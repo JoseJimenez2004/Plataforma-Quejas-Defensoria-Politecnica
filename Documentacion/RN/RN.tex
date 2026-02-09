@@ -1,0 +1,534 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{longtable}
+
+% Solución para el error de fancyhdr
+\setlength{\headheight}{14pt}
+
+\title{\textbf{Documento de Reglas de Negocio (RN)} \\
+\large Sistema de Gestión DDP - Instituto Politécnico Nacional}
+\author{Defensoría de los Derechos Politécnicos}
+\date{\today}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Reglas de Negocio DDP}
+\fancyhead[R]{\small Versión 2.0}
+\fancyfoot[C]{\thepage}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+    \textbf{Versión 2.0} \\
+    \vspace{0.5cm}
+    \textbf{Vigencia:} Permanente hasta modificación \\
+    \textbf{Aprobado por:} Titular de la DDP \\
+    \textbf{Fecha de aprobación:} \today
+\end{center}
+
+\vspace{1cm}
+
+\begin{tcolorbox}[title=Marco Normativo, colback=purple!5!white]
+    \begin{tabular}{ll}
+        \textbf{Documento Base:} & Manual de Procedimientos DDP \\
+        \textbf{Normativa:} & Reglamento Interno del IPN \\
+        \textbf{Versiones:} & Actualizado según reformas 2024 \\
+        \textbf{Responsable:} & Departamento Jurídico DDP \\
+        \textbf{Estado:} & Vigente \\
+    \end{tabular}
+\end{tcolorbox}
+
+\section*{Introducción}
+Este documento contiene las reglas de negocio institucionales que rigen los procesos de la Defensoría de los Derechos Politécnicos. Estas reglas son de obligatorio cumplimiento y se derivan del marco normativo del IPN.
+
+\section{Clasificación por Procesos}
+Las reglas de negocio se organizan según los procesos establecidos en el manual DDP:
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|l|p{3cm}|p{4cm}|}
+        \hline
+        \textbf{Código} & \textbf{Proceso} & \textbf{Número de RN} & \textbf{Tipo Principal} \\
+        \hline
+        DDP-PO-01 & Control Documental & 2 & Validación, Restricción \\
+        \hline
+        DDP-PO-02 & Atención de Quejas & 2 & Tiempos, Conclusión \\
+        \hline
+        DDP-PO-03 & Formación & 2 & Diagnóstico, Acreditación \\
+        \hline
+        DDP-PO-04 & Promoción & 2 & Calendarización, Evidencia \\
+        \hline
+        DDP-PO-05 & Convenios & 2 & Responsabilidad, Formalización \\
+        \hline
+    \end{tabular}
+    \caption{Distribución de reglas por proceso}
+\end{table}
+
+\section{Reglas de Negocio por Proceso}
+
+\subsection{Proceso DDP-PO-01: Control y Gestión Administrativa de Documentos}
+
+\begin{tcolorbox}[title=RN-01-001: Registro Exclusivo de Correspondencia, colback=red!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RN-01-001
+        \item \textbf{Proceso:} DDP-PO-01
+        \item \textbf{Categoría:} Restricción
+        \item \textbf{Prioridad:} Crítica
+        \item \textbf{Vigencia:} Permanente
+        \item \textbf{Origen:} Manual de Procedimientos DDP, Capítulo 3, Artículo 5
+        \item \textbf{Descripción:} Toda correspondencia dirigida al titular debe ser registrada y gestionada exclusivamente a través del mecanismo establecido por dicho titular.
+        \item \textbf{Expresión Formal:}
+        \begin{verbatim}
+        Para todo documento en Documentos_Entrada,
+        si documento.destinatario = "Titular DDP" entonces
+            documento.mecanismo_registro = "Sistema_Oficial_DDP"
+            y documento.estado diferente de "No_Registrado"
+        \end{verbatim}
+        \item \textbf{Excepciones:} Ninguna
+        \item \textbf{Procedimiento:}
+        \begin{enumerate}
+            \item Recepción física en ventanilla única
+            \item Digitalización inmediata
+            \item Registro en sistema con folio oficial
+            \item Distribución según instructivo del titular
+        \end{enumerate}
+        \item \textbf{Sanciones por Incumplimiento:}
+        \begin{itemize}
+            \item Amonestación escrita
+            \item Reporte a recursos humanos
+            \item Responsabilidad administrativa
+        \end{itemize}
+        \item \textbf{Evidencia Requerida:} Bitácora de registro con firma digital
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=RN-01-002: Requisitos Formales de Documentos, colback=red!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RN-01-002
+        \item \textbf{Proceso:} DDP-PO-01
+        \item \textbf{Categoría:} Validación
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Vigencia:} Permanente
+        \item \textbf{Origen:} Reglamento de Correspondencia Oficial IPN, Art. 12
+        \item \textbf{Descripción:} Los documentos que ingresen deben contar obligatoriamente con la firma del remitente y el sello de la entidad emisora.
+        \item \textbf{Elementos Requeridos:}
+        \begin{center}
+        \begin{tabular}{|l|l|l|}
+            \hline
+            \textbf{Elemento} & \textbf{Obligatorio} & \textbf{Validación} \\
+            \hline
+            Firma autógrafa & Sí & Comparación con registro \\
+            \hline
+            Sello institucional & Sí & Verificación de autenticidad \\
+            \hline
+            Fecha de emisión & Sí & Coherencia temporal \\
+            \hline
+            Nombre y cargo & Sí & Existencia en directorio \\
+            \hline
+            Folio de referencia & No & Validación si existe \\
+            \hline
+        \end{tabular}
+        \end{center}
+        \item \textbf{Proceso de Validación:}
+        \begin{enumerate}
+            \item Verificación visual de firma y sello
+            \item Digitalización con resolución 300 DPI
+            \item Registro de anomalías si las hay
+            \item Comunicación al remitente en caso de deficiencias
+        \end{enumerate}
+        \item \textbf{Documentos Exentos:}
+        \begin{itemize}
+            \item Comunicaciones internas del IPN
+            \item Documentos anónimos (proceso especial)
+            \item Notificaciones judiciales
+        \end{itemize}
+        \item \textbf{Mensaje de Error:} "El documento no cumple con los requisitos formales. Favor de verificar firma y sello."
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-02: Atención a Solicitudes de Orientación y/o Quejas}
+
+\begin{tcolorbox}[title=RN-02-001: Plazos de Respuesta Institucionales, colback=blue!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RN-02-001
+        \item \textbf{Proceso:} DDP-PO-02
+        \item \textbf{Categoría:} Tiempos
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Vigencia:} Hasta reforma normativa
+        \item \textbf{Origen:} Ley Federal de Procedimiento Administrativo, Art. 8
+        \item \textbf{Descripción:} Las dependencias tienen un plazo máximo de 10 días hábiles para responder a la primera solicitud de información y 5 días para las subsecuentes.
+        \item \textbf{Cálculo de Plazos:}
+        \begin{verbatim}
+        Fecha_Limite = Fecha_Recepcion + Dias_Habiles
+        donde:
+        - Dias_Habiles = 10 (primera solicitud)
+        - Dias_Habiles = 5 (subsiguientes)
+        - Excluye: sabados, domingos, dias inhabiles oficiales
+        \end{verbatim}
+        \item \textbf{Calendario Oficial:} Según calendario escolar IPN
+        \item \textbf{Extensiones:} Máximo 5 días adicionales con justificación
+        \item \textbf{Notificaciones:}
+        \begin{itemize}
+            \item Aviso a 3 días del vencimiento
+            \item Recordatorio día anterior
+            \item Notificación de vencimiento
+            \item Reporte de incumplimiento
+        \end{itemize}
+        \item \textbf{Consecuencias por Incumplimiento:}
+        \begin{enumerate}
+            \item Reporte a superior jerárquico
+            \item Cálculo de mora administrativa
+            \item Responsabilidad del titular del área
+        \end{enumerate}
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=RN-02-002: Conclusión Legal de Asuntos, colback=blue!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RN-02-002
+        \item \textbf{Proceso:} DDP-PO-02
+        \item \textbf{Categoría:} Conclusión
+        \item \textbf{Prioridad:} Crítica
+        \item \textbf{Vigencia:} Permanente
+        \item \textbf{Origen:} Reglamento Interno DDP, Capítulo 4, Artículo 15
+        \item \textbf{Descripción:} Un asunto se considera legalmente concluido solo cuando se emite el acuerdo o resolución que establece la causa de conclusión y su fundamento legal.
+        \item \textbf{Causas de Conclusión:}
+        \begin{center}
+        \begin{tabular}{|l|l|}
+            \hline
+            \textbf{Causa} & \textbf{Requisitos} \\
+            \hline
+            Satisfacción del peticionario & Acuerdo por ambas partes \\
+            \hline
+            Falta de competencia & Oficio de turno a instancia correspondiente \\
+            \hline
+            Prescripción & Cálculo de plazos legales \\
+            \hline
+            Desistimiento & Solicitud expresa del peticionario \\
+            \hline
+            Resolución fundada & Análisis jurídico completo \\
+            \hline
+        \end{tabular}
+        \end{center}
+        \item \textbf{Documentación Obligatoria:}
+        \begin{enumerate}
+            \item Acuerdo de conclusión firmado
+            \item Fundamentación jurídica
+            \item Evidencia de notificación
+            \item Archivo en expediente electrónico
+        \end{enumerate}
+        \item \textbf{Prohibiciones:}
+        \begin{itemize}
+            \item No se pueden archivar asuntos sin resolución
+            \item No se puede concluir sin notificación
+            \item No se pueden eliminar expedientes concluidos
+        \end{itemize}
+        \item \textbf{Periodo de Retención:} 10 años después de conclusión
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-03: Acciones de Formación en Derechos Humanos y Politécnicos}
+
+\begin{tcolorbox}[title=RN-03-001: Diagnóstico Previo de Necesidades, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RN-03-001
+        \item \textbf{Proceso:} DDP-PO-03
+        \item \textbf{Categoría:} Diagnóstico
+        \item \textbf{Prioridad:} Media
+        \item \textbf{Vigencia:} Anual
+        \item \textbf{Origen:} Programa Institucional de Derechos Humanos
+        \item \textbf{Descripción:} La DDP debe realizar un diagnóstico previo de necesidades y demandas de la comunidad antes de elaborar el programa anual.
+        \item \textbf{Métodos de Diagnóstico:}
+        \begin{itemize}
+            \item Encuestas a comunidad politécnica
+            \item Análisis de quejas recibidas
+            \item Grupos focales por unidad académica
+            \item Estadísticas de años anteriores
+        \end{itemize}
+        \item \textbf{Población Muestra:} Mínimo 10\% por segmento:
+        \begin{center}
+        \begin{tabular}{|l|l|l|}
+            \hline
+            \textbf{Segmento} & \textbf{Muestra Mínima} & \textbf{Periodicidad} \\
+            \hline
+            Estudiantes & 5,000 & Anual \\
+            \hline
+            Académicos & 500 & Anual \\
+            \hline
+            Administrativos & 300 & Anual \\
+            \hline
+            Directivos & 50 & Semestral \\
+            \hline
+        \end{tabular}
+        \end{center}
+        \item \textbf{Plazo para Diagnóstico:} Octubre-Noviembre de cada año
+        \item \textbf{Validación:} Comité de Planeación DDP
+        \item \textbf{Producto:} Informe de diagnóstico con propuestas
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=RN-03-002: Acreditación de Convenios de Formación, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RN-03-002
+        \item \textbf{Proceso:} DDP-PO-03
+        \item \textbf{Categoría:} Acreditación
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Vigencia:} Vigencia del convenio
+        \item \textbf{Origen:} Acuerdos Interinstitucionales IPN
+        \item \textbf{Descripción:} Las instituciones especializadas (CNDH, CDHCM, CONAPRED) deben aprobar y acreditar los convenios específicos de formación.
+        \item \textbf{Instituciones Acreditadoras:}
+        \begin{itemize}
+            \item Comisión Nacional de Derechos Humanos (CNDH)
+            \item Comisión de Derechos Humanos de la Ciudad de México (CDHCM)
+            \item Consejo Nacional para Prevenir la Discriminación (CONAPRED)
+        \end{itemize}
+        \item \textbf{Proceso de Acreditación:}
+        \begin{enumerate}
+            \item Elaboración de propuesta por DDP
+            \item Revisión por área jurídica IPN
+            \item Envío a institución acreditadora
+            \item Negociación de términos
+            \item Firma de convenio específico
+            \item Registro en sistema de convenios IPN
+        \end{enumerate}
+        \item \textbf{Vigencia de Acreditación:} Máximo 3 años, renovable
+        \item \textbf{Documentación:}
+        \begin{itemize}
+            \item Convenio marco (existente)
+            \item Convenio específico por programa
+            \item Plan de estudios aprobado
+            \item Perfiles de instructores
+        \end{itemize}
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-04: Acciones de Promoción en Derechos Humanos y Politécnicos}
+
+\begin{tcolorbox}[title=RN-04-001: Calendarización Escolar, colback=yellow!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RN-04-001
+        \item \textbf{Proceso:} DDP-PO-04
+        \item \textbf{Categoría:} Calendarización
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Vigencia:} Anual
+        \item \textbf{Origen:} Calendario Escolar Oficial IPN
+        \item \textbf{Descripción:} El Plan de Trabajo Anual debe elaborarse estrictamente bajo el calendario escolar autorizado por el IPN.
+        \item \textbf{Restricciones de Calendario:}
+        \begin{center}
+        \begin{tabular}{|l|l|}
+            \hline
+            \textbf{Periodo} & \textbf{Restricciones} \\
+            \hline
+            Inicio de semestre & Primera semana, solo actividades de inducción \\
+            \hline
+            Exámenes parciales & No programar actividades extracurriculares \\
+            \hline
+            Exámenes finales & Prohibida cualquier actividad promocional \\
+            \hline
+            Vacaciones & Solo actividades previa autorización especial \\
+            \hline
+            Días inhábiles & No programar actividades oficiales \\
+            \hline
+        \end{tabular}
+        \end{center}
+        \item \textbf{Fuente Oficial:} Calendario escolar publicado por DGIP
+        \item \textbf{Actualizaciones:} Sincronización automática con calendario oficial
+        \item \textbf{Validaciones:}
+        \begin{enumerate}
+            \item Verificación contra calendario escolar
+            \item Confirmación de disponibilidad de espacios
+            \item Aprobación de unidad académica anfitriona
+            \item Registro en sistema de calendarización IPN
+        \end{enumerate}
+        \item \textbf{Sanciones por Incumplimiento:} Cancelación de actividad y reporte
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=RN-04-002: Evidencia de Actividades, colback=yellow!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RN-04-002
+        \item \textbf{Proceso:} DDP-PO-04
+        \item \textbf{Categoría:} Evidencia
+        \item \textbf{Prioridad:} Media
+        \item \textbf{Vigencia:} Permanente
+        \item \textbf{Origen:} Manual de Evidencia DDP, Capítulo 2
+        \item \textbf{Descripción:} Se debe generar y resguardar evidencia fotográfica y listas de registro de asistencia como comprobación de cada actividad desarrollada.
+        \item \textbf{Tipos de Evidencia Requerida:}
+        \begin{center}
+        \begin{tabular}{|l|l|l|}
+            \hline
+            \textbf{Tipo} & \textbf{Formato} & \textbf{Cantidad Mínima} \\
+            \hline
+            Fotografías & JPG, 300 DPI & 10 por actividad \\
+            \hline
+            Lista de asistencia & PDF firmado & 1 original + copia \\
+            \hline
+            Programa de actividad & PDF & 1 \\
+            \hline
+            Materiales utilizados & Varios & Todos los empleados \\
+            \hline
+            Evaluación de participantes & Sistema en línea & 70\% de asistentes \\
+            \hline
+        \end{tabular}
+        \end{center}
+        \item \textbf{Metadatos Obligatorios:}
+        \begin{itemize}
+            \item Fecha y hora de actividad
+            \item Lugar específico
+            \item Nombre de responsable
+            \item Número de participantes
+            \item Temática desarrollada
+        \end{itemize}
+        \item \textbf{Periodo de Retención:} 5 años
+        \item \textbf{Respaldo:} En sistema institucional y físico en archivo
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-05: Gestión para la Formalización de Convenios de Colaboración}
+
+\begin{tcolorbox}[title=RN-05-001: Responsabilidad Única de Documentación, colback=orange!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RN-05-001
+        \item \textbf{Proceso:} DDP-PO-05
+        \item \textbf{Categoría:} Responsabilidad
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Vigencia:} Permanente
+        \item \textbf{Origen:} Manual de Convenios IPN, Artículo 8
+        \item \textbf{Descripción:} El Departamento de Promoción (DPFDH) es el único encargado de recabar la documentación probatoria requerida para formalizar alianzas.
+        \item \textbf{Documentación Probatoria:}
+        \begin{enumerate}
+            \item Acta constitutiva de institución externa
+            \item Identificación oficial del representante
+            \item Poderes vigentes del firmante
+            \item RFC y situación fiscal
+            \item Propuesta técnica y económica
+            \item Aval jurídico IPN
+        \end{enumerate}
+        \item \textbf{Flujo Documental:}
+        \begin{verbatim}
+        Institucion Externa -> DPFDH -> Area Juridica -> 
+        Relaciones Internacionales -> Titular IPN
+        \end{verbatim}
+        \item \textbf{Plazos:}
+        \begin{itemize}
+            \item Recopilación: 15 días hábiles
+            \item Revisión jurídica: 10 días hábiles
+            \item Negociación: variable según complejidad
+            \item Firma: según agenda de autoridades
+        \end{itemize}
+        \item \textbf{Prohibiciones:}
+        \begin{itemize}
+            \item Otras áreas no pueden solicitar documentación
+            \item No se acepta documentación incompleta
+            \item No se procesan convenios sin aval jurídico
+        \end{itemize}
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=RN-05-002: Formalización de Convenios, colback=orange!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RN-05-002
+        \item \textbf{Proceso:} DDP-PO-05
+        \item \textbf{Categoría:} Formalización
+        \item \textbf{Prioridad:} Crítica
+        \item \textbf{Vigencia:} Permanente
+        \item \textbf{Origen:} Reglamento de Formalización de Convenios IPN
+        \item \textbf{Descripción:} Al finalizar la aceptación, se deben imprimir obligatoriamente 3 tantos en original para recabar las firmas correspondientes.
+        \item \textbf{Especificaciones de Impresión:}
+        \begin{center}
+        \begin{tabular}{|l|l|}
+            \hline
+            \textbf{Característica} & \textbf{Especificación} \\
+            \hline
+            Cantidad de originales & 3 ejemplares idénticos \\
+            \hline
+            Papel & Bond institucional 75 gr \\
+            \hline
+            Formato & Oficio (215.9 x 330.2 mm) \\
+            \hline
+            Numeración & Página X de Y en cada página \\
+            \hline
+            Firmas & Originales en todas las copias \\
+            \hline
+            Sellos & Húmedos en todas las firmas \\
+            \hline
+        \end{tabular}
+        \end{center}
+        \item \textbf{Distribución de Originales:}
+        \begin{enumerate}
+            \item Original 1: Archivo DDP
+            \item Original 2: Institución externa
+            \item Original 3: Archivo General IPN
+        \end{enumerate}
+        \item \textbf{Orden de Firmas:}
+        \begin{enumerate}
+            \item Representante externo
+            \item Titular DDP
+            \item Dirección de Relaciones Internacionales
+            \item Titular IPN (según monto y alcance)
+        \end{enumerate}
+        \item \textbf{Registro:} Inmediato en Sistema de Convenios IPN
+    \end{itemize}
+\end{tcolorbox}
+
+\section{Matriz de Trazabilidad de Reglas}
+\begin{longtable}{|c|l|l|l|l|}
+    \hline
+    \textbf{ID RN} & \textbf{Proceso} & \textbf{Descripción} & \textbf{Prioridad} & \textbf{Vigencia} \\
+    \hline
+    RN-01-001 & DDP-PO-01 & Registro exclusivo de correspondencia & Crítica & Permanente \\
+    \hline
+    RN-01-002 & DDP-PO-01 & Requisitos formales de documentos & Alta & Permanente \\
+    \hline
+    RN-02-001 & DDP-PO-02 & Plazos de respuesta institucionales & Alta & Hasta reforma \\
+    \hline
+    RN-02-002 & DDP-PO-02 & Conclusión legal de asuntos & Crítica & Permanente \\
+    \hline
+    RN-03-001 & DDP-PO-03 & Diagnóstico previo de necesidades & Media & Anual \\
+    \hline
+    RN-03-002 & DDP-PO-03 & Acreditación de convenios de formación & Alta & Vigencia convenio \\
+    \hline
+    RN-04-001 & DDP-PO-04 & Calendarización escolar & Alta & Anual \\
+    \hline
+    RN-04-002 & DDP-PO-04 & Evidencia de actividades & Media & Permanente \\
+    \hline
+    RN-05-001 & DDP-PO-05 & Responsabilidad única de documentación & Alta & Permanente \\
+    \hline
+    RN-05-002 & DDP-PO-05 & Formalización de convenios & Crítica & Permanente \\
+    \hline
+\end{longtable}
+
+\section{Proceso de Modificación de Reglas}
+Las modificaciones a las reglas de negocio deben seguir estrictamente:
+\begin{enumerate}
+    \item Solicitud formal con justificación
+    \item Análisis de impacto por área jurídica
+    \item Consulta a áreas involucradas
+    \item Aprobación por Comité de Reglas DDP
+    \item Publicación en gaceta institucional
+    \item Capacitación a personal afectado
+    \item Actualización de sistemas
+\end{enumerate}
+
+\section*{Firmas de Validación}
+\vspace{1cm}
+
+\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
+    \textbf{Elaborado por:} & \textbf{Revisado por:} & \textbf{Aprobado por:} \\
+    \vspace{2cm} & \vspace{2cm} & \vspace{2cm} \\
+    \hline
+    [Nombre y firma] & [Nombre y firma] & [Nombre y firma] \\
+    Departamento Jurídico DDP & Subdefensor Administrativo & Titular de la DDP \\
+\end{tabular}
+
+\end{document}

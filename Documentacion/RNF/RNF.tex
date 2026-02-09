@@ -1,0 +1,361 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+
+% Solución para el error de fancyhdr
+\setlength{\headheight}{14pt}
+
+% Para usar símbolos matemáticos
+\usepackage{amsmath}
+\newcommand{\mleq}{\ensuremath{\leq}} % menor o igual que
+\newcommand{\mgeq}{\ensuremath{\geq}} % mayor o igual que
+
+\title{\textbf{Documento de Requerimientos No Funcionales (RNF)} \\
+\large Sistema de Gestión de la Defensoría de los Derechos Politécnicos}
+\author{Dirección de Defensoría de los Derechos Politécnicos - IPN}
+\date{\today}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small RNF - Sistema DDP}
+\fancyhead[R]{\small Versión 2.0}
+\fancyfoot[C]{\thepage}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+    \textbf{Versión 2.0} \\
+    \vspace{0.5cm}
+    \textbf{Clasificación:} CONFIDENCIAL \\
+    \textbf{Aprobado por:} Titular de la DDP \\
+    \textbf{Fecha de aprobación:} \today
+\end{center}
+
+\vspace{1cm}
+
+\begin{tcolorbox}[title=Datos Institucionales, colback=red!5!white]
+    \begin{tabular}{ll}
+        \textbf{Institución:} & Instituto Politécnico Nacional \\
+        \textbf{Dirección:} & Defensoría de los Derechos Politécnicos \\
+        \textbf{Normativa Base:} & Manual de Procedimientos DDP \\
+        \textbf{Alcance:} & 5 Procesos Institucionales \\
+        \textbf{Estado:} & En diseño \\
+    \end{tabular}
+\end{tcolorbox}
+
+\section*{Introducción}
+Este documento especifica los requerimientos no funcionales del Sistema de Gestión DDP, estableciendo atributos de calidad, restricciones y criterios de operación para garantizar el cumplimiento de los procesos institucionales.
+
+\section{Clasificación por Procesos DDP}
+Los requerimientos no funcionales se asocian a procesos específicos del manual DDP:
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|c|l|p{8cm}|}
+        \hline
+        \textbf{Código} & \textbf{Proceso} & \textbf{Enfoque RNF} \\
+        \hline
+        DDP-PO-01 & Control Documental & Disponibilidad, Integración \\
+        \hline
+        DDP-PO-02 & Atención de Quejas & Seguridad, Confidencialidad \\
+        \hline
+        DDP-PO-03 & Acciones de Formación & Capacidad, Eficiencia \\
+        \hline
+        DDP-PO-04 & Acciones de Promoción & Eficiencia, Usabilidad \\
+        \hline
+        DDP-PO-05 & Convenios Colaboración & Calidad, Seguridad \\
+        \hline
+    \end{tabular}
+    \caption{Asociación de RNF por proceso}
+\end{table}
+
+\section{Requerimientos No Funcionales por Proceso}
+
+\subsection{Proceso DDP-PO-01: Control y Gestión Administrativa de Documentos}
+
+\begin{tcolorbox}[title=RNF-01-001: Disponibilidad del Proceso, colback=yellow!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RNF-01-001
+        \item \textbf{Proceso:} DDP-PO-01
+        \item \textbf{Categoría:} Disponibilidad
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Descripción:} El proceso debe garantizar una atención expedita y oportuna a los miembros de la comunidad politécnica.
+        \item \textbf{Métricas:}
+        \begin{itemize}
+            \item Tiempo máximo de registro: 5 minutos por documento
+            \item Disponibilidad del sistema: 99\% en horario laboral
+            \item Tiempo de búsqueda: \mleq 30 segundos
+            \item Capacidad concurrente: 20 usuarios simultáneos
+        \end{itemize}
+        \item \textbf{Horario Laboral:} Lunes a Viernes, 8:00 - 18:00 horas
+        \item \textbf{Tolerancia:} 1\% de tiempo de inactividad mensual
+        \item \textbf{Método de Verificación:} Monitoreo de logs y métricas de uso
+        \item \textbf{Requisitos Institucionales:}
+        \begin{enumerate}
+            \item Atención inmediata a documentos urgentes
+            \item Priorización según tipo de documento
+            \item Notificaciones en tiempo real
+        \end{enumerate}
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-02: Atención a Solicitudes de Orientación y/o Quejas}
+
+\begin{tcolorbox}[title=RNF-02-001: Confidencialidad de Quejas, colback=orange!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RNF-02-001
+        \item \textbf{Proceso:} DDP-PO-02
+        \item \textbf{Categoría:} Seguridad/Confidencialidad
+        \item \textbf{Prioridad:} Crítica
+        \item \textbf{Descripción:} La información de las quejas debe tratarse de manera confidencial y reservada bajo la normativa de transparencia.
+        \item \textbf{Normativa Aplicable:}
+        \begin{itemize}
+            \item Ley General de Protección de Datos Personales
+            \item Ley Federal de Transparencia
+            \item Reglamento Interno del IPN
+        \end{itemize}
+        \item \textbf{Medidas de Seguridad:}
+        \begin{enumerate}
+            \item Encriptación de datos sensibles en reposo y tránsito
+            \item Control de acceso basado en roles (RBAC)
+            \item Registro de auditoría completo (who, what, when)
+            \item Anonimización para reportes estadísticos
+            \item Borrado seguro según políticas de retención
+        \end{enumerate}
+        \item \textbf{Niveles de Acceso:}
+        \begin{itemize}
+            \item Nivel 1: Personal DDP (acceso limitado)
+            \item Nivel 2: Subdefensores (acceso por área)
+            \item Nivel 3: Titular DDP (acceso completo)
+            \item Nivel 4: Administradores (sin acceso a contenido)
+        \end{itemize}
+        \item \textbf{Método de Verificación:} Auditorías de seguridad trimestrales
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-03: Acciones de Formación en Derechos Humanos y Politécnicos}
+
+\begin{tcolorbox}[title=RNF-03-001: Capacidad de Recursos, colback=blue!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RNF-03-001
+        \item \textbf{Proceso:} DDP-PO-03
+        \item \textbf{Categoría:} Capacidad
+        \item \textbf{Prioridad:} Media
+        \item \textbf{Descripción:} Los recursos tecnológicos y didácticos deben ser suficientes para cubrir las exigencias de cada acción formativa específica.
+        \item \textbf{Requisitos Técnicos:}
+        \begin{itemize}
+            \item Soporte para videoconferencias con 100 participantes
+            \item Almacenamiento para materiales didácticos (1TB)
+            \item Plataforma de aprendizaje compatible con SCORM
+            \item Ancho de banda mínimo: 100 Mbps dedicado
+        \end{itemize}
+        \item \textbf{Recursos Didácticos:}
+        \begin{itemize}
+            \item Streaming de video en HD (720p mínimo)
+            \item Compartición de pantalla
+            \item Salas virtuales para trabajos en grupo
+            \item Biblioteca digital de materiales
+        \end{itemize}
+        \item \textbf{Escalabilidad:}
+        \begin{itemize}
+            \item Soporte para 500 usuarios concurrentes
+            \item Capacidad para 50 acciones formativas simultáneas
+            \item Almacenamiento escalable según demanda
+        \end{itemize}
+        \item \textbf{Método de Verificación:} Pruebas de carga y simulación
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-04: Acciones de Promoción en Derechos Humanos y Politécnicos}
+
+\begin{tcolorbox}[title=RNF-04-001: Eficiencia en Promoción, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RNF-04-001
+        \item \textbf{Proceso:} DDP-PO-04
+        \item \textbf{Categoría:} Eficiencia
+        \item \textbf{Prioridad:} Media
+        \item \textbf{Descripción:} Las acciones de promoción deben sistematizarse para garantizar que se proporcionen de manera eficaz a la comunidad que lo requiera.
+        \item \textbf{Métricas de Eficiencia:}
+        \begin{itemize}
+            \item Tiempo de respuesta a solicitudes: \mleq 48 horas
+            \item Tasa de utilización de recursos: \mgeq 85\%
+            \item Reducción de trámites manuales: \mgeq 70\%
+            \item Satisfacción de usuarios: \mgeq 90\%
+        \end{itemize}
+        \item \textbf{Procesos a Optimizar:}
+        \begin{enumerate}
+            \item Solicitud de actividades
+            \item Programación de calendario
+            \item Confirmación de participantes
+            \item Generación de evidencia
+            \item Reporte de actividades
+        \end{enumerate}
+        \item \textbf{Automatización Requerida:}
+        \begin{itemize}
+            \item Programación automática según disponibilidad
+            \item Notificaciones automáticas a participantes
+            \item Generación de documentación oficial
+            \item Cálculo de indicadores de gestión
+        \end{itemize}
+        \item \textbf{Método de Verificación:} Análisis de tiempos y procesos
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-05: Gestión para la Formalización de Convenios de Colaboración}
+
+\begin{tcolorbox}[title=RNF-05-001: Calidad de Medios, colback=purple!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RNF-05-001
+        \item \textbf{Proceso:} DDP-PO-05
+        \item \textbf{Categoría:} Calidad
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Descripción:} Los espacios y medios para la gestión (como videoconferencias) deben cumplir con los estándares institucionales.
+        \item \textbf{Estándares Institucionales:}
+        \begin{itemize}
+            \item Normativa de Comunicación Oficial IPN
+            \item Estándares de Imagen Institucional
+            \item Protocolos de Ceremonial y Protocolo
+            \item Formatos Oficiales de Documentación
+        \end{itemize}
+        \item \textbf{Requisitos de Calidad:}
+        \begin{enumerate}
+            \item Videoconferencias en calidad Full HD (1080p)
+            \item Audio claro sin interferencias
+            \item Sala virtual con branding institucional
+            \item Documentos en formatos oficiales (.docx, .pdf)
+            \item Respaldo de sesiones con calidad de archivo
+        \end{enumerate}
+        \item \textbf{Equipamiento Mínimo:}
+        \begin{itemize}
+            \item Cámaras HD con seguimiento automático
+            \item Micrófonos de condensador direccionales
+            \item Sistema de iluminación profesional
+            \item Pantallas de 55" mínimo
+        \end{itemize}
+        \item \textbf{Método de Verificación:} Checklist de calidad pre-sesión
+    \end{itemize}
+\end{tcolorbox}
+
+\section{Requerimientos No Funcionales Transversales}
+
+\begin{tcolorbox}[title=RNF-T-001: Usabilidad Institucional, colback=gray!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RNF-T-001
+        \item \textbf{Procesos:} Todos
+        \item \textbf{Categoría:} Usabilidad
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Descripción:} El sistema debe ser intuitivo y fácil de usar para personal con diversos niveles de habilidad tecnológica.
+        \item \textbf{Métricas:}
+        \begin{itemize}
+            \item Tiempo de aprendizaje: \mleq 2 horas
+            \item Eficiencia de uso: \mgeq 90\% de tareas completadas
+            \item Tasa de error: \mleq 5\%
+            \item Satisfacción: \mgeq 4/5 en escala Likert
+        \end{itemize}
+        \item \textbf{Lineamientos:}
+        \begin{itemize}
+            \item Interfaz en español
+            \item Consistencia con sistemas IPN
+            \item Navegación intuitiva
+            \item Ayuda contextual
+            \item Tutoriales integrados
+        \end{itemize}
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=RNF-T-002: Rendimiento General, colback=gray!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RNF-T-002
+        \item \textbf{Procesos:} Todos
+        \item \textbf{Categoría:} Rendimiento
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Descripción:} El sistema debe mantener tiempos de respuesta adecuados para todas las funcionalidades.
+        \item \textbf{Métricas de Rendimiento:}
+        \begin{center}
+        \begin{tabular}{|l|l|l|}
+            \hline
+            \textbf{Operación} & \textbf{Tiempo Máximo} & \textbf{Percentil} \\
+            \hline
+            Carga de página inicial & 2 segundos & P95 \\
+            \hline
+            Búsquedas simples & 3 segundos & P95 \\
+            \hline
+            Búsquedas complejas & 10 segundos & P90 \\
+            \hline
+            Generación de reportes & 30 segundos & P90 \\
+            \hline
+            Carga de documentos & 5 segundos/MB & P95 \\
+            \hline
+        \end{tabular}
+        \end{center}
+        \item \textbf{Capacidad Concurrente:} 100 usuarios simultáneos
+        \item \textbf{Disponibilidad:} 99.5\% en horario laboral
+    \end{itemize}
+\end{tcolorbox}
+
+\section{Matriz de Cumplimiento de RNF}
+\begin{longtable}{|c|l|l|l|l|}
+    \hline
+    \textbf{ID RNF} & \textbf{Proceso} & \textbf{Descripción} & \textbf{Prioridad} & \textbf{Estado} \\
+    \hline
+    RNF-01-001 & DDP-PO-01 & Disponibilidad del proceso & Alta & Pendiente \\
+    \hline
+    RNF-02-001 & DDP-PO-02 & Confidencialidad de quejas & Crítica & En diseño \\
+    \hline
+    RNF-03-001 & DDP-PO-03 & Capacidad de recursos & Media & Pendiente \\
+    \hline
+    RNF-04-001 & DDP-PO-04 & Eficiencia en promoción & Media & Pendiente \\
+    \hline
+    RNF-05-001 & DDP-PO-05 & Calidad de medios & Alta & En diseño \\
+    \hline
+    RNF-T-001 & Todos & Usabilidad institucional & Alta & Pendiente \\
+    \hline
+    RNF-T-002 & Todos & Rendimiento general & Alta & Pendiente \\
+    \hline
+\end{longtable}
+
+\section{Métricas de Calidad por Proceso}
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|l|l|l|l|}
+        \hline
+        \textbf{Proceso} & \textbf{Métrica Principal} & \textbf{Objetivo} & \textbf{Frecuencia} \\
+        \hline
+        DDP-PO-01 & Tiempo de registro & \mleq 5 min/documento & Diaria \\
+        \hline
+        DDP-PO-02 & Confidencialidad & 0 violaciones & Continua \\
+        \hline
+        DDP-PO-03 & Capacidad eventos & 100 participantes & Por evento \\
+        \hline
+        DDP-PO-04 & Eficiencia procesos & \mgeq 85\% & Mensual \\
+        \hline
+        DDP-PO-05 & Calidad medios & 100\% estándares & Por sesión \\
+        \hline
+        Transversal & Disponibilidad sistema & \mgeq 99.5\% & Mensual \\
+        \hline
+    \end{tabular}
+    \caption{Métricas de calidad del sistema DDP}
+\end{table}
+
+\section*{Firmas de Validación}
+\vspace{1cm}
+
+\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
+    \textbf{Elaborado por:} & \textbf{Revisado por:} & \textbf{Aprobado por:} \\
+    \vspace{2cm} & \vspace{2cm} & \vspace{2cm} \\
+    \hline
+    [Nombre y firma] & [Nombre y firma] & [Nombre y firma] \\
+    Arquitecto de Sistemas & Subdefensor Técnico & Titular de la DDP \\
+\end{tabular}
+
+\end{document}

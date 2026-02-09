@@ -1,0 +1,467 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{longtable}
+
+% Solución para el error de fancyhdr
+\setlength{\headheight}{14pt}
+
+% Configuración simplificada para listados de código
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!5},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+}
+
+\title{\textbf{Documento de Requerimientos Técnicos (RT)} \\
+\large Sistema Integral de Gestión DDP - IPN}
+\author{Dirección de Defensoría de los Derechos Politécnicos \\
+Coordinación de Tecnologías de la Información}
+\date{\today}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Requerimientos Técnicos DDP}
+\fancyhead[R]{\small Versión 2.0}
+\fancyfoot[C]{\thepage}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+    \textbf{Versión 2.0} \\
+    \vspace{0.5cm}
+    \textbf{Clasificación:} USO INSTITUCIONAL \\
+    \textbf{Aprobado por:} Coordinador de TI DDP \\
+    \textbf{Fecha de aprobación:} \today
+\end{center}
+
+\vspace{1cm}
+
+\begin{tcolorbox}[title=Contexto Técnico Institucional, colback=gray!5!white]
+    \begin{tabular}{ll}
+        \textbf{Infraestructura Base:} & Red Institucional IPN \\
+        \textbf{Plataforma Objetivo:} & Sistema Integral de Gestión DDP \\
+        \textbf{Arquitectura:} & Híbrida (On-premise + Cloud) \\
+        \textbf{Estándares:} & Normas Técnicas IPN v4.0 \\
+        \textbf{Horario Operación:} & 24/7 con mantenimiento programado \\
+    \end{tabular}
+\end{tcolorbox}
+
+\section*{Introducción}
+Este documento especifica los requerimientos técnicos para el Sistema de Gestión DDP, estableciendo las decisiones tecnológicas, arquitectónicas y de integración necesarias para soportar los cinco procesos institucionales.
+
+\section{Requerimientos Técnicos por Proceso}
+
+\subsection{Proceso DDP-PO-01: Control y Gestión Administrativa de Documentos}
+
+\begin{tcolorbox}[title=RT-01-001: Integración con Base de Datos Institucional, colback=blue!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RT-01-001
+        \item \textbf{Proceso:} DDP-PO-01
+        \item \textbf{Categoría:} Integración
+        \item \textbf{Prioridad:} Crítica
+        \item \textbf{Descripción:} El registro y control de correspondencia debe realizarse mediante la base de datos institucional de la DDP.
+        \item \textbf{Especificaciones Técnicas:}
+        \begin{itemize}
+            \item \textbf{Base de Datos:} Oracle Database 19c Enterprise Edition
+            \item \textbf{Servidor:} Oracle Exadata X8M (on-premise)
+            \item \textbf{Licencias:} Oracle ULA institucional
+            \item \textbf{Conectividad:} JDBC Thin Client
+        \end{itemize}
+        \item \textbf{Esquema de Base de Datos:}
+\begin{lstlisting}
+-- Tabla principal de documentos
+CREATE TABLE ddp_documentos (
+    doc_id NUMBER PRIMARY KEY,
+    numero_turno VARCHAR2(50) UNIQUE NOT NULL,
+    fecha_recepcion DATE DEFAULT SYSDATE,
+    remitente_id NUMBER REFERENCES ddp_remitentes(id),
+    asunto VARCHAR2(500) NOT NULL,
+    subdefensoria_asignada VARCHAR2(100),
+    estado VARCHAR2(20) DEFAULT 'REGISTRADO',
+    usuario_registro VARCHAR2(50),
+    fecha_registro TIMESTAMP DEFAULT SYSTIMESTAMP
+);
+\end{lstlisting}
+        \item \textbf{Requisitos de Conexión:}
+        \begin{itemize}
+            \item Connection Pool: mínimo 50 conexiones
+            \item Timeout: 30 segundos
+            \item Reintentos: 3 con backoff exponencial
+            \item Encriptación: TLS 1.2 para conexiones
+        \end{itemize}
+        \item \textbf{Monitoreo:} Oracle Enterprise Manager para supervisión
+        \item \textbf{Backup:} RMAN incremental diario + completo semanal
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-02: Atención a Solicitudes de Orientación y/o Quejas}
+
+\begin{tcolorbox}[title=RT-02-001: Integración con Portal Web Oficial, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RT-02-001
+        \item \textbf{Proceso:} DDP-PO-02
+        \item \textbf{Categoría:} Interfaz Web
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Descripción:} Se requiere la integración con el portal oficial www.ipn.mx/defensoria/ para la recepción de quejas en línea.
+        \item \textbf{Arquitectura Web:}
+        \begin{itemize}
+            \item \textbf{Frontend:} React 18 + TypeScript
+            \item \textbf{Backend:} Node.js 18 LTS
+            \item \textbf{Servidor Web:} Apache 2.4 con mod\_proxy
+            \item \textbf{Balanceador:} F5 BIG-IP LTM
+        \end{itemize}
+        \item \textbf{Ejemplo de Componente:}
+\begin{lstlisting}
+import React, { useState } from 'react';
+
+const QuejasPortal = () => {
+    const [queja, setQueja] = useState({
+        tipo: '',
+        descripcion: '',
+        anonima: false
+    });
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        // Envio seguro mediante API
+        const response = await fetch('/api/quejas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(queja)
+        });
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            {/* Formulario de quejas */}
+        </form>
+    );
+};
+\end{lstlisting}
+        \item \textbf{Seguridad Web:}
+        \begin{enumerate}
+            \item HTTPS obligatorio (TLS 1.3)
+            \item WAF (Web Application Firewall)
+            \item Protección contra CSRF y XSS
+            \item Rate limiting: 10 solicitudes/minuto por IP
+            \item CAPTCHA para formularios públicos
+        \end{enumerate}
+        \item \textbf{Accesibilidad:} WCAG 2.1 Nivel AA
+        \item \textbf{Compatibilidad:}
+        \begin{itemize}
+            \item Chrome 90+, Firefox 88+, Edge 90+
+            \item Safari 14+ (iOS y macOS)
+            \item Resolución mínima: 320px (mobile first)
+        \end{itemize}
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-03: Acciones de Formación en Derechos Humanos y Politécnicos}
+
+\begin{tcolorbox}[title=RT-03-001: Gestión de Datos y Archivo, colback=purple!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RT-03-001
+        \item \textbf{Proceso:} DDP-PO-03
+        \item \textbf{Categoría:} Gestión de Datos
+        \item \textbf{Prioridad:} Media
+        \item \textbf{Descripción:} El sistema debe archivar los datos de cada acción para atender reportes y solicitudes de información pública.
+        \item \textbf{Arquitectura de Datos:}
+        \begin{itemize}
+            \item \textbf{Base Principal:} PostgreSQL 14 (datos transaccionales)
+            \item \textbf{Data Warehouse:} Amazon Redshift (reportes)
+            \item \textbf{Búsqueda:} Elasticsearch 8.0 (índices)
+            \item \textbf{Cache:} Redis 7.0 (sesiones y datos frecuentes)
+        \end{itemize}
+        \item \textbf{Esquema de Formación:}
+\begin{lstlisting}
+-- Programa Anual de Acciones
+CREATE TABLE ddp_paamdh (
+    programa_id SERIAL PRIMARY KEY,
+    anio INTEGER NOT NULL,
+    version VARCHAR2(10),
+    fecha_publicacion DATE,
+    estado VARCHAR2(20) DEFAULT 'BORRADOR'
+);
+
+-- Acciones de formación
+CREATE TABLE ddp_acciones_formacion (
+    accion_id SERIAL PRIMARY KEY,
+    programa_id INTEGER REFERENCES ddp_paamdh(programa_id),
+    nombre VARCHAR2(200) NOT NULL,
+    fecha_inicio DATE,
+    fecha_fin DATE,
+    modalidad VARCHAR2(50)
+);
+\end{lstlisting}
+        \item \textbf{Políticas de Retención:}
+        \begin{center}
+        \begin{tabular}{|l|l|l|}
+            \hline
+            \textbf{Tipo de Dato} & \textbf{Retención} & \textbf{Destino Final} \\
+            \hline
+            Datos de participantes & 5 años & Archivo histórico \\
+            \hline
+            Materiales didácticos & 10 años & Repositorio institucional \\
+            \hline
+            Registros de asistencia & 7 años & Sistema de archivo \\
+            \hline
+            Evaluaciones & 3 años & Anonimización \\
+            \hline
+        \end{tabular}
+        \end{center}
+        \item \textbf{Backup:} Snapshots diarios + replicación cross-region
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-04: Acciones de Promoción en Derechos Humanos y Politécnicos}
+
+\begin{tcolorbox}[title=RT-04-001: Sistema de Almacenamiento y Repositorio, colback=yellow!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RT-04-001
+        \item \textbf{Proceso:} DDP-PO-04
+        \item \textbf{Categoría:} Almacenamiento
+        \item \textbf{Prioridad:} Media
+        \item \textbf{Descripción:} El sistema debe contar con un repositorio para el archivo de evidencia generada (fotos, programas, acuses).
+        \item \textbf{Solución de Almacenamiento:}
+        \begin{itemize}
+            \item \textbf{Primary Storage:} NetApp AFF A800 (all-flash)
+            \item \textbf{Capacity:} 100 TB inicial, escalable a 1 PB
+            \item \textbf{Performance:} 1M IOPS, latencia < 1ms
+            \item \textbf{Protocols:} NFS v4.1, SMB 3.1.1, S3 compatible
+        \end{itemize}
+        \item \textbf{Estructura de Repositorio:}
+\begin{verbatim}
+/repositorio_ddp/
+   /actividades/
+      /2024/
+         /01-enero/
+            /conferencia-derechos/
+               /fotos/
+               /listas/
+               /programa/
+            /taller-discriminacion/
+   /evidencias/
+      /fotograficas/
+      /documentales/
+   /backups/
+\end{verbatim}
+        \item \textbf{Metadatos Obligatorios:}
+\begin{lstlisting}
+{
+  "actividad_id": "ACT-2024-001",
+  "fecha": "2024-01-15",
+  "tipo_evidencia": "FOTO",
+  "formato": "JPEG",
+  "resolucion": "4000x3000",
+  "creado_por": "usuario_ddp"
+}
+\end{lstlisting}
+        \item \textbf{Seguridad de Archivos:}
+        \begin{enumerate}
+            \item Encriptación AES-256 en reposo
+            \item Control de acceso basado en roles
+            \item Logging de acceso detallado
+            \item Prevención de pérdida de datos (DLP)
+            \item Detección de malware en tiempo real
+        \end{enumerate}
+        \item \textbf{Disponibilidad:} 99.95\% SLA
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-05: Gestión para la Formalización de Convenios de Colaboración}
+
+\begin{tcolorbox}[title=RT-05-001: Sistema de Comunicación Institucional, colback=orange!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RT-05-001
+        \item \textbf{Proceso:} DDP-PO-05
+        \item \textbf{Categoría:} Comunicación
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Descripción:} El intercambio de propuestas y ajustes debe realizarse exclusivamente a través del correo electrónico institucional.
+        \item \textbf{Infraestructura de Correo:}
+        \begin{itemize}
+            \item \textbf{Plataforma:} Microsoft Exchange Online (Plan 2)
+            \item \textbf{Dominio:} @ipn.mx
+            \item \textbf{Capacidad:} 100 GB por buzón
+            \item \textbf{Retención:} Política de 7 años
+        \end{itemize}
+        \item \textbf{Integración con Sistema:}
+\begin{lstlisting}
+public class CorreoInstitucionalService {
+    public async Task EnviarPropuestaConvenio(
+        PropuestaConvenio propuesta, 
+        List<string> destinatarios)
+    {
+        // Envio mediante EWS (Exchange Web Services)
+        // Registro en base de datos
+    }
+}
+\end{lstlisting}
+        \item \textbf{Características Requeridas:}
+        \begin{enumerate}
+            \item Cifrado de extremo a extremo (S/MIME)
+            \item Firma digital de mensajes
+            \item Acuse de recibo electrónico
+            \item Archivado automático según política
+            \item Búsqueda avanzada con eDiscovery
+        \end{enumerate}
+        \item \textbf{Seguridad:}
+        \begin{itemize}
+            \item Microsoft Defender for Office 365
+            \item Anti-phishing y anti-malware
+            \item Protección contra pérdida de datos
+            \item Quarantine para correo sospechoso
+        \end{itemize}
+        \item \textbf{Disponibilidad:} 99.9\% SLA Microsoft
+    \end{itemize}
+\end{tcolorbox}
+
+\section{Requerimientos Técnicos Transversales}
+
+\begin{tcolorbox}[title=RT-T-001: Infraestructura de Seguridad, colback=red!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RT-T-001
+        \item \textbf{Procesos:} Todos
+        \item \textbf{Categoría:} Seguridad
+        \item \textbf{Prioridad:} Crítica
+        \item \textbf{Descripción:} Infraestructura de seguridad integral para todos los procesos DDP.
+        \item \textbf{Componentes de Seguridad:}
+        \begin{center}
+        \begin{tabular}{|l|l|l|}
+            \hline
+            \textbf{Componente} & \textbf{Tecnología} & \textbf{Responsabilidad} \\
+            \hline
+            Firewall & Palo Alto PA-5200 & Red perimetral \\
+            \hline
+            IDS/IPS & Cisco Firepower & Detección de intrusos \\
+            \hline
+            SIEM & Splunk Enterprise & Correlación de logs \\
+            \hline
+            IAM & Microsoft Azure AD & Gestión de identidades \\
+            \hline
+            PAM & CyberArk & Privileged Access Management \\
+            \hline
+            DLP & Symantec & Prevención de fuga de datos \\
+            \hline
+        \end{tabular}
+        \end{center}
+        \item \textbf{Estándares de Cumplimiento:}
+        \begin{itemize}
+            \item ISO 27001:2013
+            \item NIST Cybersecurity Framework
+            \item Ley Federal de Protección de Datos Personales
+            \item Políticas de Seguridad IPN
+        \end{itemize}
+        \item \textbf{Auditoría:} Escaneos de vulnerabilidades mensuales
+        \item \textbf{Respuesta a Incidentes:} Plan documentado y equipo dedicado
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=RT-T-002: Monitoreo y Operaciones, colback=gray!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RT-T-002
+        \item \textbf{Procesos:} Todos
+        \item \textbf{Categoría:} Operaciones
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Descripción:} Sistema de monitoreo unificado para toda la infraestructura.
+        \item \textbf{Stack de Monitoreo:}
+        \begin{itemize}
+            \item \textbf{Métricas:} Prometheus + Grafana
+            \item \textbf{Logs:} ELK Stack (Elasticsearch, Logstash, Kibana)
+            \item \textbf{Trazas:} Jaeger para distributed tracing
+            \item \textbf{Alertas:} PagerDuty + OpsGenie
+        \end{itemize}
+        \item \textbf{Métricas Clave:}
+\begin{lstlisting}
+# Dashboard DDP-PO-01: Control Documental
+- Documentos registrados por hora
+- Tiempo promedio de procesamiento
+- Errores de validacion
+- Usuarios activos concurrentes
+
+# Alertas criticas:
+- Disponibilidad sistema < 99%
+- Tiempo respuesta > 10 segundos
+- Errores consecutivos > 100
+- Storage utilizado > 90%
+\end{lstlisting}
+        \item \textbf{SLA Objetivo:} 99.5\% para todos los sistemas
+        \item \textbf{MTTR:} < 4 horas para incidentes críticos
+    \end{itemize}
+\end{tcolorbox}
+
+\section{Matriz de Compatibilidad Tecnológica}
+\begin{longtable}{|l|l|l|l|}
+    \hline
+    \textbf{Componente} & \textbf{Tecnología} & \textbf{Versión} & \textbf{Procesos} \\
+    \hline
+    Base de Datos & Oracle Database & 19c Enterprise & DDP-PO-01, DDP-PO-03 \\
+    \hline
+    Servidor Web & Apache HTTP Server & 2.4.56 & DDP-PO-02 \\
+    \hline
+    Frontend Framework & React & 18.2.0 & DDP-PO-02 \\
+    \hline
+    Backend Runtime & Node.js & 18.16 LTS & DDP-PO-02, DDP-PO-04 \\
+    \hline
+    Storage & NetApp AFF & A800 & DDP-PO-04 \\
+    \hline
+    Correo & Exchange Online & Plan 2 & DDP-PO-05 \\
+    \hline
+    Monitoreo & Prometheus/Grafana & 2.45/9.5 & Todos \\
+    \hline
+    Contenedores & Docker & 24.0 & Todos \\
+    \hline
+    Orquestación & Kubernetes & 1.27 & Todos \\
+    \hline
+    Logging & Elastic Stack & 8.0 & Todos \\
+    \hline
+\end{longtable}
+
+\section{Cronograma de Implementación}
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|l|l|l|}
+        \hline
+        \textbf{Fase} & \textbf{Procesos} & \textbf{Duración} & \textbf{Entrega} \\
+        \hline
+        Fase 1 & DDP-PO-01, DDP-PO-02 & 3 meses & Q1 2024 \\
+        \hline
+        Fase 2 & DDP-PO-03, DDP-PO-04 & 4 meses & Q2 2024 \\
+        \hline
+        Fase 3 & DDP-PO-05 & 2 meses & Q3 2024 \\
+        \hline
+        Fase 4 & Integración total & 3 meses & Q4 2024 \\
+        \hline
+        Soporte & Todos & Permanente & Post-implementación \\
+        \hline
+    \end{tabular}
+    \caption{Cronograma de implementación técnica}
+\end{table}
+
+\section*{Firmas de Validación Técnica}
+\vspace{1cm}
+
+\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
+    \textbf{Elaborado por:} & \textbf{Revisado por:} & \textbf{Aprobado por:} \\
+    \vspace{2cm} & \vspace{2cm} & \vspace{2cm} \\
+    \hline
+    [Nombre y firma] & [Nombre y firma] & [Nombre y firma] \\
+    Arquitecto de Soluciones & Jefe de Infraestructura & Coordinador de TI DDP \\
+\end{tabular}
+
+\end{document}

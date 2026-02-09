@@ -1,0 +1,373 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+
+\title{\textbf{Documento de Requerimientos Funcionales (RF)} \\
+\large Sistema de Gestión de la Defensoría de los Derechos Politécnicos (DDP)}
+\author{Dirección de Defensoría de los Derechos Politécnicos}
+\date{\today}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Requerimientos Funcionales - DDP}
+\fancyhead[R]{\small Versión 2.0}
+\fancyfoot[C]{\thepage}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+    \textbf{Versión 2.0} \\
+    \vspace{0.5cm}
+    \textbf{Aprobado por:} Titular de la DDP \\
+    \textbf{Fecha de aprobación:} \today
+\end{center}
+
+\vspace{1cm}
+
+\begin{tcolorbox}[title=Información Institucional, colback=blue!5!white]
+    \begin{tabular}{ll}
+        \textbf{Institución:} & Instituto Politécnico Nacional (IPN) \\
+        \textbf{Dependencia:} & Defensoría de los Derechos Politécnicos (DDP) \\
+        \textbf{Responsable:} & Titular de la DDP \\
+        \textbf{Fecha de Creación:} & \today \\
+        \textbf{Estado:} & En desarrollo \\
+        \textbf{Código:} & DDP-SG-2024 \\
+    \end{tabular}
+\end{tcolorbox}
+
+\section*{Introducción}
+Este documento especifica los requerimientos funcionales del Sistema de Gestión de la Defensoría de los Derechos Politécnicos (DDP). Los requerimientos están organizados por procesos institucionales según el manual de procedimientos DDP.
+
+\section{Procesos Institucionales}
+El sistema cubrirá los siguientes procesos documentados en el manual DDP:
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|l|c|}
+        \hline
+        \textbf{Código} & \textbf{Proceso} & \textbf{Páginas} \\
+        \hline
+        DDP-PO-01 & Control y Gestión Administrativa de Documentos & 18-31 \\
+        \hline
+        DDP-PO-02 & Atención a Solicitudes de Orientación y/o Quejas & 32-55 \\
+        \hline
+        DDP-PO-03 & Acciones de Formación en Derechos Humanos y Politécnicos & 56-69 \\
+        \hline
+        DDP-PO-04 & Acciones de Promoción en Derechos Humanos y Politécnicos & 70-80 \\
+        \hline
+        DDP-PO-05 & Gestión para la Formalización de Convenios de Colaboración & 81-94 \\
+        \hline
+    \end{tabular}
+    \caption{Procesos institucionales DDP}
+\end{table}
+
+\section{Requerimientos Funcionales por Proceso}
+
+\subsection{Proceso DDP-PO-01: Control y Gestión Administrativa de Documentos}
+
+\begin{tcolorbox}[title=RF-01-001: Registro de Documentos de Entrada, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RF-01-001
+        \item \textbf{Proceso:} DDP-PO-01
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Versión:} 1.0
+        \item \textbf{Descripción:} El sistema debe permitir el registro de documentos de entrada asignando un número de turno consecutivo proporcionado por Control de Gestión.
+        \item \textbf{Criterios de Aceptación:}
+        \begin{enumerate}
+            \item Generación automática de número de turno consecutivo
+            \item Integración con Control de Gestión para numeración
+            \item Registro de fecha y hora de entrada automática
+            \item Asignación automática de folio interno
+        \end{enumerate}
+        \item \textbf{Datos Requeridos:}
+        \begin{itemize}
+            \item Número de turno
+            \item Fecha de recepción
+            \item Remitente
+            \item Asunto
+            \item Prioridad
+        \end{itemize}
+        \item \textbf{Complejidad:} Media
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=RF-01-002: Búsqueda de Antecedentes, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RF-01-002
+        \item \textbf{Proceso:} DDP-PO-01
+        \item \textbf{Prioridad:} Media
+        \item \textbf{Versión:} 1.0
+        \item \textbf{Descripción:} Debe permitir la búsqueda de antecedentes en la base de datos de orientaciones para determinar el turno a la Subdefensoría correspondiente.
+        \item \textbf{Criterios de Aceptación:}
+        \begin{enumerate}
+            \item Búsqueda por nombre, matrícula o asunto
+            \item Consulta histórica de orientaciones previas
+            \item Sugerencia automática de Subdefensoría
+            \item Visualización de historial completo
+        \end{enumerate}
+        \item \textbf{Dependencias:} RF-01-001
+        \item \textbf{Complejidad:} Alta
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-02: Atención a Solicitudes de Orientación y/o Quejas}
+
+\begin{tcolorbox}[title=RF-02-001: Captura Multicanales de Quejas, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RF-02-001
+        \item \textbf{Proceso:} DDP-PO-02
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Versión:} 1.0
+        \item \textbf{Descripción:} El sistema debe capturar quejas recibidas por diversos canales: personal, correo electrónico (defensoria@ipn.mx) o sitio web.
+        \item \textbf{Criterios de Aceptación:}
+        \begin{enumerate}
+            \item Formulario web para recepción en línea
+            \item Integración con buzón de correo institucional
+            \item Registro manual para atención personal
+            \item Unificación de todos los canales en una base única
+        \end{enumerate}
+        \item \textbf{Canales:}
+        \begin{itemize}
+            \item Presencial
+            \item Correo: defensoria@ipn.mx
+            \item Portal: www.ipn.mx/defensoria/
+            \item Telefónico (registro manual)
+        \end{itemize}
+        \item \textbf{Complejidad:} Alta
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=RF-02-002: Generación Automática de Documentos, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RF-02-002
+        \item \textbf{Proceso:} DDP-PO-02
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Versión:} 1.0
+        \item \textbf{Descripción:} El sistema debe generar automáticamente Acuerdos de Admisión, Notificaciones y asignación de número de expediente tras determinar competencia.
+        \item \textbf{Criterios de Aceptación:}
+        \begin{enumerate}
+            \item Generación de Acuerdo de Admisión en formato oficial
+            \item Creación de notificaciones automáticas
+            \item Asignación secuencial de número de expediente
+            \item Plantillas oficiales con formatos institucionales
+        \end{enumerate}
+        \item \textbf{Documentos a generar:}
+        \begin{itemize}
+            \item Acuerdo de Admisión
+            \item Notificaciones a partes
+            \item Oficios de requerimiento
+            \item Acuses de recibo
+        \end{itemize}
+        \item \textbf{Dependencias:} RF-02-001
+        \item \textbf{Complejidad:} Media
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-03: Acciones de Formación en Derechos Humanos y Politécnicos}
+
+\begin{tcolorbox}[title=RF-03-001: Gestión del Programa Anual, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RF-03-001
+        \item \textbf{Proceso:} DDP-PO-03
+        \item \textbf{Prioridad:} Media
+        \item \textbf{Versión:} 1.0
+        \item \textbf{Descripción:} El sistema debe gestionar la publicación del Programa Anual de Acciones en Materia de Derechos Humanos (PAAMDH) en la web oficial.
+        \item \textbf{Criterios de Aceptación:}
+        \begin{enumerate}
+            \item Creación y edición del PAAMDH
+            \item Publicación automática en portal institucional
+            \item Control de versiones del programa
+            \item Difusión en canales oficiales
+        \end{enumerate}
+        \item \textbf{Elementos del PAAMDH:}
+        \begin{itemize}
+            \item Calendario anual
+            \item Temáticas
+            \item Población objetivo
+            \item Recursos requeridos
+        \end{itemize}
+        \item \textbf{Complejidad:} Media
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=RF-03-002: Registro de Participantes, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RF-03-002
+        \item \textbf{Proceso:} DDP-PO-03
+        \item \textbf{Prioridad:} Media
+        \item \textbf{Versión:} 1.0
+        \item \textbf{Descripción:} Debe permitir el registro y matriculación de participantes, concentrando los datos enviados por las Unidades Académicas (UA).
+        \item \textbf{Criterios de Aceptación:}
+        \begin{enumerate}
+            \item Formulario de registro en línea
+            \item Carga masiva desde archivos de UA
+            \item Generación de listas de asistencia
+            \item Emisión de constancias
+        \end{enumerate}
+        \item \textbf{Datos de participantes:}
+        \begin{itemize}
+            \item Nombre completo
+            \item Matrícula o número de empleado
+            \item Unidad Académica/Administrativa
+            \item Correo institucional
+        \end{itemize}
+        \item \textbf{Dependencias:} RF-03-001
+        \item \textbf{Complejidad:} Baja
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-04: Acciones de Promoción en Derechos Humanos y Politécnicos}
+
+\begin{tcolorbox}[title=RF-04-001: Verificación de Disponibilidad, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RF-04-001
+        \item \textbf{Proceso:} DDP-PO-04
+        \item \textbf{Prioridad:} Media
+        \item \textbf{Versión:} 1.0
+        \item \textbf{Descripción:} El sistema debe permitir la verificación de disponibilidad de fechas y horarios en el calendario anual para las solicitudes de las UA.
+        \item \textbf{Criterios de Aceptación:}
+        \begin{enumerate}
+            \item Consulta interactiva de calendario
+            \item Validación de fechas según calendario escolar
+            \item Bloqueo de fechas no disponibles
+            \item Sugerencia de fechas alternas
+        \end{enumerate}
+        \item \textbf{Fuentes de validación:}
+        \begin{itemize}
+            \item Calendario escolar IPN
+            \item Agenda de actividades DDP
+            \item Periodos vacacionales
+            \item Días inhábiles
+        \end{itemize}
+        \item \textbf{Complejidad:} Media
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=RF-04-002: Gestión de Oficios, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RF-04-002
+        \item \textbf{Proceso:} DDP-PO-04
+        \item \textbf{Prioridad:} Baja
+        \item \textbf{Versión:} 1.0
+        \item \textbf{Descripción:} Debe gestionar el envío y recepción de oficios de solicitud de actividades de promoción vía correo electrónico.
+        \item \textbf{Criterios de Aceptación:}
+        \begin{enumerate}
+            \item Generación de oficios con formato oficial
+            \item Envío automático por correo electrónico
+            \item Seguimiento de acuses de recibo
+            \item Archivo digital de correspondencia
+        \end{enumerate}
+        \item \textbf{Flujo documental:}
+        \begin{itemize}
+            \item Solicitud de UA → DDP
+            \item Respuesta DDP → UA
+            \item Confirmación UA → DDP
+            \item Acuse DDP → UA
+        \end{itemize}
+        \item \textbf{Dependencias:} RF-04-001
+        \item \textbf{Complejidad:} Baja
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Proceso DDP-PO-05: Gestión para la Formalización de Convenios de Colaboración}
+
+\begin{tcolorbox}[title=RF-05-001: Gestión de Propuestas de Convenios, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RF-05-001
+        \item \textbf{Proceso:} DDP-PO-05
+        \item \textbf{Prioridad:} Media
+        \item \textbf{Versión:} 1.0
+        \item \textbf{Descripción:} El sistema debe facilitar el envío de propuestas de convenios a instituciones externas y la recepción de comentarios u observaciones.
+        \item \textbf{Criterios de Aceptación:}
+        \begin{enumerate}
+            \item Formulario para creación de propuestas
+            \item Envío seguro a instituciones externas
+            \item Recepción y registro de observaciones
+            \item Seguimiento de versiones de propuesta
+        \end{enumerate}
+        \item \textbf{Elementos de propuesta:}
+        \begin{itemize}
+            \item Objeto del convenio
+            \item Alcance
+            \item Duración
+            \item Responsabilidades
+        \end{itemize}
+        \item \textbf{Complejidad:} Alta
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=RF-05-002: Flujo de Revisión Institucional, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{ID:} RF-05-002
+        \item \textbf{Proceso:} DDP-PO-05
+        \item \textbf{Prioridad:} Alta
+        \item \textbf{Versión:} 1.0
+        \item \textbf{Descripción:} Debe gestionar el flujo de revisión y "Visto Bueno" con el titular de la Dirección de Relaciones Internacionales.
+        \item \textbf{Criterios de Aceptación:}
+        \begin{enumerate}
+            \item Enrutamiento automático a Relaciones Internacionales
+            \item Notificaciones a revisores
+            \item Registro de "Visto Bueno" digital
+            \item Historial de revisiones
+        \end{enumerate}
+        \item \textbf{Revisores:}
+        \begin{itemize}
+            \item Titular DDP
+            \item Dirección de Relaciones Internacionales
+            \item Área Jurídica
+            \item Titular del IPN
+        \end{itemize}
+        \item \textbf{Dependencias:} RF-05-001
+        \item \textbf{Complejidad:} Media
+    \end{itemize}
+\end{tcolorbox}
+
+\section{Matriz de Trazabilidad de Requerimientos}
+\begin{longtable}{|c|l|l|l|l|}
+    \hline
+    \textbf{ID RF} & \textbf{Proceso} & \textbf{Descripción} & \textbf{Prioridad} & \textbf{Estado} \\
+    \hline
+    RF-01-001 & DDP-PO-01 & Registro de documentos de entrada & Alta & Pendiente \\
+    \hline
+    RF-01-002 & DDP-PO-01 & Búsqueda de antecedentes & Media & Pendiente \\
+    \hline
+    RF-02-001 & DDP-PO-02 & Captura multicanales de quejas & Alta & Pendiente \\
+    \hline
+    RF-02-002 & DDP-PO-02 & Generación automática de documentos & Alta & Pendiente \\
+    \hline
+    RF-03-001 & DDP-PO-03 & Gestión del Programa Anual (PAAMDH) & Media & Pendiente \\
+    \hline
+    RF-03-002 & DDP-PO-03 & Registro de participantes & Media & Pendiente \\
+    \hline
+    RF-04-001 & DDP-PO-04 & Verificación de disponibilidad & Media & Pendiente \\
+    \hline
+    RF-04-002 & DDP-PO-04 & Gestión de oficios & Baja & Pendiente \\
+    \hline
+    RF-05-001 & DDP-PO-05 & Gestión de propuestas de convenios & Media & Pendiente \\
+    \hline
+    RF-05-002 & DDP-PO-05 & Flujo de revisión institucional & Alta & Pendiente \\
+    \hline
+\end{longtable}
+
+\section*{Firmas de Validación}
+\vspace{1cm}
+
+\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
+    \textbf{Elaborado por:} & \textbf{Revisado por:} & \textbf{Aprobado por:} \\
+    \vspace{2cm} & \vspace{2cm} & \vspace{2cm} \\
+    \hline
+    [Nombre y firma] & [Nombre y firma] & [Nombre y firma] \\
+    Analista de Sistemas DDP & Subdefensor Jurídico & Titular de la DDP \\
+\end{tabular}
+
+\end{document}
