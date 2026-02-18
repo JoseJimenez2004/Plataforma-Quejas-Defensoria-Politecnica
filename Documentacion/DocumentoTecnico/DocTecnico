@@ -1,0 +1,100 @@
+% --- 1. CONFIGURACIÓN DEL DOCUMENTO ---
+\documentclass[12pt, a4paper]{article}
+
+% --- 2. PREÁMBULO (Librerías/Paquetes) ---
+\usepackage[utf8]{inputenc}    % Para acentos y la ñ
+\usepackage[spanish]{babel}    % Idioma español y cortes de palabra
+\usepackage{graphicx}         % Inserción de imágenes
+\usepackage{geometry}         % Gestión de márgenes
+\usepackage{booktabs}         % Para tablas de aspecto profesional
+\usepackage{hyperref}         % Para enlaces y referencias clicables
+
+% Margenes: Izq 3cm, Der 2cm, Sup 2cm, Inf 2cm
+\geometry{
+    left=3cm, 
+    right=2cm, 
+    top=2cm, 
+    bottom=2cm
+}
+
+% --- 3. DATOS DE LA PORTADA ---
+\title{Sistema de Recepción de Quejas para la Defensoría de los Derechos Politécnicos}
+\author{Edgar Jair Flores Espinosa, José Bryan Omar Jiménez Velázquez, \\ Leilani Shareni Santos Rivera}
+\date{2026}
+
+% --- 4. CUERPO DEL DOCUMENTO ---
+\begin{document}
+
+% Portada simplificada
+\begin{titlepage}
+        \centering
+        % Logotipos (necesitas los archivos logo_ipn y logo_escom en tu carpeta)
+        \begin{minipage}{0.15\textwidth}
+            \includegraphics[width=\textwidth]{logo_ipn}
+        \end{minipage}
+        \hfill
+        \begin{minipage}{0.65\textwidth}
+            \centering
+            {\bfseries\fontsize{20}{24}\selectfont INSTITUTO POLITÉCNICO NACIONAL \par}
+            {\bfseries\fontsize{20}{24}\selectfont ESCUELA SUPERIOR DE CÓMPUTO \par}
+        \end{minipage}
+        \hfill
+        \begin{minipage}{0.15\textwidth}
+            \includegraphics[width=\textwidth]{logo_escom}
+        \end{minipage}
+        
+        \vspace{1.5cm}
+        {\bfseries\fontsize{36}{42}\selectfont ESCOM \par}
+        \vspace{1.5cm}
+        {\itshape\fontsize{24}{28}\selectfont Trabajo Terminal \par}
+        \vspace{1cm}
+        {\bfseries\fontsize{24}{28}\selectfont "Sistema de Recepción de Quejas para la Defensoría de los Derechos Politécnicos" \par}
+        \vspace{0.5cm}
+        {\fontsize{14}{16}\selectfont 2026-B009 \par}
+        
+        \vfill
+        {\itshape\fontsize{16}{19}\selectfont Presentan: \par}
+        {\bfseries\fontsize{16}{19}\selectfont 
+        Flores Espinosa Edgar Jair \\
+        Jiménez Velázquez José Bryan Omar \\
+        Santos Rivera Leilani Shareni \par} % Ordenados por apellido [cite: 148]
+        
+        \vspace{1cm}
+        {\itshape\fontsize{16}{19}\selectfont Directores: \par}
+        {\bfseries\fontsize{16}{19}\selectfont 
+        M. en C. Jessie Paulina Guzmán Flores \\
+        M. en C. Ulises Vélez Saldaña \par}
+        
+        \vfill
+        {\fontsize{12}{14}\selectfont (Fecha de presentación) \par}
+\end{titlepage}
+
+\newpage
+\section*{Resumen}
+Actualmente, la Defensoría de los Derechos Politécnicos (DDP) presenta áreas de oportunidad en su flujo operativo debido al uso de procesos manuales y recepción de quejas en canales descentralizados...
+
+\newpage
+\tableofcontents % Genera el índice automáticamente basado en las \section
+\newpage
+
+\section{Introducción}
+En el Instituto Politécnico Nacional (IPN), que es una institución reconocida por la educación tecnológica en México...
+
+\subsection{Planteamiento del Problema}
+La DDP es el órgano pilar encargado de salvaguardar la legalidad y el respeto a los derechos politécnicos...
+
+\subsection{Solución Propuesta}
+Se propone el desarrollo de una plataforma web integral basada en una arquitectura de microservicios...
+
+\section{Objetivos}
+\subsection{Objetivo General}
+Desarrollar una plataforma web basada en una arquitectura de microservicios mediante la integración de módulos de gestión documental...
+
+\subsection{Objetivos Específicos}
+\begin{itemize}
+    \item Modelar las etapas de proceso y resolución de quejas con base en las reglas de negocio.
+    \item Diseñar una arquitectura de microservicios empleando Java Spring Boot.
+    \item Implementar un clasificador de texto neuro-simbólico utilizando Word Embeddings.
+\end{itemize}
+
+\end{document}
