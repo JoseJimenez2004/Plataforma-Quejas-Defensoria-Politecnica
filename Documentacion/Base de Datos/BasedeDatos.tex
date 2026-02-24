@@ -1,0 +1,1082 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{pdflscape}
+\usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{colortbl}
+
+% Configuración de tcolorbox
+\tcbuselibrary{skins, breakable}
+
+% Corrección de headheight para fancyhdr
+\setlength{\headheight}{14pt}
+\setlength{\headsep}{10pt}
+
+% Comando para guiones bajos en texto normal
+\newcommand{\ud}{\textunderscore}
+
+\title{\textbf{Modelo de Base de Datos - 3ra Forma Normal (3FN)} \\
+\large Sistema de Gestión de la Defensoría de los Derechos Politécnicos (DDP)}
+\author{Dirección de Defensoría de los Derechos Politécnicos}
+\date{\today}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Modelo de Datos - DDP}
+\fancyhead[R]{\small Versión 1.0 - 3FN}
+\fancyfoot[C]{\thepage}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+    \textbf{Versión 1.0} \\
+    \vspace{0.5cm}
+    \textbf{Aprobado por:} Titular de la DDP \\
+    \textbf{Fecha de aprobación:} \today
+\end{center}
+
+\vspace{1cm}
+
+\begin{tcolorbox}[title=Información del Documento, colback=blue!5!white]
+    \begin{tabular}{ll}
+        \textbf{Institución:} & Instituto Politécnico Nacional (IPN) \\
+        \textbf{Dependencia:} & Defensoría de los Derechos Politécnicos (DDP) \\
+        \textbf{Responsable:} & Titular de la DDP \\
+        \textbf{Fecha de Creación:} & \today \\
+        \textbf{Normalización:} & Tercera Forma Normal (3FN) \\
+        \textbf{Motor BD:} & PostgreSQL 14+ \\
+        \textbf{Código:} & DDP-BD-2024 \\
+    \end{tabular}
+\end{tcolorbox}
+
+\section*{Introducción}
+Este documento presenta el modelo de base de datos del Sistema de Gestión de la DDP, diseñado en \textbf{Tercera Forma Normal (3FN)}. 
+El modelo garantiza:
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{1FN:} Atributos atómicos, sin grupos repetitivos, clave primaria definida.
+    \item \textbf{2FN:} Cumple 1FN y todos los atributos no clave dependen completamente de la clave primaria.
+    \item \textbf{3FN:} Cumple 2FN y no existen dependencias transitivas.
+\end{itemize}
+
+\newpage
+
+\tableofcontents
+\newpage
+
+%=============================================================================
+% DIAGRAMA ENTIDAD-RELACIÓN (TEXTO)
+%=============================================================================
+\section{Diagrama Entidad-Relación Conceptual}
+\label{sec:der}
+
+\begin{tcolorbox}[title=Convenciones de Nomenclatura, colback=gray!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{Prefijos:} 
+            \begin{itemize}
+                \item \texttt{cat\ud} - Catálogos
+                \item \texttt{exp\ud} - Expedientes y quejas
+                \item \texttt{per\ud} - Personas y usuarios
+                \item \texttt{seg\ud} - Seguimiento y actuaciones
+                \item \texttt{doc\ud} - Documentos y archivos
+                \item \texttt{aud\ud} - Auditoría y bitácoras
+                \item \texttt{not\ud} - Notificaciones
+                \item \texttt{res\ud} - Resoluciones
+            \end{itemize}
+        \item \textbf{Tipo de clave:}
+            \begin{itemize}
+                \item \texttt{id} - Clave primaria (SERIAL/BIGSERIAL)
+                \item \texttt{[entidad]\ud id} - Clave foránea
+                \item \texttt{uuid} - Identificador público
+            \end{itemize}
+        \item \textbf{Timestamp:}
+            \begin{itemize}
+                \item \texttt{created\ud at} - Fecha de creación
+                \item \texttt{updated\ud at} - Fecha de actualización
+                \item \texttt{deleted\ud at} - Soft delete
+            \end{itemize}
+    \end{itemize}
+\end{tcolorbox}
+
+%=============================================================================
+% MÓDULO 1: PERSONAS Y USUARIOS
+%=============================================================================
+\section{Módulo de Personas y Usuarios}
+\label{sec:personas}
+
+\subsection{cat\_tipo\_persona}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & SERIAL & PRIMARY KEY & Identificador único \\
+    \hline
+    nombre & VARCHAR(50) & NOT NULL, UNIQUE & Quejoso, Abogado, Titular, etc. \\
+    \hline
+    descripcion & VARCHAR(255) & & Descripción del rol \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & Fecha de creación \\
+    \hline
+\end{longtable}
+
+\subsection{per\_persona}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & Identificador único \\
+    \hline
+    uuid & UUID & DEFAULT gen\_random\_uuid(), UNIQUE & Identificador público \\
+    \hline
+    tipo\_persona\_id & INTEGER & FOREIGN KEY (cat\_tipo\_persona.id) & Tipo de persona \\
+    \hline
+    nombre & VARCHAR(100) & NOT NULL & Nombre(s) \\
+    \hline
+    apellido\_paterno & VARCHAR(100) & NOT NULL & Apellido paterno \\
+    \hline
+    apellido\_materno & VARCHAR(100) & & Apellido materno \\
+    \hline
+    correo & VARCHAR(150) & NOT NULL, UNIQUE & Correo institucional \\
+    \hline
+    telefono & VARCHAR(20) & & Teléfono de contacto \\
+    \hline
+    curp & VARCHAR(18) & & CURP \\
+    \hline
+    rfc & VARCHAR(13) & & RFC \\
+    \hline
+    boleta & VARCHAR(20) & & Número de boleta \\
+    \hline
+    numero\_empleado & VARCHAR(20) & & Número de empleado \\
+    \hline
+    unidad\_academica\_id & INTEGER & FOREIGN KEY (cat\_unidad\_academica.id) & Unidad de adscripción \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & Fecha de creación \\
+    \hline
+    updated\_at & TIMESTAMP & & Fecha de actualización \\
+    \hline
+    deleted\_at & TIMESTAMP & & Soft delete \\
+    \hline
+\end{longtable}
+
+\subsection{per\_usuario}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & Identificador único \\
+    \hline
+    persona\_id & BIGINT & FOREIGN KEY (per\_persona.id), UNIQUE & Persona asociada \\
+    \hline
+    password\_hash & VARCHAR(255) & NOT NULL & Hash de contraseña \\
+    \hline
+    verificado & BOOLEAN & DEFAULT FALSE & Correo verificado \\
+    \hline
+    token\_verificacion & VARCHAR(255) & & Token para verificación \\
+    \hline
+    token\_expiracion & TIMESTAMP & & Expiración del token \\
+    \hline
+    ultimo\_acceso & TIMESTAMP & & Último inicio de sesión \\
+    \hline
+    intentos\_fallidos & INTEGER & DEFAULT 0 & Intentos fallidos \\
+    \hline
+    bloqueado\_hasta & TIMESTAMP & & Bloqueo temporal \\
+    \hline
+    two\_factor\_enabled & BOOLEAN & DEFAULT FALSE & 2FA habilitado \\
+    \hline
+    two\_factor\_secret & VARCHAR(100) & & Secreto para 2FA \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & Fecha de creación \\
+    \hline
+    updated\_at & TIMESTAMP & & Fecha de actualización \\
+    \hline
+    deleted\_at & TIMESTAMP & & Soft delete \\
+    \hline
+\end{longtable}
+
+\subsection{cat\_rol}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & SERIAL & PRIMARY KEY & Identificador único \\
+    \hline
+    nombre & VARCHAR(50) & NOT NULL, UNIQUE & ROLE\_QUEJOSO, ROLE\_TITULAR, etc. \\
+    \hline
+    descripcion & VARCHAR(255) & & Descripción del rol \\
+    \hline
+    nivel & INTEGER & NOT NULL & Jerarquía (1-10) \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & Fecha de creación \\
+    \hline
+\end{longtable}
+
+\subsection{per\_usuario\_rol}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    usuario\_id & BIGINT & FOREIGN KEY (per\_usuario.id) & Usuario \\
+    \hline
+    rol\_id & INTEGER & FOREIGN KEY (cat\_rol.id) & Rol asignado \\
+    \hline
+    asignado\_por & BIGINT & FOREIGN KEY (per\_usuario.id) & Usuario que asignó \\
+    \hline
+    asignado\_en & TIMESTAMP & DEFAULT NOW() & Fecha de asignación \\
+    \hline
+    \multicolumn{4}{|p{14cm}|}{\cellcolor[gray]{0.95} \textbf{PRIMARY KEY:} (usuario\_id, rol\_id)} \\
+    \hline
+\end{longtable}
+
+\subsection{cat\_unidad\_academica}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & SERIAL & PRIMARY KEY & Identificador único \\
+    \hline
+    clave & VARCHAR(20) & NOT NULL, UNIQUE & Clave oficial \\
+    \hline
+    nombre & VARCHAR(150) & NOT NULL & Nombre completo \\
+    \hline
+    tipo & VARCHAR(30) & NOT NULL & Escuela, Centro, Unidad \\
+    \hline
+    nivel & VARCHAR(30) & & Superior, Posgrado \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & Fecha de creación \\
+    \hline
+\end{longtable}
+
+%=============================================================================
+% MÓDULO 2: EXPEDIENTES Y QUEJAS
+%=============================================================================
+\section{Módulo de Expedientes y Quejas}
+\label{sec:expedientes}
+
+\subsection{exp\_queja}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & Identificador único \\
+    \hline
+    uuid & UUID & DEFAULT gen\_random\_uuid(), UNIQUE & Identificador público \\
+    \hline
+    folio\_turno & VARCHAR(20) & NOT NULL, UNIQUE & DDP-\{AÑO\}-\{CONSECUTIVO\} \\
+    \hline
+    numero\_expediente & VARCHAR(20) & UNIQUE & EXP-\{AÑO\}-\{CONSECUTIVO\} \\
+    \hline
+    quejoso\_id & BIGINT & NOT NULL, FOREIGN KEY (per\_persona.id) & Persona que presenta queja \\
+    \hline
+    autoridad\_id & BIGINT & FOREIGN KEY (per\_persona.id) & Autoridad señalada \\
+    \hline
+    subdefensoria\_id & INTEGER & FOREIGN KEY (cat\_subdefensoria.id) & Subdefensoría asignada \\
+    \hline
+    abogado\_responsable\_id & BIGINT & FOREIGN KEY (per\_usuario.id) & Abogado asignado \\
+    \hline
+    titular\_responsable\_id & BIGINT & FOREIGN KEY (per\_usuario.id) & Titular responsable \\
+    \hline
+    fecha\_recepcion & TIMESTAMP & NOT NULL & Fecha de recepción \\
+    \hline
+    fecha\_turno & TIMESTAMP & & Fecha de asignación de turno \\
+    \hline
+    fecha\_admission & TIMESTAMP & & Fecha de acuerdo de admisión \\
+    \hline
+    titulo & VARCHAR(255) & NOT NULL & Título de la queja \\
+    \hline
+    narrativa & TEXT & NOT NULL & Descripción detallada \\
+    \hline
+    canal\_recepcion\_id & INTEGER & FOREIGN KEY (cat\_canal.id) & Canal de recepción \\
+    \hline
+    estado\_id & INTEGER & NOT NULL, FOREIGN KEY (cat\_estado\_queja.id) & Estado actual \\
+    \hline
+    competencia\_determinada & BOOLEAN & & ¿Es competencia DDP? \\
+    \hline
+    fundamento\_competencia & TEXT & & Fundamento legal \\
+    \hline
+    instancia\_canalizacion & VARCHAR(255) & & A dónde se canaliza \\
+    \hline
+    requiere\_medidas & BOOLEAN & DEFAULT FALSE & ¿Requiere medidas cautelares? \\
+    \hline
+    fecha\_conclusion & TIMESTAMP & & Fecha de cierre \\
+    \hline
+    tipo\_conclusion\_id & INTEGER & FOREIGN KEY (cat\_tipo\_conclusion.id) & Tipo de conclusión \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & Fecha de creación \\
+    \hline
+    updated\_at & TIMESTAMP & & Fecha de actualización \\
+    \hline
+    deleted\_at & TIMESTAMP & & Soft delete \\
+    \hline
+\end{longtable}
+
+\subsection{cat\_estado\_queja}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & SERIAL & PRIMARY KEY & Identificador único \\
+    \hline
+    nombre & VARCHAR(50) & NOT NULL, UNIQUE & Borrador, Verificado, etc. \\
+    \hline
+    etapa & VARCHAR(30) & NOT NULL & Recepción, Validación, etc. \\
+    \hline
+    orden & INTEGER & NOT NULL & Orden secuencial \\
+    \hline
+    requiere\_acuerdo & BOOLEAN & DEFAULT FALSE & ¿Requiere documento? \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+\end{longtable}
+
+\subsection{cat\_subdefensoria}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & SERIAL & PRIMARY KEY & \\
+    \hline
+    nombre & VARCHAR(100) & NOT NULL, UNIQUE & Subdefensoría Académica, etc. \\
+    \hline
+    descripcion & TEXT & & Ámbito de competencia \\
+    \hline
+    titular\_id & BIGINT & FOREIGN KEY (per\_usuario.id) & Subdefensor titular \\
+    \hline
+    activa & BOOLEAN & DEFAULT TRUE & ¿Está activa? \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+\end{longtable}
+
+\subsection{cat\_canal}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & SERIAL & PRIMARY KEY & \\
+    \hline
+    nombre & VARCHAR(30) & NOT NULL, UNIQUE & Presencial, Web, Correo \\
+    \hline
+    descripcion & VARCHAR(255) & & \\
+    \hline
+\end{longtable}
+
+\subsection{cat\_tipo\_conclusion}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & SERIAL & PRIMARY KEY & \\
+    \hline
+    nombre & VARCHAR(50) & NOT NULL, UNIQUE & Recomendación, Conciliación \\
+    \hline
+    requiere\_cumplimiento & BOOLEAN & DEFAULT TRUE & ¿Requiere seguimiento? \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+\end{longtable}
+
+%=============================================================================
+% MÓDULO 3: ANTECEDENTES Y BÚSQUEDA
+%=============================================================================
+\section{Módulo de Antecedentes}
+\label{sec:antecedentes}
+
+\subsection{exp\_antecedente}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    queja\_id & BIGINT & NOT NULL, FOREIGN KEY (exp\_queja.id) & Queja actual \\
+    \hline
+    queja\_antecedente\_id & BIGINT & NOT NULL, FOREIGN KEY (exp\_queja.id) & Queja previa \\
+    \hline
+    tipo\_deteccion & VARCHAR(20) & NOT NULL & FILTRO, IA, MANUAL \\
+    \hline
+    similitud\_porcentaje & DECIMAL(5,2) & & Porcentaje de similitud \\
+    \hline
+    validado\_por & BIGINT & FOREIGN KEY (per\_usuario.id) & Secretario que validó \\
+    \hline
+    validado\_en & TIMESTAMP & & Fecha de validación \\
+    \hline
+    observaciones & TEXT & & Observaciones \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+\end{longtable}
+
+\subsection{exp\_vector\_semantico}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    queja\_id & BIGINT & NOT NULL, UNIQUE, FOREIGN KEY (exp\_queja.id) & Queja asociada \\
+    \hline
+    embedding & VARCHAR(1000) & NOT NULL & Vector de embeddings \\
+    \hline
+    modelo & VARCHAR(50) & NOT NULL & all-MiniLM-L6-v2 \\
+    \hline
+    version & VARCHAR(20) & NOT NULL & Versión del modelo \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+    updated\_at & TIMESTAMP & & \\
+    \hline
+\end{longtable}
+
+%=============================================================================
+% MÓDULO 4: DOCUMENTOS Y ARCHIVOS
+%=============================================================================
+\section{Módulo de Documentos}
+\label{sec:documentos}
+
+\subsection{cat\_tipo\_documento}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & SERIAL & PRIMARY KEY & \\
+    \hline
+    nombre & VARCHAR(50) & NOT NULL, UNIQUE & Acuerdo Admisión, etc. \\
+    \hline
+    plantilla & TEXT & & Plantilla base \\
+    \hline
+    requiere\_firma & BOOLEAN & DEFAULT FALSE & \\
+    \hline
+    rol\_firma\_id & INTEGER & FOREIGN KEY (cat\_rol.id) & Rol que debe firmar \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+\end{longtable}
+
+\subsection{doc\_documento}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    uuid & UUID & DEFAULT gen\_random\_uuid(), UNIQUE & \\
+    \hline
+    queja\_id & BIGINT & NOT NULL, FOREIGN KEY (exp\_queja.id) & Expediente asociado \\
+    \hline
+    tipo\_documento\_id & INTEGER & NOT NULL, FOREIGN KEY (cat\_tipo\_documento.id) & Tipo de documento \\
+    \hline
+    version & INTEGER & NOT NULL DEFAULT 1 & Versión del documento \\
+    \hline
+    titulo & VARCHAR(255) & NOT NULL & Título descriptivo \\
+    \hline
+    nombre\_archivo & VARCHAR(255) & NOT NULL & Nombre original \\
+    \hline
+    ruta\_almacenamiento & VARCHAR(512) & NOT NULL & Ruta en MinIO \\
+    \hline
+    tamanio\_bytes & BIGINT & NOT NULL & Tamaño en bytes \\
+    \hline
+    mime\_type & VARCHAR(100) & NOT NULL & application/pdf, etc. \\
+    \hline
+    hash\_sha256 & VARCHAR(64) & NOT NULL & Integridad criptográfica \\
+    \hline
+    clasificacion & VARCHAR(20) & NOT NULL DEFAULT 'PUBLICO' & PUBLICO, RESERVADO \\
+    \hline
+    subido\_por & BIGINT & NOT NULL, FOREIGN KEY (per\_usuario.id) & Usuario que subió \\
+    \hline
+    firmado & BOOLEAN & DEFAULT FALSE & ¿Está firmado? \\
+    \hline
+    fecha\_firma & TIMESTAMP & & Fecha de firma \\
+    \hline
+    firmado\_por & BIGINT & FOREIGN KEY (per\_usuario.id) & Usuario que firmó \\
+    \hline
+    sello\_tiempo & VARCHAR(255) & & Timestamp SAT \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+\end{longtable}
+
+\subsection{doc\_documento\_version}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    documento\_id & BIGINT & NOT NULL, FOREIGN KEY (doc\_documento.id) & Documento padre \\
+    \hline
+    version & INTEGER & NOT NULL & Número de versión \\
+    \hline
+    nombre\_archivo & VARCHAR(255) & NOT NULL & \\
+    \hline
+    ruta\_almacenamiento & VARCHAR(512) & NOT NULL & \\
+    \hline
+    tamanio\_bytes & BIGINT & NOT NULL & \\
+    \hline
+    hash\_sha256 & VARCHAR(64) & NOT NULL & \\
+    \hline
+    subido\_por & BIGINT & NOT NULL, FOREIGN KEY (per\_usuario.id) & \\
+    \hline
+    comentario & TEXT & & Motivo de nueva versión \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+    \multicolumn{4}{|p{14cm}|}{\cellcolor[gray]{0.95} \textbf{UNIQUE:} (documento\_id, version)} \\
+    \hline
+\end{longtable}
+
+\subsection{doc\_descarga}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    documento\_id & BIGINT & NOT NULL, FOREIGN KEY (doc\_documento.id) & \\
+    \hline
+    usuario\_id & BIGINT & NOT NULL, FOREIGN KEY (per\_usuario.id) & \\
+    \hline
+    ip\_address & VARCHAR(45) & NOT NULL & Dirección IP \\
+    \hline
+    user\_agent & TEXT & & Navegador/cliente \\
+    \hline
+    fecha\_descarga & TIMESTAMP & DEFAULT NOW() & Acuse de recibido \\
+    \hline
+\end{longtable}
+
+%=============================================================================
+% MÓDULO 5: ACTUACIONES Y PROCESOS
+%=============================================================================
+\section{Módulo de Actuaciones y Procesos}
+\label{sec:actuaciones}
+
+\subsection{cat\_tipo\_actuacion}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & SERIAL & PRIMARY KEY & \\
+    \hline
+    nombre & VARCHAR(50) & NOT NULL, UNIQUE & Contacto Inicial, Entrevista \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+\end{longtable}
+
+\subsection{seg\_actuacion}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    uuid & UUID & DEFAULT gen\_random\_uuid(), UNIQUE & \\
+    \hline
+    queja\_id & BIGINT & NOT NULL, FOREIGN KEY (exp\_queja.id) & \\
+    \hline
+    usuario\_id & BIGINT & NOT NULL, FOREIGN KEY (per\_usuario.id) & Abogado responsable \\
+    \hline
+    tipo\_actuacion\_id & INTEGER & NOT NULL, FOREIGN KEY (cat\_tipo\_actuacion.id) & Llamada, Entrevista \\
+    \hline
+    fecha\_actuacion & TIMESTAMP & NOT NULL & Fecha del evento \\
+    \hline
+    medio & VARCHAR(30) & & Telefónico, Presencial \\
+    \hline
+    resumen & TEXT & NOT NULL & Descripción de la actuación \\
+    \hline
+    documento\_id & BIGINT & FOREIGN KEY (doc\_documento.id) & Documento relacionado \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+    updated\_at & TIMESTAMP & & \\
+    \hline
+\end{longtable}
+
+\subsection{seg\_oficio}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    queja\_id & BIGINT & NOT NULL, FOREIGN KEY (exp\_queja.id) & \\
+    \hline
+    documento\_id & BIGINT & NOT NULL, FOREIGN KEY (doc\_documento.id) & Oficio generado \\
+    \hline
+    autoridad\_destinatario\_id & BIGINT & NOT NULL, FOREIGN KEY (per\_persona.id) & Autoridad destinataria \\
+    \hline
+    fecha\_envio & TIMESTAMP & & Fecha de envío \\
+    \hline
+    fecha\_vencimiento & TIMESTAMP & & Fecha límite de respuesta \\
+    \hline
+    estado & VARCHAR(20) & DEFAULT 'PENDIENTE' & PENDIENTE, ENTREGADO, RESPONDIDO, VENCIDO \\
+    \hline
+    es\_recordatorio & BOOLEAN & DEFAULT FALSE & ¿Es oficio de recordatorio? \\
+    \hline
+    recordatorio\_origen\_id & BIGINT & FOREIGN KEY (seg\_oficio.id) & Oficio original \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+    updated\_at & TIMESTAMP & & \\
+    \hline
+\end{longtable}
+
+\subsection{seg\_informe\_autoridad}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    oficio\_id & BIGINT & NOT NULL, FOREIGN KEY (seg\_oficio.id) & Oficio de requerimiento \\
+    \hline
+    documento\_id & BIGINT & NOT NULL, FOREIGN KEY (doc\_documento.id) & Informe recibido \\
+    \hline
+    fecha\_recepcion & TIMESTAMP & NOT NULL & \\
+    \hline
+    fecha\_vencimiento & TIMESTAMP & NOT NULL & 10 días hábiles \\
+    \hline
+    editable\_hasta & TIMESTAMP & & Fecha límite de edición \\
+    \hline
+    notificado\_quejoso & BOOLEAN & DEFAULT FALSE & ¿Se notificó al quejoso? \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+    updated\_at & TIMESTAMP & & \\
+    \hline
+\end{longtable}
+
+\subsection{seg\_prorroga}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    informe\_id & BIGINT & NOT NULL, FOREIGN KEY (seg\_informe\_autoridad.id) & \\
+    \hline
+    autorizado\_por & BIGINT & NOT NULL, FOREIGN KEY (per\_usuario.id) & Abogado que autoriza \\
+    \hline
+    nueva\_fecha\_vencimiento & TIMESTAMP & NOT NULL & Nueva fecha límite \\
+    \hline
+    justificacion & TEXT & NOT NULL & Motivo de la prórroga \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+\end{longtable}
+
+%=============================================================================
+% MÓDULO 6: RESOLUCIONES Y FIRMAS
+%=============================================================================
+\section{Módulo de Resoluciones y Firmas}
+\label{sec:resoluciones}
+
+\subsection{res\_proyecto}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    queja\_id & BIGINT & NOT NULL, FOREIGN KEY (exp\_queja.id) & \\
+    \hline
+    documento\_id & BIGINT & NOT NULL, FOREIGN KEY (doc\_documento.id) & Documento proyecto \\
+    \hline
+    version & INTEGER & NOT NULL & Versión del proyecto \\
+    \hline
+    estado & VARCHAR(20) & DEFAULT 'BORRADOR' & BORRADOR, EN\_REVISION, APROBADO, RECHAZADO \\
+    \hline
+    enviado\_por & BIGINT & NOT NULL, FOREIGN KEY (per\_usuario.id) & Subdefensor que envía \\
+    \hline
+    revisado\_por & BIGINT & FOREIGN KEY (per\_usuario.id) & Resoluciones/Titular \\
+    \hline
+    fecha\_envio & TIMESTAMP & & \\
+    \hline
+    fecha\_revision & TIMESTAMP & & \\
+    \hline
+    observaciones & TEXT & & Comentarios del revisor \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+    updated\_at & TIMESTAMP & & \\
+    \hline
+\end{longtable}
+
+\subsection{res\_determinacion\_violacion}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    queja\_id & BIGINT & NOT NULL, UNIQUE, FOREIGN KEY (exp\_queja.id) & \\
+    \hline
+    existe\_violacion & BOOLEAN & NOT NULL & Sí/No \\
+    \hline
+    fundamento & TEXT & NOT NULL & Fundamento legal \\
+    \hline
+    determinado\_por & BIGINT & NOT NULL, FOREIGN KEY (per\_usuario.id) & Titular \\
+    \hline
+    fecha\_determinacion & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+    updated\_at & TIMESTAMP & & \\
+    \hline
+\end{longtable}
+
+\subsection{res\_firma}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    documento\_id & BIGINT & NOT NULL, FOREIGN KEY (doc\_documento.id) & Documento firmado \\
+    \hline
+    usuario\_id & BIGINT & NOT NULL, FOREIGN KEY (per\_usuario.id) & Titular \\
+    \hline
+    tipo\_firma & VARCHAR(30) & NOT NULL & FIEL, AVANZADA, SELLO \\
+    \hline
+    certificado\_serial & VARCHAR(100) & & Serie del certificado \\
+    \hline
+    firma\_hash & VARCHAR(500) & & Hash de la firma \\
+    \hline
+    sello\_tiempo & VARCHAR(255) & & RFC 3161 timestamp \\
+    \hline
+    fecha\_firma & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+    ip\_address & VARCHAR(45) & & IP desde donde firmó \\
+    \hline
+    \multicolumn{4}{|p{14cm}|}{\cellcolor[gray]{0.95} \textbf{UNIQUE:} (documento\_id, usuario\_id)} \\
+    \hline
+\end{longtable}
+
+%=============================================================================
+% MÓDULO 7: SEGUIMIENTO Y CUMPLIMIENTO
+%=============================================================================
+\section{Módulo de Seguimiento y Cumplimiento}
+\label{sec:seguimiento}
+
+\subsection{seg\_recomendacion}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    queja\_id & BIGINT & NOT NULL, UNIQUE, FOREIGN KEY (exp\_queja.id) & \\
+    \hline
+    documento\_id & BIGINT & NOT NULL, FOREIGN KEY (doc\_documento.id) & Documento de recomendación \\
+    \hline
+    fecha\_notificacion & TIMESTAMP & & Fecha de envío a autoridad \\
+    \hline
+    fecha\_limite\_aceptacion & TIMESTAMP & & 10 días hábiles \\
+    \hline
+    estado\_aceptacion & VARCHAR(20) & DEFAULT 'PENDIENTE' & PENDIENTE, ACEPTADA, RECHAZADA, VENCIDA \\
+    \hline
+    fecha\_respuesta\_aceptacion & TIMESTAMP & & Fecha de respuesta \\
+    \hline
+    documento\_respuesta\_id & BIGINT & FOREIGN KEY (doc\_documento.id) & Oficio de respuesta \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+    updated\_at & TIMESTAMP & & \\
+    \hline
+\end{longtable}
+
+\subsection{seg\_cumplimiento}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    recomendacion\_id & BIGINT & NOT NULL, FOREIGN KEY (seg\_recomendacion.id) & \\
+    \hline
+    fecha\_limite\_cumplimiento & TIMESTAMP & NOT NULL & 15 días hábiles \\
+    \hline
+    estado & VARCHAR(20) & DEFAULT 'PENDIENTE' & PENDIENTE, CUMPLE, CUMPLE\_PARCIAL, NO\_CUMPLE, VENCIDO \\
+    \hline
+    validacion\_final & BOOLEAN & DEFAULT FALSE & Cumplimiento total validado \\
+    \hline
+    validado\_por & BIGINT & FOREIGN KEY (per\_usuario.id) & Abogado de seguimiento \\
+    \hline
+    fecha\_validacion & TIMESTAMP & & \\
+    \hline
+    observaciones & TEXT & & \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+    updated\_at & TIMESTAMP & & \\
+    \hline
+\end{longtable}
+
+\subsection{seg\_informe\_cumplimiento}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    cumplimiento\_id & BIGINT & NOT NULL, FOREIGN KEY (seg\_cumplimiento.id) & \\
+    \hline
+    documento\_id & BIGINT & NOT NULL, FOREIGN KEY (doc\_documento.id) & Informe de autoridad \\
+    \hline
+    fecha\_recepcion & TIMESTAMP & NOT NULL & \\
+    \hline
+    puntos\_atendidos & TEXT & & Descripción \\
+    \hline
+    evidencia\_id & BIGINT & FOREIGN KEY (doc\_documento.id) & Documento probatorio \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+\end{longtable}
+
+%=============================================================================
+% MÓDULO 8: NOTIFICACIONES Y BUZÓN
+%=============================================================================
+\section{Módulo de Notificaciones}
+\label{sec:notificaciones}
+
+\subsection{not\_notificacion}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    uuid & UUID & DEFAULT gen\_random\_uuid(), UNIQUE & \\
+    \hline
+    queja\_id & BIGINT & NOT NULL, FOREIGN KEY (exp\_queja.id) & \\
+    \hline
+    usuario\_id & BIGINT & NOT NULL, FOREIGN KEY (per\_usuario.id) & Destinatario \\
+    \hline
+    tipo\_notificacion & VARCHAR(30) & NOT NULL & ACUERDO, INFORME, RECOMENDACION \\
+    \hline
+    titulo & VARCHAR(255) & NOT NULL & \\
+    \hline
+    mensaje & TEXT & NOT NULL & \\
+    \hline
+    documento\_id & BIGINT & FOREIGN KEY (doc\_documento.id) & Documento asociado \\
+    \hline
+    leida & BOOLEAN & DEFAULT FALSE & ¿Vista por el usuario? \\
+    \hline
+    fecha\_lectura & TIMESTAMP & & \\
+    \hline
+    descargada & BOOLEAN & DEFAULT FALSE & ¿Descargó el documento? \\
+    \hline
+    fecha\_descarga & TIMESTAMP & & Acuse \\
+    \hline
+    enviada\_email & BOOLEAN & DEFAULT FALSE & \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+\end{longtable}
+
+%=============================================================================
+% MÓDULO 9: AUDITORÍA
+%=============================================================================
+\section{Módulo de Auditoría}
+\label{sec:auditoria}
+
+\subsection{aud\_log}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & BIGSERIAL & PRIMARY KEY & \\
+    \hline
+    usuario\_id & BIGINT & FOREIGN KEY (per\_usuario.id) & Usuario que realizó la acción \\
+    \hline
+    queja\_id & BIGINT & FOREIGN KEY (exp\_queja.id) & Expediente afectado \\
+    \hline
+    accion & VARCHAR(50) & NOT NULL & CREATE, UPDATE, DELETE, VIEW, DOWNLOAD, SIGN \\
+    \hline
+    entidad & VARCHAR(50) & NOT NULL & queja, documento, oficio \\
+    \hline
+    entidad\_id & BIGINT & & ID del registro afectado \\
+    \hline
+    valor\_anterior & TEXT & & Estado anterior \\
+    \hline
+    valor\_nuevo & TEXT & & Estado nuevo \\
+    \hline
+    ip\_address & VARCHAR(45) & NOT NULL & \\
+    \hline
+    user\_agent & TEXT & & \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+\end{longtable}
+
+%=============================================================================
+% MÓDULO 10: CATÁLOGOS GENERALES
+%=============================================================================
+\section{Catálogos Generales}
+\label{sec:catalogos}
+
+\subsection{cat\_dias\_inhabiles}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & SERIAL & PRIMARY KEY & \\
+    \hline
+    fecha & DATE & NOT NULL, UNIQUE & Día inhábil \\
+    \hline
+    descripcion & VARCHAR(255) & & Motivo \\
+    \hline
+    recurrente & BOOLEAN & DEFAULT FALSE & ¿Se repite cada año? \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+\end{longtable}
+
+\subsection{cat\_parametro}
+\begin{longtable}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{5cm}|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Columna} & \textbf{Tipo} & \textbf{Restricciones} & \textbf{Descripción} \\
+    \hline
+    id & SERIAL & PRIMARY KEY & \\
+    \hline
+    clave & VARCHAR(100) & NOT NULL, UNIQUE & PLAZO\_RESPUESTA\_OFICIO \\
+    \hline
+    valor & VARCHAR(255) & NOT NULL & Valor numérico o texto \\
+    \hline
+    tipo & VARCHAR(20) & NOT NULL & ENTERO, DECIMAL, BOOLEANO, TEXTO \\
+    \hline
+    descripcion & TEXT & & \\
+    \hline
+    created\_at & TIMESTAMP & DEFAULT NOW() & \\
+    \hline
+    updated\_at & TIMESTAMP & & \\
+    \hline
+\end{longtable}
+
+%=============================================================================
+% VERIFICACIÓN 3FN
+%=============================================================================
+\section{Verificación de Tercera Forma Normal (3FN)}
+\label{sec:3fn}
+
+\begin{tcolorbox}[title=Verificación 1FN - Atomicidad, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{Sin grupos repetitivos:} Todas las columnas son atómicas.
+        \item  \textbf{Clave primaria definida:} Todas las tablas tienen clave primaria.
+        \item  \textbf{Atributos atómicos:} Cada columna contiene un solo valor.
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Verificación 2FN - Dependencia Completa, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item \textbf{Tablas con clave simple:} Dependencia completa.
+        \item  \textbf{Tablas con clave compuesta:} per\_usuario\_rol y doc\_documento\_version verificadas.
+        \item  \textbf{Eliminación de dependencias parciales:} No existen.
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Verificación 3FN - Dependencias Transitivas, colback=green!5!white]
+    \begin{itemize}[leftmargin=*]
+        \item  \textbf{exp\_queja:} No depende de cat\_subdefensoria.nombre.
+        \item  \textbf{per\_persona:} No depende de cat\_unidad\_academica.nombre.
+        \item  \textbf{doc\_documento:} No depende de cat\_tipo\_documento.plantilla.
+        \item  \textbf{per\_usuario:} No depende de per\_persona.correo.
+        \item  \textbf{Todas las dependencias transitivas eliminadas.}
+    \end{itemize}
+\end{tcolorbox}
+
+%=============================================================================
+% RESUMEN DE TABLAS
+%=============================================================================
+\section*{Resumen de Tablas}
+\begin{tcolorbox}[title=Estadísticas del Modelo, colback=gray!5!white]
+    \begin{tabular}{|l|c|}
+        \hline
+        \rowcolor[gray]{0.9}
+        \textbf{Tipo de Tabla} & \textbf{Cantidad} \\
+        \hline
+        Tablas de Personas y Usuarios & 6 \\
+        \hline
+        Tablas de Expedientes y Quejas & 6 \\
+        \hline
+        Tablas de Antecedentes & 2 \\
+        \hline
+        Tablas de Documentos & 4 \\
+        \hline
+        Tablas de Actuaciones y Procesos & 6 \\
+        \hline
+        Tablas de Resoluciones y Firmas & 3 \\
+        \hline
+        Tablas de Seguimiento y Cumplimiento & 3 \\
+        \hline
+        Tablas de Notificaciones & 1 \\
+        \hline
+        Tablas de Auditoría & 1 \\
+        \hline
+        Tablas de Catálogos & 8 \\
+        \hline
+        \textbf{Total} & \textbf{40} \\
+        \hline
+    \end{tabular}
+    
+    \vspace{0.5cm}
+    \textbf{Total de tablas:} 40 entidades en Tercera Forma Normal (3FN)
+\end{tcolorbox}
+
+\section*{Firmas de Validación}
+\vspace{1cm}
+
+\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
+    \textbf{Elaborado por:} & \textbf{Revisado por:} & \textbf{Aprobado por:} \\
+    \vspace{2cm} & \vspace{2cm} & \vspace{2cm} \\
+    \hline
+    [Nombre y firma] & [Nombre y firma] & [Nombre y firma] \\
+    Arquitecto de Datos & Subdefensor Jurídico & Titular de la DDP \\
+\end{tabular}
+
+\end{document}

@@ -1,0 +1,192 @@
+\documentclass[12pt,oneside]{report}
+
+% ------------------------------------------------
+% PAQUETES
+% ------------------------------------------------
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{tocbibind}
+\usepackage{hyperref}
+\usepackage{cite}
+
+\geometry{left=3cm,right=2.5cm,top=3cm,bottom=2.5cm}
+\onehalfspacing
+
+% ------------------------------------------------
+% DATOS DE LA TESIS (MODIFICA AQUÍ)
+% ------------------------------------------------
+\newcommand{\titulo}{Cyber-Escudo: Plataforma Web de Denuncia con Clasificación Inteligente y Seguimiento Seguro}
+\newcommand{\autor}{José Jiménez}
+\newcommand{\carrera}{Ingeniería en Sistemas Computacionales}
+\newcommand{\director}{Nombre del Director de Tesis}
+\newcommand{\unidad}{Unidad Académica (Ej. ESCOM)}
+\newcommand{\anio}{2026}
+
+% ------------------------------------------------
+\begin{document}
+
+% ------------------------------------------------
+% PORTADA
+% ------------------------------------------------
+\begin{titlepage}
+\begin{center}
+
+{\Large INSTITUTO POLITÉCNICO NACIONAL} \\[0.5cm]
+{\large \unidad} \\[1.5cm]
+
+{\Large \textbf{\titulo}} \\[1.5cm]
+
+TESIS \\[0.3cm]
+QUE PARA OBTENER EL TÍTULO DE \\[0.3cm]
+{\textbf{\carrera}} \\[1cm]
+
+PRESENTA: \\[0.3cm]
+{\textbf{\autor}} \\[1cm]
+
+DIRECTOR DE TESIS: \\[0.3cm]
+{\director} \\[2cm]
+
+Ciudad de México \\[0.3cm]
+\anio
+
+\end{center}
+\end{titlepage}
+
+% ------------------------------------------------
+% PRELIMINARES (ROMANOS)
+% ------------------------------------------------
+\pagenumbering{roman}
+
+\chapter*{Resumen}
+\addcontentsline{toc}{chapter}{Resumen}
+
+En la actualidad, la integración de la tecnología en la vida cotidiana ha generado un entorno digital en el que coexisten oportunidades y riesgos. Fenómenos como el ciberacoso, la suplantación de identidad y la violencia digital representan una problemática social emergente que afecta a estudiantes y docentes.
+
+El presente trabajo propone el desarrollo de la plataforma \textbf{Cyber-Escudo}, orientada a proporcionar un canal digital seguro para el registro anónimo de denuncias, su clasificación mediante inteligencia artificial y el seguimiento transparente de los casos, garantizando protección de datos personales y cumplimiento de la normativa institucional del Instituto Politécnico Nacional.
+
+\tableofcontents
+\newpage
+
+% ------------------------------------------------
+% CONTENIDO PRINCIPAL
+% ------------------------------------------------
+\pagenumbering{arabic}
+
+% ------------------------------------------------
+\chapter{Introducción}
+
+En la última década, México ha experimentado una acelerada adopción tecnológica. De acuerdo con el Instituto Nacional de Estadística y Geografía (INEGI), más de 100 millones de personas utilizan internet en el país \cite{ref1}. Sin embargo, este crecimiento ha incrementado los riesgos asociados al entorno digital.
+
+Según el Módulo sobre Ciberacoso (MOCIBA), millones de personas han sido víctimas de agresiones digitales \cite{ref2}. Esta problemática también impacta al ámbito educativo, afectando el desempeño académico y el bienestar emocional.
+
+Existe una brecha significativa entre víctimas y denuncias formales, derivada de la desconfianza institucional, temor a represalias y desconocimiento de los mecanismos de reporte.
+
+% ------------------------------------------------
+\chapter{Planteamiento del Problema}
+
+En el Instituto Politécnico Nacional, la Defensoría de los Derechos Politécnicos es responsable de proteger los derechos de la comunidad. No obstante, enfrenta limitaciones operativas tales como:
+
+\begin{itemize}
+    \item Saturación administrativa.
+    \item Procesos manuales y poco digitalizados.
+    \item Demoras en el seguimiento de casos.
+    \item Falta de herramientas tecnológicas integradas.
+\end{itemize}
+
+Estas deficiencias impactan la percepción de confianza y eficiencia institucional.
+
+% ------------------------------------------------
+\chapter{Objetivos}
+
+\section{Objetivo General}
+
+Desarrollar una plataforma web de denuncia que integre registro seguro, clasificación automatizada mediante inteligencia artificial y seguimiento transparente de los casos.
+
+\section{Objetivos Específicos}
+
+\begin{itemize}
+    \item Analizar el estado del arte de plataformas de denuncia.
+    \item Diseñar la arquitectura del sistema con enfoque en seguridad y escalabilidad.
+    \item Diseñar un modelo de base de datos estructurado.
+    \item Implementar mecanismos de anonimato y cifrado.
+    \item Desarrollar módulo de seguimiento por folio.
+\end{itemize}
+
+% ------------------------------------------------
+\chapter{Justificación}
+
+La falta de canales accesibles y privados limita la denuncia de casos de violencia digital. La implementación de una plataforma tecnológica permitirá optimizar tiempos de respuesta, fortalecer la transparencia y proteger la identidad del denunciante.
+
+La complejidad técnica radica en la implementación de algoritmos de clasificación supervisada y técnicas de procesamiento de lenguaje natural, así como en la aplicación de medidas de seguridad como cifrado y control de accesos.
+
+% ------------------------------------------------
+\chapter{Estado del Arte}
+
+Se analizarán plataformas de denuncia implementadas por dependencias gubernamentales y universidades públicas, evaluando criterios como:
+
+\begin{itemize}
+    \item Nivel de anonimato.
+    \item Seguridad de la información.
+    \item Automatización del proceso.
+    \item Cumplimiento normativo.
+\end{itemize}
+
+% ------------------------------------------------
+\chapter{Marco Teórico}
+
+\section{Flujo Operativo Actual de la Defensoría}
+
+Descripción del proceso actual de recepción, clasificación y resolución de quejas dentro del IPN.
+
+\section{Clasificación de Quejas}
+
+Tipologías conforme al Reglamento Interno del IPN \cite{ref9}.
+
+\section{Normativa Aplicable}
+
+\begin{itemize}
+    \item Reglamento Interno del IPN \cite{ref9}.
+    \item Reglamentos internos de unidades académicas \cite{ref10}.
+    \item Ley Federal de Protección de Datos Personales \cite{ref11}.
+\end{itemize}
+
+\section{Modelo de Clasificación Inteligente}
+
+El sistema empleará aprendizaje supervisado y procesamiento de lenguaje natural para categorizar denuncias, incorporando revisión humana para mitigación de sesgos.
+
+% ------------------------------------------------
+\chapter{Metodología}
+
+Se empleará la metodología Scrum-ban, combinando iteraciones planificadas (Scrum) con gestión visual del flujo de trabajo (Kanban), permitiendo adaptabilidad y mejora continua.
+
+% ------------------------------------------------
+\chapter{Conclusiones}
+
+La plataforma propuesta representa una solución tecnológica orientada a mejorar la eficiencia, transparencia y seguridad en la gestión de denuncias dentro del Instituto Politécnico Nacional.
+
+% ------------------------------------------------
+\begin{thebibliography}{11}
+
+\bibitem{ref1}
+INEGI, Encuesta Nacional sobre Disponibilidad y Uso de Tecnologías de la Información en los Hogares (ENDUTIH) 2024.
+
+\bibitem{ref2}
+INEGI, Módulo sobre Ciberacoso (MOCIBA) 2024.
+
+\bibitem{ref9}
+Instituto Politécnico Nacional, Reglamento Interno del IPN, 2018.
+
+\bibitem{ref10}
+Instituto Politécnico Nacional, Reglamento General de Unidades Académicas, 2018.
+
+\bibitem{ref11}
+Ley Federal de Protección de Datos Personales en Posesión de los Particulares, 2018.
+
+\end{thebibliography}
+
+\end{document}
