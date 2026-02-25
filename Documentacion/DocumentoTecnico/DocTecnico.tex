@@ -1,0 +1,346 @@
+% --- 1. CONFIGURACIÓN DEL DOCUMENTO ---
+\documentclass[12pt, letterpaper]{article}
+
+% --- 2. PREÁMBULO (Librerías/Paquetes) ---
+\usepackage[utf8]{inputenc}    % Para acentos y la ñ
+\usepackage[spanish]{babel}    % Idioma español y cortes de palabra
+\usepackage{graphicx}         % Inserción de imágenes
+\usepackage{geometry}         % Gestión de márgenes
+\usepackage{booktabs}         % Para tablas de aspecto profesional
+\usepackage{array}            % Para columnas tipo m{} en tabular
+\usepackage{float}            % Para forzar posición de tablas con [H]
+\usepackage[backend=biber, style=ieee, citestyle=numeric-comp, sorting=none, language=spanish]{biblatex} % Bibliografía estilo IEEE
+\addbibresource{referencias.bib}  % Archivo de referencias
+\usepackage{hyperref}         % Para enlaces y referencias clicables
+\usepackage{tikz}             % Para dibujar la línea en la portada
+\usepackage{lmodern}          % Fuentes escalables para evitar errores de tamaño
+\usepackage{setspace}       % Para control de interlineado
+\usetikzlibrary{calc}         % Para cálculos en tikz
+
+% Margenes: Izq 3cm, Der 2cm, Sup 2cm, Inf 2cm
+\geometry{
+    left=3cm, 
+    right=2cm, 
+    top=2cm, 
+    bottom=2cm
+}
+
+% --- 3. DATOS DE LA PORTADA ---
+\title{Sistema de Recepción de Quejas para la Defensoría de los Derechos Politécnicos}
+\author{Edgar Jair Flores Espinosa, José Bryan Omar Jiménez Velázquez, \\ Leilani Shareni Santos Rivera}
+\date{2026}
+
+% --- 4. CUERPO DEL DOCUMENTO ---
+\begin{document}
+
+% Portada personalizada
+\begin{titlepage}
+\thispagestyle{empty}
+
+% Línea vertical azul en el lado izquierdo (dentro del margen)
+\begin{tikzpicture}[remember picture, overlay]
+    % Línea vertical
+    \draw[line width=8pt, color=cyan] ($(current page.north west) + (2cm, -2cm)$) -- ($(current page.south west) + (2cm, 2cm)$);
+    
+    % Logo IPN en la punta superior de la línea
+    \node[anchor=south] at ($(current page.north west) + (2cm, -4cm)$) {\includegraphics[width=2cm]{logo_ipn}};
+    
+    % Logo ESCOM en la punta inferior de la línea
+    \node[anchor=north] at ($(current page.south west) + (2cm, 4cm)$) {\includegraphics[width=3cm]{logo_escom}};
+\end{tikzpicture}
+
+% Contenido centrado respetando los márgenes
+\begin{center}
+    % Títulos principales
+    {\bfseries\LARGE INSTITUTO POLITÉCNICO NACIONAL \par}
+    \vspace{0.3cm}
+    {\bfseries\Large ESCUELA SUPERIOR DE CÓMPUTO \par}
+    \vspace{1.5cm}
+    {\bfseries\fontsize{16}{19}\selectfont ESCOM \par}
+    
+    \vspace{1.5cm}
+    
+    % Tipo de trabajo
+    {\itshape\fontsize{14}{16}\selectfont Trabajo Terminal \par}
+    
+    \vspace{1.5cm}
+    
+    % Título del proyecto
+    {\bfseries\fontsize{14}{16}\selectfont ``Sistema de Recepción de Quejas para la Defensoría de los Derechos Politécnicos'' \par}
+    
+    \vspace{0.5cm}
+    
+    % Código del proyecto
+    {\fontsize{12}{14}\selectfont 2026-B009 \par}
+    
+    \vfill
+    \vspace{0.4cm}
+    % Autores
+    {\itshape\fontsize{12}{14}\selectfont Presentan \par}
+    \vspace{0.3cm}
+    {\bfseries\fontsize{12}{14}\selectfont 
+    Edgar Jair Flores Espinosa \\
+    José Bryan Omar Jiménez Velázquez \\
+    Leilani Shareni Santos Rivera \par}
+    
+    \vspace{1.3cm}
+    
+    % Directores en dos columnas
+    {\itshape\fontsize{12}{14}\selectfont Directores \par}
+    \vspace{0.3cm}
+    {\bfseries\fontsize{11}{13}\selectfont 
+    \begin{tabular}{cc}
+        M. en C. Jessie Paulina Guzmán Flores & M. en C. Ulises Vélez Saldaña
+    \end{tabular} \par}
+    
+    \vspace{2cm}
+    
+    % Fecha
+    {\fontsize{11}{13}\selectfont Fecha: (no se sabe fecha aún de presentación) \par}
+\end{center}
+
+\vfill
+\end{titlepage}
+
+% --- SEGUNDA PÁGINA: PORTADA ACADÉMICA ---
+\newpage
+
+% Encabezado con logos e institución
+\begin{center}
+\begin{tabular}{m{2.5cm} >{\centering\arraybackslash}m{8.5cm} m{2.5cm}}
+    \includegraphics[height=2cm]{logo_ipn} &
+    \parbox[c]{8.5cm}{\centering{\bfseries\large INSTITUTO POLITÉCNICO NACIONAL}\\[0.2cm]{\normalsize ESCUELA SUPERIOR DE CÓMPUTO}} &
+    \centering\includegraphics[height=2cm]{logo_escom}
+\end{tabular}
+\end{center}
+
+\vspace{1cm}
+
+% No. de TT y Fecha
+\noindent\textbf{No. de TT: 2026-B009} \hfill \textbf{Fecha: [aun no tenemos fecha]}
+
+\vspace{0.4cm}
+
+% Tipo de documento
+\begin{center}
+    Documento Técnico
+\end{center}
+
+\vspace{0.5cm}
+
+% Título del proyecto
+\begin{center}
+    {\bfseries ``Sistema de Recepción de Quejas para la Defensoría de los Derechos Politécnicos''}
+\end{center}
+
+\vspace{0.6cm}
+
+% Presentan
+\begin{center}
+    {\itshape Presentan}\\[0.3cm]
+    Edgar Jair Flores Espinosa\textsuperscript{1}\\[0.1cm]
+    José Bryan Omar Jiménez Velázquez\textsuperscript{2}\\[0.1cm]
+    Leilani Shareni Santos Rivera\textsuperscript{3}
+\end{center}
+
+\vspace{0.6cm}
+
+% Directores
+\begin{center}
+    {\itshape Directores}\\[0.3cm]
+    \begin{tabular}{cc}
+        \textbf{M. en C. Jessie Paulina Guzmán Flores} & \textbf{M. en C. Ulises Vélez Saldaña}
+    \end{tabular}
+\end{center}
+
+\vspace{0.7cm}
+
+% Resumen
+\noindent\textbf{Resumen}
+
+\vspace{0.2cm}
+\noindent Actualmente, la Defensoría de los Derechos Politécnicos (DDP) presenta áreas de oportunidad en su flujo operativo debido al uso de procesos manuales y recepción de quejas en canales descentralizados, lo que genera una alta carga administrativa para el personal de la defensoría y por parte de la persona que realiza la queja. En el presente Trabajo Terminal se propone el desarrollo de una plataforma web integral basada en una arquitectura de microservicios que modernice el flujo de quejas que recibe la defensoría. La solución abarca un módulo de asistencia inteligente mediante Procesamiento de Lenguaje Natural (PLN) para automatizar el filtrado de competencia desde el primer contacto. El objetivo principal es reducir la saturación operativa, otorgar trazabilidad de las quejas y fortalecer la transparencia en la atención a la comunidad politécnica mediante una infraestructura tecnológica modular.
+
+\vspace{0.4cm}
+\noindent\textbf{Palabras clave:}
+
+\vfill
+
+% Notas al pie con correos de los autores
+\noindent\rule{0.45\textwidth}{0.4pt}\\
+{\small \textsuperscript{1}jair100flo@gmail.com}\\
+{\small \textsuperscript{2}josebryanomar2004@gmail.com}\\
+{\small \textsuperscript{3}leishasr@gmail.com}
+
+\newpage
+\tableofcontents % Genera el índice automáticamente basado en las \section
+\newpage
+
+\section{Introducción}
+En el Instituto Politécnico Nacional (IPN), que es una institución reconocida por la educación tecnológica en Mexico, tiene como principios establecidos bajo la Ley Orgánica \cite{ipn_ley_organica} y su Reglamento Interno \cite{ipn_reglamento_interno} el compromiso propio de garantizar un entorno de respeto, equidad y legalidad para todos los integrantes de su comunidad. Ante la identificación de diversas violaciones o vulneraciones a los derechos de estudiantes, docentes y administrativos, el IPN determino la creación de la Defensoría de los Derechos Politécnicos (DDP) a través de su acuerdo de creación oficial \cite{ipn_acuerdo_ddp}. El cual es un órgano dotado de independencia funcional, que surge como el mecanismo institucional encargado del seguimiento y gestión de las inconformidades derivadas de actos u omisiones que incumplan los derechos Politécnicos.
+\\
+La gestión de estas quejas representa un proceso critico que demanda no solo de la sensibilidad humana, sino una administración operativa de alta precisión. Actualmente, la DDP rige su operación mediante el Manual de Organización \cite{ipn_manual_organizacion} y el Manual de Procedimientos \cite{ipn_manual_procedimientos}, los cuales establecen las etapas de recepción, radicación, investigación y resolución. No obstante, la ejecución de estos procesos a presentado desafíos tecnológicos significativos, ya que el flujo de trabajo actual depende de mecanismos manuales y herramientas de oficina descentralizadas que impiden una integración total de la información. Esta carencia de integración tecnológica, sumada al creciente volumen de solicitudes diarias, compromete la eficiencia del personal y extiende los tiempos de respuesta institucionales.
+\\
+En respuesta a esta problemática, el presente Trabajo Terminal (TT) propone el desarrollo de una Plataforma Web para gestionar y tener un seguimiento de las quejas, diseñada para alinearse específicamente con la estructura orgánica de la DDP. La solución busca centralizar las quejas recibidas en una sola plataforma y sistematizar el flujo operativo de los diversos roles institucionales, tales como el Abogado Asesor, Subdefensor, Area Secretarial, Area de Primer Contacto y Titular.
+\\
+Como innovación tecnológica,va qu el sistema incorpora un modulo de asistencia basado en Inteligencia Artificial (IA) para la etapa de registro. Este componente utiliza técnicas de Procesamiento de Lenguaje Natural (PLN) mediante el uso de Word Embeddings para comprender el contexto semántico de las narrativas \cite{mikolov2013word2vec}. A través de un enfoque que combina redes neuronales con sistemas expertos, el clasificador actúa como un agente inteligente capaz de orientar al quejoso sobre la competencia de su solicitud, Con ello se busca filtrar desde el primer contacto con el quejoso para optimizar la carga de trabajo de la DDP.
+
+\subsection{Planteamiento del Problema}
+La DDP es el órgano pilar encargado de salvaguardar la legalidad y el respeto a los derechos politécnicos dentro de la comunidad del IPN, la cual integra a estudiantes, docentes y personal administrativo. Su función es esencial para la atención y resolución de quejas; no obstante, ante la creciente demanda de servicios y el tiempo requerido de procesos operativos de los casos actuales, se ha identificado la oportunidad de fortalecer su eficiencia operativa a través de la modernización tecnológica. Bajo el esquema de flujo operativo actual, se presentan tres puntos críticos que fundamentan el desarrollo de la solución planteada:
+\\
+En primer lugar, se identifica \textbf{la necesidad de optimización de capital humano y la carga operativa}, debido a que la atención jurídica sustantiva es realizada por un cuerpo especializado de 5 abogados, quienes gestionan la totalidad de las quejas competentes. La cantidad de quejas recibidas genera una carga administrativa que, al ser gestionada mediante procesos manuales, limita el tiempo disponible para cada abogado, resultando estratégico implementar una solución tecnológica que asistan en las tareas repetitivas y permitan al personal enfocarse en la resolución de los casos.
+\\
+Derivado de lo anterior, existe un \textbf{reto en la eficiencia de la recepción y clasificación de solicitudes} durante la etapa de “Primer Contacto”. Ya que, al recibir información por múltiples canales descentralizados, las solicitudes suelen presentarse de forma incompleta o no son competentes para el órgano de la DDP, resaltando la falta de un asistente tecnológico para el filtrado de competencia, obligando a la revisión manual, retrasando la atención a casos de alta prioridad.
+\\
+Finalmente, \textbf{la gestión de documentos realizada de forma tradicional y la falta de seguimiento} impactan en la transparencia del proceso. La actual dependencia de métodos de archivo físicos dificulta la consulta rápida de antecedentes. Con la transición a la plataforma integral, no solo brindaría certidumbre al quejoso sobre el estatus de su queja, sino que permitiría al personal de la DDP la revisión de documentos y datos importantes sobre los casos.
+
+
+\subsection{Solución Propuesta}
+Se propone el desarrollo de una plataforma web integral diseñada para centralizar, automatizar y optimizar el ciclo de vida de las quejas dentro de la DDP. La solución se fundamenta en una arquitectura basada en microservicios y contempla la implementación de un módulo de asistencia inteligente en la etapa de primer contacto, el cual utiliza técnicas de PLN para asistir al usuario en la determinación preliminar de la competencia de su queja. Se permitirá la gestión basada en roles, garantizando que cada actor interactúe con la información de acuerdo con sus facultades normativas, asegurando el seguimiento total del expediente desde su recepción hasta su resolución final.
+
+\subsection{Objetivos}
+\subsubsection{Objetivo General}
+Desarrollar una plataforma web basada en una arquitectura de microservicios mediante la integración de módulos de gestión documental y un motor de procesamiento de lenguaje natural para sistematizar el flujo operativo de recepción, clasificación y seguimiento de quejas de la DDP.
+
+\subsubsection{Objetivos Específicos}
+\begin{itemize}
+    \item Modelar las etapas de proceso y resolución de quejas con base en las reglas de negocio del Manual de Procedimientos de la DDP para automatizar la transición de estados del expediente y el cumplimiento de términos legales.
+    \item Diseñar una arquitectura de microservicios desacoplada empleando el ecosistema de Java Spring Boot y comunicación vía API REST para garantizar la independencia operativa entre el sistema de gestión administrativa y el módulo de inteligencia artificial.
+    \item Implementar un clasificador de texto neuro-simbólico utilizando Word Embeddings y sistemas basados en reglas para determinar la competencia de las solicitudes desde el primer contacto y reducir la carga de clasificación manual.
+    \item Construir un repositorio digital de evidencias y expedientes mediante el sistema de gestión de bases de datos PostgreSQL para centralizar la documentación soporte y asegurar la integridad de la información jurídica manejada por la Defensoría.
+    \item Desarrollar un módulo de consulta y seguimiento para el quejoso a través de un sistema de folios digitales y notificaciones de estatus para brindar certidumbre sobre el avance del proceso y reducir la saturación de los canales de comunicación presenciales.
+\end{itemize}
+
+\subsection{Justificación}
+La implementación de esta plataforma web se justifica por la necesidad estratégica de fortalecer los procesos operativos de la DDP, transformando una gestión actual basada en métodos manuales y herramientas de oficina descentralizadas hacia un flujo digital inteligente.
+\\
+En el ámbito social e institucional, el proyecto busca fortalecer varios puntos empezando por la eliminación de barreras que impiden una mejor comunicación entre la comunidad politécnica y la DDP al proporcionar un canal de seguimiento transparente que elimine la incertidumbre del quejoso. De igual forma, al automatizar las tareas administrativas, se potencia la capacidad de respuesta del personal de la Defensoría y se reduce el costo de gestión operativa, permitiendo que el cuerpo de abogados centralice sus esfuerzos en el análisis jurídico de fondo a las quejas procedentes, apoyando una atención equitativa y eficiente ante la creciente demanda de quejas que reciben diariamente.
+\\
+Desde la perspectiva técnica, el desarrollo de este sistema se fundamenta en la adopción de una arquitectura de microservicios permitiendo la oportunidad de escalabilidad y mantenimiento independiente de sus componentes. Ya que la integración de tecnologías como Java Spring Boot y PostgreSQL permite el manejo seguro de información sensible, mientras que la incorporación de un clasificador basado en PLN demuestra una innovación clave para resolver los puntos significativos desde el área de primer contacto. Esta solución resuelve la fragmentación de datos y fortalece la integridad de un repositorio histórico de quejas para futuras consultas y auditorias.
+\\
+Finalmente, dado que la plataforma procesa información de carácter personal y sensible dentro del entorno educativo, su diseño integra protocolos de acceso basado en roles y este apegado a el cumplimiento legal y ético. Logrando que este enfoque no solo optimice la operación interna de la DDP, sino que consolida una infraestructura digital confiable que otorga a la DDP eficiencia administrativa apoyando el cumplimiento de sus procesos operativos dentro del IPN.
+
+\section{Estado del Arte}
+Para el desarrollo de la presente plataforma, es fundamental realizar un análisis comparativo de las soluciones tecnológicas existentes en el mercado y en el ámbito institucional que abordan la gestión de quejas. Este estudio permite identificar las deficiencias funcionales de las herramientas actuales y definir el valor agregado de nuestra propuesta.
+\begin{table}[H]
+    \centering
+    \caption{Descripción de sistemas orientados a la denuncia y gestión de casos}
+    \label{tab:sistemas_comparativos}
+    \begin{tabular}{>{\bfseries\itshape\raggedleft\arraybackslash}p{3cm} p{10cm}}
+    \toprule
+    \textbf{Plataforma} & \textbf{Descripción} \\
+    \midrule
+    BullyButton.com &
+        Herramienta de pago para entornos escolares que permite reportar incidentes de acoso y genera informes de seguimiento y estadísticas para administradores \cite{bullybutton}. \\
+    \addlinespace
+    Ventanilla Escolar &
+        Plataforma para la comunidad escolar mexicana que permite generar reportes de orientación sobre incidentes, aunque estos no constituyen denuncias formales y su seguimiento es limitado \cite{ventanilla_escolar}. \\
+    \addlinespace
+    Alerta IPN &
+        Herramienta institucional para reportar sucesos anómalos. Requiere registro, pero el documento indica que la clasificación de incidentes es manual y tiene operatividad limitada para denuncias formales \cite{ipn_alerta}. \\
+    \addlinespace
+    UNAM --- Denuncia Línea &
+        Plataforma de la Defensoría de los Derechos Universitarios de la UNAM que permite el registro y seguimiento de quejas por actos contrarios a la normativa universitaria \cite{unam_defensoria}. \\
+    \addlinespace
+    PROFEDET Digital &
+        Sistema de la Procuraduría Federal de la Defensa del Trabajo que ofrece un flujo de orientación y registro de quejas para la defensa de derechos laborales \cite{profedet}. \\
+    \bottomrule
+    \end{tabular}
+    \end{table}
+
+\newpage
+\subsection {Análisis Comparativo de Funcionalidades}
+Las siguientes tablas establecen el contraste técnico entre las soluciones analizadas y los objetivos de este proyecto.
+\begin{table}[H]
+    \centering
+    \caption{Comparativa de funciones de gestión operativa}
+    \label{tab:comparativa_funciones}
+    \begin{tabular}{>{\bfseries\itshape\raggedright\arraybackslash}p{2.8cm} >{\centering\arraybackslash}p{2cm} >{\centering\arraybackslash}p{2cm} >{\centering\arraybackslash}p{2cm} >{\centering\arraybackslash}p{2cm} >{\centering\arraybackslash}p{2cm}}
+    \toprule
+    \textit{Característica} & \textbf{\underline{BullyButton}} & \textbf{Ventanilla Escolar} & \textbf{Alerta IPN} & \textbf{UNAM Denuncia} & \textbf{PROFEDET Digital} \\
+    \midrule
+    Plataforma Web        & Si & Si & Si & Si & Si \\
+    \addlinespace
+    Registro de quejas formal & Si & Si & No & Si & Si \\
+    \addlinespace
+    Seguimiento por folio & Si & No & No & No & No \\
+    \addlinespace
+    Generación de estadísticas & Si & No & No & Si & Si \\
+    \addlinespace
+    Clasificador de casos con IA & No & No & No & Si & Si \\
+    \bottomrule
+    \end{tabular}
+    \end{table}
+
+\subsection {Diferenciación y Ventaja Competitiva}
+Tras la investigación, se concluye que la mayoría de las herramientas institucionales actuales son informativas o requieren de una intervención manual para la clasificación de incidentes. Nuestra propuesta se diferencia al cerrar el ciclo de coordinación entre el quejoso y el abogado mediante una experiencia unificada.
+
+A diferencia de las herramientas mencionadas, nuestra aplicación especializa la afinidad en el contexto legal del IPN e incorpora un módulo de inteligencia artificial que mitiga la fragmentación de datos y retraso de procesos. Además, el uso de una arquitectura de microservicios garantiza que el sistema no sea un prototipo aislado, sino una infraestructura escalable capaz de soportar la demanda real de la Defensoría.
+
+\section {Marco Teórico}
+El presente capitulo establece los fundamentos normativos, operativos y tecnológicos que respaldan el desarrollo de la plataforma. A través de este análisis, se justifican los procesos institucionales con las soluciones de ingeniería que se proponen, validando que el desarrollo tecnológico además de resolver la problemática operativa, este abarca las bases funcionales y rigor técnico que un proyecto de esta índole demanda en el ámbito profesional.
+
+\subsection {Contexto Institucional y Normativo}
+En esta sección se definen las bases legales del órgano para el cual se desarrolla la plataforma
+
+\subsubsection {Defensoría de Derechos Politécnicos (DDP)}
+La DDP se establece como un órgano dotado de autonomía técnica, cuya misión fundamental es recibir y gestionar quejas relativas a actos u omisiones que vulneren o invaliden los derechos individuales otorgados a los miembros pertenecientes a la comunidad del Instituto Politécnico Nacional. Su creación responde a la necesidad de contar con una instancia independiente que garantice la legalidad y respeto a los derechos humanos dentro de la institución \cite{ipn_acuerdo_ddp}.
+\\
+De acuerdo con su marco normativo, la Defensoría tiene la facultad de proponer soluciones a través de recomendaciones y mediaciones, siempre bajo los principios de imparcialidad y confidencialidad \cite{ipn_acuerdo_ddp}.
+
+\subsubsection {Manuales de Organización y Procedimientos}
+La operatividad de la plataforma web se rige bajo la estructura y los procesos definidos en los manuales administrativos oficiales de la Defensoría:
+\begin{itemize}
+    \item \textbf{Manual de Organización de DDP:} Este documento determina la estructura jerárquica y las atribuciones específicas de los servidores públicos designados a la defensoría. Es el pilar para la definición del Control de Acceso Basado a Roles (RBAC) del sistema, permitiendo diferenciar las capacidades de cada rol, en este caso el Titular, el cuerpo de abogados y el personal administrativo \cite{ipn_manual_organizacion}.
+    \item \textbf{Manual de Procedimientos de DDP:} Este documento establece la secuencia de los procesos y los requisitos formales de cada etapa de atención de una queja, desde su recepción hasta la resolución final. Este manual dicta las reglas de negocio que el software debe automatizar, incluyendo los criterios de validación de información y generación de documentos oficiales que integran el expediente digital \cite{ipn_manual_procedimientos}.
+\end{itemize}
+
+\subsection {Lógica de Negocio y Flujo de Procesos}
+Esta sección define los conceptos operativos y las reglas de negocio que sigue el funcionamiento del sistema, basándose en las secuencias de actividades y las estructuras jerárquicas dictadas por los manuales institucionales vigentes \cite{ipn_manual_organizacion,ipn_manual_procedimientos}. Al modelar estos procesos, se garantiza que la plataforma actúe apegada a las normativas y salvaguarde la integridad de cada etapa del proceso, desde el ingreso de la solicitud hasta la conclusión del expediente.
+
+\subsubsection{Flujo Operativo de la Queja}
+El proceso de atención a una queja dentro de la Defensoría de los Derechos Politécnicos se rige por un flujo operativo estandarizado que garantiza la atención jurídica desde el primer contacto hasta el archivo del expediente. De acuerdo con el Manual de Procedimientos \cite{ipn_manual_procedimientos}, el flujo operativo que el sistema debe sistematizar se compone de las siguientes fases:
+\\
+\begin{itemize}
+    \item \textbf{Recepción y análisis de la solicitud:} Se recibe la petición de la persona interesada y se analizan los hechos narrados para determinar la procedencia inicial \cite{ipn_manual_procedimientos}. 
+    \item \textbf{Radicación del expediente:} Una vez determinada la procedencia, se asigna un número de expediente y se turna al área jurídica correspondiente para su trámite \cite{ipn_manual_procedimientos}. 
+    \item \textbf{Admisión y solicitud de informe:} Se admite formalmente la queja y se solicita un informe detallado a la autoridad o servidor público señalado como presunto responsable \cite{ipn_manual_procedimientos}. 
+    \item \textbf{Análisis y valoración de pruebas:} El abogado asesor analiza el informe de la autoridad y valora las evidencias presentadas por ambas partes para determinar si existe una vulneración de derechos \cite{ipn_manual_procedimientos}. 
+    \item \textbf{Resolución y seguimiento:} Se emite un pronunciamiento (recomendación, acuerdo de conciliación o cese) y se verifica el cumplimiento de las acciones acordadas hasta el archivo definitivo del expediente \cite{ipn_manual_procedimientos}.
+\end{itemize}
+
+\subsubsection{Roles Administrativos y Operativos}
+La estructura de los usuarios del sistema se fundamenta en la organización jerárquica y las facultades definidas en el Manual de Organización \cite{ipn_manual_organizacion}. Para garantizar la integridad de la información y el cumplimiento de las responsabilidades legales, se definen los siguientes perfiles operativos:
+\\
+\begin{itemize}
+    \item \textbf{Titular de la Defensoría:} Responsable de dirigir, coordinar y supervisar el funcionamiento de la Defensoría, así como de emitir las recomendaciones y pronunciamientos finales derivados de los expedientes \cite{ipn_manual_organizacion}.
+    \item \textbf{Cuerpo de Abogados Asesores:} Son los encargados de la atención directa de los casos, realizando el análisis jurídico, la integración de expedientes, la valoración de pruebas y la elaboración de proyectos de resolución \cite{ipn_manual_organizacion}.
+    \item \textbf{Área Secretarial:} Área encargada de coordinar el apoyo administrativo y el seguimiento de acuerdos, siendo el enlace entre las diversas áreas de la Defensoría \cite{ipn_manual_organizacion}.
+    \item \textbf{Personal de Apoyo (Primer Contacto):}
+    Area responsable de la recepción inicial de las solicitudes, la captura de datos generales del quejoso y la gestión de la correspondencia oficial \cite{ipn_manual_organizacion}.
+\end{itemize}
+
+\subsubsection{Términos y Plazos dentro del Proceso}
+En el ámbito administrativo, los términos procesales representan los lapsos temporales obligatorios en los que la autoridad debe realizar una actuación jurídica especifica \cite{ipn_manual_procedimientos}. El sistema debe integrar el monitoreo de estos plazos para asegurar que la gestión de la queja se mantenga dentro de los límites establecidos en la legalidad de la normativa institucional:
+\\
+\begin{itemize}
+    \item \textbf{Plazo para la Radicación:} Una vez recibida y analizada la solicitud, la Defensoría debe proceder a la radicación y dar turno del expediente en un periodo de 2 días habiles para evitar el rezago administrativo \cite{ipn_manual_procedimientos}.
+    \item \textbf{Término para la Solicitud de Informe:} Tras la admisión de la queja, se debe notificar a la autoridad responsable, otorgándole un plazo de (2 o 15) días para rendir su informe detallado sobre los hechos \cite{ipn_manual_procedimientos}.
+    \item \textbf{Periodo de Valoración:} El abogado asesor cuenta con un tiempo definido para analizar las evidencias y los informes recibidos antes de proponer un proyecto de resolución \cite{ipn_manual_procedimientos}.
+    \item \textbf{Plazos de Seguimiento:} Una vez emitida una recomendación o acuerdo, el sistema debe vigilar los tiempos otorgados para el cumplimiento de las acciones remediales antes del archivo del caso, dando al quejoso 5 días hábiles para contestar lo que a derecho le convenga \cite{ipn_manual_procedimientos}.
+\end{itemize}
+
+\subsubsection{Instrumentos de Captura y Gestión de Documentos}
+La sistematización de las quejas requiere de la estandarización de los instrumentos de captura para garantizar que la información recolectada sea integra y la suficiente para el análisis jurídico. Por lo que el sistema debe contemplar la digitalización y gestión de los siguientes documentos:
+\\
+\begin{itemize}
+    \item \textbf{Catálogo de Derechos Vulnerados:} Herramienta que permite categorizar la queja según la normativa del IPN, facilitando la clasificación automática y la generación de estadísticas \cite{ipn_manual_procedimientos}.
+    \item \textbf{Acuse de Recibo y Folio de Seguimiento:} Folio generado automáticamente por el sistema que brinda certeza jurídica al usuario sobre el inicio de su trámite y los medios para consultar su estatus \cite{ipn_manual_procedimientos}.
+    \item \textbf{Expediente Digital de Evidencias:} Repositorio centralizado para el almacenamiento de archivos multimedia (imágenes, audios, videos) y documentos en formato PDF que sustentan la queja presentada \cite{ipn_manual_procedimientos}.
+    \item \textbf{Oficios de Notificación y Solicitud de Informe:} Formatos preestablecidos que el sistema debe emitir para requerir información a las autoridades señaladas como responsables, cumpliendo con las formalidades del Manual de Procedimientos \cite{ipn_manual_procedimientos}.
+\end{itemize}
+
+\newpage
+\printbibliography[heading=bibintoc, title={Referencias}]
+
+\end{document}

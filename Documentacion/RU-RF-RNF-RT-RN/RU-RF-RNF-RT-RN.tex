@@ -1,0 +1,153 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{booktabs}
+
+\geometry{a4paper, margin=1in}
+
+\begin{document}
+
+\section*{Especificación de Requerimientos de Usuario (RU)}
+
+A continuación se presentan las tablas de Requerimientos de Usuario, organizadas por sectores y actores, incluyendo su relación con los Requerimientos Funcionales (RF) y Reglas de Negocio (RN) del sistema.
+
+\subsection*{1. Sector: Quejoso}
+
+\begin{longtable}{|l|p{3cm}|p{6cm}|c|p{2.5cm}|}
+\hline
+\textbf{Id} & \textbf{Nombre} & \textbf{Descripción} & \textbf{Stat} & \textbf{Relación (RF/RN)} \\ \hline
+\endfirsthead
+\hline
+\textbf{Id} & \textbf{Nombre} & \textbf{Descripción} & \textbf{Stat} & \textbf{Relación (RF/RN)} \\ \hline
+\endhead
+\hline
+\endfoot
+RU1 & Formulario para la queja & Captura de datos personales (nombre, boleta, unidad académica) y del acusado. & & RF1-1, RF6-1  \\ \hline
+RU2 & Redacción de queja & Mencionar los sucesos del altercado en la narrativa. & & RF1-1, RNF-SEC-01  \\ \hline
+RU3 & Adjunto de evidencia & Adjuntar archivos que avalen la queja presentada. & & RF1-1, RN-09, RN-10  \\ \hline
+RU4 & Gestión de menores & Especificar datos de tutor y contacto en caso de que sea menor de edad. & & RF1-1  \\ \hline
+RU5 & Registro de usuario & Creación de cuenta tras presentar la primera queja. & & RF3-1, RF2-1  \\ \hline
+RU6 & Consulta de estado & Visualizar la etapa procesal donde su queja está siendo procesada. & & RF5-1, RNF-USA-07  \\ \hline
+RU7 & Notificación de oficios & Conocer los oficios que avalan el estado de la queja. & & RF8-1, RN-06  \\ \hline
+RU8 & Validación de identidad & Validar pertenencia al instituto y verificar identidad. & & RF2-1, RN-02  \\ \hline
+\end{longtable}
+
+\subsection*{2. Sector: Área Secretarial (Recepcionista)}
+
+\begin{longtable}{|l|p{3cm}|p{6cm}|c|p{2.5cm}|}
+\hline
+\textbf{Id} & \textbf{Nombre} & \textbf{Descripción} & \textbf{Stat} & \textbf{Relación (RF/RN)} \\ \hline
+RU9 & Recepción de queja & Colocar sello digital y asignar número de turno correlativo. & & RF3-2, RN-01  \\ \hline
+RU10 & Revisión de antecedentes & Buscar coincidencia del nuevo caso con históricos. & & RF4.1-2, RF4.2-2  \\ \hline
+RU11 & Turna de queja & Turnar al abogado previo o a oficina de primer contacto. & & RF5-2, RN-04  \\ \hline
+RU12 & Añadir a expediente & Agregar caso finalizado al expediente histórico. & & RF6-2, RN-08  \\ \hline
+\end{longtable}
+
+\subsection*{3. Sector: Primer Contacto (Oficinista)}
+
+\begin{longtable}{|l|p{3cm}|p{6cm}|c|p{2.5cm}|}
+\hline
+\textbf{Id} & \textbf{Nombre} & \textbf{Descripción} & \textbf{Stat} & \textbf{Relación (RF/RN)} \\ \hline
+RU13 & Análisis de competencia & Verificar si la queja compete con la DDP. & & RF1-3  \\ \hline
+RU14 & Oficio de queja remitida & Notificar incompetencia y orientar hacia el departamento correcto. & & RF3-3  \\ \hline
+RU15 & Determinación de medidas & Elaborar solicitud de medidas precautorias y asignar asesor. & & RF4-3  \\ \hline
+\end{longtable}
+
+\subsection*{4. Sector: Subdefensoría (Abogado Asesor)}
+
+\begin{longtable}{|l|p{3cm}|p{6cm}|c|p{2.5cm}|}
+\hline
+\textbf{Id} & \textbf{Nombre} & \textbf{Descripción} & \textbf{Stat} & \textbf{Relación (RF/RN)} \\ \hline
+RU16 & Solicitud de investigación & Realizar actos de investigación y registrar en bitácora. & & RF5-4, RF1-4  \\ \hline
+RU17 & Resolución de la UA & Elaborar oficio de acuerdo si la UA resuelve el caso. & & RF7-4, RF4-4  \\ \hline
+RU18 & Turna a resoluciones & Enviar expediente a oficina de resoluciones si no hay solución. & & RF8-4  \\ \hline
+\end{longtable}
+
+\subsection*{5. Sector: Oficina de Resoluciones}
+
+\begin{longtable}{|l|p{3cm}|p{6cm}|c|p{2.5cm}|}
+\hline
+\textbf{Id} & \textbf{Nombre} & \textbf{Descripción} & \textbf{Stat} & \textbf{Relación (RF/RN)} \\ \hline
+RU19 & Análisis de violación & Determinar si existe violación a derechos humanos. & & RF3-5, RF1-5  \\ \hline
+RU20 & Conciliación entre partes & Elaborar acuerdo de conciliación y notificar al quejoso. & & RF2-5, RF5-5  \\ \hline
+RU21 & Turna a seguimiento & Enviar al área de seguimiento si no es factible conciliar. & & RF6-5, RF4-5  \\ \hline
+\end{longtable}
+
+\subsection*{6. Sector: Seguimiento}
+
+\begin{longtable}{|l|p{3cm}|p{6cm}|c|p{2.5cm}|}
+\hline
+\textbf{Id} & \textbf{Nombre} & \textbf{Descripción} & \textbf{Stat} & \textbf{Relación (RF/RN)} \\ \hline
+RU22 & Notificación de recomendación & Notificar atrasos de cumplimiento por parte de la autoridad. & & RF5-6, RF1-6  \\ \hline
+RU23 & Verificar información & Analizar pruebas de cumplimiento de recomendaciones. & & RF4-6, RF3-6  \\ \hline
+RU24 & Conclusión & Elaborar oficio de conclusión y enviar a archivo definitivo. & & RF6-6, RN-08  \\ \hline
+\end{longtable}
+
+\newpage
+
+\section*{Especificación de Requerimientos Funcionales (RF)}
+
+\begin{longtable}{|l|p{4cm}|p{8cm}|}
+\hline
+\textbf{ID} & \textbf{Nombre} & \textbf{Descripción} \\ \hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Nombre} & \textbf{Descripción} \\ \hline
+\endhead
+\hline
+\endfoot
+\multicolumn{3}{|l|}{\textbf{Módulo 1: Quejoso}} \\ \hline
+RF1-1 & Registro Digital & Captura de información personal y carga de evidencias.  \\ \hline
+RF9-1 & Enlaces Externos & Registro de nubes externas si los archivos superan los 20MB.  \\ \hline
+\multicolumn{3}{|l|}{\textbf{Módulo 2: Área Secretarial}} \\ \hline
+RF3-2 & Turno y Sello & Generación de folio y aplicación de sello digital.  \\ \hline
+RF4.2-2 & Búsqueda por IA & Comparativa semántica entre narrativa actual e histórica.  \\ \hline
+\multicolumn{3}{|l|}{\textbf{Módulo 4: Subdefensoría}} \\ \hline
+RF2-4 & Control de plazos & Cronómetro automático de 10 días hábiles de respuesta.  \\ \hline
+RF3-4 & Recordatorios & Generación de oficio de recordatorio al día 11 sin respuesta.  \\ \hline
+\multicolumn{3}{|l|}{\textbf{Módulo 6: Seguimiento}} \\ \hline
+RF2-6 & Monitor de cumplimiento & Indicador visual (semáforo) para el plazo de 15 días.  \\ \hline
+RF7-6 & Tablero de indicadores & Reportes estadísticos de cumplimiento por Unidad Académica.  \\ \hline
+\end{longtable}
+
+\section*{Requerimientos No Funcionales (RNF)}
+
+\begin{longtable}{|l|l|p{8.5cm}|}
+\hline
+\textbf{ID} & \textbf{Categoría} & \textbf{Descripción} \\ \hline
+RNF-SEC-01 & Seguridad & Cifrado de datos personales en tránsito y reposo.  \\ \hline
+RNF-SEC-02 & Seguridad & Firma electrónica avanzada con validez jurídica y no repudio.  \\ \hline
+RNF-USA-07 & Usabilidad & Uso de indicadores gráficos claros para el estatus de la queja.  \\ \hline
+RNF-FIA-08 & Fiabilidad & Cronómetros calculados exclusivamente en días hábiles.  \\ \hline
+RNF-POR-10 & Portabilidad & Acceso funcional garantizado en el navegador Chrome.  \\ \hline
+RNF-MTN-11 & Mantenibilidad & Diseño modular para actualizaciones sin afectar disponibilidad.  \\ \hline
+\end{longtable}
+
+\section*{Requerimientos Técnicos (RT) - [Generados]}
+
+\begin{longtable}{|l|p{4cm}|p{8cm}|}
+\hline
+\textbf{ID} & \textbf{Nombre} & \textbf{Especificación} \\ \hline
+RT-01 & Arquitectura & Microservicios para escalabilidad de los 6 módulos. \\ \hline
+RT-02 & Backend & Java (Spring Boot) para lógica de negocio y Python para IA. \\ \hline
+RT-03 & Base de Datos & PostgreSQL para datos relacionales y almacenamiento de logs. \\ \hline
+RT-04 & Motor de IA & Modelo de procesamiento de lenguaje natural para RF4.2-2. \\ \hline
+RT-05 & Despliegue & Contenedores Docker para asegurar la portabilidad (RNF-POR-10). \\ \hline
+\end{longtable}
+
+\section*{Reglas de Negocio (RN)}
+
+\begin{longtable}{|l|p{4cm}|p{8cm}|}
+\hline
+\textbf{ID} & \textbf{Regla} & \textbf{Descripción Técnica / Legal} \\ \hline
+RN-01 & Unicidad de Turno & Folio consecutivo y único por año calendario.  \\ \hline
+RN-04 & Jerarquía de Turno & Turnar obligatoriamente a la Subdefensoría con antecedentes.  \\ \hline
+RN-05 & Plazo de Informe & Bloqueo de edición de informes tras vencer 10 días hábiles.  \\ \hline
+RN-09 & Límite de Archivos & Documentos máx. 2MB; Multimedia máx. 20MB.  \\ \hline
+RN-10 & Cuota Total & Peso total de anexos iniciales no debe exceder 30MB.  \\ \hline
+\end{longtable}
+
+\end{document}
