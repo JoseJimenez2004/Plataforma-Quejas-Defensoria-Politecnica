@@ -1,0 +1,49 @@
+
+Plataforma Educativa sobre Privacidad y Derechos Digitales para Adolescentes
+----------------------------------------------------------------------------
+
+FRONTEND (Interfaz interactiva y gamificación)
+- React (framework principal) o Vue.js (alternativa ligera).
+- Phaser.js → motor de juegos 2D para simulaciones tipo “elige tu camino”.
+- React Flow → diagramas interactivos para explicar procesos.
+- Recharts / D3.js → visualización de progreso y métricas.
+- TailwindCSS → estilos rápidos y adaptables.
+- Shadcn/UI o Material UI → componentes accesibles.
+
+BACKEND (Lógica y seguridad)
+- Node.js con Express (API escalable y rápida).
+- Alternativa: Django (Python) para futuras integraciones con IA.
+- Funciones clave:
+  * Registro seguro con alias (no usar nombre real).
+  * Gestión de sesiones con JWT / OAuth2.
+  * Reportes automáticos en PDF/Excel (pdfkit, reportlab).
+  * API REST para comunicación frontend-backend.
+
+BASE DE DATOS
+- PostgreSQL (relacional, seguro y trazable).
+- MongoDB (NoSQL, flexible para progreso gamificado).
+
+SEGURIDAD
+- Anonimización de datos (alias en vez de nombre real).
+- Encriptación de contraseñas con bcrypt o argon2.
+- Certificados SSL (HTTPS obligatorio).
+- Cumplimiento normativo: LFPDPPP + privacidad por diseño.
+
+INFRAESTRUCTURA
+- Vercel/Netlify → para frontend.
+- Heroku / Railway / Render → para backend en pruebas.
+- Escalado: AWS Educate o Google Cloud for Education.
+- Contenedores con Docker para portabilidad.
+
+GAMIFICACIÓN Y TRAZABILIDAD
+- xAPI (TinCan API) o SCORM para registrar interacciones educativas.
+- Firebase Analytics o Matomo (open-source) para métricas de uso.
+- Sistema de logros/recompensas (BadgeOS o desarrollo propio).
+
+RESUMEN
+- FRONTEND: React + Phaser.js + TailwindCSS
+- BACKEND: Node.js + Express
+- BASE DE DATOS: PostgreSQL / MongoDB
+- SEGURIDAD: SSL + bcrypt + anonimización
+- INFRAESTRUCTURA: Vercel + Render/Docker
+- GAMIFICACIÓN: xAPI + Phaser.js

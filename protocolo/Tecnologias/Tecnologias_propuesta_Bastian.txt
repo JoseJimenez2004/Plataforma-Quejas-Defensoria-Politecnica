@@ -1,0 +1,53 @@
+Propuesta de Tecnologías a Utilizar
+-----Frontend (Interfaz de Usuario)-----
+
+Tecnología: React
+
+Función: Construcción de la interfaz modular, dinámica e interactiva para los módulos educativos y gamificados.
+
+Por qué usarla:
+-Más fácil y flexible que Angular.
+-Más moderno y escalable que usar solo HTML/JS puro.
+-Comunidad enorme, muchos tutoriales y librerías listas.
+
+Curva de aprendizaje: Media–rápida (4–6 semanas para manejar lo básico).
+
+Tecnologías de apoyo:
+-TailwindCSS (estilos modernos y responsive).
+-Framer Motion (animaciones atractivas).
+-Phaser.js (opcional para minijuegos).
+
+-----Backend (Lógica de negocio y API)-----
+
+Tecnología: Spring Boot (Java)
+
+Función: Exponer APIs REST, procesar lógica de negocio y conectarse a la base de datos.
+
+Por qué usarla:
+-Más robusta y defendible académicamente que Firebase o Node.js.
+-Estándar en entornos empresariales (muestra solidez técnica).
+-Se integra muy bien con bases de datos relacionales como PostgreSQL.
+
+Curva de aprendizaje: Media–alta (6–8 semanas, pero manejable en equipo).
+
+Tecnologías de apoyo:
+-Spring Web (endpoints REST).
+-Spring Data JPA (ORM para BD).
+-Spring Security (seguridad básica).
+
+-----Base de datos (Persistencia)-----
+
+Tecnología: PostgreSQL
+
+Función: Almacenamiento estructurado del progreso de usuarios anónimos, logros e historial de reportes.
+
+Por qué usarla:
+-Más moderno y potente que MySQL (mejor manejo de JSON y consultas avanzadas).
+-Mejor vista en el ámbito académico que usar una base NoSQL como Firebase Firestore.
+-Ideal para relaciones claras (usuario ↔ progreso ↔ logros).
+
+Curva de aprendizaje: Media (2–3 semanas para modelar y manejar consultas básicas).
+
+Tecnologías de apoyo:
+-H2 Database (para pruebas locales rápidas).
+-pgAdmin (gestor visual para PostgreSQL).
