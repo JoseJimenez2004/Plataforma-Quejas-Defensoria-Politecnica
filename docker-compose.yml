@@ -1,0 +1,29 @@
+services:
+  # Base de datos para el sistema de denuncias
+  db-defensoria:
+    image: postgres:15-alpine
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: defensoria_db
+      POSTGRES_USER: admin_user
+      POSTGRES_PASSWORD: password_seguro
+    ports:
+      - "5432:5432"
+
+  # Backend (Donde pusiste el ZIP de Spring Boot)
+  backend:
+    build: ./Defensoria-back/Dev
+    container_name: spring-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db-defensoria
+
+  # Frontend (Donde acabamos de generar Angular)
+  frontend:
+    build: ./Defensoria-front/Dev
+    container_name: angular-frontend
+    ports:
+      - "4200:4200"
+    stdin_open: true
+    tty: true

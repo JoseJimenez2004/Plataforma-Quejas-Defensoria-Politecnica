@@ -1,0 +1,217 @@
+%!TEX root = ../docs.tex
+\chapterX{Package cdtPersistencia}
+\label{ch:persistencia}
+
+El paquete cdtPersistencia define un conjunto de comandos internos que permiten guardar la información relevante de la especificación de un proyecto de software para (probablemente) ser explotada posteriormente. Además permite que al referenciar un elemento mediante su identificador aparezca un enlace con el nombre del elemento mientras que se añade una entrada para la referencia hecha en el apartado de referencias cruzadas al final del documento.\\
+
+\noindent Las dependencias con relación a otros paquetes se lista a continuación:
+        
+    \begin{quote}
+    \begin{description}
+        \item[inputenc] Permite especificar la codificación de los caracteres de entrada (la opción utilizada es 'uft8').
+        
+        \item[babel] Este paquete administra reglas tipográficas con base en el idioma especificado mediante la opción, el idioma utilizado es el español ('spanish')
+        
+        \item[fontenc] Permite al selecionar la codificación del tipo de fuente. Con la opción T1 se utiliza una codificación de 8-bits, lo que permite tener hasta 256 characteres (glifos).
+        
+        \item[datatool] Permite crear bases de datos mediante comandos de LaTeX, sobre las cuales se pueden aplicar operaciones de ordenamiento, lectura registro a registro, selecion a traves de condiciones, entre otras.
+        
+        \item[pgfkeys] Proporciona un sistema de administración de llaves flexible, dichas llaves son almacenadas internamente en una estructura de arbol con la finalidad de hacer más rápida su busqueda.
+        
+        \item[pgffor] Al igual que el packete pgfkeys forma parte del packete pgf. Pgffor define el comando 'foreach' que permite iterar sobre un arreglo de elementos de tipo clave-valor.
+        
+        \item[xstring] Provee un conjunto de macros que permiten realizar distintas operaciones sobre cadenas incluyendo operaciones condicionales dependiendo si la cadena cumple o no un criterio especificado.
+        
+        \item[multicol] Define un entorno 'multicols' el cual acomoda el texto en multiples columnas y balancea la cantidad de texto desplegada en cada columna
+        
+    \end{description}
+    \end{quote}
+
+
+\section{Tipos de Elementos}
+
+    En el paquete se define 7 tipos de elementos los cuales son almacenados en un arreglo correspondiente al tipo de elemento. Cada vez que se procesa un elemento, este se añade al arreglo correspondiente, arreglos son listados a continuación:
+    
+    \begin{description}
+        \item[\macro{Terminos}] Almacena los identificadores de los términos de negocio especificados a lo largo del documento. Los identificadores de terminos de negocio deben ser de la forma {\bf tTerminoNegocio} ó {\bf tTermino}.
+        
+        \item[\macro{BusinessRules}] Contiene todos los identificadores de las reglas de negocio especificadas en el documento. Los identificadores deben ser de la forma {\bf BRclave} (por ejemplo BR-S004 o BR-N025)
+        
+        \item[\macro{Actores}] Contiene los identificadores de los distintos actores especificados en el documento. Los identificadores para los actores deben ser de la forma {\bf aNombreActor} o {\bf aActor}.
+        
+        \item[\macro{Interfaces}] Almacena todos los identificadores de las interfaces especificadas en el documento. Dichos identificadores deben ser de la forma {\bf} (por ejemplo IN-DAE-UI1, IN-DAE-UI1a)
+        
+        \item[\macro{UseCases}] Almacena los identificadores de todos los casos de uso especificados en el documento. Los identificadores deben tener como subcadena a la sílaba {\bf UI}
+        
+        \item[\macro{Messages}] Contiene los identificadores de los distintos mensajes del sistema especificados. Los identificadores de los mensajes deben ser de la forma {\bf MSGclave}
+        
+        \item[\macro{OtrosElementos}] Contiene los nonmbres de las entidades y los atributos de las mismas, de la forma {\bf Entidad} o {\bf Entidad.atributo}. Cualquier elemento que no entre en las otras clasificaciones se guardará por defecto aquí.
+    \end{description}
+
+
+\section{Carga de Elementos}
+
+La carga de elementos se realiza mediante el comando {\bf\macro{load}}, por motivos de optimización los archivos de persistencia son abiertos en modo lectura unicamente en el inicio del documento. Cada archivo de persistencia corresponde a un tipo de elemento.
+    
+    \begin{code}
+\load{Family}{DB<sufixname>}
+    \end{code}
+    
+\noindent El comando recibe dos argumentos, el primero es la familia o abreviación del tipo de elemento, y el segundo es el subfijo del nombre de la base de datos. Este comando es usado unicamente al inicio del documento.
+    
+    \begin{code}
+\AtBeginDocument{
+    \load{BR}{BusinessRules}
+    \load{Term}{Terminos}
+    \load{Element}{Elements}
+    \load{UseCase}{UseCases}
+    \load{MSg}{Messages}
+    \load{UI}{Interfaces}
+    \load{Actor}{Actores}
+}
+    \end{code}
+
+
+\section{Añadiendo Elementos}
+
+Cada vez que se quiere añadir un elemento es necesario indicar establecer un punto para las posibles futuras referencias de ese mismo elemento, para ello se utiliza el siguiente comando.\\
+
+{\bf\macro{cdtLabel}} Al usar este comando se añadirá el punto de referencia a cadena especificada, cuando no se quiera imprimir una cadena entonces el segundo argumento debería estar vacio.
+
+    \begin{code}
+\cdtLabel{id}{Nombre}
+    \end{code}
+    
+{\bf\macro{cdtAddElement}} Este comando permite añadir un elemento al registro de llaves y al arreglo correspondiente del tipo de elemento introducido, especificando el autor, version y estado de dicho elemento
+
+    \begin{code}
+\cdtAddElement{id}{Nombre}{Autor}{Version}{Estado}
+    \end{code}
+
+\noindent Las variables que son asignadas en este comando son:
+
+    \begin{description}
+        \item[\macro{currentElementId}] Almacena el ''id'' del elemento que se está procesando en cada momento. Dependiendo de la forma que tenga el ''id'', este se añadira a los arreglos \refcmd{Terminos}, \refcmd{Actores}, \refcmd{BusinessRules}, \refcmd{Messages}, \refcmd{Interfaces}, \refcmd{UseCases} o \refcmd{OtrosElementos}.
+        
+        \item[\macro{currentElementFamily}] Alcena la familia del elemento que está actualmente procesado, puede contener los valores {\it Term} (para Terminos), {\it Actor} (para Actores), {\it BR} (para Reglas de Negocio), {\it MSG} (para Mensajes), {\it UseCase} (para Casos de Uso), {\it UI} (para interfaces) y {\it Element} (para otros elementos).
+    \end{description}
+
+\noindent Las claves y valores que se añaden las registro de claves están dados de la siguiente forma:
+    
+    \begin{code}
+/\currentElementFamily/id -> Nombre
+/\currentElementFamily/id/author -> Autor
+/\currentElementFamily/id/version -> Version
+/\currentElementFamily/id/status -> Estado
+    \end{code}
+    
+\noindent A veces es necesario cambiar el identificador del elemento actual que se está procesando, para ello se ocupa el siguiente comando, que sobreescribe a \refcmd{currentElementId}
+
+    \begin{code}
+\setCurrentElementId{id}
+    \end{code}
+
+
+\clearpage
+\section{Manejo de Referencias}
+
+Cada ves que sea necesario referenciar algun elemento dentro de la especificaciónn de otro, se recomienda usar el comando \cmd{refElem} o \cmd{refIdElem}.\\
+
+{\bf\macro{refElem}} Crea un enlace con el nombre del elemento que es referenciado.
+    \begin{code}
+\refElem{id}
+    \end{code}
+    
+{\bigskip\bf\macro{refIdElem}} Crea un enlace con el identificador y nombre del elemento que es referenciado, de la forma ''id:elemento''.
+    \begin{code}
+\refIdElem{id}
+    \end{code}
+
+\bigskip\noindent Cabe resaltar que el paquete maneja internamente un arreglo por cada elemento que es referenciado. Dicho arreglo contiene los identificadores de los elementos que referencian a un elemento en particular.
+
+    \begin{quote}
+    \begin{description}
+        \item[Por ejemplo:] Si un elemento $A$, es referencia primero por un elemento $B$, y posteriormente $A$ es referenciado por un elemento $C$, entonces el arregle $A_{ref}$ contiene a $B$ y $C$.\\
+        
+        \item[Nota:] El arreglo $A_{ref}$ es guardado en la llave de pgfkeys $/Reference/A$\\
+    \end{description}
+    \end{quote}
+
+\noindent Para realizar la tarea anteriormente mencionada, se utilizan las siguientes variables:
+
+    \begin{itemize}
+        \item {\bf\macro{referencedElementFamily}} Variable que contiene la familia de PGFKeys del elemento a referenciar. 
+        
+        \item {\bf\macro{oldValue}} Variable que almacena temporalmente el arreglo del elemento a referenciar, antes de ser actualizado.
+
+        \item \refcmd{currentElementId} Variable que almacena el identificador del elemento que está siendo especificado actualmente.
+    \end{itemize}
+        
+\noindent {\bf\macro{setReferencedElementFamily}} Es el comando encardo de asignarle valor a la variable \cmd{referencedElementFamily}, recibe como parámetro el id del elemento a referenciar.
+
+    \begin{code}
+\setReferencedElementFamily{id}
+    \end{code}
+        
+        
+\clearpage
+\section{Impresion de Referencias Cruzadas}
+
+Este paquete proporciona una macro la cual imprime todas las referencias cruzadas de los distintos elementos este comando es el siguiente:\\
+
+\noindent{\bf\macro{makeReferenciasCruzadas}} Imprime las referencias cruzadas de Terminos de Negocio, Actores, Elementos, Reglas de Negocio, Casos de Uso, Mensajes e Interfaces de Usuario.
+
+    \begin{code}
+\makeReferenciasCruzadas
+    \end{code}
+
+\noindent Dentro de \cmd{makeReferenciasCruzadas} se llama al los comandos internos.\\
+
+\noindent{\bf\macro{getReferences}} Itera sobre los arreglos de elementos para imprimir sus referencias cruzadas. Este comando recibe el par de argumentos familia y arreglo, de un tipo de elementos.
+
+    \begin{multicols}{2}
+        \begin{code}
+\getReferences{Familia}{Macro<Array>}
+        \end{code}
+        \columnbreak
+        \begin{code}
+\getReferences{BR}{\BusinessRules}
+        \end{code}
+    \end{multicols}
+
+\noindent{\bf\macro{getReferencesId}} Provee la misma funcionalidad que \cmd{getReferences} solo que presenta el nombre del elemento principal junto con su identificador, de la forma ''id:elemento''.
+
+    \begin{code}
+\getReferencesId{Familia}{Macro<Array>}
+    \end{code}
+    
+
+\noindent Finalmente, para escribir cada entrada en las referencias cruzadas de nn elemento en particular, se utiliza el comando {\bf\macro{getElement}} el cual escribe una sentencia dependiendo del tipo de elemento
+        
+    \begin{code}
+\getElement{id}
+    \end{code}
+        
+\noindent Las frase que imprime este comando pueden ser: {\it''El termino A''}, {\it''El actor B''}, {\it''La regla de negocio BR-N0012''}, entre otros.
+
+\section{Persistencia de Elementos}
+
+    Este paquete brinda la funcionalidad de que automáticamente se guarde en distintas bases de datos los elementos que fueron especificados a lo largo del documento. El comando que realiza esta tarea es:\\
+
+\noindent{\bf\macro{save}} Guarda un tipo de elementos en una base de datos en el directorio db, especificando la familia de los elementos, la macro que contiene el arreglo de dichos elementos y el nombre de la base de datos.
+
+    \begin{code}
+\save{Familia}{Macro<Array>}{DB<sufix-name>}
+    \end{code}
+    
+
+\noindent Por ejemplo, el comando \colorbox{gray!10}{\cmd{save}$\{$BR$\}\{\backslash$BusinessRules$\}\{$BusinessRules$\}$} guardaría las Reglas de negocio, en una base de datos llamada cdtBusinessRules.csv\\
+
+    \begin{quote}    
+    {\bf Nota:} Cada registro en las bases de datos tiene como atributos: id, name, author, version, status. Esto con la finalidad de que los datos puedan ser explotados por alguna otra herramienta externa.
+    \end{quote}
+
+
+
+
+

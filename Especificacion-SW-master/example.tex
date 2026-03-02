@@ -1,0 +1,68 @@
+\documentclass[10pt]{book}
+\usepackage[userView]{cdt/cdtAnalisis}
+\usepackage{comment}
+
+%==== Information of Proyect ================================================
+
+    \sistema[Etapa \#x]{Nombre del Sistema}
+    \proyecto[PROYECTO]{NOMBRE DEL PROYECTO}
+    \documento{DOCUMENTO}{NOMBRE DEL DOCUMENTO}{\RELEASE{VERSION}} % DRAFT{\today}
+    \entregable{ENTREGABLE}{NOMBRE DE ENTREGABLE}
+        
+    \titulo{\varProyecto}
+    \subtitulo{\varCveDocumento--\varEntregable}
+    \organizacion[CLAVE]{Instituto Politécnico Nacional}
+    \author{Escuela Superior de Cómputo del IPN}
+    \fecha{\today}
+    
+%==== Information of Document
+        
+        \setElaboro[Líder de proyecto IPN-ESCOM]{M.en C. José Jaime López Rabadán}
+            \addElaboro[Jefe de Academica]{Roberto gonzale Pedro}
+            \addElaboro[Jefe Garrafoneros]{Pancho Lopez}
+        \setAprobo[Comité Técnico]{Comite Técnico}
+        \setSuperviso[Secretaria de Servicios Educativos]{Mtra. María Guadalupe Vargas Jacobo}        
+
+%==== Defining Own Style
+
+        \setImgPortada{cdtTheme/portada}
+        \setImgHeader{cdtTheme/headerPar}{cdtTheme/headerInp}
+        \setImgPleca{cdtTheme/pleca}
+        \setImgLogo{cdtTheme/logoInp}{cdtTheme/logoPar}
+        %\setDireccion{Flores Magon \#82 B-402, Edificion Lopez Mateos, Nonoalco Tlatelolco, Delegación Cuauhtemoc, cp: 06900, CDMX}
+        \setTelefono{01800LLAMAME}
+        \setCorreo{example@example.com}
+
+\begin{document}
+
+    \frontmatter
+        \maketitle
+        \makeDocInfo
+        \makeObservaciones
+        \makeFirmas
+        \tableofcontents
+        \listoffigures
+        \listoftables
+    \mainmatter
+    
+%==== Se incluyen 
+
+    %\chapter{Introducción}
+    %\label{ch:introduccion}
+    %\input{example/1introduccion}
+
+    \part{Modelado del negocio}
+    \label{part:modeloNegocio}
+        \input{example/2ModTerminos}
+        \input{example/3ModInfo}
+        \input{example/4ModReglas}
+        \input{example/6ModUsuario}
+        \input{example/5ModDinamico}
+        \input{example/6Mensajes}
+        \input{example/7ModInteraccion}
+
+\backmatter
+    \makeReferenciasCruzadas
+
+\end{document}
+

@@ -2,3 +2,20 @@ token.txt
 *.txt
 token.txt
 *.txt
+
+# Archivos de construcción
+target/
+dist/
+node_modules/
+
+# Datos persistentes de la base de datos (IMPORTANTE)
+db-data/
+postgres_data/
+
+# IDEs y entorno
+.idea/
+.vscode/
+*.swp
+
+# Archivos de sistema de Docker
+.docker/
