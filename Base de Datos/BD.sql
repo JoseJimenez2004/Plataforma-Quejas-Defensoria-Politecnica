@@ -1,170 +1,95 @@
-// Use DBML to define your database structure
-// Docs: https://dbml.dbdiagram.io/docs
+-- Creación de Enums (como tipos o tablas según prefieras, aquí como tablas para mejor compatibilidad)
+CREATE TABLE dependencias_politecnicas (
+    id VARCHAR(50) PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL,
+    titular_nombre VARCHAR(255),
+    correo_oficial VARCHAR(255)
+);
 
-// --- ENUMS PARA REGLAS DE NEGOCIO ---
+CREATE TABLE usuarios (
+    id VARCHAR(50) PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    nombre_completo VARCHAR(200) NOT NULL,
+    rol VARCHAR(50) NOT NULL,
+    activo BOOLEAN DEFAULT TRUE,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-Enum RolActor {
-  QUEJOSO
-  AREA_SECRETARIAL
-  PRIMER_CONTACTO
-  SUBDEFENSORIA_ABOGADO
-  RESOLUCIONES
-  TITULAR_DDP
-  SEGUIMIENTO
-  ADMIN_SISTEMA
-  AUTORIDAD_POLITECNICA
-}
+CREATE TABLE quejosos (
+    id VARCHAR(50) PRIMARY KEY,
+    usuario_id VARCHAR(50) UNIQUE REFERENCES usuarios(id),
+    boleta_empleado VARCHAR(50) UNIQUE,
+    unidad_academica_id VARCHAR(50) REFERENCES dependencias_politecnicas(id),
+    es_mayor_edad BOOLEAN DEFAULT TRUE,
+    nombre_tutor VARCHAR(255),
+    contacto_tutor VARCHAR(255)
+);
 
-Enum TipoSolicitud {
-  ORIENTACION
-  QUEJA
-}
+CREATE TABLE quejas (
+    id VARCHAR(50) PRIMARY KEY,
+    folio VARCHAR(50) UNIQUE,
+    quejoso_id VARCHAR(50) REFERENCES quejosos(id),
+    tipo VARCHAR(50) NOT NULL,
+    medio VARCHAR(50) NOT NULL,
+    descripcion_hechos TEXT NOT NULL,
+    estatus VARCHAR(50) DEFAULT 'BORRADOR',
+    tiene_antecedentes BOOLEAN DEFAULT FALSE,
+    requiere_medidas BOOLEAN DEFAULT FALSE,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_ultimo_estatus TIMESTAMP
+);
 
-Enum MedioRecepcion {
-  PERSONAL
-  CORREO_ELECTRONICO
-  REDES_SOCIALES
-  SITIO_WEB
-}
+CREATE TABLE documentos (
+    id VARCHAR(50) PRIMARY KEY,
+    queja_id VARCHAR(50) REFERENCES quejas(id),
+    nombre_archivo VARCHAR(255) NOT NULL,
+    url_archivo TEXT NOT NULL,
+    tipo_doc VARCHAR(50),
+    es_original BOOLEAN DEFAULT FALSE,
+    firmado BOOLEAN DEFAULT FALSE,
+    sello_digital TEXT,
+    subido_por_usuario_id VARCHAR(50) REFERENCES usuarios(id),
+    fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-Enum EstatusQueja {
-  BORRADOR
-  RECIBIDA
-  EN_REVISION
-  INADMITIDA
-  ADMITIDA
-  EN_INVESTIGACION
-  EN_RESOLUCION
-  CONCILIADA
-  CONCLUIDA
-  EN_SEGUIMIENTO
-}
+CREATE TABLE acciones_investigacion (
+    id VARCHAR(50) PRIMARY KEY,
+    queja_id VARCHAR(50) REFERENCES quejas(id),
+    abogado_id VARCHAR(50) REFERENCES usuarios(id),
+    dependencia_id VARCHAR(50) REFERENCES dependencias_politecnicas(id),
+    descripcion_solicitud TEXT,
+    fecha_solicitud DATE,
+    fecha_limite_respuesta DATE,
+    respondida BOOLEAN DEFAULT FALSE,
+    recordatorios_enviados INTEGER DEFAULT 0
+);
 
-Enum TipoDocumento {
-  EVIDENCIA
-  ACUERDO_ADMISION
-  ACUERDO_INCOMPETENCIA
-  SOLICITUD_MEDIDAS
-  OFICIO_INVESTIGACION
-  RESOLUCION
-  RECOMENDACION
-  ACTA_CONCILIACION
-}
+CREATE TABLE resoluciones (
+    id VARCHAR(50) PRIMARY KEY,
+    queja_id VARCHAR(50) UNIQUE REFERENCES quejas(id),
+    existe_violacion BOOLEAN,
+    tipo_conclusion VARCHAR(100),
+    fundamento_legal TEXT,
+    fecha_emision DATE,
+    firma_titular_id VARCHAR(50) REFERENCES usuarios(id)
+);
 
-// --- TABLAS DE USUARIOS Y ACTORES ---
+CREATE TABLE seguimiento_recomendaciones (
+    id VARCHAR(50) PRIMARY KEY,
+    resolucion_id VARCHAR(50) REFERENCES resoluciones(id),
+    autoridad_acepta BOOLEAN,
+    estatus_cumplimiento VARCHAR(100),
+    fecha_limite_cumplimiento DATE,
+    prorroga_otorgada BOOLEAN DEFAULT FALSE,
+    motivo_prorroga TEXT
+);
 
-Table Usuario {
-  id varchar [pk]
-  username varchar [unique, not null]
-  password_hash varchar [not null]
-  email varchar [unique, not null]
-  nombre_completo varchar [not null]
-  rol RolActor [not null]
-  activo boolean [default: true]
-  fecha_registro timestamp [default: `now()`]
-}
-
-Table Quejoso {
-  id varchar [pk]
-  usuarioId varchar [unique]
-  boleta_empleado varchar [unique]
-  unidad_academica_id varchar
-  es_mayor_edad boolean [default: true]
-  nombre_tutor varchar 
-  contacto_tutor varchar
-}
-
-Table DependenciaPolitecnica {
-  id varchar [pk]
-  nombre varchar [not null]
-  titular_nombre varchar
-  correo_oficial varchar
-}
-
-// --- TABLAS DE GESTIÓN DE EXPEDIENTES ---
-
-Table Queja {
-  id varchar [pk]
-  folio varchar [unique] 
-  quejosoId varchar
-  tipo TipoSolicitud [not null]
-  medio MedioRecepcion [not null]
-  descripcion_hechos text [not null]
-  estatus EstatusQueja [default: 'BORRADOR']
-  tiene_antecedentes boolean [default: false]
-  requiere_medidas boolean [default: false]
-  fecha_creacion timestamp [default: `now()`]
-  fecha_ultimo_estatus timestamp
-}
-
-Table Documento {
-  id varchar [pk]
-  quejaId varchar
-  nombre_archivo varchar [not null]
-  url_archivo varchar [not null]
-  tipo_doc TipoDocumento
-  es_original boolean [default: false]
-  firmado boolean [default: false]
-  sello_digital text
-  subido_por_usuarioId varchar
-  fecha_subida timestamp [default: `now()`]
-}
-
-// --- TABLAS DE INVESTIGACIÓN Y RESOLUCIÓN ---
-
-Table AccionInvestigacion {
-  id varchar [pk]
-  quejaId varchar
-  abogado_id varchar 
-  dependencia_id varchar
-  descripcion_solicitud text
-  fecha_solicitud date
-  fecha_limite_respuesta date 
-  respondida boolean [default: false]
-  recordatorios_enviados integer [default: 0]
-}
-
-Table Resolucion {
-  id varchar [pk]
-  quejaId varchar [unique]
-  existe_violacion boolean
-  tipo_conclusion varchar 
-  fundamento_legal text
-  fecha_emision date
-  firma_titular_id varchar
-}
-
-Table SeguimientoRecomendacion {
-  id varchar [pk]
-  resolucionId varchar
-  autoridad_acepta boolean
-  estatus_cumplimiento varchar 
-  fecha_limite_cumplimiento date
-  prorroga_otorgada boolean [default: false]
-  motivo_prorroga text
-}
-
-// --- AUDITORÍA ---
-
-Table BitacoraAuditoria {
-  id varchar [pk]
-  usuarioId varchar
-  accion_realizada text
-  ip_origen varchar
-  fecha_hora timestamp [default: `now()`]
-}
-
-// --- RELACIONES (REFERENCIAS TOP-LEVEL) ---
-
-Ref: Quejoso.usuarioId > Usuario.id
-Ref: Queja.quejosoId > Quejoso.id
-Ref: Documento.quejaId > Queja.id
-Ref: Documento.subido_por_usuarioId > Usuario.id
-Ref: AccionInvestigacion.quejaId > Queja.id
-Ref: AccionInvestigacion.abogado_id > Usuario.id
-Ref: AccionInvestigacion.dependencia_id > DependenciaPolitecnica.id
-Ref: Resolucion.quejaId > Queja.id
-Ref: Resolucion.firma_titular_id > Usuario.id
-Ref: SeguimientoRecomendacion.resolucionId > Resolucion.id
-Ref: BitacoraAuditoria.usuarioId > Usuario.id
-Ref: Quejoso.unidad_academica_id > DependenciaPolitecnica.id
+CREATE TABLE bitacora_auditoria (
+    id VARCHAR(50) PRIMARY KEY,
+    usuario_id VARCHAR(50) REFERENCES usuarios(id),
+    accion_realizada TEXT,
+    ip_origen VARCHAR(45),
+    fecha_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
