@@ -1,0 +1,115 @@
+\documentclass[10pt]{book}
+\usepackage{cdt/cdtBook}
+\usepackage{cdt/cdtControl}
+\usepackage{cdt/cdtTheme}
+\usepackage{multicol}
+\usepackage{comment}
+\usepackage{fancyvrb}
+\usepackage[titles]{tocloft} % http://mirrors.ibiblio.org/CTAN/macros/latex/contrib/tocloft/tocloft.pdf
+
+\makeatletter
+\newcommand{\linkdest}[1]{\Hy@raisedlink{\hypertarget{#1}{}}}
+\makeatother
+
+\newcommand{\listmacrosname}{List of Macros}
+\newcommand{\listenvironname}{List of Environments}
+\newlistof{macro}{exp}{\listmacrosname}
+\newlistof{environ}{expE}{\listenvironname}
+
+\newcommand{\cmd}[1]{{\color{colorPrincipal}$\backslash$#1}}
+\newcommand{\refcmd}[1]{\hyperlink{#1}{$\backslash${#1}}}
+
+\newcommand{\macro}[1]{%
+    \linkdest{#1}%{}%
+    \refstepcounter{macro}%
+	\addcontentsline{exp}{macro}{\protect\hspace{3em}%
+	%\numberline{
+	\thechapter.\themacro\ \cmd{#1}}%\par%
+	\noindent{\cmd{#1}}%
+}
+
+\newcommand{\environ}[1]{
+    \linkdest{#1}%{}%
+    \refstepcounter{environ}%
+	\addcontentsline{expE}{environ}{\protect\hspace{3em}%
+	%\numberline{
+	\thechapter.\theenviron\ \cmd{#1}}%\par%
+	\noindent{\cmd{#1}}%
+}
+
+\setcounter{macro}{0}
+\setcounter{environ}{0}
+
+\newcommand{\chapterX}[1]{
+    \chapter{#1}
+	\addcontentsline{exp}{macro}{\hfill\\\bigskip\protect\numberline{\bf\thechapter\hspace{0.5em}#1}}
+	\addcontentsline{expE}{environ}{\hfill\\\bigskip\protect\numberline{\bf\thechapter\hspace{0.5em}#1}}
+}
+
+\newenvironment{code}{\SaveVerbatim{cverb}}{\endSaveVerbatim%
+    \vspace{-1em}%
+    \flushleft\fboxrule=1pt\fboxsep=1em
+        \fcolorbox{NavyBlue}{NavyBlue!20}{%
+            \makebox[\dimexpr\linewidth-2\fboxsep][l]{%
+                \BUseVerbatim{cverb}%
+            }%
+        }%
+    \endflushleft%
+}
+
+
+    %\sistema{Paquetes \LaTeX{} para Proyectos}
+    \proyecto[\bf--- CDT \LaTeX{} ]{Documentación CDT \LaTeX{}}
+    \documento {}{PLANTILLA PARA LA ESPECIFICACIÓN DE PROYECTOS}{ \bf\RELEASE{1.0}---- } % DRAFT{\today
+    \entregable{}{DOCUMENTACIÓN TÉCNICA}
+        
+    \titulo{\varProyecto\\\large\varDocumento}
+    \subtitulo{\varEntregable}
+    \organizacion[IPN]{Instituto Politécnico Nacional}
+    \author{Escuela Superior de Cómputo} % Daniel Isai Ortega Z.
+    \fecha{\today}
+    
+    \setImgPleca{cdtTheme/plecaL}
+
+\begin{document}
+
+    \frontmatter
+        \maketitle
+        %\makeDocInfo
+        %\makeObservaciones
+        %\makeFirmas
+        \tableofcontents
+        \listofmacro
+        \listofenviron
+        %\listoffigures
+        %\listoftables
+    \mainmatter
+    
+%==== Se incluyen 
+
+    %\input{docs/1Introduccion}
+    %\input{docs/2stackPaquetes}
+    
+    \part{Estilos}
+        %\input{docs/book}
+        %\input{docs/theme}
+        
+    \part{Especificación de Software}
+        \input{docs/analisis}
+        %\input{docs/business}
+        
+    \part{Persistencia y control de cambios}
+        %\input{docs/control}
+        \input{docs/persistencia}
+    
+    %\part{Guía de Instalación}
+        %\chapter{Instalación}
+        %\label{ch:install}
+        %\input{docs/}
+        
+        %\chapter{Recomendaciones}
+        %\label{ch:recommends}
+        %\input{docs/}
+    
+\end{document}
+

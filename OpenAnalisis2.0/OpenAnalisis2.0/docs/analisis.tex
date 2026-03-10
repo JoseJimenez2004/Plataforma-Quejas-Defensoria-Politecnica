@@ -1,0 +1,282 @@
+%!TEX root = ../docs.tex
+\chapterX{Package cdtAnalisis}
+\label{ch:analisis}
+
+El proposito de este paquete es facilitar la documentación en la etapa de análisis de un proyecto de ingeniería de software, contiene comandos y entornos para la especificación de actores, interfaces de usuario y mensajes.
+
+\noindent Las dependencias con relación a otros paquetes se listan a continuación:
+
+    \begin{quote}
+    \begin{description}
+        \item[chapterfolder] Paquete destinado a los usuarios que tienen una compleja estructura de carpetas, el paquete es utilizado para poder incluir archivos de otros directorios.
+        \item[keystroke] Este paquete provee un conjunto de macros para la representación gráfica de las teclas de un teclado de computadora.
+        \item[etoolbox] Proporciona un conjunto de primitivas de e-TeX entre otras herramientas destinadas a la generación de plantillas y comandos/environments de \LaTeX.
+        \item[cdt/Business] ir al capitulo.
+        \item[cdt/Control] ir al capitulo.
+        \item[cdt/cdtPersistencia] ir al capitulo.
+        \item[cdt/cdtBook] ir al capitulo.
+    \end{description}
+    \end{quote}
+
+\section{Opciones de Paquete}
+
+Las opciones de este paquete permiten filtrar el contenido que se desplegará en el documento PDF al momento de la compilación.
+    
+\noindent Las distintas categorías de visualización son:
+
+    \begin{quote}
+    \begin{description}
+        \item[all] Indica que el elemento se desplegará en todas las vistas.
+        \item[admin] Indica que el elemento es de administración del proyecto.
+        \item[control] El elemento es usado para control de cambios.
+        \item[design] El elemento define aspectos específicos de diseño.
+    \end{description}
+    \end{quote}
+
+\noindent Una vez vistos las distintas categorías de visualización, la {\bf opciones} que permite este paquete permiten acomodar un filtro para mostrar las distintas categorías. Las opciones del paquete son:
+    
+    \begin{quote}
+    \begin{description}
+        \item[userView] Muestra solo los elementos con categoria: all. (Opción por defecto)
+        \item[adminView] Muestra los elementos con categorías: all, admin, control o design.
+        \item[testView] Muestra los elementos: all y design
+    \end{description}
+    \end{quote}
+    
+\noindent Este paquete es el que debe ser añadido solo una vez en el archivo principal de \LaTeX. A continuación se muestran algunos ejemplos de como añadirlo, especificando las opciones
+    
+    \begin{code}
+\usepackage{cdt/cdtAnalisys}
+\usepackage[userView]{cdt/cdtAnalisys}
+\usepackage[adminView]{cdt/cdtAnalisys}
+\usepackage[testView]{cdt/cdtAnalisys}
+    \end{code}
+
+\section{Especificación de Requerimientos}
+
+El paquete define el entorno \environ{requerimientos} el cual muestra en una tabla los requerimientos iniciales del sistema. El entorno recibe como argumento opcional el título, en caso de no especificarse su valor es {\it Requerimientos iniciales para el sistema}.
+    
+    \begin{multicols}{2}
+    \begin{code}
+\begin{requerimientos}
+    \RFitem{id}{Nombre}{Descripción}
+    \RFitem{id}{Nombre}{Descripción}
+    ...
+\end{requerimientos}
+    \end{code}
+    \columnbreak
+    \begin{code}
+\begin{requerimientos}[Titulo]
+  \RFitem{id}{Nombre}{Descripción}
+  \RFitem{id}{Nombre}{Descripción}
+  ...
+\end{requerimientos}
+    \end{code}
+    \end{multicols}
+
+\noindent El comando \macro{RFItem} permite añadir un nuevo requerimientos al entorno \cmd{requerimientos}. Este comando recibe como argumentos el identificador de requerimiento, el nombre y la descripción del mismo.
+
+    \begin{code}
+\RFItem{id}{Nombre}{Descripción}
+    \end{code}
+
+
+\section{Atributos de Software}
+
+El paquete define el entorno \environ{atributoSoftware} el cual ayuda a definir los atributos de software que se deben considerar, en esta definición se incluye el objetivo, definición de métricas, unidad de medida, proceso de medición, y la meta o valores de aceptación.
+\clearpage
+
+\noindent Este entorno recibe como parámetros tres argurmos, los cuales son el identificador del atributo de software, el tipo, y el nombre. A continuación se muestra un ejemplo de como utilizar este entorno.
+
+    \begin{code}
+\begin{atributoDeSoftware}{Id}{Tipo}{Nombre}
+    \item[Objetivo:] Descripción
+    \item[Definición:] Descripción
+    \item[Métrica:] Descripción
+    \item[Unidad de medida:] Descripción
+    \item[Medición:] Descripción
+    \item[Meta:] Descripción
+\end{atributoDeSoftware}
+    \end{code}
+
+\begin{quote}
+{\bf Nota:} La medición debe contener una descripción del procedimiento y ambiente en necesarios para obtener evidencia objetiva sobre la propiedad que se pueda presentar en la Unidad de medida descrita. Esta descripción debe garantizar su reprodución: la repeticion del procedimiento, bajo las mismas condiciones descritas, de los mismos artefactos de software, deben producir los mismos resultados.
+\end{quote}
+
+
+
+\section{Especificación de Actores}
+
+El paquete define el entorno \environ{actor} el cual permite especificar las características de los actores que operarán el sistema. Este entorno recibe como parametros un argumento opcional y tres argumentos obligatorios. El argumento opcional, debe ser una cadena especial específicada en la sección \ref{ch:persistencia} en el apartado X..., a continuación se muestran dos ejemplos de como utilizar este entorno.
+
+    \begin{code}
+ \begin{Actor}{id}{Nombre del actor}{descripción}
+     \item[Área:] Descripción
+     \item[Responsabilidades:] \hfill
+        \begin{itemize}
+            \item Supervisar ...
+            \item Plantear ...
+            \item Cuidar ...
+        \end{itemize}
+    \item[Perfil:] \hfill
+        \begin{itemize}
+            \item Amplia experiencia en el ramo
+            \item Licenciatura como mínimo
+        \end{itemize}
+     \item[Cantidad:] Decenas
+ \end{Actor}
+    \end{code}
+    
+\begin{quote}
+{\bf Nota:} Se recomienda especificar la cantidad en decenas, centenas, millares, etc.
+\end{quote}
+    
+    \begin{code}
+ \begin{Actor}[Autor/DanielO,Version/1.0,Estado/Ok]{id}{Nombre}{descripción}
+     \item[Área:] Descripción
+     \item[Responsabilidades:] \hfill
+        \begin{itemize}
+            \item Supervisar ...
+            \item Plantear ...
+            \item Cuidar ...
+        \end{itemize}
+    \item[Perfil:] \hfill
+        \begin{itemize}
+            \item Amplia experiencia en el ramo
+            \item Licenciatura como mínimo
+        \end{itemize}
+     \item[Cantidad:] Cientos
+ \end{Actor}
+    \end{code}
+
+\section{Interfaces}
+
+\clearpage
+\section{Casos de Uso}
+
+Este paquete tambien brinda el entorno \environ{UserCase} el cual ayuda a especificar la interacción que tienen uno o varios actores con el sistema al ocupar una funcionalidad del mismo.
+
+    \begin{code}
+\begin{UseCase}[Autor/DanielO,Version/1.0,Estado/Ok]{Id}{Nombre}{Descripción}
+
+    % Atributos de control
+
+    \UCsection{Atributos}
+    \UCitem{Actor}{\refElem{ actor }}
+    \UCitem{Propósito}{ ... }
+    \UCitem{Entradas}{ \imprimeEntrada }
+    \UCitem{Origen}{ Mouse y del teclado. }
+    \UCitem{Salida}{ ... }   
+    \UCitem{Destino}{ ... }
+    \UCitem{Precondición}{ ... }
+    \UCitem{Postcondición}{ ... }
+    \UCitem{Reglas de Negocio}{ ... }	
+    \UCitem{Errores}{ ... }
+    
+    \UCitem{Referencia Documental}{ ... }
+    \UCitem{Datos sensibles}{ ... }
+    
+    % Atributos de diseño
+    
+    % Atributos de administración
+    
+    % Atributos de control
+    
+\end{UseCase}
+    \end{code}
+    
+\noindent Al especificar casos de uso se recomienda usar al menos los attributos del ejemplo, si es necesario de pueden añadir o quitar otros elementos. A continuación se escribe la especificación de los comandos:\\
+    
+\noindent{\bf\cmd{UCsection}} Este comando recibe dos argumentos: el primero es opcional y especifica la categoría de visualización, el siguiente es el título de la nueva sección.
+    
+    \begin{multicols}{2}
+    \begin{code}
+\UCsection{Atributos}
+    \end{code}
+    \columnbreak
+    \begin{code}
+\UCsection[design]{Datos de diseño}
+    \end{code}
+    \end{multicols}
+    
+\clearpage
+\noindent{\bf\cmd{UCitem}} Este comando recibe tres argumentos: el primero (opcional) es la categoria de visualización (por defecto 'all'), el segundo es el atributo que se mostrará y el tercer elemento el la descripción de dicho atributo. A continuación se muestran dos ejemplos.
+
+    \begin{multicols}{2}
+    \begin{code}
+\UCitem{Atributo}{Descripción}
+    \end{code}
+    \columnbreak
+    \begin{code}
+\UCitem[design]{Atributo}{Descripción}
+    \end{code}
+    \end{multicols}
+
+\subsection{Atributos de Control}
+
+Normalmente en los atributos de control se especifican al inicio del caso de uso, los que se muestran por defecto son autor, versión y estado; es buena practica añadir los atributos del supervisor, ultimo cambio, entre otros.\\
+    
+\noindent Tambien al realizar las revisiones se acostumbra realizar una sección que separe los datos (atributos) correspondientes a dicha revisión. A continuación se muestra un ejemplo.
+
+    \begin{code}
+\UCitem[control]{Superviso}{...}
+\UCitem[control]{Revisor}{...}
+\UCitem[control]{Último cambio}{...}
+
+\UCsection[control]{Revisión número 1}
+    \UCitem[control]{Fecha}{...}
+    \UCitem[control]{Resultado}{Con correcciones}
+    \UCitem[control]{Observaciones}{
+	    \begin{Titemize}
+		    \Titem Observacion 1
+		    \Titem ...
+	    \end{Titemize}
+    }
+    \end{code}
+
+\subsection{Atributos de diseño}
+
+En los atributos de diseño se especifican consideraciones específicas del caso de uso que implican restricciones al momento de desarrollar/implementar y realizar las pruebas del caso de uso.
+
+    \begin{code}
+\UCsection[design]{Datos de Diseño}
+
+    \UCitem[design]{Disparador}{ ... }
+    \UCitem[design]{Condiciones de Término}{ ... }
+    \UCitem[design]{Efectos Colaterales}{ ... }
+    \UCitem[design]{Suposiciones}{ ... }
+    \UCitem[design]{Casos de Prueba}{ ... }
+    \end{code}
+    
+    
+\clearpage
+\subsection{Atributos de administración}
+
+Los atributos de administración de requerimientos permiten saber que el nivel de entendimiento y complejidad del caso de uso para la administración del proyecto.
+
+    \begin{code}
+\UCsection[admin]{Datos de Administración de Requerimiento}
+
+    \UCitem[admin]{Viene de}{ \refIdElem{idUseCase} }
+    \UCitem[admin]{Requerimientos Funcionales}{ ... }
+    \UCitem[admin]{Requerimientos del Sistema}{ ... }
+    \UCitem[admin]{Madurez}{ Alta/Media/Baja }
+    \UCitem[admin]{Volatilidad}{ Alta/Media/Baja }
+    \UCitem[admin]{Complejidad}{ Alta/Media/Baja }
+    \UCitem[admin]{Tamaño}{ Grande/Mediano/Pequeño } 
+    \UCitem[admin]{Prioridad}{ Alta/Media/Baja }
+    \UCitem[admin]{Auditable}{ Si/No }
+    \UCitem[admin]{Issues}{ ... }
+    \UCitem[admin]{Dificultades}{
+	    \begin{Titemize}
+		    \Titem Dificultad 1
+		    \Titem ...
+	    \end{Titemize}
+    }
+    \end{code}
+
+\section{Mensajes}
+\subsection{Variables}
+\subsection{Commandos}
+\subsection{Environments}
+

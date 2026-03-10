@@ -1,0 +1,20 @@
+# Excluding Gedit backup files
+*.*~
+cdt/*.*~
+example/*.*~
+docs/*.*~
+
+# Excluding all but essential/required files
+*.*
+!*.tex
+!*.pdf
+!cdt/*.sty
+!cdt/**/*.png
+!images/**/*.png
+!theme/*.png
+!compile.sh
+
+# Including other files
+!.gitignore
+!README.md
+
