@@ -15,6 +15,7 @@
 \usepackage{tikz}             % Para dibujar la línea en la portada
 \usepackage{lmodern}          % Fuentes escalables para evitar errores de tamaño
 \usepackage{setspace}       % Para control de interlineado
+\usepackage{makecell}         % Para saltos de línea en celdas de tablas
 \usetikzlibrary{calc}         % Para cálculos en tikz
 
 % Margenes: Izq 3cm, Der 2cm, Sup 2cm, Inf 2cm
@@ -220,13 +221,14 @@ Desde la perspectiva técnica, el desarrollo de este sistema se fundamenta en la
 \\
 Finalmente, dado que la plataforma procesa información de carácter personal y sensible dentro del entorno educativo, su diseño integra protocolos de acceso basado en roles y este apegado a el cumplimiento legal y ético. Logrando que este enfoque no solo optimice la operación interna de la DDP, sino que consolida una infraestructura digital confiable que otorga a la DDP eficiencia administrativa apoyando el cumplimiento de sus procesos operativos dentro del IPN.
 
+\newpage
 \section{Estado del Arte}
 Para el desarrollo de la presente plataforma, es fundamental realizar un análisis comparativo de las soluciones tecnológicas existentes en el mercado y en el ámbito institucional que abordan la gestión de quejas. Este estudio permite identificar las deficiencias funcionales de las herramientas actuales y definir el valor agregado de nuestra propuesta.
 \begin{table}[H]
     \centering
     \caption{Descripción de sistemas orientados a la denuncia y gestión de casos}
     \label{tab:sistemas_comparativos}
-    \begin{tabular}{>{\bfseries\itshape\raggedleft\arraybackslash}p{3cm} p{10cm}}
+    \begin{tabular}{>{\bfseries\raggedright\arraybackslash}p{3.2cm} p{10.5cm}}
     \toprule
     \textbf{Plataforma} & \textbf{Descripción} \\
     \midrule
@@ -255,19 +257,25 @@ Las siguientes tablas establecen el contraste técnico entre las soluciones anal
     \centering
     \caption{Comparativa de funciones de gestión operativa}
     \label{tab:comparativa_funciones}
-    \begin{tabular}{>{\bfseries\itshape\raggedright\arraybackslash}p{2.8cm} >{\centering\arraybackslash}p{2cm} >{\centering\arraybackslash}p{2cm} >{\centering\arraybackslash}p{2cm} >{\centering\arraybackslash}p{2cm} >{\centering\arraybackslash}p{2cm}}
+    \small
+    \begin{tabular}{>{\raggedright\arraybackslash}p{3.4cm} >{\centering\arraybackslash}p{1.9cm} >{\centering\arraybackslash}p{1.9cm} >{\centering\arraybackslash}p{1.9cm} >{\centering\arraybackslash}p{1.9cm} >{\centering\arraybackslash}p{1.9cm}}
     \toprule
-    \textit{Característica} & \textbf{\underline{BullyButton}} & \textbf{Ventanilla Escolar} & \textbf{Alerta IPN} & \textbf{UNAM Denuncia} & \textbf{PROFEDET Digital} \\
+    \textbf{Característica} &
+    \makecell{\textbf{Bully}\\\textbf{Button}} &
+    \makecell{\textbf{Ventanilla}\\\textbf{Escolar}} &
+    \makecell{\textbf{Alerta}\\\textbf{IPN}} &
+    \makecell{\textbf{UNAM}\\\textbf{Denuncia}} &
+    \makecell{\textbf{PROFEDET}\\\textbf{Digital}} \\
     \midrule
-    Plataforma Web        & Si & Si & Si & Si & Si \\
+    Plataforma Web               & Sí & Sí & Sí & Sí & Sí \\
     \addlinespace
-    Registro de quejas formal & Si & Si & No & Si & Si \\
+    Registro de queja formal     & Sí & Sí & No & Sí & Sí \\
     \addlinespace
-    Seguimiento por folio & Si & No & No & No & No \\
+    Seguimiento por folio        & Sí & No & No & No & No \\
     \addlinespace
-    Generación de estadísticas & Si & No & No & Si & Si \\
+    Generación de estadísticas   & Sí & No & No & Sí & Sí \\
     \addlinespace
-    Clasificador de casos con IA & No & No & No & Si & Si \\
+    Clasificador de casos con IA & No & No & No & Sí & Sí \\
     \bottomrule
     \end{tabular}
     \end{table}
