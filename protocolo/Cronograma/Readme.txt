@@ -1,1 +1,0 @@
-Se generara conforme a las tegnologias 

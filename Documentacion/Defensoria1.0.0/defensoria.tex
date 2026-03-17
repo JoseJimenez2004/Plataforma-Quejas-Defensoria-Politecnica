@@ -1,0 +1,57 @@
+\documentclass[10pt]{book}
+\usepackage[userView]{cdt/cdtAnalisis}
+\usepackage{comment}
+
+%==== Information of Project ================================================
+\sistema[Etapa \#1]{Cyber-Escudo} 
+\proyecto[TT 2026-B009]{Plataforma Web para la Denuncia Segura y Prevención de Riesgos Digitales en Alineación con la Normativa Mexicana} 
+\documento{DT}{Documento de Reporte Técnico Final}{\RELEASE{1.0}} 
+\entregable{E1}{Plataforma web funcional}
+    
+\titulo{\varProyecto}
+\subtitulo{\varCveDocumento--\varEntregable}
+\organizacion[IPN]{Instituto Politécnico Nacional} 
+\author{Escuela Superior de Cómputo (ESCOM)} 
+\fecha{12 de marzo de 2026}
+
+%==== Information of Document
+\setElaboro[Líder de Proyecto]{Jiménez Velázquez José Bryan Omar} 
+    \addElaboro[Ingeniero de Backend]{Flores Espinosa Edgar Jair} 
+    \addElaboro[Desarrolladora de Frontend]{Santos Rivera Leilani Shareni} 
+\setAprobo[Director]{M. en C. Ulises Vélez Saldaña} 
+\setSuperviso[Directora]{M. en C. Jessie Paulina Guzmán Flores} 
+
+\begin{document}
+
+    \frontmatter
+        \maketitle
+        \makeDocInfo
+        \makeObservaciones
+        \makeFirmas
+        \tableofcontents
+        \listoffigures
+        \listoftables
+    \mainmatter
+    
+%==== Se incluyen 
+
+    %\chapter{Introducción}
+    %\label{ch:introduccion}
+    %\input{example/1introduccion}
+
+    \part{Modelado del negocio}
+    \label{part:modeloNegocio}
+        \input{example/1introduccion}
+        \input{example/2ModTerminos}
+        \input{example/3ModInfo}
+        \input{example/4ModReglas}
+        \input{example/6ModUsuario}
+        \input{example/5ModDinamico}
+        \input{example/6Mensajes}
+        \input{example/7ModInteraccion}
+
+\backmatter
+    \makeReferenciasCruzadas
+
+\end{document}
+

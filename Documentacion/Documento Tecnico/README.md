@@ -1,3 +1,0 @@
-﻿# Primeros pasos
-
-Documentación
