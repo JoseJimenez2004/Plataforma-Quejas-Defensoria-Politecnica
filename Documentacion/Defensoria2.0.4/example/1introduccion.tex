@@ -5,142 +5,140 @@
     En el Instituto Politécnico Nacional (IPN), que es una institución reconocida por la educación tecnológica en México, tiene como principios establecidos bajo la Ley Orgánica [1] y su Reglamento Interno [2] el compromiso propio de garantizar un entorno de respeto, equidad y legalidad para todos los integrantes de su comunidad. Ante la identificación de diversas violaciones o vulneraciones a los derechos de estudiantes, docentes y administrativos, el IPN determinó la creación de la Defensoría de los Derechos Politécnicos (DDP) a través de su acuerdo de creación oficial [3]. El cual es un órgano dotado de independencia funcional, que surge como el mecanismo institucional encargado del seguimiento y gestión de las inconformidades derivadas de actos u omisiones que incumplan los derechos Politécnicos.
     
     La gestión de estas quejas representa un proceso crítico que demanda no solo de la sensibilidad humana, sino una administración operativa de alta precisión. Actualmente, la DDP rige su operación mediante el Manual de Organización [4] y el Manual de Procedimientos [5], los cuales establecen las etapas de recepción, radicación, investigación y resolución. No obstante, la ejecución de estos procesos ha presentado desafíos tecnológicos significativos, ya que el flujo de trabajo actual depende de mecanismos manuales y herramientas de oficina descentralizadas que impiden una integración total de la información. Esta carencia de integración tecnológica, sumada al creciente volumen de solicitudes diarias, compromete la eficiencia del personal y extiende los tiempos de respuesta institucionales.
+
+\section{Planteamiento del Problema}
+
+    La DDP es el órgano pilar encargado de salvaguardar la legalidad y el respeto a los derechos politécnicos dentro de la comunidad del IPN, la cual integra a estudiantes, docentes y personal administrativo. Su función es esencial para la atención y resolución de quejas; no obstante, ante la creciente demanda de servicios y el tiempo requerido de procesos operativos de los casos actuales, se ha identificado la oportunidad de fortalecer su eficiencia operativa a través de la modernización tecnológica. Bajo el esquema de flujo operativo actual, se presentan tres puntos críticos que fundamentan el desarrollo de la solución planteada:
     
-    En respuesta a esta problemática, el presente Trabajo Terminal (TT) propone el desarrollo de una Plataforma Web para gestionar y tener un seguimiento de las quejas, diseñada para alinearse específicamente con la estructura orgánica de la DDP. La solución busca centralizar las quejas recibidas en una sola plataforma y sistematizar el flujo operativo de los diversos roles institucionales, tales como el Abogado Asesor, Subdefensor, Área Secretarial, Área de Primer Contacto y Titular.
+    \subsection{Contexto y situación problemática}
     
-    Como innovación tecnológica, el sistema incorpora un módulo de asistencia basado en Inteligencia Artificial (IA) para la etapa de registro. Este componente utiliza técnicas de Procesamiento de Lenguaje Natural (PLN) mediante el uso de Word Embeddings para comprender el contexto semántico de las narrativas [6]. A través de un enfoque que combina redes neuronales con sistemas expertos, el clasificador actúa como un agente inteligente capaz de orientar al quejoso sobre la competencia de su solicitud. Con ello se busca filtrar desde el primer contacto para optimizar la carga de trabajo de la DDP.
+    En primer lugar, se identifica la necesidad de optimización de capital humano y la carga operativa, debido a que la atención jurídica sustantiva es realizada por un cuerpo especializado de 5 abogados, quienes gestionan la totalidad de las quejas competentes. La cantidad de quejas recibidas genera una carga administrativa que, al ser gestionada mediante procesos manuales, limita el tiempo disponible para cada abogado, resultando estratégico implementar una solución tecnológica que asista en las tareas repetitivas y permita al personal enfocarse en la resolución de los casos.
+    
+    \subsection{Problema a resolver}
+    
+    Derivado de lo anterior, existe un reto en la eficiencia de la recepción y clasificación de solicitudes durante la etapa de "Primer Contacto". Ya que, al recibir información por múltiples canales descentralizados, las solicitudes suelen presentarse de forma incompleta o no son competentes para el órgano de la DDP, resaltando la falta de un asistente tecnológico para el filtrado de competencia, obligando a la revisión manual, retrasando la atención a casos de alta prioridad.
+    
+    Finalmente, la gestión de documentos realizada de forma tradicional y la falta de seguimiento impactan en la transparencia del proceso. La actual dependencia de métodos de archivo físicos dificulta la consulta rápida de antecedentes. La transición a una plataforma integral no solo brindaría certidumbre al quejoso sobre el estatus de su queja, sino que permitiría al personal de la DDP la revisión de documentos y datos importantes sobre los casos.
 
-    \section{Planteamiento del Problema}
+\section{Solución Propuesta}
 
-        La DDP es el órgano pilar encargado de salvaguardar la legalidad y el respeto a los derechos politécnicos dentro de la comunidad del IPN, la cual integra a estudiantes, docentes y personal administrativo. Su función es esencial para la atención y resolución de quejas; no obstante, ante la creciente demanda de servicios y el tiempo requerido de procesos operativos de los casos actuales, se ha identificado la oportunidad de fortalecer su eficiencia operativa a través de la modernización tecnológica. Bajo el esquema de flujo operativo actual, se presentan tres puntos críticos que fundamentan el desarrollo de la solución planteada:
+    Se propone el desarrollo de una plataforma web integral diseñada para centralizar, automatizar y optimizar el ciclo de vida de las quejas dentro de la DDP. La solución se fundamenta en una arquitectura basada en microservicios y contempla la implementación de un módulo de asistencia inteligente en la etapa de primer contacto, el cual utiliza técnicas de PLN para asistir al usuario en la determinación preliminar de la competencia de su queja. Se permitirá la gestión basada en roles, garantizando que cada actor interactúe con la información de acuerdo con sus facultades normativas, asegurando el seguimiento total del expediente desde su recepción hasta su resolución final.
+
+\section{Justificación}
+
+    La implementación de esta plataforma web se justifica por la necesidad estratégica de fortalecer los procesos operativos de la DDP, transformando una gestión actual basada en métodos manuales y herramientas de oficina descentralizadas hacia un flujo digital inteligente. 
+    
+    \subsection{Ámbito social e institucional}
+    
+    En el ámbito social e institucional, el proyecto busca fortalecer varios puntos empezando por la eliminación de barreras que impiden una mejor comunicación entre la comunidad politécnica y la DDP al proporcionar un canal de seguimiento transparente que elimine la incertidumbre del quejoso. De igual forma, al automatizar las tareas administrativas, se potencia la capacidad de respuesta del personal de la Defensoría y se reduce el costo de gestión operativa, permitiendo que el cuerpo de abogados centralice sus esfuerzos en el análisis jurídico de fondo a las quejas procedentes, apoyando una atención equitativa y eficiente ante la creciente demanda de quejas que reciben diariamente.
+    
+    \subsection{Perspectiva técnica}
+    
+    Desde la perspectiva técnica, el desarrollo de este sistema se fundamenta en la adopción de una arquitectura de microservicios permitiendo la oportunidad de escalabilidad y mantenimiento independiente de sus componentes. Ya que la integración de tecnologías como Java Spring Boot y PostgreSQL permite el manejo seguro de información sensible, mientras que la incorporación de un clasificador basado en PLN demuestra una innovación clave para resolver los puntos significativos desde el área de primer contacto. Esta solución resuelve la fragmentación de datos y fortalece la integridad de un repositorio histórico de quejas para futuras consultas y auditorias.
+    
+    Finalmente, dado que la plataforma procesa información de carácter personal y sensible dentro del entorno educativo, su diseño integra protocolos de acceso basado en roles y está apegado al cumplimiento legal y ético. Logrando que este enfoque no solo optimice la operación interna de la DDP, sino que consolide una infraestructura digital confiable que otorgue a la DDP eficiencia administrativa apoyando el cumplimiento de sus procesos operativos dentro del IPN.
+
+\section{Objetivos}
+
+    \subsection{Objetivo General}
+
+        Desarrollar una plataforma web basada en una arquitectura de microservicios mediante la integración de módulos de gestión documental y un motor de procesamiento de lenguaje natural para sistematizar el flujo operativo de recepción, clasificación y seguimiento de quejas de la DDP.
+    
+    \subsection{Objetivos específicos}
+        \begin{itemize}
+            \item Modelar las etapas de proceso y resolución de quejas con base en las reglas de negocio del Manual de Procedimientos de la DDP para automatizar la transición de estados del expediente y el cumplimiento de términos legales.
+            \item Diseñar una arquitectura de microservicios desacoplada empleando el ecosistema de Java Spring Boot y comunicación vía API REST para garantizar la independencia operativa entre el sistema de gestión administrativa y el módulo de inteligencia artificial.
+            \item Implementar un clasificador de texto neuro-simbólico utilizando Word Embeddings y sistemas basados en reglas para determinar la competencia de las solicitudes desde el primer contacto y reducir la carga de clasificación manual.
+            \item Construir un repositorio digital de evidencias y expedientes mediante el sistema de gestión de bases de datos PostgreSQL para centralizar la documentación soporte y asegurar la integridad de la información jurídica manejada por la Defensoría.
+            \item Desarrollar un módulo de consulta y seguimiento para el quejoso a través de un sistema de folios digitales y notificaciones de estatus para brindar certidumbre sobre el avance del proceso y reducir la saturación de los canales de comunicación presenciales.
+        \end{itemize}
+
+\section{Alcances y Limitaciones}
+
+    \subsection{Alcances}
+    
+    La plataforma web permitirá el registro, seguimiento y gestión integral de las quejas recibidas por la DDP, abarcando desde el primer contacto hasta la resolución final del expediente. El sistema implementará un clasificador basado en PLN para asistir en la determinación de competencia de las solicitudes, así como un repositorio digital para el almacenamiento seguro de documentos y evidencias. Se desarrollarán módulos específicos para cada rol institucional (Abogado Asesor, Subdefensor, Área Secretarial, Área de Primer Contacto y Titular) y se proporcionará un sistema de consulta pública mediante folios digitales.
+    
+    \subsection{Limitaciones}
+    
+    El sistema no sustituirá el criterio jurídico de los abogados de la DDP, sino que fungirá como una herramienta de apoyo en la clasificación inicial. La plataforma no realizará resoluciones automáticas de quejas ni emitirá dictámenes legales. Asimismo, el clasificador basado en IA requerirá un período de entrenamiento y ajuste con datos reales para alcanzar niveles óptimos de precisión, por lo que en etapas iniciales operará de manera asistida con supervisión humana.
+
+\section{Estado del Arte}
+
+    Para el desarrollo de la presente plataforma, es fundamental realizar un análisis comparativo de las soluciones tecnológicas existentes en el mercado y en el ámbito institucional que abordan la gestión de quejas. Este estudio permite identificar las deficiencias funcionales de las herramientas actuales y definir el valor agregado de nuestra propuesta.
+    
+    \subsection{Sistemas orientados a la denuncia y gestión de casos}
+    
+    \begin{table}[h]
+    \centering
+    \caption{Descripción de sistemas orientados a la denuncia y gestión de casos}
+    \label{tab:estado-arte}
+    \begin{tabular}{|p{3cm}|p{9.5cm}|}
+        \hline
+        \textbf{Plataforma} & \textbf{Descripción} \\
+        \hline
+        BullyButton.com & Herramienta de pago para entornos escolares que permite reportar incidentes de acoso y genera informes de seguimiento y estadísticas para administradores [7]. \\
+        \hline
+        Ventanilla Escolar & Plataforma para la comunidad escolar mexicana que permite generar reportes de orientación sobre incidentes, aunque estos no constituyen denuncias formales y su seguimiento es limitado [8]. \\
+        \hline
+        Alerta IPN & Herramienta institucional para reportar sucesos anómalos. Requiere registro, pero el documento indica que la clasificación de incidentes es manual y tiene operatividad limitada para denuncias formales [9]. \\
+        \hline
+        UNAM - Denuncia Línea & Plataforma de la Defensoría de los Derechos Universitarios de la UNAM que permite el registro y seguimiento de quejas por actos contrarios a la normativa universitaria [10]. \\
+        \hline
+        PROFEDET Digital & Sistema de la Procuraduría Federal de la Defensa del Trabajo que ofrece un flujo de orientación y registro de quejas para la defensa de derechos laborales [11]. \\
+        \hline
+    \end{tabular}
+    \end{table}
+
+    \subsection{Análisis comparativo de funcionalidades}
         
-        En primer lugar, se identifica la necesidad de optimización de capital humano y la carga operativa, debido a que la atención jurídica sustantiva es realizada por un cuerpo especializado de 5 abogados, quienes gestionan la totalidad de las quejas competentes. La cantidad de quejas recibidas genera una carga administrativa que, al ser gestionada mediante procesos manuales, limita el tiempo disponible para cada abogado, resultando estratégico implementar una solución tecnológica que asista en las tareas repetitivas y permita al personal enfocarse en la resolución de los casos.
-        
-        Derivado de lo anterior, existe un reto en la eficiencia de la recepción y clasificación de solicitudes durante la etapa de "Primer Contacto". Ya que, al recibir información por múltiples canales descentralizados, las solicitudes suelen presentarse de forma incompleta o no son competentes para el órgano de la DDP, resaltando la falta de un asistente tecnológico para el filtrado de competencia, obligando a la revisión manual, retrasando la atención a casos de alta prioridad.
-        
-        Finalmente, la gestión de documentos realizada de forma tradicional y la falta de seguimiento impactan en la transparencia del proceso. La actual dependencia de métodos de archivo físicos dificulta la consulta rápida de antecedentes. La transición a una plataforma integral no solo brindaría certidumbre al quejoso sobre el estatus de su queja, sino que permitiría al personal de la DDP la revisión de documentos y datos importantes sobre los casos.
-
-    \section{Solución Propuesta}
-
-        Se propone el desarrollo de una plataforma web integral diseñada para centralizar, automatizar y optimizar el ciclo de vida de las quejas dentro de la DDP. La solución se fundamenta en una arquitectura basada en microservicios y contempla la implementación de un módulo de asistencia inteligente en la etapa de primer contacto, el cual utiliza técnicas de PLN para asistir al usuario en la determinación preliminar de la competencia de su queja. Se permitirá la gestión basada en roles, garantizando que cada actor interactúe con la información de acuerdo con sus facultades normativas, asegurando el seguimiento total del expediente desde su recepción hasta su resolución final.
-
-    \section{Objetivos}
-
-        \subsection{Objetivo General}
-
-            Desarrollar una plataforma web basada en una arquitectura de microservicios mediante la integración de módulos de gestión documental y un motor de procesamiento de lenguaje natural para sistematizar el flujo operativo de recepción, clasificación y seguimiento de quejas de la DDP.
-        
-        \subsection{Objetivos específicos}
-            \begin{itemize}
-                \item Modelar las etapas de proceso y resolución de quejas con base en las reglas de negocio del Manual de Procedimientos de la DDP para automatizar la transición de estados del expediente y el cumplimiento de términos legales.
-                \item Diseñar una arquitectura de microservicios desacoplada empleando el ecosistema de Java Spring Boot y comunicación vía API REST para garantizar la independencia operativa entre el sistema de gestión administrativa y el módulo de inteligencia artificial.
-                \item Implementar un clasificador de texto neuro-simbólico utilizando Word Embeddings y sistemas basados en reglas para determinar la competencia de las solicitudes desde el primer contacto y reducir la carga de clasificación manual.
-                \item Construir un repositorio digital de evidencias y expedientes mediante el sistema de gestión de bases de datos PostgreSQL para centralizar la documentación soporte y asegurar la integridad de la información jurídica manejada por la Defensoría.
-                \item Desarrollar un módulo de consulta y seguimiento para el quejoso a través de un sistema de folios digitales y notificaciones de estatus para brindar certidumbre sobre el avance del proceso y reducir la saturación de los canales de comunicación presenciales.
-            \end{itemize}
-
-    \section{Justificación}
-
-        La implementación de esta plataforma web se justifica por la necesidad estratégica de fortalecer los procesos operativos de la DDP, transformando una gestión actual basada en métodos manuales y herramientas de oficina descentralizadas hacia un flujo digital inteligente. 
-        
-        En el ámbito social e institucional, el proyecto busca fortalecer varios puntos empezando por la eliminación de barreras que impiden una mejor comunicación entre la comunidad politécnica y la DDP al proporcionar un canal de seguimiento transparente que elimine la incertidumbre del quejoso. De igual forma, al automatizar las tareas administrativas, se potencia la capacidad de respuesta del personal de la Defensoría y se reduce el costo de gestión operativa, permitiendo que el cuerpo de abogados centralice sus esfuerzos en el análisis jurídico de fondo a las quejas procedentes, apoyando una atención equitativa y eficiente ante la creciente demanda de quejas que reciben diariamente.
-        
-        Desde la perspectiva técnica, el desarrollo de este sistema se fundamenta en la adopción de una arquitectura de microservicios permitiendo la oportunidad de escalabilidad y mantenimiento independiente de sus componentes. Ya que la integración de tecnologías como Java Spring Boot y PostgreSQL permite el manejo seguro de información sensible, mientras que la incorporación de un clasificador basado en PLN demuestra una innovación clave para resolver los puntos significativos desde el área de primer contacto. Esta solución resuelve la fragmentación de datos y fortalece la integridad de un repositorio histórico de quejas para futuras consultas y auditorias.
-        
-        Finalmente, dado que la plataforma procesa información de carácter personal y sensible dentro del entorno educativo, su diseño integra protocolos de acceso basado en roles y está apegado al cumplimiento legal y ético. Logrando que este enfoque no solo optimice la operación interna de la DDP, sino que consolide una infraestructura digital confiable que otorgue a la DDP eficiencia administrativa apoyando el cumplimiento de sus procesos operativos dentro del IPN.
-
-    \section{Estado del Arte}
-
-        Para el desarrollo de la presente plataforma, es fundamental realizar un análisis comparativo de las soluciones tecnológicas existentes en el mercado y en el ámbito institucional que abordan la gestión de quejas. Este estudio permite identificar las deficiencias funcionales de las herramientas actuales y definir el valor agregado de nuestra propuesta.
+        Las siguientes tablas establecen el contraste técnico entre las soluciones analizadas y los objetivos de este proyecto.
         
         \begin{table}[h]
         \centering
-        \caption{Descripción de sistemas orientados a la denuncia y gestión de casos}
-        \label{tab:estado-arte}
-        \begin{tabular}{|p{3cm}|p{9.5cm}|}
+        \caption{Comparativa de funciones de gestión operativa}
+        \label{tab:comparativa}
+        \begin{tabular}{|p{2.5cm}|c|c|c|c|c|}
             \hline
-            \textbf{Plataforma} & \textbf{Descripción} \\
+            \textbf{Característica} & \textbf{BullyButton} & \textbf{V. Escolar} & \textbf{Alerta IPN} & \textbf{UNAM} & \textbf{PROFEDET} \\
             \hline
-            BullyButton.com & Herramienta de pago para entornos escolares que permite reportar incidentes de acoso y genera informes de seguimiento y estadísticas para administradores [7]. \\
+            Plataforma Web & Sí & Sí & Sí & Sí & Sí \\
             \hline
-            Ventanilla Escolar & Plataforma para la comunidad escolar mexicana que permite generar reportes de orientación sobre incidentes, aunque estos no constituyen denuncias formales y su seguimiento es limitado [8]. \\
+            Registro de quejas formal & Sí & Sí & No & Sí & Sí \\
             \hline
-            Alerta IPN & Herramienta institucional para reportar sucesos anómalos. Requiere registro, pero el documento indica que la clasificación de incidentes es manual y tiene operatividad limitada para denuncias formales [9]. \\
+            Seguimiento por folio & Sí & No & No & No & No \\
             \hline
-            UNAM - Denuncia Línea & Plataforma de la Defensoría de los Derechos Universitarios de la UNAM que permite el registro y seguimiento de quejas por actos contrarios a la normativa universitaria [10]. \\
+            Generación de estadísticas & Sí & No & No & Sí & Sí \\
             \hline
-            PROFEDET Digital & Sistema de la Procuraduría Federal de la Defensa del Trabajo que ofrece un flujo de orientación y registro de quejas para la defensa de derechos laborales [11]. \\
+            Clasificador de casos con IA & No & No & No & Sí & Sí \\
             \hline
         \end{tabular}
         \end{table}
 
-        \subsection{Análisis Comparativo de Funcionalidades}
-            
-            Las siguientes tablas establecen el contraste técnico entre las soluciones analizadas y los objetivos de este proyecto.
-            
-            \begin{table}[h]
-            \centering
-            \caption{Comparativa de funciones de gestión operativa}
-            \label{tab:comparativa}
-            \begin{tabular}{|p{2.5cm}|c|c|c|c|c|}
-                \hline
-                \textbf{Característica} & \textbf{BullyButton} & \textbf{V. Escolar} & \textbf{Alerta IPN} & \textbf{UNAM} & \textbf{PROFEDET} \\
-                \hline
-                Plataforma Web & Sí & Sí & Sí & Sí & Sí \\
-                \hline
-                Registro de quejas formal & Sí & Sí & No & Sí & Sí \\
-                \hline
-                Seguimiento por folio & Sí & No & No & No & No \\
-                \hline
-                Generación de estadísticas & Sí & No & No & Sí & Sí \\
-                \hline
-                Clasificador de casos con IA & No & No & No & Sí & Sí \\
-                \hline
-            \end{tabular}
-            \end{table}
+\section{Metodología}
+
+    Para el desarrollo de este proyecto se ha decidido utilizar un enfoque ágil híbrido, que combina la estructura iterativa y planificación de Scrum con la gestión visual y flexible de Kanban, conformando la metodología Scrum-ban. Esta decisión se fundamenta en las ventajas que cada metodología ofrece:
+    \begin{itemize}
+        \item \textbf{Scrum} proporciona un marco de trabajo iterativo, basado en ciclos cortos llamados Sprints, donde se priorizan funcionalidades del Product Backlog, asegurando entregas parciales de valor y retroalimentación continua.
+        \item \textbf{Kanban} facilita la visualización del flujo de trabajo, la identificación temprana de obstáculos y la flexibilidad para gestionar tareas de forma continua, sin depender de la finalización estricta de fases.
+    \end{itemize}
+    La combinación de ambos enfoques permite:
+    \begin{itemize}
+        \item Mantener un flujo de trabajo constante, evitando bloqueos que retrasen la entrega de funcionalidades críticas.
+        \item Adaptarse rápidamente a cambios en requisitos o prioridades, vital en un proyecto que involucra interpretación y clasificación de datos sensibles.
+        \item Visualizar el progreso en tiempo real, permitiendo a todos los miembros del equipo y stakeholders conocer el estado de cada tarea.
+        \item Garantizar entregas parciales de valor mediante Sprints planificados, mientras se mantiene un flujo flexible para ajustes continuos.
+    \end{itemize}
+    A diferencia de los modelos secuenciales tradicionales, Scrum-ban no espera a que una fase termine completamente para iniciar la siguiente, permitiendo una entrega de valor constante y ajustes iterativos a lo largo del ciclo de desarrollo.
+
+\section{Estructura del documento / Intención del documento}
+
+    Este documento refleja el resultado de los avances realizados en el sistema \varCveSistema-\varSistema\ y tiene como objetivo fundamental establecer la arquitectura, los módulos de interacción y las reglas de negocio necesarias para el desarrollo de un canal digital seguro de denuncia y prevención.
+
+    Va dirigido a los directores del Trabajo Terminal, el M. en C. Ulises Vélez Saldaña y la Dra. Jessie Paulina Guzmán Flores, así como a los sínodos encargados de la evaluación técnica del proyecto y a los desarrolladores involucrados en la implementación de los módulos de Backend y Frontend.
     
-    \section{Metodología}
-    
-        Para el desarrollo de este proyecto se ha decidido utilizar un enfoque ágil híbrido, que combina la estructura iterativa y planificación de Scrum con la gestión visual y flexible de Kanban, conformando la metodología Scrum-ban. Esta decisión se fundamenta en las ventajas que cada metodología ofrece:
-        \begin{itemize}
-            \item \textbf{Scrum} proporciona un marco de trabajo iterativo, basado en ciclos cortos llamados Sprints, donde se priorizan funcionalidades del Product Backlog, asegurando entregas parciales de valor y retroalimentación continua.
-            \item \textbf{Kanban} facilita la visualización del flujo de trabajo, la identificación temprana de obstáculos y la flexibilidad para gestionar tareas de forma continua, sin depender de la finalización estricta de fases.
-        \end{itemize}
-        La combinación de ambos enfoques permite:
-        \begin{itemize}
-            \item Mantener un flujo de trabajo constante, evitando bloqueos que retrasen la entrega de funcionalidades críticas.
-            \item Adaptarse rápidamente a cambios en requisitos o prioridades, vital en un proyecto que involucra interpretación y clasificación de datos sensibles.
-            \item Visualizar el progreso en tiempo real, permitiendo a todos los miembros del equipo y stakeholders conocer el estado de cada tarea.
-            \item Garantizar entregas parciales de valor mediante Sprints planificados, mientras se mantiene un flujo flexible para ajustes continuos.
-        \end{itemize}
-        A diferencia de los modelos secuenciales tradicionales, Scrum-ban no espera a que una fase termine completamente para iniciar la siguiente, permitiendo una entrega de valor constante y ajustes iterativos a lo largo del ciclo de desarrollo.
+    El documento se estructura de la siguiente manera: el Capítulo 2 presenta la nomenclatura y el modelado del negocio; el Capítulo 3 describe los requerimientos del sistema; el Capítulo 4 detalla la arquitectura propuesta; el Capítulo 5 presenta el diseño de la interfaz; y finalmente, el Capítulo 6 expone las conclusiones y trabajos futuros.
 
-    \section{Intención del documento}
-
-        Este documento refleja el resultado de los avances realizados en el sistema \varCveSistema-\varSistema\ y tiene como objetivo fundamental establecer la arquitectura, los módulos de interacción y las reglas de negocio necesarias para el desarrollo de un canal digital seguro de denuncia y prevención.
-
-        Va dirigido a los directores del Trabajo Terminal, el M. en C. Ulises Vélez Saldaña y la Dra. Jessie Paulina Guzmán Flores, así como a los sínodos encargados de la evaluación técnica del proyecto y a los desarrolladores involucrados en la implementación de los módulos de Backend y Frontend.
-
-    \section{Estructura del documento}
-
-        El presente documento se encuentra organizado en tres partes principales, cada una dividida a su vez en capítulos, como se muestra a continuación:
-
-        \begin{itemize}
-            \item El capítulo \ref{ch:nomenclatura} presenta la terminología y modelado base utilizado para la estructura de la información.
-            \item Parte 1: Modelo de Negocio
-                \begin{itemize}
-                    \item El capítulo \ref{ch:glosario} presenta los términos técnicos y del negocio necesarios para comprender el dominio de la denuncia segura y riesgos digitales.
-                    \item El capítulo \ref{ch:modInfo} detalla las entidades del sistema como Quejoso, Expediente y Resolución.
-                    \item El capítulo \ref{ch:modReglas} define las reglas de negocio que rigen el comportamiento del sistema.
-                \end{itemize}
-            \item Parte 2: Modelo Dinámico e Interacción
-                \begin{itemize}
-                    \item El capítulo \ref{ch:modDinamico} describe los casos de uso, como el registro de quejas y gestión de expedientes.
-                    \item El capítulo \ref{ch:modAlcance} define los actores del sistema, incluyendo al Abogado Asesor, Titular de la DDP y otros roles institucionales.
-                    \item El capítulo de interfaces presenta el diseño visual y flujo de interacción del usuario.
-                \end{itemize}
-        \end{itemize}
-    
 \chapter{Nomenclatura}
 \label{ch:nomenclatura}
     
