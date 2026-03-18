@@ -1,0 +1,81 @@
+%!TEX root = ../example.tex
+\chapter{Glosario}
+
+\chapter{Fundamentos Tecnológicos: Motor de Clasificación de Textos}
+\label{ch:fundamentos_clasificacion}
+
+    Para dotar a la Plataforma Web para la Denuncia Segura y Prevención de Riesgos Digitales de una etapa de primer contacto verdaderamente inteligente, es imperativo establecer un marco teórico sólido que sustente la toma de decisiones del sistema. El clasificador encargado de asistir en la determinación de competencia de las quejas dirigidas a la Defensoría de los Derechos Politécnicos (DDP) se fundamenta en el Aprendizaje Supervisado, el cual utiliza datos previamente etiquetados para predecir la categoría de nuevas entradas[cite: 2]. Este capítulo detalla la progresión analítica, matemática y arquitectónica necesaria para construir y optimizar los algoritmos Support Vector Machines (SVM) y Naive Bayes dentro del ecosistema del proyecto.
+
+\section{Fundamentos Lógicos, Matemáticos y Estadísticos}
+
+    El procesamiento de quejas a través de un sistema informático requiere abstraer el lenguaje humano a representaciones cuantitativas.
+    
+    \subsection{Paradigmas Estadísticos y Probabilidad}
+    Es necesario comprender la diferencia computacional y epistemológica entre la estadística frecuentista y la inferencia bayesiana. Mientras la primera se basa exclusivamente en la repetición de datos observables, la estadística bayesiana define la probabilidad como la certeza de un evento incorporando información previa o externa. Este enfoque se rige por el Teorema de Bayes para calcular probabilidades condicionadas:
+    $$P(A|B)=\frac{P(B|A)P(A)}{P(B)}$$
+    
+    \subsection{Álgebra Lineal Espacial}
+    El procesamiento de múltiples características textuales exige proyectar la información en espacios vectoriales $n$-dimensionales. Para medir la similitud entre documentos procesados, se hace uso de métricas espaciales como la distancia euclidiana:
+    $$d(x,y)=\sqrt{\sum_{i}(x_{i}-y_{i})^{2}}$$
+
+\section{Preprocesamiento de Lenguaje Natural (PLN)}
+
+    El lenguaje expresado en las quejas de la comunidad politécnica contiene ambigüedades. El correcto procesamiento de los datos incluye la eliminación de caracteres especiales y de palabras clave conocidas como \textit{stopwords}.
+    
+    \begin{itemize}
+        \item \textbf{Limpieza y Normalización:} Remoción de ruido algorítmico y caracteres especiales para estandarizar el texto de entrada.
+        \item \textbf{Reducción Morfológica:} Aplicación de técnicas como el \textit{Stemming} para reducir las palabras a su raíz algorítmica y la \textit{Lemmatization} para obtener la forma canónica evaluando el contexto léxico.
+        \item \textbf{Tokenización y N-gramas:} Partición de frases en subconjuntos discretos para preservar las dependencias contextuales locales.
+    \end{itemize}
+
+\section{Extracción de Características y Vectorización}
+
+    Para que los modelos de la DDP procesen texto, este debe transformarse en matrices numéricas.
+    
+    \subsection{Mapeo de Frecuencia y Relevancia}
+    El uso de funciones como \textit{CountVectorizer} permite realizar una transformación del texto a vector basándose puramente en la frecuencia. Alternativamente, el enfoque \textit{Term Frequency - Inverse Document Frequency} (TF-IDF) otorga un menor peso a las palabras que más veces se repiten asumiendo que poseen menor poder discriminativo.
+    
+    \subsection{Word Embeddings}
+    Implementación de representaciones vectoriales continuas. Modelos como Word2Vec utilizan redes neuronales para aprender asociaciones entre palabras, mientras que GloVe representa el parecido semántico evaluando la distancia geométrica.
+
+\section{Modelo Probabilístico: Algoritmo Multinomial Naive Bayes}
+
+    Este modelo destaca por su rapidez y simplicidad computacional, calculando la probabilidad de ocurrencia de clases asumiendo una independencia estricta entre los sucesos.
+
+    \subsection{Regla de Decisión y Suavizado}
+    Para clasificar múltiples categorías, el modelo aplica la regla Maximum A Posteriori (MAP):
+    $$v_{NB}=\arg\max_{v_{j}\in V}P(v_{j})\prod_{i}P(a_{i}|v_{j})$$
+    
+    Dado que una queja nueva puede contener vocabulario ausente en el entrenamiento, se utiliza la Regla de Laplace. Esta técnica suele añadir una unidad a cada uno de los recuentos para evitar que una probabilidad de cero anule todo el producto:
+    $$\hat{\theta}_{yi}=\frac{N_{yi}+\alpha}{N_{y}+\alpha n}$$
+
+\section{Geometría de Separación: Support Vector Machines (SVM)}
+
+    El algoritmo SVM ofrece alta eficacia geométrica y se basa en la idea de separar dos clases usando una línea recta o un hiperplano, seleccionando los vectores de soporte para maximizar el margen de separación.
+    
+    \subsection{Construcción del Hiperplano y Regularización}
+    Se definen los límites de decisión mediante las ecuaciones paramétricas $wx+b=1$ y $wx+b=-1$. La inclusión del parámetro de regularización $C$ compensa errores permitiendo flexibilidad frente al ruido inherente de los textos libres.
+    
+    \subsection{Proyección Dimensional y Estrategias Multiclase}
+    Para datos no linealmente separables, se aplican funciones \textit{Kernel} (Lineal, Polinomial, RBF) que proyectan la información a dimensiones superiores. La clasificación en las distintas áreas de competencia de la DDP se resuelve dividiendo el problema mediante estrategias computacionales \textit{One-against-One} u \textit{One-against-All}.
+
+\section{Evaluación Rigurosa y Optimización}
+
+    Para asegurar la calidad en la automatización del primer contacto, el rendimiento de los modelos no se mide únicamente por su exactitud global, sino auditando sesgos a través de una Matriz de Confusión.
+    
+    \begin{itemize}
+        \item \textbf{Cálculo de Tasas de Eficiencia:} Uso de Precisión y \textit{Recall} (sensibilidad).
+        \item \textbf{F1-Score:} Se trata de una media armónica de la precisión y recall que otorga un mayor peso a los valores más bajos, previniendo clasificaciones engañosas por clases desbalanceadas:
+        $$F1 = 2 \cdot \frac{precision \cdot recall}{precision + recall}$$
+        \item \textbf{Curva ROC y AUC:} Representación gráfica de la tasa de verdaderos positivos contra los falsos positivos para determinar el umbral óptimo de discriminación del sistema.
+    \end{itemize}
+
+\section{Arquitectura, Integración y Microservicios}
+
+    La transición de un entorno de experimentación matemática a un entorno de producción en el IPN requiere un ensamblaje arquitectónico riguroso.
+    
+    \subsection{Serialización y Tuberías Computacionales}
+    Uso de herramientas de \textit{Pipeline} para encadenar la vectorización y el modelo predictivo. La persistencia del estado en memoria se logra transformando el clasificador entrenado a un archivo binario mediante la función \textit{pickle.dumps}, permitiendo su posterior carga sin requerir un reentrenamiento constante[cite: 2].
+    
+    \subsection{Despliegue Operativo}
+    La integración final consiste en encapsular el modelo binario dentro del ecosistema de microservicios. Se orquesta la comunicación vía API REST hacia el backend (gestionado en Java Spring Boot) y se garantiza la trazabilidad histórica de los expedientes almacenados en PostgreSQL, consolidando una infraestructura digital independiente y confiable.

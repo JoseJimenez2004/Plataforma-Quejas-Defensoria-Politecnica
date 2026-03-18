@@ -1,0 +1,97 @@
+\documentclass[10pt]{book}
+\usepackage[userView]{cdt/cdtAnalisis}
+\usepackage{comment}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{graphicx}
+%==== Information of Project ================================================
+\sistema[Etapa \#1]{Cyber-Escudo} 
+\proyecto[TT 2026-B009]{Plataforma Web para la Denuncia Segura y Prevención de Riesgos Digitales en Alineación con la Normativa Mexicana} 
+\documento{DT}{Documento de Reporte Técnico Final}{\RELEASE{2.1.0}} 
+\entregable{E1}{Plataforma web funcional}
+    
+\titulo{\varProyecto}
+\subtitulo{\varCveDocumento--\varEntregable}
+\organizacion[IPN]{Instituto Politécnico Nacional} 
+\author{Escuela Superior de Cómputo (ESCOM)} 
+\fecha{12 de marzo de 2026}
+
+%==== Information of Document
+\setElaboro[Líder de Proyecto]{Jiménez Velázquez José Bryan Omar} 
+    \addElaboro[Ingeniero de Backend]{Flores Espinosa Edgar Jair} 
+    \addElaboro[Desarrolladora de Frontend]{Santos Rivera Leilani Shareni} 
+\setAprobo[Director]{M. en C. Ulises Vélez Saldaña} 
+\setSuperviso[Directora]{M. en C. Jessie Paulina Guzmán Flores} 
+
+\begin{document}
+
+    \frontmatter
+        \maketitle
+        \makeDocInfo
+        \makeObservaciones
+        \makeFirmas
+        
+        % === ADVERTENCIA ===
+        \thispagestyle{empty}
+        \begin{center}
+            \textbf{\large Advertencia}
+        \end{center}
+        
+        \vspace{0.5cm}
+        
+        \begin{quote}
+        \noindent
+        ``Este documento contiene información desarrollada por la Escuela Superior de Cómputo del Instituto Politécnico Nacional, a partir de datos y documentos con derecho de propiedad y por lo tanto, su uso quedará restringido a las aplicaciones que explícitamente se convengan.''
+        
+        \vspace{0.3cm}
+        
+        \noindent
+        La aplicación no convenida exime a la escuela su responsabilidad técnica y da lugar a las consecuencias legales que para tal efecto se determinen.
+        
+        \vspace{0.5cm}
+        
+        \noindent
+        Información adicional sobre este reporte técnico podrá obtenerse en:
+        
+        \vspace{0.3cm}
+        
+        \noindent
+        La Subdirección Académica de la Escuela Superior de Cómputo del Instituto Politécnico Nacional, situada en Av. Juan de Dios Bátiz s/n Teléfono: 57296000, extensión 52000.
+        \end{quote}
+        
+        \clearpage
+        % === FIN ADVERTENCIA ===
+        
+        \tableofcontents
+        \listoffigures
+        \listoftables
+    \mainmatter
+    
+%==== Se incluyen 
+
+    %\chapter{Introducción}
+    %\label{ch:introduccion}
+    %\input{example/1introduccion}
+
+    \part{Modelado del negocio}
+    \label{part:modeloNegocio}
+        \input{example/1introduccion}
+        \input{example/2FundamentosdeInteligenciaArtificial}
+        \input{example/3ArquitecturadelSistema}
+        \input{example/4ModTerminos}
+        \input{example/5ModInfo}
+        \input{example/6ModReglas}
+        \input{example/7ModDinamico}
+        \input{example/8ModUsuario}
+        \input{example/9Mensajes}
+        \input{example/10ModInteraccion}
+        \input{example/11ModReferencias}
+
+        
+\backmatter
+    \makeReferenciasCruzadas
+
+\end{document}

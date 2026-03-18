@@ -1,0 +1,786 @@
+%!TEX root = ../example.tex
+\chapter{Modelo de Reglas de Negocio}
+\label{ch:modReglas}
+
+\section{Reglas de Negocio de Sistema}
+
+%%======================================================================
+\begin{BusinessRule}[Autor/Erick Jimenez,Version/2.1,Estado/Ok]{BR-S001}{Campos obligatorios}%
+
+	\BRitem[control]{Revisada por}{Pendiente.}
+    \BRitem[control]{Aprobada por}{Pendiente.}
+    
+    \BRsection[control]{Atributos}    
+    \BRitem[admin]{Clase}{\bcIntegridad}%   Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+    \BRitem[admin]{Tipo}{\btEnabler}%       Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+    \BRitem[admin]{Nivel}{\blControlling}%  Nivel: \blControlling, \blInfluencing.
+    
+	\BRitem{Descripción}{Los campos proporcionados al sistema marcados como obligatorios no se deben omitir.}
+	\BRitem[admin]{Sentencia}{Sea $campo$ un atributo de $Entidad$, tal que $campo.obligatorio = true$ entonces 
+    	$ \forall campo \Rightarrow campo.valor \neq \emptyset $ }
+	\BRitem{Motivación}{Evitar la falta de información relevante en el sistema causada por la omisión del actor al introducir datos.}
+	\BRitem{Ejemplo positivo}{Cumplen la regla:
+	    \begin{itemize}
+		    \item Para la entidad unidad aprendizaje, el actor introduce todos los atributos solicitados.
+		    \item Para el Perfil Docente, el actor introduce todos los datos con excepción de habilidades y actitudes.
+		    \item Para la entidad bibliografía, el actor introduce todos los atributos solicitados con excepción del ISSN.
+	    \end{itemize}}
+	\BRitem{Ejemplo negativo}{No cumplen con la regla: \refElem{BR-N045}
+	\begin{itemize}
+		\item El actor no proporciona el nombre para la entidad.
+		\item El actor no proporciona la fecha de validación para la entidad \refElem{tPlanEstudio}
+		\item El actor no proporciona el lugar de realización para la entidad \refElem{Practica}.
+	\end{itemize}}
+	
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-S002}{Información correcta}
+
+	\BRitem[control]{Revisada por}{Pendiente.}
+	\BRitem[control]{Aprobada por}{Pendiente.}
+	
+	\BRsection[control]{Atributos}    
+    \BRitem[admin]{Clase}{\bcIntegridad}%   Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+    \BRitem[admin]{Tipo}{\btEnabler}%       Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+    \BRitem[admin]{Nivel}{\blControlling}%  Nivel: \blControlling, \blInfluencing.
+	
+	\BRitem{Descripción}{Todos los datos proporcionados al sistema deben respetar su formto, estar dentro de su longitud máxima o mínima descrita en el diccionario de datos y pertenecer al tipo de dato especificado en el modelo de información.}
+	\BRitem{Sentencia}{Sea $formato$ la expresión regular que determina el formato de un campo definido en el diccionario de datos, $L$ el lenguaje que genera $formato$ y $campo$ un campo introducido por el actor, entonces $ \forall campo \Rightarrow campo \in L $.}
+	\BRitem{Sentencia}{Sea $dato$ un elemento definido dentro de un tipo de dato $D$, entonces $ \forall dato \Rightarrow dato \in D $.}
+	\BRitem{Motivación}{Mantener los datos del sistema dentro del formato definido y dentro del conjunto de datos correspondiente.}
+	
+	\BRitem{Especificación de formatos}{
+	\begin{itemize}
+		\item Periodo escolar: cadena1-cadena2/Número.
+		\item El actor introduce un número de teléfono que contiene sólo números.
+		\item El actor introduce un correo electrónico que contiene un símbolo '@' y cuya terminación es un dominio de correo electrónico.
+	\end{itemize}}
+
+	\BRitem{Ejemplo positivo}{Cumplen la regla:
+	\begin{itemize}
+		\item El actor introduce el nombre de una \refElem{tUnidadAcademica} que solamente contiene caractéres alfabéticos.
+		\item El actor introduce un número de teléfono que contiene sólo números.
+		\item El actor introduce un correo electrónico que contiene un símbolo '@' y cuya terminación es un dominio de correo electrónico.
+	\end{itemize}}
+	\BRitem{Ejemplo negativo}{No cumplen con la regla:
+	\begin{itemize}
+		\item El actor introduce un nombre de \refElem{tUnidadAcademica} que contiene el símbolo '@'.
+		\item El actor introduce un número de teléfono que contiene símbolos alfabéticos.
+		\item El actor introduce un correo electrónico que no contiene el carácter '@'.
+	\end{itemize}}
+	
+\end{BusinessRule}
+
+\begin{comment}
+%======================================================================
+\begin{BusinessRule}{BR-S003}{Eliminación lógica de elementos}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Ángeles Cerritos
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] Un elemento sólo se puede eliminar si no tiene asociaciones con otros elementos. Tomando en cuenta la definición de la sentencia, se tienen los siguietes valores para $e_1$ y $e_2$, respectivamente:
+	
+	\begin{itemize}
+		\item Espacio y Edificio.
+		\item Plan de Estudio y Programa Académico.
+		\item Espacio y Nivel.
+	\end{itemize}
+	
+	\BRitem{Sentencia] Sean $ e_1 \in Entidad1 , e_2 \in Entidad2, R(x,y) = x $ está asociado con $ y $ entonces $ e_2 $ se puede eliminar si y sólo si $ \nexists e_1 $ tal que $ R(e_1, e_2) $ se cumpla.
+	\BRitem{Motivación] Evitar que existan elementos en el sistema asociados a elementos que ya no existen dentro de él.
+	\BRitem{Ejemplo positivo] Cumplen la regla:
+	\begin{itemize}
+		\item Eliminar un edificio que no tiene espacios asociados.
+		\item Eliminar un Programa Académico que no tiene planes de estudio asociados.
+		\item Eliminar los espacios asociados a un edificio y después eliminar el edificio.
+	\end{itemize}
+	\BRitem{Ejemplo negativo] No cumplen con la regla:
+	\begin{itemize}
+		\item Eliminar un edificio con un espacio asociado.
+		\item Eliminar un edificio con tres espacios asociados.
+		\item Eliminar un Programa Académico con un Plan de Estudio asociado.
+	\end{itemize}
+	%\BRitem{Referenciado por] 
+\end{BusinessRule}
+
+
+%%======================================================================
+\begin{BusinessRule}{BR-S004}{Unicidad de elementos}
+	{\bcIntegridad}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Ángeles.
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] Un elemento no se puede duplicar en el ámbito donde es utilizado ni registrarse en más de una ocasión. Dada la sentencia se consideran dentro de la regla las siguientes entidades y atributos:
+	
+	\begin{itemize}
+		\item Unidad Académica, \{nombre, acrónimo\}
+		\item Programa Académico, \{nombre\}
+		\item Unidad de Aprendizaje, \{nombre, Plan de Estudio, Programa Académico, Unidad Académica\}
+		\item Bibliografía, \{ISBN\}
+		\item Plan de Estudio, \{nombre, Programa Académico, Unidad Académica\}
+		\item Edificio, {Nombre por Unidad Académica}
+		\item Espacio, {Nombre por Edificio por Unidad Académica}
+
+	\end{itemize}
+	\BRitem{Sentencia] Sean $ e_1, e_2 \in Entidad , atributos = {atributo_1, atributo_2,...,atributo_n}$ atributos de la entidad tal que:\\
+	Si $ \forall a \in atributos$ se cumple que $ e_1.a = e_2.a$ entonces $ e_1 = e_2 $.
+	
+	\BRitem{Motivación] Evitar la duplicidad de elementos dentro del sistema.
+	\BRitem{Ejemplo positivo] Cumplen la regla:
+	\begin{itemize}
+		\item Dos Unidades de Aprendizaje con diferentes nombres.
+		\item Dos prácticas con el mismo lugar de realización pero diferentes nombres.
+		\item Dos Unidades Académicas con la misma dirección pero diferente nombre.
+	\end{itemize}
+	\BRitem{Ejemplo negativo] No cumplen con la regla:
+	\begin{itemize}
+		\item Dos Unidades de Aprendizaje con el mismo nombre.
+		\item Dos Bibliografías con el mismo ISBN.
+		\item Dos Planes de Estudio con el mismo nombre.
+	\end{itemize}
+	%\BRitem{Referenciado por] 
+\end{BusinessRule}
+%%======== BR-S005 Eiminación de Bibliografía ===============
+
+
+%=======================================
+%==== REGLAS DE NEGOCIO DEL NEGOCIO ====
+%=======================================
+
+\section{Reglas de Negocio del Negocio}
+
+
+%%======================================================================
+\begin{BusinessRule}{BR-N025}{Periodo válido}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] David
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] Un periodo de solicitudes de unidades de aprendizaje es válido, sí y solo sí se encuentra dentro del periodo escolar actual.
+%	\BRitem{Sentencia]  $ $
+%	\BRitem{Motivación] Evitar que se defina un periodo de recepción de solicitudes de unidades de aprendizaje en un tiempo posterior a la planeación de la estructura educativa.
+%	\BRitem{Ejemplo positivo] \cdtEmpty
+%	\begin{itemize}
+%		\item 
+%		\item 
+%		\item 
+%	\end{itemize}
+%	\BRitem{Ejemplo negativo]
+%	\begin{itemize}
+%		\item 
+%		\item 
+%		\item 
+%	\end{itemize}
+%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N026}{Relación entre fechas de periodo}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Ángeles
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] La fecha de inicio de un periodo de recepción de solicitudes debe ser mayor a la fecha de temino.
+	\BRitem{Sentencia]  $Fecha de Inicio < Fecha de Ternimo$
+%	\BRitem{Motivación] Evitar que se defina un periodo de recepción de solicitudes de unidades de aprendizaje en un tiempo posterior a la planeación de la estructura educativa.
+%	\BRitem{Ejemplo positivo] \cdtEmpty
+%	\begin{itemize}
+%		\item 
+%		\item 
+%		\item 
+%	\end{itemize}
+%	\BRitem{Ejemplo negativo]
+%	\begin{itemize}
+%		\item 
+%		\item 
+%		\item 
+%	\end{itemize}
+%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N027}{Solicitud válida}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Ángeles
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] Una solicitud de unidades de aprendizaje es válida, sí y solo sí tiene asociada en cada unidad académica de adscripción del profesor por lo menos una unidad de aprendizaje.
+%	\BRitem{Sentencia]  $Fecha de Inicio < Fecha de Ternimo$
+%	\BRitem{Motivación] Evitar que se defina un periodo de recepción de solicitudes de unidades de aprendizaje en un tiempo posterior a la planeación de la estructura educativa.
+%	\BRitem{Ejemplo positivo] \cdtEmpty
+%	\begin{itemize}
+%		\item 
+%		\item 
+%		\item 
+%	\end{itemize}
+%	\BRitem{Ejemplo negativo]
+%	\begin{itemize}
+%		\item 
+%		\item 
+%		\item 
+%	\end{itemize}
+%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N028}{Número de periodos anteriores para consulta}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Ángeles
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] La información para consulta se aplica para los 4 periodos anteriores al periodo que se esta diseñando.
+%	\BRitem{Sentencia]  $Fecha de Inicio < Fecha de Ternimo$
+%	\BRitem{Motivación] Evitar que se defina un periodo de recepción de solicitudes de unidades de aprendizaje en un tiempo posterior a la planeación de la estructura educativa.
+%	\BRitem{Ejemplo positivo] \cdtEmpty
+%	\begin{itemize}
+%		\item 
+%		\item 
+%		\item 
+%	\end{itemize}
+%	\BRitem{Ejemplo negativo]
+%	\begin{itemize}
+%		\item 
+%		\item 
+%		\item 
+%	\end{itemize}
+%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N029}{Promedio de ocupabilidad de unidad de aprendizaje}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] David
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] El promedio de ocupabilidad de una unidad de aprendizaje es igual a la suma de alumnos inscritos de los grupos asociados a la unidad de aprendizaje, entre el total de grupos asociados a la unidad de aprendizaje
+	\BRitem{Sentencia]  $\dfrac{\sum^{\infty}_{n=0}NumeroTotalDeAlumnos}{NumeroDeGrupos}$
+	\BRitem{Motivación] Definir la ocupabilidad de alumnos por unidad de aprendizaje.
+%	\BRitem{Ejemplo positivo] \cdtEmpty
+%	\begin{itemize}
+%		\item 
+%		\item 
+%		\item 
+%	\end{itemize}
+%	\BRitem{Ejemplo negativo]
+%	\begin{itemize}
+%		\item 
+%		\item 
+%		\item 
+%	\end{itemize}
+%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N030}{Relación entre turnos}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Ángeles
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] Debe existir al menos un turno definido entre matutino, vespertino y mixto.  Matutino y vespertino no se deben traslapar, mixto puede traslaparse con uno o con los dos.
+	\BRitem{Sentencia]	\cdtEmpty
+	\begin{itemize}
+		\item $\forall Turnos \ni ProgramaAcademico \exists Turno Definido$
+		\item $ HoraFinTurno1 = HoraInicioTurno2$
+		\item $ Turno matutino \neq Turno Vespertino $
+		\item $ HoraInicioTurno1 \neq HoraFinTurno1 $
+	\end{itemize}
+	\BRitem{Motivación] Evitar que se defina una Estructura Educativa sin turnos definidos para grupos así como evitar que el turno matutino y turno vespertino se traslapen.
+	\BRitem{Ejemplo positivo 1] \cdtEmpty
+	\begin{itemize}
+			\item Turno matutino: 07:00-13:00
+			\item Turno mixto: 12:00-15:00
+			\item Turno vespertino: 15:00-22:00
+	\end{itemize}
+	\BRitem{Ejemplo positivo 2] \cdtEmpty
+	\begin{itemize}
+		\item Turno matutino: 07:00-13:00
+	\end{itemize}
+		\BRitem{Ejemplo positivo 3] \cdtEmpty
+	\begin{itemize}
+		\item Turno matutino: 07:00-13:00
+		\item Turno mixto: 12:00-15:00
+		\item Turno vespertino: 13:00-22:00
+	\end{itemize}	
+	\BRitem{Ejemplo negativo 1] \cdtEmpty
+		\begin{itemize}
+			\item Turno matutino: 07:00am - 02:00pm
+			\item Turno matutino: 12:00 - 12:00
+		\end{itemize}
+		\BRitem{Ejemplo negativo 2] \cdtEmpty
+	\begin{itemize}
+		\item Turno matutino: \_\_:\_\_ - \_\_:\_\_
+		\item Turno mixto: \_\_:\_\_ - \_\_:\_\_
+		\item Turno Vespertino: \_\_:\_\_ - \_\_:\_\_
+	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N031}{Relación de horas en turnos}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Ángeles
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] hora de inicio debe ser menor que la hora de fin, el inicio de un turno puede ser el igual a la hora de fin de otro
+	\BRitem{Sentencia]  $Hora de Inicio < Hora de Ternimo$
+		\BRitem{Motivación] Evitar que se defina un turno con la hora de inicio mayor o igual a la hora de fin.
+		\BRitem{Ejemplo positivo] \cdtEmpty
+		\begin{itemize}
+			\item Turno matutino: 07:00-15:00
+	%		\item 
+	%		\item 
+		\end{itemize}
+		\BRitem{Ejemplo negativo] \cdtEmpty
+		\begin{itemize}
+			\item Turno matutino: 14:00 - 12:00
+	%		\item 
+	 	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N032}{Ocupabilidad en grupo}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Ángeles
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] La ocupabilidad de un grupo debe ser mayor que cero pero menor o igual X
+	\BRitem{Sentencia]  $ \infty> ocupabilidad > 0$
+	\BRitem{Motivación] Evitar que se definan grupos con capacidad igual o menor que cero.
+		\BRitem{Ejemplo positivo] \cdtEmpty
+		\begin{itemize}
+			\item capacidad = 33
+	%		\item 
+	%		\item 
+		\end{itemize}
+		\BRitem{Ejemplo negativo] \cdtEmpty
+		\begin{itemize}
+			\item capacidad = -1
+			\item capacidad = 0
+	%		\item 
+		\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N033}{Definición de espacio}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Ángeles
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] Una unidad de aprendizaje puede tener asociado un espacio
+	%	\BRitem{Sentencia]  $Fecha de Inicio < Fecha de Ternimo$
+	%	\BRitem{Motivación] Evitar que se defina un periodo de recepción de solicitudes de unidades de aprendizaje en un tiempo posterior a la planeación de la estructura educativa.
+	%	\BRitem{Ejemplo positivo] \cdtEmpty
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Ejemplo negativo]
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N034}{Traslape de profesor}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Cesar
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] Verifica que el docente seleccionado no tenga asignado el horario que se le está definiendo para una Unidad de Aprendizaje
+	%	\BRitem{Sentencia]  $Fecha de Inicio < Fecha de Ternimo$
+	%	\BRitem{Motivación] Evitar que se defina un periodo de recepción de solicitudes de unidades de aprendizaje en un tiempo posterior a la planeación de la estructura educativa.
+	%	\BRitem{Ejemplo positivo] \cdtEmpty
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Ejemplo negativo]
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N035}{Carga Máxima}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Cesar
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] La carga máxima de un profesor debe ser igual a la definida en su dictamen de categoría y a su número de horas basificadas
+		\BRitem{Sentencia]  $Carga maxima = carga definida en dictamen de categoria \wedge numero de horas basificadas$
+		\BRitem{Motivación] Verifica que le profesor cubra con la carga máxima que tiene asignada según su dictamen de categoría.
+	%	\BRitem{Ejemplo positivo] \cdtEmpty
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Ejemplo negativo]
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N036}{Horario Laboral para Asignación de profesores a Unidades de Aprendizaje}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Cesar  
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] La asignación de un profesor a la unidad de aprendizaje será válida si y solo si horario de la unidad de aprendizaje está dentro del horario laboral del profesor
+	\BRitem{Sentencia]  $HorarioDeUnidadDeAprendizaje \in HorarioLaboral de Profesor$
+		\BRitem{Motivación] Verifica que el horario que se le asigna a un profesor para una materia este dentro del horario laboral del profesor.
+	%	\BRitem{Ejemplo positivo] \cdtEmpty
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Ejemplo negativo]
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+
+%%======================================================================
+\begin{BusinessRule}{BR-N037}{Porcentaje de calificación}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Cesar
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] La sumatoria de la calificación definida para la Unidad de Aprendizaje entre clases teóricas y prácticas debe ser igual a 100
+	\BRitem{Sentencia]  $\dfrac{\sum^{\infty}_{n=0}Calificacion}{ClaseTeorica \wedge ClasePractica} = 100$
+	\BRitem{Motivación] Verifica que la calificación o definida para la Unidad de Aprendizaje por tipo de clase sea igual que 100
+		\BRitem{Ejemplo positivo] \cdtEmpty
+		\begin{itemize}
+			\item Clase Practica: 50\%
+			\item Clase Teórica: 50\%
+			\item Total de calificación: 100\% 
+		\end{itemize}
+		\BRitem{Ejemplo negativo] \cdtEmpty
+		\begin{itemize}
+			\item Clase Practica: 60\%
+			\item Clase Teórica: 70\%
+			\item Total de calificación: 130\%
+		\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N038}{Docente titular de teoría y práctica}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Cesar
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] El docente que ha sido asignado como titular en la clase teórica deberá ser titular de al menos una unidad de aprendizaje en clase práctica
+	%	\BRitem{Sentencia]  $Fecha de Inicio < Fecha de Ternimo$
+	\BRitem{Motivación] Verifica que un profesor que sea titular de una clase de laboratorio sea por lo menos titular de una clase teórica
+	%	\BRitem{Ejemplo positivo] \cdtEmpty
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Ejemplo negativo]
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N039}{Métricas de carga académica}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Cesar
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] La carga académica tiene 4 métricas:
+	\begin{itemize}
+		\item El Director de la Unidad Académica y el o los docentes del sindicato pueden estar exentos de carga académica.
+		\item Todo el personal docente que pertenezca al organigrama administrativo puede estar exento de carga máxima pero deberá cumplir la carga mínima.
+		\item El personal docente restante tendrá la obligación de cumplir con su carga máxima.
+		\item El personal técnico docente no debe tener carga frente a grupo.
+	\end{itemize}
+	%	\BRitem{Sentencia]  $Fecha de Inicio < Fecha de Ternimo$
+	\BRitem{Motivación] Verificar que el personal cubra la carga correspondiente según lo establecido dentro de las métricas .
+	%	\BRitem{Ejemplo positivo] \cdtEmpty
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Ejemplo negativo]
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N040}{Requisitos para asignación de espacios y/o profesores}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Cesar
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] Los botones para asignar espacios y profesores estarán deshabilitados hasta que se cumpla la siguiente condición:\\
+		\begin{itemize}
+			\item Se podrán asignar espacios y/o profesores si y solo si ya se ha asignado el horario parcial o total a por lo menos un grupo del semestre seleccionado.
+		\end{itemize}
+	%	\BRitem{Sentencia]  $Fecha de Inicio < Fecha de Ternimo$
+	\BRitem{Motivación] Evitar que se defina espacios y/o profesores si antes definir el horario total o parcial de por lo menos un grupo del semestre seleccionado
+	%	\BRitem{Ejemplo positivo] \cdtEmpty
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Ejemplo negativo]
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N041}{Requisitos para asignación de unidades de aprendizaje}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Cesar
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] El botón para asignar unidades de aprendizaje estará deshabilitado hasta que se cumpla la siguiente condición:\\
+		\begin{itemize}
+			\item Se podrán asignar unidades de aprendizaje si y solo si ya se ha terminado de definir los grupos del semestre seleccionado .
+		\end{itemize}
+	%	\BRitem{Sentencia]  $Fecha de Inicio < Fecha de Ternimo$
+	\BRitem{Motivación] Evitar que se definan unidades de aprendizaje sin antes definir los grupos de una estructura educativa.
+	%	\BRitem{Ejemplo positivo] \cdtEmpty
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Ejemplo negativo]
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+%%======================================================================
+\begin{BusinessRule}{BR-N042}{Número de horas para unidades de aprendizaje}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Cesar
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] El número de horas por definir para una unidad de aprendizaje debe ser igual al que tiene definido en el plan de estudios.
+	\BRitem{Sentencia]  $NumeroDeHorasDeUnidadDeAprendizajeEnHorario = NumeroDEHorasUnidadDeAprendizajeEnPlanDeEstudios$
+	\BRitem{Motivación] Verifica que el número de horas que se define para una materia en un grupo sea igual al número de horas que tiene definido en el plan de estudiosj.
+	%	\BRitem{Ejemplo positivo] \cdtEmpty
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Ejemplo negativo]
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N043}{Traslape de horario}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Cesar
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] El horario de una unidad de aprendizaje no puede ser el mismo para dos o mas unidades de aprendizaje en el mismo día.
+	%	\BRitem{Sentencia]  $Fecha de Inicio < Fecha de Ternimo$
+		\BRitem{Motivación] Verifica que el horario no haya sido asignado a otra unidad de aprendizaje en el mismo día.
+	%	\BRitem{Ejemplo positivo] \cdtEmpty
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Ejemplo negativo]
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N044}{Rango de horario}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Cesar
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] Los horarios de una unidad de aprendizaje deberán estar dentro del horario del turno al cuál pertenece el grupo en la que ha sido asignada.
+	\BRitem{Sentencia]  $HorarioDeUnaUnidadDeApredizaje \in HorarioDeTurnoDefinidoParaGrupo$
+	\BRitem{Motivación] Verifica que los horarios de una unidad de aprendizaje pertenezcan al horario del turno al que pertenece el grupo.
+	%	\BRitem{Ejemplo positivo] \cdtEmpty
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Ejemplo negativo]
+	%	\begin{itemize}
+	%		\item 
+	%		\item 
+	%		\item 
+	%	\end{itemize}
+	%	\BRitem{Referenciado por] \refIdElem{UA-CU2.1}
+\end{BusinessRule}
+
+%%======================================================================
+\begin{BusinessRule}{BR-N045}{Formato de horario}
+	{\bcCondition}    % Clase: \bcCondition,   \bcIntegridad, \bcAutorization, \bcDerivation.
+	{\btEnabler}     % Tipo:  \btEnabler,     \btTimer,      \btExecutive.
+	{\blControlling}    % Nivel: \blControlling, \blInfluencing.
+	\BRitem{Versión] 1.0.
+	\BRitem{Estado] Propuesta.
+	\BRitem{Propuesta por] Cesar
+	\BRitem{Revisada por] Pendiente.
+	\BRitem{Aprobada por] Pendiente.
+	\BRitem{Descripción] El Formato de horario deberá ser ingresado en formato 24 horas y deberá ser de la siguiente manera:
+		\begin{itemize}
+			\item  \_ \_ : \_ \_ - \_ \_ : \_ \_
+		\end{itemize}
+	%	\BRitem{Sentencia]  $Fecha de Inicio < Fecha de Ternimo$
+		\BRitem{Motivación] Verifica que el formato del horario este en 24 horas y que respete el formato.
+		\BRitem{Ejemplo positivo] \cdtEmpty
+		\begin{itemize}
+			\item 07:00-12:00
+	%		\item 
+	%		\item 
+		\end{itemize}
+		\BRitem{Ejemplo negativo] \cdtEmpty
+		\begin{itemize} 
+			\item 07:00/12:\_ \_
+	%		\item 
+	%		\item 
+		\end{itemize}
+		\BRitem{Referenciado por] \refElem{BR-S001}
+\end{BusinessRule}
+\begin{comment}
+\end{comment}

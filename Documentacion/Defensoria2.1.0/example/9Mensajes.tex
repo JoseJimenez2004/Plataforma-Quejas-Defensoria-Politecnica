@@ -1,0 +1,383 @@
+\chapter{Mensajes del sistema}
+\label{ch:mensajes}
+\cdtLabel{apendice:Mensajes}{}
+
+%En esta sección se describen los mensajes utilizados en el prototipo actual del sistema.
+Los mensajes se refieren a todos aquellos avisos que el sistema muestra al actor para comunicar la ocurrencia de algún evento tal como un error o una operación exitosa. Estos mensajes se pueden mostrar a través de diversos canales, por ejemplo, pantalla o correo electrónico.
+
+Cuando un mensaje es recurrente se parametrizan sus elementos, por ejemplo los mensajes: ``Aún no existen registros de \textit{Unidades Académicas} en el sistema.'', ``Aún no existen registros de \textit{Programas Académicos} en el sistema.'', 
+``Aún no existen registros de \textit{alumnos} en el sistema.'', tienen una estructura similar 
+por lo que, con el objetivo de que el mensaje sea genérico y pueda utilizarse en todos los casos de uso que se considere necesario, se utilizan parámetros para definir el mensaje.\\
+
+Los parámetros también se utilizan cuando la redacción del mensaje tiene datos que son ingresados por el actor o que dependen del resultado de la operación, por ejemplo: 
+``La \textit{Unidad Académica ESCOM} ha sido \textit{modificada} exitosamente.''. En este caso la redacción se presenta parametrizada de la forma: ``$<DETERMINADO> <ENTIDAD> <VALOR>$ ha sido $<OPERACION>$ exitosamente.'' y los parámetros se describen de la siguiente forma:
+
+\begin{itemize}
+	\item DETERMINADO ENTIDAD: Es un artículo determinado más el nombre de la entidad sobre la cual se realizó la acción.
+	\item VALOR: Es el valor asignado al atributo de la entidad, generalmente es el nombre o la clave.
+	\item OPERACIÓN: Es la acción que el actor solicitó realizar.
+\end{itemize}
+
+En el ejemplo anterior se hace referencia a $<VALOR>$, es decir: \textit{ESCOM} es el \textbf{valor} de la \textbf{entidad} \textit{escuela}. Cada mensaje enlista los parámetros  que utiliza, sin embargo aquí se definen los más comunes a fin de simplificar la descripción de los mensajes:
+
+\begin{description}
+	\item [$<ARTICULO>$:] Se refiere a un {\em artículo} el cual puede ser DETERMINADO (El $\mid$ La $\mid$ Lo $\mid$ Los $\mid$ Las) o INDETERMINADO (Un $\mid$ Una $\mid$ 
+	Uno $\mid$ Unos $\mid$Unas) se aplica generalmente sobre una ENTIDAD, ATRIBUTO o VALOR.
+	
+	\item [$<CAMPO>$:] Se refiere a un campo del formulario. Por lo regular es el nombre de un atributo en una entidad.
+	
+	\item [$<CONDICION>$:] Define una expresión booleana cuyo resultado deriva en {\em falso} o {\em verdadero} y suele ser la causa del mensaje.
+	
+	\item [$<DATO>$:] Es un sustantivo y generalmente se refiere a un atributo de una entidad descrito en el modelo estructural del negocio, por ejemplo: nombre de la unidad de aprendizaje, nombre del alumno, RFC del profesor, etc. %ATRIBUTO
+	
+	\item [$<ENTIDAD>$:] Es un sustantivo y generalmente se refiere a una entidad del modelo estructural del negocio, por ejemplo: programa académico, alumno, profesor, etc.
+	\item [$<OPERACION>$:] Se refiere a una acción que se debe realizar sobre los datos de una o varias entidades. Por ejemplo: registrar, eliminar, actualizar, por mencionar algunos. Comúnmente la OPERACIÓN va concatenada con el sustantivo, por ejemplo: Registro de un nuevo beneficio, registro de una actividad, eliminar una tarea y demás.
+	
+	\item [$<VALOR>$:] Es un sustantivo concreto y generalmente se refiere a un valor en específico. Por ejemplo: \textit{Histología I} es un \textbf{valor} concreto de la \textbf{entidad} \textit{Unidad de Aprendizaje}.
+	
+\end{description}
+%___________________________Plantilla_______________________________
+%===========================  MSGX ==================================
+%\begin{mensaje}{MSGX}{}{}
+%	\item[Canal:] 
+%	\item[Propósito:] 
+%	\item[Redacción:]
+%	\item[Parámetros:] 
+%	\begin{itemize}
+%		\item 
+%	\end{itemize}
+%	\item[Ejemplo:]  
+%	\item[Referenciado por: ]
+%\end{mensaje}
+
+%===========================  MSG1 ==================================
+\begin{mensaje}{MSG1}{Operación Exitosa}{Informativo }
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que la operación solicitada al sistema se llevó a cabo exitosamente.
+	\item[Redacción:] La $<OPERACION>$ se llevo a cabo correctamente.
+	\item[Parámetros:] OPERACION: Actividad que el actor debe realizar.
+	\item[Ejemplo:] La reincripción se llevo a cabo correctamente.
+\end{mensaje}
+
+%============================== MSG2 =================================
+\begin{mensaje}{MSG2}{Operación Fallida}{Error}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que la operación solicitada al sistema no pudo llevarse a cabo.
+	\item[Redacción:] Error, $<ERROR_ENCONTRADO>$.
+	\item[Parámetros:] ERROR\_ENCONTRADO: Error que el sistema identificó al intentar realizar la operación.
+	\item[Ejemplo:] Error, No hay conexión al sistema.(Base de Datos)
+\end{mensaje}
+
+
+%===========================  MSG3 ==================================
+\begin{mensaje}{MSG3}{Elementos No Disponibles}{Error}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que no existen elementos en el sistema por mostrar.
+	\item[Redacción:] ¡No hay $<ELEMENTOS>$ para mostrarte!
+	\item[Parámetros:] ELEMENTOS: Información de la cual se requiere para concluir un proceso
+	\item[Ejemplo:] ¡No hay registros de aspirantes para mostrarte!
+	
+\end{mensaje}
+
+%============================== MSG4 =================================
+\begin{mensaje}{MSG4}{Elemento No Disponible}{Error}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que el elemento que se desea ver no existe o no está disponible en el sistema.
+	\item[Redacción:] ¡Este/Esta $<ELEMENTO>$ no esta disponible aún!
+	\item[Parámetros:] ELEMENTO:Información de un registro en específico de la cual se requiere para concluir un proceso.
+	\item[Ejemplo:] ¡Esta boleta no esta disponible aún!
+	
+\end{mensaje}
+
+%============================== MSG5 =================================
+\begin{mensaje}{MSG5}{Duplicado de Información}{Error}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que ya existe un elemento con la misma información que desea ingresar.
+	\item[Redacción:] ¡Ya existe un/a $<ELEMENTO>$ con la misma información!
+	\item[Parámetros:] ELEMENTO: Parte de la información que esta duplicada
+	\item[Ejemplo:]¡Ya existe una boleta con la misma información!
+	
+\end{mensaje}
+
+%============================== MSG6 =================================
+\begin{mensaje}{MSG6}{Falta dato obligatorio}{Error}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor la omisión de algún dato obligatorio por ingresar.
+	\item[Redacción ] !Error¡ El campo $<DATO>$ es un campo obligatorio, favor de ingresar el campo faltante
+	\item[Parámetros:] DATO: Información que se requiere para completar la operación.
+	\item[Ejemplo:] !ERROR¡ El campo Referencia Bibliografíca es un campo obligatorio, favor de ingresar el campo faltante.
+\end{mensaje}
+
+%============================== MSG7 =================================
+\begin{mensaje}{MSG7}{Formato de campo Incorrecto}{Error }
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que el dato ingresado en alguno de los campos del formulario no cumple con el tipo de dato definido en el diccionario de datos.
+	\item[Redacción:] !Error¡ El campo $<DATO>$ ingresado es incorrecto, favor de ingresar un dato válido.
+	\item[Parámetros:] DATO: Información que se requiere para completar la operación.
+	\item[Ejemplo:] !ERROR¡ El campo Unidad de Aprendizaje ingresado es incorrecto, favor de ingresar un dato válido
+\end{mensaje}
+
+
+%===============================MSG8=============================
+
+\begin{mensaje}{MSG8}{Operación por Atender}{Informativo }
+	\item[Canal:] Correo / SMS / WhatsApp
+	\item[Propósito:] Notificar al actor que existen operaciones que requieren de su atención o supervisión para llevarse a cabo.
+	\item[Redacción:]Calmécac te notifica que hay $<ELEMENTOS>$ que requieren de tu atención.
+	\item[Parámetros:]ELEMENTOS: Aquella información que el actor debe supervisar o atender.
+	\item[Ejemplo:] Calmécac te notifica que hay registros de aspirantes que requieren de tu atención.
+		
+\end{mensaje}
+
+%===============================MSG9=============================
+
+\begin{mensaje}{MSG9}{Límite de Tiempo}{Informativo }
+	\item[Canal:] Correo / SMS / WhatsApp
+	\item[Propósito:] Notificar al actor que el límite de tiempo para que realice una operación está por agotarse.
+	\item[Redacción:]¡ALERTA! Recuerda que debes realizar la $<OPERACION>$ antes del $<TIEMPO>$
+	\item[Parámetros:]OPERACION: Tarea a realizar por el actor
+	TIEMPO: Fecha para la cual el límite 
+	\item[Ejemplo:] ¡ALERTA! Recuerda que debes realizar la reinscripción antes del 10 de Mayo del 2017.
+		
+\end{mensaje}
+
+
+%===============================MSG10=============================
+\begin{mensaje}{MSG10}{Cierre de Operación}{Informativo}
+	\item[Canal:] Correo / SMS / WhatsApp
+	\item[Propósito:] Notificar al actor que el límite de tiempo para que realice la operación se ha agotado y sugiere realizar algo para poder llevarla a cabo.
+	\item[Redacción:] ¡ALERTA! El tiempo para realizar la $<OPERACION>$ se ha acabado. Calmécac te sugiere $<SUGERENCIA>$.
+	\item[Parámetros:] 
+	\begin{itemize}
+		\item OPERACION: Tarea a realizar por el actor
+		\item SUGERENCIA: Proceso u operación que el actor debe realizar para poder concluir una actividad.
+	\end{itemize}
+	\item[Ejemplo:] ¡ALERTA! El tiempo para realizar la reinscripción se ha acabado. Calmécac te sugiere ir al Departamento de Gestión Escolar para poder reinscribirte.
+	
+\end{mensaje}
+
+%===========================  MSG11 ==================================
+\begin{mensaje}{MSG11}{Recomendación para revisar configuración de servicios web}{Informativo}
+	\item[Canal:] Correo / SMS / WhatsApp
+	\item[Propósito:] Notificar al actor que la es necesario revisar la configuración actual de los servicios web, ya que se acerca un proceso de carga de datos al sistema.
+	\item[Redacción:] Recomendación del Calmécac. La $<OPERACION>$ ha concluido, y se sugiere que se revise la configuración de los servicios web del Calmécac.
+	\item[Parámetros:] OPERACION: Tarea realizada por el Politécnico.
+	\item[Ejemplo:] Recomendación del Calmecac. La generación de citas ha concluido y se sugiere que se revise la configuración de los servicios web del Calmécac.
+		
+\end{mensaje}
+
+
+%===========================  MSG12 ==================================
+\begin{mensaje}{MSG12}{Confirmar operación sin cambios posteriores}{Confirmación}
+	\item[Canal:] Sistema
+	\item[Propósito:] Solicitar al actor la confirmación de una operación de impacto que no podrá ser revertida.
+	\item[Redacción:] ¿Desea confirmar la finalización $<OPERACION>$? La operación no podrá ser revertida una vez confirmada.
+	Calmécac te notifica que es necesaria tú aprobación para concluir la $<OPERACION>$
+	\item[Parámetros:] OPERACION: Aquella operación que el actor debe confirmar.
+	\item[Ejemplo:] ¿Desea confirmar la finalización del registro de aspirantes? La operación no podrá ser revertida una vez confirmada.
+	Calmécac te notifica que es necesario tú aprobación para concluir el registro de aspirantes
+	
+\end{mensaje}
+
+%===========================  MSG13 ==================================
+\begin{mensaje}{MSG13}{Operación en Curso}{Informativo}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que el sistema esta actualmente ejecutando una transacción.
+	\item[Redacción:] Calmécac te notifica que se esta ejecutando la/el $<TRANSACCION>$
+	\item[Parámetros:] TRASACCION: Aquella transaccion que se esta ejecutando actualmente
+	\item[Ejemplo:] Calmécac te notifica que se esta ejecutando la generación de citas de reinscripción.
+	    
+\end{mensaje}
+
+
+%===========================  MSG14 ==================================
+\begin{mensaje}{MSG14}{No tienes notificaciones por atender}{Informativo}
+	\item[Canal:] Correo / SMS / WhatsApp
+	\item[Propósito:] Notificar al actor que no tiene mensajes o notificaciones que requieran de su atención.
+	\item[Redacción:] Calmécac te notifica que no tienes mensajes o notificaciones pendientes que requieran de tu atención
+\end{mensaje}
+
+%===========================  MSG15 ==================================
+\begin{mensaje}{MSG15}{No	 existe información en el sistema}{Error}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que no se puede llevar a cabo la operación solicitada pues no existe la información suficiente en el sistema.
+	\item[Redacción:] !Error! Falta información necesaria sobre $<INFORMACION>$ en el sistema para poder realizar la/el $<OPERACION>$ \\
+	\item[Parámetros:] 
+	\begin{Titemize}
+		\Titem INFORMACIÓN: El tipo de información que hace falta en el sistema.
+		\Titem OPERACION: Tarea a realizar por el actor
+	\end{Titemize}
+	\item[Ejemplo:] ¡Error! Falta información necesaria sobre Modalidad Educativa en el sistema para poder realizar el registro de Unidades de Aprendizaje
+	\refIdElem{HR-UA-CU4}, \refIdElem{HR-UA-GG-CU1}
+\end{mensaje}
+
+%===========================  MSG16 ==================================
+\begin{mensaje}{MSG16}{Condiciones necesarias para realizar operación}{Error}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que no se puede realizar la operación solicitada debido a que no se cumplen las condiciones necesarias para hacerlo
+	\item[Redacción:] No es posible $<OPERACION> <ARTICULO\_ENTIDAD>$ pues es necesario que $<CONDICIONES>$
+	\item[Parámetros:] 
+	\begin{itemize}
+		\item OPERACION: Es la operación que el actor intentó llevar a cabo.
+		\item ARTICULO\_ENTIDAD: Es la entidad sobre la cual se intentó realizar la operación acompañado del artículo de género correspondiente.
+		\item CONDICIONES: Son las condiciones necesarias que no se satisfacieron.
+	\end{itemize}
+	\item[Ejemplo:] No es posible activar el plan de estudio pues es necesario que se especifiquen sus unidades de aprendizaje.
+	
+	
+\end{mensaje}
+
+%===========================  MSG17 ==================================
+\begin{mensaje}{MSG17}{Eliminar elemento}{Confirmación}
+	\item[Canal:] Sistema
+	\item[Propósito:] Solicitar la confirmación del actor para la eliminación de un elemento.
+	\item[Redacción:] ¿Desea eliminar $<ARTICULO>$ + $<ELEMENTO>$ + $<SELECCION>$?
+	\item[Parámetros:] 
+	\begin{itemize}
+		\item ARTICULO: Es la parte de la oración que se ocupa de expresar el género (masculino/femenino).
+		\item ELEMENTO: Es el elemento que se requiere eliminar.
+		\item SELECCION:Dependiendo del género en la oración se ocupa, seleccionado(masculino)  ó seleccionada(femenino).
+	\end{itemize}
+	\item[Ejemplo:] ¿Desea eliminar el ciclo escolar seleccionado?
+	
+\end{mensaje}
+
+%===========================  MSG18 ==================================
+\begin{mensaje}{MSG18}{Relación de fechas incorrecta}{Error}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que la relación entre dos fechas ingresadas no es la esperada.
+	\item[Redacción:] La $<FECHA1>$ de $<ENTIDAD1>$ debe ser $<CONDICION>$ $<FECHA2>$ de $<ENTIDAD2>$
+	\item[Parámetros:] 
+	\begin{itemize}
+		\item FECHA1: Fecha de una entidad.
+		\item ENTIDAD1: Entidad que requiere de una fecha.
+		\item CONDICION: La condición de relación que deben satisfacer FECHA1 Y FECHA2.
+		\item FECHA2: Fecha de una entidad.
+		\item ENTIDAD2: Entidad que requiere de una fecha.
+	\end{itemize}
+	\item[Ejemplo:] La fecha de fin de actividad debe ser menor que la fecha de fin de período escolar.
+\end{mensaje}
+
+%===========================  MSG19 ==================================
+\begin{mensaje}{MSG19}{Relación de cantidades incorrecta}{Error}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que la relación entre dos cantidades ingresadas no es la esperada.
+	\item[Redacción:] La $<CANTIDAD1>$ debe ser $<CONDICION>$ $<CANTIDAD2>$.
+	\item[Parámetros:] 
+	\begin{itemize}
+		\item CANTIDAD1: Cantidad de un elemento.
+		\item CONDICION: La condición de relación que deben satisfacer CANTIDAD1 Y CANTIDAD2.
+		\item CANTIDAD2: Cantidad de un elemento.
+	\end{itemize}
+	\item[Ejemplo:] La carga mínima debe ser menor que la carga media.
+	
+\end{mensaje}
+
+%===========================  MSG20 ==================================
+\begin{mensaje}{MSG20}{Relación de horas incorrecta}{Error}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que la relación entre dos horas ingresadas no es la esperada.
+	\item[Redacción:] Las(s) $<HORAS1>$ de $<ENTIDAD1>$ debe(n) ser $<CONDICION>$ $<HORAS2>$ de $<ENTIDAD2>$
+	\item[Parámetros:] 
+	\begin{itemize}
+		\item HORAS1: Horas asociadas a una entidad.
+		\item ENTIDAD1: Entidad que requiere de una asginación de horas.
+		\item CONDICION: La condición de relación que deben satisfacer HORAS1 Y HORAS2.
+		\item HORAS2: Horas asociadas a una entidad.
+		\item ENTIDAD2: Entidad que requiere de una asginación de horas.
+	\end{itemize}
+	\item[Ejemplo:] Las horas de un contenido deben ser menores que las horas de la unidad de aprendizaje.
+	
+\end{mensaje}
+
+
+%===========================  MSG21 ==================================
+\begin{mensaje}{MSG21}{Elementos mínimos necesarios}{Error}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que debe registrar al menos cierta cantidad de elementos para realizar la operación.
+	\item[Redacción:] Es necesario $<OPERACION>$ al menos $<CANTIDAD>$ $<ENTIDAD>$.
+	\item[Parámetros:] 
+	\begin{itemize}
+		\item OPERACIÓN: Operación que debe realizar el usuario. Puede ser registrar o seleccionar.
+		\item CANTIDAD: La cantidad necesaria de elementos que el actor debe registrar.
+		\item ENTIDAD: Es la entidad de la cuál se debe realizar la acción.
+	\end{itemize}
+	\item[Ejemplo:]  Es necesario registrar al menos un plan de estudio.
+	
+\end{mensaje}
+
+
+%===========================  MSG22 ==================================
+\begin{mensaje}{MSG22}{Notificación de operación.}{Informativo}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor la realización de una operación.
+	\item[Redacción:] $<ARTICULO\_ENTIDAD>$ $<NOMBRE>$ ha sido $<OPERACION>$
+	\item[Parámetros:] 
+	\begin{itemize}
+		\item ARTICULO\_ENTIDAD: Es la entidad a la que pertenece el elemento sobre el que se realizó la operación..
+		\item NOMBRE: Es el nombre del elemento.
+		\item OPERACIÓN: Es la operación que ha sido realizada.
+	\end{itemize}
+	\item[Ejemplo:] El período escolar 2017-2018/3-A1 ha sido eliminado.
+	
+\end{mensaje}
+
+%===========================  MSG23 ==================================
+\begin{mensaje}{MSG23}{No es posible realizar operación sobre elemento}{Informativo}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que no es posible realizar una operación sobre un elemento debido a la existencia de otros elementos asociados a él.
+	\item[Redacción:] No es posible $<OPERACION>$ $<ARTICULO\_ENTIDAD>$ $<NOMBRE>$ debido a que tiene $<ELEMENTOS\_ASOCIADOS>$ asociados.
+	\item[Parámetros:] 
+	\begin{itemize}
+		\item OPERACIÓN: La operación que no se puede llevar a cabo.
+		\item ARTICULO\_ENTIDAD: Es la entidad de la cuál se quiere eliminar un elemento.
+		\item NOMBRE: Es el nombre del elemento.
+		\item ELEMENTOS\_ASOCIADOS: Son los elementos que se encuentran asociados al elemento que se quiere eliminar.
+	\end{itemize}
+	\item[Ejemplo:] No es posible eliminar el edificio Edificio Inteligente debido a que tiene espacios asociados. 
+	
+\end{mensaje}
+
+%===========================  MSG24 ==================================
+\begin{mensaje}{MSG24}{Confirmación de eliminación en cadena}{Confirmación}
+	\item[Canal:] Sistema
+	\item[Propósito:] Solicitar al actor la confirmación para eliminar un elemento que tiene como consecuencia la elimación de otros elementos.
+	\item[Redacción:] Al eliminar $<ARTICULO\_ENTIDAD>$ $<NOMBRE>$ se eliminarán $<ARTICULO\_ENTIDAD\_ASOCIADA>$ que se listan a continuación, ¿desea continuar?
+	\item[Parámetros:] 
+	\begin{itemize}
+		\item ARTICULO\_ENTIDAD: Es la entidad de la cuál se eliminará el elemento.
+		\item NOMBRE: Es el identificador del elemento.
+		\item ARTICULO\_ENTIDAD\_ASOCIADA: Es la entidad de las cuál se eliminarán elementos debido a la eliminación de NOMBRE.
+	\end{itemize}
+	\item[Ejemplo:]  Al eliminar el periodo escolar se eliminarán las estructuras académicas que se listan a continuación, ¿desea continuar?
+	
+\end{mensaje}
+
+%===========================  MSG25 ==================================
+\begin{mensaje}{MSG25}{Confirmación de operación}{Confirmación}
+	\item[Canal:] Sistema
+	\item[Propósito:] Solicitar al actor la confirmación para llevar a cabo una operación.
+	\item[Redacción:] ¿Desea $<OPERACION>$ $<ARTICULO\_ENTIDAD>$ $<NOMBRE>$?
+	\item[Parámetros:] 
+	\begin{itemize}
+		\item OPERACIÓN: Es la operación que el actor desea realizar.
+		\item ARTICULO\_ENTIDAD: Es la entidad de la cuál se eliminará el elemento.
+		\item NOMBRE: Es el identificador del elemento.
+	\end{itemize}
+	\item[Ejemplo:] ¿Desea editar el plan de estudio Plan 2009?
+\end{mensaje}
+
+%===========================  MSG58 ==================================
+\begin{mensaje}{MSG58}{Operación fuera de periodo}{Error}
+	\item[Canal:] Sistema
+	\item[Propósito:] Notificar al actor que la operación que desea realizar está fuera del periodo permitido
+	\item[Redacción:] No es posible realizar $<ARTICULO\_OPERACION>$ debido al que la fecha actual está fuera del periodo permitido para realizarla.
+	\item[Parámetros:] 
+	\begin{itemize}
+		\item ARTICULO\_OPERACION: La operación que el actor desea llevar a cabo.
+	\end{itemize}
+	\item[Ejemplo:] No es posible realizar el envío de la solicitud debido a que la fecha actual está fuera del periodo permitido para realizarla.
+	\refIdElem{HR-PR-CU1}
+\end{mensaje}
+
+
