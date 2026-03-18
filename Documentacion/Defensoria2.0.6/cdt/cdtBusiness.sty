@@ -292,4 +292,130 @@
     \textbf{\hypertarget{\varDataTypeId.#1}{#2}} & \refElem{#3} & #4 \\\hline%
 }
 
+% FIN DEL PAQUETE cdtBusiness.sty
+\endinput
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  DOCUMENTO PRINCIPAL
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[12pt,letterpaper]{book}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{colortbl}
+\usepackage{longtable}
+\usepackage{xstring}
+\usepackage{hyperref}
+
+% Definir colores necesarios (si no están definidos en cdtControl)
+\definecolor{colorPrincipal}{rgb}{0.2,0.4,0.6}
+\definecolor{colorSecundario}{rgb}{0.3,0.5,0.7}
+\definecolor{colorAgua}{rgb}{0.9,0.95,1}
+
+% Cargar el paquete cdtBusiness con la opción deseada
+\usepackage[userView]{cdt/cdtBusiness}
+
+% Configuración del documento
+\title{Documento de Análisis y Diseño}
+\author{Ulises Vélez Saldaña}
+\date{\today}
+
+\begin{document}
+
+\frontmatter
+\maketitle
+\tableofcontents
+
+\mainmatter
+
+% Aquí se incluyen los capítulos que mencionaste
+\chapter{Fundamentos Tecnológicos: Motor de Clasificación de Textos}
+\label{chap:fundamentos}
+
+\section{Introducción}
+En este capítulo se presentan los fundamentos tecnológicos relacionados con el motor de clasificación de textos...
+
+\subsection{Procesamiento de Lenguaje Natural}
+El procesamiento de lenguaje natural (PLN) es una disciplina que combina la lingüística y la inteligencia artificial...
+
+\section{Técnicas de Clasificación}
+Existen diversas técnicas para la clasificación de textos...
+
+% Ejemplo de uso de los ambientes del paquete
+\section{Glosario de Términos}
+\begin{bGlosario}
+    \bTerm{pln}{Procesamiento de Lenguaje Natural} Disciplina que permite a las computadoras entender, interpretar y manipular lenguaje humano.
+    \bTerm{ml}{Machine Learning} Rama de la inteligencia artificial que permite a los sistemas aprender y mejorar a partir de la experiencia.
+\end{bGlosario}
+
+\section{Reglas de Negocio}
+\begin{BusinessRule}{BR001}{Validación de Textos}{Estado/Aprobada}
+    \BRitem[Descripción]{Los textos deben tener una longitud mínima de 10 caracteres para ser clasificados}
+    \BRitem[Sentencia]{$longitud(texto) \geq 10$}
+    \BRitem[Motivación]{Garantizar que los textos tengan suficiente contenido para una clasificación precisa}
+\end{BusinessRule}
+
+% Segundo capítulo
+\chapter{Arquitectura del Sistema y Análisis de Tecnologías}
+\label{chap:arquitectura}
+
+\section{Visión General de la Arquitectura}
+El sistema está diseñado siguiendo una arquitectura de microservicios...
+
+\subsection{Componentes Principales}
+\begin{itemize}
+    \item \textbf{Motor de Clasificación}: Responsable del procesamiento y clasificación de textos
+    \item \textbf{Gestor de Modelos}: Administra los modelos de machine learning
+    \item \textbf{API Gateway}: Punto de entrada único para las peticiones
+\end{itemize}
+
+\section{Tecnologías Evaluadas}
+\subsection{Frameworks de Machine Learning}
+Se evaluaron diferentes frameworks para la implementación del motor de clasificación...
+
+% Ejemplo de entidad
+\section{Modelo de Datos}
+\begin{cdtEntidad}[Representa un texto a clasificar]{EntidadTexto}{Texto}{Esta entidad almacena los textos que serán procesados por el motor de clasificación}
+    \brAttr{idTexto}{Identificador}{alfanumerico}{Identificador único del texto}{\datRequerido}
+    \brAttr{contenido}{Contenido}{texto}{Texto a clasificar}{\datRequerido}
+    \brAttr{longitud}{Longitud}{entero}{Número de caracteres del texto}{\datOpcional}
+    \brAttr{fechaRegistro}{Fecha de Registro}{fecha}{Fecha en que se registró el texto}{\datRequerido}
+    
+    \cdtEntityRelSection
+    \brRel{\brRelAgregation}{Categoría}{El texto puede pertenecer a una o más categorías}
+    \brRel{\brRelComposition}{Clasificación}{Un texto tiene asociada una clasificación}
+\end{cdtEntidad}
+
+% Ejemplo de tipo de dato
+\section{Tipos de Datos}
+\begin{TipoDeDato}{CategoriaTD}{Categoría}{Define la estructura de una categoría de clasificación}
+    \begin{tdAtributos}
+        \tdAttr{idCategoria}{Identificador}{alfanumerico}{Identificador único de la categoría}
+        \tdAttr{nombre}{Nombre}{texto}{Nombre descriptivo de la categoría}
+        \tdAttr{descripcion}{Descripción}{texto}{Descripción detallada de la categoría}
+    \end{tdAtributos}
+\end{TipoDeDato}
+
+% Ejemplo de máquina de estados
+\section{Máquina de Estados del Procesamiento}
+\begin{Maquina}{MaquinaProcesamiento}{Máquina de Estados del Procesamiento de Textos}
+{Esta máquina de estados describe el ciclo de vida de un texto desde su ingreso hasta su clasificación final}
+{ejemplos/maquina_estados.png}
+    El proceso inicia cuando un texto es recibido por el sistema. 
+    Pasa por las etapas de validación, preprocesamiento, clasificación y finalmente 
+    almacenamiento de resultados.
+\end{Maquina}
+
+\backmatter
+\appendix
+\chapter{Glosario Completo}
+\label{apendice:glosario}
+
+\begin{bGlosario}
+    \bTerm{api}{API} Interfaz de Programación de Aplicaciones
+    \bTerm{json}{JSON} JavaScript Object Notation, formato de intercambio de datos
+    \bTerm{rest}{REST} Representational State Transfer, estilo de arquitectura software
+\end{bGlosario}
+
+\end{document}

@@ -1,11 +1,16 @@
 \documentclass[10pt]{book}
 \usepackage[userView]{cdt/cdtAnalisis}
 \usepackage{comment}
-
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{graphicx}
 %==== Information of Project ================================================
 \sistema[Etapa \#1]{Cyber-Escudo} 
 \proyecto[TT 2026-B009]{Plataforma Web para la Denuncia Segura y Prevención de Riesgos Digitales en Alineación con la Normativa Mexicana} 
-\documento{DT}{Documento de Reporte Técnico Final}{\RELEASE{2.0.4}} 
+\documento{DT}{Documento de Reporte Técnico Final}{\RELEASE{2.0.6}} 
 \entregable{E1}{Plataforma web funcional}
     
 \titulo{\varProyecto}
@@ -74,14 +79,16 @@
     \part{Modelado del negocio}
     \label{part:modeloNegocio}
         \input{example/1introduccion}
-        \input{example/2ModTerminos}
-        \input{example/3ModInfo}
-        \input{example/4ModReglas}
-        \input{example/6ModUsuario}
-        \input{example/5ModDinamico}
-        \input{example/6Mensajes}
-        \input{example/7ModInteraccion}
-        \input{example/8ModReferencias}
+        \input{example/2FundamentosdeInteligenciaArtificial}
+        \input{example/3ArquitecturadelSistema}
+        \input{example/4ModTerminos}
+        \input{example/5ModInfo}
+        \input{example/6ModReglas}
+        \input{example/7ModDinamico}
+        \input{example/8ModUsuario}
+        \input{example/9Mensajes}
+        \input{example/10ModInteraccion}
+        \input{example/11ModReferencias}
 
         
 \backmatter
