@@ -1,16 +1,14 @@
 %!TEX root = ../example.tex
 \chapter{Arquitectura del Sistema y Análisis de Tecnologías}
 % Paquetes necesarios (deben estar en el preámbulo del documento principal)
-% \usepackage{tikz}
 % \usepackage{listings}
 % \usepackage{amsmath}
 % \usepackage{array}
 % \usepackage{multirow}
-% \usepackage{graphicx}
 % \usepackage{longtable}
 % \usepackage{colortbl}
 % \usepackage{xcolor}
-% \usepackage{adjustbox} % Para ajustar tablas demasiado anchas
+% \usepackage{adjustbox}
 
 \section{Introducción a la Arquitectura del Sistema}
 
@@ -110,11 +108,11 @@ El backend requiere una combinación de tecnologías que ofrezcan robustez para 
 \hline
 \textbf{Rendimiento} & \textbf{Excelente para operaciones complejas}: Multi-threading, ideal para operaciones transaccionales y computación intensiva & \textbf{Excelente para I/O}: Modelo asíncrono no bloqueante, ideal para APIs REST simples y tiempo real \\
 \hline
-\textbf{Escalabilidad} & \textbf{Alta}: Soporte nativo para microservicios con Spring Cloud, service discovery (Eureka) & \textbf{Alta}: Cluster module, PM2, arquitectura orientada a eventos \\
+\textbf{Escalabilidad} & \textbf{Alta}: Soporte nativo para microservicios con Spring Cloud, service discovery & \textbf{Alta}: Cluster module, PM2, arquitectura orientada a eventos \\
 \hline
 \textbf{Madurez} & \textbf{Muy alta}: 20+ años en entornos empresariales, utilizado por gobiernos y bancos & \textbf{Alta}: 10+ años, ampliamente adoptado \\
 \hline
-\textbf{Transaccionalidad} & \textbf{Soporte completo}: @Transactional, gestión declarativa de transacciones & \textbf{Limitado}: No tiene transacciones nativas, requiere manejo manual \\
+\textbf{Transaccionalidad} & \textbf{Soporte completo}: Transactional, gestión declarativa de transacciones & \textbf{Limitado}: No tiene transacciones nativas, requiere manejo manual \\
 \hline
 \end{tabular}
 \end{table}
@@ -205,20 +203,20 @@ Node.js complementa la arquitectura en roles específicos donde su modelo asínc
     \item \textbf{Rate limiting}: Implementación eficiente de límites de peticiones para prevenir ataques de denegación de servicio.
 \end{itemize}
 
-\textbf{Ejemplo de API Gateway con Node.js/Express}:
+\textbf{Estructura conceptual de API Gateway}:
 
-\begin{lstlisting}[language=Java, caption=Estructura conceptual de API Gateway]
-// El API Gateway actúa como punto único de entrada
+\begin{lstlisting}[caption=Estructura conceptual de API Gateway]
+// El API Gateway actua como punto unico de entrada
 // Redirige peticiones a los microservicios correspondientes
-// Implementa rate limiting, autenticación y logging centralizado
+// Implementa rate limiting, autenticacion y logging centralizado
 
 Funcion principal del Gateway:
 - Recibir peticiones del cliente
 - Validar tokens JWT
-- Aplicar límites de tasa
+- Aplicar limites de tasa
 - Enrutar al servicio correspondiente
 - Agregar respuestas cuando sea necesario
-- Registrar todas las operaciones para auditoría
+- Registrar todas las operaciones para auditoria
 \end{lstlisting}
 
 \subsubsection{Servicio de Notificaciones}
@@ -403,7 +401,7 @@ public class RegistroQuejaOrquestador {
     
     private void compensar(Exception e, QuejaDTO quejaDTO) {
         log.error("Error en registro de queja, compensando...", e);
-        // Lógica de compensación
+        // Logica de compensacion
     }
 }
 \end{lstlisting}
