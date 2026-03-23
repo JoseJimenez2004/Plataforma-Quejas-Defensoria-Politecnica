@@ -3,17 +3,17 @@ spring:
     name: defensoria
   
   datasource:
-    # 'db-defensoria' será el nombre del servicio en nuestro docker-compose
+    # 'db-defensoria' es el nombre del servicio en el docker-compose
     url: jdbc:postgresql://db-defensoria:5432/defensoria_db
-    username: admin_user
-    password: password_seguro
+    username: defensoria
+    password: "Bicho_IPN_2026!"
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      # 'update' creará las tablas de quejas 
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
