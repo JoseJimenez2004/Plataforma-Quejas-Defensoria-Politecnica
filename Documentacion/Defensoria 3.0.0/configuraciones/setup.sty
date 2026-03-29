@@ -1,0 +1,59 @@
+\ProvidesPackage{configuraciones/setup}
+
+% --- Paquetes Necesarios ---
+\usepackage[utf8]{inputenc}
+\usepackage[spanish, es-tabla]{babel}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{tikz}
+\usepackage{times} % Usa Times New Roman como sugiere la guía
+
+% --- Definición de Colores ---
+\definecolor{azulESCOM}{RGB}{0, 68, 129}
+
+% --- Configuración de Márgenes Estándar ---
+\geometry{
+    letterpaper,
+    top=2cm,
+    bottom=2cm,
+    left=3cm,
+    right=2cm
+}
+
+\usepackage{fancyhdr}
+\usepackage{titlesec} % Para controlar la alineación de los títulos
+
+% --- Configuración de Encabezados y Pies de Página ---
+\pagestyle{fancy}
+\fancyhf{} % Limpia los estilos por defecto
+
+% Nombre del capítulo a la derecha (superior)
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\fancyhead[R]{\textit{\leftmark}} 
+
+% Línea decorativa en el encabezado (opcional, puedes poner 0pt si no la quieres)
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Número de página centrado abajo (o puedes moverlo con \fancyfoot[C]{\thepage})
+\fancyfoot[C]{\thepage}
+
+% --- Configuración de Títulos ---
+% Asegura que los títulos de secciones y subsecciones estén a la izquierda
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+\usepackage{microtype} 
+\sloppy % Ayuda a evitar que las palabras se salgan del margen en párrafos densos
+
+% --- Para arreglar el error de "headheight is too small" ---
+\setlength{\headheight}{15pt}
+\addtolength{\topmargin}{-3pt}
+
+% --- Para arreglar el error de "Undefined control sequence" en referencias ---
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=azulESCOM
+}

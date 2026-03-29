@@ -1,0 +1,20 @@
+\documentclass[12pt, oneside, letterpaper]{book}
+\usepackage{configuraciones/setup}
+
+\begin{document}
+
+\frontmatter
+% Referencias para los archivos de capítulos
+\include{capitulos/00-portada} 
+\include{capitulos/00-advertencia} 
+\include{capitulos/00-agradecimientos}
+\include{capitulos/00-indices} 
+
+\mainmatter
+\pagestyle{fancy} % Encabezados y pies de página
+\include{capitulos/01-introduccion}
+
+
+\backmatter
+\include{capitulos/00-referencias}
+\end{document}
