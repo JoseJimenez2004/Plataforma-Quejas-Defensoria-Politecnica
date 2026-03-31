@@ -1,62 +1,66 @@
 \ProvidesPackage{configuraciones/setup}
 
-% --- Paquetes Necesarios ---
+% --- Paquetes de Idioma y Codificación ---
 \usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage[spanish, es-tabla]{babel}
+
+% --- Fuentes y Estética del Texto ---
+\usepackage{newtxtext,newtxmath} % Fuente moderna compacta
+\usepackage{setspace}
+\onehalfspacing        % Interlineado 1.5
+\usepackage{parskip}   % Espacio entre párrafos (sin sangría)
+\usepackage{microtype} % Justificado perfecto SOLO en párrafos
+
+% --- Gráficos y Dibujo ---
 \usepackage{xcolor}
 \usepackage{graphicx}
+\usepackage{tikz} % ¡AQUÍ ESTÁ PARA TU PORTADA!
+\usetikzlibrary{calc}
+
+% --- Márgenes y Encabezados ---
 \usepackage{geometry}
-\usepackage{tikz}
-\usepackage{times} % Usa Times New Roman 
-\usepackage[titletoc]{appendix}
-\renewcommand{\appendixname}{Anexos}
-\renewcommand{\appendixtocname}{Anexos}
-
-% --- Definición de Colores ---
-\definecolor{azulESCOM}{RGB}{0, 68, 129}
-
-% --- Configuración de Márgenes Estándar ---
 \geometry{
     letterpaper,
-    top=2cm,
-    bottom=2cm,
+    top=2.5cm,
+    bottom=2.5cm,
     left=3cm,
-    right=2cm
+    right=2cm,
+    headheight=25pt % Aumentado para evitar errores
 }
 
 \usepackage{fancyhdr}
-\usepackage{titlesec} % Para controlar la alineación de los títulos
-
-% --- Configuración de Encabezados y Pies de Página ---
 \pagestyle{fancy}
-\fancyhf{} % Limpia los estilos por defecto
-
-% Nombre del capítulo a la derecha (superior)
+\fancyhf{}
 \renewcommand{\chaptermark}[1]{\markboth{#1}{}}
-\fancyhead[R]{\textit{\leftmark}} 
-
-% Línea decorativa en el encabezado (opcional, puedes poner 0pt si no la quieres)
-\renewcommand{\headrulewidth}{0.4pt}
-
-% Número de página centrado abajo (o puedes moverlo con \fancyfoot[C]{\thepage})
+\fancyhead[R]{\small\itshape\color{azulESCOM}\leftmark} 
 \fancyfoot[C]{\thepage}
+\fancyfoot[L]{\small\color{gray} DDP-IPN}
 
-% --- Configuración de Títulos ---
-% Asegura que los títulos de secciones y subsecciones estén a la izquierda
-\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
-\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+% Líneas del encabezado y pie
+\definecolor{azulESCOM}{RGB}{0, 68, 129}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{azulESCOM}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0.5pt}
+\renewcommand{\footrule}{\hbox to\headwidth{\color{azulESCOM}\leaders\hrule height \footrulewidth\hfill}}
 
-\usepackage{microtype} 
-\sloppy % Ayuda a evitar que las palabras se salgan del margen en párrafos densos
+% --- TÍTULOS (AQUÍ ESTÁ EL ARREGLO: ALINEADOS A LA IZQUIERDA) ---
+\usepackage{titlesec}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{azulESCOM}}{\thesection}{1em}{\raggedright}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{azulESCOM}}{\thesubsection}{1em}{\raggedright}
 
-% --- Para arreglar el error de "headheight is too small" ---
-\setlength{\headheight}{15pt}
-\addtolength{\topmargin}{-3pt}
+% --- Anexos y Referencias ---
+\usepackage[titletoc]{appendix} % ¡AQUÍ ESTÁ PARA TUS ANEXOS!
+\renewcommand{\appendixname}{Anexos}
+\renewcommand{\appendixtocname}{Anexos}
 
-% --- Para arreglar el error de "Undefined control sequence" en referencias ---
+\usepackage{url}
 \usepackage{hyperref}
+\usepackage{nameref}
 \hypersetup{
     colorlinks=true,
-    linkcolor=black,
+    linkcolor=azulESCOM,
     urlcolor=azulESCOM
 }

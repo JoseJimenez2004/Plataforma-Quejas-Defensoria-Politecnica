@@ -1,0 +1,150 @@
+% ==============================================================================
+% capitulos/03-tecnologias.tex - Infraestructura y Tecnologías
+% ==============================================================================
+
+\chapter{Infraestructura y Tecnologías}
+\label{cap:tecnologias}
+
+\section{Estudio de Arquitecturas de Software}
+\label{sec:estudio_arquitecturas}
+
+\subsection{Introducción a las Arquitecturas de Software}
+\begin{itemize}
+    \item Definición de arquitectura de software
+    \item Importancia en el desarrollo de sistemas
+    \item Factores de calidad:
+    \begin{itemize}
+        \item Rendimiento
+        \item Escalabilidad
+        \item Mantenibilidad
+    \end{itemize}
+    \item Clasificación general de arquitecturas:
+    \begin{itemize}
+        \item Monolíticas
+        \item Distribuidas
+        \item Orientadas a servicios
+        \item Basadas en eventos
+    \end{itemize}
+\end{itemize}
+
+\subsection{Arquitectura Monolítica}
+\begin{itemize}
+    \item Definición y estructura
+    \item Funcionamiento interno
+    \item Ventajas
+    \item Desventajas
+    \item Casos de uso
+\end{itemize}
+
+\subsection{Arquitectura Orientada a Servicios (SOA)}
+\begin{itemize}
+    \item Definición y principios
+    \item Enterprise Service Bus (ESB)
+    \item Protocolos de comunicación:
+    \begin{itemize}
+        \item SOAP
+        \item XML
+    \end{itemize}
+    \item Ventajas
+    \item Desventajas
+    \item Diferencias con microservicios
+\end{itemize}
+
+\subsection{Arquitectura de Microservicios}
+\begin{itemize}
+    \item Definición y características
+    \item Principios fundamentales:
+    \begin{itemize}
+        \item Independencia de despliegue
+        \item Alta cohesión
+        \item Bajo acoplamiento
+    \end{itemize}
+    \item Descomposición funcional
+    \item Comunicación entre servicios:
+    \begin{itemize}
+        \item REST
+        \item JSON
+        \item API Gateway
+    \end{itemize}
+    \item Patrones clave:
+    \begin{itemize}
+        \item API Gateway
+        \item Service Discovery
+        \item Circuit Breaker
+    \end{itemize}
+    \item Gestión de datos:
+    \begin{itemize}
+        \item Base de datos por servicio
+        \item Base de datos compartida
+    \end{itemize}
+    \item Ventajas
+    \item Desventajas
+\end{itemize}
+
+\subsection{Arquitectura de Microservicios en 3 Capas}
+\begin{itemize}
+    \item Capa de presentación
+    \item Capa de lógica
+    \item Capa de datos
+    \item Flujo de petición
+    \item Justificación del diseño
+\end{itemize}
+
+\subsection{Arquitectura Dirigida por Eventos (Event-Driven)}
+\begin{itemize}
+    \item Concepto de eventos
+    \item Productores y consumidores
+    \item Message brokers:
+    \begin{itemize}
+        \item RabbitMQ
+        \item Kafka
+    \end{itemize}
+    \item Comunicación asíncrona
+    \item Consistencia eventual
+    \item Ventajas
+    \item Desventajas
+\end{itemize}
+
+\subsection{Arquitectura Serverless (FaaS)}
+\begin{itemize}
+    \item Definición
+    \item Ejecución basada en eventos
+    \item Plataformas:
+    \begin{itemize}
+        \item AWS Lambda
+        \item Google Cloud Functions
+    \end{itemize}
+    \item Características:
+    \begin{itemize}
+        \item Escalabilidad automática
+        \item Pago por uso
+        \item Stateless
+    \end{itemize}
+    \item Ventajas
+    \item Desventajas
+\end{itemize}
+
+\subsection{Arquitectura Hexagonal (Ports and Adapters)}
+\begin{itemize}
+    \item Definición
+    \item Separación del dominio
+    \item Puertos y adaptadores
+    \item Independencia tecnológica
+    \item Beneficios en pruebas
+\end{itemize}
+
+\subsection{Comparación de Arquitecturas}
+\begin{itemize}
+    \item Escalabilidad
+    \item Complejidad
+    \item Acoplamiento
+    \item Mantenibilidad
+    \item Casos de uso
+\end{itemize}
+
+\subsection{Selección de Arquitectura}
+\begin{itemize}
+    \item Criterios de selección
+    \item Evaluación según contexto
+    \item Justificación de la arquitectura elegida
+\end{itemize}

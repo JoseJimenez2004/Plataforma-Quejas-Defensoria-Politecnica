@@ -1,6 +1,3 @@
-Copia y pega todo este bloque en tu archivo README.md:
-
-Markdown
 # 🛡️ Plataforma Web para la Denuncia Segura y Prevención de Riesgos Digitales
 ### Trabajo Terminal: TT 2026-B009 | IPN - ESCOM
 
