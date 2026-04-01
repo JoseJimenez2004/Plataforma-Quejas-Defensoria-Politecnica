@@ -1,10 +1,10 @@
-package com.ipn.escom.defensoria;
+package ipn.escom.defensoria.home;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DefensoriaApplicationTests {
+class HomeApplicationTests {
 
 	@Test
 	void contextLoads() {
