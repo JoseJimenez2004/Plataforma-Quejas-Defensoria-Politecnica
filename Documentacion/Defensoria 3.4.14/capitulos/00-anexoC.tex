@@ -1,0 +1,67 @@
+% ==============================================================================
+% capitulos/00-anexoC.tex - Catálogo de Mensajes
+% ==============================================================================
+
+\chapter{Catálogo de Mensajes}
+\label{anexo:mensajes}
+
+En este anexo se describen los mensajes informativos y de confirmación que el sistema DDP muestra al usuario durante su interacción.
+
+\small
+\begin{longtable}{|p{2cm}|p{6cm}|p{6cm}|}
+    \caption{Catálogo de mensajes del sistema.} \label{tab:mensajes} \\
+    
+    \hline
+    \rowcolor[HTML]{EFEFEF} 
+    \textbf{Código} & \textbf{Texto del Mensaje} & \textbf{Descripción / Causa} \\ \hline
+    \endfirsthead % Lo anterior solo aparece en la primera página
+    
+    \hline
+    \rowcolor[HTML]{EFEFEF} 
+    \textbf{Código} & \textbf{Texto del Mensaje} & \textbf{Descripción / Causa} \\ \hline
+    \endhead % Lo anterior aparece como encabezado en cada nueva página
+    
+    \hline
+    \multicolumn{3}{r}{{Continúa en la siguiente página...}} \\
+    \endfoot % Lo anterior aparece al pie de cada página (excepto la última)
+    
+    \hline
+    \endlastfoot % Lo anterior aparece al final de la tabla completa
+
+    \hypertarget{msg:MSG01}{\textbf{MSG01}} & "Registro exitoso. Se ha enviado un correo de verificación." & Confirmación de que los datos se guardaron correctamente en la BD. \\ \hline
+    \hypertarget{msg:MSG02}{\textbf{MSG02}} & "Por favor, complete todos los campos obligatorios." & Notificación cuando el validador de frontend detecta campos vacíos. \\ \hline
+    \hypertarget{msg:MSG03}{\textbf{MSG03}} & "El correo electrónico ya se encuentra vinculado a una cuenta." & Error de negocio cuando el correo ya existe en la tabla de Usuarios. \\ \hline
+    \hypertarget{msg:MSG05}{\textbf{MSG05}} & "Usuario o contraseña incorrectos." & Error de autenticación por datos erróneos. \\ \hline
+    \hypertarget{msg:MSG06}{\textbf{MSG06}} & "Inicio de sesión exitoso. Bienvenido." & Confirmación de acceso correcto al sistema. \\ \hline
+    \hypertarget{msg:MSG07}{\textbf{MSG07}} & "Cuenta bloqueada temporalmente por seguridad." & Bloqueo tras 3 intentos fallidos consecutivos. \\ \hline
+    \hypertarget{msg:MSG08}{\textbf{MSG08}} & "Enlace de recuperación enviado a su correo." & Notificación de envío de token vía SMTP. \\ \hline
+    \hypertarget{msg:MSG09}{\textbf{MSG09}} & "El enlace ha caducado. Por favor, solicite uno nuevo." & Validación de tiempo de vida del token (20 min). \\ \hline
+    \hypertarget{msg:MSG10}{\textbf{MSG10}} & "Contraseña actualizada exitosamente." & Confirmación final del proceso de recuperación. \\ \hline
+    \hypertarget{msg:MSG11}{\textbf{MSG11}} & "Cambios guardados exitosamente." & Confirmación de actualización de perfil en la BD. \\ \hline
+    \hypertarget{msg:MSG12}{\textbf{MSG12}} & "Formato o tamaño de imagen no permitido." & Error cuando el archivo no es .jpg/.png o pesa >2MB. \\ \hline
+    \hypertarget{msg:MSG13}{\textbf{MSG13}} & "Se requiere el registro de un tutor legal para continuar." & Aviso de interrupción por detección de minoría de edad. \\ \hline
+    \hypertarget{msg:MSG14}{\textbf{MSG14}} & "Datos del tutor registrados correctamente." & Confirmación de vinculación legal exitosa. \\ \hline
+    \hypertarget{msg:MSG15}{\textbf{MSG15}} & "Los datos de contacto del tutor no son válidos." & Error de formato en teléfono o correo del tutor. \\ \hline
+    \hypertarget{msg:MSG16}{\textbf{MSG16}} & "El tutor no puede tener el mismo correo que el menor." & Validación de seguridad para evitar suplantación de identidad. \\ \hline
+    \hypertarget{msg:MSG17}{\textbf{MSG17}} & "Queja registrada exitosamente. Su trámite ha iniciado." & Confirmación de envío definitivo a la Defensoría. \\ \hline
+    \hypertarget{msg:MSG18}{\textbf{MSG18}} & "Borrador guardado. Puede continuar después." & Confirmación de persistencia temporal de datos. \\ \hline
+    \hypertarget{msg:MSG19}{\textbf{MSG19}} & "La descripción debe contener al menos 50 caracteres." & Validación de integridad para asegurar detalles suficientes. \\ \hline
+    \hypertarget{msg:MSG20}{\textbf{MSG20}} & "Folio generado: [FOLIO-XXXX]." & Identificador alfanumérico para seguimiento del quejoso. \\ \hline
+    \hypertarget{msg:MSG21}{\textbf{MSG21}} & "La fecha de los hechos no puede ser futura." & Validación lógica de temporalidad de los sucesos. \\ \hline
+    \hypertarget{msg:MSG22}{\textbf{MSG22}} & "Archivo adjunto correctamente al expediente." & Confirmación de carga exitosa en el servidor de archivos. \\ \hline
+    \hypertarget{msg:MSG23}{\textbf{MSG23}} & "Tipo de archivo no permitido por políticas de seguridad." & Bloqueo de extensiones peligrosas (ej. .sh, .exe, .js). \\ \hline
+    \hypertarget{msg:MSG24}{\textbf{MSG24}} & "El archivo supera el límite de tamaño permitido (15MB)." & Validación de cuota por archivo individual. \\ \hline
+    \hypertarget{msg:MSG25}{\textbf{MSG25}} & "Archivo corrupto o ilegible. Intente nuevamente." & Error cuando la integridad del archivo no puede verificarse. \\ \hline
+    \hypertarget{msg:MSG26}{\textbf{MSG26}} & "Se ha alcanzado el límite máximo de anexos por queja." & Validación de cuota total de almacenamiento por expediente. \\ \hline
+    \hypertarget{msg:MSG27}{\textbf{MSG27}} & "¿Está seguro de que desea eliminar esta evidencia?" & Mensaje de confirmación para acción destructiva. \\ \hline
+    \hypertarget{msg:MSG28}{\textbf{MSG28}} & "Usted aún no cuenta con trámites registrados." & Notificación de ausencia de registros para el usuario activo. \\ \hline
+    \hypertarget{msg:MSG29}{\textbf{MSG29}} & "Error al cargar el tablero. Intente más tarde." & Fallo en la comunicación con el servicio de persistencia (Timeout). \\ \hline
+    \hypertarget{msg:MSG30}{\textbf{MSG30}} & "El borrador ha sido eliminado permanentemente." & Confirmación de borrado definitivo de los datos en el sistema. \\ \hline
+    \hypertarget{msg:MSG31}{\textbf{MSG31}} & "No se pudo actualizar el estado de la notificación." & Error en la sincronización con el servidor al marcar lectura. \\ \hline
+    \hypertarget{msg:MSG32}{\textbf{MSG32}} & "Tiene un nuevo requerimiento de información para su queja." & Aviso genérico enviado al correo electrónico del usuario. \\ \hline
+    \hypertarget{msg:MSG33}{\textbf{MSG33}} & "Información complementaria enviada exitosamente." & Confirmación de que el trámite vuelve a estar en revisión. \\ \hline
+    \hypertarget{msg:MSG34}{\textbf{MSG34}} & "No se detectaron cambios en la información del trámite." & Validación para asegurar que el usuario atendió el requerimiento. \\ \hline
+    \hypertarget{msg:MSG35}{\textbf{MSG35}} & "El documento de medidas precautorias aún no está disponible." & Error técnico cuando el archivo PDF no ha sido firmado o cargado correctamente. \\ \hline
+    \hypertarget{msg:MSG36}{\textbf{MSG36}} & "Esta propuesta ya cuenta con una respuesta registrada." & Error al intentar acceder a una propuesta cuyo plazo o decisión ya expiró. \\ \hline
+
+\end{longtable}

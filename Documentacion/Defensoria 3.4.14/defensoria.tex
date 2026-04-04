@@ -1,0 +1,29 @@
+\documentclass[12pt, oneside, letterpaper]{book}
+\usepackage{configuraciones/setup}
+
+\begin{document}
+
+\frontmatter
+% Referencias para los archivos de capítulos
+\include{capitulos/00-portada} 
+\include{capitulos/00-advertencia} 
+\include{capitulos/00-agradecimientos}
+\include{capitulos/00-indices} 
+
+\mainmatter
+\pagestyle{fancy} % Encabezados y pies de página
+\include{capitulos/01-introduccion}
+\include{capitulos/02-marco-teorico}
+\include{capitulos/03-tecnologias}
+\include{capitulos/04-base-datos}
+\include{capitulos/05-requerimientos}
+
+
+\backmatter
+\include{capitulos/00-anexoA}
+\include{capitulos/00-anexoB}
+\include{capitulos/00-anexoC}
+\include{capitulos/00-anexoD}
+\backmatter
+\include{capitulos/00-referencias}
+\end{document}

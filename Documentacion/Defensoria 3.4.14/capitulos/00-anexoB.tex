@@ -1,0 +1,958 @@
+% ==============================================================================
+% capitulos/00-anexoB.tex - Anexos del Proyecto (Casos de Uso)
+% ==============================================================================
+
+\begin{appendices}
+
+\chapter{Casos de Uso}
+\label{anexo:casos_uso}
+
+A continuación se detallan los diagramas de casos de uso y sus especificaciones técnicas, describiendo las interacciones entre los actores (Abogados, Quejosos, Administradores) y el sistema DDP.
+
+\begin{figure}[htbp]
+    \centering
+    %\includegraphics[width=0.7\textwidth]{imagenes/diagrama_casos_uso_general.png}
+    \caption{Diagrama general de casos de uso del sistema DDP.}
+    \label{fig:casos_uso_general}
+\end{figure}
+
+\section{Especificación detallada de Casos de Uso}
+
+% --- CU01: Crear cuenta de usuario ---
+\subsection{CU01: Crear cuenta de usuario}
+
+\textbf{Resumen:} 
+El actor Quejoso inicia el proceso de registro proporcionando sus datos de identidad y contacto. El sistema debe validar que el correo electrónico no se encuentre previamente registrado en la base de datos y que la contraseña cumpla con los criterios de seguridad definidos. Una vez verificada la información, el sistema persiste la información del nuevo perfil.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Registrar formalmente a un nuevo usuario en el sistema para permitir su autenticación y gestión de trámites. \\ \hline
+\textbf{Entradas} & Formulario digital con: Nombre completo, correo electrónico, teléfono, contraseña y confirmación de contraseña. \\ \hline
+\textbf{Origen} & Interfaz de usuario provista por el navegador del cliente. \\ \hline
+\textbf{Salidas} & \hyperlink{msg:MSG01}{MSG01}: Registro exitoso, \hyperlink{msg:MSG02}{MSG02}: Error de validación, \hyperlink{msg:MSG03}{MSG03}: Correo existente. \\ \hline
+\textbf{Destino} & Pantalla de confirmación [GP]-UI02 y Base de Datos institucional. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El sistema debe encontrarse en línea y con conexión a la base de datos.
+    \item El actor debe visualizar la pantalla de inicio [GP]-UI01.
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El registro se almacena en la tabla Usuarios con estado "Pendiente de Verificación".
+    \item El sistema envía un token de activación al correo proporcionado.
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E1}{E1}: Datos obligatorios incompletos.
+    \item \hyperlink{err:E2}{E2}: Correo electrónico duplicado.
+    \item \hyperlink{err:E3}{E3}: Contraseñas no coinciden.
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU01.}
+\label{tab:cu01_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del Caso de Uso}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor selecciona la opción "Registrarse" en la pantalla [GP]-UI01.
+    \item El sistema despliega el formulario de captura de datos.
+    \item El actor ingresa su nombre, correo, teléfono y genera una contraseña segura.
+    \item El actor acepta los términos y condiciones.
+    \item El sistema valida la integridad de los campos (\hyperlink{err:E1}{Error E1}).
+    \item El sistema verifica que el correo electrónico no esté registrado (\hyperlink{err:E2}{Error E2}).
+    \item El sistema valida que la contraseña y su confirmación coincidan (\hyperlink{err:E3}{Error E3}).
+    \item El sistema persiste la información en la base de datos.
+    \item El sistema muestra el mensaje \hyperlink{msg:MSG01}{MSG01} y redirecciona a [GP]-UI02.
+\end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Datos incompletos o inválidos} \\
+    \textit{Condición:} El actor omite un campo obligatorio o usa formato inválido.
+    \begin{itemize}[nosep]
+        \item[A-1:] El sistema resalta los campos erróneos en color rojo.
+        \item[A-2:] El sistema muestra el mensaje \hyperlink{msg:MSG02}{MSG02}.
+        \item \textbf{Retorno:} El sistema retorna al punto 3 de la trayectoria principal.
+    \end{itemize}
+
+    \item \textbf{Trayectoria B: Correo ya registrado} \\
+    \textit{Condición:} El correo electrónico ingresado ya existe en la plataforma.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema identifica la duplicidad del registro.
+        \item[B-2:] El sistema muestra el mensaje \hyperlink{msg:MSG03}{MSG03}.
+        \item[B-3:] El sistema sugiere utilizar la función de recuperación de contraseña.
+    \end{itemize}
+
+    \item \textbf{Trayectoria C: Discrepancia en contraseñas} \\
+    \textit{Condición:} El campo ``Contraseña'' y ``Confirmar Contraseña'' no coinciden.
+    \begin{itemize}[nosep]
+        \item[C-1:] El sistema detecta la inconsistencia de caracteres.
+        \item[C-2:] El sistema muestra el mensaje de error correspondiente.
+        \item \textbf{Retorno:} El sistema retorna al punto 3 de la trayectoria principal.
+    \end{itemize}
+\end{itemize}
+
+% --- CU02: Iniciar sesión ---
+\subsection{CU02: Iniciar sesión}
+
+\textbf{Resumen:} 
+El actor Quejoso solicita el acceso al sistema introduciendo sus credenciales (correo y contraseña). El sistema valida la cuenta y la veracidad de la clave mediante algoritmos de cifrado. Si los datos son correctos, se genera un Token JWT y se permite el acceso al panel principal.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Autenticar la identidad del usuario para conceder acceso a las funciones privadas del sistema. \\ \hline
+\textbf{Entradas} & Correo electrónico y Contraseña (alfanumérico). \\ \hline
+\textbf{Origen} & Interfaz de usuario en el navegador del cliente. \\ \hline
+\textbf{Salidas} & \hyperlink{msg:MSG05}{MSG05}: Credenciales inválidas, \hyperlink{msg:MSG06}{MSG06}: Éxito, \hyperlink{msg:MSG07}{MSG07}: Cuenta bloqueada. \\ \hline
+\textbf{Destino} & Dashboard principal del sistema [GP]-UI03. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El usuario debe poseer una cuenta previamente creada y activa.
+    \item El actor debe encontrarse en la pantalla de acceso [GP]-UI01.
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item Se genera un Token de sesión JWT (60 min).
+    \item Se registra el evento en el log de auditoría (Login\_Event).
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E4}{E4}: Credenciales incorrectas.
+    \item \hyperlink{err:E5}{E5}: Superación de intentos fallidos.
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU02.}
+\label{tab:cu02_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU02}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor ingresa su correo y contraseña en [GP]-UI01.
+    \item El actor hace clic en el botón "Ingresar".
+    \item El sistema valida el formato de los datos.
+    \item El sistema verifica la existencia del usuario y la validez de la contraseña (\hyperlink{err:E4}{Error E4}).
+    \item El sistema verifica que la cuenta no esté bloqueada (\hyperlink{err:E5}{Error E5}).
+    \item El sistema genera la sesión y muestra el mensaje \hyperlink{msg:MSG06}{MSG06}.
+    \item El sistema redirecciona al actor a [GP]-UI03.
+\end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Recuperación de credenciales (Extiende CU03)} \\
+    \textit{Condición:} El actor no recuerda su contraseña.
+    \begin{itemize}[nosep]
+        \item[A-1:] El actor selecciona "¿Olvidó su contraseña?".
+        \item[A-2:] El sistema invoca al CU03: Recuperar contraseña.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Credenciales inválidas} \\
+    \textit{Condición:} Datos no coinciden con los registros.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema incrementa el contador de intentos fallidos.
+        \item[B-2:] El sistema muestra el mensaje \hyperlink{msg:MSG05}{MSG05}.
+        \item \textbf{Retorno:} Regresa al punto 1 de la trayectoria principal.
+    \end{itemize}
+\end{itemize}
+
+
+% --- CU03: Recuperar contraseña ---
+\subsection{CU03: Recuperar contraseña}
+
+\textbf{Resumen:} 
+El actor Quejoso solicita el restablecimiento de su clave al no poder autenticarse. El proceso consiste en la verificación del correo y el envío de un enlace temporal para definir una nueva contraseña que cumpla con los criterios de seguridad.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Permitir al usuario restablecer su contraseña de acceso mediante una validación por correo electrónico. \\ \hline
+\textbf{Entradas} & Correo electrónico registrado, Nueva contraseña y Confirmación. \\ \hline
+\textbf{Origen} & Interfaz de usuario en el navegador del cliente. \\ \hline
+\textbf{Salidas} & \hyperlink{msg:MSG08}{MSG08}: Enlace enviado, \hyperlink{msg:MSG09}{MSG09}: Token inválido, \hyperlink{msg:MSG10}{MSG10}: Éxito. \\ \hline
+\textbf{Destino} & Correo electrónico del usuario y Pantalla de inicio [GP]-UI01. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El actor debe haber activado la extensión desde [GP]-UI01 o acceder a [GP]-UI04.
+    \item El correo ingresado debe existir en el registro de usuarios.
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item La nueva contraseña se almacena con cifrado Hash en la base de datos.
+    \item El token de recuperación utilizado se marca como "Invalidado".
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{msg:MSG03}{E1}: Correo no encontrado (reutiliza MSG03).
+    \item \hyperlink{err:E6}{E2}: Enlace caducado (MSG09).
+    \item \hyperlink{err:E3}{E3}: Contraseñas no coinciden (reutiliza E3).
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU03.}
+\label{tab:cu03_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU03}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor selecciona "¿Olvidó su contraseña?" en \textbf{[GP]-UI01}.
+    \item El sistema muestra la pantalla de solicitud \textbf{[GP]-UI04}.
+    \item El actor ingresa su correo electrónico registrado.
+    \item El sistema valida la existencia del correo (\hyperlink{msg:MSG03}{Error E1}).
+    \item El sistema genera un token (20 min) y envía el mensaje \hyperlink{msg:MSG08}{MSG08}.
+    \item El actor usa el enlace y el sistema despliega \textbf{[GP]-UI05} (\hyperlink{err:E6}{Error E2}).
+    \item El actor ingresa la nueva contraseña y su confirmación.
+    \item El sistema valida que ambos campos coincidan (\hyperlink{err:E3}{Error E3}).
+    \item El sistema actualiza la BD y muestra el mensaje \hyperlink{msg:MSG10}{MSG10}.
+    \item El sistema redirecciona al actor a la pantalla \textbf{[GP]-UI01}.
+\end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria B: Enlace de recuperación caducado} \\
+    \textit{Condición:} El actor accede al enlace después del tiempo de vigencia.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema detecta que el token ha expirado.
+        \item[B-2:] El sistema muestra el mensaje \hyperlink{msg:MSG09}{MSG09}.
+        \item \textbf{Retorno:} El sistema retorna al punto 2 de la trayectoria principal.
+    \end{itemize}
+\end{itemize}
+
+% --- CU04: Editar perfil de usuario ---
+\subsection{CU04: Editar perfil de usuario}
+
+\textbf{Resumen:} 
+El actor Quejoso solicita la modificación de sus datos personales almacenados. El sistema permite la edición de campos como nombre, teléfono y fotografía, validando los formatos y persistiendo los cambios en la base de datos para su actualización inmediata.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Permitir al usuario actualizar su información personal y de contacto en el sistema. \\ \hline
+\textbf{Entradas} & Nombre completo, teléfono, fotografía de perfil (opcional). \\ \hline
+\textbf{Origen} & Interfaz de usuario en el navegador del cliente. \\ \hline
+\textbf{Salidas} & \hyperlink{msg:MSG11}{MSG11}: Cambios exitosos, \hyperlink{msg:MSG12}{MSG12}: Archivo no válido, \hyperlink{msg:MSG02}{MSG02}: Error de validación. \\ \hline
+\textbf{Destino} & Pantalla de perfil [GP]-UI06 y Base de Datos institucional. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El actor debe haber iniciado sesión exitosamente (\hyperlink{anexo:casos_uso}{CU02}).
+    \item El actor debe encontrarse en la pantalla de gestión de cuenta [GP]-UI06.
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item Los datos antiguos son sobrescritos en la tabla Usuarios.
+    \item Se actualiza la información en el contexto de la sesión activa.
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{msg:MSG02}{E1}: Datos obligatorios vacíos (reutiliza MSG02).
+    \item \hyperlink{err:E7}{E2}: Formato de imagen incompatible (MSG12).
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU04.}
+\label{tab:cu04_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU04}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor selecciona "Configuración de Perfil" en el menú principal.
+    \item El sistema recupera los datos actuales y los despliega en \textbf{[GP]-UI06}.
+    \item El actor modifica los campos deseados (Nombre o Teléfono).
+    \item El actor selecciona el botón "Guardar cambios".
+    \item El sistema valida que los campos obligatorios no estén vacíos (\hyperlink{msg:MSG02}{Error E1}).
+    \item El sistema valida el formato numérico del teléfono.
+    \item El sistema actualiza el registro en la base de datos.
+    \item El sistema muestra el mensaje de confirmación \hyperlink{msg:MSG11}{MSG11}.
+    \item El sistema refresca la pantalla con la nueva información.
+\end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Actualización de fotografía de perfil} \\
+    \textit{Condición:} El actor decide cargar una nueva imagen.
+    \begin{itemize}[nosep]
+        \item[A-1:] El actor selecciona "Subir imagen".
+        \item[A-2:] El sistema valida extensión (.jpg, .png) y tamaño (máx. 2MB) (\hyperlink{err:E7}{Error E2}).
+        \item[A-3:] El sistema procesa la imagen y genera vista previa.
+        \item \textbf{Retorno:} Regresa al punto 4 de la trayectoria principal.
+    \end{itemize}
+\end{itemize}
+
+% --- CU05: Registrar datos de tutor ---
+\subsection{CU05: Registrar datos de tutor}
+
+\textbf{Resumen:} 
+El sistema activa automáticamente este caso de uso cuando se detecta que el actor Quejoso es menor de edad (menor a 18 años). Se bloquea el avance del registro principal hasta que se validen los datos de identidad y contacto de un padre o tutor legal para fines de vinculación jurídica.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso (Asistido por Tutor) \\ \hline
+\textbf{Propósito} & Asegurar el cumplimiento legal mediante el registro de un responsable legal para usuarios menores de edad. \\ \hline
+\textbf{Entradas} & Nombre completo del tutor, Parentesco, Teléfono y Correo electrónico del tutor. \\ \hline
+\textbf{Origen} & Interfaz de usuario en el navegador del cliente. \\ \hline
+\textbf{Salidas} & \hyperlink{msg:MSG13}{MSG13}: Aviso de minoría de edad, \hyperlink{msg:MSG14}{MSG14}: Registro exitoso, \hyperlink{msg:MSG15}{MSG15}: Error en datos. \\ \hline
+\textbf{Destino} & Expediente digital del usuario y Base de Datos (Tabla Tutores). \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El sistema calculó una edad < 18 años desde \hyperlink{anexo:casos_uso}{CU01} o \hyperlink{anexo:casos_uso}{CU04}.
+    \item El flujo de registro principal se encuentra en estado "Pausado".
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item Se crea una relación uno-a-uno entre el ID\_Usuario y el ID\_Tutor.
+    \item El sistema permite continuar con la finalización del perfil general.
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E8}{E1}: Datos de contacto del tutor inválidos (MSG15).
+    \item \hyperlink{err:E9}{E2}: Tutor duplicado con el usuario menor (MSG16).
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU05.}
+\label{tab:cu05_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU05}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El sistema detecta minoría de edad en el \hyperlink{anexo:casos_uso}{CU01} o \hyperlink{anexo:casos_uso}{CU04}.
+    \item El sistema interrumpe el flujo y muestra el mensaje \hyperlink{msg:MSG13}{MSG13}.
+    \item El sistema despliega la pantalla de registro de tutor \textbf{[GP]-UI07}.
+    \item El actor ingresa el nombre del tutor y selecciona el parentesco.
+    \item El actor ingresa el teléfono y correo electrónico del responsable.
+    \item El sistema valida los campos y la diferencia de correos (\hyperlink{err:E8}{Error E1}, \hyperlink{err:E9}{Error E2}).
+    \item El sistema vincula los datos del tutor al perfil del quejoso en la BD.
+    \item El sistema muestra el mensaje \hyperlink{msg:MSG14}{MSG14}.
+    \item El sistema retorna el control al caso de uso origen para finalizar el proceso.
+\end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: El usuario declara ser mayor de edad tras corrección} \\
+    \textit{Condición:} El actor ingresó erróneamente su fecha de nacimiento.
+    \begin{itemize}[nosep]
+        \item[A-1:] El actor selecciona "Corregir mi fecha de nacimiento".
+        \item[A-2:] El sistema regresa al formulario de datos personales del origen.
+    \end{itemize}
+\end{itemize}
+
+% --- CU06: Levantar queja ---
+\subsection{CU06: Levantar queja}
+
+\textbf{Resumen:} 
+El actor Quejoso inicia el proceso formal de denuncia describiendo hechos, responsables y autoridades. El sistema garantiza el anonimato si se solicita y genera un folio único de seguimiento. Permite el guardado parcial (borrador) o el envío definitivo para su revisión por la Defensoría.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Registrar formalmente una queja o denuncia ante la Defensoría de los Derechos Politécnicos. \\ \hline
+\textbf{Entradas} & Título, descripción de hechos, fecha, lugar, involucrados y opción de anonimato. \\ \hline
+\textbf{Origen} & Formulario dinámico en la interfaz del cliente [GQ]-UI01. \\ \hline
+\textbf{Salidas} & \hyperlink{msg:MSG17}{MSG17}: Éxito, \hyperlink{msg:MSG18}{MSG18}: Borrador guardado, \hyperlink{msg:MSG19}{MSG19}: Error campos, \hyperlink{msg:MSG20}{MSG20}: Folio generado. \\ \hline
+\textbf{Destino} & Bandeja de la Defensoría y Pantalla de confirmación [GQ]-UI02. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El actor debe haber iniciado sesión (\hyperlink{anexo:casos_uso}{CU02}).
+    \item El actor debe visualizar la pantalla de registro [GQ]-UI01.
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item Generación de registro con identificador único (UUID).
+    \item Inhabilitación de edición tras el envío (estatus "En Revisión").
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E10}{E1}: Descripción demasiado corta (MSG19).
+    \item \hyperlink{err:E11}{E2}: Fecha de hechos inválida (MSG21).
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU06.}
+\label{tab:cu06_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU06}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor selecciona "Nueva Queja" en el panel principal.
+    \item El sistema despliega el formulario \textbf{[GQ]-UI01}.
+    \item El actor redacta título, descripción y selecciona fecha y ubicación.
+    \item El actor elige el nivel de visibilidad (Anonimato vs. Identidad expuesta).
+    \item El actor selecciona "Enviar Queja".
+    \item El sistema valida longitud de descripción y validez de fecha (\hyperlink{err:E10}{Error E1}, \hyperlink{err:E11}{Error E2}).
+    \item El sistema asigna el folio único (\hyperlink{msg:MSG20}{MSG20}).
+    \item El sistema persiste la queja (Estatus: Enviada) y muestra \hyperlink{msg:MSG17}{MSG17}.
+\end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Guardar como borrador} \\
+    \textit{Condición:} El actor desea conservar el progreso sin enviar.
+    \begin{itemize}[nosep]
+        \item[A-1:] El actor selecciona "Guardar Borrador".
+        \item[A-2:] El sistema valida el título y almacena con estatus "Borrador".
+        \item[A-3:] El sistema muestra \hyperlink{msg:MSG18}{MSG18}.
+    \end{itemize}
+    \item \textbf{Trayectorias de Extensión:}
+    \begin{itemize}[nosep]
+        \item \textbf{Modificación:} El actor invoca al \textbf{CU09} para editar borradores.
+        \item \textbf{Eliminación:} El actor invoca al \textbf{CU10} para descartar borradores.
+    \end{itemize}
+\end{itemize}
+
+% --- CU07: Adjuntar evidencia ---
+\subsection{CU07: Adjuntar evidencia}
+
+\textbf{Resumen:} 
+El actor Quejoso carga archivos digitales (documentos, imágenes, audios o videos) como soporte probatorio. El sistema valida que no excedan el tamaño permitido y que correspondan a formatos seguros, vinculándolos al folio de la queja mediante cifrado para garantizar la integridad de la prueba.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Sustentar la denuncia mediante la carga de recursos multimedia o documentos digitales. \\ \hline
+\textbf{Entradas} & Archivo digital (binario), Descripción breve del anexo. \\ \hline
+\textbf{Origen} & Sistema de archivos local del dispositivo del usuario. \\ \hline
+\textbf{Salidas} & \hyperlink{msg:MSG22}{MSG22}: Carga exitosa, \hyperlink{msg:MSG23}{MSG23}: Formato no permitido, \hyperlink{msg:MSG24}{MSG24}: Tamaño excedido. \\ \hline
+\textbf{Destino} & Repositorio de evidencias (Storage) y Pantalla de edición [GQ]-UI01. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El quejoso debe estar en proceso de levantar una queja (\hyperlink{anexo:casos_uso}{CU06}) o editando un borrador.
+    \item El estado de la queja debe permitir la adición de documentos (Borrador o Requerimiento).
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El archivo se almacena y se genera una firma Hash para asegurar integridad.
+    \item Se actualiza el contador de anexos en el resumen del expediente.
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E12}{E1}: Archivo corrupto o ilegible (MSG25).
+    \item \hyperlink{err:E13}{E2}: Superación de cuota de almacenamiento (MSG26).
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU07.}
+\label{tab:cu07_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU07}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor selecciona "Adjuntar Evidencia" en la pantalla \textbf{[GQ]-UI01}.
+    \item El sistema habilita la ventana de selección de archivos del SO.
+    \item El actor selecciona el archivo y proporciona una descripción opcional.
+    \item El sistema valida el formato (.pdf, .jpg, .mp3, .mp4) (\hyperlink{msg:MSG23}{Trayectoria A}).
+    \item El sistema verifica que el peso no supere los 15MB (\hyperlink{msg:MSG24}{Trayectoria B}).
+    \item El sistema analiza el archivo en busca de malware.
+    \item El sistema confirma la recepción con el mensaje \hyperlink{msg:MSG22}{MSG22}.
+    \item El sistema muestra la lista de archivos adjuntos satisfactoriamente.
+\end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Formato de archivo no admitido} \\
+    \textit{Condición:} El actor intenta subir un formato no seguro (ej. .exe).
+    \begin{itemize}[nosep]
+        \item[A-1:] El sistema bloquea la carga y muestra \hyperlink{msg:MSG23}{MSG23}.
+        \item \textbf{Retorno:} Regresa al punto 2 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Eliminar evidencia adjunta} \\
+    \textit{Condición:} El actor decide remover un archivo antes del envío.
+    \begin{itemize}[nosep]
+        \item[C-1:] El actor selecciona "Eliminar" junto al archivo.
+        \item[C-2:] El sistema solicita confirmación mediante \hyperlink{msg:MSG27}{MSG27}.
+        \item[C-3:] El sistema libera el espacio y actualiza la base de datos.
+    \end{itemize}
+\end{itemize}
+
+% --- CU08: Consultar tablero de trámites ---
+\subsection{CU08: Consultar tablero de trámites}
+
+\textbf{Resumen:} 
+El actor Quejoso accede a una vista centralizada que despliega el listado de todas sus quejas (Borrador, En Revisión, Prevenida o Concluida). El sistema permite filtrar y ordenar los expedientes, sirviendo como punto de entrada para la edición de borradores o la consulta de notificaciones.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Visualizar el estado actual y el histórico de todas las solicitudes y quejas registradas por el usuario. \\ \hline
+\textbf{Entradas} & Criterios de filtrado (Estatus, Rango de fechas), Selección de registro específico. \\ \hline
+\textbf{Origen} & Base de Datos institucional (Tablas Quejas y Estados). \\ \hline
+\textbf{Salidas} & \hyperlink{msg:MSG28}{MSG28}: Sin trámites, \hyperlink{msg:MSG29}{MSG29}: Error de carga, Lista de quejas (ID, Fecha, Estatus). \\ \hline
+\textbf{Destino} & Pantalla principal de seguimiento [GQ]-UI03. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El actor debe haber iniciado sesión exitosamente (\hyperlink{anexo:casos_uso}{CU02}).
+    \item El actor debe navegar a la sección "Mis Trámites" en el menú principal.
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El sistema mantiene la persistencia de los filtros durante la sesión activa.
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E14}{E1}: Tiempo de espera de base de datos agotado (MSG29).
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU08.}
+\label{tab:cu08_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU08}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor selecciona "Mis Trámites" en el menú de navegación.
+    \item El sistema consulta la BD buscando registros vinculados al ID\_Usuario del actor.
+    \item El sistema recupera la información y la ordena cronológicamente (descendente).
+    \item El sistema despliega el tablero \textbf{[GQ]-UI03} con Folio, Título, Fecha y Estatus.
+    \item El actor visualiza el resumen y puede seleccionar una queja específica.
+\end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Usuario sin trámites previos} \\
+    \textit{Condición:} La consulta devuelve cero registros.
+    \begin{itemize}[nosep]
+        \item[A-1:] El sistema muestra el mensaje \hyperlink{msg:MSG28}{MSG28}.
+        \item[A-2:] El sistema ofrece acceso directo al \hyperlink{anexo:casos_uso}{CU06} (Levantar queja).
+    \end{itemize}
+    \item \textbf{Trayectoria B: Filtrado de información} \\
+    \textit{Condición:} El actor aplica filtros por estatus o fecha.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema actualiza la vista con los resultados coincidentes.
+        \item \textbf{Retorno:} Regresa al punto 5 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectorias de Extensión:}
+    \begin{itemize}[nosep]
+        \item \textbf{Edición:} Si es "Borrador", habilita enlace al \textbf{CU09}.
+        \item \textbf{Notificación:} Si hay avisos, habilita enlace al \textbf{CU11}.
+    \end{itemize}
+\end{itemize}
+
+
+% --- CU09: Modificar queja ---
+\subsection{CU09: Modificar queja}
+
+\textbf{Resumen:} 
+El actor Quejoso accede a una queja previamente guardada con estatus "Borrador" para completar o corregir la información antes de su envío definitivo. El sistema permite modificar todos los campos de la narrativa y adjuntar o eliminar evidencias.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Permitir la edición de los datos de una queja que aún no ha sido enviada formalmente a la Defensoría. \\ \hline
+\textbf{Entradas} & Título, hechos, fecha, lugar, involucrados, archivos de evidencia. \\ \hline
+\textbf{Origen} & Registro existente en la base de datos (Estado: Borrador). \\ \hline
+\textbf{Salidas} & \hyperlink{msg:MSG17}{MSG17}: Envío exitoso, \hyperlink{msg:MSG18}{MSG18}: Borrador actualizado. \\ \hline
+\textbf{Destino} & Base de datos (Tabla Quejas) y Pantalla de edición [GQ]-UI01. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El actor debe haber seleccionado una queja en estado "Borrador" desde el \hyperlink{anexo:casos_uso}{CU08}.
+    \item El trámite no debe haber sido enviado definitivamente (Estatus != "En Revisión").
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item Se actualizan los campos modificados manteniendo el mismo UUID original.
+    \item Si se selecciona "Enviar", el estatus cambia a "En Revisión" e inhabilita futuras ediciones.
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E10}{E1}: Descripción insuficiente (reutiliza E10).
+    \item \hyperlink{err:E11}{E2}: Fecha de hechos inválida (reutiliza E11).
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU09.}
+\label{tab:cu09_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU09}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor selecciona una queja con estatus "Borrador" en el tablero \textbf{[GQ]-UI03}.
+    \item El sistema carga los datos almacenados en el formulario de edición \textbf{[GQ]-UI01}.
+    \item El actor modifica los campos deseados de la narrativa o involucrados.
+    \item El actor invoca al \hyperlink{anexo:casos_uso}{CU07} si desea gestionar nuevas evidencias.
+    \item El actor selecciona "Guardar Borrador" para mantener los cambios o "Enviar Queja" para el trámite formal.
+    \item El sistema valida la integridad de la información (\hyperlink{err:E10}{Error E1}, \hyperlink{err:E11}{Error E2}).
+    \item El sistema persiste la actualización y muestra \hyperlink{msg:MSG18}{MSG18} o \hyperlink{msg:MSG17}{MSG17} según corresponda.
+\end{enumerate}
+
+
+% --- CU10: Eliminar borrador de queja ---
+\subsection{CU10: Eliminar borrador de queja}
+
+\textbf{Resumen:} 
+El actor Quejoso solicita la eliminación permanente de una queja que aún se encuentra en estado de "Borrador". El sistema elimina el registro y todas las evidencias asociadas de la base de datos y del repositorio de archivos, liberando el espacio asignado.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Remover definitivamente una queja no enviada del historial del usuario. \\ \hline
+\textbf{Entradas} & Confirmación de eliminación. \\ \hline
+\textbf{Origen} & Registro existente en la base de datos (Estado: Borrador). \\ \hline
+\textbf{Salidas} & \hyperlink{msg:MSG30}{MSG30}: Borrador eliminado exitosamente. \\ \hline
+\textbf{Destino} & Base de Datos (Tabla Quejas y Evidencias) y Pantalla del Tablero [GQ]-UI03. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El actor debe haber iniciado sesión (\hyperlink{anexo:casos_uso}{CU02}).
+    \item El trámite seleccionado debe estar exclusivamente en estatus "Borrador".
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item Se realiza un borrado físico o lógico (según política) del registro y sus anexos.
+    \item El folio deja de ser visible en el tablero del usuario.
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E15}{E1}: Intento de eliminar una queja ya enviada o en revisión.
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU10.}
+\label{tab:cu10_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU10}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor identifica una queja en estatus "Borrador" dentro del tablero \textbf{[GQ]-UI03}.
+    \item El actor selecciona la opción "Eliminar".
+    \item El sistema muestra un mensaje de confirmación mediante \hyperlink{msg:MSG27}{MSG27} (¿Está seguro?).
+    \item El actor confirma la acción.
+    \item El sistema verifica que el estatus siga siendo "Borrador" (\hyperlink{err:E15}{Error E1}).
+    \item El sistema elimina el registro de la queja y sus archivos adjuntos (\hyperlink{anexo:casos_uso}{CU07}).
+    \item El sistema muestra el mensaje de éxito \hyperlink{msg:MSG30}{MSG30}.
+    \item El sistema actualiza y refresca el tablero de trámites.
+\end{enumerate}
+
+% --- CU11: Recibir notificaciones de status ---
+\subsection{CU11: Recibir notificaciones de status}
+
+\textbf{Resumen:} 
+El actor Quejoso recibe avisos automáticos emitidos por el sistema o por el personal de la Defensoría sobre cambios en el estado de su trámite. Estas notificaciones pueden incluir requerimientos de información, dictado de medidas precautorias o propuestas de conciliación, permitiendo al usuario reaccionar oportunamente.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Mantener al usuario informado sobre el avance de su queja y habilitar acciones de respuesta inmediata. \\ \hline
+\textbf{Entradas} & Selección de notificación en la bandeja de entrada. \\ \hline
+\textbf{Origen} & Base de Datos (Tabla Notificaciones) y Eventos de sistema. \\ \hline
+\textbf{Salidas} & Lectura del detalle de la notificación, Redirección a casos de uso extendidos. \\ \hline
+\textbf{Destino} & Centro de notificaciones [GQ]-UI04 y Correo electrónico del usuario. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El actor debe haber iniciado sesión (\hyperlink{anexo:casos_uso}{CU02}).
+    \item Debe existir un evento previo generado por el Administrador o el sistema.
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item La notificación se marca como "Leída" en la base de datos.
+    \item Se habilita el acceso a las funciones de respuesta (\hyperlink{anexo:casos_uso}{CU12}, \hyperlink{anexo:casos_uso}{CU13}, \hyperlink{anexo:casos_uso}{CU14}).
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E16}{E1}: Error al marcar la notificación como leída (MSG31).
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU11.}
+\label{tab:cu11_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU11}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El sistema envía un correo electrónico al quejoso avisando sobre una novedad.
+    \item El actor ingresa a la plataforma y accede al centro de notificaciones \textbf{[GQ]-UI04}.
+    \item El sistema despliega el listado de avisos no leídos vinculados a sus trámites.
+    \item El actor selecciona una notificación para leer el contenido detallado.
+    \item El sistema marca la notificación como leída (\hyperlink{err:E16}{Error E1}).
+    \item Dependiendo del tipo de notificación, el sistema ofrece una acción de extensión:
+    \begin{itemize}[nosep]
+        \item Si solicita datos adicionales: Invoca al \textbf{CU12}.
+        \item Si informa medidas de protección: Invoca al \textbf{CU13}.
+        \item Si presenta una propuesta de cierre: Invoca al \textbf{CU14}.
+    \end{itemize}
+\end{enumerate}
+
+
+% --- CU12: Completar información requerida ---
+\subsection{CU12: Completar información requerida}
+
+\textbf{Resumen:} 
+El actor Quejoso responde a un requerimiento formal de la Defensoría cuando su trámite se encuentra en estatus "Prevenida". El sistema habilita temporalmente la edición de los campos señalados como incompletos o erróneos para que el usuario aporte la información o evidencias faltantes.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Subsanar omisiones en la denuncia para evitar que el trámite sea desechado por falta de información. \\ \hline
+\textbf{Entradas} & Correcciones en la narrativa de los hechos, nuevos archivos de evidencia. \\ \hline
+\textbf{Origen} & Notificación de requerimiento (\hyperlink{anexo:casos_uso}{CU11}). \\ \hline
+\textbf{Salidas} & \hyperlink{msg:MSG33}{MSG33}: Información actualizada y re-enviada. \\ \hline
+\textbf{Destino} & Expediente digital en la base de datos (Estatus cambia de "Prevenida" a "En Revisión"). \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item La queja debe tener el estatus "Prevenida".
+    \item El actor debió recibir la notificación correspondiente en el \hyperlink{anexo:casos_uso}{CU11}.
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El sistema bloquea de nuevo la edición una vez enviado el complemento.
+    \item Se notifica al abogado asignado sobre la recepción de la información.
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E17}{E1}: Intento de envío sin realizar cambios (MSG34).
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU12.}
+\label{tab:cu12_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU12}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor accede a la notificación de requerimiento en el \hyperlink{anexo:casos_uso}{CU11}.
+    \item El actor selecciona la opción "Subsanar Requerimiento".
+    \item El sistema abre el formulario \textbf{[GQ]-UI01} con los datos previamente enviados.
+    \item El actor realiza las correcciones solicitadas o añade evidencias (\hyperlink{anexo:casos_uso}{CU07}).
+    \item El actor selecciona "Enviar Complemento".
+    \item El sistema valida que se hayan realizado modificaciones (\hyperlink{err:E17}{Error E1}).
+    \item El sistema actualiza el estatus de la queja a "En Revisión".
+    \item El sistema muestra el mensaje \hyperlink{msg:MSG33}{MSG33}.
+\end{enumerate}
+
+% --- CU13: Consultar medidas precautorias ---
+\subsection{CU13: Consultar medidas precautorias}
+
+\textbf{Resumen:} 
+El actor Quejoso visualiza las medidas de protección dictadas por la Defensoría para salvaguardar su integridad o sus derechos durante el proceso. El sistema permite descargar el documento oficial que contiene las instrucciones, plazos y autoridades responsables de ejecutar dichas medidas.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Informar al usuario sobre las acciones legales inmediatas tomadas para su protección y prevención de riesgos. \\ \hline
+\textbf{Entradas} & Selección de la notificación de medidas precautorias. \\ \hline
+\textbf{Origen} & Resolución emitida por el Personal de la Defensoría en la Base de Datos. \\ \hline
+\textbf{Salidas} & Visualización de la medida, Descarga de documento PDF oficial. \\ \hline
+\textbf{Destino} & Pantalla de detalles del trámite [GQ]-UI05. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El abogado asignado debe haber dictado y registrado las medidas en el sistema.
+    \item El actor debe recibir la notificación correspondiente mediante el \hyperlink{anexo:casos_uso}{CU11}.
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El sistema registra la fecha y hora en que el usuario consultó las medidas (acuse de recibo digital).
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E18}{E1}: Documento no disponible o error en la generación del PDF (MSG35).
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU13.}
+\label{tab:cu13_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU13}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor accede a la notificación de "Medidas Precautorias" en el \hyperlink{anexo:casos_uso}{CU11}.
+    \item El sistema despliega la pantalla de detalles \textbf{[GQ]-UI05} mostrando el resumen de la medida (ej. Suspensión temporal, restricción de contacto).
+    \item El actor selecciona la opción "Descargar Resolución".
+    \item El sistema genera y descarga el documento oficial con sello digital (\hyperlink{err:E18}{Error E1}).
+    \item El sistema registra el evento de consulta para fines de auditoría legal.
+\end{enumerate}
+
+% --- CU14: Consultar propuesta de conciliación ---
+\subsection{CU14: Consultar propuesta de conciliación}
+
+\textbf{Resumen:} 
+El actor Quejoso visualiza el documento de propuesta de conciliación emitido por la Defensoría para dar solución al conflicto planteado en la queja. El sistema permite leer los términos del acuerdo y habilita las opciones de aceptación o rechazo definitivo.
+
+\begin{table}[htbp]
+\centering
+\small
+\shorthandoff{"}
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Informar al usuario sobre los términos de solución propuestos para concluir el trámite de manera conciliatoria. \\ \hline
+\textbf{Entradas} & Selección de la notificación de propuesta de conciliación. \\ \hline
+\textbf{Origen} & Propuesta redactada por el Personal de la Defensoría en la Base de Datos. \\ \hline
+\textbf{Salidas} & Texto de la propuesta, Documento adjunto de términos legales. \\ \hline
+\textbf{Destino} & Pantalla de decisión de conciliación [GQ]-UI06. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item La queja debe encontrarse en estatus ``En Proceso de Conciliación''.
+    \item El actor debe recibir la notificación correspondiente en el \hyperlink{anexo:casos_uso}{CU11}.
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item Se habilita la navegación hacia los casos de uso de decisión (\hyperlink{anexo:casos_uso}{CU15} y \hyperlink{anexo:casos_uso}{CU16}).
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E19}{E1}: La propuesta ya ha sido respondida previamente (MSG36).
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU14.}
+\label{tab:cu14_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU14}
+
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor accede a la notificación de ``Propuesta de Conciliación'' en el \hyperlink{anexo:casos_uso}{CU11}.
+    \item El sistema despliega la pantalla \textbf{[GQ]-UI06} mostrando el detalle de los términos propuestos.
+    \item El actor lee la propuesta y descarga los documentos anexos si existen.
+    \item El sistema verifica que la propuesta no tenga una respuesta previa (\hyperlink{err:E19}{Error E1}).
+    \item El sistema presenta los botones de acción: ``Aceptar Propuesta'' e ``Inconformarse / Rechazar''.
+    \item Dependiendo de la elección, el sistema invoca al \textbf{CU15} o \textbf{CU16}.
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{appendices}
