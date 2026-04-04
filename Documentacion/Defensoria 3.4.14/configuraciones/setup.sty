@@ -1,0 +1,96 @@
+\ProvidesPackage{configuraciones/setup}
+
+% ==============================================================================
+% 1. Paquetes de Idioma y Codificación
+% ==============================================================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish, es-tabla]{babel}
+
+% ==============================================================================
+% 2. Fuentes y Estética del Texto
+% ==============================================================================
+\usepackage{newtxtext,newtxmath} % Fuente moderna compacta
+\usepackage{setspace}
+\onehalfspacing        % Interlineado 1.5
+\usepackage{parskip}   % Espacio entre párrafos (sin sangría)
+\usepackage{microtype} % Justificado perfecto SOLO en párrafos
+
+% ==============================================================================
+% 3. Gráficos, Colores y Dibujo
+% ==============================================================================
+% Nota: Se cargan las opciones de xcolor aquí para evitar conflictos (Option Clash)
+\usepackage[table,xcdraw]{xcolor} 
+\definecolor{azulESCOM}{RGB}{0, 68, 129}
+
+\usepackage{graphicx}
+\usepackage{tikz} 
+\usetikzlibrary{calc}
+
+% ==============================================================================
+% 4. Tablas y Listas (Optimizadas para Casos de Uso y Catálogos)
+% ==============================================================================
+\usepackage{tabularx}   % Tablas con ancho ajustable
+\usepackage{booktabs}   % Mejora la calidad visual de las tablas
+\usepackage{enumitem}   % Control total de listas (comando [nosep])
+\usepackage{array}      % Para mejores alineaciones en tablas
+\usepackage{longtable}  % PERMITE TABLAS QUE OCUPAN VARIAS HOJAS (Indispensable para el Anexo C)
+\usepackage{multirow}   % Para celdas que ocupan varias filas
+
+% ==============================================================================
+% 5. Márgenes y Encabezados
+% ==============================================================================
+\usepackage{geometry}
+\geometry{
+    letterpaper,
+    top=2.5cm,
+    bottom=2.5cm,
+    left=3cm,
+    right=2cm,
+    headheight=25pt 
+}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\fancyhead[R]{\small\itshape\color{azulESCOM}\leftmark} 
+\fancyfoot[C]{\thepage}
+\fancyfoot[L]{\small\color{gray} DDP-IPN}
+
+% Líneas del encabezado y pie personalizadas con el color de ESCOM
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{azulESCOM}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0.5pt}
+\renewcommand{\footrule}{\hbox to\headwidth{\color{azulESCOM}\leaders\hrule height \footrulewidth\hfill}}
+
+% ==============================================================================
+% 6. Títulos (Alineados a la izquierda)
+% ==============================================================================
+\usepackage{titlesec}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{azulESCOM}}{\thesection}{1em}{\raggedright}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{azulESCOM}}{\thesubsection}{1em}{\raggedright}
+
+% ==============================================================================
+% 7. Anexos y Referencias
+% ==============================================================================
+\usepackage[titletoc]{appendix} 
+\renewcommand{\appendixname}{Anexos}
+\renewcommand{\appendixtocname}{Anexos}
+
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{nameref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=azulESCOM,
+    urlcolor=azulESCOM,
+    citecolor=azulESCOM,
+    filecolor=azulESCOM,
+    pdfauthor={Jose Bryan Omar Jimenez Velazquez},
+    pdftitle={Trabajo Terminal - DDP IPN}
+}
+
+\endinput

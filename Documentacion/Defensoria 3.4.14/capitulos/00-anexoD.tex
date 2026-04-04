@@ -1,0 +1,43 @@
+% ==============================================================================
+% capitulos/00-anexoD.tex - Catálogo de Errores
+% ==============================================================================
+
+\chapter{Catálogo de Errores}
+\label{anexo:errores}
+
+A continuación se listan los errores que pueden interrumpir el flujo normal de la aplicación, incluyendo validaciones de seguridad y de integridad de datos.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{2cm}|p{6cm}|p{6cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Código} & \textbf{Nombre del Error} & \textbf{Acción Correctiva} \\ \hline
+\hypertarget{err:E1}{\textbf{E1}} & Datos obligatorios incompletos & Revisar que todos los campos con (*) estén llenos. \\ \hline
+\hypertarget{err:E2}{\textbf{E2}} & Correo electrónico duplicado & El usuario debe usar otro correo o recuperar su contraseña. \\ \hline
+\hypertarget{err:E3}{\textbf{E3}} & Discrepancia en contraseñas & Asegurarse de que ambos campos de contraseña sean idénticos. \\ \hline
+\hypertarget{err:E4}{\textbf{E4}} & Credenciales incorrectas & Validar que el correo y contraseña sean correctos. \\ \hline
+\hypertarget{err:E5}{\textbf{E5}} & Superación de intentos fallidos & Esperar 15 minutos o contactar al administrador. \\ \hline
+\hypertarget{err:E6}{\textbf{E6}} & Enlace de recuperación caducado o inválido & El usuario debe generar una nueva solicitud de recuperación. \\ \hline
+\hypertarget{err:E7}{\textbf{E7}} & Formato de imagen incompatible & El usuario debe subir un archivo de imagen válido (JPG/PNG). \\ \hline
+\hypertarget{err:E8}{\textbf{E8}} & Datos de contacto del tutor inválidos & Revisar que el teléfono y correo del tutor cumplan el formato. \\ \hline
+\hypertarget{err:E9}{\textbf{E9}} & Conflicto de identidad Tutor-Usuario & El tutor debe ser una persona distinta al usuario registrado. \\ \hline
+\hypertarget{err:E10}{\textbf{E10}} & Descripción insuficiente & La queja requiere una descripción más detallada para ser procesada. \\ \hline
+\hypertarget{err:E11}{\textbf{E11}} & Fecha inconsistente & Se ingresó una fecha posterior al día actual del sistema. \\ \hline
+\hypertarget{err:E12}{\textbf{E12}} & Archivo corrupto o ilegible & El sistema no pudo procesar el flujo binario del archivo subido. \\ \hline
+\hypertarget{err:E13}{\textbf{E13}} & Superación de cuota de almacenamiento & El expediente ha llegado al límite de espacio asignado para pruebas. \\ \hline
+\hypertarget{err:E14}{\textbf{E14}} & Tiempo de espera de BD agotado & La consulta al servidor de base de datos excedió el tiempo límite (Timeout). \\ \hline
+\hypertarget{err:E15}{\textbf{E15}} & Acción no permitida para el estatus actual & Intento de eliminar una queja que ya ha iniciado proceso legal. \\ \hline
+\hypertarget{err:E16}{\textbf{E16}} & Fallo en persistencia de lectura & El sistema no pudo actualizar el flag de 'leído' en la tabla de notificaciones. \\ \hline
+\hypertarget{err:E17}{\textbf{E17}} & Falta de aportación de datos & El usuario intentó enviar el formulario sin modificar el contenido reportado como incompleto. \\ \hline
+\hypertarget{err:E18}{\textbf{E18}} & Fallo en recuperación de documento & El servidor de archivos no pudo localizar o generar el PDF solicitado. \\ \hline
+\hypertarget{err:E19}{\textbf{E19}} & Propuesta fuera de tiempo o ya resuelta & El trámite ha avanzado a un estado que no permite modificar la decisión de conciliación. \\ \hline
+
+
+
+
+
+\end{tabular}
+\caption{Catálogo de errores y acciones correctivas.}
+\end{table}
