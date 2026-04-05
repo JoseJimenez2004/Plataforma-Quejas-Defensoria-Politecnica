@@ -14,12 +14,9 @@ public class FolioController {
     @Autowired
     private FolioServiece service;
     
+        // En FolioController.java
     @PostMapping("/generar")
-    public ResponseEntity<FolioDTO> generarFolio(){
-        String folioCreado = service.generadorFolio();
-        return ResponseEntity.ok(new FolioDTO(folioCreado, "Queja enviada con éxito"));
+    public ResponseEntity<String> generar(@RequestBody FolioDTO formulario) {
+        return ResponseEntity.ok(service.generadorFolio(formulario));
     }
-    
-    
-    
 }
