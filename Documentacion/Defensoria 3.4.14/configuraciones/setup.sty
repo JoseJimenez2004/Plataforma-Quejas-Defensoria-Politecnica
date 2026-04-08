@@ -1,30 +1,27 @@
 \ProvidesPackage{configuraciones/setup}
 
-<<<<<<< HEAD
 % --- Paquetes de Idioma y Codificación ---
-=======
+
 % ==============================================================================
 % 1. Paquetes de Idioma y Codificación
 % ==============================================================================
->>>>>>> main
+
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[spanish, es-tabla]{babel}
 
-<<<<<<< HEAD
 % --- Fuentes y Estética del Texto ---
-=======
+
 % ==============================================================================
 % 2. Fuentes y Estética del Texto
 % ==============================================================================
->>>>>>> main
+
 \usepackage{newtxtext,newtxmath} % Fuente moderna compacta
 \usepackage{setspace}
 \onehalfspacing        % Interlineado 1.5
 \usepackage{parskip}   % Espacio entre párrafos (sin sangría)
 \usepackage{microtype} % Justificado perfecto SOLO en párrafos
 
-<<<<<<< HEAD
 % --- Gráficos y Dibujo ---
 \usepackage{xcolor}
 \usepackage{graphicx}
@@ -32,7 +29,7 @@
 \usetikzlibrary{calc}
 
 % --- Márgenes y Encabezados ---
-=======
+
 % ==============================================================================
 % 3. Gráficos, Colores y Dibujo
 % ==============================================================================
@@ -57,7 +54,7 @@
 % ==============================================================================
 % 5. Márgenes y Encabezados
 % ==============================================================================
->>>>>>> main
+
 \usepackage{geometry}
 \geometry{
     letterpaper,
@@ -65,11 +62,7 @@
     bottom=2.5cm,
     left=3cm,
     right=2cm,
-<<<<<<< HEAD
     headheight=25pt % Aumentado para evitar errores
-=======
-    headheight=25pt 
->>>>>>> main
 }
 
 \usepackage{fancyhdr}
@@ -79,42 +72,41 @@
 \fancyhead[R]{\small\itshape\color{azulESCOM}\leftmark} 
 \fancyfoot[C]{\thepage}
 \fancyfoot[L]{\small\color{gray} DDP-IPN}
-<<<<<<< HEAD
+
 \usepackage{graphicx}
 
 % Líneas del encabezado y pie
 \definecolor{azulESCOM}{RGB}{0, 68, 129}
-=======
+
 
 % Líneas del encabezado y pie personalizadas con el color de ESCOM
->>>>>>> main
+
 \renewcommand{\headrulewidth}{0.5pt}
 \renewcommand{\headrule}{\hbox to\headwidth{\color{azulESCOM}\leaders\hrule height \headrulewidth\hfill}}
 \renewcommand{\footrulewidth}{0.5pt}
 \renewcommand{\footrule}{\hbox to\headwidth{\color{azulESCOM}\leaders\hrule height \footrulewidth\hfill}}
 
-<<<<<<< HEAD
+
 % --- TÍTULOS (AQUÍ ESTÁ EL ARREGLO: ALINEADOS A LA IZQUIERDA) ---
-=======
 % ==============================================================================
 % 6. Títulos (Alineados a la izquierda)
 % ==============================================================================
->>>>>>> main
+
 \usepackage{titlesec}
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{azulESCOM}}{\thesection}{1em}{\raggedright}
 \titleformat{\subsection}
   {\normalfont\large\bfseries\color{azulESCOM}}{\thesubsection}{1em}{\raggedright}
 
-<<<<<<< HEAD
+
 % --- Anexos y Referencias ---
 \usepackage[titletoc]{appendix} % ¡AQUÍ ESTÁ PARA TUS ANEXOS!
-=======
+
 % ==============================================================================
 % 7. Anexos y Referencias
 % ==============================================================================
 \usepackage[titletoc]{appendix} 
->>>>>>> main
+
 \renewcommand{\appendixname}{Anexos}
 \renewcommand{\appendixtocname}{Anexos}
 
@@ -122,12 +114,6 @@
 \usepackage{hyperref}
 \usepackage{nameref}
 \hypersetup{
-    colorlinks=true,
-    linkcolor=azulESCOM,
-<<<<<<< HEAD
-    urlcolor=azulESCOM
-}
-=======
     urlcolor=azulESCOM,
     citecolor=azulESCOM,
     filecolor=azulESCOM,
@@ -136,4 +122,3 @@
 }
 
 \endinput
->>>>>>> main
