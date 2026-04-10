@@ -31,25 +31,130 @@ Históricamente, las arquitecturas se han clasificado según la forma en que dis
 \end{itemize}
 
 \section{Arquitectura del Sistema}
-\subsection{Arquitectura de Microservicios (Macro-arquitectura)}
-\subsection{Arquitectura Interna de los Servicios: Patrón de 3 Capas (Micro-arquitectura)}
+Para este proyecto se ha optado por una arquitectura de microservicios, complementandolo con un patron de 3 capas para la organización interna de cada servicio. Esta elección se fundamenta en la necesidad de garantizar un alto rendimiento, mantenibilidad y escalabilidad, permitiendo que cada componente del sistema pueda evolucionar de manera independiente sin afectar a los demás.
+
+\subsection{Arquitectura de Microservicios}
+La arquitectura de microservicios se caracteriza por la división de la aplicacion en componentes independientes que corren cada uno su propio proceso como un servicio, estos servicios se comunican a travez de APIs. Cada servicio se enfoca en una funcionalidad específica del negocio, pero al ser ejecutados de manera independiente, pueden ser desarrollados, desplegados y escalados de forma autónoma [18].
+
+\textbf{Ventajas de su Uso:}
+\begin{itemize}
+    \item \textbf{Aislamiento de fallos:} Si un servicio específico falla, el resto de la aplicación continúa funcionando de manera independiente y sin interrupción [18].
+    \item \textbf{Escalado Flexible:} Facilita la asignación independiente de recursos de infraestructura únicamente a los servicios que presentan mayor demanda [18].
+    \item \textbf{Agilidad de Despliegue:} Al ser módulos independientes, se acortan los tiempos de desarrollo y se facilita la actualización continua sin afectar toda la plataforma [18].
+\end{itemize}
+
+Justificando esta arquitectura para el desarrollo del proyecto, en la Defensoría de los Derechos Politécnicos se requiere un sistema conformado por diversos módulos o servicios para los roles que trabajan en la Defensoria. Se adoptó este enfoque para asegurar la continuidad operativa de la plataforma; si alguno de estos servicios individuales llega a presentar una falla o caída, el aislamiento de los microservicios nos garantiza que el resto de las funciones continúen trabajando de forma ininterrumpida.
+
+\subsection{Arquitectura Interna de los Servicios: Patrón de 3 Capas}
+La arquitectura de tres niveles es una arquitectura de aplicaciones de software bien establecida que organiza las aplicaciones en tres niveles lógicos y físicos: el nivel de presentación, o interfaz de usuario; el nivel de aplicación, donde se procesan los datos; y el nivel de datos, donde se almacenan y gestionan los datos de la aplicación [19]. Esta estructura conforma de manera exacta cómo se desarrolló internamente cada uno de los microservicios de la plataforma.
+
+\textbf{Ventajas de su Uso:}
+\begin{itemize}
+    \item \textbf{Desarrollo más rápido:} Debido a que cada nivel puede ser desarrollado simultáneamente por cada integrante del equipo, se reduce el tiempo total de desarrollo [19].
+    \item \textbf{Escalabilidad mejorada:} Cualquier nivel se puede escalar de forma independiente de los demás según sea necesario [19].
+    \item \textbf{Mayor confiabilidad:} Es menos probable que una interrupción en un nivel afecte la disponibilidad o el rendimiento de los demás niveles [19].
+\end{itemize}
+
+El uso de este patrón se justifica en la necesidad de mantener una separación entre la lógica de presentación, la lógica de negocio y la gestión de datos.
+En el desarrollo de los microservicios, este enfoque asegura que cada nivel opere de manera aislada, protegiendo las reglas del sistema y facilitando el mantenimiento a largo plazo.
+
 \subsection{Servidor Web y Proxy Inverso (Nginx)}
+NGINX es un software de código abierto diseñado para servir páginas web, funcionar como proxy inverso y balanceador de carga. Destaca por su arquitectura basada en eventos asíncronos, lo que le permite manejar un alto volumen de conexiones concurrentes con un mínimo consumo de recursos [20].
+
+\textbf{Ventajas de su Uso:}
+\begin{itemize}
+    \item \textbf{Rendimiento y Alta Concurrencia:} Su arquitectura asíncrona basada en eventos resuelve el problema de concurrencia extrema, manejando miles de conexiones simultáneas con un consumo mínimo de memoria [21].
+    \item \textbf{Balanceo de Carga Eficiente:} Actúa como proxy inverso distribuyendo inteligentemente el tráfico entrante entre los distintos microservicios, previniendo sobrecargas y maximizando la disponibilidad [21].
+    \item \textbf{Caché Acelerado:} Almacena temporalmente el contenido estático de las peticiones frecuentes, reduciendo la carga sobre el backend y mejorando los tiempos de respuesta [21].
+\end{itemize}
+
+El uso de este patron es para la arquitectura de microservicios, exponer cada módulo directamente a la red representa un riesgo de seguridad crítico. NGINX se implementa como un API Gateway (puerta de enlace) único; intercepta todas las peticiones provenientes de la interfaz de usuario (Angular) y las enruta de manera segura al microservicio interno correspondiente, aislando así la topología del backend del acceso público directo.
 
 \section{Tecnologías de Desarrollo Backend}
 \subsection{Lenguaje de Programación: Java}
+Java es un lenguaje de programación orientado a objetos y una plataforma informática de amplia adopción, utilizado usualmente para codificar aplicaciones web, destacando históricamente por su rapidez, seguridad y fiabilidad [22][23].
+
+\textbf{Ventajas de su Uso:}
+\begin{itemize}
+    \item \textbf{Seguridad robusta:} Incorpora mecanismos de seguridad nativos y un tipado estricto que previenen la corrupción de datos legales durante su procesamiento [23].
+    \item \textbf{Independencia de plataforma:} Su Máquina Virtual (JVM) permite que el código fuente compilado se ejecute en cualquier sistema operativo sin modificaciones [23].
+    \item \textbf{Gestión automática de memoria:} Utiliza un recolector de basura (Garbage Collector) que libera la memoria no utilizada, optimizando los recursos del servidor de forma autónoma [23].
+\end{itemize}
+
+La selección de Java como motor principal del backend se fundamenta en el dominio técnico y la experiencia previa del equipo de desarrollo con este lenguaje, lo que minimiza la curva de aprendizaje y agiliza la construcción del sistema. Además, al ser un estándar consolidado en la industria para el desarrollo de aplicaciones empresariales, asegura la robustez técnica, el soporte a largo plazo y la facilidad de mantenimiento que requiere la plataforma institucional.
+
 \subsection{Framework Empresarial: Spring Boot}
+Spring Boot es un framework de código abierto basado en Java, diseñado específicamente para simplificar la creación de aplicaciones web y microservicios listos para producción mediante la autoconfiguración [24].
 
-\section{Tecnologías de Procesamiento de Inteligencia Artificial}
-\subsection{Lenguaje de Programación Científica: Python}
+\textbf{Ventajas de su Uso:}
+\begin{itemize}
+    \item \textbf{Autoconfiguración inteligente:} Reduce drásticamente el código de configuración inicial al detectar e instalar automáticamente las dependencias necesarias [24].
+    \item \textbf{Servidores embebidos:} Incluye servidores como Tomcat integrados directamente en la aplicación, eliminando las complejas configuraciones de despliegue [24].
+    \item \textbf{Desarrollo ágil de APIs:} Proporciona anotaciones simples y potentes que aceleran la creación de rutas seguras para la comunicación REST.
+\end{itemize}
 
+Mientras Java provee el lenguaje, Spring Boot aporta la infraestructura. Su uso en el proyecto permite a los desarrolladores omitir configuraciones repetitivas para enfocarse puramente en la lógica institucional. Además, su integración natural con Spring Security es fundamental para proteger el sistema mediante un esquema de Control de Acceso Basado en Roles (RBAC).
+
+% Cuando se tengan las librerias a usar para el clasificador de texto, se agregará una sección adicional para explicar la elección de estas
+\subsection{Lenguaje de Programación: Python}
+Python es un lenguaje de programación de alto nivel, interpretado y de propósito general, ampliamente reconocido en la industria tecnológica como el estándar principal para aplicaciones de ciencia de datos, desarrollo de software y Machine Learning [25].
+
+\textbf{Ventajas de su Uso:}
+\begin{itemize}
+    \item \textbf{Ecosistema especializado:} Cuenta con la mayor colección de bibliotecas nativas altamente optimizadas para el análisis de datos y la construcción de modelos de inteligencia artificial [25].
+    \item \textbf{Sintaxis intuitiva:} Su diseño centrado en la legibilidad del código y su eficiencia facilitan el desarrollo, mantenimiento y depuración de algoritmos analíticos complejos [25].
+    \item \textbf{Integración y portabilidad:} Es altamente compatible y capaz de ejecutarse en múltiples plataformas, permitiendo conectar sus modelos con otras arquitecturas de manera fluida [25].
+\end{itemize}
+
+Para el sistema, se requiere un asistente tecnológico capaz de procesar el texto de las quejas utilizando algoritmos de Procesamiento de Lenguaje Natural (PLN). La incorporación de Python se justifica por su superioridad técnica en el ecosistema de inteligencia artificial; utilizarlo dentro de su propio microservicio permite delegar la pesada carga del análisis de texto a un entorno especializado, evitando saturar o comprometer el rendimiento de las operaciones administrativas del servidor principal en Java.
 \section{Tecnologías de Desarrollo Frontend}
 \subsection{Framework de Interfaz de Usuario: Angular}
+Angular es una plataforma de desarrollo y un framework basado en TypeScript para construir aplicaciones web escalables de una sola página (SPA). Se caracteriza por su arquitectura basada en componentes y una amplia colección de herramientas integradas que facilitan el desarrollo, las pruebas y la actualización de aplicaciones robustas [26].
+
+\textbf{Ventajas de su Uso:}
+\begin{itemize}
+    \item \textbf{Modularidad y Reutilización:} Organiza el código en componentes aislados que permiten reutilizar lógica y estilos visuales en múltiples secciones de la plataforma [27].
+    \item \textbf{Integración con TypeScript:} Ofrece un tipado fuerte que detecta errores durante el desarrollo, asegurando un código más limpio y fácil de mantener a largo plazo [27].
+    \item \textbf{Arquitectura Estructurada:} Proporciona un marco de trabajo con estándares claros que guían al equipo de desarrollo, evitando inconsistencias en el diseño del frontend [27].
+\end{itemize}
+
+La incorporación de Angular como tecnología frontend se justifica por su madurez como framework empresarial y la reducida curva de aprendizaje para el equipo de desarrollo, lo que asegura una construcción ágil de la interfaz. Asimismo, su arquitectura orientada a servicios permite una integración nativa y eficiente con el ecosistema de microservicios basado en Java y Python, garantizando la compatibilidad técnica necesaria para gestionar el flujo de información del sistema de manera fluida.
 
 \section{Gestión de Bases de Datos}
 \subsection{Sistema de Gestión de Bases de Datos Relacional (RDBMS): PostgreSQL}
+PostgreSQL es un sistema de gestión de bases de datos relacionales de objetos (ORDBMS) de código abierto, reconocido por su fiabilidad, robustez de funciones y rendimiento, lo que permite gestionar cargas de trabajo de datos complejas de forma segura [28].
+
+\textbf{Ventajas de su Uso:}
+\begin{itemize}
+    \item \textbf{Integridad y Seguridad de Datos:} Cumple estrictamente con el modelo ACID, garantizando que todas las transacciones se procesen de forma fiable y protegiendo la información contra fallos [28].
+    \item \textbf{Extensibilidad y Versatilidad:} Permite definir tipos de datos personalizados y soporta diversos lenguajes, facilitando el manejo de datos relacionales y no relacionales. [28].
+    \item \textbf{Soporte y Estándares:} Su alta adherencia a SQL asegura la compatibilidad con múltiples herramientas de análisis y facilita la integración con el ecosistema tecnológico del proyecto [28].
+\end{itemize}
+
+La elección de PostgreSQL como repositorio central del sistema se fundamenta en su estabilidad comprobada agilizando el diseño del modelo de datos. Su capacidad para manejar la integridad referencial de forma estricta es indispensable para salvaguardar el historial legal de la Defensoría, asegurando que la información de los expedientes permanezca consistente y protegida a largo plazo.
 
 \section{Infraestructura y Despliegue}
 \subsection{Plataforma de Contenerización: Docker}
+Docker es una tecnología de código abierto que permite la creación y el uso de contenedores de Linux, los cuales empaquetan una aplicación con todas sus bibliotecas y dependencias en una unidad estandarizada para su ejecución aislada en cualquier entorno [29].
+
+\textbf{Ventajas de su Uso:}
+\begin{itemize}
+    \item \textbf{Portabilidad:} Asegura que la aplicación se ejecute de manera idéntica en cualquier infraestructura, eliminando las discrepancias entre los equipos de desarrollo y el servidor final [29].
+    \item \textbf{Aislamiento y Seguridad:} Cada servicio opera de forma independiente dentro de su propio contenedor, garantizando que un fallo o consumo excesivo de recursos en un módulo no afecte al resto del sistema [29].
+    \item \textbf{Eficiencia en Recursos:} Optimiza el uso de CPU y memoria al compartir el núcleo del sistema anfitrión, permitiendo un arranque casi instantáneo frente a las máquinas virtuales [29].
+\end{itemize}
+
+Debido a que el sistema contiene varias tecnologías utilizadas (compuesto por Java, Python, Angular y PostgreSQL), Docker es indispensable para estandarizar el entorno de ejecución. Su uso asegura que la infraestructura de microservicios sea fácil de desplegar y migrar, garantizando que el sistema funcione correctamente tanto en los equipos locales de desarrollo como en los servidores institucionales del IPN.
 
 \section{Control de Versiones y Trabajo Colaborativo}
 \subsection{Repositorio y Flujos de Trabajo: GitHub}
+GitHub es una plataforma de desarrollo alojada en la nube que permite gestionar y controlar las versiones del código utilizando Git, un sistema de control de versiones distribuido. Facilita la colaboración entre desarrolladores al registrar cada modificación realizada en los archivos, permitiendo la recuperación de versiones específicas y la integración segura de cambios [30][31].
+
+\textbf{Ventajas de su Uso:}
+\begin{itemize}
+    \item \textbf{Control de Versiones Distribuido:} Registra un historial detallado de cambios, facilitando la reversión a estados anteriores y la experimentación segura del código [31].
+    \item \textbf{Colaboración mediante Ramificaciones:} Permite crear ramas independientes para desarrollar nuevas funciones de forma aislada antes de integrarlas al proyecto principal [30].
+    \item \textbf{Gestión Centralizada en la Nube:} Actúa como un repositorio central que garantiza el respaldo del proyecto y facilita el acceso al código desde cualquier ubicación [30].
+\end{itemize}
+
+La adopción de GitHub como plataforma de control de versiones se basa en el dominio previo de los integrantes del equipo sobre el flujo de trabajo de esta plataforma, lo que reduce riesgos operativos y agiliza la integración de los módulos del sistema. Al ser uno de los estándares de la industria, proporciona una infraestructura confiable que asegura la trazabilidad del desarrollo y garantiza que el código fuente esté respaldado y organizado durante todo el ciclo de vida del proyecto.
