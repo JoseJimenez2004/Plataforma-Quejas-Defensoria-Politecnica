@@ -51,13 +51,13 @@ Desarrollar una plataforma web basada en una arquitectura de microservicios medi
 \section{Alcances y Limitaciones}
 
 \subsection{Alcances}
-La plataforma web permitirá el registro, seguimiento y gestión integral de las quejas recibidas por la DDP, abarcando desde el primer contacto hasta la resolución final del expediente. El sistema implementará un clasificador basado en PLN para asistir en la determinación de competencia de las solicitudes, así como un repositorio digital para el almacenamiento seguro de documentos y evidencias. Se desarrollarán módulos específicos para cada rol institucional (Abogado Asesor, Subdefensor, Área Secretarial, Área de Primer Contacto y Titular) y se proporcionará un sistema de consulta pública mediante folios digitales.
+La plataforma web permitirá el registro, seguimiento y gestión integral de las quejas recibidas por la DDP, abarcando desde el primer contacto hasta la resolución final del expediente. El sistema implementará un clasificador basado en PLN para asistir en la determinación de competencia de las solicitudes, así como un repositorio digital para el almacenamiento seguro de documentos y evidencias. Se desarrollarán módulos específicos para cada rol institucional (Abogado Asesor, Subdefensor, Recepcionista, Área de Primer Contacto y Titular) y se proporcionará un sistema de consulta pública mediante folios digitales.
 
 \subsection{Limitaciones}
 El sistema no sustituirá el criterio jurídico de los abogados de la DDP, sino que fungirá como una herramienta de apoyo en la clasificación inicial. La plataforma no realizará resoluciones automáticas de quejas ni emitirá dictámenes legales. Asimismo, el clasificador basado en IA requerirá un período de entrenamiento y ajuste con datos reales para alcanzar niveles óptimos de precisión, por lo que en etapas iniciales operará de manera asistida con supervisión humana.
 
 \section{Estado del Arte}
-
+Para el desarrollo de la presente plataforma, es fundamental realizar un análisis comparativo de las soluciones tecnológicas existentes en el mercado y en el ámbito institucional que abordan la gestión de quejas. Este estudio permite identificar las deficiencias funcionales de las herramientas actuales y definir el valor agregado de nuestra propuesta.
 \subsection{Sistemas orientados a la denuncia y gestión de casos}
 
 \begin{table}[htbp]
@@ -74,6 +74,31 @@ PROFEDET Digital & Sistema para la defensa de derechos laborales [11]. \\ \hline
 \end{tabular}
 \caption{Sistemas orientados a la denuncia y gestión de casos.}
 \end{table}
+
+\newpage
+\subsection{Análisis Comparativo de Funcionalidades}
+Las siguientes tablas establecen el contraste técnico entre las soluciones analizadas y los objetivos de este proyecto.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3.5cm}|c|c|c|c|c|}
+\hline
+\textbf{Característica} & \textbf{BullyButton} & \textbf{Ventanilla} & \textbf{Alerta IPN} & \textbf{UNAM} & \textbf{PROFEDET} \\
+& \textbf{[7]} & \textbf{Escolar [8]} & \textbf{[9]} & \textbf{Denuncia [10]} & \textbf{Digital [11]} \\ \hline
+\textit{Plataforma Web} & Si & Si & Si & Si & Si \\ \hline
+\textit{Registro de quejas formal} & Si & Si & No & Si & Si \\ \hline
+\textit{Seguimiento por folio} & Si & No & No & No & No \\ \hline
+\textit{Generación de estadísticas} & Si & No & No & Si & Si \\ \hline
+\textit{Clasificador de casos con IA} & No & No & No & Si & Si \\ \hline
+\end{tabular}
+\caption{Comparativa de funciones de gestión operativa}
+\end{table}
+
+\subsection{Diferenciación y Ventaja Competitiva}
+Tras la investigación, se concluye que la mayoría de las herramientas institucionales actuales son informativas o requieren de una intervención manual para la clasificación de incidentes. Nuestra propuesta se diferencia al cerrar el ciclo de coordinación entre el quejoso y el abogado mediante una experiencia unificada. 
+
+A diferencia de las herramientas mencionadas, nuestra aplicación especializa la afinidad en el contexto legal del IPN e incorpora un módulo de inteligencia artificial que eficientiza la decisión de competencia y retraso de procesos. Además, el uso de una arquitectura de microservicios garantiza que el sistema no sea un prototipo aislado, sino una infraestructura escalable capaz de soportar la demanda real de la Defensoría.
 
 \section{Metodología}
 Para el desarrollo de este proyecto se ha decidido utilizar un enfoque ágil híbrido: \textbf{Scrum-ban}. Combina la estructura iterativa y planificación de Scrum con la gestión visual y flexible de Kanban. Esta decisión permite mantener un flujo constante evitando bloqueos y garantiza entregas parciales de valor mediante Sprints planificados.
