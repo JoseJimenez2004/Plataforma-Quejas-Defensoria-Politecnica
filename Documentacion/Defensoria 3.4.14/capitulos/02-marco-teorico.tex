@@ -65,7 +65,7 @@ La inferencia bayesiana es un método estadístico el cual permite actualizar la
 
 \begin{enumerate}
     \item \textbf{Priorización y posterización:} En primer lugar, se utiliza una probabilidad previa que se actualizara a través de dato, de esta manera obtenemos probabilidad posterior, pues la idea es comprobar ese contraste.
-    \item \textbf{Verosimilitud:} Son datos que tienen que ser verdaderos. Si los datos no son verosímiles, se tendrán que consultar los sistemas de capacitación de los estos.
+    \item \textbf{Verosimilitud:} Representa la probabilidad de observar los términos específicos en la queja ($D$) asumiendo que esta pertenece a una categoría determinada ($H$). Permite medir qué tan bien los datos observados respaldan la clasificación sugerida. Si los datos no son verosímiles, se tendrán que consultar los sistemas de capacitación de estos.
     \item \textbf{Actuación iterativa:} Cuando más información se tenga, las probabilidades posteriores pueden ser previas.
 \end{enumerate}
 
@@ -84,7 +84,7 @@ Esta fórmula se puede incluir en numerosos elementos y, también, cuando se dis
 
 \subsection{Algebra lineal en PLN}
 
-Para que un modelo de aprendizaje procese el lenguaje humano, los textos se deben transformar en representaciones numéricas, por ende, el algebra lineal proporciona la estructura para manipular estas representaciones en espacios vectoriales, donde un espacio vectorial es la representación de un conjunto de documentos como vectores en un espacio común y es fundamental para una serie de operaciones de recuperación de información, desde la puntuación de documentos en una consulta, así como clasificación y agrupamiento.
+Para que el modelo pueda aplicar los principios probabilísticos de Bayes, primero debe ser capaz de 'leer' el texto de forma matemática. El Álgebra Lineal proporciona la estructura necesaria para transformar las narrativas jurídicas en vectores numéricos, permitiendo que el motor de clasificación realice operaciones geométricas en un espacio de características de alta dimensionalidad.
 
 Este modelo posibilita determinar la importancia de un termino en un documento especifico y entiende que los documentos pueden expresarse en función de estos vectores que recogen la frecuencia en que aparecen los términos en los documentos. Los términos que formaran esta matriz serán términos no vacíos, esto significa que contienen significado para el momento de recuperar información, teniéndolos almacenados en formato stemmed (reducidos los términos a una raíz común).
 
@@ -107,7 +107,7 @@ Entonces, una queja especifica se define como:
 \vec{x} = (w_1, w_2, w_3, \dots, w_V)
 \end{equation}
 
-Donde $w_i$ representa el peso del termino $i$ en esa queja. Si una palabra $x$ tiene un peso alto en el vector, este apuntara hacia un reglón del espacio asociada a la improcedencia. Dado que el lenguaje es vasto, el espacio de características suele ser de alta dimensionalidad, lo que significa que la mayoría de los componentes del vector serán cero, ya que una sola queja no contiene todas las palabras.
+Donde $w_i$ representa el peso del termino $i$ en esa queja. Si una palabra $x$ tiene un peso alto en el vector, este apuntara hacia un región del espacio asociada históricamente  a la improcedencia. Dado que el lenguaje es vasto, el espacio de características suele ser de alta dimensionalidad, lo que significa que la mayoría de los componentes del vector serán cero, ya que una sola queja no contiene todas las palabras.
 
 \subsubsection{Métricas de proximidad}
 
@@ -122,26 +122,26 @@ La métrica principal utilizada es la Similitud de Coseno. A diferencia de la di
     \text{cos}(\theta) = \frac{A \cdot B}{\|A\| \|B\|} = \frac{\sum_{i=1}^{n} A_i B_i}{\sqrt{\sum_{i=1}^{n} A_i^2} \sqrt{\sum_{i=1}^{n} B_i^2}}
     \end{equation}
     \begin{itemize}
-        \item Un valor de 1 indica que las quejas son idénticas en temática.
+        \item Un valor de 1 indica indica que los vectores tienen la misma dirección, lo cual interpretamos como temática idéntica.
         \item Un valor de 0 indica que no comparten ninguna palabra clave relevante.
     \end{itemize}
 \end{itemize}
 
-Esta métrica es la base para que algoritmos como SVM puedan trazar una frontera (hiperplano) que divida eficientemente ambos grupos de quejas.
+Mientras que la Similitud de Coseno permite agrupar las quejas por su afinidad temática, el algoritmo SVM utiliza estas métricas de proximidad para calcular el hiperplano óptimo que separa legalmente lo competente de lo improcedente, garantizando un margen de error mínimo en la clasificación automatizada.
 
 \section{Preprocesamiento avanzado de lenguaje natural (PLN)}
-
-Como hemos visto, la implementación de lenguaje natural comienzo con la recopilación y preparación de datos de texto, no estructurados, pero un paso que es crucial en el desarrollo de PNL, ha sido el preprocesamiento de información.
 
 El preprocesamiento transforma el lenguaje natural desestructurado en datos aptos para los algoritmos SVM y Naive Bayes, esto es esencial en todos los modelos, sin embargo, en la DDP, este paso es critico para filtrar la narrativa emocional y conservar las características que definen la competencia al departamento.
 
 \subsection{Limpieza estructural (normalización de Unicode, eliminación de ruido y stopwords especificas)}
 
-La limpieza de datos es fundamental, pues los textos pueden contener ruido y elementos irrelevantes, existen técnicas básicas como la eliminación de puntuación, la conversión de mayúsculas o minúsculas y la eliminación de palabras vacías.
+Aunque la competencia de la DDP está delimitada por normativas legales estrictas, la interpretación de la narrativa en las quejas introduce un componente de incertidumbre semántica. La Inferencia Bayesiana permite modelar esta incertidumbre, tratando los hechos narrados como evidencias que actualizan la probabilidad de que un caso sea competente. Esto permite que el sistema 'razone' de manera similar a un abogado que evalúa la relevancia de ciertos términos legales antes de emitir un juicio definitivo.
 
 La normalización es una de ellas, la cual busca estandarizar el texto para facilitar su análisis. Esto permite convertir abreviaturas y jerga a palabras completos, mapear sinónimos y homónimos, así podemos resolver ambigüedades lingüísticas, así removemos caracteres especiales que no aportan un significado.
 
 Y para esto, el uso de Stop Words es necesario, pues estás son palabras que no aportan algún significado por si solas, y suelen ser ignoradas por los motores de búsqueda. Estas palabras se eliminan durante el análisis de texto, así podemos mejorar la eficiencia, reducimos el ruido y enfocamos el análisis en palabras clave más relevantes.
+
+En el caso específico de la DDP, este filtrado permite que el sistema ignore adjetivos cargados de emotividad y se concentre en los sustantivos y verbos que describen la acción jurídica, evitando que el sesgo sentimental de la queja confunda la clasificación de competencia.
 
 \subsection{Analisis morfosintáctico}
 
@@ -172,6 +172,8 @@ En el análisis sintáctico es el que nos muestra funciones que tienen cada una 
     \item \textbf{Predicado:} nos muestra la acción del verbo y los complementos que le acompañan. Está formado por un sintagma verbal en el que el núcleo siempre será el verbo.
 \end{itemize}
 
+De manera análoga, en una queja recibida, identificar que 'profesor' es el sujeto y 'reprobó' es el núcleo del predicado, permite al sistema reconocer la estructura jerárquica de la denuncia y determinar si la acción descrita entra en el catálogo de exclusiones del Artículo 13.
+
 Dentro del predicado también existen otras palabras que también tienen una función dentro de la oración: "la historia" que es el Complemento Directo y "a su prima" que es el Complemento Indirecto. Así podemos señalar que dentro del predicado nos encontramos con que la palabra explicó es el núcleo.
 
 Por lo tanto, el análisis morfosintáctico consiste en señalar todas las partes que componen la oración, las funciones que cumplen cada una de ellas, los tipos de palabras y cómo estas se comportan dentro de la misma. Este proceso es fundamental para tareas avanzadas como la traducción automática, la extracción de información, el reconocimiento de entidades y la generación de texto, ya que permite una comprensión profunda del significado y las relaciones entre palabras en un texto.
@@ -192,11 +194,16 @@ La lematización es la tarea de reducir las variantes morfológicas a una forma 
 
 Debido a que la lematización tiene como objetivo generar formas basadas en diccionarios, requiere un análisis morfológico más estable que el stemming. El etiquetado de parte del discurso (POS) es un paso crucial en la lematización. En la DDP la precisión terminológica es fundamental; mientras el stemming podría cortar la palabra “ley” de forma impredecible, la lematización identifica que “leyes” tiene como lema “ley” y que “fueron” tiene como lema “ser”. Es más lenta que el stemming porque requiere una base de datos lingüística, pero garantiza que el "sentido legal" de los hechos presentados en la queja se mantenga intacto.
 
+Mientras el stemming reduce la dimensionalidad del vocabulario de manera eficiente para el modelo Naive Bayes, la lematización garantiza que el 'sentido legal' de los hechos se mantenga intacto para el análisis de SVM, logrando un equilibrio entre rendimiento computacional y precisión jurídica.
+
+
 \subsection{Estrategias de tokenización (Unigramas, Bigramas y su impacto en la captura de frases)}
 
 Para un funcionamiento adecuado del clasificador de la DDP, no basta con analizar palabras aisladas pues la estructura de la frase aporta el contexto de la competencia.
 
 Existen los \textbf{Unigramas}, los cuales se generan tomando cada palabra como token independiente, así podemos detectar temas generales, pero pierde el contexto. A diferencia de los \textbf{Bigramas}, donde se toman pares de palabras adyacentes, con esto logramos capturar conceptos compuestos que perderían su valor si se separan. Al combinar unigramas y bigramas, el modelo puede distinguir entre una situación y otra, incrementando la precisión al capturar la semántica de una queja.
+
+Por ejemplo, el unigrama 'examen' puede ser ambiguo. Sin embargo, el bigrama 'examen extraordinario' sugiere una competencia académica, mientras que 'examen médico' o 'examen sindical' permitirían al modelo discriminar inmediatamente situaciones ajenas a la Defensoría.
 
 \section{Vectorización (Representación numérica)}
 
@@ -241,6 +248,8 @@ Dado que rojo, rosa y violeta aparecen una vez en el documento 1, el vector para
 
 Para un modelo de bolsa de palabras, lo único que importa es la cantidad de ocurrencias. Esto nos deja como limitación que todas las palabras tienen la misma importancia.
 
+Trasladando este modelo a la DDP, un documento que contenga los términos 'profesor', 'calificación' y 'extraordinario' se representará como un punto en un espacio donde dichas palabras son dimensiones. Si otra queja presenta una frecuencia similar de estos términos, los puntos resultantes estarán geométricamente cercanos, permitiendo al modelo agruparlas bajo la categoría de competencia académica.
+
 \subsection{TF-IDF (Term Frequency - Inverse Document Frequency)}
 
 Para resolver las limitaciones de BoW, se utilizaría un esquema de pesaje TF-IDF, asignando un valor a cada termino basado no solo en la frecuencia, sino en la relevancia global. Combina dos componentes:
@@ -257,9 +266,11 @@ Para resolver las limitaciones de BoW, se utilizaría un esquema de pesaje TF-ID
 \end{itemize}
 Este equilibrio permite resaltar términos que son frecuentes dentro de un documento especifico, lo que lo convierte en una herramienta útil para tareas de clasificación de texto. 
 
+Esta ponderación es vital para el motor de clasificación, ya que términos genéricos como 'Politécnico' o 'Instituto', que aparecen en casi todas las quejas (IDF bajo), pierden peso frente a términos específicos y raros como 'sindical' o 'laboral' (IDF alto). Esto permite que el sistema ignore el ruido institucional y se centre en las palabras que realmente definen la improcedencia por materia.
+
 \subsection{Modelos de continuidad (Word embeddings)}
 
-Es una técnica que permite a las maquinas representar el significado de las palabras capturando relaciones complejas entre ellas. Un ejemplo básico sería la palabra “banco” pues podría referirse a una institución bancaria o a un asiento, dependiendo del contexto en el que se encuentre.
+En el contexto de la DDP, los word embeddings permiten que el sistema entienda que una queja que menciona 'maltrato docente' es semánticamente similar a una que hable de 'hostigamiento de profesor', aunque no compartan las mismas palabras exactas. Al capturar relaciones complejas, el modelo supera las limitaciones de la coincidencia exacta de términos, reconociendo la intención del quejoso.
 
 Con los Word embeddings asignamos a cada palabra un vector en un espacio de varias dimensiones, con la posición de estos vectores en el espeacio observaríamos la cercanía semántica entre las palabras, por ende, si dos palabras tienen significados similares, sus vectores estarán cercanos.
  
@@ -315,7 +326,8 @@ Este supuesto simplifica enormemente el cálculo de la probabilidad conjunta, ha
     \item \textbf{Ventajas:} : El modelo es rápido de entrenar e inferir, lo que lo hace ideal para tareas como filtrado de spam o clasificación de texto. 
     \item \textbf{Limitaciones:} En la práctica, las características rara vez son verdaderamente independientes. Por ejemplo, en un correo electrónico, la palabra "oferta" puede estar relacionada con "descuento". A pesar de esto, el clasificador suele funcionar bien en muchos escenarios reales, especialmente con tamaños de muestra pequeños. 
 \end{itemize}
-En la práctica, las características rara vez son verdaderamente independientes. Por ejemplo, en un correo electrónico, la palabra "oferta" puede estar relacionada con "descuento". A pesar de esto, el clasificador suele funcionar bien en muchos escenarios reales, especialmente con tamaños de muestra pequeños. 
+
+En el contexto de la DDP, este supuesto implica que la aparición de la palabra 'sindical' es tratada como independiente de la palabra 'conflicto'. Aunque en la realidad jurídica estas palabras suelen aparecer juntas en casos de improcedencia laboral, Naive Bayes las procesa por separado para simplificar el cálculo probabilístico. A pesar de esta simplificación 'ingenua', el modelo resulta altamente efectivo para identificar patrones léxicos que separan una queja académica de una administrativa.
 
 \subsection{Estimación de máxima verosimilitud}
 
@@ -329,9 +341,10 @@ Este enfoque de MLE es directo y eficiente, pero tiene un problema crítico: si 
 
 \subsection{El problema de la probabilidad cero}
 
+
 El problema de la probabilidad cero en Naive Bayes surge cuando una característica (por ejemplo, una palabra en texto) no aparece en los datos de entrenamiento para una clase determinada. Esto hace que la probabilidad condicional de esa característica dada la clase sea cero. Como Naive Bayes multiplica todas las probabilidades condicionales para obtener la probabilidad posterior, un valor cero anula completamente el resultado, llevando a predicciones incorrectas o imposibles, incluso si otras características indican claramente la clase correcta.
 
-Este problema es común en tareas como el filtrado de spam, donde una palabra nueva o rara en el conjunto de entrenamiento puede hacer que el modelo no pueda clasificar un mensaje. Por ejemplo, si la palabra "Comida" nunca aparece en correos de spam, su probabilidad condicional será cero, y cualquier mensaje que la contenga será clasificado erróneamente como "No Spam", aunque otras palabras sugieran lo contrario. 
+Para la Defensoría, este problema es crítico. Si una queja nueva contiene una palabra jurídica poco común o un término técnico específico que no figuraba en el histórico de entrenamiento, el modelo podría asignar una probabilidad de cero a la clase 'Competente', rechazando la queja automáticamente de forma errónea. La implementación del suavizado de Laplace es, por tanto, una salvaguarda procedimental que garantiza que ningún término nuevo anule la posibilidad de que un ciudadano sea atendido.
 
 La técnica más utilizada para resolver este problema es el suavizado de Laplace (también llamado suavizado aditivo).  Consiste en sumar un valor pequeño (generalmente 1) al recuento de cada combinación de clase y característica, asegurando que ninguna probabilidad sea cero. Esto permite que el modelo haga predicciones incluso para características nuevas o raras.
 
@@ -348,13 +361,18 @@ Donde:
     \item $\alpha$ es el parámetro de suavizado (comúnmente se utiliza $\alpha = 1$).
 \end{itemize}
 
-Este ajuste mejora la generalización del modelo y evita que el clasificador se rompa ante datos no vistos en el entrenamiento.s
+Este ajuste mejora la generalización del modelo y evita que el clasificador se rompa ante datos no vistos en el entrenamiento.
+
+Mientras que Naive Bayes ofrece una solución basada en la frecuencia de términos y la actualización de creencias probabilísticas, presenta limitaciones cuando las palabras clave de ambas clases (competente e improcedente) se traslapan significativamente. Para abordar estas fronteras de decisión más complejas, se introduce a continuación el modelo de Máquinas de Soporte Vectorial (SVM).
 
 \section{Support Vector Machines}
+
 
 Una Support Vector Machine es un algoritmo de Machine Learning supervisado que se suele utilizar para problemas de clasificación y regresión en aplicaciones de procesamiento de señales, procesamiento del lenguaje natural (PLN), y reconocimiento del habla e imágenes. El objetivo del algoritmo de SVM es encontrar un hiperplano que, en la mejor medida posible, separe los puntos de datos de una clase de los de otra clase. Este hiperplano puede ser una línea para espacio en 2D o un plano para un espacio con n dimensiones, donde n es el número de características de cada observación del conjunto de datos. Pueden existir múltiples hiperplanos que separen las clases de los datos. El hiperplano óptimo, derivado por el algoritmo de SVM, es el que aumenta el margen entre las dos clases.
 
 El margen es la anchura máxima de la franja paralela al hiperplano que no contiene puntos de datos en su interior. Los puntos de datos que marcan el límite de esta franja paralela y están más cerca del hiperplano separador son los vectores de soporte. Los vectores de soporte hacen referencia a un subconjunto de las observaciones de entrenamiento que determinan la ubicación del hiperplano separador.
+
+El hiperplano óptimo representa la frontera de decisión legal. Los vectores de soporte serían aquellas quejas cuyas narrativas son más ambiguas o se encuentran en el límite de la competencia (por ejemplo, casos que rozan lo laboral pero mantienen un componente de derechos politécnicos). Maximizar el margen asegura que el sistema sea robusto y no clasifique erróneamente una queja debido a pequeñas variaciones en el vocabulario del quejoso."
 
 \subsection{Optimización de hiperplano de separación (margen máximo)}
 
@@ -423,6 +441,7 @@ Una función central es una función matemática que toma dos vectores de entrad
 Al usar el truco del kernel, las SVM pueden calcular de manera eficiente el límite de decisión en el espacio de características de mayor dimensión sin transformar explícitamente los datos. Esto se logra definiendo la función kernel para calcular implícitamente el producto interno entre los vectores de características transformados. El algoritmo SVM solo necesita calcular la función kernel para pares de vectores de entrada, en lugar de calcular la transformación para todos los puntos de datos individuales.
 Hay varios tipos de funciones de kernel que se usan comúnmente en las SVM, incluidas las funciones lineales, polinómicas, de base radial gaussiana (RBF) y kernels sigmoides. Cada función del núcleo tiene sus propias características y la elección del núcleo depende del problema específico y la naturaleza de los datos.
 Por ejemplo, el kernel lineal simplemente calcula el producto interno entre los vectores de entrada, realizando efectivamente una clasificación lineal en el espacio de entrada original. El núcleo polinomial eleva el producto interno a una cierta potencia, lo que permite límites de decisión no lineales. El kernel RBF mide la similitud entre dos vectores en función de su distancia euclidiana, lo que permite que las SVM capturen patrones complejos en los datos. El kernel sigmoide calcula la tangente hiperbólica del producto interno, lo que puede ser útil en ciertos escenarios.
+Debido a que el lenguaje humano es inherentemente no lineal —donde la combinación de palabras cambia el sentido de forma compleja—, el uso de un Kernel RBF o Polinomial permite que el motor de la DDP proyecte las quejas en un espacio de dimensiones superiores. Esto facilita encontrar separaciones que en el espacio original de palabras (BoW) serían imposibles de trazar.
 
 \subsection{Enfoque matemático}
 
