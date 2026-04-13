@@ -31,7 +31,7 @@ public class PrimerContactoController {
         return ResponseEntity.ok(service.obtenerBandejaAnalisis());
     }
 
-    // --- CREACIÓN DE DENUNCIA (Para alimentar el sistema) ---
+    // --- CREACIÓN DE DENUNCIA 
     @PostMapping("/expedientes")
     public ResponseEntity<Expediente> crearExpediente(@RequestBody Expediente expediente) {
         if (expediente.getFechaIngreso() == null) {
@@ -49,7 +49,7 @@ public class PrimerContactoController {
         return ResponseEntity.ok(service.obtenerDetalleExpediente(folio));
     }
 
-    // --- DICTAMEN (Usa X-User-Role en el Header de Postman) ---
+    // --- DICTAMEN (
     @PatchMapping("/expedientes/{folio}/dictamen")
     public ResponseEntity<Expediente> procesarDictamen(
             @PathVariable String folio,

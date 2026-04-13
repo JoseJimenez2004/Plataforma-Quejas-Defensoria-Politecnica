@@ -47,12 +47,12 @@ public class PrimerContactoServiceImpl implements PrimerContactoService {
     @Override
     @Transactional
     public void formalizarYNotificar(String folio, String contenidoAcuerdo, String cargoUsuario) {
-        // Solo el SUBDEFENSOR o el ABOGADO pueden formalizar el cierre
+        
         validarPermisosAbogacia(cargoUsuario);
 
         Expediente expediente = obtenerDetalleExpediente(folio);
         
-        // Aquí iría la lógica real de envío de correo
+        
         System.out.println("LOG: Formalización realizada por: " + cargoUsuario);
         System.out.println("LOG: Enviando notificación a: " + expediente.getCorreoQuejoso());
     }

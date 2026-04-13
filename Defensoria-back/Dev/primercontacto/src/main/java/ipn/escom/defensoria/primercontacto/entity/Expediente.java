@@ -37,11 +37,11 @@ public class Expediente {
     @Lob
     private String narrativa;
 
-    private String prioridad; // Alta, Media, Baja
+    private String prioridad; 
 
     private String tipoViolacion;
 
-    private String estatus; // PENDIENTE, ADMITIDO, REMITIDO
+    private String estatus; 
 
     private String motivoRemision;
 

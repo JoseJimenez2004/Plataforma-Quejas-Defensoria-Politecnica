@@ -20,9 +20,9 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String email;    // correo@ipn.mx
+    private String email;    
     private String password;
     private String nombre;
-    private String cargo;    // SUBDEFENSOR, ABOGADO_DICTAMINADOR, AUXILIAR
-    private String nivelAcceso; // NIVEL_1, NIVEL_2, NIVEL_3 (Matriz RBAC)
+    private String cargo;    
+    private String nivelAcceso; 
 }

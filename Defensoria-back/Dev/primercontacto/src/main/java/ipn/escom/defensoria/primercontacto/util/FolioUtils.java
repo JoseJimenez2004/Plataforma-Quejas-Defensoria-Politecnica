@@ -5,7 +5,7 @@ import java.time.LocalDate;
 public class FolioUtils {
 
     private FolioUtils() {
-        // Constructor privado para evitar instanciación
+        
     }
 
     public static String generarFolioOficial(Long id) {

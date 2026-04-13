@@ -23,7 +23,7 @@ public class AuthController {
         Optional<Usuario> userOpt = usuarioRepository.findByEmail(loginRequest.getEmail());
         
         if (userOpt.isPresent() && userOpt.get().getPassword().equals(loginRequest.getPassword())) {
-            // En un sistema real, aquí generarías un JWT token
+            
             return ResponseEntity.ok(userOpt.get());
         }
         
