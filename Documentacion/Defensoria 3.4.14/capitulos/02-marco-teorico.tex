@@ -1,16 +1,15 @@
 \chapter{Fundamentos Tecnológicos del Motor de Clasificación}
 
-Para cumplir con uno de los objetivos específicos que establece la implementación de un clasificador de texto con el fin de identificar la competencia o no competencia a la Defensoría de Derechos Politécnicos para así automatizar el flujo operativo de recepción, clasificación y seguimiento, para el entrenamiento de estes clasificador se usara un modelo de aprendizaje supervisado como SVM (Máquina de Soporte Vectorial) y Naive Bayes como modelo de clasificación probabilístico dentro del aprendizaje automático supervisado.
+Para automatizar el flujo operativo de recepción, clasificación y seguimiento en la Defensoría de Derechos Politécnicos (DDP), se implementará un clasificador de texto encargado de determinar la competencia o improcedencia de cada queja. El desarrollo de este motor se basará en modelos de aprendizaje supervisado, específicamente la Máquina de Soporte Vectorial (SVM) y Naive Bayes, este último como enfoque probabilístico fundamental.
 
 \section{Problema de clasificación en el contexto de la DDP}
 
-La Defensoría de Derechos Politécnicos no presenta conflictos al clasificar la competencia de una queja al departamento, pues esta competencia esta dada por el factor humano (abogados) quienes por medio de parámetros y al artículo 13 del acuerdo de creación detectan la competencia de la queja.
+Actualmente, la determinación de la competencia de una queja en la Defensoría de Derechos Politécnicos recae exclusivamente en el factor humano. Este proceso es llevado a cabo por abogados especialistas quienes, fundamentados en el Artículo 13 del Acuerdo de Creación y parámetros institucionales, analizan cada narrativa para decidir si el asunto entra en el ámbito de facultades de la Defensoría.
+
+El conflicto no reside en la capacidad de los abogados para clasificar, sino en la carga operativa y la variabilidad del criterio manual. Al depender de una interpretación subjetiva de textos no estructurados, el flujo de recepción se vuelve lento y propenso a cuellos de botella. Por ello, surge la necesidad de un sistema de clasificación automatizado que actúe como un filtro inteligente, emulando la lógica jurídica para agilizar la respuesta institucional.
 
 \subsection{Taxonomía de denuncias}
-
-Entender la clasificación de las quejas y el porqué es fundamental para la organización de los datos al momento de entrenar el modelo. Esta es una clasificación binaria, pues solo encontramos dos opciones: competente o no competente.
-
-Sin embargo, existen diversas formas de catalogar una queja. Este catálogo es usado para filtrar el motivo de la queja con el fin de organizar los hechos presentados y, por ende, realizar de manera más eficiente el trabajo de los abogados. La competencia se define por:
+Para transformar este proceso manual en un modelo de aprendizaje automático, es necesario estructurar la taxonomía de las denuncias. Aunque el sistema final arroja un veredicto de naturaleza binaria (Competente o No Competente), la decisión depende de un análisis multidimensional basado en los siguientes criterios:
 
 \begin{enumerate}
     \item \textbf{Identificación del Sujeto (Legitimación):} Se verifica que el quejoso sea un miembro de la comunidad politécnica (alumno con número de cuenta o empleado con número de trabajador) y que la autoridad señalada pertenezca a una unidad académica o administrativa del IPN.
@@ -27,7 +26,8 @@ Sin embargo, existen diversas formas de catalogar una queja. Este catálogo es u
 
 \subsection{Clasificación multiclase vs multietiqueta}
 
-La clasificación inicial es multiclase específicamente en su primer nivel es binaria, pues el estatus jurídico de una queja es excluyente en los siguientes puntos:
+Si bien el diseño de una arquitectura híbrida representa la solución óptima, para este sistema se ha optado por un enfoque de clasificación multiclase (binaria). Esta decisión se fundamenta en la viabilidad técnica: la implementación de una clasificación multietiqueta requeriría un volumen de datos de entrenamiento con el que no se cuenta actualmente. En contraste, el enfoque binario permite concentrar la muestra en solo dos categorías, garantizando una mayor densidad de datos por clase y, por ende, una mayor robustez en el entrenamiento del modelo.
+
 \begin{itemize}
     \item Acorde al articulo 13, una queja no puede ser simultáneamente “Competente” e “Improcedente”.
     \item El sistema debe arrojar un veredicto definitivo para procesar el folio, o se admite o se rechaza.
@@ -41,7 +41,7 @@ Una vez declarada la queja como competente, el sistema se beneficia de un enfoqu
     \item Permite a los abogados filtrar casos por materias específicas para aplicar los mismos criterios de lógica y legalidad en la valoración de pruebas similares.
 \end{itemize}
 
-Si bien el diseño de una arquitectura híbrida representa la solución óptima, para este sistema se ha optado por un enfoque de clasificación multiclase (binaria). Esta decisión se fundamenta en la viabilidad técnica: la implementación de una clasificación multietiqueta requeriría un volumen de datos de entrenamiento con el que no se cuenta actualmente. En contraste, el enfoque binario permite concentrar la muestra en solo dos categorías, garantizando una mayor densidad de datos por clase y, por ende, una mayor robustez en el entrenamiento del modelo.
+La transición de un modelo de decisión basado en el juicio humano hacia un sistema automatizado requiere de una infraestructura de datos robusta. No basta con definir los criterios legales de competencia; es imperativo establecer un flujo técnico que transforme la narrativa subjetiva del quejoso en una entrada estructurada que los algoritmos puedan procesar. A continuación, se detalla el ciclo de vida de los datos, el cual actúa como el puente operativo entre el Artículo 13 del Reglamento y la implementación de los modelos SVM y Naive Bayes.
 
 \subsection{Ciclo de vida de los datos en el aprendizaje supervisado}
 
@@ -49,12 +49,13 @@ El ciclo de vida de los datos en este proyecto no es solo un proceso técnico, s
 
 \begin{enumerate}
     \item \textbf{Captura de datos:} Los datos se originan cuando el quejoso interactúa con el sistema digital. Para cumplir con la Fracción II del Artículo 13, el sistema captura de forma estructurada el nombre, número de cuenta/empleado, la autoridad imputada y la descripción detallada de los hechos.
-    \item \textbf{Procesamiento y Filtrado:} El sistema calcula automáticamente si la queja se encuentra dentro del plazo de 90 días naturales desde el hecho, marcando esta variable como crítica para la clasificación de improcedencia. La descripción de los actos se somete a técnicas de Procesamiento de Lenguaje Natural (PLN) para identificar palabras clave relacionadas con las exclusiones de competencia (ej. "sindicato", "evaluación", "laboral").
+    \item \textbf{Procesamiento y Filtrado:}La descripción de los actos se somete a técnicas de Procesamiento de Lenguaje Natural (PLN) para identificar palabras clave relacionadas con las exclusiones de competencia (ej. "sindicato", "evaluación", "laboral").
     \item \textbf{Etiquetado (Supervisión):} Dado que es un aprendizaje supervisado, el modelo se entrena con el histórico de decisiones de los abogados. Cada expediente histórico se etiqueta como "Competente" (Admitida) o "No Competente" (Rechazo fundado y motivado) basándose en si cumplió con los lineamientos del Artículo 13.
     \item \textbf{División de Dataset:} Debido a la escasez de datos para etiquetas múltiples, se utiliza el conjunto de datos para fortalecer la clasificación binaria. Se divide la muestra en datos de entrenamiento (para que el modelo aprenda la correlación entre hechos y competencia) y datos de validación (para asegurar que el modelo pueda predecir correctamente la competencia de quejas nuevas).
     \item \textbf{Retroalimentación:} El modelo sugiere una clasificación al abogado. Si el factor humano corrige la sugerencia del sistema (por ejemplo, admitiendo una queja que el modelo sugirió rechazar), este dato se reincorpora al ciclo para re-entrenar el modelo y mejorar su precisión futura.
     \item \textbf{Anonimización y Resguardo:} Los datos permanecen activos para la detección de patrones de reincidencia. Al cumplirse el límite de 5 años de resguardo físico, la información digital puede permanecer anonimizada para fines estadísticos y de mejora continua del motor de clasificación.
 \end{enumerate}
+
 
 \section{Fundamentos lógicos}
 
