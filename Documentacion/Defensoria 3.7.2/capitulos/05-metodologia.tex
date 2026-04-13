@@ -1,0 +1,68 @@
+% ==============================================================================
+% capitulos/05-metodologia.tex - Metodología de Desarrollo
+% ==============================================================================
+
+\chapter{Metodología de Desarrollo}
+\label{cap:metodologia}
+
+\begin{flushleft}
+La elección de una metodología de desarrollo adecuada es un factor crítico para el éxito de cualquier proyecto de ingeniería de software. Para la creación de la plataforma de la Defensoría de los Derechos Politécnicos, se requiere un enfoque que combine la disciplina de la planificación con la flexibilidad necesaria para ajustar requerimientos técnicos complejos, como la integración de inteligencia artificial.
+\end{flushleft}
+
+\justifying
+
+\section{Enfoque Ágil Híbrido: Scrum-ban}
+Para el desarrollo de este proyecto se ha decidido utilizar un enfoque ágil híbrido denominado \textbf{Scrum-ban}. Esta metodología combina la estructura iterativa y la planificación por periodos de \textbf{Scrum} con la gestión visual y la optimización del flujo de trabajo de \textbf{Kanban}. 
+
+La adopción de Scrum-ban permite mantener un flujo constante de trabajo evitando cuellos de botella y garantiza entregas parciales de valor (incrementos) mediante Sprints planificados, adaptándose idealmente al calendario académico del Trabajo Terminal.
+
+\section{Justificación de la Metodología}
+El uso de Scrum-ban se justifica por las siguientes ventajas estratégicas para el equipo:
+\begin{itemize}
+    \item \textbf{Flexibilidad frente al cambio:} Permite reaccionar ante ajustes en la lógica de negocio institucional sin desestabilizar el plan general.
+    \item \textbf{Visualización del Trabajo (WIP):} Mediante un tablero Kanban, se limita el trabajo en curso (\textit{Work In Progress}), lo que asegura que el equipo (Bastian, Jair y Anthony) se enfoque en terminar tareas antes de iniciar nuevas.
+    \item \textbf{Entregas Incrementales:} La estructura de Sprints de Scrum asegura que existan prototipos funcionales evaluables por los directores del proyecto en fechas establecidas.
+\end{itemize}
+
+\section{Fases del Ciclo de Vida del Proyecto}
+El proceso de desarrollo se divide en cuatro fases principales, alineadas con los objetivos del Trabajo Terminal:
+
+\subsection{Fase 1: Planificación y Definición (Backlog Grooming)}
+En esta fase inicial, se capturaron los requerimientos funcionales y no funcionales, traduciéndolos en \textit{User Stories} (Historias de Usuario). Se priorizaron las tareas críticas, como el diseño de la arquitectura de microservicios y el modelado de la base de datos PostgreSQL.
+
+\subsection{Fase 2: Ejecución Iterativa (Sprints)}
+El desarrollo se organiza en Sprints de dos semanas de duración. Cada Sprint incluye:
+\begin{itemize}
+    \item \textbf{Sprint Planning:} Definición de los objetivos y selección de tareas del Backlog.
+    \item \textbf{Desarrollo (Build):} Implementación de servicios en Java (Spring Boot) y Python (PLN).
+    \item \textbf{Daily Stand-up:} Sesiones breves para sincronizar esfuerzos y detectar bloqueos técnicos.
+\end{itemize}
+
+\subsection{Fase 3: Control y Optimización (Flujo Kanban)}
+Se utiliza un tablero visual para monitorear el estado de cada componente. Las columnas típicas incluyen: \textit{To Do}, \textit{In Progress}, \textit{Testing} (Pruebas Unitarias y de Integración) y \textit{Done}. Esta fase es crucial para asegurar que el microservicio de IA se integre correctamente con el backend administrativo.
+
+\subsection{Fase 4: Revisión y Cierre de Incremento}
+Al finalizar cada Sprint, se realiza una \textbf{Sprint Review} para demostrar las funcionalidades alcanzadas. Posteriormente, se lleva a cabo una \textbf{Retrospectiva} para mejorar los procesos internos del equipo y optimizar el rendimiento en el siguiente ciclo.
+
+\section{Roles y Responsabilidades}
+Dada la estructura del equipo de trabajo, los roles de Scrum se han adaptado de la siguiente manera:
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\textbf{Rol} & \textbf{Responsabilidad en el Proyecto} \\ \hline
+\textit{Product Owner} & Representado colectivamente por los directores y el equipo, asegurando que el sistema cumpla con la normativa de la DDP. \\ \hline
+\textit{Scrum Master} & Encargado de mantener el flujo de trabajo y eliminar impedimentos técnicos (configuración de Docker, Nginx, etc.). \\ \hline
+\textit{Development Team} & Anthony, Bastian y Jair; responsables del diseño, codificación de microservicios, entrenamiento del modelo PLN y pruebas. \\ \hline
+\end{tabular}
+\caption{Distribución de roles bajo la metodología Scrum-ban.}
+\end{table}
+
+\section{Herramientas de Apoyo}
+Para la implementación efectiva de esta metodología, se utilizan las siguientes herramientas:
+\begin{itemize}
+    \item \textbf{GitHub Projects:} Para la gestión del tablero Kanban y el control de versiones.
+    \item \textbf{Discord / Slack:} Para la comunicación síncrona y coordinación diaria.
+    \item \textbf{Docker:} Para garantizar que el incremento desarrollado funcione de manera idéntica en todos los entornos de prueba.
+\end{itemize}
