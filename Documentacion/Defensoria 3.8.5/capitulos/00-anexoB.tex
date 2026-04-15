@@ -11,20 +11,28 @@ A continuación se detallan los diagramas de casos de uso y sus especificaciones
 
 \begin{figure}[htbp]
     \centering
-    %\includegraphics[width=0.7\textwidth]{imagenes/diagrama_casos_uso_general.png}
     \caption{Diagrama general de casos de uso del sistema DDP.}
     \label{fig:casos_uso_general}
 \end{figure}
-\begin{flushleft}
-\section{Especificación detallada de Casos de Uso}
-\end{flushleft}
-\justifying
 
-% --- CU01: Crear cuenta de usuario ---
+\section{Especificación detallada de Casos de Uso}
+
+% ==============================================================================
+% CU01: Crear cuenta de usuario
+% ==============================================================================
 \subsection{CU01: Crear cuenta de usuario}
 
 \textbf{Resumen:} 
 El actor Quejoso inicia el proceso de registro proporcionando sus datos de identidad y contacto. El sistema debe validar que el correo electrónico no se encuentre previamente registrado en la base de datos y que la contraseña cumpla con los criterios de seguridad definidos. Una vez verificada la información, el sistema persiste la información del nuevo perfil.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUuno 
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU01.}
+    \label{fig:cu01}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -64,7 +72,7 @@ El actor Quejoso inicia el proceso de registro proporcionando sus datos de ident
 
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
-    \item El actor selecciona la opción "Registrarse" en la pantalla [GP]-UI01.
+    \item El actor selecciona la opción Registrarse en la pantalla [GP]-UI01.
     \item El sistema despliega el formulario de captura de datos.
     \item El actor ingresa su nombre, correo, teléfono y genera una contraseña segura.
     \item El actor acepta los términos y condiciones.
@@ -76,7 +84,6 @@ El actor Quejoso inicia el proceso de registro proporcionando sus datos de ident
 \end{enumerate}
 
 \textbf{Trayectorias alternativas:}
-
 \begin{itemize}[leftmargin=*]
     \item \textbf{Trayectoria A: Datos incompletos o inválidos} \\
     \textit{Condición:} El actor omite un campo obligatorio o usa formato inválido.
@@ -85,7 +92,6 @@ El actor Quejoso inicia el proceso de registro proporcionando sus datos de ident
         \item[A-2:] El sistema muestra el mensaje \hyperlink{msg:MSG02}{MSG02}.
         \item \textbf{Retorno:} El sistema retorna al punto 3 de la trayectoria principal.
     \end{itemize}
-
     \item \textbf{Trayectoria B: Correo ya registrado} \\
     \textit{Condición:} El correo electrónico ingresado ya existe en la plataforma.
     \begin{itemize}[nosep]
@@ -93,7 +99,6 @@ El actor Quejoso inicia el proceso de registro proporcionando sus datos de ident
         \item[B-2:] El sistema muestra el mensaje \hyperlink{msg:MSG03}{MSG03}.
         \item[B-3:] El sistema sugiere utilizar la función de recuperación de contraseña.
     \end{itemize}
-
     \item \textbf{Trayectoria C: Discrepancia en contraseñas} \\
     \textit{Condición:} El campo ``Contraseña'' y ``Confirmar Contraseña'' no coinciden.
     \begin{itemize}[nosep]
@@ -103,11 +108,24 @@ El actor Quejoso inicia el proceso de registro proporcionando sus datos de ident
     \end{itemize}
 \end{itemize}
 
-% --- CU02: Iniciar sesión ---
+\newpage
+
+% ==============================================================================
+% CU02: Iniciar sesión
+% ==============================================================================
 \subsection{CU02: Iniciar sesión}
 
 \textbf{Resumen:} 
 El actor Quejoso solicita el acceso al sistema introduciendo sus credenciales (correo y contraseña). El sistema valida la cuenta y la veracidad de la clave mediante algoritmos de cifrado. Si los datos son correctos, se genera un Token JWT y se permite el acceso al panel principal.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUdos 
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU02.}
+    \label{fig:cu02}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -143,7 +161,6 @@ El actor Quejoso solicita el acceso al sistema introduciendo sus credenciales (c
 \end{table}
 
 \subsubsection{Trayectorias del CU02}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor ingresa su correo y contraseña en [GP]-UI01.
@@ -172,12 +189,24 @@ El actor Quejoso solicita el acceso al sistema introduciendo sus credenciales (c
     \end{itemize}
 \end{itemize}
 
+\newpage
 
-% --- CU03: Recuperar contraseña ---
+% ==============================================================================
+% CU03: Recuperar contraseña
+% ==============================================================================
 \subsection{CU03: Recuperar contraseña}
 
 \textbf{Resumen:} 
 El actor Quejoso solicita el restablecimiento de su clave al no poder autenticarse. El proceso consiste en la verificación del correo y el envío de un enlace temporal para definir una nueva contraseña que cumpla con los criterios de seguridad.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUtres
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU03.}
+    \label{fig:cu03}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -214,7 +243,6 @@ El actor Quejoso solicita el restablecimiento de su clave al no poder autenticar
 \end{table}
 
 \subsubsection{Trayectorias del CU03}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor selecciona "¿Olvidó su contraseña?" en \textbf{[GP]-UI01}.
@@ -240,11 +268,24 @@ El actor Quejoso solicita el restablecimiento de su clave al no poder autenticar
     \end{itemize}
 \end{itemize}
 
-% --- CU04: Editar perfil de usuario ---
+\newpage
+
+% ==============================================================================
+% CU04: Editar perfil de usuario
+% ==============================================================================
 \subsection{CU04: Editar perfil de usuario}
 
 \textbf{Resumen:} 
 El actor Quejoso solicita la modificación de sus datos personales almacenados. El sistema permite la edición de campos como nombre, teléfono y fotografía, validando los formatos y persistiendo los cambios en la base de datos para su actualización inmediata.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUcuatro
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU04.}
+    \label{fig:cu04}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -280,7 +321,6 @@ El actor Quejoso solicita la modificación de sus datos personales almacenados. 
 \end{table}
 
 \subsubsection{Trayectorias del CU04}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor selecciona "Configuración de Perfil" en el menú principal.
@@ -306,11 +346,24 @@ El actor Quejoso solicita la modificación de sus datos personales almacenados. 
     \end{itemize}
 \end{itemize}
 
-% --- CU05: Registrar datos de tutor ---
+\newpage
+
+% ==============================================================================
+% CU05: Registrar datos de tutor
+% ==============================================================================
 \subsection{CU05: Registrar datos de tutor}
 
 \textbf{Resumen:} 
 El sistema activa automáticamente este caso de uso cuando se detecta que el actor Quejoso es menor de edad (menor a 18 años). Se bloquea el avance del registro principal hasta que se validen los datos de identidad y contacto de un padre o tutor legal para fines de vinculación jurídica.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUcinco
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU05.}
+    \label{fig:cu05}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -346,7 +399,6 @@ El sistema activa automáticamente este caso de uso cuando se detecta que el act
 \end{table}
 
 \subsubsection{Trayectorias del CU05}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El sistema detecta minoría de edad en el \hyperlink{anexo:casos_uso}{CU01} o \hyperlink{anexo:casos_uso}{CU04}.
@@ -370,11 +422,24 @@ El sistema activa automáticamente este caso de uso cuando se detecta que el act
     \end{itemize}
 \end{itemize}
 
-% --- CU06: Levantar queja ---
+\newpage
+
+% ==============================================================================
+% CU06: Levantar queja
+% ==============================================================================
 \subsection{CU06: Levantar queja}
 
 \textbf{Resumen:} 
 El actor Quejoso inicia el proceso formal de denuncia describiendo hechos, responsables y autoridades. El sistema garantiza el anonimato si se solicita y genera un folio único de seguimiento. Permite el guardado parcial (borrador) o el envío definitivo para su revisión por la Defensoría.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUseis
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU06.}
+    \label{fig:cu06}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -410,7 +475,6 @@ El actor Quejoso inicia el proceso formal de denuncia describiendo hechos, respo
 \end{table}
 
 \subsubsection{Trayectorias del CU06}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor selecciona "Nueva Queja" en el panel principal.
@@ -439,11 +503,24 @@ El actor Quejoso inicia el proceso formal de denuncia describiendo hechos, respo
     \end{itemize}
 \end{itemize}
 
-% --- CU07: Adjuntar evidencia ---
+\newpage
+
+% ==============================================================================
+% CU07: Adjuntar evidencia
+% ==============================================================================
 \subsection{CU07: Adjuntar evidencia}
 
 \textbf{Resumen:} 
 El actor Quejoso carga archivos digitales (documentos, imágenes, audios o videos) como soporte probatorio. El sistema valida que no excedan el tamaño permitido y que correspondan a formatos seguros, vinculándolos al folio de la queja mediante cifrado para garantizar la integridad de la prueba.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUsiete
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU07.}
+    \label{fig:cu07}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -479,7 +556,6 @@ El actor Quejoso carga archivos digitales (documentos, imágenes, audios o video
 \end{table}
 
 \subsubsection{Trayectorias del CU07}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor selecciona "Adjuntar Evidencia" en la pantalla \textbf{[GQ]-UI01}.
@@ -509,11 +585,24 @@ El actor Quejoso carga archivos digitales (documentos, imágenes, audios o video
     \end{itemize}
 \end{itemize}
 
-% --- CU08: Consultar tablero de trámites ---
+\newpage
+
+% ==============================================================================
+% CU08: Consultar tablero de trámites
+% ==============================================================================
 \subsection{CU08: Consultar tablero de trámites}
 
 \textbf{Resumen:} 
 El actor Quejoso accede a una vista centralizada que despliega el listado de todas sus quejas (Borrador, En Revisión, Prevenida o Concluida). El sistema permite filtrar y ordenar los expedientes, sirviendo como punto de entrada para la edición de borradores o la consulta de notificaciones.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUocho
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU08.}
+    \label{fig:cu08}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -547,7 +636,6 @@ El actor Quejoso accede a una vista centralizada que despliega el listado de tod
 \end{table}
 
 \subsubsection{Trayectorias del CU08}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor selecciona "Mis Trámites" en el menú de navegación.
@@ -578,12 +666,24 @@ El actor Quejoso accede a una vista centralizada que despliega el listado de tod
     \end{itemize}
 \end{itemize}
 
+\newpage
 
-% --- CU09: Modificar queja ---
+% ==============================================================================
+% CU09: Modificar queja
+% ==============================================================================
 \subsection{CU09: Modificar queja}
 
 \textbf{Resumen:} 
 El actor Quejoso accede a una queja previamente guardada con estatus "Borrador" para completar o corregir la información antes de su envío definitivo. El sistema permite modificar todos los campos de la narrativa y adjuntar o eliminar evidencias.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUnueve
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU09.}
+    \label{fig:cu09}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -619,7 +719,6 @@ El actor Quejoso accede a una queja previamente guardada con estatus "Borrador" 
 \end{table}
 
 \subsubsection{Trayectorias del CU09}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor selecciona una queja con estatus "Borrador" en el tablero \textbf{[GQ]-UI03}.
@@ -631,12 +730,24 @@ El actor Quejoso accede a una queja previamente guardada con estatus "Borrador" 
     \item El sistema persiste la actualización y muestra \hyperlink{msg:MSG18}{MSG18} o \hyperlink{msg:MSG17}{MSG17} según corresponda.
 \end{enumerate}
 
+\newpage
 
-% --- CU10: Eliminar borrador de queja ---
+% ==============================================================================
+% CU10: Eliminar borrador de queja
+% ==============================================================================
 \subsection{CU10: Eliminar borrador de queja}
 
 \textbf{Resumen:} 
 El actor Quejoso solicita la eliminación permanente de una queja que aún se encuentra en estado de "Borrador". El sistema elimina el registro y todas las evidencias asociadas de la base de datos y del repositorio de archivos, liberando el espacio asignado.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUdiez
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU10.}
+    \label{fig:cu10}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -671,7 +782,6 @@ El actor Quejoso solicita la eliminación permanente de una queja que aún se en
 \end{table}
 
 \subsubsection{Trayectorias del CU10}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor identifica una queja en estatus "Borrador" dentro del tablero \textbf{[GQ]-UI03}.
@@ -684,11 +794,24 @@ El actor Quejoso solicita la eliminación permanente de una queja que aún se en
     \item El sistema actualiza y refresca el tablero de trámites.
 \end{enumerate}
 
-% --- CU11: Recibir notificaciones de status ---
+\newpage
+
+% ==============================================================================
+% CU11: Recibir notificaciones de status
+% ==============================================================================
 \subsection{CU11: Recibir notificaciones de status}
 
 \textbf{Resumen:} 
 El actor Quejoso recibe avisos automáticos emitidos por el sistema o por el personal de la Defensoría sobre cambios en el estado de su trámite. Estas notificaciones pueden incluir requerimientos de información, dictado de medidas precautorias o propuestas de conciliación, permitiendo al usuario reaccionar oportunamente.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUonce
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU11.}
+    \label{fig:cu11}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -723,7 +846,6 @@ El actor Quejoso recibe avisos automáticos emitidos por el sistema o por el per
 \end{table}
 
 \subsubsection{Trayectorias del CU11}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El sistema envía un correo electrónico al quejoso avisando sobre una novedad.
@@ -739,12 +861,24 @@ El actor Quejoso recibe avisos automáticos emitidos por el sistema o por el per
     \end{itemize}
 \end{enumerate}
 
+\newpage
 
-% --- CU12: Completar información requerida ---
+% ==============================================================================
+% CU12: Completar información requerida
+% ==============================================================================
 \subsection{CU12: Completar información requerida}
 
 \textbf{Resumen:} 
 El actor Quejoso responde a un requerimiento formal de la Defensoría cuando su trámite se encuentra en estatus "Prevenida". El sistema habilita temporalmente la edición de los campos señalados como incompletos o erróneos para que el usuario aporte la información o evidencias faltantes.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUdoce
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU12.}
+    \label{fig:cu12}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -779,7 +913,6 @@ El actor Quejoso responde a un requerimiento formal de la Defensoría cuando su 
 \end{table}
 
 \subsubsection{Trayectorias del CU12}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor accede a la notificación de requerimiento en el \hyperlink{anexo:casos_uso}{CU11}.
@@ -792,11 +925,24 @@ El actor Quejoso responde a un requerimiento formal de la Defensoría cuando su 
     \item El sistema muestra el mensaje \hyperlink{msg:MSG33}{MSG33}.
 \end{enumerate}
 
-% --- CU13: Consultar medidas precautorias ---
+\newpage
+
+% ==============================================================================
+% CU13: Consultar medidas precautorias
+% ==============================================================================
 \subsection{CU13: Consultar medidas precautorias}
 
 \textbf{Resumen:} 
 El actor Quejoso visualiza las medidas de protección dictadas por la Defensoría para salvaguardar su integridad o sus derechos durante el proceso. El sistema permite descargar el documento oficial que contiene las instrucciones, plazos y autoridades responsables de ejecutar dichas medidas.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUtrece
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU13.}
+    \label{fig:cu13}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -830,7 +976,6 @@ El actor Quejoso visualiza las medidas de protección dictadas por la Defensorí
 \end{table}
 
 \subsubsection{Trayectorias del CU13}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor accede a la notificación de "Medidas Precautorias" en el \hyperlink{anexo:casos_uso}{CU11}.
@@ -840,11 +985,24 @@ El actor Quejoso visualiza las medidas de protección dictadas por la Defensorí
     \item El sistema registra el evento de consulta para fines de auditoría legal.
 \end{enumerate}
 
-% --- CU14: Consultar propuesta de conciliación ---
+\newpage
+
+% ==============================================================================
+% CU14: Consultar propuesta de conciliación
+% ==============================================================================
 \subsection{CU14: Consultar propuesta de conciliación}
 
 \textbf{Resumen:} 
 El actor Quejoso visualiza el documento de propuesta de conciliación emitido por la Defensoría para dar solución al conflicto planteado en la queja. El sistema permite leer los términos del acuerdo y habilita las opciones de aceptación o rechazo definitivo.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUcatorce
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU14.}
+    \label{fig:cu14}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -879,7 +1037,6 @@ El actor Quejoso visualiza el documento de propuesta de conciliación emitido po
 \end{table}
 
 \subsubsection{Trayectorias del CU14}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor accede a la notificación de ``Propuesta de Conciliación'' en el \hyperlink{anexo:casos_uso}{CU11}.
@@ -890,12 +1047,24 @@ El actor Quejoso visualiza el documento de propuesta de conciliación emitido po
     \item Dependiendo de la elección, el sistema invoca al \textbf{CU15} o \textbf{CU16}.
 \end{enumerate}
 
+\newpage
 
-% --- CU15: Aceptar propuesta de conciliación ---
+% ==============================================================================
+% CU15: Aceptar propuesta de conciliación
+% ==============================================================================
 \subsection{CU15: Aceptar propuesta de conciliación}
 
 \textbf{Resumen:} 
 El actor Quejoso manifiesta su conformidad con los términos presentados por la Defensoría en la propuesta de conciliación. El sistema registra la aceptación, genera un acta de acuerdo con sello digital y procede al cierre administrativo de la queja con estatus de ``Concluida por Conciliación''.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUquince
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU15.}
+    \label{fig:cu15}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -931,7 +1100,6 @@ El actor Quejoso manifiesta su conformidad con los términos presentados por la 
 \end{table}
 
 \subsubsection{Trayectorias del CU15}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor selecciona el botón ``Aceptar Propuesta'' en la pantalla del \hyperlink{anexo:casos_uso}{CU14}.
@@ -943,11 +1111,24 @@ El actor Quejoso manifiesta su conformidad con los términos presentados por la 
     \item El sistema habilita el enlace para el \hyperlink{anexo:casos_uso}{CU17} (Descargar acuse).
 \end{enumerate}
 
-% --- CU16: Rechazar propuesta de conciliación ---
+\newpage
+
+% ==============================================================================
+% CU16: Rechazar propuesta de conciliación
+% ==============================================================================
 \subsection{CU16: Rechazar propuesta de conciliación}
 
 \textbf{Resumen:} 
 El actor Quejoso manifiesta su inconformidad con los términos de la propuesta de conciliación presentada. El sistema registra el rechazo, permite al usuario ingresar una breve justificación de su negativa y actualiza el estatus del expediente a ``En Investigación'' o ``Pendiente de Resolución'', continuando así con el proceso administrativo formal.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUdieciseis
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU16.}
+    \label{fig:cu16}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -983,7 +1164,6 @@ El actor Quejoso manifiesta su inconformidad con los términos de la propuesta d
 \end{table}
 
 \subsubsection{Trayectorias del CU16}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor selecciona la opción ``Inconformarse / Rechazar'' en la pantalla del \hyperlink{anexo:casos_uso}{CU14}.
@@ -995,11 +1175,24 @@ El actor Quejoso manifiesta su inconformidad con los términos de la propuesta d
     \item El sistema redirecciona al actor al tablero de trámites \textbf{[GQ]-UI03}.
 \end{enumerate}
 
-% --- CU17: Descargar acuse de recibo con sello digital ---
+\newpage
+
+% ==============================================================================
+% CU17: Descargar acuse de recibo con sello digital
+% ==============================================================================
 \subsection{CU17: Descargar acuse de recibo con sello digital}
 
 \textbf{Resumen:} 
 El actor Quejoso solicita la generación y descarga del documento oficial que acredita la recepción de su queja o la conclusión de un acuerdo. El sistema genera un archivo PDF que integra un sello digital de autenticidad y un código QR de validación, proporcionando certeza jurídica sobre la fecha y hora de los eventos registrados.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUdiecisiete
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU17.}
+    \label{fig:cu17}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -1034,7 +1227,6 @@ El actor Quejoso solicita la generación y descarga del documento oficial que ac
 \end{table}
 
 \subsubsection{Trayectorias del CU17}
-
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor identifica el trámite correspondiente en el tablero \textbf{[GQ]-UI03} o finaliza un proceso (\hyperlink{anexo:casos_uso}{CU06} o \hyperlink{anexo:casos_uso}{CU15}).
@@ -1045,71 +1237,66 @@ El actor Quejoso solicita la generación y descarga del documento oficial que ac
     \item El sistema muestra el mensaje \hyperlink{msg:MSG41}{MSG41} y descarga el archivo PDF.
 \end{enumerate}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+\newpage
+
+% ==============================================================================
+% CU18: Consultar Detalles del trámite completos
+% ==============================================================================
+\subsection{CU18: Consultar Detalles del trámite completos}
+
+\textbf{Resumen:} 
+El actor Quejoso accede al expediente digital íntegro de una queja específica. El sistema recopila y muestra la narrativa original de los hechos, el listado de archivos de evidencia adjuntos, la cronología de estados por los que ha pasado el trámite y todas las notificaciones emitidas por la Defensoría hasta la fecha.
+
+\begin{figure}[htbp]
+    \centering
+    \shorthandoff{"}
+    \figCUdieciocho
+    \shorthandon{"}
+    \caption{Diagrama de Caso de Uso CU18.}
+    \label{fig:cu18}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\small
+\shorthandoff{"}
+\begin{tabular}{|p{3.5cm}|p{10.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Campo} & \textbf{Detalle} \\ \hline
+\textbf{Actor} & Quejoso \\ \hline
+\textbf{Propósito} & Ofrecer una vista detallada y transparente de toda la información y actividad relacionada con un folio de queja específico. \\ \hline
+\textbf{Entradas} & Selección de un folio desde el tablero de trámites (\hyperlink{anexo:casos_uso}{CU08}). \\ \hline
+\textbf{Origen} & Base de Datos (Tablas: Quejas, Evidencias, Notificaciones, Historial\_Estados). \\ \hline
+\textbf{Salidas} & Despliegue de narrativa completa, visor de evidencias, línea del tiempo de estatus. \\ \hline
+\textbf{Destino} & Pantalla de expediente detallado [GQ]-UI05. \\ \hline
+\textbf{Precondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El actor debe haber iniciado sesión (\hyperlink{anexo:casos_uso}{CU02}).
+    \item El trámite seleccionado debe pertenecer al ID\_Usuario activo (validación de propiedad).
+\end{itemize} \\ \hline
+\textbf{Postcondiciones} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item El sistema permite la navegación hacia la descarga de acuses (\hyperlink{anexo:casos_uso}{CU17}) si el estatus lo permite.
+\end{itemize} \\ \hline
+\textbf{Errores} & 
+\begin{itemize}[nosep, leftmargin=*]
+    \item \hyperlink{err:E23}{E1}: El folio no existe o el usuario no tiene permisos de acceso (MSG43).
+\end{itemize} \\ \hline
+\end{tabular}
+\caption{Descripción del Caso de Uso CU18.}
+\label{tab:cu18_especificacion}
+\end{table}
+
+\subsubsection{Trayectorias del CU18}
+\textbf{Trayectoria principal:}
+\begin{enumerate}[nosep]
+    \item El actor selecciona un trámite específico en el tablero \textbf{[GQ]-UI03}.
+    \item El sistema valida los permisos de acceso para asegurar que el quejoso sea el dueño del folio (\hyperlink{err:E23}{Error E1}).
+    \item El sistema recupera la información de la narrativa, anexos multimedia y notificaciones.
+    \item El sistema despliega la pantalla \textbf{[GQ]-UI05} organizada por secciones (Datos, Pruebas, Estatus).
+    \item El actor navega por las pestañas de información para consultar el progreso de su denuncia.
+    \item El actor puede invocar al \hyperlink{anexo:casos_uso}{CU17} para descargar el acuse de recibo si está disponible.
+\end{enumerate}
 
 \end{appendices}

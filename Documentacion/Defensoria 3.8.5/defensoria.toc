@@ -1,0 +1,161 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {chapter}{\numberline {1}Introducción}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Planteamiento del Problema}{1}{section.1.1}%
+\contentsline {subsection}{\numberline {1.1.1}Contexto y situación problemática}{2}{subsection.1.1.1}%
+\contentsline {subsection}{\numberline {1.1.2}Problema a resolver}{2}{subsection.1.1.2}%
+\contentsline {section}{\numberline {1.2}Solución Propuesta}{2}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Justificación}{3}{section.1.3}%
+\contentsline {subsection}{\numberline {1.3.1}Ámbito social e institucional}{3}{subsection.1.3.1}%
+\contentsline {subsection}{\numberline {1.3.2}Perspectiva técnica}{3}{subsection.1.3.2}%
+\contentsline {section}{\numberline {1.4}Objetivos}{3}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}Objetivo General}{4}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1.4.2}Objetivos específicos}{4}{subsection.1.4.2}%
+\contentsline {section}{\numberline {1.5}Alcances y Limitaciones}{4}{section.1.5}%
+\contentsline {subsection}{\numberline {1.5.1}Alcances}{4}{subsection.1.5.1}%
+\contentsline {subsection}{\numberline {1.5.2}Limitaciones}{5}{subsection.1.5.2}%
+\contentsline {chapter}{\numberline {2}Estado del Arte}{6}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Sistemas orientados a la denuncia y gestión de casos}{6}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Análisis Comparativo de Funcionalidades}{7}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Diferenciación y Ventaja Competitiva}{7}{section.2.3}%
+\contentsline {chapter}{\numberline {3}Marco Normativo}{9}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Contexto Institucional y Normativo}{9}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Defensoría de Derechos Politécnicos (DDP)}{9}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}Manuales de Organización y Procedimientos}{10}{subsection.3.1.2}%
+\contentsline {subsection}{\numberline {3.1.3}Protocolo para la Prevención, Detección, Atención y Sanción de la Violencia de Género}{10}{subsection.3.1.3}%
+\contentsline {section}{\numberline {3.2}Lógica de Negocio y Flujo de Procesos}{10}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Flujo Operativo de la Queja}{11}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Roles Administrativos y Operativos}{12}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}Términos y Plazos dentro del Proceso}{12}{subsection.3.2.3}%
+\contentsline {subsection}{\numberline {3.2.4}Instrumentos de Captura y Gestión de Documentos}{13}{subsection.3.2.4}%
+\contentsline {chapter}{\numberline {4}Marco Teórico}{14}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Problema de clasificación en el contexto de la DDP}{14}{section.4.1}%
+\contentsline {subsection}{\numberline {4.1.1}Taxonomía de denuncias}{15}{subsection.4.1.1}%
+\contentsline {subsection}{\numberline {4.1.2}Clasificación multiclase vs multietiqueta}{15}{subsection.4.1.2}%
+\contentsline {subsection}{\numberline {4.1.3}Ciclo de vida de los datos en el aprendizaje supervisado}{16}{subsection.4.1.3}%
+\contentsline {section}{\numberline {4.2}Fundamentos lógicos}{17}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Inferencia Bayesiana (probabilidad a priori y a posteriori)}{17}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Algebra lineal en PLN}{19}{subsection.4.2.2}%
+\contentsline {subsubsection}{Espacios de características (N-dimensiones)}{20}{subsubsection*.4}%
+\contentsline {subsubsection}{Métricas de proximidad}{20}{subsubsection*.5}%
+\contentsline {section}{\numberline {4.3}Preprocesamiento avanzado de lenguaje natural (PLN)}{21}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Limpieza estructural (normalización de Unicode, eliminación de ruido y stopwords especificas)}{21}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Analisis morfosintáctico}{22}{subsection.4.3.2}%
+\contentsline {subsubsection}{Stemming}{23}{subsubsection*.6}%
+\contentsline {subsubsection}{Lematización}{24}{subsubsection*.7}%
+\contentsline {subsection}{\numberline {4.3.3}Estrategias de tokenización (Unigramas, Bigramas y su impacto en la captura de frases)}{24}{subsection.4.3.3}%
+\contentsline {section}{\numberline {4.4}Vectorización (Representación numérica)}{25}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Modelos de bolsa de palabras (BoW)}{25}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}TF-IDF (Term Frequency - Inverse Document Frequency)}{26}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Modelos de continuidad (Word embeddings)}{28}{subsection.4.4.3}%
+\contentsline {subsubsection}{Word2Vec y GloVe (captura de relaciones semánticas mediante contextos locales)}{28}{subsubsection*.8}%
+\contentsline {section}{\numberline {4.5}Profundización en el Algoritmo Multinomial Naive Bayes}{29}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}Supuesto de independencia condicional (ventajas y desventajas)}{29}{subsection.4.5.1}%
+\contentsline {subsection}{\numberline {4.5.2}Estimación de máxima verosimilitud}{30}{subsection.4.5.2}%
+\contentsline {subsection}{\numberline {4.5.3}El problema de la probabilidad cero}{30}{subsection.4.5.3}%
+\contentsline {section}{\numberline {4.6}Support Vector Machines}{32}{section.4.6}%
+\contentsline {subsection}{\numberline {4.6.1}Optimización de hiperplano de separación (margen máximo)}{32}{subsection.4.6.1}%
+\contentsline {subsection}{\numberline {4.6.2}Flexibilidad mediante variables de holgura}{33}{subsection.4.6.2}%
+\contentsline {subsection}{\numberline {4.6.3}El truco kernel}{34}{subsection.4.6.3}%
+\contentsline {subsection}{\numberline {4.6.4}Enfoque matemático}{35}{subsection.4.6.4}%
+\contentsline {section}{\numberline {4.7}Estrategias de entrenamiento y validación}{38}{section.4.7}%
+\contentsline {subsection}{\numberline {4.7.1}Manejo de clases desbalanceadas}{38}{subsection.4.7.1}%
+\contentsline {subsection}{\numberline {4.7.2}Optimización de hiperparámetros}{38}{subsection.4.7.2}%
+\contentsline {subsection}{\numberline {4.7.3}Validación cruzada (K-Fold Cross-Validation)}{39}{subsection.4.7.3}%
+\contentsline {section}{\numberline {4.8}Evaluación de la inteligencia del sistema}{39}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Selección de Tecnologías}{40}{section.4.9}%
+\contentsline {subsection}{\numberline {4.9.1}Definición de arquitectura de software}{40}{subsection.4.9.1}%
+\contentsline {subsection}{\numberline {4.9.2}Arquitectura del Sistema}{41}{subsection.4.9.2}%
+\contentsline {section}{\numberline {4.10}Definición de arquitectura de software}{41}{section.4.10}%
+\contentsline {subsection}{\numberline {4.10.1}Importancia en el desarrollo de sistemas}{41}{subsection.4.10.1}%
+\contentsline {subsection}{\numberline {4.10.2}Factores de calidad}{42}{subsection.4.10.2}%
+\contentsline {subsection}{\numberline {4.10.3}Clasificación de arquitecturas}{43}{subsection.4.10.3}%
+\contentsline {section}{\numberline {4.11}Arquitectura del Sistema}{44}{section.4.11}%
+\contentsline {subsection}{\numberline {4.11.1}Arquitectura de Microservicios}{45}{subsection.4.11.1}%
+\contentsline {subsection}{\numberline {4.11.2}Arquitectura Interna de los Servicios: Patrón de 3 Capas}{46}{subsection.4.11.2}%
+\contentsline {subsection}{\numberline {4.11.3}Servidor Web y Proxy Inverso (Nginx)}{47}{subsection.4.11.3}%
+\contentsline {section}{\numberline {4.12}Tecnologías de Desarrollo Backend}{48}{section.4.12}%
+\contentsline {subsection}{\numberline {4.12.1}Lenguaje de Programación: Java}{49}{subsection.4.12.1}%
+\contentsline {subsection}{\numberline {4.12.2}Fundamentos Técnicos y Mecanismos Internos de Java}{50}{subsection.4.12.2}%
+\contentsline {subsubsection}{Seguridad y Tipado Estricto}{50}{subsubsection*.9}%
+\contentsline {subsubsection}{Arquitectura de la Java Virtual Machine (JVM)}{50}{subsubsection*.10}%
+\contentsline {subsubsection}{Gestión de Memoria: Garbage Collection (GC)}{50}{subsubsection*.11}%
+\contentsline {subsubsection}{Multihilo y Concurrencia}{51}{subsubsection*.12}%
+\contentsline {subsubsection}{Ecosistema y Robustez Empresarial}{51}{subsubsection*.13}%
+\contentsline {subsection}{\numberline {4.12.3}Framework: Spring Boot}{51}{subsection.4.12.3}%
+\contentsline {subsubsection}{Mecanismos Técnicos: IoC y Dependency Injection}{52}{subsubsection*.14}%
+\contentsline {subsubsection}{Seguridad Integrada y Control de Acceso}{53}{subsubsection*.15}%
+\contentsline {section}{\numberline {4.13}Tecnologías de Desarrollo Frontend}{53}{section.4.13}%
+\contentsline {subsection}{\numberline {4.13.1}Framework de Interfaz de Usuario: Angular}{53}{subsection.4.13.1}%
+\contentsline {section}{\numberline {4.14}Gestión de Bases de Datos}{54}{section.4.14}%
+\contentsline {subsection}{\numberline {4.14.1}Sistema de Gestión de Bases de Datos Relacional (RDBMS): PostgreSQL}{54}{subsection.4.14.1}%
+\contentsline {section}{\numberline {4.15}Infraestructura y Despliegue}{55}{section.4.15}%
+\contentsline {subsection}{\numberline {4.15.1}Plataforma de Contenerización: Docker}{55}{subsection.4.15.1}%
+\contentsline {section}{\numberline {4.16}Control de Versiones y Trabajo Colaborativo}{55}{section.4.16}%
+\contentsline {subsection}{\numberline {4.16.1}Repositorio y Flujos de Trabajo: GitHub}{55}{subsection.4.16.1}%
+\contentsline {section}{\numberline {4.17}Diseño de Modelos}{56}{section.4.17}%
+\contentsline {subsection}{\numberline {4.17.1}Modelo de Datos (Diagrama Entidad-Relación)}{56}{subsection.4.17.1}%
+\contentsline {subsection}{\numberline {4.17.2}Diseño de Interfaz (Mockups)}{56}{subsection.4.17.2}%
+\contentsline {section}{\numberline {4.18}Requerimientos Funcionales (RF)}{57}{section.4.18}%
+\contentsline {section}{\numberline {4.19}Reglas de Negocio (RN)}{57}{section.4.19}%
+\contentsline {chapter}{\numberline {5}Metodología de Desarrollo}{58}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Enfoque Ágil Híbrido: Scrum-ban}{58}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Justificación de la Metodología}{58}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Fases del Ciclo de Vida del Proyecto}{59}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}Fase 1: Planificación y Definición (Backlog Grooming)}{59}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}Fase 2: Ejecución Iterativa (Sprints)}{59}{subsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.3.3}Fase 3: Control y Optimización (Flujo Kanban)}{59}{subsection.5.3.3}%
+\contentsline {subsection}{\numberline {5.3.4}Fase 4: Revisión y Cierre de Incremento}{60}{subsection.5.3.4}%
+\contentsline {section}{\numberline {5.4}Roles y Responsabilidades}{60}{section.5.4}%
+\contentsline {section}{\numberline {5.5}Herramientas de Apoyo}{60}{section.5.5}%
+\contentsline {chapter}{\numberline {6}Análisis y Diseño del Sistema}{61}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Modelo del Alcance}{61}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Modelo del Negocio}{61}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Modelo Dinámico}{62}{section.6.3}%
+\contentsline {subsection}{\numberline {6.3.1}Diagrama de Secuencia: Registro y Clasificación}{62}{subsection.6.3.1}%
+\contentsline {section}{\numberline {6.4}Análisis de Riesgo}{62}{section.6.4}%
+\contentsline {section}{\numberline {6.5}Costos del Proyecto}{62}{section.6.5}%
+\contentsline {chapter}{Ap\'{e}ndice Pantallas y Mockups del Sistema}{64}{appendix*.16}%
+\contentsline {section}{\numberline {.1}Perfil: Quejoso}{64}{section.alph1.Alph0.1}%
+\contentsline {section}{\numberline {.2}Perfil: Recepcionista}{65}{section.alph1.Alph0.2}%
+\contentsline {section}{\numberline {.3}Perfil: Oficina de Primer Contacto}{66}{section.alph1.Alph0.3}%
+\contentsline {section}{\numberline {.4}Perfil: Subdefensores}{67}{section.alph1.Alph0.4}%
+\contentsline {chapter}{Ap\'{e}ndice Casos de Uso}{68}{appendix*.17}%
+\contentsline {section}{\numberline {.1}Especificación detallada de Casos de Uso}{68}{section.alph2.Alph0.1}%
+\contentsline {subsection}{\numberline {.1.1}CU01: Crear cuenta de usuario}{68}{subsection.alph2.Alph0.1.1}%
+\contentsline {subsubsection}{Trayectorias del Caso de Uso}{68}{subsubsection*.18}%
+\contentsline {subsection}{\numberline {.1.2}CU02: Iniciar sesión}{71}{subsection.alph2.Alph0.1.2}%
+\contentsline {subsubsection}{Trayectorias del CU02}{71}{subsubsection*.19}%
+\contentsline {subsection}{\numberline {.1.3}CU03: Recuperar contraseña}{73}{subsection.alph2.Alph0.1.3}%
+\contentsline {subsubsection}{Trayectorias del CU03}{73}{subsubsection*.20}%
+\contentsline {subsection}{\numberline {.1.4}CU04: Editar perfil de usuario}{75}{subsection.alph2.Alph0.1.4}%
+\contentsline {subsubsection}{Trayectorias del CU04}{75}{subsubsection*.21}%
+\contentsline {subsection}{\numberline {.1.5}CU05: Registrar datos de tutor}{77}{subsection.alph2.Alph0.1.5}%
+\contentsline {subsubsection}{Trayectorias del CU05}{77}{subsubsection*.22}%
+\contentsline {subsection}{\numberline {.1.6}CU06: Levantar queja}{79}{subsection.alph2.Alph0.1.6}%
+\contentsline {subsubsection}{Trayectorias del CU06}{79}{subsubsection*.23}%
+\contentsline {subsection}{\numberline {.1.7}CU07: Adjuntar evidencia}{81}{subsection.alph2.Alph0.1.7}%
+\contentsline {subsubsection}{Trayectorias del CU07}{81}{subsubsection*.24}%
+\contentsline {subsection}{\numberline {.1.8}CU08: Consultar tablero de trámites}{83}{subsection.alph2.Alph0.1.8}%
+\contentsline {subsubsection}{Trayectorias del CU08}{83}{subsubsection*.25}%
+\contentsline {subsection}{\numberline {.1.9}CU09: Modificar queja}{85}{subsection.alph2.Alph0.1.9}%
+\contentsline {subsubsection}{Trayectorias del CU09}{85}{subsubsection*.26}%
+\contentsline {subsection}{\numberline {.1.10}CU10: Eliminar borrador de queja}{87}{subsection.alph2.Alph0.1.10}%
+\contentsline {subsubsection}{Trayectorias del CU10}{87}{subsubsection*.27}%
+\contentsline {subsection}{\numberline {.1.11}CU11: Recibir notificaciones de status}{89}{subsection.alph2.Alph0.1.11}%
+\contentsline {subsubsection}{Trayectorias del CU11}{89}{subsubsection*.28}%
+\contentsline {subsection}{\numberline {.1.12}CU12: Completar información requerida}{91}{subsection.alph2.Alph0.1.12}%
+\contentsline {subsubsection}{Trayectorias del CU12}{91}{subsubsection*.29}%
+\contentsline {subsection}{\numberline {.1.13}CU13: Consultar medidas precautorias}{93}{subsection.alph2.Alph0.1.13}%
+\contentsline {subsubsection}{Trayectorias del CU13}{93}{subsubsection*.30}%
+\contentsline {subsection}{\numberline {.1.14}CU14: Consultar propuesta de conciliación}{95}{subsection.alph2.Alph0.1.14}%
+\contentsline {subsubsection}{Trayectorias del CU14}{95}{subsubsection*.31}%
+\contentsline {subsection}{\numberline {.1.15}CU15: Aceptar propuesta de conciliación}{97}{subsection.alph2.Alph0.1.15}%
+\contentsline {subsubsection}{Trayectorias del CU15}{97}{subsubsection*.32}%
+\contentsline {subsection}{\numberline {.1.16}CU16: Rechazar propuesta de conciliación}{99}{subsection.alph2.Alph0.1.16}%
+\contentsline {subsubsection}{Trayectorias del CU16}{99}{subsubsection*.33}%
+\contentsline {subsection}{\numberline {.1.17}CU17: Descargar acuse de recibo con sello digital}{101}{subsection.alph2.Alph0.1.17}%
+\contentsline {subsubsection}{Trayectorias del CU17}{101}{subsubsection*.34}%
+\contentsline {subsection}{\numberline {.1.18}CU18: Consultar Detalles del trámite completos}{103}{subsection.alph2.Alph0.1.18}%
+\contentsline {subsubsection}{Trayectorias del CU18}{103}{subsubsection*.35}%
+\contentsline {chapter}{Catálogo de Mensajes}{105}{appendix*.36}%
+\contentsline {chapter}{Catálogo de Errores}{108}{appendix*.37}%
