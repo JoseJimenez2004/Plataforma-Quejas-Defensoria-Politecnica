@@ -1,9 +1,9 @@
-PWD /home/bicho/Documents/Plataforma-Quejas-Defensoria-Politecnica/Documentacion/Defensoria 3.7.2
+PWD /home/bicho/Documents/Plataforma-Quejas-Defensoria-Politecnica/Documentacion/Defensoria 3.8.5
 INPUT /etc/texmf/web2c/texmf.cnf
 INPUT /usr/share/texmf/web2c/texmf.cnf
 INPUT /usr/share/texlive/texmf-dist/web2c/texmf.cnf
 INPUT /var/lib/texmf/web2c/pdftex/pdflatex.fmt
-INPUT /home/bicho/Documents/Plataforma-Quejas-Defensoria-Politecnica/Documentacion/Defensoria 3.7.2/defensoria.tex
+INPUT /home/bicho/Documents/Plataforma-Quejas-Defensoria-Politecnica/Documentacion/Defensoria 3.8.5/defensoria.tex
 OUTPUT defensoria.log
 INPUT /usr/share/texlive/texmf-dist/tex/latex/base/book.cls
 INPUT /usr/share/texlive/texmf-dist/tex/latex/base/book.cls
@@ -611,6 +611,17 @@ OUTPUT capitulos/00-anexoA.aux
 INPUT ./capitulos/00-anexoA.tex
 INPUT ./capitulos/00-anexoA.tex
 INPUT capitulos/00-anexoA.tex
+INPUT ./imagenes/quejoso/Inicio.png
+INPUT ./imagenes/quejoso/Inicio.png
+INPUT ./imagenes/quejoso/Inicio.png
+INPUT ./imagenes/quejoso/Inicio.png
+INPUT ./imagenes/quejoso/Inicio.png
+INPUT /usr/share/texlive/texmf-dist/fonts/vf/public/newtx/ntxmi.vf
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/NewTXMI.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/stxscr.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/vf/public/newtx/ntxsy.vf
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/txsys.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/txex-bar.tfm
 INPUT ./capitulos/00-anexoB.tex
 INPUT ./capitulos/00-anexoB.tex
 OUTPUT capitulos/00-anexoB.aux
