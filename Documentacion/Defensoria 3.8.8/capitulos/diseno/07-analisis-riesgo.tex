@@ -1,0 +1,15 @@
+\section{Análisis de Riesgo}
+Se identifican los riesgos que podrían afectar la viabilidad del proyecto utilizando una matriz de impacto y probabilidad.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{3cm}|c|c|p{6cm}|}
+\hline
+\textbf{Riesgo} & \textbf{Prob.} & \textbf{Impacto} & \textbf{Estrategia de Mitigación} \\ \hline
+Baja precisión del modelo de IA & Media & Alto & Implementar un modo "asistido" donde el abogado siempre valida el resultado. \\ \hline
+Vulneración de datos sensibles & Baja & Crítico & Cifrado de base de datos y uso de protocolos HTTPS/SSL gestionados en Nginx. \\ \hline
+Curva de aprendizaje de microservicios & Media & Medio & Uso de Docker para estandarizar entornos y documentación exhaustiva. \\ \hline
+\end{tabular}
+\caption{Matriz de Riesgos del Proyecto.}
+\end{table}

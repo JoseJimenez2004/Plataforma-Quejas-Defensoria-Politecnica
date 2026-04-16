@@ -100,7 +100,7 @@ El actor Quejoso inicia el proceso de registro proporcionando sus datos de ident
         \item[B-3:] El sistema sugiere utilizar la función de recuperación de contraseña.
     \end{itemize}
     \item \textbf{Trayectoria C: Discrepancia en contraseñas} \\
-    \textit{Condición:} El campo ``Contraseña'' y ``Confirmar Contraseña'' no coinciden.
+    \textit{Condición:} El campo "Contraseña" y "Confirmar Contraseña" no coinciden.
     \begin{itemize}[nosep]
         \item[C-1:] El sistema detecta la inconsistencia de caracteres.
         \item[C-2:] El sistema muestra el mensaje de error correspondiente.
@@ -187,6 +187,13 @@ El actor Quejoso solicita el acceso al sistema introduciendo sus credenciales (c
         \item[B-2:] El sistema muestra el mensaje \hyperlink{msg:MSG05}{MSG05}.
         \item \textbf{Retorno:} Regresa al punto 1 de la trayectoria principal.
     \end{itemize}
+    \item \textbf{Trayectoria C: Cuenta bloqueada por múltiples intentos fallidos} \\
+    \textit{Condición:} Se superan los 5 intentos fallidos de inicio de sesión.
+    \begin{itemize}[nosep]
+        \item[C-1:] El sistema bloquea la cuenta temporalmente (30 minutos).
+        \item[C-2:] El sistema muestra el mensaje \hyperlink{msg:MSG07}{MSG07}.
+        \item \textbf{Retorno:} El sistema sugiere esperar o usar recuperación de contraseña.
+    \end{itemize}
 \end{itemize}
 
 \newpage
@@ -259,12 +266,25 @@ El actor Quejoso solicita el restablecimiento de su clave al no poder autenticar
 
 \textbf{Trayectorias alternativas:}
 \begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Correo no registrado} \\
+    \textit{Condición:} El correo ingresado no existe en la base de datos.
+    \begin{itemize}[nosep]
+        \item[A-1:] El sistema muestra el mensaje \hyperlink{msg:MSG03}{MSG03}.
+        \item \textbf{Retorno:} Regresa al punto 3 de la trayectoria principal.
+    \end{itemize}
     \item \textbf{Trayectoria B: Enlace de recuperación caducado} \\
     \textit{Condición:} El actor accede al enlace después del tiempo de vigencia.
     \begin{itemize}[nosep]
         \item[B-1:] El sistema detecta que el token ha expirado.
         \item[B-2:] El sistema muestra el mensaje \hyperlink{msg:MSG09}{MSG09}.
         \item \textbf{Retorno:} El sistema retorna al punto 2 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Contraseña débil} \\
+    \textit{Condición:} La nueva contraseña no cumple los criterios de seguridad.
+    \begin{itemize}[nosep]
+        \item[C-1:] El sistema valida la complejidad (mín. 8 caracteres, mayúscula, número, símbolo).
+        \item[C-2:] El sistema muestra mensaje específico de error.
+        \item \textbf{Retorno:} Regresa al punto 7 de la trayectoria principal.
     \end{itemize}
 \end{itemize}
 
@@ -344,6 +364,20 @@ El actor Quejoso solicita la modificación de sus datos personales almacenados. 
         \item[A-3:] El sistema procesa la imagen y genera vista previa.
         \item \textbf{Retorno:} Regresa al punto 4 de la trayectoria principal.
     \end{itemize}
+    \item \textbf{Trayectoria B: Formato de teléfono inválido} \\
+    \textit{Condición:} El teléfono ingresado no cumple el formato esperado.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema detecta el formato incorrecto.
+        \item[B-2:] El sistema muestra mensaje de error específico.
+        \item \textbf{Retorno:} Regresa al punto 3 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Cancelar edición} \\
+    \textit{Condición:} El actor decide no guardar los cambios.
+    \begin{itemize}[nosep]
+        \item[C-1:] El actor selecciona "Cancelar".
+        \item[C-2:] El sistema descarta los cambios y refresca con datos originales.
+        \item \textbf{Retorno:} Termina el caso de uso.
+    \end{itemize}
 \end{itemize}
 
 \newpage
@@ -419,6 +453,21 @@ El sistema activa automáticamente este caso de uso cuando se detecta que el act
     \begin{itemize}[nosep]
         \item[A-1:] El actor selecciona "Corregir mi fecha de nacimiento".
         \item[A-2:] El sistema regresa al formulario de datos personales del origen.
+        \item \textbf{Retorno:} Termina el caso de uso y retorna al origen.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Datos de contacto del tutor inválidos} \\
+    \textit{Condición:} El correo o teléfono del tutor tienen formato incorrecto.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema resalta los campos con error.
+        \item[B-2:] El sistema muestra el mensaje \hyperlink{msg:MSG15}{MSG15}.
+        \item \textbf{Retorno:} Regresa al punto 4 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Tutor duplicado (mismo que el usuario)} \\
+    \textit{Condición:} Se intenta registrar al mismo menor como su propio tutor.
+    \begin{itemize}[nosep]
+        \item[C-1:] El sistema detecta que correo del tutor = correo del usuario.
+        \item[C-2:] El sistema muestra mensaje de error específico.
+        \item \textbf{Retorno:} Regresa al punto 4 de la trayectoria principal.
     \end{itemize}
 \end{itemize}
 
@@ -495,6 +544,21 @@ El actor Quejoso inicia el proceso formal de denuncia describiendo hechos, respo
         \item[A-1:] El actor selecciona "Guardar Borrador".
         \item[A-2:] El sistema valida el título y almacena con estatus "Borrador".
         \item[A-3:] El sistema muestra \hyperlink{msg:MSG18}{MSG18}.
+        \item \textbf{Retorno:} Termina el caso de uso.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Descripción insuficiente} \\
+    \textit{Condición:} La descripción de hechos tiene menos de 20 caracteres.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema identifica la longitud insuficiente.
+        \item[B-2:] El sistema muestra el mensaje \hyperlink{msg:MSG19}{MSG19}.
+        \item \textbf{Retorno:} Regresa al punto 3 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Fecha de hechos inválida} \\
+    \textit{Condición:} La fecha ingresada es futura o anterior a la creación de la cuenta.
+    \begin{itemize}[nosep]
+        \item[C-1:] El sistema detecta la inconsistencia temporal.
+        \item[C-2:] El sistema muestra el mensaje \hyperlink{msg:MSG21}{MSG21}.
+        \item \textbf{Retorno:} Regresa al punto 3 de la trayectoria principal.
     \end{itemize}
     \item \textbf{Trayectorias de Extensión:}
     \begin{itemize}[nosep]
@@ -561,9 +625,10 @@ El actor Quejoso carga archivos digitales (documentos, imágenes, audios o video
     \item El actor selecciona "Adjuntar Evidencia" en la pantalla \textbf{[GQ]-UI01}.
     \item El sistema habilita la ventana de selección de archivos del SO.
     \item El actor selecciona el archivo y proporciona una descripción opcional.
-    \item El sistema valida el formato (.pdf, .jpg, .mp3, .mp4) (\hyperlink{msg:MSG23}{Trayectoria A}).
+    \item El sistema valida el formato (.pdf, .jpg, .png, .mp3, .mp4) (\hyperlink{msg:MSG23}{Trayectoria A}).
     \item El sistema verifica que el peso no supere los 15MB (\hyperlink{msg:MSG24}{Trayectoria B}).
-    \item El sistema analiza el archivo en busca de malware.
+    \item El sistema analiza el archivo en busca de malware (\hyperlink{err:E12}{Error E1}).
+    \item El sistema verifica la cuota de almacenamiento del usuario (\hyperlink{err:E13}{Error E2}).
     \item El sistema confirma la recepción con el mensaje \hyperlink{msg:MSG22}{MSG22}.
     \item El sistema muestra la lista de archivos adjuntos satisfactoriamente.
 \end{enumerate}
@@ -571,17 +636,40 @@ El actor Quejoso carga archivos digitales (documentos, imágenes, audios o video
 \textbf{Trayectorias alternativas:}
 \begin{itemize}[leftmargin=*]
     \item \textbf{Trayectoria A: Formato de archivo no admitido} \\
-    \textit{Condición:} El actor intenta subir un formato no seguro (ej. .exe).
+    \textit{Condición:} El actor intenta subir un formato no seguro (ej. .exe, .sh, .bat).
     \begin{itemize}[nosep]
         \item[A-1:] El sistema bloquea la carga y muestra \hyperlink{msg:MSG23}{MSG23}.
         \item \textbf{Retorno:} Regresa al punto 2 de la trayectoria principal.
     \end{itemize}
-    \item \textbf{Trayectoria C: Eliminar evidencia adjunta} \\
+    \item \textbf{Trayectoria B: Tamaño de archivo excedido} \\
+    \textit{Condición:} El archivo seleccionado supera el límite de 15MB.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema interrumpe la carga y muestra \hyperlink{msg:MSG24}{MSG24}.
+        \item \textbf{Retorno:} Regresa al punto 2 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Archivo corrupto o infectado} \\
+    \textit{Condición:} El análisis de seguridad detecta malware o el archivo está dañado.
+    \begin{itemize}[nosep]
+        \item[C-1:] El sistema rechaza la carga.
+        \item[C-2:] El sistema muestra el mensaje \hyperlink{msg:MSG25}{MSG25}.
+        \item \textbf{Retorno:} Regresa al punto 2 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria D: Cuota de almacenamiento excedida} \\
+    \textit{Condición:} El usuario ha superado su límite de almacenamiento (100MB).
+    \begin{itemize}[nosep]
+        \item[D-1:] El sistema detecta la superación de cuota.
+        \item[D-2:] El sistema muestra el mensaje \hyperlink{msg:MSG26}{MSG26}.
+        \item[D-3:] El sistema sugiere eliminar evidencias antiguas.
+        \item \textbf{Retorno:} Regresa al punto 2 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria E: Eliminar evidencia adjunta} \\
     \textit{Condición:} El actor decide remover un archivo antes del envío.
     \begin{itemize}[nosep]
-        \item[C-1:] El actor selecciona "Eliminar" junto al archivo.
-        \item[C-2:] El sistema solicita confirmación mediante \hyperlink{msg:MSG27}{MSG27}.
-        \item[C-3:] El sistema libera el espacio y actualiza la base de datos.
+        \item[E-1:] El actor selecciona "Eliminar" junto al archivo.
+        \item[E-2:] El sistema solicita confirmación mediante \hyperlink{msg:MSG27}{MSG27}.
+        \item[E-3:] El actor confirma la eliminación.
+        \item[E-4:] El sistema libera el espacio y actualiza la base de datos.
+        \item \textbf{Retorno:} Regresa al punto 8 de la trayectoria principal.
     \end{itemize}
 \end{itemize}
 
@@ -652,17 +740,36 @@ El actor Quejoso accede a una vista centralizada que despliega el listado de tod
     \begin{itemize}[nosep]
         \item[A-1:] El sistema muestra el mensaje \hyperlink{msg:MSG28}{MSG28}.
         \item[A-2:] El sistema ofrece acceso directo al \hyperlink{anexo:casos_uso}{CU06} (Levantar queja).
+        \item \textbf{Retorno:} Termina el caso de uso.
     \end{itemize}
     \item \textbf{Trayectoria B: Filtrado de información} \\
     \textit{Condición:} El actor aplica filtros por estatus o fecha.
     \begin{itemize}[nosep]
-        \item[B-1:] El sistema actualiza la vista con los resultados coincidentes.
+        \item[B-1:] El actor selecciona criterios de filtro en el tablero.
+        \item[B-2:] El sistema actualiza la consulta con los parámetros seleccionados.
+        \item[B-3:] El sistema muestra los resultados coincidentes.
         \item \textbf{Retorno:} Regresa al punto 5 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Ordenamiento de resultados} \\
+    \textit{Condición:} El actor desea ordenar la lista por fecha o estatus.
+    \begin{itemize}[nosep]
+        \item[C-1:] El actor selecciona la columna por la cual ordenar.
+        \item[C-2:] El sistema reordena la tabla (ascendente/descendente alternado).
+        \item \textbf{Retorno:} Regresa al punto 5 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria D: Error de conexión con la base de datos} \\
+    \textit{Condición:} La consulta excede el tiempo de espera o falla la conexión.
+    \begin{itemize}[nosep]
+        \item[D-1:] El sistema detecta el timeout o error de conexión.
+        \item[D-2:] El sistema muestra el mensaje \hyperlink{msg:MSG29}{MSG29}.
+        \item[D-3:] El sistema sugiere recargar la página o intentar más tarde.
+        \item \textbf{Retorno:} Termina el caso de uso.
     \end{itemize}
     \item \textbf{Trayectorias de Extensión:}
     \begin{itemize}[nosep]
-        \item \textbf{Edición:} Si es "Borrador", habilita enlace al \textbf{CU09}.
-        \item \textbf{Notificación:} Si hay avisos, habilita enlace al \textbf{CU11}.
+        \item \textbf{Edición:} Si selecciona "Borrador", habilita enlace al \textbf{CU09}.
+        \item \textbf{Notificación:} Si hay avisos nuevos, habilita enlace al \textbf{CU11}.
+        \item \textbf{Detalle:} Si selecciona cualquier trámite, habilita enlace al \textbf{CU18}.
     \end{itemize}
 \end{itemize}
 
@@ -730,6 +837,31 @@ El actor Quejoso accede a una queja previamente guardada con estatus "Borrador" 
     \item El sistema persiste la actualización y muestra \hyperlink{msg:MSG18}{MSG18} o \hyperlink{msg:MSG17}{MSG17} según corresponda.
 \end{enumerate}
 
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Descripción insuficiente al enviar} \\
+    \textit{Condición:} La descripción modificada tiene menos de 20 caracteres.
+    \begin{itemize}[nosep]
+        \item[A-1:] El sistema detecta la longitud insuficiente.
+        \item[A-2:] El sistema muestra el mensaje \hyperlink{msg:MSG19}{MSG19}.
+        \item \textbf{Retorno:} Regresa al punto 3 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Fecha de hechos inválida} \\
+    \textit{Condición:} La fecha modificada es futura.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema detecta la inconsistencia temporal.
+        \item[B-2:] El sistema muestra el mensaje \hyperlink{msg:MSG21}{MSG21}.
+        \item \textbf{Retorno:} Regresa al punto 3 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Cancelar edición} \\
+    \textit{Condición:} El actor decide no guardar los cambios realizados.
+    \begin{itemize}[nosep]
+        \item[C-1:] El actor selecciona "Cancelar".
+        \item[C-2:] El sistema descarta los cambios y retorna al tablero \textbf{[GQ]-UI03}.
+        \item \textbf{Retorno:} Termina el caso de uso.
+    \end{itemize}
+\end{itemize}
+
 \newpage
 
 % ==============================================================================
@@ -793,6 +925,32 @@ El actor Quejoso solicita la eliminación permanente de una queja que aún se en
     \item El sistema muestra el mensaje de éxito \hyperlink{msg:MSG30}{MSG30}.
     \item El sistema actualiza y refresca el tablero de trámites.
 \end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Cancelar eliminación} \\
+    \textit{Condición:} El actor cambia de opinión en el mensaje de confirmación.
+    \begin{itemize}[nosep]
+        \item[A-1:] El actor selecciona "Cancelar" en el diálogo de confirmación.
+        \item[A-2:] El sistema cierra el diálogo sin realizar cambios.
+        \item \textbf{Retorno:} Regresa al tablero \textbf{[GQ]-UI03} sin eliminar.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Intento de eliminar queja no borrador} \\
+    \textit{Condición:} El estatus del trámite cambió entre la selección y la confirmación.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema detecta que el estatus ya no es "Borrador".
+        \item[B-2:] El sistema muestra el mensaje de error \hyperlink{err:E15}{E1}.
+        \item \textbf{Retorno:} Regresa al tablero \textbf{[GQ]-UI03} sin eliminar.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Error en la eliminación de archivos adjuntos} \\
+    \textit{Condición:} Fallo al eliminar evidencias del repositorio de almacenamiento.
+    \begin{itemize}[nosep]
+        \item[C-1:] El sistema intenta eliminar la queja pero falla en los adjuntos.
+        \item[C-2:] El sistema registra el error en el log y revierte la operación.
+        \item[C-3:] El sistema muestra mensaje de error genérico.
+        \item \textbf{Retorno:} Regresa al tablero \textbf{[GQ]-UI03} sin eliminar.
+    \end{itemize}
+\end{itemize}
 
 \newpage
 
@@ -861,6 +1019,32 @@ El actor Quejoso recibe avisos automáticos emitidos por el sistema o por el per
     \end{itemize}
 \end{enumerate}
 
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Notificación de tipo informativo} \\
+    \textit{Condición:} La notificación solo informa un cambio de estatus sin requerir acción.
+    \begin{itemize}[nosep]
+        \item[A-1:] El actor lee el contenido de la notificación.
+        \item[A-2:] El sistema solo marca como leída y cierra.
+        \item \textbf{Retorno:} Termina el caso de uso.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Error al marcar como leída} \\
+    \textit{Condición:} Fallo en la actualización del estado de la notificación.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema detecta el error de persistencia.
+        \item[B-2:] El sistema muestra el mensaje \hyperlink{msg:MSG31}{MSG31}.
+        \item[B-3:] El sistema permite reintentar la operación.
+        \item \textbf{Retorno:} Regresa al punto 4 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Múltiples notificaciones del mismo trámite} \\
+    \textit{Condición:} Existen varias notificaciones sin leer para un mismo folio.
+    \begin{itemize}[nosep]
+        \item[C-1:] El sistema agrupa las notificaciones por trámite.
+        \item[C-2:] El actor puede expandir el grupo para ver el historial.
+        \item \textbf{Retorno:} Regresa al punto 3 de la trayectoria principal.
+    \end{itemize}
+\end{itemize}
+
 \newpage
 
 % ==============================================================================
@@ -925,6 +1109,33 @@ El actor Quejoso responde a un requerimiento formal de la Defensoría cuando su 
     \item El sistema muestra el mensaje \hyperlink{msg:MSG33}{MSG33}.
 \end{enumerate}
 
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Envío sin realizar cambios} \\
+    \textit{Condición:} El actor intenta reenviar sin modificar nada.
+    \begin{itemize}[nosep]
+        \item[A-1:] El sistema detecta que no hay cambios en los campos requeridos.
+        \item[A-2:] El sistema muestra el mensaje \hyperlink{msg:MSG34}{MSG34}.
+        \item \textbf{Retorno:} Regresa al punto 3 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Vencimiento del plazo para subsanar} \\
+    \textit{Condición:} El actor intenta responder después del plazo establecido.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema verifica la fecha de vencimiento del requerimiento.
+        \item[B-2:] El sistema muestra mensaje indicando que el plazo expiró.
+        \item[B-3:] El sistema informa que el trámite podría ser desechado.
+        \item \textbf{Retorno:} Termina el caso de uso.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Guardar progreso de subsanación} \\
+    \textit{Condición:} El actor desea guardar parcialmente las correcciones.
+    \begin{itemize}[nosep]
+        \item[C-1:] El actor selecciona "Guardar Progreso".
+        \item[C-2:] El sistema almacena los cambios sin cambiar el estatus.
+        \item[C-3:] El sistema muestra mensaje de confirmación.
+        \item \textbf{Retorno:} Regresa al punto 3 de la trayectoria principal.
+    \end{itemize}
+\end{itemize}
+
 \newpage
 
 % ==============================================================================
@@ -985,6 +1196,32 @@ El actor Quejoso visualiza las medidas de protección dictadas por la Defensorí
     \item El sistema registra el evento de consulta para fines de auditoría legal.
 \end{enumerate}
 
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Error en la generación del PDF} \\
+    \textit{Condición:} Fallo en el servicio de generación de documentos.
+    \begin{itemize}[nosep]
+        \item[A-1:] El sistema detecta el error en la generación.
+        \item[A-2:] El sistema muestra el mensaje \hyperlink{msg:MSG35}{MSG35}.
+        \item[A-3:] El sistema sugiere intentar nuevamente o contactar soporte.
+        \item \textbf{Retorno:} Regresa al punto 2 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Visualización sin descarga} \\
+    \textit{Condición:} El actor solo desea leer el resumen sin descargar el PDF.
+    \begin{itemize}[nosep]
+        \item[B-1:] El actor lee el contenido resumido en la pantalla.
+        \item[B-2:] El actor selecciona "Cerrar" o "Volver".
+        \item \textbf{Retorno:} Termina el caso de uso.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Múltiples medidas precautorias} \\
+    \textit{Condición:} Existen varias medidas dictadas para el mismo trámite.
+    \begin{itemize}[nosep]
+        \item[C-1:] El sistema despliega una lista de todas las medidas emitidas.
+        \item[C-2:] El actor selecciona la medida específica a consultar.
+        \item \textbf{Retorno:} Regresa al punto 2 de la trayectoria principal.
+    \end{itemize}
+\end{itemize}
+
 \newpage
 
 % ==============================================================================
@@ -1020,7 +1257,7 @@ El actor Quejoso visualiza el documento de propuesta de conciliación emitido po
 \textbf{Destino} & Pantalla de decisión de conciliación [GQ]-UI06. \\ \hline
 \textbf{Precondiciones} & 
 \begin{itemize}[nosep, leftmargin=*]
-    \item La queja debe encontrarse en estatus ``En Proceso de Conciliación''.
+    \item La queja debe encontrarse en estatus "En Proceso de Conciliación".
     \item El actor debe recibir la notificación correspondiente en el \hyperlink{anexo:casos_uso}{CU11}.
 \end{itemize} \\ \hline
 \textbf{Postcondiciones} & 
@@ -1039,13 +1276,40 @@ El actor Quejoso visualiza el documento de propuesta de conciliación emitido po
 \subsubsection{Trayectorias del CU14}
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
-    \item El actor accede a la notificación de ``Propuesta de Conciliación'' en el \hyperlink{anexo:casos_uso}{CU11}.
+    \item El actor accede a la notificación de "Propuesta de Conciliación" en el \hyperlink{anexo:casos_uso}{CU11}.
     \item El sistema despliega la pantalla \textbf{[GQ]-UI06} mostrando el detalle de los términos propuestos.
     \item El actor lee la propuesta y descarga los documentos anexos si existen.
     \item El sistema verifica que la propuesta no tenga una respuesta previa (\hyperlink{err:E19}{Error E1}).
-    \item El sistema presenta los botones de acción: ``Aceptar Propuesta'' e ``Inconformarse / Rechazar''.
+    \item El sistema presenta los botones de acción: \textbf{Aceptar Propuesta} e \textbf{Inconformarse / Rechazar}.
     \item Dependiendo de la elección, el sistema invoca al \textbf{CU15} o \textbf{CU16}.
 \end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Propuesta ya respondida} \\
+    \textit{Condición:} El actor intenta acceder a una propuesta ya aceptada o rechazada.
+    \begin{itemize}[nosep]
+        \item[A-1:] El sistema detecta que ya existe una respuesta previa.
+        \item[A-2:] El sistema muestra el mensaje \hyperlink{msg:MSG36}{MSG36}.
+        \item[A-3:] El sistema solo permite visualizar, no modificar la decisión.
+        \item \textbf{Retorno:} Termina el caso de uso.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Propuesta vencida} \\
+    \textit{Condición:} El plazo para responder a la propuesta ha expirado.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema verifica la fecha de vencimiento.
+        \item[B-2:] El sistema muestra mensaje indicando que el plazo expiró.
+        \item[B-3:] El sistema informa que el trámite continuará por vía administrativa.
+        \item \textbf{Retorno:} Termina el caso de uso.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Descargar propuesta completa} \\
+    \textit{Condición:} El actor desea descargar el documento oficial de la propuesta.
+    \begin{itemize}[nosep]
+        \item[C-1:] El actor selecciona "Descargar Propuesta".
+        \item[C-2:] El sistema genera y descarga el PDF con los términos completos.
+        \item \textbf{Retorno:} Regresa al punto 3 de la trayectoria principal.
+    \end{itemize}
+\end{itemize}
 
 \newpage
 
@@ -1055,7 +1319,7 @@ El actor Quejoso visualiza el documento de propuesta de conciliación emitido po
 \subsection{CU15: Aceptar propuesta de conciliación}
 
 \textbf{Resumen:} 
-El actor Quejoso manifiesta su conformidad con los términos presentados por la Defensoría en la propuesta de conciliación. El sistema registra la aceptación, genera un acta de acuerdo con sello digital y procede al cierre administrativo de la queja con estatus de ``Concluida por Conciliación''.
+El actor Quejoso manifiesta su conformidad con los términos presentados por la Defensoría en la propuesta de conciliación. El sistema registra la aceptación, genera un acta de acuerdo con sello digital y procede al cierre administrativo de la queja con estatus de "Concluida por Conciliación".
 
 \begin{figure}[htbp]
     \centering
@@ -1102,14 +1366,42 @@ El actor Quejoso manifiesta su conformidad con los términos presentados por la 
 \subsubsection{Trayectorias del CU15}
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
-    \item El actor selecciona el botón ``Aceptar Propuesta'' en la pantalla del \hyperlink{anexo:casos_uso}{CU14}.
+    \item El actor selecciona el botón "Aceptar Propuesta" en la pantalla del \hyperlink{anexo:casos_uso}{CU14}.
     \item El sistema solicita una confirmación final indicando que la acción es irreversible.
     \item El actor confirma la aceptación.
-    \item El sistema actualiza el estatus del expediente a ``Concluida''.
-    \item El sistema genera automáticamente el acta de acuerdo con sello digital.
+    \item El sistema actualiza el estatus del expediente a "Concluida".
+    \item El sistema genera automáticamente el acta de acuerdo con sello digital (\hyperlink{err:E20}{Error E1}).
     \item El sistema muestra el mensaje \hyperlink{msg:MSG37}{MSG37}.
     \item El sistema habilita el enlace para el \hyperlink{anexo:casos_uso}{CU17} (Descargar acuse).
 \end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Cancelar aceptación} \\
+    \textit{Condición:} El actor cambia de opinión en el paso de confirmación.
+    \begin{itemize}[nosep]
+        \item[A-1:] El actor selecciona "Cancelar" en el diálogo de confirmación.
+        \item[A-2:] El sistema cierra el diálogo sin realizar cambios.
+        \item \textbf{Retorno:} Regresa al \hyperlink{anexo:casos_uso}{CU14}.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Error al generar el acta de cierre} \\
+    \textit{Condición:} Fallo en el servicio de generación de documentos.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema detecta el error en la generación del acta.
+        \item[B-2:] El sistema muestra el mensaje \hyperlink{msg:MSG38}{MSG38}.
+        \item[B-3:] El sistema registra el error y mantiene el estatus.
+        \item[B-4:] El sistema notifica al soporte técnico.
+        \item \textbf{Retorno:} Termina el caso de uso sin completar la aceptación.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Aceptación con condiciones} \\
+    \textit{Condición:} El actor desea agregar observaciones a su aceptación.
+    \begin{itemize}[nosep]
+        \item[C-1:] El actor selecciona "Agregar Observaciones".
+        \item[C-2:] El sistema muestra un campo de texto para observaciones.
+        \item[C-3:] El actor ingresa sus observaciones.
+        \item \textbf{Retorno:} Regresa al punto 2 de la trayectoria principal.
+    \end{itemize}
+\end{itemize}
 
 \newpage
 
@@ -1119,7 +1411,7 @@ El actor Quejoso manifiesta su conformidad con los términos presentados por la 
 \subsection{CU16: Rechazar propuesta de conciliación}
 
 \textbf{Resumen:} 
-El actor Quejoso manifiesta su inconformidad con los términos de la propuesta de conciliación presentada. El sistema registra el rechazo, permite al usuario ingresar una breve justificación de su negativa y actualiza el estatus del expediente a ``En Investigación'' o ``Pendiente de Resolución'', continuando así con el proceso administrativo formal.
+El actor Quejoso manifiesta su inconformidad con los términos de la propuesta de conciliación presentada. El sistema registra el rechazo, permite al usuario ingresar una breve justificación de su negativa y actualiza el estatus del expediente a "En Investigación" o "Pendiente de Resolución", continuando así con el proceso administrativo formal.
 
 \begin{figure}[htbp]
     \centering
@@ -1166,14 +1458,41 @@ El actor Quejoso manifiesta su inconformidad con los términos de la propuesta d
 \subsubsection{Trayectorias del CU16}
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
-    \item El actor selecciona la opción ``Inconformarse / Rechazar'' en la pantalla del \hyperlink{anexo:casos_uso}{CU14}.
+    \item El actor selecciona la opción "Inconformarse / Rechazar" en la pantalla del \hyperlink{anexo:casos_uso}{CU14}.
     \item El sistema despliega un cuadro de texto para que el actor ingrese los motivos del rechazo.
     \item El actor redacta los motivos y confirma la acción.
-    \item El sistema actualiza el estatus de la queja a ``En Investigación''.
+    \item El sistema actualiza el estatus de la queja a "En Investigación".
     \item El sistema almacena la justificación como parte del histórico del expediente.
     \item El sistema muestra el mensaje \hyperlink{msg:MSG39}{MSG39}.
     \item El sistema redirecciona al actor al tablero de trámites \textbf{[GQ]-UI03}.
 \end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Cancelar rechazo} \\
+    \textit{Condición:} El actor cambia de opinión antes de confirmar.
+    \begin{itemize}[nosep]
+        \item[A-1:] El actor selecciona "Cancelar" o "Volver".
+        \item[A-2:] El sistema cierra el formulario sin realizar cambios.
+        \item \textbf{Retorno:} Regresa al \hyperlink{anexo:casos_uso}{CU14}.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Error al actualizar el estatus} \\
+    \textit{Condición:} Fallo en la persistencia del cambio de estatus.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema detecta el error en la actualización.
+        \item[B-2:] El sistema muestra el mensaje \hyperlink{msg:MSG40}{MSG40}.
+        \item[B-3:] El sistema revierte cualquier cambio parcial.
+        \item \textbf{Retorno:} Regresa al punto 2 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Rechazo sin justificación} \\
+    \textit{Condición:} El actor no proporciona motivos para el rechazo.
+    \begin{itemize}[nosep]
+        \item[C-1:] El actor deja el campo de justificación vacío.
+        \item[C-2:] El sistema acepta el rechazo sin observaciones.
+        \item[C-3:] El sistema registra "Sin justificación especificada".
+        \item \textbf{Retorno:} Continúa en el punto 4 de la trayectoria principal.
+    \end{itemize}
+\end{itemize}
 
 \newpage
 
@@ -1230,12 +1549,40 @@ El actor Quejoso solicita la generación y descarga del documento oficial que ac
 \textbf{Trayectoria principal:}
 \begin{enumerate}[nosep]
     \item El actor identifica el trámite correspondiente en el tablero \textbf{[GQ]-UI03} o finaliza un proceso (\hyperlink{anexo:casos_uso}{CU06} o \hyperlink{anexo:casos_uso}{CU15}).
-    \item El actor selecciona la opción ``Descargar Acuse''.
+    \item El actor selecciona la opción "Descargar Acuse".
     \item El sistema recopila los datos del folio, fecha, hora y datos del quejoso.
     \item El sistema genera una cadena original de seguridad y un sello digital (\hyperlink{err:E22}{Error E1}).
     \item El sistema incrusta un código QR que apunta a la URL de validación institucional.
     \item El sistema muestra el mensaje \hyperlink{msg:MSG41}{MSG41} y descarga el archivo PDF.
 \end{enumerate}
+
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Error en el servicio de sellado digital} \\
+    \textit{Condición:} El servicio de firma electrónica no está disponible.
+    \begin{itemize}[nosep]
+        \item[A-1:] El sistema detecta el error de conexión o generación.
+        \item[A-2:] El sistema muestra el mensaje \hyperlink{msg:MSG42}{MSG42}.
+        \item[A-3:] El sistema sugiere intentar nuevamente más tarde.
+        \item \textbf{Retorno:} Termina el caso de uso sin descargar.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Acuse no disponible para el estatus actual} \\
+    \textit{Condición:} El trámite está en un estatus que no permite generar acuse.
+    \begin{itemize}[nosep]
+        \item[B-1:] El sistema verifica el estatus del trámite.
+        \item[B-2:] El sistema muestra mensaje indicando que el acuse no está disponible.
+        \item[B-3:] El sistema explica qué estatus habilitan la descarga.
+        \item \textbf{Retorno:} Termina el caso de uso.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Descarga de acuse de conciliación} \\
+    \textit{Condición:} El acuse corresponde a un acta de conciliación aceptada.
+    \begin{itemize}[nosep]
+        \item[C-1:] El sistema genera el acta con términos del acuerdo.
+        \item[C-2:] El sistema incluye las firmas digitales de ambas partes.
+        \item[C-3:] El sistema añade un sello de "Concluido por Conciliación".
+        \item \textbf{Retorno:} Continúa en el punto 6 de la trayectoria principal.
+    \end{itemize}
+\end{itemize}
 
 \newpage
 
@@ -1299,9 +1646,40 @@ El actor Quejoso accede al expediente digital íntegro de una queja específica.
     \item El actor puede invocar al \hyperlink{anexo:casos_uso}{CU17} para descargar el acuse de recibo si está disponible.
 \end{enumerate}
 
-
-
-
-
+\textbf{Trayectorias alternativas:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trayectoria A: Acceso denegado por permisos insuficientes} \\
+    \textit{Condición:} El actor intenta acceder a un trámite que no le pertenece.
+    \begin{itemize}[nosep]
+        \item[A-1:] El sistema valida que el ID\_Usuario no corresponde al folio.
+        \item[A-2:] El sistema muestra el mensaje \hyperlink{msg:MSG43}{MSG43}.
+        \item[A-3:] El sistema redirecciona al tablero de trámites.
+        \item \textbf{Retorno:} Termina el caso de uso.
+    \end{itemize}
+    \item \textbf{Trayectoria B: Visualización de evidencias} \\
+    \textit{Condición:} El actor desea ver un archivo de evidencia adjunto.
+    \begin{itemize}[nosep]
+        \item[B-1:] El actor selecciona un archivo de la lista de evidencias.
+        \item[B-2:] El sistema abre un visor modal o descarga el archivo.
+        \item[B-3:] El sistema registra la visualización en el log.
+        \item \textbf{Retorno:} Regresa al punto 5 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria C: Línea de tiempo de estatus} \\
+    \textit{Condición:} El actor consulta el historial de cambios de estatus.
+    \begin{itemize}[nosep]
+        \item[C-1:] El actor selecciona la pestaña "Historial" o "Línea de tiempo".
+        \item[C-2:] El sistema muestra la cronología de todos los cambios de estatus.
+        \item[C-3:] El sistema incluye fechas, horas y usuarios responsables.
+        \item \textbf{Retorno:} Regresa al punto 5 de la trayectoria principal.
+    \end{itemize}
+    \item \textbf{Trayectoria D: Error al cargar los datos del expediente} \\
+    \textit{Condición:} Fallo en la consulta de la base de datos o timeout.
+    \begin{itemize}[nosep]
+        \item[D-1:] El sistema detecta el error en la recuperación de datos.
+        \item[D-2:] El sistema muestra mensaje de error genérico.
+        \item[D-3:] El sistema sugiere recargar la página o intentar más tarde.
+        \item \textbf{Retorno:} Termina el caso de uso.
+    \end{itemize}
+\end{itemize}
 
 \end{appendices}
