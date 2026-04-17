@@ -46,13 +46,13 @@
 \contentsline {section}{\numberline {4.4}Vectorización (Representación numérica)}{25}{section.4.4}%
 \contentsline {subsection}{\numberline {4.4.1}Modelos de bolsa de palabras (BoW)}{25}{subsection.4.4.1}%
 \contentsline {subsection}{\numberline {4.4.2}TF-IDF (Term Frequency - Inverse Document Frequency)}{26}{subsection.4.4.2}%
-\contentsline {subsection}{\numberline {4.4.3}Modelos de continuidad (Word embeddings)}{28}{subsection.4.4.3}%
+\contentsline {subsection}{\numberline {4.4.3}Modelos de continuidad (Word embeddings)}{27}{subsection.4.4.3}%
 \contentsline {subsubsection}{Word2Vec y GloVe (captura de relaciones semánticas mediante contextos locales)}{28}{subsubsection*.8}%
-\contentsline {section}{\numberline {4.5}Profundización en el Algoritmo Multinomial Naive Bayes}{29}{section.4.5}%
+\contentsline {section}{\numberline {4.5}Profundización en el Algoritmo Multinomial Naive Bayes}{28}{section.4.5}%
 \contentsline {subsection}{\numberline {4.5.1}Supuesto de independencia condicional (ventajas y desventajas)}{29}{subsection.4.5.1}%
 \contentsline {subsection}{\numberline {4.5.2}Estimación de máxima verosimilitud}{30}{subsection.4.5.2}%
 \contentsline {subsection}{\numberline {4.5.3}El problema de la probabilidad cero}{30}{subsection.4.5.3}%
-\contentsline {section}{\numberline {4.6}Support Vector Machines}{32}{section.4.6}%
+\contentsline {section}{\numberline {4.6}Support Vector Machines}{31}{section.4.6}%
 \contentsline {subsection}{\numberline {4.6.1}Optimización de hiperplano de separación (margen máximo)}{32}{subsection.4.6.1}%
 \contentsline {subsection}{\numberline {4.6.2}Flexibilidad mediante variables de holgura}{33}{subsection.4.6.2}%
 \contentsline {subsection}{\numberline {4.6.3}El truco kernel}{34}{subsection.4.6.3}%
@@ -64,7 +64,7 @@
 \contentsline {section}{\numberline {4.8}Evaluación de la inteligencia del sistema}{39}{section.4.8}%
 \contentsline {section}{\numberline {4.9}Selección de Tecnologías}{40}{section.4.9}%
 \contentsline {subsection}{\numberline {4.9.1}Definición de arquitectura de software}{40}{subsection.4.9.1}%
-\contentsline {subsection}{\numberline {4.9.2}Arquitectura del Sistema}{41}{subsection.4.9.2}%
+\contentsline {subsection}{\numberline {4.9.2}Arquitectura del Sistema}{40}{subsection.4.9.2}%
 \contentsline {section}{\numberline {4.10}Definición de arquitectura de software}{41}{section.4.10}%
 \contentsline {subsection}{\numberline {4.10.1}Importancia en el desarrollo de sistemas}{41}{subsection.4.10.1}%
 \contentsline {subsection}{\numberline {4.10.2}Factores de calidad}{42}{subsection.4.10.2}%
@@ -123,45 +123,48 @@
 \contentsline {section}{\numberline {7.6}Modelo de Clasificador}{63}{section.7.6}%
 \contentsline {section}{\numberline {7.7}Análisis de Riesgo}{63}{section.7.7}%
 \contentsline {section}{\numberline {7.8}Costos del Proyecto}{63}{section.7.8}%
-\contentsline {chapter}{Ap\'{e}ndice Mouckups de Interfaces del Sistema}{64}{appendix*.16}%
-\contentsline {section}{\numberline {.1}Perfil: Quejoso}{64}{section.alph1.Alph0.1}%
-\contentsline {chapter}{Ap\'{e}ndice Casos de Uso}{66}{appendix*.17}%
-\contentsline {section}{\numberline {.1}Especificación detallada de Casos de Uso}{66}{section.alph2.Alph0.1}%
-\contentsline {subsection}{\numberline {.1.1}CU01: Crear cuenta de usuario}{66}{subsection.alph2.Alph0.1.1}%
-\contentsline {subsubsection}{Trayectorias del Caso de Uso}{66}{subsubsection*.18}%
-\contentsline {subsection}{\numberline {.1.2}CU02: Iniciar sesión}{69}{subsection.alph2.Alph0.1.2}%
-\contentsline {subsubsection}{Trayectorias del CU02}{69}{subsubsection*.19}%
-\contentsline {subsection}{\numberline {.1.3}CU03: Recuperar contraseña}{71}{subsection.alph2.Alph0.1.3}%
-\contentsline {subsubsection}{Trayectorias del CU03}{71}{subsubsection*.20}%
-\contentsline {subsection}{\numberline {.1.4}CU04: Editar perfil de usuario}{73}{subsection.alph2.Alph0.1.4}%
-\contentsline {subsubsection}{Trayectorias del CU04}{73}{subsubsection*.21}%
-\contentsline {subsection}{\numberline {.1.5}CU05: Registrar datos de tutor}{75}{subsection.alph2.Alph0.1.5}%
-\contentsline {subsubsection}{Trayectorias del CU05}{75}{subsubsection*.22}%
-\contentsline {subsection}{\numberline {.1.6}CU06: Levantar queja}{77}{subsection.alph2.Alph0.1.6}%
-\contentsline {subsubsection}{Trayectorias del CU06}{77}{subsubsection*.23}%
-\contentsline {subsection}{\numberline {.1.7}CU07: Adjuntar evidencia}{79}{subsection.alph2.Alph0.1.7}%
-\contentsline {subsubsection}{Trayectorias del CU07}{79}{subsubsection*.24}%
-\contentsline {subsection}{\numberline {.1.8}CU08: Consultar tablero de trámites}{82}{subsection.alph2.Alph0.1.8}%
-\contentsline {subsubsection}{Trayectorias del CU08}{82}{subsubsection*.25}%
-\contentsline {subsection}{\numberline {.1.9}CU09: Modificar queja}{85}{subsection.alph2.Alph0.1.9}%
-\contentsline {subsubsection}{Trayectorias del CU09}{85}{subsubsection*.26}%
-\contentsline {subsection}{\numberline {.1.10}CU10: Eliminar borrador de queja}{87}{subsection.alph2.Alph0.1.10}%
-\contentsline {subsubsection}{Trayectorias del CU10}{87}{subsubsection*.27}%
-\contentsline {subsection}{\numberline {.1.11}CU11: Recibir notificaciones de status}{89}{subsection.alph2.Alph0.1.11}%
-\contentsline {subsubsection}{Trayectorias del CU11}{89}{subsubsection*.28}%
-\contentsline {subsection}{\numberline {.1.12}CU12: Completar información requerida}{91}{subsection.alph2.Alph0.1.12}%
-\contentsline {subsubsection}{Trayectorias del CU12}{91}{subsubsection*.29}%
-\contentsline {subsection}{\numberline {.1.13}CU13: Consultar medidas precautorias}{93}{subsection.alph2.Alph0.1.13}%
-\contentsline {subsubsection}{Trayectorias del CU13}{93}{subsubsection*.30}%
-\contentsline {subsection}{\numberline {.1.14}CU14: Consultar propuesta de conciliación}{95}{subsection.alph2.Alph0.1.14}%
-\contentsline {subsubsection}{Trayectorias del CU14}{95}{subsubsection*.31}%
-\contentsline {subsection}{\numberline {.1.15}CU15: Aceptar propuesta de conciliación}{97}{subsection.alph2.Alph0.1.15}%
-\contentsline {subsubsection}{Trayectorias del CU15}{97}{subsubsection*.32}%
-\contentsline {subsection}{\numberline {.1.16}CU16: Rechazar propuesta de conciliación}{99}{subsection.alph2.Alph0.1.16}%
-\contentsline {subsubsection}{Trayectorias del CU16}{99}{subsubsection*.33}%
-\contentsline {subsection}{\numberline {.1.17}CU17: Descargar acuse de recibo con sello digital}{101}{subsection.alph2.Alph0.1.17}%
-\contentsline {subsubsection}{Trayectorias del CU17}{101}{subsubsection*.34}%
-\contentsline {subsection}{\numberline {.1.18}CU18: Consultar Detalles del trámite completos}{103}{subsection.alph2.Alph0.1.18}%
-\contentsline {subsubsection}{Trayectorias del CU18}{103}{subsubsection*.35}%
-\contentsline {chapter}{Catálogo de Mensajes}{105}{appendix*.36}%
-\contentsline {chapter}{Catálogo de Errores}{108}{appendix*.37}%
+\contentsline {chapter}{Ap\'{e}ndice Mockups de Interfaces del Sistema}{64}{appendix*.16}%
+\contentsline {section}{\numberline {.1}Perfil: Quejoso}{64}{section.1.Alph0.1}%
+\contentsline {section}{\numberline {.2}Perfil: Administración y Defensoría}{81}{section.1.Alph0.2}%
+\contentsline {subsection}{\numberline {.2.1}Departamento de Recepción}{83}{subsection.1.Alph0.2.1}%
+\contentsline {subsection}{\numberline {.2.2}Departamento de Primer Contacto}{88}{subsection.1.Alph0.2.2}%
+\contentsline {chapter}{Ap\'{e}ndice Casos de Uso}{94}{appendix*.17}%
+\contentsline {section}{\numberline {.1}Especificación detallada de Casos de Uso}{94}{section.2.Alph0.1}%
+\contentsline {subsection}{\numberline {.1.1}CU01: Crear cuenta de usuario}{94}{subsection.2.Alph0.1.1}%
+\contentsline {subsubsection}{Trayectorias del Caso de Uso}{94}{subsubsection*.18}%
+\contentsline {subsection}{\numberline {.1.2}CU02: Iniciar sesión}{97}{subsection.2.Alph0.1.2}%
+\contentsline {subsubsection}{Trayectorias del CU02}{97}{subsubsection*.19}%
+\contentsline {subsection}{\numberline {.1.3}CU03: Recuperar contraseña}{99}{subsection.2.Alph0.1.3}%
+\contentsline {subsubsection}{Trayectorias del CU03}{99}{subsubsection*.20}%
+\contentsline {subsection}{\numberline {.1.4}CU04: Editar perfil de usuario}{101}{subsection.2.Alph0.1.4}%
+\contentsline {subsubsection}{Trayectorias del CU04}{101}{subsubsection*.21}%
+\contentsline {subsection}{\numberline {.1.5}CU05: Registrar datos de tutor}{103}{subsection.2.Alph0.1.5}%
+\contentsline {subsubsection}{Trayectorias del CU05}{103}{subsubsection*.22}%
+\contentsline {subsection}{\numberline {.1.6}CU06: Levantar queja}{105}{subsection.2.Alph0.1.6}%
+\contentsline {subsubsection}{Trayectorias del CU06}{105}{subsubsection*.23}%
+\contentsline {subsection}{\numberline {.1.7}CU07: Adjuntar evidencia}{107}{subsection.2.Alph0.1.7}%
+\contentsline {subsubsection}{Trayectorias del CU07}{107}{subsubsection*.24}%
+\contentsline {subsection}{\numberline {.1.8}CU08: Consultar tablero de trámites}{110}{subsection.2.Alph0.1.8}%
+\contentsline {subsubsection}{Trayectorias del CU08}{110}{subsubsection*.25}%
+\contentsline {subsection}{\numberline {.1.9}CU09: Modificar queja}{112}{subsection.2.Alph0.1.9}%
+\contentsline {subsubsection}{Trayectorias del CU09}{112}{subsubsection*.26}%
+\contentsline {subsection}{\numberline {.1.10}CU10: Eliminar borrador de queja}{114}{subsection.2.Alph0.1.10}%
+\contentsline {subsubsection}{Trayectorias del CU10}{114}{subsubsection*.27}%
+\contentsline {subsection}{\numberline {.1.11}CU11: Recibir notificaciones de status}{116}{subsection.2.Alph0.1.11}%
+\contentsline {subsubsection}{Trayectorias del CU11}{116}{subsubsection*.28}%
+\contentsline {subsection}{\numberline {.1.12}CU12: Completar información requerida}{118}{subsection.2.Alph0.1.12}%
+\contentsline {subsubsection}{Trayectorias del CU12}{118}{subsubsection*.29}%
+\contentsline {subsection}{\numberline {.1.13}CU13: Consultar medidas precautorias}{120}{subsection.2.Alph0.1.13}%
+\contentsline {subsubsection}{Trayectorias del CU13}{120}{subsubsection*.30}%
+\contentsline {subsection}{\numberline {.1.14}CU14: Consultar propuesta de conciliación}{122}{subsection.2.Alph0.1.14}%
+\contentsline {subsubsection}{Trayectorias del CU14}{122}{subsubsection*.31}%
+\contentsline {subsection}{\numberline {.1.15}CU15: Aceptar propuesta de conciliación}{124}{subsection.2.Alph0.1.15}%
+\contentsline {subsubsection}{Trayectorias del CU15}{124}{subsubsection*.32}%
+\contentsline {subsection}{\numberline {.1.16}CU16: Rechazar propuesta de conciliación}{126}{subsection.2.Alph0.1.16}%
+\contentsline {subsubsection}{Trayectorias del CU16}{126}{subsubsection*.33}%
+\contentsline {subsection}{\numberline {.1.17}CU17: Descargar acuse de recibo con sello digital}{128}{subsection.2.Alph0.1.17}%
+\contentsline {subsubsection}{Trayectorias del CU17}{128}{subsubsection*.34}%
+\contentsline {subsection}{\numberline {.1.18}CU18: Consultar Detalles del trámite completos}{130}{subsection.2.Alph0.1.18}%
+\contentsline {subsubsection}{Trayectorias del CU18}{130}{subsubsection*.35}%
+\contentsline {chapter}{Catálogo de Mensajes}{132}{appendix*.36}%
+\contentsline {chapter}{Catálogo de Errores}{135}{appendix*.37}%
