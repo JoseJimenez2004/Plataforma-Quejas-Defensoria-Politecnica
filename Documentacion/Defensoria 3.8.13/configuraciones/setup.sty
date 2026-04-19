@@ -1,0 +1,147 @@
+\ProvidesPackage{configuraciones/setup}
+
+% ==============================================================================
+% 1. Paquetes de Idioma y Codificación (SIN CAMBIOS)
+% ==============================================================================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish, es-tabla]{babel}
+
+% ==============================================================================
+% 2. MATEMÁTICAS Y SÍMBOLOS (DEBE IR ANTES QUE newtxmath)
+% ==============================================================================
+
+\usepackage{amsmath}
+\usepackage{amssymb}     % <--- ANTES de newtxmath
+\usepackage{amsfonts}    % <--- ANTES de newtxmath
+
+% ==============================================================================
+% 3. Fuentes y Estética del Texto (CON ORDEN CORREGIDO)
+% ==============================================================================
+
+% NOTA: newtxtext y newtxmath DEBEN ir DESPUÉS de amssymb
+\usepackage{newtxtext}
+\usepackage{newtxmath}   % <--- DESPUÉS de amssymb
+
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{parskip}
+\usepackage{microtype}
+
+% ==============================================================================
+% 4. Gráficos, Colores y Dibujo (SIN CAMBIOS)
+% ==============================================================================
+
+\usepackage[table,xcdraw]{xcolor}
+\definecolor{azulESCOM}{RGB}{0, 68, 129}
+
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, calc}
+
+% ==============================================================================
+% 5. Tablas y Listas (CON PAQUETES ADICIONALES)
+% ==============================================================================
+
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{adjustbox}      % NUEVO: Para ajustar tablas anchas
+\usepackage{rotating}       % NUEVO: Para rotar tablas
+\usepackage{threeparttable} % NUEVO: Para notas al pie en tablas
+\usepackage{makecell}       % NUEVO: Para celdas con múltiples líneas
+\usepackage{bigstrut}       % NUEVO: Para ajustar altura de filas
+\usepackage{pdflscape}      % NUEVO: Para tablas horizontales
+
+% Columnas personalizadas
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+
+% Configuración global para tablas (reduce Overfull \hbox)
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+
+% Comandos personalizados para símbolos (evita Unicode)
+\newcommand{\cmark}{$\checkmark$}
+\newcommand{\xmark}{$\times$}
+\newcommand{\pmark}{$\pm$}
+
+% ==============================================================================
+% 6. Márgenes y Encabezados (SIN CAMBIOS)
+% ==============================================================================
+
+\usepackage{geometry}
+\geometry{
+    letterpaper,
+    top=2.5cm,
+    bottom=2.5cm,
+    left=3cm,
+    right=2cm,
+    headheight=25pt
+}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\fancyhead[R]{\small\itshape\color{azulESCOM}\leftmark}
+\fancyfoot[C]{\thepage}
+\fancyfoot[L]{\small\color{gray} DDP-IPN}
+
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{azulESCOM}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0.5pt}
+\renewcommand{\footrule}{\hbox to\headwidth{\color{azulESCOM}\leaders\hrule height \footrulewidth\hfill}}
+
+% ==============================================================================
+% 7. Títulos (SIN CAMBIOS)
+% ==============================================================================
+
+\usepackage{titlesec}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{azulESCOM}}
+  {\thesection}
+  {1em}
+  {}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{azulESCOM}}
+  {\thesubsection}
+  {1em}
+  {}
+
+% ==============================================================================
+% 8. Anexos y Referencias (CON PAQUETES ADICIONALES)
+% ==============================================================================
+
+\usepackage[titletoc]{appendix}
+\renewcommand{\appendixname}{Anexos}
+\renewcommand{\appendixtocname}{Anexos}
+
+\usepackage{url}
+\usepackage{xurl}
+\usepackage{ragged2e}
+
+\usepackage{hyperref}
+\usepackage{nameref}
+\usepackage{cleveref}      % NUEVO: Para \cref{tab:ejemplo}
+\crefname{table}{Tabla}{Tablas}
+\Crefname{table}{Tabla}{Tablas}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=azulESCOM,
+    urlcolor=azulESCOM,
+    citecolor=azulESCOM,
+    filecolor=azulESCOM,
+    pdfauthor={Jose Bryan Omar Jimenez Velazquez},
+    pdftitle={Trabajo Terminal - DDP IPN}
+}
+
+\endinput

@@ -1,0 +1,714 @@
+\chapter{Estado del Arte}
+
+\begin{flushleft}
+\justifying
+El diseño y despliegue de una plataforma integral para la gestión de quejas en el ámbito institucional exige un análisis crítico del ecosistema tecnológico actual. No basta con catalogar las herramientas existentes; es imperativo auditar la brecha tecnológica entre los sistemas de seguimiento pasivos y las soluciones proactivas de gobernanza digital. 
+
+Este estudio disecciona las soluciones del mercado y del sector público bajo tres ejes fundamentales: la integridad inmutable de los datos, la automatización del triaje administrativo. Al identificar las carencias en la arquitectura de las herramientas actuales, se define el valor agregado de esta propuesta: la transición de un simple repositorio de información hacia un ecosistema de \textbf{inteligencia aplicada al derecho administrativo}. Mediante la implementación de microservicios y algoritmos de clasificación, este proyecto busca no solo digitalizar el proceso, sino optimizar la soberanía y protección de la información sensible de la comunidad politécnica.
+\end{flushleft}
+
+\section{Sistema Integral de Denuncias Ciudadanas (SIDEC)}
+
+\begin{flushleft}
+\justifying
+El Sistema Integral de Denuncias Ciudadanas (SIDEC) constituye la infraestructura base del Gobierno Federal para la fiscalización administrativa en México, centralizando la recepción de quejas contra servidores públicos federales \cite{6}. Este sistema representa el estándar actual en términos de normativa institucional, sin embargo, presenta áreas de oportunidad críticas desde una perspectiva técnica y de ingeniería de software.
+
+\textbf{Análisis de Capacidades y Fortalezas:}
+El SIDEC destaca por su permitiendo la recepción de denuncias las 24 horas y ofreciendo un modelo de anonimato protegido que asigna un folio y contraseña únicos para el seguimiento \cite{7}. Técnicamente, posee la capacidad de gestionar evidencia multimedia (audio, video y documentos), actuando como un repositorio centralizado alineado estrictamente con la Ley General de Responsabilidades Administrativas.
+
+\textbf{Limitaciones y Carencias Técnicas:}
+A pesar de su alcance, el sistema presenta deficiencias que este Trabajo Terminal busca solventar:
+\begin{itemize}
+    \item \textbf{Arquitectura Pasiva:} El sistema opera como un formulario de registro estático. Carece de motores de análisis que detecten patrones de corrupción o comportamientos anómalos de forma proactiva mediante el uso de \textit{Big Data} \cite{8}.
+    \item \textbf{Rigidez en el Triaje:} La clasificación de las faltas depende del criterio manual del usuario, lo que genera saturación por denuncias improcedentes.
+    \item \textbf{Opacidad en el Procesamiento:} Aunque existe un folio de seguimiento, el usuario no tiene visibilidad real sobre la etapa técnica o el analista asignado, limitándose a estados genéricos de gestión.
+\end{itemize}
+
+\textbf{Oportunidades de Mejora:} 
+Para superar estas limitaciones mediante la implementación de \textbf{Procesamiento de Lenguaje Natural (NLP)} para asistir al usuario en la redacción, y una \textbf{arquitectura de microservicios} que garantice la escalabilidad y la inmutabilidad de los registros, aspectos que el modelo monolítico del SIDEC no cubre eficientemente.
+\end{flushleft}
+
+\section{Denuncia Digital (CDMX) y Sistemas Estatales}
+
+\begin{flushleft}
+\justifying
+A nivel local, la Ciudad de México ha implementado la plataforma \textbf{Denuncia Digital}, un sistema orientado a la recepción de querellas por delitos cometidos sin violencia \cite{9}. A diferencia de los sistemas federales, esta plataforma exige el uso de la firma electrónica o la \textit{Llave CDMX}, lo que garantiza un nivel superior de autenticación y validez legal en el inicio de la carpeta de investigación.
+
+\textbf{Análisis de Capacidades:}
+El sistema destaca por permitir la transición completa de delitos como violencia familiar (no física), delitos electorales y contra la intimidad sexual hacia el ámbito digital. Además, ofrece un módulo de denuncia anónima y un MP Virtual para la ratificación de actas especiales vía internet \cite{10}. 
+
+\textbf{Panorama Nacional y Fragmentación Tecnológica:}
+Un análisis comparativo de las fiscalías estatales revela una brecha tecnológica significativa \cite{10}:
+\begin{itemize}
+    \item \textbf{Sistemas Avanzados:} Estados como Chihuahua, Nuevo León y Michoacán permiten denunciar casi cualquier delito de manera virtual, utilizando incluso videodenuncias y cabinas digitales (CODE Virtual).
+    \item \textbf{Sistemas de Pre-denuncia:} Entidades como el Estado de México y Zacatecas operan bajo un modelo híbrido donde el registro es digital, pero la ratificación presencial es obligatoria para generar la carpeta de investigación.
+    \item \textbf{Rezago Digital:} Estados como Campeche, Hidalgo y Nayarit carecen de plataformas propias, limitándose a buzones de sugerencias o atención telefónica.
+\end{itemize}
+
+\textbf{Diferenciación con la Propuesta:}
+Si bien estos sistemas cubren delitos penales y faltas administrativas generales, carecen de una especialización en el \textbf{Derecho Administrativo Universitario}. El valor de la plataforma para la Defensoría de los Derechos Politécnicos radica en su capacidad de gestionar quejas dentro de una estructura institucional autónoma, integrando criterios de justicia restaurativa y protección de derechos estudiantiles que los sistemas de procuración de justicia general no contemplan en sus algoritmos de triaje.
+\end{flushleft}
+
+\subsection{Servicios de Procuración Digital: MP Virtual y Denuncia Anónima (FGJ-CDMX)}
+
+\begin{flushleft}
+\justifying
+La Fiscalía General de Justicia de la Ciudad de México (FGJ-CDMX) ha diversificado su atención digital mediante el ecosistema del \textbf{MP Virtual} y el sistema de \textbf{Denuncia Anónima}. Estos servicios representan un avance de datos y la protección de la identidad del denunciante en entornos urbanos de alta complejidad \cite{11}.
+
+\textbf{Análisis de Componentes:}
+\begin{itemize}
+    \item \textbf{MP Virtual:} A diferencia de los formularios estáticos, este módulo permite la ratificación de querellas y actas especiales iniciadas en línea. Su valor técnico radica en la capacidad de formalizar un trámite jurídico sin la presencia física inmediata del usuario, utilizando mecanismos de validación documental \cite{12}.
+    \item \textbf{Denuncia Anónima Confidencial:} Implementa un canal donde no es requisito proporcionar datos de identificación, permitiendo que el Ministerio Público reciba noticias criminales sobre delitos de alto impacto, como narcomenudeo o extorsión, manteniendo el sigilo absoluto.
+    \item \textbf{Servicios Transversales (RAPI y MP Transparente):} El ecosistema incluye herramientas de consulta en tiempo real, como el Registro de Automotores de Procedencia Ilícita (RAPI) y el buscador de personas puestas a disposición, lo que incrementa la transparencia del proceso penal \cite{11}.
+\end{itemize}
+
+\textbf{Crítica Técnica:}
+Desde la perspectiva de este Trabajo Terminal, aunque el MP Virtual facilita la ratificación, sigue operando bajo una lógica de \textbf{infraestructura centralizada}. La dependencia de una base de datos única y el uso de firmas genéricas del Estado pueden presentar puntos de falla únicos. La propuesta para la Defensoría de los Derechos Politécnicos busca emular esta facilidad de "ratificación remota", pero aplicando una arquitectura de microservicios que aísle los datos sensibles de la comunidad politécnica de los procesos administrativos generales, garantizando una mayor resiliencia ante ataques de denegación de servicio o filtraciones de datos.
+\end{flushleft}
+
+\section{Aplicaciones Móviles y Denuncia Georreferenciada}
+
+\begin{flushleft}
+\justifying
+La evolución de la denuncia digital ha trascendido los portales web para integrarse en dispositivos móviles, permitiendo una captura de datos más dinámica y contextual. Un referente en este ámbito es la aplicación \textbf{Incorruptible}, una plataforma multiplataforma (iOS/Android) diseñada para combatir la corrupción mediante denuncias georreferenciadas \cite{13}.
+
+\textbf{Análisis de Funcionalidades Disruptivas:}
+A diferencia de los sistemas institucionales rígidos, \textit{Incorruptible} introduce elementos de \textit{crowdsourcing} y transparencia pública:
+\begin{itemize}
+    \item \textbf{Geolocalización:} Permite ubicar con precisión el lugar del acto de corrupción, facilitando la identificación de "puntos calientes" o unidades administrativas con mayores incidencias.
+    \item \textbf{Socialización de la Denuncia:} Ofrece la opción de hacer pública la denuncia para que otros ciudadanos afectados puedan sumarse al reporte, creando una presión social y visibilidad que los sistemas cerrados no poseen.
+    \item \textbf{Cuantificación del Impacto:} Incluye campos para estimar el monto económico involucrado, proporcionando una métrica directa del daño patrimonial \cite{13}.
+\end{itemize}
+
+\textbf{Sistemas de Atención Regional: El caso del SAM (Estado de México):}
+Por otro lado, el \textbf{Sistema de Atención Mexiquense (SAM)} representa un modelo que integra portal web, aplicación móvil y atención telefónica (800-HONESTO). Su arquitectura permite turnar denuncias automáticamente entre los distintos Poderes (Ejecutivo, Legislativo y Judicial) y Órganos Internos de Control, asegurando que la competencia administrativa no sea una barrera para el usuario \cite{14}.
+
+\textbf{Brecha con la Propuesta Institucional Universitaria:}
+El análisis de estas aplicaciones revela que, si bien son eficaces para la denuncia de corrupción o delitos penales, carecen de un enfoque en la \textbf{identidad institucional}. La plataforma desarrollada para la Defensoría de los Derechos Politécnicos debe adoptar la movilidad y facilidad de adjuntar evidencia multimedia de \textit{Incorruptible}, pero bajo un esquema de \textbf{autenticación institucional robusta} (Boleta/Número de Empleado), garantizando que el denunciante pertenezca a la comunidad del IPN y que los datos se resguarden bajo los protocolos de ciberseguridad específicos de la institución, evitando la exposición pública de información sensible que caracteriza a las aplicaciones ciudadanas abiertas.
+\end{flushleft}
+
+\subsection{Análisis de Plataformas Internacionales}
+
+\begin{flushleft}
+\justifying
+El mercado global de \textit{RegTech} (Tecnología Regulatoria) ha consolidado soluciones robustas que sirven como referente técnico para la gestión de denuncias. A continuación, se analizan las plataformas más disruptivas del contexto europeo y norteamericano:
+
+\textbf{1. Whistlelink (Suecia):}
+Es una solución integral enfocada en la facilidad de despliegue. Su arquitectura permite la comunicación bidireccional anónima, asegurando que el investigador y el denunciante mantengan un canal abierto sin revelar la identidad de este último \cite{15}. 
+\begin{itemize}
+    \item \textbf{Fortaleza:} Soporte multilingüe extremo (35+ idiomas) y una interfaz de usuario simplificada que reduce la fricción en el reporte.
+    \item \textbf{Carencia:} Al ser un modelo cerrado, la personalización de flujos de trabajo institucionales complejos es limitada.
+\end{itemize}
+
+\textbf{2. EQS Integrity Line (Alemania):}
+Considerada una de las plataformas más potentes a nivel corporativo mundial. Destaca por su módulo de gestión de casos altamente granular, diseñado para cumplir con la Directiva Europea 2019/1937 \cite{16}.
+\begin{itemize}
+    \item \textbf{Fortaleza:} Capacidad de generar informes analíticos en tiempo real para la alta dirección y cumplimiento de estándares de seguridad alemanes (BSI).
+    \item \textbf{Carencia:} Alta complejidad técnica y curvas de aprendizaje prolongadas para los administradores del sistema.
+\end{itemize}
+
+\textbf{3. NAVEX / WhistleB (EE. UU. - Suecia):}
+NAVEX representa el estándar de cumplimiento ético global. Su plataforma \textit{WhistleB} utiliza la infraestructura de Microsoft Azure para garantizar escalabilidad y disponibilidad \cite{17}.
+\begin{itemize}
+    \item \textbf{Fortaleza:} Integración con ecosistemas GRC (\textit{Governance, Risk, and Compliance}) y protocolos de seguridad física y lógica certificados internacionalmente.
+    \item \textbf{Carencia:} Dependencia total de proveedores de nube de terceros, lo que contraviene el principio de soberanía de datos en instituciones gubernamentales estrictas.
+\end{itemize}
+
+\textbf{4. Whistleblower Software (Dinamarca):}
+Se especializa en el cifrado de extremo a extremo, asegurando que ni siquiera los administradores del servidor puedan acceder al contenido de la denuncia sin las llaves de cifrado correspondientes \cite{18}.
+\begin{itemize}
+    \item \textbf{Fortaleza:} Implementación de "Cero Conocimiento" (\textit{Zero-Knowledge Architecture}), alineada perfectamente con las necesidades de ciberseguridad.
+    \item \textbf{Carencia:} Su enfoque está limitado a organizaciones de hasta 10,000 empleados, lo que podría verse comprometido ante la escala masiva de la comunidad politécnica.
+\end{itemize}
+
+\textbf{5. Coloriuris y Centinela (España):}
+Estas herramientas se distinguen por su validez jurídica. \textit{Coloriuris} integra el sello eIDAS y conservación a largo plazo (15 años), mientras que \textit{Centinela} ofrece notificaciones automatizadas bajo la certificación ISO 27001 \cite{19}, \cite{20}.
+\begin{itemize}
+    \item \textbf{Fortaleza:} Evidencia digital con validez probatoria ante tribunales europeos.
+    \item \textbf{Carencia:} Modelos de licenciamiento por volumen que resultan costosos para el presupuesto de instituciones públicas en México.
+\end{itemize}
+\end{flushleft}
+
+\subsection{Sistemas de Contexto Académico e Institucional}
+
+\begin{flushleft}
+\justifying
+El análisis de soluciones dentro del ámbito educativo y de defensa de derechos es fundamental para situar la relevancia de esta plataforma. A continuación, se evalúan herramientas que, aunque comparten objetivos de reporte, presentan diferencias estructurales significativas con el sistema propuesto:
+
+\textbf{1. BullyButton.com:}
+Es una solución comercial anglosajona diseñada específicamente para combatir el acoso escolar (\textit{bullying}). Su arquitectura se centra en la inmediatez de la denuncia y la generación de métricas en tiempo real para directivos \cite{21}.
+\begin{itemize}
+    \item \textbf{Fortaleza:} Interfaz sumamente simplificada que reduce la barrera psicológica para que los estudiantes reporten incidentes.
+    \item \textbf{Carencia:} Carece de un marco jurídico-administrativo. Se limita al reporte estadístico y no contempla la cadena de custodia de evidencias necesaria para un proceso legal formal.
+\end{itemize}
+
+\textbf{2. Ventanilla Escolar (Gobierno de México):}
+Plataforma de orientación ciudadana que funge como primer contacto entre los planteles educativos y las autoridades federales \cite{22}.
+\begin{itemize}
+    \item \textbf{Fortaleza:} Centraliza la asesoría inicial, permitiendo que los usuarios conozcan sus derechos y los canales de queja adecuados.
+    \item \textbf{Carencia:} Funciona únicamente como un canal de comunicación; no permite el seguimiento del ciclo de vida de una queja ni garantiza la integridad técnica de los expedientes digitales.
+\end{itemize}
+
+\textbf{3. Alerta IPN:}
+Representa el esfuerzo institucional más cercano dentro del Instituto Politécnico Nacional. Está enfocada en el reporte de emergencias y sucesos anómalos dentro de las instalaciones físicas \cite{23}.
+\begin{itemize}
+    \item \textbf{Fortaleza:} Respuesta inmediata ante situaciones de riesgo y excelente difusión dentro de la comunidad politécnica.
+    \item \textbf{Carencia:} No está diseñada para la gestión de quejas de derechos politécnicos. No cuenta con módulos de seguimiento jurídico, auditoría de resoluciones ni procesos de inteligencia de datos para la clasificación de denuncias administrativas.
+\end{itemize}
+
+\textbf{4. UNAM - Denuncia Línea:}
+Es el referente institucional más sólido en México para la gestión de quejas universitarias. Implementado por la UNAM, este sistema permite el registro formal de denuncias alineadas a su normativa interna \cite{24}.
+\begin{itemize}
+    \item \textbf{Fortaleza:} Estructura administrativa robusta y protocolos claros de actuación que sirven como modelo de gobernanza universitaria.
+    \item \textbf{Carencia:} Su arquitectura tecnológica, aunque funcional, carece de una integración moderna de microservicios que permita una escalabilidad granular o la incorporación de inteligencia artificial para el triaje automático de casos.
+\end{itemize}
+
+\textbf{5. PROFEDET Digital:}
+Plataforma de la Procuraduría Federal de la Defensa del Trabajo orientada a la protección de derechos laborales \cite{25}
+\begin{itemize}
+    \item \textbf{Fortaleza:} Permite un seguimiento formal de los casos y ofrece herramientas digitales para la defensa jurídica del trabajador.
+    \item \textbf{Carencia:} Su enfoque es puramente laboral y externo, lo que dificulta su adaptación a las dinámicas académicas y de derechos humanos específicos de una institución educativa como el IPN.
+\end{itemize}
+\end{flushleft}
+
+\subsection{Análisis Comparativo de Plataformas}
+
+\begin{flushleft}
+\justifying
+Para sintetizar la información recopilada y justificar la propuesta técnica de este Trabajo Terminal, se ha elaborado un análisis comparativo de las principales funcionalidades de las plataformas estudiadas. Las plataformas se han agrupado en cinco categorías según su ámbito de aplicación: gubernamentales federales, gubernamentales locales, internacionales comerciales, aplicaciones móviles ciudadanas, y sistemas de contexto académico-institucional.
+\end{flushleft}
+
+% ==============================================================================
+% CATEGORÍA 1: PLATAFORMAS GUBERNAMENTALES FEDERALES
+% ==============================================================================
+
+\subsubsection{Plataformas Gubernamentales Federales}
+
+\begin{flushleft}
+\justifying
+Esta categoría incluye sistemas implementados por dependencias del Gobierno Federal mexicano para la gestión de quejas y denuncias ciudadanas.
+\end{flushleft}
+
+% TABLA 1: SIDEC
+\begin{table}[htbp]
+\centering
+
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 1: SIDEC}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Institución responsable & Secretaría de la Función Pública \\
+\hline Ámbito de aplicación & Quejas contra servidores públicos federales \\
+\hline Tipo de autenticación & Básica (folio + contraseña) \\
+\hline Soporte de anonimato & Sí (con folio y contraseña únicos) \\
+\hline Seguimiento de casos & Limitado (estados genéricos) \\
+\hline Evidencia multimedia & Sí (audio, video, documentos) \\
+\hline Comunicación bidireccional & No \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Arquitectura & Monolítica \\
+\hline Cifrado & Básico (TLS) \\
+\hline Validez legal & Sí (Ley General de Responsabilidades) \\
+\hline Movilidad & Web responsive \\
+\hline \end{tabular}
+
+\caption{Sistema Integral de Denuncias Ciudadanas (SIDEC) \footnotesize Fuente: Elaboración propia \cite{6,7,8} \label{tab:sidec} }
+\end{table}
+
+
+% TABLA 2: PROFEDET Digital
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 2: PROFEDET Digital}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Institución responsable & Procuraduría Federal de la Defensa del Trabajo \\
+\hline Ámbito de aplicación & Derechos laborales \\
+\hline Tipo de autenticación & Básica \\
+\hline Soporte de anonimato & No \\
+\hline Seguimiento de casos & Sí \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & Parcial \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Arquitectura & Portal web \\
+\hline Cifrado & Básico \\
+\hline Validez legal & Sí (ámbito laboral) \\
+\hline Movilidad & Web \\
+\hline \end{tabular}
+\caption{PROFEDET Digital \footnotesize Fuente: Elaboración propia \cite{25} \label{tab:profedet}} 
+\end{table}
+
+
+% TABLA 3: Ventanilla Escolar
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 3: Ventanilla Escolar}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Institución responsable & Secretaría de Educación Pública \\
+\hline Ámbito de aplicación & Orientación educativa \\
+\hline Tipo de autenticación & Básica \\
+\hline Soporte de anonimato & No \\
+\hline Seguimiento de casos & No \\
+\hline Evidencia multimedia & No \\
+\hline Comunicación bidireccional & No \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Arquitectura & Portal web \\
+\hline Cifrado & Básico \\
+\hline Validez legal & No (solo orientación) \\
+\hline Movilidad & Web \\
+\hline \end{tabular}
+\caption{Ventanilla Escolar \footnotesize Fuente: Elaboración propia \cite{22} \label{tab:ventanilla}}
+\end{table}
+
+
+
+
+% ==============================================================================
+% CATEGORÍA 2: PLATAFORMAS GUBERNAMENTALES LOCALES
+% ==============================================================================
+
+\subsubsection{Plataformas Gubernamentales Locales}
+
+\begin{flushleft}
+\justifying
+Esta categoría incluye sistemas implementados por gobiernos estatales y la Ciudad de México para la gestión de denuncias penales y administrativas.
+\end{flushleft}
+
+% TABLA 4: Denuncia Digital (CDMX)
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 4: Denuncia Digital (CDMX)}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Institución responsable & Fiscalía General de Justicia CDMX \\
+\hline Ámbito de aplicación & Delitos sin violencia \\
+\hline Tipo de autenticación & Firma electrónica / Llave CDMX \\
+\hline Soporte de anonimato & Sí (denuncia anónima) \\
+\hline Seguimiento de casos & Parcial \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & No \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Arquitectura & Monolítica \\
+\hline Cifrado & Básico (TLS) \\
+\hline Validez legal & Sí (carpeta de investigación) \\
+\hline Movilidad & Web responsive \\
+\hline \end{tabular}
+\caption{Denuncia Digital (CDMX) \footnotesize Fuente: Elaboración propia \cite{9,10} \label{tab:denunciadigital}}
+\end{table}
+
+
+
+% TABLA 5: MP Virtual
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 5: MP Virtual (FGJ-CDMX)}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Institución responsable & Fiscalía General de Justicia CDMX \\
+\hline Ámbito de aplicación & Ratificación de querellas \\
+\hline Tipo de autenticación & Validación documental \\
+\hline Soporte de anonimato & Parcial \\
+\hline Seguimiento de casos & Sí \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & No \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Arquitectura & Centralizada \\
+\hline Cifrado & Básico \\
+\hline Validez legal & Sí (ratificación jurídica) \\
+\hline Movilidad & Web \\
+\hline \end{tabular}
+\caption{MP Virtual (FGJ-CDMX) \label{tab:mpvirtual} \footnotesize Fuente: Elaboración propia \cite{11,12}} 
+\end{table}
+
+
+% TABLA 6: SAM
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 6: Sistema de Atención Mexiquense (SAM)}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Institución responsable & Secretaría de la Contraloría del Estado de México \\
+\hline Ámbito de aplicación & Multifueros (Ejecutivo, Legislativo, Judicial) \\
+\hline Tipo de autenticación & Básica \\
+\hline Soporte de anonimato & Sí \\
+\hline Seguimiento de casos & Parcial \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & Parcial \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Arquitectura & Monolítica \\
+\hline Cifrado & Básico \\
+\hline Validez legal & Parcial \\
+\hline Movilidad & App móvil + web \\
+\hline \end{tabular}
+\caption{Sistema de Atención Mexiquense (SAM) \label{tab:sam} \footnotesize Fuente: Elaboración propia \cite{14}}
+\end{table}
+
+
+
+
+% ==============================================================================
+% CATEGORÍA 3: PLATAFORMAS INTERNACIONALES COMERCIALES (RegTech)
+% ==============================================================================
+
+\subsubsection{Plataformas Internacionales Comerciales (RegTech)}
+
+\begin{flushleft}
+\justifying
+Esta categoría incluye soluciones globales de cumplimiento normativo y gestión de denuncias, principalmente de origen europeo y norteamericano. Representan el estado del arte en tecnología para \textit{whistleblowing} y gobierno corporativo.
+\end{flushleft}
+
+% TABLA 7: Whistlelink
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 7: Whistlelink (Suecia)}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Ámbito de aplicación & Corporativo / Whistleblowing \\
+\hline Tipo de autenticación & Básica \\
+\hline Soporte de anonimato & Sí (bidireccional) \\
+\hline Seguimiento de casos & Sí \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & Sí \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Arquitectura & SaaS \\
+\hline Cifrado & Estándar \\
+\hline Validez legal & Sí (UE 2019/1937) \\
+\hline Multilingüe & Sí (35+ idiomas) \\
+\hline Limitación identificada & Poca personalización \\
+\hline \end{tabular}
+\caption{Whistlelink (Suecia) \label{tab:whistlelink} \footnotesize Fuente: Elaboración propia \cite{15}} 
+\end{table}
+
+
+
+% TABLA 8: EQS Integrity Line
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 8: EQS Integrity Line (Alemania)}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Ámbito de aplicación & Corporativo / GRC \\
+\hline Tipo de autenticación & Avanzada (SSO) \\
+\hline Soporte de anonimato & Sí \\
+\hline Seguimiento de casos & Sí (granular) \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & Sí \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & Sí (analytics) \\
+\hline Arquitectura & Modular \\
+\hline Cifrado & Avanzado \\
+\hline Validez legal & Sí (UE 2019/1937, BSI) \\
+\hline Limitación identificada & Alta complejidad técnica \\
+\hline \end{tabular}
+\caption{EQS Integrity Line (Alemania) \label{tab:eqs} \footnotesize Fuente: Elaboración propia \cite{16}} 
+\end{table}
+
+
+% TABLA 9: NAVEX / WhistleB
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 9: NAVEX / WhistleB (EE.UU.-Suecia)}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Ámbito de aplicación & GRC / Cumplimiento ético \\
+\hline Tipo de autenticación & Avanzada (AD/LDAP) \\
+\hline Soporte de anonimato & Sí \\
+\hline Seguimiento de casos & Sí \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & Sí \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & Parcial (reportes) \\
+\hline Arquitectura & SaaS (Azure) \\
+\hline Cifrado & Avanzado \\
+\hline Validez legal & Sí (ISO 27001) \\
+\hline Limitación identificada & Dependencia de nube de terceros \\
+\hline \end{tabular}
+\caption{NAVEX / WhistleB (EE.UU.-Suecia) \label{tab:navex} \footnotesize Fuente: Elaboración propia \cite{17}} 
+\end{table}
+
+
+% TABLA 10: Whistleblower Software
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 10: Whistleblower Software (Dinamarca)}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Ámbito de aplicación & Corporativo (10k empleados) \\
+\hline Tipo de autenticación & Zero-Knowledge \\
+\hline Soporte de anonimato & Sí (total) \\
+\hline Seguimiento de casos & Sí \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & Sí \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Arquitectura & SaaS \\
+\hline Cifrado & Zero-Knowledge \\
+\hline Validez legal & Sí (UE 2019/1937) \\
+\hline Limitación identificada & Escala limitada (10,000 empleados) \\
+\hline \end{tabular}
+\caption{Whistleblower Software (Dinamarca) \label{tab:whistleblowersw} \footnotesize Fuente: Elaboración propia \cite{18}} 
+\end{table}
+
+
+
+% TABLA 11: Coloriuris y Centinela
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 11: Coloriuris y Centinela (España)}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Ámbito de aplicación & Legal / UE \\
+\hline Tipo de autenticación & Firma eIDAS \\
+\hline Soporte de anonimato & Sí \\
+\hline Seguimiento de casos & Sí \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & Parcial \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Arquitectura & Cliente-servidor / SaaS \\
+\hline Cifrado & Estándar \\
+\hline Validez legal & Sí (eIDAS, 15 años) \\
+\hline Limitación identificada & Alto costo \\
+\hline \end{tabular}
+\caption{Coloriuris y Centinela (España) \label{tab:coloriuris} \footnotesize Fuente: Elaboración propia \cite{19,20}}
+\end{table}
+
+
+% ==============================================================================
+% CATEGORÍA 4: APLICACIONES MÓVILES Y DENUNCIA CIUDADANA
+% ==============================================================================
+
+\subsubsection{Aplicaciones Móviles y Denuncia Ciudadana}
+
+\begin{flushleft}
+\justifying
+Esta categoría incluye aplicaciones móviles diseñadas para la denuncia ciudadana, con énfasis en accesibilidad, geolocalización y facilidad de uso.
+\end{flushleft}
+
+% TABLA 12: Incorruptible
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 12: Incorruptible}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Ámbito de aplicación & Denuncia de corrupción \\
+\hline Plataformas soportadas & iOS / Android \\
+\hline Tipo de autenticación & Básica (opcional) \\
+\hline Soporte de anonimato & Sí \\
+\hline Seguimiento de casos & Limitado \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & No \\
+\hline Geolocalización & Sí (puntos calientes) \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Socialización de denuncia & Sí (pública) \\
+\hline Cuantificación de impacto & Sí (montos económicos) \\
+\hline Validez legal & No \\
+\hline Arquitectura & Cliente-servidor \\
+\hline \end{tabular}
+\caption{Incorruptible \label{tab:incorruptible} \footnotesize Fuente: Elaboración propia \cite{13}} 
+\end{table}
+
+
+% TABLA 13: BullyButton
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 13: BullyButton.com}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Ámbito de aplicación & Acoso escolar (bullying) \\
+\hline Plataformas soportadas & Web / App \\
+\hline Tipo de autenticación & Básica \\
+\hline Soporte de anonimato & Parcial \\
+\hline Seguimiento de casos & Limitado \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & No \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Socialización de denuncia & No \\
+\hline Validez legal & No \\
+\hline Arquitectura & SaaS \\
+\hline \end{tabular}
+\caption{BullyButton.com \label{tab:bullybutton} \footnotesize Fuente: Elaboración propia \cite{21}} 
+\end{table}
+
+
+% ==============================================================================
+% CATEGORÍA 5: SISTEMAS DE CONTEXTO ACADÉMICO E INSTITUCIONAL
+% ==============================================================================
+
+\subsubsection{Sistemas de Contexto Académico e Institucional}
+
+\begin{flushleft}
+\justifying
+Esta categoría incluye sistemas implementados en instituciones educativas y de defensa de derechos, siendo los referentes más cercanos a la propuesta del IPN.
+\end{flushleft}
+
+% TABLA 14: UNAM Denuncia Línea
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 14: UNAM Denuncia Línea}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Institución responsable & Universidad Nacional Autónoma de México \\
+\hline Ámbito de aplicación & Quejas de derechos universitarios \\
+\hline Tipo de autenticación & Institucional (expediente universitario) \\
+\hline Soporte de anonimato & Sí \\
+\hline Seguimiento de casos & Parcial \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & No \\
+\hline Geolocalización & No \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Arquitectura & Portal web \\
+\hline Cifrado & Básico \\
+\hline Validez legal & Sí (normativa UNAM) \\
+\hline Marco normativo propio & Sí (Legislación Universitaria UNAM) \\
+\hline Gestión de quejas formales & Sí \\
+\hline \end{tabular}
+\caption{UNAM Denuncia Línea \label{tab:unam} \footnotesize Fuente: Elaboración propia \cite{24}} 
+\end{table}
+
+
+% TABLA 15: Alerta IPN
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline \multicolumn{2}{|c|}{\textbf{Tabla 15: Alerta IPN}} \\
+\hline \textbf{Métrica} & \textbf{Descripción} \\
+\hline Institución responsable & Instituto Politécnico Nacional \\
+\hline Ámbito de aplicación & Reporte de emergencias y sucesos anómalos \\
+\hline Tipo de autenticación & Básica \\
+\hline Soporte de anonimato & Parcial \\
+\hline Seguimiento de casos & No \\
+\hline Evidencia multimedia & Sí \\
+\hline Comunicación bidireccional & No \\
+\hline Geolocalización & Sí (dentro de instalaciones IPN) \\
+\hline Inteligencia Artificial / NLP & No \\
+\hline Arquitectura & App móvil \\
+\hline Cifrado & Básico \\
+\hline Validez legal & No (solo emergencias) \\
+\hline Marco normativo propio & No \\
+\hline Gestión de quejas formales & No \\
+\hline \end{tabular}
+\caption{Alerta IPN \label{tab:alertaIpn} \footnotesize Fuente: Elaboración propia \cite{23}} 
+\end{table}
+
+
+% ==============================================================================
+% TABLA RESUMEN DE BRECHAS TECNOLÓGICAS
+% ==============================================================================
+
+\subsubsection{Tabla Resumen de Brechas Tecnológicas}
+
+\begin{flushleft}
+\justifying
+A modo de síntesis, la Tabla \ref{tab:resumen_brechas} presenta las principales brechas tecnológicas identificadas por categoría, evaluando la presencia o ausencia de las funcionalidades críticas para la Defensoría de los Derechos Politécnicos.
+\end{flushleft}
+
+\begin{table}[htbp]
+\centering
+\caption{Resumen de brechas tecnológicas por categoría}
+\label{tab:resumen_brechas}
+\small
+\begin{tabular}{|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Funcionalidad / Brecha} & \textbf{Fed.} & \textbf{Loc.} & \textbf{Int.} & \textbf{Móv.} & \textbf{Acad.} & \textbf{A. IPN} & \textbf{Propuesta} \\ \hline
+IA / NLP                        & $\times$      & $\times$      & $\checkmark$* & $\times$      & $\times$       & $\times$        & \textbf{$\checkmark$} \\ \hline
+Microservicios                  & $\times$      & $\times$      & $\checkmark$  & $\times$      & $\times$       & $\times$        & \textbf{$\checkmark$} \\ \hline
+Geolocalización                 & $\times$      & $\times$      & $\times$      & $\checkmark$  & $\times$       & $\checkmark$    & \textbf{$\checkmark$} \\ \hline
+Anonimato bidireccional         & $\times$      & $\times$      & $\checkmark$  & $\times$      & $\times$       & $\times$        & \textbf{$\checkmark$} \\ \hline
+Cifrado Zero-Knowledge          & $\times$      & $\times$      & $\checkmark$  & $\times$      & $\times$       & $\times$        & \textbf{$\checkmark$} \\ \hline
+Especialización IPN             & $\times$      & $\times$      & $\times$      & $\times$      & $\times$** & $\times$        & \textbf{$\checkmark$} \\ \hline
+\end{tabular}
+
+\smallskip
+\scriptsize
+\textbf{Abreviaturas:} Fed: Federales; Loc: Locales; Int: Internacionales; Móv: Móviles; Acad: Académicos; A. IPN: Alerta IPN existente.\\
+$\checkmark$ = Presente / $\times$ = Ausente / * Parcial / ** Solo UNAM.\\
+Fuente: Elaboración propia.
+\end{table}
+
+\begin{flushleft}
+\justifying
+
+\textbf{Análisis de la Tabla Resumen:}
+
+La tabla resumen evidencia que ninguna categoría existente integra todas las funcionalidades requeridas para la Defensoría de los Derechos Politécnicos:
+
+\begin{itemize}
+    \item \textbf{Plataformas federales y locales:} Presentan ausencia total en todas las métricas avanzadas (IA, microservicios, geolocalización, anonimato bidireccional, cifrado Zero-Knowledge).
+    
+    \item \textbf{Plataformas internacionales:} Destacan en inteligencia artificial (parcial), microservicios, anonimato bidireccional y cifrado Zero-Knowledge, pero carecen de geolocalización y especialización en derecho mexicano.
+    
+    \item \textbf{Aplicaciones móviles:} Aportan geolocalización (Incorruptible) y facilidad de uso, pero sin validez legal, seguimiento formal o capacidades de IA.
+    
+    \item \textbf{Sistemas académicos:} UNAM ofrece especialización normativa pero arquitectura obsoleta. Alerta IPN ofrece geolocalización pero sin gestión de quejas formales.
+\end{itemize}
+\end{flushleft}
+
+% ==============================================================================
+% SÍNTESIS DE LA BRECHA TECNOLÓGICA Y VALOR AGREGADO
+% ==============================================================================
+
+\subsection{Síntesis de la Brecha Tecnológica y Valor Agregado}
+
+\begin{flushleft}
+\justifying
+
+Con base en el análisis comparativo de 16 plataformas a través de múltiples dimensiones técnicas y funcionales, se identifica una \textbf{brecha tecnológica estructural} que justifica el desarrollo de este Trabajo Terminal:
+
+\subsubsection*{Dimensiones de la Brecha Identificada}
+
+\textbf{1. Dimensión Funcional (IA/ML):} Los sistemas existentes son reactivos (repositorios de información), no proactivos. Carecen de inteligencia aplicada para la detección temprana de patrones de conflicto o la automatización del triaje administrativo. Ninguna plataforma gubernamental mexicana incorpora NLP. La propuesta implementa Procesamiento de Lenguaje Natural para clasificación automática y detección de anomalías.
+
+\textbf{2. Dimensión Arquitectónica:} Predominan arquitecturas monolíticas y centralizadas (SIDEC, MP Virtual, SAM), con puntos de falla únicos y baja escalabilidad. Las soluciones internacionales han migrado a SaaS sobre nubes públicas (Azure, AWS), contraviniendo principios de soberanía de datos de instituciones gubernamentales mexicanas. La propuesta adopta una arquitectura de microservicios que permite despliegue granular, escalabilidad horizontal y aislamiento de datos sensibles en infraestructura on-premise del IPN.
+
+\textbf{3. Dimensión de Seguimiento y Transparencia:} El 87.5\% de las plataformas analizadas (14 de 16) no implementan comunicación bidireccional anónima entre denunciante e investigador. Solo las soluciones europeas de whistleblowing ofrecen esta capacidad. La propuesta integra un tablero de seguimiento granular con visibilidad de etapas, tiempos y responsable, manteniendo el anonimato configurable.
+
+\textbf{4. Dimensión de Geolocalización:} Solo Incorruptible y Alerta IPN incorporan geolocalización entre todas las plataformas analizadas. Ningún sistema institucional de quejas formales (SIDEC, SAM, UNAM) ofrece esta funcionalidad. La propuesta incorpora geolocalización para identificar patrones espaciales de incidencia dentro de las unidades académicas del IPN.
+
+\textbf{5. Dimensión Normativa:} No existe una plataforma alineada específicamente al Marco Jurídico del Instituto Politécnico Nacional (Ley Orgánica, Reglamento Interno, Manual de Procedimientos de la Defensoría). La UNAM cuenta con sistema propio, pero el IPN carece de un equivalente. La propuesta incorpora las figuras jurídicas propias del derecho administrativo politécnico.
+
+\textbf{6. Dimensión de Ciberseguridad:} La soberanía de datos sensibles no está garantizada en soluciones de terceros. Las plataformas mexicanas utilizan cifrado básico en tránsito (TLS) sin implementar cifrado de extremo a extremo. Whistleblower Software establece el estándar con arquitectura Zero-Knowledge. La propuesta adopta cifrado end-to-end para el contenido de denuncias y evidencias.
+
+\subsubsection*{Valor Agregado de la Propuesta}
+
+La plataforma para la Defensoría de los Derechos Politécnicos no busca competir con soluciones comerciales como Whistlelink o EQS Integrity Line, sino \textbf{adaptar las mejores prácticas internacionales} al \textbf{contexto normativo, técnico y presupuestal del IPN}:
+
+\begin{itemize}
+    \item \textbf{Autenticación institucional robusta:} Mediante boleta o número de empleado, combinada con anonimato configurable para casos sensibles.
+    
+    \item \textbf{Inteligencia de datos mediante NLP:} Para triaje automático de denuncias, detección de patrones y clasificación inteligente.
+    
+    \item \textbf{Arquitectura de microservicios:} Despliegue granular, escalabilidad horizontal, aislamiento de datos y resiliencia ante fallos.
+    
+    \item \textbf{Geolocalización:} Identificación de puntos calientes dentro de unidades académicas y administrativas del IPN.
+    
+    \item \textbf{Comunicación bidireccional anónima:} Canal seguro entre denunciante e investigador sin revelar identidad.
+    
+    \item \textbf{Cifrado de extremo a extremo:} Protección de datos sensibles bajo estándares internacionales.
+    
+    \item \textbf{Especialización en derecho politécnico:} Alineación con Ley Orgánica del IPN, Reglamento Interno y Manuales de la Defensoría.
+\end{itemize}
+
+\end{flushleft}
