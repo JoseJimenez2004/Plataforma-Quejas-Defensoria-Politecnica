@@ -1,2 +1,46 @@
 \section{Solución Integral}
-% Contenido...
+
+\begin{flushleft}
+\justifying
+
+Presentando la solución integral, se propone el desarrollo de una plataforma web centralizada que gestione el ciclo de vida de una queja desde su recepción hasta la emisión de una resolución final.
+
+Esta solución aborda las distintas categorías de problemas de forma conjunta mediante los siguientes puntos integrados:
+
+\subsection{Arquitectura del sistema}
+
+La base de la solución integral es el uso de arquitectura de microservicios, la cual garantiza que el sistema sea capaz de seguir funcionando incluso si alguno de sus módulos llegara a presentar fallas.
+
+Esta estructura sustenta el uso de diferentes lenguajes de programación según la necesidad técnica:
+
+\begin{itemize}
+    \item Java y Spring Boot gestionan toda la lógica de los expedientes.
+    \item Python se encarga exclusivamente del asistente de clasificación inteligente.
+\end{itemize}
+
+Esta independencia asegura que la carga de trabajo pesada de la inteligencia artificial no afecte el rendimiento del servidor principal, permitiendo que la plataforma sea escalable y eficiente por cada módulo que contenga esta.
+
+\subsection{Centralización y Trazabilidad del ciclo de vida de la queja}
+
+El sistema elimina la dispersión de información al centralizar cada etapa del proceso en una base de datos única. Esto permite un seguimiento puntual desde dos perspectivas clave:
+
+\begin{itemize}
+    \item \textbf{Perspectiva del Quejoso:} El sistema ofrece un canal de comunicación donde la comunidad politécnica puede registrar su queja y recibir un folio digital. Esto otorga certidumbre al usuario, quien puede consultar en tiempo real el departamento exacto en el que se encuentra su trámite.
+    \item \textbf{Perspectiva Administrativa:} La plataforma guía el expediente a través de un flujo de trabajo que conecta a los actores de la Defensoría (Recepcionista, Área de Primer Contacto, Subdefensoría y Titular). Esta interconexión garantiza que la información fluya sin interrupciones, permitiendo mitigar los tiempos perdidos y las esperas administrativas entre cada etapa del proceso; esto se centra en la falta de organización actual y agilidad de resolución de quejas.
+\end{itemize}
+
+\subsection{Validación de quejas en el origen}
+
+Para resolver el problema de las quejas recibidas de forma incompleta o la falta de pruebas, la solución integral implementa reglas de validación en el origen. El sistema garantiza que las solicitudes cumplan con los requisitos normativos mínimos antes de su envío. De esta manera se asegura que la queja llegue completa desde el inicio reduciendo drásticamente el tiempo que antes se perdía solicitando aclaraciones o documentos faltantes a los usuarios.
+
+\subsection{Control de Acceso Basado en Roles (RBAC)}
+
+Aunque cada módulo tiene su propia función, la solución integral engloba todos los beneficios de seguridad mediante un esquema de Control de Acceso Basado en Roles (RBAC). Esto establece un protocolo de acceso formal protegiendo la privacidad de los datos sensibles de la comunidad. Gracias a que cada usuario tiene permisos definidos según su puesto, el sistema facilita la adaptación de nuevos empleados ante la rotación de personal; al centrarse en su propio módulo, se agiliza el aprendizaje y se mantiene un control estricto sobre el manejo de la información.
+
+\subsection{Consideraciones sobre problemas externos}
+
+Es importante reconocer que existen problemáticas institucionales de carácter administrativo y físico que el desarrollo de software no puede resolver por sí mismo, como la falta de espacio físico en las oficinas, la necesidad de mayor presupuesto para personal o las deficiencias en la conectividad de red (Wi-Fi).
+
+Sin embargo, estas problemáticas se toman en cuenta ya que si bien el sistema no puede contratar más personal, su implementación busca mitigar la carga de trabajo de los abogados al liberarlos de tareas manuales y repetitivas. Asimismo, la digitalización de expedientes ofrece una respuesta a la falta de espacio al reducir la dependencia de los archivos de papel.
+
+\end{flushleft}
