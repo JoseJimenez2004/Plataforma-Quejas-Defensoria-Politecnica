@@ -19,3 +19,14 @@ postgres_data/
 
 # Archivos de sistema de Docker
 .docker/
+
+# LaTeX temporary files
+*.aux
+*.log
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.out
+*.lot
+*.lof

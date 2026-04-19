@@ -560,15 +560,14 @@ $$F1 = 2 \cdot \frac{\text{Precisión} \cdot \text{Recall}}{\text{Precisión} + 
 
 
 \subsection{Definición de arquitectura de software}
-La arquitectura de software se entiende como el conjunto de patrones y abstracciones que proporcionan el marco de referencia necesario para llevar a cabo la construcción de un sistema. Funciona como el esqueleto del software...
+La arquitectura de software se entiende como el conjunto de patrones y abstracciones que proporcionan el marco de referencia necesario para llevar a cabo la construcción de un sistema. Funciona como el esqueleto del software.
 
-\subsection{Arquitectura del Sistema}
 
 \begin{flushleft}
 \section{Definición de arquitectura de software}
 \end{flushleft}
 \justifying
-La arquitectura de software se entiende como el conjunto de patrones y abstracciones que proporcionan el marco de referencia necesario para llevar a cabo la construcción de un sistema. Funciona como el esqueleto del software, ya que en este se define cómo se organizan los componentes, cómo interactúan entre sí y bajo qué principios se rigen para cumplir con los objetivos del negocio [13]. 
+La arquitectura de software se entiende como el conjunto de patrones y abstracciones que proporcionan el marco de referencia necesario para llevar a cabo la construcción de un sistema. Funciona como el esqueleto del software, ya que en este se define cómo se organizan los componentes, cómo interactúan entre sí y bajo qué principios se rigen para cumplir con los objetivos del negocio \cite{27}. 
 \subsection{Importancia en el desarrollo de sistemas}
 
 La importancia de la arquitectura de software radica en que permite a los equipos de desarrollo tener una visión clara y compartida de la solución, facilitando la toma de decisiones críticas antes de iniciar la etapa de codificación detallada. Sin embargo, su relevancia se extiende a múltiples dimensiones estratégicas del ciclo de vida del software:
@@ -590,14 +589,14 @@ En definitiva, la arquitectura no es solo un artefacto técnico, sino el cimient
 
 \subsection{Factores de calidad}
 
-Para asegurar que la estructura seleccionada sea la adecuada, esta debe ser evaluada bajo atributos de calidad que garanticen su viabilidad a largo plazo. De acuerdo con los modelos de calidad internacionales como el ISO/IEC 9126 (y su evolución en la norma ISO/IEC 25010), estos atributos permiten medir la capacidad del software para satisfacer necesidades explícitas e implícitas bajo condiciones determinadas [14]. En el contexto de un sistema de gestión institucional de denuncias, destacan los siguientes pilares:
+Para asegurar que la estructura seleccionada sea la adecuada, esta debe ser evaluada bajo atributos de calidad que garanticen su viabilidad a largo plazo. De acuerdo con los modelos de calidad internacionales como el ISO/IEC 9126 (y su evolución en la norma ISO/IEC 25010), estos atributos permiten medir la capacidad del software para satisfacer necesidades explícitas e implícitas bajo condiciones determinadas \cite{28} . En el contexto de un sistema de gestión institucional de denuncias, destacan los siguientes pilares:
 
 \begin{itemize}
-    \item \textbf{Rendimiento y Eficiencia:} Evalúa el comportamiento temporal del sistema y la utilización óptima de recursos al procesar transacciones. En una arquitectura de microservicios, esto implica garantizar latencias mínimas en la comunicación entre servicios (vía API REST) para que la experiencia del usuario sea fluida, incluso durante procesos complejos de carga de evidencias o archivos adjuntos [14].
+    \item \textbf{Rendimiento y Eficiencia:} Evalúa el comportamiento temporal del sistema y la utilización óptima de recursos al procesar transacciones. En una arquitectura de microservicios, esto implica garantizar latencias mínimas en la comunicación entre servicios (vía API REST) para que la experiencia del usuario sea fluida, incluso durante procesos complejos de carga de evidencias o archivos adjuntos \cite{28} .
     
-    \item \textbf{Mantenibilidad:} Representa la facilidad con la que el software puede ser modificado para corregir defectos, mejorar el desempeño o adaptarse a cambios normativos en el IPN. Gracias al uso de \textit{Docker} y una estructura de tres capas, el sistema permite que cada microservicio sea actualizado de forma independiente, reduciendo el riesgo de introducir errores en módulos no relacionados y garantizando la estabilidad operativa [14].
+    \item \textbf{Mantenibilidad:} Representa la facilidad con la que el software puede ser modificado para corregir defectos, mejorar el desempeño o adaptarse a cambios normativos en el IPN. Gracias al uso de \textit{Docker} y una estructura de tres capas, el sistema permite que cada microservicio sea actualizado de forma independiente, reduciendo el riesgo de introducir errores en módulos no relacionados y garantizando la estabilidad operativa \cite{28} .
 
-    \item \textbf{Escalabilidad (Horizontal y Vertical):} Es la capacidad del sistema para ajustarse a variaciones en la demanda de procesamiento. Para la Defensoría, esto es vital en periodos de alta afluencia de usuarios; la arquitectura permite realizar un escalado horizontal (añadir más instancias de un microservicio crítico como el de denuncias) sin necesidad de replicar toda la aplicación, optimizando el uso de la infraestructura institucional [15].
+    \item \textbf{Escalabilidad (Horizontal y Vertical):} Es la capacidad del sistema para ajustarse a variaciones en la demanda de procesamiento. Para la Defensoría, esto es vital en periodos de alta afluencia de usuarios; la arquitectura permite realizar un escalado horizontal (añadir más instancias de un microservicio crítico como el de denuncias) sin necesidad de replicar toda la aplicación, optimizando el uso de la infraestructura institucional \cite{29} .
 
     \item \textbf{Seguridad y Confidencialidad:} Dado el carácter sensible de las quejas procesadas, este atributo asegura que la información solo sea accesible por personal autorizado mediante esquemas de RBAC (Control de Acceso Basado en Roles). La arquitectura debe garantizar el cifrado de datos en reposo y en tránsito, protegiendo la identidad del denunciante y la integridad del expediente digital.
 
@@ -625,40 +624,40 @@ Históricamente, las arquitecturas se han clasificado según la forma en que dis
 
 \section{Arquitectura del Sistema}
 
-Para el desarrollo de la "Plataforma Web para la Denuncia Segura y Prevención de Riesgos Digitales", se ha seleccionado una arquitectura de microservicios, la cual se complementa internamente con un patrón de tres capas para la organización de cada servicio. Esta decisión técnica no es arbitraria; se fundamenta en la necesidad de superar las limitaciones de las arquitecturas monolíticas tradicionales, donde el alto acoplamiento entre componentes suele derivar en dificultades para el mantenimiento y la escalabilidad ante una demanda creciente [1].
+Para el desarrollo de la "Plataforma Web para la Denuncia Segura y Prevención de Riesgos Digitales", se ha seleccionado una arquitectura de microservicios, la cual se complementa internamente con un patrón de tres capas para la organización de cada servicio. Esta decisión técnica no es arbitraria; se fundamenta en la necesidad de superar las limitaciones de las arquitecturas monolíticas tradicionales, donde el alto acoplamiento entre componentes suele derivar en dificultades para el mantenimiento y la escalabilidad ante una demanda creciente \cite{30} .
 
-Al adoptar un enfoque de microservicios, el sistema se descompone en unidades funcionales autónomas que se comunican a través de protocolos ligeros. Según Villamizar et al., esta estructura permite que cada componente evolucione de manera independiente, facilitando la innovación tecnológica y permitiendo que fallos en un servicio específico (como el procesador de lenguaje natural en Python) no comprometan la disponibilidad global de la plataforma administrativa en Java [1].
+Al adoptar un enfoque de microservicios, el sistema se descompone en unidades funcionales autónomas que se comunican a través de protocolos ligeros. Según Villamizar et al., esta estructura permite que cada componente evolucione de manera independiente, facilitando la innovación tecnológica y permitiendo que fallos en un servicio específico (como el procesador de lenguaje natural en Python) no comprometan la disponibilidad global de la plataforma administrativa en Java \cite{31} .
 
 La organización interna de estos servicios sigue el patrón de tres capas, el cual establece una división clara de responsabilidades:
 \begin{itemize}
     \item \textbf{Capa de Presentación:} Gestiona la interacción con el usuario (Angular).
-    \item \textbf{Capa de Negocio (Dominio):} Implementa las reglas institucionales de la Defensoría, aislando la lógica de cualquier dependencia externa [3][5].
-    \item \textbf{Capa de Acceso a Datos (Infraestructura):} Encargada de la persistencia en PostgreSQL de forma transparente para el resto del sistema [3].
+    \item \textbf{Capa de Negocio (Dominio):} Implementa las reglas institucionales de la Defensoría, aislando la lógica de cualquier dependencia externa \cite{33}.
+    \item \textbf{Capa de Acceso a Datos (Infraestructura):} Encargada de la persistencia en PostgreSQL de forma transparente para el resto del sistema \cite{33} .
 \end{itemize}
 
 Esta arquitectura híbrida garantiza los siguientes pilares fundamentales para el Instituto Politécnico Nacional:
 \begin{itemize}
-    \item \textbf{Escalabilidad Eficiente:} Siguiendo los principios de sistemas distribuidos, es posible asignar recursos de servidor de manera granular únicamente a los microservicios que presenten mayor carga de trabajo [2].
-    \item \textbf{Mantenibilidad y Desacoplamiento:} El uso de capas asegura que cambios en la lógica de negocio o en el motor de base de datos se realicen con un impacto mínimo en el código fuente, reduciendo la deuda técnica a largo plazo [3].
-    \item \textbf{Alto Rendimiento:} La distribución de tareas entre nodos independientes y el uso de un proxy inverso optimizan los tiempos de respuesta ante múltiples peticiones concurrentes [2][4].
+    \item \textbf{Escalabilidad Eficiente:} Siguiendo los principios de sistemas distribuidos, es posible asignar recursos de servidor de manera granular únicamente a los microservicios que presenten mayor carga de trabajo \cite{29} .
+    \item \textbf{Mantenibilidad y Desacoplamiento:} El uso de capas asegura que cambios en la lógica de negocio o en el motor de base de datos se realicen con un impacto mínimo en el código fuente, reduciendo la deuda técnica a largo plazo \cite{33} .
+    \item \textbf{Alto Rendimiento:} La distribución de tareas entre nodos independientes y el uso de un proxy inverso optimizan los tiempos de respuesta ante múltiples peticiones concurrentes \cite{29}.
 \end{itemize}
 
 
 \subsection{Arquitectura de Microservicios}
 
-La arquitectura de microservicios se define como un enfoque de desarrollo de software donde una aplicación se descompone en un conjunto de servicios pequeños, autónomos y altamente cohesivos. Cada uno de estos componentes se ejecuta como un proceso independiente y se comunica con los demás a través de mecanismos ligeros, generalmente interfaces de programación de aplicaciones (APIs) basadas en el protocolo HTTP. A diferencia de las arquitecturas monolíticas, donde una falla en un módulo puede comprometer la totalidad del sistema, los microservicios permiten que cada unidad funcional se enfoque en una capacidad específica del negocio, facilitando su desarrollo, despliegue y escalado de forma totalmente autónoma [1][18].
+La arquitectura de microservicios se define como un enfoque de desarrollo de software donde una aplicación se descompone en un conjunto de servicios pequeños, autónomos y altamente cohesivos. Cada uno de estos componentes se ejecuta como un proceso independiente y se comunica con los demás a través de mecanismos ligeros, generalmente interfaces de programación de aplicaciones (APIs) basadas en el protocolo HTTP. A diferencia de las arquitecturas monolíticas, donde una falla en un módulo puede comprometer la totalidad del sistema, los microservicios permiten que cada unidad funcional se enfoque en una capacidad específica del negocio, facilitando su desarrollo, despliegue y escalado de forma totalmente autónoma \cite{31}.
 
 
 
 \textbf{Ventajas de su Uso:}
 \begin{itemize}
-    \item \textbf{Aislamiento y Resiliencia ante Fallos:} Dado que cada servicio opera en un entorno de ejecución separado, un error crítico o una excepción no controlada en un módulo específico no provoca un efecto dominó sobre el resto de la plataforma. Esta característica es vital para mantener la alta disponibilidad requerida en entornos institucionales [1][18].
+    \item \textbf{Aislamiento y Resiliencia ante Fallos:} Dado que cada servicio opera en un entorno de ejecución separado, un error crítico o una excepción no controlada en un módulo específico no provoca un efecto dominó sobre el resto de la plataforma. Esta característica es vital para mantener la alta disponibilidad requerida en entornos institucionales \cite{32} .
     
-    \item \textbf{Escalabilidad Granular y Eficiente:} Permite realizar un escalado horizontal selectivo. En lugar de replicar la aplicación completa, es posible asignar recursos de infraestructura adicionales únicamente a aquellos servicios que experimentan una alta demanda de procesamiento, optimizando significativamente el uso del hardware y los costos operativos [1][2].
+    \item \textbf{Escalabilidad Granular y Eficiente:} Permite realizar un escalado horizontal selectivo. En lugar de replicar la aplicación completa, es posible asignar recursos de infraestructura adicionales únicamente a aquellos servicios que experimentan una alta demanda de procesamiento, optimizando significativamente el uso del hardware y los costos operativos \cite{32} \cite{29} .
     
-    \item \textbf{Heterogeneidad Tecnológica:} Facilita el uso de diferentes lenguajes de programación y bases de datos según las necesidades específicas de cada módulo. En este proyecto, dicha flexibilidad permite la coexistencia de servicios robustos en Java con módulos especializados en análisis de datos desarrollados en Python [1].
+    \item \textbf{Heterogeneidad Tecnológica:} Facilita el uso de diferentes lenguajes de programación y bases de datos según las necesidades específicas de cada módulo. En este proyecto, dicha flexibilidad permite la coexistencia de servicios robustos en Java con módulos especializados en análisis de datos desarrollados en Python \cite{32} .
     
-    \item \textbf{Agilidad en el Despliegue Continuo:} Al reducir el acoplamiento entre funciones, se acortan los ciclos de desarrollo y se permite la actualización constante de módulos individuales sin necesidad de reiniciar o interrumpir la operación global del sistema [1].
+    \item \textbf{Agilidad en el Despliegue Continuo:} Al reducir el acoplamiento entre funciones, se acortan los ciclos de desarrollo y se permite la actualización constante de módulos individuales sin necesidad de reiniciar o interrumpir la operación global del sistema \cite{33} .
 \end{itemize}
 
 \textbf{Justificación para la Defensoría de los Derechos Politécnicos:}
@@ -667,23 +666,23 @@ La elección de este enfoque para la plataforma de denuncia segura responde a la
 
 \subsection{Arquitectura Interna de los Servicios: Patrón de 3 Capas}
 
-La arquitectura de tres niveles (o capas) es un modelo de diseño de software cuya finalidad primordial es la separación de las responsabilidades y el desacoplamiento de las etapas de procesamiento de una aplicación. Esta estructura organiza el software en tres niveles lógicos y físicos claramente diferenciados: el nivel de presentación, el nivel de aplicación (o lógica de negocio) y el nivel de datos [3][19]. En este proyecto, dicha estructura conforma de manera exacta el diseño interno de cada microservicio, garantizando que la lógica institucional esté aislada de las interfaces de usuario y de los motores de persistencia.
+La arquitectura de tres niveles (o capas) es un modelo de diseño de software cuya finalidad primordial es la separación de las responsabilidades y el desacoplamiento de las etapas de procesamiento de una aplicación. Esta estructura organiza el software en tres niveles lógicos y físicos claramente diferenciados: el nivel de presentación, el nivel de aplicación (o lógica de negocio) y el nivel de datos \cite{33} \cite{40} . En este proyecto, dicha estructura conforma de manera exacta el diseño interno de cada microservicio, garantizando que la lógica institucional esté aislada de las interfaces de usuario y de los motores de persistencia.
 
 
 
 \begin{itemize}
-    \item \textbf{Nivel de Presentación (Interfaz de Usuario):} Es la capa más externa del servicio, encargada de la interacción directa con el usuario o con otros servicios externos. Su función principal es presentar la información y recolectar datos de entrada para enviarlos a la capa de aplicación. Al estar desacoplada, permite realizar cambios estéticos o funcionales en la interfaz (Angular) sin alterar las reglas de negocio subyacentes [3][19].
+    \item \textbf{Nivel de Presentación (Interfaz de Usuario):} Es la capa más externa del servicio, encargada de la interacción directa con el usuario o con otros servicios externos. Su función principal es presentar la información y recolectar datos de entrada para enviarlos a la capa de aplicación. Al estar desacoplada, permite realizar cambios estéticos o funcionales en la interfaz (Angular) sin alterar las reglas de negocio subyacentes \cite{33} \cite{40} .
     
-    \item \textbf{Nivel de Aplicación (Lógica de Negocio):} Considerado el núcleo del servicio, es donde se modelan las reglas del negocio y se toman las decisiones lógicas. Según Coti Colop, la ubicación de las reglas en esta capa central es crítica para asegurar la funcionalidad y la integridad del sistema, ya que actúa como un puente que coordina las peticiones de la interfaz y la gestión de los datos, protegiendo la coherencia de los procesos legales y administrativos de la Defensoría [5].
+    \item \textbf{Nivel de Aplicación (Lógica de Negocio):} Considerado el núcleo del servicio, es donde se modelan las reglas del negocio y se toman las decisiones lógicas. Según Coti Colop, la ubicación de las reglas en esta capa central es crítica para asegurar la funcionalidad y la integridad del sistema, ya que actúa como un puente que coordina las peticiones de la interfaz y la gestión de los datos, protegiendo la coherencia de los procesos legales y administrativos de la Defensoría \cite{33} .
     
-    \item \textbf{Nivel de Datos (Persistencia):} Es la capa responsable del almacenamiento y la recuperación de la información. Gestiona la comunicación con el Sistema de Gestión de Bases de Datos (PostgreSQL), permitiendo que la persistencia sea transparente para las capas superiores. Esto significa que el motor de base de datos podría ser optimizado o sustituido con un impacto mínimo en la lógica de negocio [19].
+    \item \textbf{Nivel de Datos (Persistencia):} Es la capa responsable del almacenamiento y la recuperación de la información. Gestiona la comunicación con el Sistema de Gestión de Bases de Datos (PostgreSQL), permitiendo que la persistencia sea transparente para las capas superiores. Esto significa que el motor de base de datos podría ser optimizado o sustituido con un impacto mínimo en la lógica de negocio \cite{42} .
 \end{itemize}
 
 \textbf{Ventajas de su Uso:}
 \begin{itemize}
-    \item \textbf{Independencia y Escalabilidad:} Cada nivel puede ser escalado de forma independiente según la demanda específica. Por ejemplo, si el procesamiento de datos aumenta, se puede fortalecer la capa de aplicación sin necesidad de modificar la interfaz de usuario [3][19].
-    \item \textbf{Mantenibilidad y Flexibilidad:} Facilita el mantenimiento a largo plazo al permitir que cada capa sea desarrollada, probada y actualizada simultáneamente por distintos integrantes del equipo, lo que reduce significativamente el tiempo total de desarrollo y el riesgo de introducir errores colaterales [19].
-    \item \textbf{Confiabilidad Operativa:} Al operar de manera aislada, una interrupción o fallo en la capa de presentación no compromete la integridad de los datos ni la ejecución de los procesos de negocio en curso, aumentando la resiliencia del microservicio [19].
+    \item \textbf{Independencia y Escalabilidad:} Cada nivel puede ser escalado de forma independiente según la demanda específica. Por ejemplo, si el procesamiento de datos aumenta, se puede fortalecer la capa de aplicación sin necesidad de modificar la interfaz de usuario \cite{33} \cite{42} .
+    \item \textbf{Mantenibilidad y Flexibilidad:} Facilita el mantenimiento a largo plazo al permitir que cada capa sea desarrollada, probada y actualizada simultáneamente por distintos integrantes del equipo, lo que reduce significativamente el tiempo total de desarrollo y el riesgo de introducir errores colaterales \cite{46} .
+    \item \textbf{Confiabilidad Operativa:} Al operar de manera aislada, una interrupción o fallo en la capa de presentación no compromete la integridad de los datos ni la ejecución de los procesos de negocio en curso, aumentando la resiliencia del microservicio \cite{46} .
 \end{itemize}
 
 El uso de este patrón se justifica plenamente en la necesidad de proteger las reglas del sistema ante cambios tecnológicos. Al separar la lógica de negocio de la infraestructura técnica, se asegura que la plataforma de la Defensoría de los Derechos Politécnicos sea una solución robusta, fácil de auditar y capaz de evolucionar conforme a los requisitos normativos del Instituto.
@@ -770,15 +769,15 @@ El ecosistema de Java proporciona bibliotecas estandarizadas y probadas para la 
 
 \subsection{Framework: Spring Boot}
 
-Spring Boot es una extensión del ecosistema Spring diseñada para simplificar el proceso de configuración y despliegue de aplicaciones de grado empresarial. Se basa en el principio de \textit{"Convention over Configuration"} (convención sobre configuración), lo que permite crear microservicios autónomos y listos para producción con un esfuerzo de configuración mínimo. Mientras Java proporciona la sintaxis y robustez del lenguaje, Spring Boot aporta la infraestructura necesaria para orquestar servicios complejos de manera eficiente [24].
+Spring Boot es una extensión del ecosistema Spring diseñada para simplificar el proceso de configuración y despliegue de aplicaciones de grado empresarial. Se basa en el principio de \textit{"Convention over Configuration"} (convención sobre configuración), lo que permite crear microservicios autónomos y listos para producción con un esfuerzo de configuración mínimo. Mientras Java proporciona la sintaxis y robustez del lenguaje, Spring Boot aporta la infraestructura necesaria para orquestar servicios complejos de manera eficiente \cite{38} .
 
 
 
 \textbf{Ventajas de su Uso:}
 \begin{itemize}
-    \item \textbf{Autoconfiguración Inteligente:} El framework analiza las dependencias presentes en el \textit{classpath} y configura automáticamente los componentes necesarios. Por ejemplo, al detectar la librería de PostgreSQL, Spring Boot configura por sí solo el \textit{DataSource} y el gestor de transacciones, reduciendo el código repetitivo (\textit{boilerplate}) y el riesgo de errores de configuración manual [24].
+    \item \textbf{Autoconfiguración Inteligente:} El framework analiza las dependencias presentes en el \textit{classpath} y configura automáticamente los componentes necesarios. Por ejemplo, al detectar la librería de PostgreSQL, Spring Boot configura por sí solo el \textit{DataSource} y el gestor de transacciones, reduciendo el código repetitivo (\textit{boilerplate}) y el riesgo de errores de configuración manual \cite{38} .
     
-    \item \textbf{Contenedores de Servlet Embebidos:} A diferencia de las aplicaciones web tradicionales que requieren un servidor externo, Spring Boot empaqueta servidores como Apache Tomcat directamente dentro del archivo ejecutable (JAR). Esto simplifica el despliegue en entornos de contenedores como Docker, ya que la aplicación es totalmente autónoma [24].
+    \item \textbf{Contenedores de Servlet Embebidos:} A diferencia de las aplicaciones web tradicionales que requieren un servidor externo, Spring Boot empaqueta servidores como Apache Tomcat directamente dentro del archivo ejecutable (JAR). Esto simplifica el despliegue en entornos de contenedores como Docker, ya que la aplicación es totalmente autónoma \cite{38} .
     
     \item \textbf{Ecosistema de "Starters":} Proporciona descriptores de dependencias simplificados que agrupan bibliotecas compatibles para tareas específicas (web, seguridad, datos), garantizando la estabilidad del sistema al evitar conflictos entre versiones de librerías.
 \end{itemize}
@@ -804,52 +803,52 @@ La integración nativa con Spring Security es una de las razones fundamentales p
 Para el sistema, se requiere un asistente tecnológico capaz de procesar el texto de las quejas utilizando algoritmos de Procesamiento de Lenguaje Natural (PLN). La incorporación de Python se justifica por su superioridad técnica en el ecosistema de inteligencia artificial; utilizarlo dentro de su propio microservicio permite delegar la pesada carga del análisis de texto a un entorno especializado, evitando saturar o comprometer el rendimiento de las operaciones administrativas del servidor principal en Java.
 \section{Tecnologías de Desarrollo Frontend}
 \subsection{Framework de Interfaz de Usuario: Angular}
-Angular es una plataforma de desarrollo y un framework basado en TypeScript para construir aplicaciones web escalables de una sola página (SPA). Se caracteriza por su arquitectura basada en componentes y una amplia colección de herramientas integradas que facilitan el desarrollo, las pruebas y la actualización de aplicaciones robustas [26].
+Angular es una plataforma de desarrollo y un framework basado en TypeScript para construir aplicaciones web escalables de una sola página (SPA). Se caracteriza por su arquitectura basada en componentes y una amplia colección de herramientas integradas que facilitan el desarrollo, las pruebas y la actualización de aplicaciones robustas \cite{41} .
 
 \textbf{Ventajas de su Uso:}
 \begin{itemize}
-    \item \textbf{Modularidad y Reutilización:} Organiza el código en componentes aislados que permiten reutilizar lógica y estilos visuales en múltiples secciones de la plataforma [27].
-    \item \textbf{Integración con TypeScript:} Ofrece un tipado fuerte que detecta errores durante el desarrollo, asegurando un código más limpio y fácil de mantener a largo plazo [27].
-    \item \textbf{Arquitectura Estructurada:} Proporciona un marco de trabajo con estándares claros que guían al equipo de desarrollo, evitando inconsistencias en el diseño del frontend [27].
+    \item \textbf{Modularidad y Reutilización:} Organiza el código en componentes aislados que permiten reutilizar lógica y estilos visuales en múltiples secciones de la plataforma \cite{41} .
+    \item \textbf{Integración con TypeScript:} Ofrece un tipado fuerte que detecta errores durante el desarrollo, asegurando un código más limpio y fácil de mantener a largo plazo \cite{41} .
+    \item \textbf{Arquitectura Estructurada:} Proporciona un marco de trabajo con estándares claros que guían al equipo de desarrollo, evitando inconsistencias en el diseño del frontend \cite{41} .
 \end{itemize}
 
 La incorporación de Angular como tecnología frontend se justifica por su madurez como framework empresarial y la reducida curva de aprendizaje para el equipo de desarrollo, lo que asegura una construcción ágil de la interfaz. Asimismo, su arquitectura orientada a servicios permite una integración nativa y eficiente con el ecosistema de microservicios basado en Java y Python, garantizando la compatibilidad técnica necesaria para gestionar el flujo de información del sistema de manera fluida.
 
 \section{Gestión de Bases de Datos}
 \subsection{Sistema de Gestión de Bases de Datos Relacional (RDBMS): PostgreSQL}
-PostgreSQL es un sistema de gestión de bases de datos relacionales de objetos (ORDBMS) de código abierto, reconocido por su fiabilidad, robustez de funciones y rendimiento, lo que permite gestionar cargas de trabajo de datos complejas de forma segura [28].
+PostgreSQL es un sistema de gestión de bases de datos relacionales de objetos (ORDBMS) de código abierto, reconocido por su fiabilidad, robustez de funciones y rendimiento, lo que permite gestionar cargas de trabajo de datos complejas de forma segura \cite{42} .
 
 \textbf{Ventajas de su Uso:}
 \begin{itemize}
-    \item \textbf{Integridad y Seguridad de Datos:} Cumple estrictamente con el modelo ACID, garantizando que todas las transacciones se procesen de forma fiable y protegiendo la información contra fallos [28].
-    \item \textbf{Extensibilidad y Versatilidad:} Permite definir tipos de datos personalizados y soporta diversos lenguajes, facilitando el manejo de datos relacionales y no relacionales. [28].
-    \item \textbf{Soporte y Estándares:} Su alta adherencia a SQL asegura la compatibilidad con múltiples herramientas de análisis y facilita la integración con el ecosistema tecnológico del proyecto [28].
+    \item \textbf{Integridad y Seguridad de Datos:} Cumple estrictamente con el modelo ACID, garantizando que todas las transacciones se procesen de forma fiable y protegiendo la información contra fallos \cite{42} .
+    \item \textbf{Extensibilidad y Versatilidad:} Permite definir tipos de datos personalizados y soporta diversos lenguajes, facilitando el manejo de datos relacionales y no relacionales. \cite{42} .
+    \item \textbf{Soporte y Estándares:} Su alta adherencia a SQL asegura la compatibilidad con múltiples herramientas de análisis y facilita la integración con el ecosistema tecnológico del proyecto \cite{42} .
 \end{itemize}
 
 La elección de PostgreSQL como repositorio central del sistema se fundamenta en su estabilidad comprobada agilizando el diseño del modelo de datos. Su capacidad para manejar la integridad referencial de forma estricta es indispensable para salvaguardar el historial legal de la Defensoría, asegurando que la información de los expedientes permanezca consistente y protegida a largo plazo.
 
 \section{Infraestructura y Despliegue}
 \subsection{Plataforma de Contenerización: Docker}
-Docker es una tecnología de código abierto que permite la creación y el uso de contenedores de Linux, los cuales empaquetan una aplicación con todas sus bibliotecas y dependencias en una unidad estandarizada para su ejecución aislada en cualquier entorno [29].
+Docker es una tecnología de código abierto que permite la creación y el uso de contenedores de Linux, los cuales empaquetan una aplicación con todas sus bibliotecas y dependencias en una unidad estandarizada para su ejecución aislada en cualquier entorno \cite{43} .
 
 \textbf{Ventajas de su Uso:}
 \begin{itemize}
-    \item \textbf{Portabilidad:} Asegura que la aplicación se ejecute de manera idéntica en cualquier infraestructura, eliminando las discrepancias entre los equipos de desarrollo y el servidor final [29].
-    \item \textbf{Aislamiento y Seguridad:} Cada servicio opera de forma independiente dentro de su propio contenedor, garantizando que un fallo o consumo excesivo de recursos en un módulo no afecte al resto del sistema [29].
-    \item \textbf{Eficiencia en Recursos:} Optimiza el uso de CPU y memoria al compartir el núcleo del sistema anfitrión, permitiendo un arranque casi instantáneo frente a las máquinas virtuales [29].
+    \item \textbf{Portabilidad:} Asegura que la aplicación se ejecute de manera idéntica en cualquier infraestructura, eliminando las discrepancias entre los equipos de desarrollo y el servidor final \cite{43} .
+    \item \textbf{Aislamiento y Seguridad:} Cada servicio opera de forma independiente dentro de su propio contenedor, garantizando que un fallo o consumo excesivo de recursos en un módulo no afecte al resto del sistema \cite{43} .
+    \item \textbf{Eficiencia en Recursos:} Optimiza el uso de CPU y memoria al compartir el núcleo del sistema anfitrión, permitiendo un arranque casi instantáneo frente a las máquinas virtuales \cite{43} .
 \end{itemize}
 
 Debido a que el sistema contiene varias tecnologías utilizadas (compuesto por Java, Python, Angular y PostgreSQL), Docker es indispensable para estandarizar el entorno de ejecución. Su uso asegura que la infraestructura de microservicios sea fácil de desplegar y migrar, garantizando que el sistema funcione correctamente tanto en los equipos locales de desarrollo como en los servidores institucionales del IPN.
 
 \section{Control de Versiones y Trabajo Colaborativo}
 \subsection{Repositorio y Flujos de Trabajo: GitHub}
-GitHub es una plataforma de desarrollo alojada en la nube que permite gestionar y controlar las versiones del código utilizando Git, un sistema de control de versiones distribuido. Facilita la colaboración entre desarrolladores al registrar cada modificación realizada en los archivos, permitiendo la recuperación de versiones específicas y la integración segura de cambios [30][31].
+GitHub es una plataforma de desarrollo alojada en la nube que permite gestionar y controlar las versiones del código utilizando Git, un sistema de control de versiones distribuido. Facilita la colaboración entre desarrolladores al registrar cada modificación realizada en los archivos, permitiendo la recuperación de versiones específicas y la integración segura de cambios \cite{44} \cite{45} .
 
 \textbf{Ventajas de su Uso:}
 \begin{itemize}
-    \item \textbf{Control de Versiones Distribuido:} Registra un historial detallado de cambios, facilitando la reversión a estados anteriores y la experimentación segura del código [31].
-    \item \textbf{Colaboración mediante Ramificaciones:} Permite crear ramas independientes para desarrollar nuevas funciones de forma aislada antes de integrarlas al proyecto principal [30].
-    \item \textbf{Gestión Centralizada en la Nube:} Actúa como un repositorio central que garantiza el respaldo del proyecto y facilita el acceso al código desde cualquier ubicación [30].
+    \item \textbf{Control de Versiones Distribuido:} Registra un historial detallado de cambios, facilitando la reversión a estados anteriores y la experimentación segura del código \cite{45} .
+    \item \textbf{Colaboración mediante Ramificaciones:} Permite crear ramas independientes para desarrollar nuevas funciones de forma aislada antes de integrarlas al proyecto principal \cite{44} .
+    \item \textbf{Gestión Centralizada en la Nube:} Actúa como un repositorio central que garantiza el respaldo del proyecto y facilita el acceso al código desde cualquier ubicación \cite{44} .
 \end{itemize}
 
 La adopción de GitHub como plataforma de control de versiones se basa en el dominio previo de los integrantes del equipo sobre el flujo de trabajo de esta plataforma, lo que reduce riesgos operativos y agiliza la integración de los módulos del sistema. Al ser uno de los estándares de la industria, proporciona una infraestructura confiable que asegura la trazabilidad del desarrollo y garantiza que el código fuente esté respaldado y organizado durante todo el ciclo de vida del proyecto.
