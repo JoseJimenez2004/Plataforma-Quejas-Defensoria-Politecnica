@@ -1,2 +1,743 @@
-\section{Modelo de Persistencia}
-Se define el esquema de la base de datos relacional utilizando PostgreSQL, con tablas para Usuarios.
+% =========================================================
+% MODULO DE PERSISTENCIA (BASE)
+% =========================================================
+
+\subsection{Modelo de Persistencia Base}
+Se define el esquema de la base de datos relacional utilizando PostgreSQL. El diseño sigue el paradigma de mapeo objeto-relacional (ORM) a trav\'es de JPA/Hibernate, garantizando la consistencia y escalabilidad del modelo de datos.
+
+\subsubsection{Diccionario de Datos: Tabla Usuarios}
+La tabla \texttt{usuarios} constituye la entidad central para la autenticaci\'on y gesti\'on de perfiles dentro del sistema.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\rowcolor{azulESCOM} 
+\color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
+id & BIGINT & PK, IDENTITY & Identificador \'unico interno del registro. \\ \hline
+correo & VARCHAR(255) & UNIQUE, NOT NULL & Correo institucional del usuario. \\ \hline
+password & VARCHAR(255) & NOT NULL & Hash criptogr\'afico de la contrase\~na de acceso. \\ \hline
+boleta & VARCHAR(50) & UNIQUE, NOT NULL & Identificador institucional (boleta del alumno o empleado). \\ \hline
+nombre & VARCHAR(255) & - & Nombre(s) del titular del perfil. \\ \hline
+primer\_apellido & VARCHAR(255) & - & Apellido paterno. \\ \hline
+segundo\_apellido & VARCHAR(255) & - & Apellido materno (campo opcional). \\ \hline
+reset\_token & VARCHAR(255) & UNIQUE & Token empleado para la recuperaci\'on de la cuenta. \\ \hline
+token\_expiration & TIMESTAMP & - & Fecha y hora de expiraci\'on del token de seguridad. \\ \hline
+\end{tabularx}
+\caption{Diccionario de datos de la entidad \texttt{usuarios}.}
+\label{tab:dict_usuarios}
+\end{table}
+
+\subsubsection{Diccionario de Datos: Tabla Usuario Folios}
+Tabla auxiliar que gestiona la relaci\'on din\'amica de folios vinculados a cada usuario.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\rowcolor{azulESCOM} 
+\color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
+usuario\_id & BIGINT & FK, NOT NULL & Clave for\'anea que referencia a la tabla \texttt{usuarios}. \\ \hline
+folio & VARCHAR(255) & PK & C\'odigo \'unico del folio registrado. \\ \hline
+boleta & VARCHAR(50) & - & Boleta espec\'ificamente asociada a dicho folio. \\ \hline
+\end{tabularx}
+\caption{Diccionario de datos de la tabla auxiliar \texttt{usuario\_folios}.}
+\label{tab:dict_usuario_folios}
+\end{table}
+
+\subsubsection{Definici\'on de la Entidad Usuario (JPA)}
+\begin{lstlisting}[language=Java, caption={Entidad Java para la gesti\'on de usuarios.}, label={lst:java_usuario}]
+@Entity
+@Table(name = "usuarios")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UsuarioEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String correo;
+    
+    @Column(nullable = false)
+    private String password;
+    
+    @Column(unique = true, nullable = false, length = 50)
+    private String boleta;
+    
+    private String nombre;
+    private String primerApellido;
+    private String segundoApellido;
+    
+    @Column(unique = true)
+    private String resetToken;
+    
+    private LocalDateTime tokenExpiration;
+}
+\end{lstlisting}
+
+\subsubsection{Definici\'on del Esquema SQL (M\'odulo Base)}
+El siguiente script define la estructura f\'isica en PostgreSQL para el m\'odulo de usuarios.
+
+\begin{lstlisting}[language=SQL, caption={Script de creaci\'on para el m\'odulo de usuarios.}, label={lst:sql_usuarios}]
+CREATE TABLE usuarios (
+    id BIGSERIAL PRIMARY KEY,
+    correo VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    boleta VARCHAR(50) UNIQUE NOT NULL,
+    nombre VARCHAR(255),
+    primer_apellido VARCHAR(255),
+    segundo_apellido VARCHAR(255),
+    reset_token VARCHAR(255) UNIQUE,
+    token_expiration TIMESTAMP
+);
+
+CREATE TABLE usuario_folios (
+    usuario_id BIGINT NOT NULL,
+    folio VARCHAR(255) NOT NULL,
+    boleta VARCHAR(50),
+    PRIMARY KEY (usuario_id, folio),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+
+CREATE INDEX idx_usuario_folios_usuario_id ON usuario_folios(usuario_id);
+\end{lstlisting}
+
+% =========================================================
+% MODULO DE NOTIFICACIONES
+% =========================================================
+
+\subsection{M\'odulo de Notificaciones}
+Este m\'odulo extiende el modelo de persistencia base para gestionar el almacenamiento de alertas y comunicaciones dirigidas a los usuarios. El diseño permite mantener un hist\'orico completo de mensajes vinculados a cada perfil, facilitando el seguimiento de actividades y avisos del sistema.
+
+\subsubsection{Diccionario de Datos: Tabla Notificaciones}
+La tabla \texttt{notificaciones} almacena los mensajes generados por el sistema, incorporando mecanismos para el rastreo de lectura y la vinculaci\'on con el usuario receptor.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\rowcolor{azulESCOM} 
+\color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
+id & BIGINT & PK, IDENTITY & Identificador \'unico de la notificaci\'on. \\ \hline
+titulo & VARCHAR(255) & NOT NULL & Encabezado o asunto del mensaje. \\ \hline
+mensaje & TEXT & NOT NULL & Contenido detallado de la notificaci\'on. \\ \hline
+boleta & VARCHAR(50) & - & Boleta asociada al evento (redundancia para optimizaci\'on de consultas). \\ \hline
+fecha & TIMESTAMP & NOT NULL & Fecha y hora de creaci\'on del registro (por defecto la actual). \\ \hline
+leida & BOOLEAN & DEFAULT FALSE & Estado que indica si la notificaci\'on ha sido visualizada. \\ \hline
+usuario\_id & BIGINT & FK, NOT NULL & Referencia al titular en la tabla \texttt{usuarios}. \\ \hline
+\end{tabularx}
+\caption{Diccionario de datos de la entidad \texttt{notificaciones}.}
+\label{tab:dict_notificaciones}
+\end{table}
+
+\subsubsection{Definici\'on de la Entidad (JPA)}
+A continuaci\'on se presenta la implementaci\'on de la clase de entidad en Java. Se emplea la librer\'ia \textbf{Lombok} mediante la anotaci\'on \texttt{@Data} para la generaci\'on autom\'atica de m\'etodos de acceso (getters/setters), constructores y otros utilitarios.
+
+\begin{lstlisting}[language=Java, caption={Entidad Java para la gesti\'on de notificaciones.}, label={lst:java_notificacion}]
+@Entity
+@Table(name = "notificaciones")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class NotificacionEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String titulo;
+    
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String mensaje;
+    
+    private String boleta;
+    
+    @Column(nullable = false)
+    private LocalDateTime fecha;
+    
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean leida = false;
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private UsuarioEntity usuario;
+}
+\end{lstlisting}
+
+\subsubsection{Definici\'on del Esquema SQL (M\'odulo Notificaciones)}
+Script definitivo para la creaci\'on de la estructura f\'isica en PostgreSQL, incluyendo la restricci\'on de integridad referencial con borrado en cascada.
+
+\begin{lstlisting}[language=SQL, caption={Script de creaci\'on para el m\'odulo de notificaciones.}, label={lst:sql_notificaciones}]
+CREATE TABLE notificaciones (
+    id BIGSERIAL PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    mensaje TEXT NOT NULL,
+    boleta VARCHAR(50),
+    fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    leida BOOLEAN DEFAULT FALSE,
+    usuario_id BIGINT NOT NULL,
+    CONSTRAINT fk_usuario_notificacion 
+        FOREIGN KEY (usuario_id) 
+        REFERENCES usuarios(id) 
+        ON DELETE CASCADE
+);
+
+
+CREATE INDEX idx_notificaciones_usuario_fecha ON notificaciones(usuario_id, fecha DESC);
+\end{lstlisting}
+
+% =========================================================
+% MODULO DE FOLIOS (ENTIDAD MAESTRA)
+% =========================================================
+
+\section{M\'odulo de Gesti\'on de Folios}
+La entidad \texttt{FolioEntity} constituye el n\'ucleo de informaci\'on de la plataforma. En ella se consolidan los datos del incidente, la informaci\'on de identificaci\'on del quejoso y, en cumplimiento con la normativa de protecci\'on a menores, los datos de los tutores legales cuando el caso lo requiere.
+
+\subsection{Diccionario de Datos: Tabla Folios}
+Debido a la naturaleza integral del formulario de denuncia, la tabla \texttt{folios} se divide en tres segmentos informativos: datos del expediente, datos personales y datos de contacto de terceros.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\rowcolor{azulESCOM} 
+\color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
+\multicolumn{4}{|l|}{\cellcolor[HTML]{EFEFEF}\textbf{Datos del Expediente}} \\ \hline
+id & BIGINT & PK, IDENTITY & Identificador interno de la base de datos. \\ \hline
+codigo\_folio & VARCHAR(255) & UNIQUE, NOT NULL & Folio p\'ublico generado para el seguimiento. \\ \hline
+fecha\_creacion & TIMESTAMP & DEFAULT NOW() & Fecha y hora de registro en el sistema. \\ \hline
+asunto & VARCHAR(255) & - & T\'itulo descriptivo de la queja. \\ \hline
+fecha\_hechos & VARCHAR(255) & - & Fecha aproximada en que ocurrieron los hechos. \\ \hline
+descripcion & TEXT & - & Descripci\'on detallada de los hechos denunciados. \\ \hline
+unidad & VARCHAR(255) & - & Unidad acad\'emica o administrativa destino. \\ \hline
+\multicolumn{4}{|l|}{\cellcolor[HTML]{EFEFEF}\textbf{Datos del Quejoso}} \\ \hline
+boleta & VARCHAR(50) & - & N\'umero de boleta o empleado del titular. \\ \hline
+nombre & VARCHAR(255) & - & Nombre(s) del denunciante. \\ \hline
+primer\_apellido & VARCHAR(255) & - & Apellido paterno del denunciante. \\ \hline
+segundo\_apellido & VARCHAR(255) & - & Apellido materno del denunciante. \\ \hline
+correo & VARCHAR(255) & - & Correo electr\'onico de contacto. \\ \hline
+\multicolumn{4}{|l|}{\cellcolor[HTML]{EFEFEF}\textbf{Representaci\'on Legal (Menores de edad)}} \\ \hline
+nombre\_tutor & VARCHAR(255) & - & Nombre completo del tutor legal. \\ \hline
+parentesco & VARCHAR(100) & - & Relaci\'on jur\'idica con el menor. \\ \hline
+correo\_tutor & VARCHAR(255) & - & Correo de contacto del representante. \\ \hline
+telefono\_tutor & VARCHAR(20) & - & Tel\'efono de contacto del tutor. \\ \hline
+\end{tabularx}
+\caption{Diccionario de datos de la entidad Folios (segmentado).}
+\label{tab:dict_folios}
+\end{table}
+
+\subsection{Definici\'on de la Entidad (JPA)}
+La clase \texttt{FolioEntity} gestiona la composici\'on de evidencias mediante una relaci\'on de uno a muchos, permitiendo que un expediente contenga m\'ultiples archivos probatorios con persistencia en cascada.
+
+\begin{lstlisting}[language=Java, caption={Implementaci\'on de la entidad maestra de folios.}, label={lst:java_folio}]
+@Entity
+@Table(name = "folios")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class FolioEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String codigoFolio;
+    
+    private LocalDateTime fechaCreacion;
+    private String asunto;
+    private String fechaHechos;
+    private String descripcion;
+    private String unidad;
+    
+    // Datos del quejoso
+    private String nombre;
+    private String primerApellido;
+    private String segundoApellido;
+    private String correo;
+    private String boleta;
+    
+    // Datos del tutor
+    private String nombreTutor;
+    private String parentesco;
+    private String correoTutor;
+    private String telefonoTutor;
+    
+    @OneToMany(mappedBy = "folio", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EvidenciaEntity> evidencias = new ArrayList<>();
+    
+    
+    public void addEvidencia(EvidenciaEntity evidencia) {
+        evidencias.add(evidencia);
+        evidencia.setFolio(this);
+    }
+    
+    public void removeEvidencia(EvidenciaEntity evidencia) {
+        evidencias.remove(evidencia);
+        evidencia.setFolio(null);
+    }
+}
+\end{lstlisting}
+
+\subsection{Definici\'on del Esquema SQL}
+El script de creaci\'on integra todas las dimensiones de la queja, asegurando la unicidad del c\'odigo de folio para evitar colisiones en el seguimiento p\'ublico.
+
+\begin{lstlisting}[language=SQL, caption={Script DDL para la tabla maestra de folios.}, label={lst:sql_folios}]
+CREATE TABLE folios (
+    id BIGSERIAL PRIMARY KEY,
+    codigo_folio VARCHAR(255) UNIQUE NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    asunto VARCHAR(255),
+    fecha_hechos VARCHAR(255),
+    descripcion TEXT,
+    unidad VARCHAR(255),
+    nombre VARCHAR(255),
+    primer_apellido VARCHAR(255),
+    segundo_apellido VARCHAR(255),
+    correo VARCHAR(255),
+    boleta VARCHAR(50),
+    nombre_tutor VARCHAR(255),
+    parentesco VARCHAR(100),
+    correo_tutor VARCHAR(255),
+    telefono_tutor VARCHAR(20)
+);
+
+
+CREATE INDEX idx_folios_codigo ON folios(codigo_folio);
+
+
+CREATE INDEX idx_folios_boleta ON folios(boleta);
+\end{lstlisting}
+
+% =========================================================
+% MODULO DE GESTION DE EVIDENCIAS (ARCHIVOS)
+% =========================================================
+
+\section{M\'odulo de Gesti\'on de Evidencias}
+Este m\'odulo se encarga de la administraci\'on de los archivos digitales adjuntos a cada expediente. El diseño permite la persistencia de metadatos cr\'iticos y la vinculaci\'on f\'isica de los documentos almacenados en el servidor con su registro en la base de datos.
+
+\subsection{Diccionario de Datos: Tabla Evidencias}
+La tabla \texttt{evidencias} registra la ubicaci\'on y caracter\'isticas de los archivos, asegurando que cada documento pueda ser recuperado y validado mediante su tipo y nombre original.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\rowcolor{azulESCOM} 
+\color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
+id & BIGINT & PK, IDENTITY & Identificador \'unico de la evidencia. \\ \hline
+nombre\_archivo & VARCHAR(255) & NOT NULL & Nombre original del documento cargado. \\ \hline
+tipo\_archivo & VARCHAR(100) & - & Extensi\'on o tipo MIME (PDF, PNG, JPG). \\ \hline
+ruta\_almacenamiento & VARCHAR(500) & NOT NULL & Trayectoria f\'isica o URI en el sistema de archivos. \\ \hline
+codigo\_folio & VARCHAR(50) & - & Referencia textual del folio (redundancia controlada). \\ \hline
+folio\_id & BIGINT & FK, NOT NULL & Relaci\'on con la entidad principal \texttt{folios}. \\ \hline
+\end{tabularx}
+\caption{Diccionario de datos de la entidad Evidencias.}
+\label{tab:dict_evidencias}
+\end{table}
+
+\subsection{Definici\'on de la Entidad (JPA)}
+La clase \texttt{EvidenciaEntity} implementa el mapeo necesario para gestionar archivos de forma din\'amica. Se destaca la separaci\'on entre el nombre del archivo y su ruta de almacenamiento para facilitar migraciones de servidor.
+
+\begin{lstlisting}[language=Java, caption={Entidad Java para la gesti\'on de metadatos de archivos de evidencia.}, label={lst:java_evidencia}]
+@Entity
+@Table(name = "evidencias")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class EvidenciaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String nombreArchivo;
+    
+    private String tipoArchivo; 
+    
+    @Column(nullable = false)
+    private String rutaAlmacenamiento; 
+    
+    private String codigoFolio;
+
+    @ManyToOne
+    @JoinColumn(name = "folio_id", nullable = false)
+    private FolioEntity folio;
+}
+\end{lstlisting}
+
+\subsection{Definici\'on del Esquema SQL}
+El script DDL define una ruta de almacenamiento amplia para prevenir errores por trayectorias de archivos extensas y establece la integridad referencial con la tabla de folios.
+
+\begin{lstlisting}[language=SQL, caption={Script de creaci\'on para la tabla de evidencias digitales.}, label={lst:sql_evidencias}]
+CREATE TABLE evidencias (
+    id BIGSERIAL PRIMARY KEY,
+    nombre_archivo VARCHAR(255) NOT NULL,
+    tipo_archivo VARCHAR(100),
+    ruta_almacenamiento VARCHAR(500) NOT NULL,
+    codigo_folio VARCHAR(50),
+    folio_id BIGINT NOT NULL,
+    CONSTRAINT fk_folio_evidencia 
+        FOREIGN KEY (folio_id) 
+        REFERENCES folios(id) 
+        ON DELETE CASCADE
+);
+
+
+CREATE INDEX idx_evidencias_folio_id ON evidencias(folio_id);
+
+
+CREATE INDEX idx_evidencias_codigo_folio ON evidencias(codigo_folio);
+\end{lstlisting}
+
+% =========================================================
+% MODULO DE QUEJAS (CONSULTA Y SEGUIMIENTO)
+% =========================================================
+
+\section{M\'odulo de Quejas y Seguimiento}
+Este m\'odulo constituye el n\'ucleo de trazabilidad del sistema, permitiendo el almacenamiento de las quejas formales y la gesti\'on de su ciclo de vida a trav\'es de un historial cronol\'ogico de hitos.
+
+\subsection{Diccionario de Datos: Tabla Quejas}
+La tabla \texttt{quejas} utiliza el folio administrativo como identificador \'unico, lo que facilita la interoperabilidad con los procesos f\'isicos de la Defensor\'ia.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\rowcolor{azulESCOM} 
+\color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
+folio & VARCHAR(255) & PK & Identificador alfanum\'erico \'unico del expediente. \\ \hline
+fecha\_inicio & TIMESTAMP & DEFAULT NOW() & Fecha y hora de registro inicial de la queja. \\ \hline
+asunto & VARCHAR(255) & NOT NULL & Resumen o categor\'ia del motivo de la queja. \\ \hline
+status & VARCHAR(50) & DEFAULT 'PENDIENTE' & Estado actual del proceso (PENDIENTE, EN\_PROCESO, RESUELTO). \\ \hline
+evidencias & TEXT & - & Referencias o rutas a los archivos probatorios adjuntos. \\ \hline
+\end{tabularx}
+\caption{Diccionario de datos de la entidad Quejas.}
+\label{tab:dict_quejas}
+\end{table}
+
+\subsection{Definici\'on de la Entidad (JPA)}
+La implementaci\'on en Java destaca por el uso de \texttt{orphanRemoval = true}, garantizando que los hitos del historial se gestionen \'integralmente a trav\'es de la entidad ra\'iz de la queja.
+
+\begin{lstlisting}[language=Java, caption={Entidad Java para la gesti\'on de quejas y expedientes.}, label={lst:java_quejas}]
+@Entity
+@Table(name = "quejas")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class QuejaEntity {
+    @Id
+    private String folio;
+    
+    private LocalDateTime fechaInicio;
+    
+    @Column(nullable = false)
+    private String asunto;
+    
+    private String status;
+    
+    @Column(columnDefinition = "TEXT")
+    private String evidencias; 
+    
+    @OneToMany(mappedBy = "queja", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("fechaHito ASC") 
+    private List<HitoEntity> historial = new ArrayList<>();
+    
+    
+    public void addHito(HitoEntity hito) {
+        historial.add(hito);
+        hito.setQueja(this);
+    }
+    
+    public void removeHito(HitoEntity hito) {
+        historial.remove(hito);
+        hito.setQueja(null);
+    }
+}
+\end{lstlisting}
+
+\subsection{Definici\'on del Esquema SQL}
+El script refleja la capacidad de almacenamiento extendido para el campo de evidencias y la estructura b\'asica de la tabla principal de quejas.
+
+\begin{lstlisting}[language=SQL, caption={Script de creaci\'on para la tabla de quejas.}, label={lst:sql_quejas}]
+CREATE TABLE quejas (
+    folio VARCHAR(255) PRIMARY KEY,
+    fecha_inicio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    asunto VARCHAR(255) NOT NULL,
+    status VARCHAR(50) DEFAULT 'PENDIENTE',
+    evidencias TEXT
+);
+
+
+CREATE INDEX idx_quejas_status ON quejas(status);
+
+
+CREATE INDEX idx_quejas_fecha_inicio ON quejas(fecha_inicio);
+\end{lstlisting}
+
+% =========================================================
+% MODULO DE HITOS (HISTORIAL DE SEGUIMIENTO)
+% =========================================================
+
+\section{M\'odulo de Hitos de Seguimiento}
+Para garantizar la trazabilidad de cada expediente, el sistema implementa una entidad de hitos. Esta permite registrar cronol\'ogicamente cada avance, cambio de estado o acci\'on administrativa realizada sobre una queja espec\'ifica.
+
+\subsection{Diccionario de Datos: Tabla Queja Hitos}
+La tabla \texttt{queja\_hitos} mantiene una relaci\'on de muchos a uno con la tabla de quejas, permitiendo que un solo expediente cuente con m\'ultiples registros de seguimiento.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\rowcolor{azulESCOM} 
+\color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
+id & BIGINT & PK, IDENTITY & Identificador \'unico del hito. \\ \hline
+descripcion & VARCHAR(255) & NOT NULL & Detalle del evento o acci\'on realizada. \\ \hline
+fecha\_hito & TIMESTAMP & NOT NULL & Fecha y hora en que ocurri\'o el evento. \\ \hline
+folio\_id & VARCHAR(255) & FK, NOT NULL & Referencia al folio de la queja asociada. \\ \hline
+\end{tabularx}
+\caption{Diccionario de datos de la entidad Hitos (Seguimiento).}
+\label{tab:dict_hitos}
+\end{table}
+
+\subsection{Definici\'on de la Entidad (JPA)}
+La clase \texttt{HitoEntity} utiliza la anotaci\'on \texttt{@ManyToOne} para establecer la relaci\'on inversa con la entidad de queja. El uso de \texttt{LocalDateTime} asegura precisi\'on en la l\'inea de tiempo del expediente.
+
+\begin{lstlisting}[language=Java, caption={Entidad Java para el registro de hitos de seguimiento.}, label={lst:java_hito}]
+@Entity
+@Table(name = "queja_hitos")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class HitoEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String descripcion; 
+    
+    @Column(nullable = false)
+    private LocalDateTime fechaHito;
+
+    @ManyToOne
+    @JoinColumn(name = "folio_id", nullable = false)
+    private QuejaEntity queja;
+}
+\end{lstlisting}
+
+\subsection{Definici\'on del Esquema SQL}
+A continuaci\'on se detalla el script DDL para la creaci\'on de la tabla de hitos, destacando la vinculaci\'on mediante el campo \texttt{folio\_id}.
+
+\begin{lstlisting}[language=SQL, caption={Script de creaci\'on para la tabla de hitos de seguimiento.}, label={lst:sql_hitos}]
+CREATE TABLE queja_hitos (
+    id BIGSERIAL PRIMARY KEY,
+    descripcion VARCHAR(255) NOT NULL,
+    fecha_hito TIMESTAMP NOT NULL,
+    folio_id VARCHAR(255) NOT NULL,
+    CONSTRAINT fk_queja_hito 
+        FOREIGN KEY (folio_id) 
+        REFERENCES quejas(folio) 
+        ON DELETE CASCADE
+);
+
+
+CREATE INDEX idx_hitos_folio_id ON queja_hitos(folio_id);
+
+
+CREATE INDEX idx_hitos_fecha ON queja_hitos(fecha_hito);
+\end{lstlisting}
+
+% =========================================================
+% MODULO DE CATALOGOS DEL SISTEMA
+% =========================================================
+
+\section{M\'odulo de Cat\'alogos del Sistema}
+Para estandarizar la clasificaci\'on de la informaci\'on y mantener la integridad de los datos, se implementan tablas de cat\'alogo con valores predefinidos.
+
+\subsection{Cat\'alogo de Estatus de Queja}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\rowcolor{azulESCOM} 
+\color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
+id & SERIAL & PK & Identificador \'unico del estatus. \\ \hline
+nombre & VARCHAR(50) & UNIQUE, NOT NULL & Nombre corto del estado. \\ \hline
+descripcion & VARCHAR(255) & - & Explicaci\'on detallada del estado. \\ \hline
+\end{tabularx}
+\caption{Cat\'alogo de estatus de queja.}
+\label{tab:dict_cat_estatus}
+\end{table}
+
+\begin{lstlisting}[language=Java, caption={Entidad Java para cat\'alogo de estatus.}, label={lst:java_cat_estatus}]
+@Entity
+@Table(name = "cat_estatus_queja")
+@Data
+@NoArgsConstructor
+public class CatEstatusQueja {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    
+    @Column(unique = true, nullable = false, length = 50)
+    private String nombre;
+    
+    @Column(length = 255)
+    private String descripcion;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=SQL, caption={Script de creaci\'on e inicializaci\'on del cat\'alogo de estatus.}, label={lst:sql_cat_estatus}]
+CREATE TABLE cat_estatus_queja (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) UNIQUE NOT NULL,
+    descripcion VARCHAR(255)
+);
+
+INSERT INTO cat_estatus_queja (nombre, descripcion) VALUES 
+('PENDIENTE', 'Queja registrada pendiente de revisi\'on inicial'),
+('EN_PROCESO', 'Queja aceptada y asignada para an\'alisis y seguimiento'),
+('RESUELTO', 'Queja con resoluci\'on final o cierre administrativo'),
+('RECHAZADO', 'Queja no procedente seg\'un criterios establecidos');
+\end{lstlisting}
+
+\subsection{Cat\'alogo de Temas o Categor\'ias}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\rowcolor{azulESCOM} 
+\color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
+id & SERIAL & PK & Identificador \'unico del tema. \\ \hline
+nombre & VARCHAR(100) & UNIQUE, NOT NULL & Nombre de la categor\'ia tem\'atica. \\ \hline
+descripcion & VARCHAR(255) & - & Descripci\'on detallada del tema. \\ \hline
+\end{tabularx}
+\caption{Cat\'alogo de temas.}
+\label{tab:dict_cat_tema}
+\end{table}
+
+\begin{lstlisting}[language=Java, caption={Entidad Java para cat\'alogo de temas.}, label={lst:java_cat_tema}]
+@Entity
+@Table(name = "cat_tema")
+@Data
+@NoArgsConstructor
+public class CatTema {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    
+    @Column(unique = true, nullable = false, length = 100)
+    private String nombre;
+    
+    @Column(length = 255)
+    private String descripcion;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=SQL, caption={Script de creaci\'on e inicializaci\'on del cat\'alogo de temas.}, label={lst:sql_cat_tema}]
+CREATE TABLE cat_tema (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) UNIQUE NOT NULL,
+    descripcion VARCHAR(255)
+);
+
+INSERT INTO cat_tema (nombre, descripcion) VALUES 
+('Acoso escolar', 'Conductas de hostigamiento entre pares dentro del \'ambito escolar'),
+('Discriminaci\'on', 'Trato diferenciado o excluyente por motivos de g\'enero, origen, etc.'),
+('Abuso de autoridad', 'Ejercicio irregular del poder por parte de personal institucional'),
+('Irregularidades acad\'emicas', 'Fallas en procesos de evaluaci\'on, calificaci\'on o administrativos'),
+('Violencia de g\'enero', 'Actos de violencia basados en la identidad o expresi\'on de g\'enero'),
+('Incumplimiento de funciones', 'Omisi\'on o falta de respuesta por parte del personal');
+\end{lstlisting}
+
+\subsection{Cat\'alogo de Tipos de Documento}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\rowcolor{azulESCOM} 
+\color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
+id & SERIAL & PK & Identificador \'unico del tipo de documento. \\ \hline
+nombre & VARCHAR(50) & UNIQUE, NOT NULL & Nombre del tipo de documento. \\ \hline
+descripcion & VARCHAR(255) & - & Descripci\'on del prop\'osito del documento. \\ \hline
+\end{tabularx}
+\caption{Cat\'alogo de tipos de documento.}
+\label{tab:dict_cat_tipo_doc}
+\end{table}
+
+\begin{lstlisting}[language=Java, caption={Entidad Java para cat\'alogo de tipos de documento.}, label={lst:java_cat_tipo_doc}]
+@Entity
+@Table(name = "cat_tipo_documento")
+@Data
+@NoArgsConstructor
+public class CatTipoDocumento {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    
+    @Column(unique = true, nullable = false, length = 50)
+    private String nombre;
+    
+    @Column(length = 255)
+    private String descripcion;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=SQL, caption={Script de creaci\'on e inicializaci\'on del cat\'alogo de tipos de documento.}, label={lst:sql_cat_tipo_doc}]
+CREATE TABLE cat_tipo_documento (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) UNIQUE NOT NULL,
+    descripcion VARCHAR(255)
+);
+
+INSERT INTO cat_tipo_documento (nombre, descripcion) VALUES 
+('Queja formal', 'Documento que expresa inconformidad por actos u omisiones'),
+('Denuncia', 'Se\~nalamiento de faltas o irregularidades graves'),
+('Solicitud de orientaci\'on', 'Petici\'on de asesor\'ia o informaci\'on sobre derechos'),
+('Escrito libre', 'Comunicaci\'on sin formato predeterminado'),
+('Comparecencia', 'Declaraci\'on realizada de manera presencial');
+\end{lstlisting}
+
+% =========================================================
+% NOTA SOBRE ORDEN DE EJECUCION SQL
+% =========================================================
+
+\subsection{Orden de Ejecuci\'on de Scripts}
+Para garantizar la integridad referencial y evitar errores de dependencias circulares, los scripts DDL deben ejecutarse en el siguiente orden:
+
+\begin{enumerate}
+    \item \texttt{cat\_estatus\_queja} (Cat\'alogos)
+    \item \texttt{cat\_tema} (Cat\'alogos)
+    \item \texttt{cat\_tipo\_documento} (Cat\'alogos)
+    \item \texttt{usuarios} (M\'odulo base)
+    \item \texttt{folios} (Entidad maestra)
+    \item \texttt{quejas} (M\'odulo de quejas)
+    \item \texttt{evidencias} (M\'odulo de evidencias - depende de \texttt{folios})
+    \item \texttt{queja\_hitos} (M\'odulo de hitos - depende de \texttt{quejas})
+    \item \texttt{notificaciones} (M\'odulo de notificaciones - depende de \texttt{usuarios})
+    \item \texttt{usuario\_folios} (Tabla auxiliar - depende de \texttt{usuarios})
+\end{enumerate}
+
+\begin{center}
+\fbox{\parbox{0.9\textwidth}{\centering\textbf{Nota:} Todas las tablas incluyen \'indices adicionales para optimizar el rendimiento de consultas frecuentes. Se recomienda evaluar peri\'odicamente el uso de estos \'indices y ajustarlos seg\'un los patrones de acceso reales del sistema.}}
+\end{center}
+
+% =========================================================
+% FIN DEL DOCUMENTO
+% =========================================================

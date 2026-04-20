@@ -1,7 +1,7 @@
 \ProvidesPackage{configuraciones/setup}
 
 % ==============================================================================
-% 1. Paquetes de Idioma y Codificación (SIN CAMBIOS)
+% 1. Paquetes de Idioma y Codificación
 % ==============================================================================
 
 \usepackage[utf8]{inputenc}
@@ -13,16 +13,15 @@
 % ==============================================================================
 
 \usepackage{amsmath}
-\usepackage{amssymb}     % <--- ANTES de newtxmath
-\usepackage{amsfonts}    % <--- ANTES de newtxmath
+\usepackage{amssymb}     % ANTES de newtxmath
+\usepackage{amsfonts}    % ANTES de newtxmath
 
 % ==============================================================================
 % 3. Fuentes y Estética del Texto (CON ORDEN CORREGIDO)
 % ==============================================================================
 
-% NOTA: newtxtext y newtxmath DEBEN ir DESPUÉS de amssymb
 \usepackage{newtxtext}
-\usepackage{newtxmath}   % <--- DESPUÉS de amssymb
+\usepackage{newtxmath}   % DESPUÉS de amssymb
 
 \usepackage{setspace}
 \onehalfspacing
@@ -30,18 +29,63 @@
 \usepackage{microtype}
 
 % ==============================================================================
-% 4. Gráficos, Colores y Dibujo (SIN CAMBIOS)
+% 4. Gráficos, Colores y Dibujo
 % ==============================================================================
 
 \usepackage[table,xcdraw]{xcolor}
 \definecolor{azulESCOM}{RGB}{0, 68, 129}
+\definecolor{grayCode}{RGB}{245,245,245}  % Para fondos de código
 
 \usepackage{graphicx}
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows, calc}
 
 % ==============================================================================
-% 5. Tablas y Listas (CON PAQUETES ADICIONALES)
+% 4b. PAQUETES CRÍTICOS PARA TABLAS Y CÓDIGO (AGREGADOS)
+% ==============================================================================
+
+\usepackage{float}       % Permite usar [H] en tablas y figuras
+\usepackage{listings}    % Entorno lstlisting para código
+\usepackage{caption}     % Mejora el manejo de etiquetas
+
+% Configuración GLOBAL de listings (se aplica a todos los bloques)
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{azulESCOM}\bfseries,
+    stringstyle=\color{green!50!black},
+    commentstyle=\color{gray}\itshape,
+    breaklines=true,
+    breakatwhitespace=true,
+    frame=single,
+    frameround=tttt,
+    showstringspaces=false,
+    tabsize=4,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=5pt,
+    xleftmargin=10pt,
+    xrightmargin=5pt,
+    backgroundcolor=\color{grayCode},
+    rulecolor=\color{azulESCOM}
+}
+
+% Configuración específica para SQL
+\lstdefinestyle{sqlstyle}{
+    language=SQL,
+    morekeywords={BIGSERIAL, TIMESTAMP, BOOLEAN, TEXT, VARCHAR}
+}
+
+% Configuración específica para Java
+\lstdefinestyle{javastyle}{
+    language=Java,
+    morekeywords={Entity, Table, Id, GeneratedValue, GenerationType, 
+                  Column, OneToMany, ManyToOne, JoinColumn, Data, 
+                  NoArgsConstructor, AllArgsConstructor, Builder, 
+                  LocalDateTime, FetchType, LAZY, CascadeType}
+}
+
+% ==============================================================================
+% 5. Tablas y Listas (COMPLETO)
 % ==============================================================================
 
 \usepackage{tabularx}
@@ -50,14 +94,14 @@
 \usepackage{array}
 \usepackage{longtable}
 \usepackage{multirow}
-\usepackage{adjustbox}      % NUEVO: Para ajustar tablas anchas
-\usepackage{rotating}       % NUEVO: Para rotar tablas
-\usepackage{threeparttable} % NUEVO: Para notas al pie en tablas
-\usepackage{makecell}       % NUEVO: Para celdas con múltiples líneas
-\usepackage{bigstrut}       % NUEVO: Para ajustar altura de filas
-\usepackage{pdflscape}      % NUEVO: Para tablas horizontales
+\usepackage{adjustbox}      % Para ajustar tablas anchas
+\usepackage{rotating}       % Para rotar tablas
+\usepackage{threeparttable} % Para notas al pie en tablas
+\usepackage{makecell}       % Para celdas con múltiples líneas
+\usepackage{bigstrut}       % Para ajustar altura de filas
+\usepackage{pdflscape}      % Para tablas horizontales
 
-% Columnas personalizadas
+% Columnas personalizadas para tabularx
 \newcolumntype{C}{>{\centering\arraybackslash}X}
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
 \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
@@ -67,12 +111,16 @@
 \renewcommand{\arraystretch}{1.2}
 
 % Comandos personalizados para símbolos (evita Unicode)
-\newcommand{\cmark}{$\checkmark$}
-\newcommand{\xmark}{$\times$}
-\newcommand{\pmark}{$\pm$}
+\newcommand{\cmark}{\ensuremath{\checkmark}}
+\newcommand{\xmark}{\ensuremath{\times}}
+\newcommand{\pmark}{\ensuremath{\pm}}
+
+% Comando para celdas con encabezado de sección en tablas
+\newcommand{\tableheader}[1]{\multicolumn{4}{|c|}{\cellcolor[HTML]{EFEFEF}\textbf{#1}}}
+\newcommand{\subtableheader}[1]{\multicolumn{4}{|l|}{\cellcolor[HTML]{EFEFEF}\textbf{#1}} \\ \hline}
 
 % ==============================================================================
-% 6. Márgenes y Encabezados (SIN CAMBIOS)
+% 6. Márgenes y Encabezados
 % ==============================================================================
 
 \usepackage{geometry}
@@ -99,7 +147,7 @@
 \renewcommand{\footrule}{\hbox to\headwidth{\color{azulESCOM}\leaders\hrule height \footrulewidth\hfill}}
 
 % ==============================================================================
-% 7. Títulos (SIN CAMBIOS)
+% 7. Títulos y Secciones
 % ==============================================================================
 
 \usepackage{titlesec}
@@ -116,13 +164,25 @@
   {1em}
   {}
 
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\color{azulESCOM}}
+  {\thesubsubsection}
+  {1em}
+  {}
+
+% Espaciado después de títulos
+\titlespacing*{\section}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
+\titlespacing*{\subsection}{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+\titlespacing*{\subsubsection}{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
 % ==============================================================================
-% 8. Anexos y Referencias (CON PAQUETES ADICIONALES)
+% 8. Anexos y Referencias
 % ==============================================================================
 
 \usepackage[titletoc]{appendix}
 \renewcommand{\appendixname}{Anexos}
 \renewcommand{\appendixtocname}{Anexos}
+\renewcommand{\appendixpagename}{Anexos}
 
 \usepackage{url}
 \usepackage{xurl}
@@ -130,10 +190,21 @@
 
 \usepackage{hyperref}
 \usepackage{nameref}
-\usepackage{cleveref}      % NUEVO: Para \cref{tab:ejemplo}
+\usepackage[capitalize, nameinlink]{cleveref}  % \cref{tab:ejemplo}
+
+% Configuración de referencias cruzadas
 \crefname{table}{Tabla}{Tablas}
 \Crefname{table}{Tabla}{Tablas}
+\crefname{figure}{Figura}{Figuras}
+\Crefname{figure}{Figura}{Figuras}
+\crefname{lstlisting}{Código}{Códigos}
+\Crefname{lstlisting}{Código}{Códigos}
+\crefname{section}{Sección}{Secciones}
+\Crefname{section}{Sección}{Secciones}
+\crefname{appendix}{Anexo}{Anexos}
+\Crefname{appendix}{Anexo}{Anexos}
 
+% Configuración de hyperref (DEBE IR ANTES DE cleveref)
 \hypersetup{
     colorlinks=true,
     linkcolor=azulESCOM,
@@ -141,7 +212,42 @@
     citecolor=azulESCOM,
     filecolor=azulESCOM,
     pdfauthor={Jose Bryan Omar Jimenez Velazquez},
-    pdftitle={Trabajo Terminal - DDP IPN}
+    pdftitle={Trabajo Terminal - DDP IPN},
+    pdfsubject={Base de Datos para Defensoría IPN},
+    pdfkeywords={PostgreSQL, JPA, Hibernate, Quejas, IPN},
+    pdfdisplaydoctitle=true
 }
+
+% ==============================================================================
+% 9. Corrección de advertencias comunes de LaTeX
+% ==============================================================================
+
+% Evita advertencia "Overfull \hbox" en tablas
+\setlength{\emergencystretch}{3em}
+
+% Permite que las tablas se puedan partir entre páginas
+\setlength{\LTpre}{0pt}
+\setlength{\LTpost}{0pt}
+
+% Mejora el manejo de viudas y huérfanas
+\widowpenalty=10000
+\clubpenalty=10000
+
+% ==============================================================================
+% 10. Comandos útiles para el documento
+% ==============================================================================
+
+% Comando para referencias rápidas
+\newcommand{\figref}[1]{Figura~\ref{#1}}
+\newcommand{\tabref}[1]{Tabla~\ref{#1}}
+\newcommand{\coderef}[1]{Código~\ref{#1}}
+
+% Comando para notas al pie mejoradas
+\newcommand{\nota}[1]{\footnote{\textit{Nota:} #1}}
+
+% Entorno personalizado para observaciones importantes
+\newenvironment{observacion}[1][Observación:]%
+    {\par\medskip\noindent\textbf{\color{azulESCOM}#1}\space\itshape}%
+    {\par\medskip}
 
 \endinput
