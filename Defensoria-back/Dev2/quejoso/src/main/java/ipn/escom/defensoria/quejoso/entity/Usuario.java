@@ -2,6 +2,8 @@ package ipn.escom.defensoria.quejoso.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -35,4 +37,8 @@ public class Usuario {
 
     @OneToMany(mappedBy = "quejoso")
     private List<Queja> quejas;
+
+    // En tu entidad Usuario.java
+    private String codigoRecuperacion;
+    private LocalDateTime fechaExpiracionCodigo;
 }

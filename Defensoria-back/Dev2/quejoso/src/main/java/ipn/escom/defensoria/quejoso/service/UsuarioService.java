@@ -8,9 +8,13 @@ import ipn.escom.defensoria.quejoso.repository.QuejaRepository;
 import ipn.escom.defensoria.quejoso.repository.UsuarioRepository;
 import ipn.escom.defensoria.quejoso.dto.UsuarioPerfilDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
+
 
 @Service
 public class UsuarioService {
@@ -23,6 +27,9 @@ public class UsuarioService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JavaMailSender mailSender;
 
     /**
      * MQ-05 y MQ-09: Activa la cuenta del usuario.
@@ -153,4 +160,58 @@ public class UsuarioService {
         // 4. Retornar datos básicos del perfil (En el futuro, aquí generamos el JWT)
         return obtenerPerfil(usuario.getId());
     }
+
+    public void generarCodigoRecuperacion(String correo) {
+        Usuario usuario = usuarioRepository.findByCorreoInstitucional(correo)
+                .orElseThrow(() -> new RuntimeException("Correo no registrado"));
+
+        // 1. Generar código de 6 dígitos aleatorio
+        String codigo = String.format("%06d", new java.util.Random().nextInt(999999));
+
+        // 2. Guardar el código (puedes cifrarlo con passwordEncoder si quieres máxima seguridad)
+        usuario.setCodigoRecuperacion(passwordEncoder.encode(codigo));
+
+        // 3. Definir expiración (10 minutos a partir de ahora)
+        usuario.setFechaExpiracionCodigo(LocalDateTime.now().plusMinutes(10));
+
+        usuarioRepository.save(usuario);
+
+        // 4. SIMULACIÓN: Imprimir en consola (Aquí es donde enviarías el correo real)
+        enviarCorreoCodigo(correo, codigo); // Llamamos al nuevo método
+
+    }
+
+    private void enviarCorreoCodigo(String destinatario, String codigo) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("jair100flo@gmail.com");
+        message.setTo(destinatario);
+        message.setSubject("Código de Recuperación - Defensoría");
+        message.setText("Hola,\n\nTu código de verificación para restablecer tu contraseña es: "
+                + codigo + "\n\nEste código expirará en 10 minutos.");
+
+        mailSender.send(message);
+    }
+
+    public void validarCodigoYCambiarPassword(String correo, String codigoRecuperado, String nuevaPassword) {
+        Usuario usuario = usuarioRepository.findByCorreoInstitucional(correo)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 1. Validar que no haya expirado
+        if (usuario.getFechaExpiracionCodigo().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("El código ha expirado. Solicita uno nuevo.");
+        }
+
+        // 2. Validar que el código coincida
+        if (!passwordEncoder.matches(codigoRecuperado, usuario.getCodigoRecuperacion())) {
+            throw new RuntimeException("El código es incorrecto.");
+        }
+
+        // 3. Si todo está bien, cambiar contraseña y limpiar el código usado
+        usuario.setPassword(passwordEncoder.encode(nuevaPassword));
+        usuario.setCodigoRecuperacion(null);
+        usuario.setFechaExpiracionCodigo(null);
+
+        usuarioRepository.save(usuario);
+    }
+
 }

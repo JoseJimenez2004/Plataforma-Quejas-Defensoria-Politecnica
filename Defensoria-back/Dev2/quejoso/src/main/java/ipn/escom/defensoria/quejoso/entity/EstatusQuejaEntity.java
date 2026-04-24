@@ -9,5 +9,6 @@ public enum EstatusQuejaEntity {
     EN_INVESTIGACION,
     PROCESO_CONCLUSION,
     FINALIZADA,
-    REMISION             // Fin de ciclo por improcedencia
+    REMISION,
+    CANCELADA// Fin de ciclo por improcedencia
 }

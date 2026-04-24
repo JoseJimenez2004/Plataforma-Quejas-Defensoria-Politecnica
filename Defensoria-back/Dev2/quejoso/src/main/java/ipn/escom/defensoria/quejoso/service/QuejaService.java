@@ -164,23 +164,27 @@ public class QuejaService {
         Queja queja = quejaRepository.findByFolio(folio)
                 .orElseThrow(() -> new RuntimeException("Queja no encontrada"));
 
-        // 1. Validar que la queja tenga un usuario vinculado
-        // Si es nulo, significa que la cuenta no ha sido activada y no puede ser borrada desde el historial
+        // 1. Validar vinculación
         if (queja.getQuejoso() == null) {
             throw new RuntimeException("Esta queja aún no está vinculada a una cuenta activa.");
         }
 
-        // 2. Regla de seguridad: solo el dueño puede borrar
+        // 2. Regla de seguridad: el dueño es el único autorizado
         if (!queja.getQuejoso().getId().equals(usuarioId)) {
             throw new RuntimeException("No tiene permisos sobre esta queja");
         }
 
-        // 3. Regla de negocio: solo si está en estatus RECIBIDA
+        // 3. Regla de negocio: solo se permite "cancelar" si no ha sido atendida
         if (queja.getEstatus() != EstatusQuejaEntity.RECIBIDA) {
-            throw new RuntimeException("No se puede eliminar una queja que ya está en proceso");
+            throw new RuntimeException("No se puede eliminar una queja que ya está en proceso o finalizada");
         }
 
-        quejaRepository.delete(queja);
+        // --- CAMBIO CLAVE AQUÍ ---
+        // En lugar de eliminar el registro de la BD, cambiamos su estatus
+        // Esto mantiene el folio en la historia pero lo "apaga" para el usuario
+        queja.setEstatus(EstatusQuejaEntity.CANCELADA);
+
+        quejaRepository.save(queja);
     }
     // En QuejaService.java
 
@@ -201,6 +205,7 @@ public class QuejaService {
         // 1. Buscar la queja y validar propiedad
         Queja queja = quejaRepository.findByFolio(folio)
                 .orElseThrow(() -> new RuntimeException("Queja no encontrada"));
+
 
         if (queja.getQuejoso() == null || !queja.getQuejoso().getId().equals(usuarioId)) {
             throw new RuntimeException("No tiene permisos para editar esta queja");
@@ -257,5 +262,17 @@ public class QuejaService {
                         .estatusActual(q.getEstatus())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    public void procesarQuejaPorRecepcion(String folio, Long adminId) {
+        Queja queja = quejaRepository.findByFolio(folio)
+                .orElseThrow(() -> new RuntimeException("Queja no encontrada"));
+
+        // --- EL BLOQUEO ---
+        if (queja.getEstatus() == EstatusQuejaEntity.CANCELADA) {
+            throw new RuntimeException("Operación denegada: La queja fue cancelada por el ciudadano y no puede ser modificada.");
+        }
+
+        // Si no está cancelada, continúa la lógica normal...
     }
 }

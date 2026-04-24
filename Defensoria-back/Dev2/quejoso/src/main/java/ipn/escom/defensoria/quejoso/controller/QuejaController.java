@@ -7,9 +7,11 @@ import ipn.escom.defensoria.quejoso.dto.QuejaEditarDTO;
 import ipn.escom.defensoria.quejoso.entity.Queja;
 import ipn.escom.defensoria.quejoso.service.QuejaService;
 import ipn.escom.defensoria.quejoso.entity.Tutor;
+import ipn.escom.defensoria.quejoso.entity.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -94,15 +96,33 @@ public class QuejaController {
 
 
     @PutMapping(value = "/editar/{folio}", consumes = {"multipart/form-data"})
-    public ResponseEntity<String> editar(
+    public ResponseEntity<?> editar(
             @PathVariable String folio,
             @RequestPart("datos") QuejaEditarDTO editarDTO,
             @RequestPart(value = "nuevosArchivos", required = false) List<MultipartFile> archivos) {
 
-        Long usuarioId = 1L; // Temporal hasta tener el SecurityContext
-        quejaService.editarQueja(folio, usuarioId, editarDTO, archivos);
+        try {
+            // Spring busca en la "bitácora" del guardia quién es el dueño del token actual
+            Usuario usuarioAutenticado = (Usuario) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            Long usuarioId = usuarioAutenticado.getId();            quejaService.editarQueja(folio, usuarioId, editarDTO, archivos);
+            return ResponseEntity.ok("Queja actualizada correctamente");
+        } catch (RuntimeException e) {
+            // Esto atrapará el error de "No se puede editar una queja cancelada"
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 
-        return ResponseEntity.ok("Queja actualizada correctamente");
+    @DeleteMapping("/borrar/{folio}")
+    public ResponseEntity<?> eliminar(@PathVariable String folio) {
+        try {
+            Usuario usuarioAutenticado = (Usuario) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            Long usuarioId = usuarioAutenticado.getId();
+
+            quejaService.eliminarQueja(folio, usuarioId);
+            return ResponseEntity.ok("La queja ha sido cancelada exitosamente.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
 
 
