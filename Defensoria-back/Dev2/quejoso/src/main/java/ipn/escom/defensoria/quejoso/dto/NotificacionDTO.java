@@ -2,7 +2,6 @@ package ipn.escom.defensoria.quejoso.dto;
 
 import lombok.Builder;
 import lombok.Data;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
