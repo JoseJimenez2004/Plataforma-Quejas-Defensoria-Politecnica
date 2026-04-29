@@ -1,10 +1,24 @@
-\section{Requerimientos de Sistema}
-Estos requerimientos especifican las capacidades técnicas y de infraestructura que el sistema debe poseer para soportar las operaciones del actor Quejoso.
+\section{Requerimientos de Usuario}
+Los requerimientos de usuario describen las necesidades que el sistema debe satisfacer desde la perspectiva de los actores principales.
 
-\begin{itemize}
-    \item \textbf{Módulo de Autenticación:} El sistema debe implementar un servicio de gestión de sesiones con soporte para recuperación de credenciales mediante tokens de seguridad.
-    \item \textbf{Gestión de Estados:} El sistema debe contar con un motor de estados capaz de transicionar automáticamente el estatus de las quejas (ej. a "RECIBIDA" o "CANCELADA") según las acciones del usuario.
-    \item \textbf{Almacenamiento de Evidencias:} El sistema debe integrarse con un volumen de almacenamiento para gestionar archivos adjuntos (imágenes o documentos) asociados a cada queja.
-    \item \textbf{Generación de Documentos:} El sistema debe ser capaz de generar dinámicamente archivos PDF para los acuses de recibo y líneas de tiempo.
-    \item \textbf{Servicio de Notificaciones:} El sistema debe integrar un módulo de mensajería interna para alertar al usuario sobre cambios en el tablero de quejas o propuestas de conciliación.
-\end{itemize}
+\begin{table}[h!]
+\centering
+\caption{Requerimientos de Usuario por Actor.}
+\label{tab:user_req}
+\begin{tabular}{@{} l l p{9cm} @{}}
+\toprule
+\rowcolor[HTML]{2D3E50} 
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Actor} & \textbf{\color[HTML]{FFFFFF} Descripción de la Necesidad} \\ \midrule
+\rowcolor[HTML]{F2F4F7} 
+RU-01 & Quejoso & Registro y acceso seguro para gestionar información personal. \\
+RU-02 & Quejoso & Levantar quejas formales con evidencias y datos de tutor (si aplica). \\
+\rowcolor[HTML]{F2F4F7} 
+RU-03 & Quejoso & Visualizar estado de folios, historial y recibir notificaciones. \\
+RU-04 & Quejoso & Aceptar/rechazar propuestas de conciliación y descargar acuses legales. \\
+\rowcolor[HTML]{F2F4F7} 
+RU-05 & Recepcionista & Gestionar quejas entrantes desde un panel administrativo centralizado. \\
+RU-06 & Recepcionista & Validar procedencia y consultar antecedentes por boleta o correo. \\
+\rowcolor[HTML]{F2F4F7} 
+RU-07 & Recepcionista & Canalizar casos al abogado correspondiente para análisis legal. \\ \bottomrule
+\end{tabular}
+\end{table}

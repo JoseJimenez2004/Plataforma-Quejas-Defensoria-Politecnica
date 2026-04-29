@@ -1,12 +1,19 @@
 \section{Reglas de Negocio}
-Las reglas de negocio definen las restricciones operativas y las políticas bajo las cuales funciona el sistema de gestión de quejas.
-
-\begin{description}
-    \item[RN-01 Generación de Identificador Único:] Toda queja registrada debe recibir un folio único e irrepetible en el momento de su creación para garantizar su trazabilidad[cite: 1, 2].
-    \item[RN-02 Protección de Menores:] Si el usuario quejoso es identificado como menor de edad, el sistema debe obligar el registro y validación de los datos de un tutor legal para proceder con el levantamiento de la queja.
-    \item[RN-03 Inmutabilidad del Folio:] Una vez generado un folio de queja, este no podrá ser modificado ni reasignado bajo ninguna circunstancia, asegurando la integridad de los registros históricos.
-    \item[RN-04 Privacidad de la Información:] Un usuario con rol de Quejoso únicamente tiene facultades para visualizar, modificar o descargar documentos asociados exclusivamente a su propio historial de quejas[cite: 1].
-    \item[RN-05 Flujo de Estatus:] El cambio de estado de una queja a "RECIBIDA" o "CANCELADA" es un evento automático o administrativo que debe quedar registrado con fecha y hora en la línea de tiempo del sistema.
-    \item[RN-06 Validez de Propuestas:] Una propuesta de conciliación emitida por la autoridad solo se considerará cerrada cuando el usuario quejoso haya manifestado explícitamente su aceptación o rechazo a través de la plataforma[cite: 2, 4].
-    \item[RN-07 Disponibilidad de Evidencia:] La carga de evidencia extra solo será permitida mientras la queja se encuentre en un estado activo de revisión y antes de que se emita una resolución final[cite: 2].
-\end{description}
+\begin{table}[h!]
+\centering
+\caption{Reglas de Negocio del Sistema.}
+\label{tab:business_rules}
+\begin{tabular}{@{} l p{12cm} @{}}
+\toprule
+\rowcolor[HTML]{2D3E50} 
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Regla de Negocio} \\ \midrule
+\rowcolor[HTML]{F2F4F7} 
+RN-01 & Bloqueo de registro para menores de edad sin datos de un tutor legal. \\
+RN-02 & Prohibición de asignar folios a abogados si el estatus no es "Recibida". \\
+\rowcolor[HTML]{F2F4F7} 
+RN-03 & Justificación legal obligatoria para todo rechazo de queja por Recepción. \\
+RN-04 & Prioridad de búsqueda de antecedentes por número de boleta institucional. \\
+\rowcolor[HTML]{F2F4F7} 
+RN-05 & Cierre automático del flujo tras la aceptación de la propuesta de conciliación. \\ \bottomrule
+\end{tabular}
+\end{table}

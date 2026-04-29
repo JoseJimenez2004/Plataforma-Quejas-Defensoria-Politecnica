@@ -1,10 +1,19 @@
 \section{Requerimientos no Funcionales}
-Los requerimientos no funcionales definen los atributos de calidad y restricciones técnicas del sistema para asegurar una operación óptima.
-
-\begin{itemize}
-    \item \textbf{Seguridad (Privacidad):} El sistema debe garantizar que un Quejoso solo tenga acceso a la información y folios vinculados estrictamente a su cuenta.
-    \item \textbf{Integridad de Datos:} Los folios generados deben ser inmutables y seguir una secuencia lógica que no permita duplicidad en la base de datos.
-    \item \textbf{Usabilidad:} El diseño de la interfaz para levantar quejas debe ser responsivo y accesible para usuarios con conocimientos técnicos básicos.
-    \item \textbf{Rendimiento:} El tiempo de respuesta para la carga del "Tablero de quejas" no debe exceder los 3 segundos bajo condiciones normales de red.
-    \item \textbf{Disponibilidad:} El acceso a la descarga de acuses y consulta de estatus debe estar garantizado el 99.9\% del tiempo.
-\end{itemize}
+\begin{table}[h!]
+\centering
+\caption{Requerimientos No Funcionales y Atributos de Calidad.}
+\label{tab:non_func}
+\begin{tabular}{@{} l p{9cm} l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50} 
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción del Atributo} & \textbf{\color[HTML]{FFFFFF} Categoría} \\ \midrule
+\rowcolor[HTML]{F2F4F7} 
+RNF-01 & Acceso restringido a folios propios mediante listas de control (ACL). & Seguridad \\
+RNF-02 & Consultas de antecedentes con tiempo de respuesta $<$ 2 segundos. & Rendimiento \\
+\rowcolor[HTML]{F2F4F7} 
+RNF-03 & Interfaz responsiva basada en estándares de usabilidad web. & Usabilidad \\
+RNF-04 & Disponibilidad del servicio del 99.9\% (Alta disponibilidad). & Disponibilidad \\
+\rowcolor[HTML]{F2F4F7} 
+RNF-05 & Inmutabilidad de registros históricos una vez que el folio se cierra. & Integridad \\ \bottomrule
+\end{tabular}
+\end{table}

@@ -1,23 +1,27 @@
 \section{Requerimientos Funcionales}
-A continuación se listan los requerimientos funcionales derivados directamente de los casos de uso para el actor Quejoso.
-
 \begin{table}[h!]
 \centering
 \small
-\begin{tabular}{|l|p{10cm}|}
-\hline
-\textbf{ID} & \textbf{Descripción del Requerimiento} \\ \hline
-RF-01 & El sistema permitirá al usuario crear una cuenta de acceso proporcionando sus datos personales. \\ \hline
-RF-02 & El sistema permitirá el levantamiento de una queja mediante un formulario que incluya descripción y categorías. \\ \hline
-RF-03 & El sistema generará automáticamente un folio único al registrar una nueva queja. \\ \hline
-RF-04 & El sistema permitirá adjuntar archivos de evidencia en el momento del registro o posteriormente. \\ \hline
-RF-05 & El sistema permitirá al usuario consultar un tablero con el resumen y estatus de todas sus quejas. \\ \hline
-RF-06 & El sistema permitirá la descarga de acuses legales en formato PDF. \\ \hline
-RF-07 & El sistema permitirá visualizar la línea de tiempo y el historial detallado de cada queja. \\ \hline
-RF-08 & El sistema permitirá al usuario aceptar o rechazar propuestas de conciliación enviadas por la autoridad. \\ \hline
-RF-09 & El sistema permitirá al usuario modificar o eliminar sus datos de perfil y los datos del tutor. \\ \hline
-RF-10 & El sistema enviará una notificación al usuario cada vez que su queja cambie de estatus o reciba una respuesta. \\ \hline
+\caption{Listado de Requerimientos Funcionales.}
+\label{tab:func_req}
+\begin{tabular}{@{} l p{10cm} l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50} 
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción del Requerimiento} & \textbf{\color[HTML]{FFFFFF} Actor} \\ \midrule
+\rowcolor[HTML]{F2F4F7} 
+RF-01 & Creación de cuenta y gestión de perfil (incluyendo datos de tutor). & Quejoso \\
+RF-02 & Registro de queja con generación de folio único automático. & Quejoso \\
+\rowcolor[HTML]{F2F4F7} 
+RF-03 & Carga de evidencias multimedia (imágenes/documentos) asociadas al folio. & Quejoso \\
+RF-04 & Consulta de tablero personal con historial y línea de tiempo detallada. & Quejoso \\
+\rowcolor[HTML]{F2F4F7} 
+RF-05 & Aceptación o rechazo formal de propuestas de conciliación. & Quejoso \\
+RF-06 & Visualización de bandeja de entrada de quejas pendientes de revisión. & Recepcionista \\
+\rowcolor[HTML]{F2F4F7} 
+RF-07 & Rechazo de quejas con campo obligatorio de justificación. & Recepcionista \\
+RF-08 & Búsqueda de antecedentes mediante boleta o correo electrónico. & Recepcionista \\
+\rowcolor[HTML]{F2F4F7} 
+RF-09 & Asignación (turnar) de folios a abogados del área jurídica. & Recepcionista \\
+RF-10 & Cambio automático de estatus a "En Análisis" tras el contacto inicial. & Recepcionista \\ \bottomrule
 \end{tabular}
-\caption{Requerimientos Funcionales del Actor Quejoso.}
-\label{tab:rf_quejoso}
 \end{table}
