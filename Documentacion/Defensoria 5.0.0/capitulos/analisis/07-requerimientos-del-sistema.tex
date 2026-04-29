@@ -1,24 +1,19 @@
-\section{Requerimientos de Usuario}
-Los requerimientos de usuario describen las necesidades que el sistema debe satisfacer desde la perspectiva de los actores principales.
-
+\section{Requerimientos de Sistema}
 \begin{table}[h!]
 \centering
-\caption{Requerimientos de Usuario por Actor.}
-\label{tab:user_req}
-\begin{tabular}{@{} l l p{9cm} @{}}
+\caption{Requerimientos de Sistema e Infraestructura.}
+\label{tab:sys_req}
+\begin{tabular}{@{} p{3cm} p{8.5cm} l @{}}
 \toprule
 \rowcolor[HTML]{2D3E50} 
-\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Actor} & \textbf{\color[HTML]{FFFFFF} Descripción de la Necesidad} \\ \midrule
+\textbf{\color[HTML]{FFFFFF} Categoría} & \textbf{\color[HTML]{FFFFFF} Especificación Técnica} & \textbf{\color[HTML]{FFFFFF} Alcance} \\ \midrule
 \rowcolor[HTML]{F2F4F7} 
-RU-01 & Quejoso & Registro y acceso seguro para gestionar información personal. \\
-RU-02 & Quejoso & Levantar quejas formales con evidencias y datos de tutor (si aplica). \\
+Seguridad & Control de acceso basado en roles (RBAC) y cifrado de datos[cite: 1]. & General \\
+Persistencia & Base de datos relacional para folios, expedientes y evidencias. & General \\
 \rowcolor[HTML]{F2F4F7} 
-RU-03 & Quejoso & Visualizar estado de folios, historial y recibir notificaciones. \\
-RU-04 & Quejoso & Aceptar/rechazar propuestas de conciliación y descargar acuses legales. \\
+Documentación & Motor de generación de PDFs para acuses, acuerdos y remisiones[cite: 3]. & Admin \\
+Integración & Servicio de notificaciones automáticas vía correo electrónico[cite: 2, 3]. & General \\
 \rowcolor[HTML]{F2F4F7} 
-RU-05 & Recepcionista & Gestionar quejas entrantes desde un panel administrativo centralizado. \\
-RU-06 & Recepcionista & Validar procedencia y consultar antecedentes por boleta o correo. \\
-\rowcolor[HTML]{F2F4F7} 
-RU-07 & Recepcionista & Canalizar casos al abogado correspondiente para análisis legal. \\ \bottomrule
+Agendamiento & Módulo de calendario con validación de disponibilidad en tiempo real[cite: 3]. & Analista \\ \bottomrule
 \end{tabular}
 \end{table}

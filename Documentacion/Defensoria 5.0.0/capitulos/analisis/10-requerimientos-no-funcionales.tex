@@ -1,19 +1,27 @@
-\section{Requerimientos no Funcionales}
+\section{Requerimientos Funcionales}
 \begin{table}[h!]
 \centering
-\caption{Requerimientos No Funcionales y Atributos de Calidad.}
-\label{tab:non_func}
-\begin{tabular}{@{} l p{9cm} l @{}}
+\small
+\caption{Listado Consolidado de Requerimientos Funcionales.}
+\label{tab:func_req}
+\begin{tabular}{@{} l p{9.5cm} l @{}}
 \toprule
 \rowcolor[HTML]{2D3E50} 
-\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción del Atributo} & \textbf{\color[HTML]{FFFFFF} Categoría} \\ \midrule
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción del Requerimiento} & \textbf{\color[HTML]{FFFFFF} Actor} \\ \midrule
 \rowcolor[HTML]{F2F4F7} 
-RNF-01 & Acceso restringido a folios propios mediante listas de control (ACL). & Seguridad \\
-RNF-02 & Consultas de antecedentes con tiempo de respuesta $<$ 2 segundos. & Rendimiento \\
+RF-01 & Registro de cuenta, acceso y recuperación de contraseña[cite: 4]. & Quejoso \\
+RF-02 & Levantamiento de queja con generación de folio único automático[cite: 1]. & Quejoso \\
 \rowcolor[HTML]{F2F4F7} 
-RNF-03 & Interfaz responsiva basada en estándares de usabilidad web. & Usabilidad \\
-RNF-04 & Disponibilidad del servicio del 99.9\% (Alta disponibilidad). & Disponibilidad \\
+RF-03 & Carga y visualización de evidencias y línea de tiempo de la queja[cite: 1]. & Quejoso \\
+RF-04 & Validación de quejas, consulta de antecedentes y rechazo motivado[cite: 2]. & Recepcionista \\
 \rowcolor[HTML]{F2F4F7} 
-RNF-05 & Inmutabilidad de registros históricos una vez que el folio se cierra. & Integridad \\ \bottomrule
+RF-05 & Apertura y análisis de expedientes digitales con agregado de notas[cite: 3]. & Analista \\
+RF-06 & Determinación de competencia y generación de acuerdos de admisión[cite: 3]. & Analista \\
+\rowcolor[HTML]{F2F4F7} 
+RF-07 & Generación de remisiones y envío de notificaciones oficiales[cite: 3]. & Analista \\
+RF-08 & Agendamiento y gestión de citas con el quejoso[cite: 3]. & Analista \\
+\rowcolor[HTML]{F2F4F7} 
+RF-09 & Solicitud de actos de investigación y actualización de estatus[cite: 3]. & Analista \\
+RF-10 & Canalización formal al abogado correspondiente (Asignación)[cite: 2, 3]. & Recepcionista/Analista \\ \bottomrule
 \end{tabular}
 \end{table}
