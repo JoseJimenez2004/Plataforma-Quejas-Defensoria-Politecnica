@@ -10,15 +10,9 @@ import java.util.List;
 @Repository
 public interface NotificacionRepository extends JpaRepository<NotificacionEntity, Long> {
 
-    /**
-     * Busca las notificaciones de un usuario que aún no han expirado.
-     * Implementa tu regla de los 30 días de visibilidad.
-     */
+    // Spring Data JPA genera la consulta automáticamente basándose en el nombre
     List<NotificacionEntity> findByUsuarioIdAndFechaExpiracionAfterOrderByFechaCreacionDesc(
             Long usuarioId,
             LocalDateTime ahora
     );
-
-    // Para mostrar el puntito rojo de "pendientes" en el mockup MQ-11/MQ-18
-    long countByUsuarioIdAndLeidaFalse(Long usuarioId);
 }

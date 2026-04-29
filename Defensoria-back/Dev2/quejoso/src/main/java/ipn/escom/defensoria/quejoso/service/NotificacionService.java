@@ -18,7 +18,6 @@ public class NotificacionService {
     // Este método sería llamado por un Listener de RabbitMQ o Kafka
     // cuando el micro de defensores envíe una notificación
     public void procesarNotificacionExterna(NotificacionEntity nueva) {
-        nueva.setFechaExpiracion(LocalDateTime.now().plusDays(30));
         notificacionRepository.save(nueva);
     }
 
@@ -38,9 +37,10 @@ public class NotificacionService {
     }
 
     public void marcarComoLeida(Long id) {
-        notificacionRepository.findById(id).ifPresent(n -> {
-            n.setLeida(true);
-            notificacionRepository.save(n);
-        });
+        NotificacionEntity n = notificacionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Notificación no encontrada con ID: " + id));
+
+        n.setLeida(true);
+        notificacionRepository.save(n);
     }
 }
