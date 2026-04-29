@@ -1,2 +1,10 @@
 \section{Requerimientos de Sistema}
-% Contenido...
+Estos requerimientos especifican las capacidades técnicas y de infraestructura que el sistema debe poseer para soportar las operaciones del actor Quejoso.
+
+\begin{itemize}
+    \item \textbf{Módulo de Autenticación:} El sistema debe implementar un servicio de gestión de sesiones con soporte para recuperación de credenciales mediante tokens de seguridad.
+    \item \textbf{Gestión de Estados:} El sistema debe contar con un motor de estados capaz de transicionar automáticamente el estatus de las quejas (ej. a "RECIBIDA" o "CANCELADA") según las acciones del usuario.
+    \item \textbf{Almacenamiento de Evidencias:} El sistema debe integrarse con un volumen de almacenamiento para gestionar archivos adjuntos (imágenes o documentos) asociados a cada queja.
+    \item \textbf{Generación de Documentos:} El sistema debe ser capaz de generar dinámicamente archivos PDF para los acuses de recibo y líneas de tiempo.
+    \item \textbf{Servicio de Notificaciones:} El sistema debe integrar un módulo de mensajería interna para alertar al usuario sobre cambios en el tablero de quejas o propuestas de conciliación.
+\end{itemize}
