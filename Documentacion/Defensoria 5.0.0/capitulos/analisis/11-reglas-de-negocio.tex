@@ -1,2 +1,30 @@
 \section{Reglas de Negocio}
-% Contenido...
+\begin{table}[h!]
+\centering
+\caption{Reglas de Negocio del Sistema de Defensoría.}
+\label{tab:business_rules}
+\begin{tabular}{@{} l p{12cm} @{}}
+\toprule
+\rowcolor[HTML]{2D3E50} 
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Regla de Negocio} \\ \midrule
+\rowcolor[HTML]{F2F4F7} 
+<<<<<<< HEAD
+RN-01 & El Defensor es el único actor con autoridad para finalizar administrativamente una queja. \\
+RN-02 & El estatus "Finalizado" es irreversible y requiere la existencia de un acuerdo firmado. \\
+\rowcolor[HTML]{F2F4F7} 
+RN-03 & Las estadísticas globales son de acceso restringido exclusivo para el rol de Defensor. \\
+RN-04 & Ningún expediente podrá enviarse a archivo sin haber pasado por el estatus "Finalizado". \\
+\rowcolor[HTML]{F2F4F7} 
+RN-05 & La asignación de permisos administrativos debe registrarse en un log de auditoría inmutable. \\ \bottomrule
+=======
+RN-01 & Los acuerdos de admisión generados por el Analista deben ser visados por el Subdefensor. \\
+RN-02 & No se puede concluir un caso si existen actos de investigación con plazos pendientes. \\
+\rowcolor[HTML]{F2F4F7} 
+RN-03 & El estatus "En Investigación" solo se activa mediante la solicitud formal de actos de investigación. \\
+RN-04 & Todo oficio enviado a UA debe quedar vinculado permanentemente al expediente digital. \\
+\rowcolor[HTML]{F2F4F7} 
+RN-05 & La notificación al quejoso es obligatoria antes de mover el folio a "Procesos Conclusión". \\
+RN-06 & El Subdefensor es el único actor facultado para emitir acuerdos de conclusión del caso. \\ \bottomrule
+>>>>>>> c618d72f96ee239319e6abe9ed2fa86eac7fcce0
+\end{tabular}
+\end{table}

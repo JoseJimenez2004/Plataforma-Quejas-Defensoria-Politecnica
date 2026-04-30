@@ -1,14 +1,24 @@
 package ipn.escom.defensoria.quejoso.entity;
 
+import lombok.Getter;
+
+@Getter
 public enum EstatusQuejaEntity {
-    RECIBIDA,            // Recepción valida requerimientos
-    EN_ANALISIS,         // Primer contacto valida competencia
-    COMPETENTE,
-    IMPROCEDENTE,
-    ASIGNADO_A_ABOGADO,
-    EN_INVESTIGACION,
-    PROCESO_CONCLUSION,
-    FINALIZADA,
-    REMISION,
-    CANCELADA// Fin de ciclo por improcedencia
+    RECIBIDA("Recibidas"),
+    EN_ANALISIS("En análisis"),
+    COMPETENTE("Competente"),
+    IMPROCEDENTE("Improcedente"),
+    ASIGNADO_A_ABOGADO("Asignado a abogado"),
+    EN_INVESTIGACION("En investigación"),
+    PROCESO_CONCLUSION("Proceso de conclusión"),
+    FINALIZADA("Finalizada"),
+    REMISION("Remisión"),
+    CANCELADA("Cancelada");
+
+    private final String descripcion;
+
+    // El nombre del constructor debe ser igual al del Enum
+    EstatusQuejaEntity(String descripcion) {
+        this.descripcion = descripcion;
+    }
 }

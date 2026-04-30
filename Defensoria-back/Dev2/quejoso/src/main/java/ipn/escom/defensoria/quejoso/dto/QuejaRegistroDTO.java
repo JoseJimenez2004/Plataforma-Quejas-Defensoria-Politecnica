@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import ipn.escom.defensoria.quejoso.config.JsonDateDeserializer;
 import lombok.Data;
 import java.time.LocalDateTime;
-import java.util.List;
+
 
 @Data
 public class QuejaRegistroDTO {
