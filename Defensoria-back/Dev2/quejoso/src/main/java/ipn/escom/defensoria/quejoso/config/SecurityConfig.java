@@ -1,8 +1,10 @@
 package ipn.escom.defensoria.quejoso.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import ipn.escom.defensoria.quejoso.repository.UsuarioRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -15,19 +17,28 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Crea el filtro JWT como @Bean (ya no es @Component).
+     * Esto evita el auto-registro como servlet filter que causaba el 403.
+     */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public JwtRequestFilter jwtRequestFilter(JwtUtil jwtUtil, UsuarioRepository usuarioRepository) {
+        return new JwtRequestFilter(jwtUtil, usuarioRepository);
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtRequestFilter jwtRequestFilter) throws Exception {
         http
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // Preflight CORS: siempre público
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // 1. RUTAS PÚBLICAS (Sin Token)
                         .requestMatchers("/api/quejoso/auth/**").permitAll()
                         .requestMatchers("/api/quejoso/quejas/registrar").permitAll()
@@ -37,7 +48,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/quejoso/quejas/seguimiento/publico").permitAll()
 
                         // 2. RUTAS PROTEGIDAS (Requieren JWT)
-                        // Cualquier otra ruta de seguimiento o perfil pedirá el "gafete"
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

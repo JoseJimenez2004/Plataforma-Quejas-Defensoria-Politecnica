@@ -136,6 +136,9 @@ public class QuejaController {
 
         // --- DATOS DEL QUEJOSO (Persistencia sin cuenta) ---
         q.setCorreoQuejoso(dto.getCorreo());
+        q.setNombreQuejoso(dto.getNombreQuejoso() + " " + dto.getPrimerApellido()
+                + (dto.getSegundoApellido() != null && !dto.getSegundoApellido().isBlank()
+                   ? " " + dto.getSegundoApellido() : ""));
         q.setIdentificacionInstitucional(dto.getIdentificacionInstitucional());
         q.setTipoIdentificacion(dto.getTipoIdentificacion());
         q.setFechaNacimiento(dto.getFechaNacimiento());

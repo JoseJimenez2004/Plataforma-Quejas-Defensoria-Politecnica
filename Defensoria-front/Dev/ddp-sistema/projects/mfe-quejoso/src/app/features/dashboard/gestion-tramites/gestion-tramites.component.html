@@ -1,0 +1,130 @@
+<div class="p-6">
+
+  <!-- Título + buscador -->
+  <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+    <h1 class="text-2xl font-bold text-gray-800">Gestión de Trámites</h1>
+    <div class="flex items-center border border-gray-300 rounded overflow-hidden">
+      <input
+        [(ngModel)]="busquedaFolio"
+        type="text"
+        placeholder="Buscar Folio (DDP-2026-XXXX)"
+        class="px-3 py-2 text-sm outline-none w-56"
+      />
+      <button class="bg-ipn-maroon text-white px-3 py-2 flex items-center"><lucide-icon name="search" class="w-4 h-4" /></button>
+    </div>
+  </div>
+
+  <!-- Tarjetas resumen -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white border border-yellow-400 rounded-lg p-4 text-center">
+      <p class="text-sm text-gray-600">Totales:</p>
+      <p class="text-3xl font-bold text-ipn-maroon">{{ resumen.totales }}</p>
+    </div>
+    <div class="bg-white border border-yellow-400 rounded-lg p-4 text-center">
+      <p class="text-sm text-gray-600">En Proceso:</p>
+      <p class="text-3xl font-bold text-ipn-maroon">{{ resumen.enProceso }}</p>
+    </div>
+    <div class="bg-white border border-yellow-400 rounded-lg p-4 text-center">
+      <p class="text-sm text-gray-600">Finalizadas:</p>
+      <p class="text-3xl font-bold text-ipn-maroon">{{ resumen.finalizadas }}</p>
+    </div>
+    <div class="bg-white border border-yellow-400 rounded-lg p-4 text-center">
+      <p class="text-sm text-gray-600">Acciones Pendientes:</p>
+      <p class="text-3xl font-bold text-ipn-maroon">{{ resumen.accionesPendientes ?? 0 }}</p>
+    </div>
+  </div>
+
+  <!-- Tabla quejas -->
+  <div class="bg-white rounded-lg shadow-sm overflow-x-auto">
+    @if (cargando) {
+      <div class="p-8 text-center text-gray-500">Cargando trámites...</div>
+    } @else if (quejasFiltradas.length === 0) {
+      <div class="p-8 text-center text-gray-500">No se encontraron trámites.</div>
+    } @else {
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="text-left px-4 py-3 font-semibold text-gray-600">Folio</th>
+            <th class="text-left px-4 py-3 font-semibold text-gray-600">Fecha de Ingreso</th>
+            <th class="text-left px-4 py-3 font-semibold text-gray-600">Asunto</th>
+            <th class="text-left px-4 py-3 font-semibold text-gray-600">Estatus actual</th>
+            <th class="text-left px-4 py-3 font-semibold text-gray-600">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (q of quejasFiltradas; track q.folio) {
+            <tr class="border-b border-gray-100 hover:bg-gray-50">
+              <td class="px-4 py-3 text-ipn-maroon font-medium">{{ q.folio }}</td>
+              <td class="px-4 py-3 text-gray-600">{{ q.fechaRegistro | date:'yyyy-MM-dd' }}</td>
+              <td class="px-4 py-3 text-gray-700">{{ q.asunto | slice:0:30 }}{{ q.asunto.length > 30 ? '...' : '' }}</td>
+              <td class="px-4 py-3">
+                <span [ngClass]="{
+                  'text-green-600': q.estatusActual === EstatusQueja.RECIBIDA,
+                  'text-yellow-600': q.estatusActual === EstatusQueja.EN_ANALISIS,
+                  'text-blue-600': q.estatusActual === EstatusQueja.ASIGNADO_A_ABOGADO || q.estatusActual === EstatusQueja.EN_INVESTIGACION,
+                  'text-gray-500': q.estatusActual === EstatusQueja.FINALIZADA || q.estatusActual === EstatusQueja.CANCELADA
+                }">
+                  {{ etiquetaEstatus(q.estatusActual) }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <!-- Editar: solo si RECIBIDA -->
+                  <button
+                    (click)="editarQueja(q.folio)"
+                    [disabled]="!puedeEditar(q)"
+                    [class]="puedeEditar(q) ? 'text-ipn-maroon hover:text-red-900' : 'text-gray-300 cursor-not-allowed'"
+                    title="Editar"
+                  ><lucide-icon name="pencil" class="w-4 h-4" /></button>
+                  <!-- Eliminar: solo si RECIBIDA -->
+                  <button
+                    (click)="abrirModalEliminar(q.folio)"
+                    [disabled]="!puedeEditar(q)"
+                    [class]="puedeEditar(q) ? 'text-red-500 hover:text-red-700' : 'text-gray-300 cursor-not-allowed'"
+                    title="Eliminar"
+                  ><lucide-icon name="trash-2" class="w-4 h-4" /></button>
+                  <!-- Ver detalle -->
+                  <button (click)="verDetalle(q.folio)" class="text-gray-600 hover:text-gray-800" title="Ver detalle">
+                    <lucide-icon name="eye" class="w-4 h-4" />
+                  </button>
+                  <!-- PDF: solo si FINALIZADA -->
+                  @if (q.estatusActual === EstatusQueja.FINALIZADA) {
+                    <button class="text-gray-600 hover:text-gray-800" title="Descargar PDF"><lucide-icon name="file-text" class="w-4 h-4" /></button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <div class="px-4 py-3 text-xs text-yellow-800 bg-yellow-50 border-t border-yellow-100">
+        La edición/eliminación solo está permitida en estatus 'Recibida'.
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Modal Confirmar Eliminar -->
+@if (mostrarModalEliminar) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
+      <div class="flex justify-center mb-3"><lucide-icon name="alert-triangle" class="w-10 h-10 text-yellow-500" /></div>
+      <h2 class="text-lg font-bold text-gray-800 mb-2">Confirmar Eliminación</h2>
+      <p class="text-gray-600 text-sm mb-6">
+        ¿Estás seguro de que deseas eliminar la queja <strong>{{ folioAEliminar }}</strong>?
+        Esta acción no se puede deshacer.
+      </p>
+      <div class="flex gap-3">
+        <button (click)="cancelarEliminar()"
+          class="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded hover:bg-gray-50 transition text-sm font-medium">
+          Cancelar
+        </button>
+        <button (click)="confirmarEliminar()" [disabled]="eliminando"
+          class="flex-1 bg-red-600 text-white py-2.5 rounded hover:bg-red-700 transition text-sm font-medium disabled:opacity-60">
+          {{ eliminando ? 'Eliminando...' : 'Eliminar definitivamente' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,120 @@
+<!-- Header guinda IPN -->
+<header class="bg-ipn-maroon text-white">
+  <div class="bg-gray-900 py-1 px-4 text-xs flex items-center gap-2">
+    <img src="/assets/gob-mx.svg" alt="Gobierno de México" class="h-4" onerror="this.style.display='none'">
+    <span>Gobierno de México</span>
+  </div>
+  <div class="flex items-center justify-between px-6 py-3">
+    <div class="flex items-center gap-3">
+      <img src="/assets/ipn-logo.png" alt="IPN" class="h-10" onerror="this.style.display='none'">
+      <img src="/assets/ddp-logo.png" alt="DDP" class="h-10" onerror="this.style.display='none'">
+    </div>
+  </div>
+  <nav class="px-6 pb-2 flex gap-6 text-sm font-medium">
+    <a routerLink="/" class="hover:underline">Inicio</a>
+    <a href="#" class="hover:underline">Conócenos</a>
+    <a href="#" class="hover:underline">Orientación</a>
+    <a routerLink="/queja/nueva" class="hover:underline">Queja</a>
+    <a href="#" class="hover:underline">Contacto</a>
+  </nav>
+</header>
+
+<!-- Contenido -->
+<main class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4">
+  <div class="bg-white rounded-lg shadow-md w-full max-w-md p-8">
+    <h1 class="text-2xl font-bold text-ipn-maroon mb-1">Portal de Seguimiento de Quejas</h1>
+    <p class="text-gray-600 text-sm mb-6">Ingresa tus credenciales para gestionar tus trámites.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <!-- Correo -->
+      <div class="mb-4">
+        <div class="flex items-center border border-gray-300 rounded px-3 py-2 focus-within:border-ipn-maroon">
+          <lucide-icon name="mail" class="w-4 h-4 text-gray-400 mr-2" />
+          <input
+            formControlName="correo"
+            type="email"
+            placeholder="Usuario / Correo"
+            class="flex-1 outline-none text-sm bg-transparent"
+            autocomplete="username"
+          />
+        </div>
+        @if (form.get('correo')?.invalid && form.get('correo')?.touched) {
+          <p class="text-red-600 text-xs mt-1">Ingresa un correo válido.</p>
+        }
+      </div>
+
+      <!-- Contraseña -->
+      <div class="mb-6">
+        <div class="flex items-center border border-gray-300 rounded px-3 py-2 focus-within:border-ipn-maroon">
+          <lucide-icon name="lock" class="w-4 h-4 text-gray-400 mr-2" />
+          <input
+            formControlName="password"
+            [type]="mostrarPassword ? 'text' : 'password'"
+            placeholder="Contraseña"
+            class="flex-1 outline-none text-sm bg-transparent"
+            autocomplete="current-password"
+          />
+          <button type="button" (click)="togglePassword()" class="text-gray-400 hover:text-gray-600 ml-2">
+            @if (mostrarPassword) { <lucide-icon name="eye-off" class="w-4 h-4" /> } @else { <lucide-icon name="eye" class="w-4 h-4" /> }
+          </button>
+        </div>
+        @if (form.get('password')?.invalid && form.get('password')?.touched) {
+          <p class="text-red-600 text-xs mt-1">La contraseña es requerida.</p>
+        }
+      </div>
+
+      <!-- Error global -->
+      @if (error) {
+        <div class="bg-red-50 border border-red-300 text-red-700 text-sm rounded px-3 py-2 mb-4">
+          {{ error }}
+        </div>
+      }
+
+      <!-- Botón -->
+      <button
+        type="submit"
+        [disabled]="cargando"
+        class="w-full bg-ipn-maroon text-white font-semibold py-3 rounded hover:bg-red-900 transition disabled:opacity-60"
+      >
+        {{ cargando ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
+      </button>
+    </form>
+
+    <div class="mt-4 text-center">
+      <a routerLink="/restablecer-password" class="text-ipn-maroon text-sm hover:underline">
+        ¿Olvidaste tu contraseña?
+      </a>
+    </div>
+
+    <div class="flex items-center my-4">
+      <hr class="flex-1 border-gray-300" />
+      <span class="mx-3 text-gray-400 text-sm">o</span>
+      <hr class="flex-1 border-gray-300" />
+    </div>
+
+    <div class="text-center">
+      <a routerLink="/registro" class="text-ipn-maroon text-sm hover:underline">
+        ¿No tienes cuenta? Regístrate aquí
+      </a>
+    </div>
+
+    <div class="mt-6 bg-gray-50 border border-gray-200 rounded p-3 text-xs text-gray-500">
+      Si tienes problemas para acceder, contacta a soporte técnico de la Defensoría.
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-ipn-maroon text-white text-center py-6 text-xs">
+  <div class="flex justify-center gap-4 mb-2">
+    <img src="/assets/ipn-logo.png" alt="IPN" class="h-8" onerror="this.style.display='none'">
+    <img src="/assets/ddp-logo.png" alt="DDP" class="h-8" onerror="this.style.display='none'">
+  </div>
+  <p>© {{ currentYear }} - Todos los derechos reservados.</p>
+  <div class="flex justify-center gap-4 mt-2 flex-wrap">
+    <a href="#" class="hover:underline">Aviso de Privacidad</a>
+    <a href="#" class="hover:underline">Marco Normativo</a>
+    <a href="#" class="hover:underline">Acuerdo de Creación</a>
+    <a href="#" class="hover:underline">Promoción para la Formación de DDHH</a>
+  </div>
+</footer>

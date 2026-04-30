@@ -1,0 +1,56 @@
+<div class="p-6">
+
+  @if (cargando) {
+    <div class="text-center py-12 text-gray-500">Cargando propuesta...</div>
+  } @else if (error) {
+    <div class="text-center py-12 text-red-600">{{ error }}</div>
+  } @else if (conciliacion) {
+
+    <h1 class="text-2xl font-bold text-ipn-maroon mb-1">Propuesta de Resolución por Conciliación</h1>
+    <p class="text-gray-500 text-sm mb-6">Vinculada a la Queja: <strong>{{ conciliacion.folioQueja }}</strong></p>
+
+    <!-- Acuerdo -->
+    <div class="border-2 border-yellow-400 rounded-lg p-6 mb-6 bg-white">
+      <div class="text-center font-bold text-lg mb-4">{{ conciliacion.tituloAcuerdo }}</div>
+      <div class="text-sm text-gray-700 leading-relaxed" [innerHTML]="conciliacion.contenidoHtml"></div>
+
+      <div class="flex justify-center gap-6 mt-8">
+        <button (click)="aceptar()"
+          class="bg-green-500 text-white font-bold px-8 py-3 rounded hover:bg-green-600 transition flex items-center gap-2">
+          <lucide-icon name="thumbs-up" class="w-4 h-4" /> ACEPTAR
+        </button>
+        <button (click)="rechazar()"
+          class="border-2 border-red-500 text-red-500 font-bold px-8 py-3 rounded hover:bg-red-50 transition flex items-center gap-2">
+          <lucide-icon name="x" class="w-4 h-4" /> RECHAZAR
+        </button>
+      </div>
+
+      @if (mostrarRechazo) {
+        <div class="mt-4">
+          <p class="text-sm text-gray-600 mb-2">
+            En caso de rechazo, por favor justifique sus motivos para que el defensor pueda analizar su caso nuevamente.
+          </p>
+          <textarea [(ngModel)]="justificacion" rows="4"
+            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon resize-none"
+            placeholder="Escriba su justificación..."></textarea>
+          <div class="flex justify-end mt-2">
+            <button (click)="confirmarRechazo()" [disabled]="!justificacion.trim()"
+              class="bg-red-600 text-white text-sm px-4 py-2 rounded hover:bg-red-700 disabled:opacity-60">
+              Confirmar Rechazo
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="flex items-center justify-between flex-wrap gap-3">
+      <button class="border border-gray-400 text-gray-700 text-sm px-5 py-2.5 rounded hover:bg-gray-50 flex items-center gap-2">
+        <lucide-icon name="file-text" class="w-4 h-4" /> Descargar Propuesta en PDF
+      </button>
+      <a routerLink="/dashboard/notificaciones" class="text-ipn-maroon text-sm hover:underline">
+        ← Volver a Notificaciones
+      </a>
+    </div>
+
+  }
+</div>

@@ -31,9 +31,10 @@
               }
             ],
             "styles": ["projects/ddp-shell/src/styles.scss"],
+            "polyfills": ["zone.js"],
             "ssr": false,
             "prerender": false,
-            "outputMode": "static" 
+            "outputMode": "static"
           },
           "configurations": {
             "production": {
@@ -100,6 +101,7 @@
               }
             ],
             "styles": ["projects/mfe-quejoso/src/styles.scss"],
+            "polyfills": ["zone.js"],
             "ssr": false,
             "prerender": false,
             "outputMode": "static"

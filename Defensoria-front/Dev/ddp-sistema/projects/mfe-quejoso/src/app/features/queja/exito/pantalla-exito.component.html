@@ -1,0 +1,85 @@
+<!-- Header guinda IPN -->
+<header class="bg-ipn-maroon text-white">
+  <div class="bg-gray-900 py-1 px-4 text-xs flex justify-between">
+    <span>Gobierno de México</span>
+    <div class="flex gap-4">
+      <a routerLink="/dashboard" class="hover:underline">Trámites</a>
+      <a routerLink="/login" class="hover:underline">Gobierno</a>
+    </div>
+  </div>
+  <div class="px-6 py-3 flex items-center gap-3">
+    <img src="/assets/ipn-logo.png" alt="IPN" class="h-10" onerror="this.style.display='none'">
+    <img src="/assets/ddp-logo.png" alt="DDP" class="h-10" onerror="this.style.display='none'">
+  </div>
+  <nav class="px-6 pb-2 flex gap-6 text-sm font-medium">
+    <a routerLink="/" class="hover:underline">Inicio</a>
+    <a href="#" class="hover:underline">Conócenos</a>
+    <a href="#" class="hover:underline">Orientación</a>
+    <a routerLink="/queja/nueva" class="hover:underline">Queja</a>
+    <a href="#" class="hover:underline">Contacto</a>
+  </nav>
+</header>
+
+<main class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+  <div class="bg-white rounded-lg shadow-md w-full max-w-md p-8 text-center">
+    <!-- Checkmark -->
+    <div class="flex justify-center mb-4">
+      <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
+        <lucide-icon name="check" class="w-8 h-8 text-white" />
+      </div>
+    </div>
+
+    <h1 class="text-2xl font-bold text-ipn-maroon mb-2">¡Queja enviada con éxito!</h1>
+    <p class="text-gray-600 text-sm mb-4">Tu número de folio para seguimiento es:</p>
+
+    <div class="bg-gray-100 border border-gray-300 rounded px-6 py-3 inline-block mb-2">
+      <span class="text-xl font-bold font-mono text-gray-800">{{ folio }}</span>
+    </div>
+
+    <p class="text-ipn-maroon text-xs mb-6">
+      Por favor, guarda este número. Es indispensable para consultar el estatus de tu trámite.
+    </p>
+
+    <button
+      type="button"
+      class="flex items-center gap-2 mx-auto border border-ipn-maroon text-ipn-maroon px-6 py-2 rounded hover:bg-red-50 transition text-sm mb-6"
+    >
+      <lucide-icon name="file-text" class="w-4 h-4" /> Descargar Acuse de Recibo
+    </button>
+
+    <!-- CTA cuenta -->
+    <div class="border-2 border-yellow-400 rounded-lg p-5">
+      <h2 class="font-bold text-gray-800 mb-2">¿Deseas dar seguimiento detallado?</h2>
+      <p class="text-gray-600 text-xs mb-4">
+        Al crear una cuenta de seguimiento podrás editar tu queja (mientras esté en estatus 'Recibida'),
+        adjuntar más evidencias y recibir notificaciones.
+      </p>
+
+      <button
+        type="button"
+        (click)="crearCuenta()"
+        class="w-full bg-ipn-maroon text-white font-semibold py-3 rounded hover:bg-red-900 transition mb-3"
+      >
+        Crear cuenta de seguimiento
+      </button>
+
+      <a routerLink="/" class="block text-ipn-maroon text-sm hover:underline">
+        Continuar como invitado (solo consulta con folio)
+      </a>
+    </div>
+  </div>
+</main>
+
+<footer class="bg-ipn-maroon text-white text-center py-6 text-xs">
+  <div class="flex justify-center gap-4 mb-2">
+    <img src="/assets/ipn-logo.png" alt="IPN" class="h-8" onerror="this.style.display='none'">
+    <img src="/assets/ddp-logo.png" alt="DDP" class="h-8" onerror="this.style.display='none'">
+  </div>
+  <p>© {{ currentYear }} - Todos los derechos reservados.</p>
+  <div class="flex justify-center gap-4 mt-2 flex-wrap">
+    <a href="#" class="hover:underline">Aviso de Privacidad</a>
+    <a href="#" class="hover:underline">Marco Normativo</a>
+    <a href="#" class="hover:underline">Acuerdo de Creación</a>
+    <a href="#" class="hover:underline">Promoción para la Formación de DDHH</a>
+  </div>
+</footer>

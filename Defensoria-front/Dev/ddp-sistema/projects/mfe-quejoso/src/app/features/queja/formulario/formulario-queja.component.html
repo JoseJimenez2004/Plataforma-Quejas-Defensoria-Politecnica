@@ -1,0 +1,424 @@
+<!-- Header guinda IPN -->
+<header class="bg-ipn-maroon text-white">
+  <div class="bg-gray-900 py-1 px-4 text-xs"><span>Gobierno de México</span></div>
+  <div class="px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img
+        src="/assets/ipn-logo.png"
+        alt="IPN"
+        class="h-10"
+        onerror="this.style.display = 'none'"
+      />
+      <img
+        src="/assets/ddp-logo.png"
+        alt="DDP"
+        class="h-10"
+        onerror="this.style.display = 'none'"
+      />
+    </div>
+  </div>
+  <nav class="px-6 pb-2 flex gap-6 text-sm font-medium">
+    <a routerLink="/" class="hover:underline">Inicio</a>
+    <a href="#" class="hover:underline">Conócenos</a>
+    <a href="#" class="hover:underline">Orientación</a>
+    <a routerLink="/queja/nueva" class="hover:underline font-bold border-b-2 border-white pb-0.5"
+      >Queja</a
+    >
+    <a href="#" class="hover:underline">Contacto</a>
+  </nav>
+</header>
+
+<!-- Breadcrumb -->
+<div class="bg-white border-b border-gray-200 px-6 py-2 text-xs text-gray-500">
+  <a routerLink="/" class="text-ipn-maroon hover:underline">Inicio</a>
+  <span class="mx-1">›</span>
+  <span>Queja</span>
+  <span class="mx-1">›</span>
+  <span>Registro</span>
+</div>
+
+<main class="bg-gray-100 min-h-screen py-8 px-4">
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold text-ipn-maroon mb-2 text-center">
+      Formulario de Registro de Quejas
+    </h1>
+
+    <div
+      class="bg-yellow-50 border border-yellow-300 text-yellow-800 text-sm rounded px-4 py-3 mb-6"
+    >
+      <p class="font-semibold mb-1">Nota importante:</p>
+      <ul class="list-disc pl-5 space-y-1">
+        <li>Las quejas sobre incidentes ocurridos hace más de 90 días no serán procesadas.</li>
+        <li>Usted podrá editar o eliminar esta queja mientras su estatus sea 'Recibida'. Una vez pase a 'En Revisión', la información será definitiva.</li>
+      </ul>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="space-y-6">
+      <!-- Datos del Quejoso -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-ipn-maroon font-bold text-lg mb-4">Datos del Quejoso</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Nombre: <span class="text-red-600">*</span></label
+            >
+            <input
+              formControlName="nombreQuejoso"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+            @if (form.get('nombreQuejoso')?.invalid && form.get('nombreQuejoso')?.touched) {
+              <p class="text-red-600 text-xs mt-1">Campo requerido.</p>
+            }
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Primer Apellido: <span class="text-red-600">*</span></label
+            >
+            <input
+              formControlName="primerApellido"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+            @if (form.get('primerApellido')?.invalid && form.get('primerApellido')?.touched) {
+              <p class="text-red-600 text-xs mt-1">Campo requerido.</p>
+            }
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Segundo Apellido:</label>
+            <input
+              formControlName="segundoApellido"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Correo: <span class="text-red-600">*</span></label
+            >
+            <input
+              formControlName="correo"
+              type="email"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+            @if (form.get('correo')?.invalid && form.get('correo')?.touched) {
+              <p class="text-red-600 text-xs mt-1">Ingresa un correo válido.</p>
+            }
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Fecha de nacimiento: <span class="text-red-600">*</span></label
+            >
+            <input
+              formControlName="fechaNacimiento"
+              type="date"
+              [max]="hoy"
+              (change)="verificarEdad()"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+            @if (esMenor && tutorData) {
+              <p class="text-green-600 text-xs mt-1 flex items-center gap-1"><lucide-icon name="check" class="w-3 h-3" /> Datos de tutor registrados</p>
+            }
+            @if (esMenor && !tutorData) {
+              <p class="text-yellow-700 text-xs mt-1">
+                Menor de edad — se requieren datos del tutor.
+              </p>
+            }
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Identificación Institucional: <span class="text-red-600">*</span></label
+            >
+            <input
+              formControlName="identificacionInstitucional"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+              placeholder="Boleta o número de empleado"
+            />
+            <div class="flex gap-4 mt-2">
+              <label class="flex items-center gap-1 text-sm cursor-pointer">
+                <input formControlName="tipoIdentificacion" type="radio" value="ALUMNO" /> Alumno
+              </label>
+              <label class="flex items-center gap-1 text-sm cursor-pointer">
+                <input formControlName="tipoIdentificacion" type="radio" value="EMPLEADO" />
+                Empleado
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Datos de la Queja -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-ipn-maroon font-bold text-lg mb-4">Datos de la Queja</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Lugar donde sucedieron los hechos: <span class="text-red-600">*</span></label
+            >
+            <select
+              formControlName="unidadAcademica"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon bg-white"
+            >
+              <option value="">Seleccione una UA</option>
+              @for (ua of unidades; track ua) {
+                <option [value]="ua">{{ ua }}</option>
+              }
+            </select>
+            @if (form.get('unidadAcademica')?.invalid && form.get('unidadAcademica')?.touched) {
+              <p class="text-red-600 text-xs mt-1">Selecciona una unidad académica.</p>
+            }
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Fecha de los hechos: <span class="text-red-600">*</span></label
+            >
+            <input
+              formControlName="fechaHechos"
+              type="date"
+              [max]="hoy"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+            @if (form.get('fechaHechos')?.touched) {
+              @if (form.get('fechaHechos')?.errors?.['required']) {
+                <p class="text-red-600 text-xs mt-1">Campo requerido.</p>
+              } @else if (form.get('fechaHechos')?.errors?.['futuro']) {
+                <p class="text-red-600 text-xs mt-1">La fecha debe ser menor a la actual.</p>
+              } @else if (form.get('fechaHechos')?.errors?.['muyAntigua']) {
+                <p class="text-red-600 text-xs mt-1">
+                  La fecha no puede ser mayor a 90 días anteriores.
+                </p>
+              }
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Datos del Denunciado -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-ipn-maroon font-bold text-lg mb-4">Datos del Denunciado</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Nombre del denunciado: <span class="text-red-600">*</span></label
+            >
+            <input
+              formControlName="nombreDenunciado"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+            @if (form.get('nombreDenunciado')?.invalid && form.get('nombreDenunciado')?.touched) {
+              <p class="text-red-600 text-xs mt-1">Campo requerido.</p>
+            }
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Primer Apellido del denunciado: <span class="text-red-600">*</span></label
+            >
+            <input
+              formControlName="primerApellidoDenunciado"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+            @if (
+              form.get('primerApellidoDenunciado')?.invalid &&
+              form.get('primerApellidoDenunciado')?.touched
+            ) {
+              <p class="text-red-600 text-xs mt-1">Campo requerido.</p>
+            }
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Segundo Apellido del denunciado:</label
+            >
+            <input
+              formControlName="segundoApellidoDenunciado"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Descripción de los hechos: <span class="text-red-600">*</span></label
+            >
+            <textarea
+              formControlName="descripcionHechos"
+              rows="5"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon resize-none"
+              placeholder="Describe detalladamente los hechos..."
+            ></textarea>
+            @if (form.get('descripcionHechos')?.invalid && form.get('descripcionHechos')?.touched) {
+              <p class="text-red-600 text-xs mt-1">Mínimo 30 caracteres.</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Evidencias -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <p class="text-sm text-gray-600 mb-1">
+          Adjunta archivos que sustenten tu queja (PDF, JPG, PNG, MP4, MP3).
+        </p>
+        <p class="text-xs text-red-600 font-medium mb-3">
+          * Límite de 30MB en total para las evidencias adjuntas.
+        </p>
+        <label
+          class="inline-flex items-center gap-2 border border-gray-400 rounded px-4 py-2 text-sm cursor-pointer hover:bg-gray-50"
+        >
+          <input
+            type="file"
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png,.mp4,.mp3,.doc,.docx"
+            class="hidden"
+            (change)="onArchivoSeleccionado($event)"
+          />
+          <lucide-icon name="paperclip" class="w-4 h-4" /> Seleccionar Archivo
+        </label>
+        @for (archivo of archivos; track archivo.name; let i = $index) {
+          <div class="flex items-center justify-between mt-2 text-sm text-gray-700">
+            <span class="flex items-center gap-1.5"><lucide-icon name="file-text" class="w-4 h-4 flex-shrink-0" /> {{ archivo.name }}</span>
+            <button
+              type="button"
+              (click)="eliminarArchivo(i)"
+              class="text-red-500 hover:text-red-700"
+            >
+              <lucide-icon name="trash-2" class="w-4 h-4" />
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (error) {
+        <div class="bg-red-50 border border-red-300 text-red-700 text-sm rounded px-4 py-3">
+          {{ error }}
+        </div>
+      }
+
+      <button
+        type="submit"
+        [disabled]="cargando"
+        class="w-full bg-ipn-maroon text-white font-semibold py-3 rounded hover:bg-red-900 transition disabled:opacity-60"
+      >
+        {{ cargando ? 'Enviando queja...' : 'Enviar Queja' }}
+      </button>
+    </form>
+  </div>
+</main>
+
+<!-- Modal Tutor -->
+@if (mostrarModalTutor) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+      <h2
+        class="bg-ipn-maroon text-white text-center font-bold py-3 rounded-t -mx-6 -mt-6 mb-4 px-6"
+      >
+        Información del Tutor / Adulto Responsable
+      </h2>
+
+      <div
+        class="bg-yellow-50 border border-yellow-300 text-yellow-800 text-sm rounded px-3 py-2 mb-4"
+      >
+        Se requiere un responsable legal para solicitantes menores de edad.
+      </div>
+
+      <form [formGroup]="tutorForm" novalidate class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Nombre(s): <span class="text-red-600">*</span></label
+          >
+          <input
+            formControlName="nombre"
+            type="text"
+            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+          />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Primer Apellido: <span class="text-red-600">*</span></label
+            >
+            <input
+              formControlName="primerApellido"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Segundo Apellido:</label>
+            <input
+              formControlName="segundoApellido"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Parentesco: <span class="text-red-600">*</span></label
+          >
+          <select
+            formControlName="parentesco"
+            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon bg-white"
+          >
+            @for (p of parentescos; track p) {
+              <option [value]="p">{{ p }}</option>
+            }
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Correo Electrónico: <span class="text-red-600">*</span></label
+            >
+            <input
+              formControlName="correo"
+              type="email"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Teléfono (10 dígitos): <span class="text-red-600">*</span></label
+            >
+            <input
+              formControlName="telefono"
+              type="tel"
+              maxlength="10"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
+            @if (tutorForm.get('telefono')?.invalid && tutorForm.get('telefono')?.touched) {
+              <p class="text-red-600 text-xs mt-1">10 dígitos requeridos.</p>
+            }
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button
+            type="button"
+            (click)="confirmarTutor()"
+            class="flex-1 bg-ipn-maroon text-white font-semibold py-2.5 rounded hover:bg-red-900 transition"
+          >
+            Confirmar Datos
+          </button>
+          <button
+            type="button"
+            (click)="cancelarTutor()"
+            class="flex-1 border border-ipn-maroon text-ipn-maroon font-semibold py-2.5 rounded hover:bg-red-50 transition"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<footer class="bg-ipn-maroon text-white text-center py-6 text-xs">
+  <p>© {{ currentYear }} - Todos los derechos reservados.</p>
+  <div class="flex justify-center gap-4 mt-2 flex-wrap">
+    <a href="#" class="hover:underline">Aviso de Privacidad</a>
+    <a href="#" class="hover:underline">Marco Normativo</a>
+    <a href="#" class="hover:underline">Acuerdo de Creación</a>
+    <a href="#" class="hover:underline">Promoción para la Formación de DDHH</a>
+  </div>
+</footer>

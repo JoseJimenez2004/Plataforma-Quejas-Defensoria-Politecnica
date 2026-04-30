@@ -45,10 +45,11 @@ public class Queja {
     @OneToMany(mappedBy = "queja", cascade = CascadeType.ALL)
     private List<EvidenciaEntity> evidencias = new java.util.ArrayList<>(); // <-- Asegúrate de tener el "= new ArrayList<>()"
 
-    private String correoQuejoso;            // El correo donde se enviará el folio
-    private String identificacionInstitucional; // Boleta o Número de empleado
-    private String tipoIdentificacion;       // ALUMNO o EMPLEADO
-    private String fechaNacimiento;          // Para validar minoría de edad (MQ-03)
+    private String correoQuejoso;
+    private String nombreQuejoso;            // Nombre completo del quejoso para poner en dashboard
+    private String identificacionInstitucional;
+    private String tipoIdentificacion;
+    private String fechaNacimiento;
 
 
 }

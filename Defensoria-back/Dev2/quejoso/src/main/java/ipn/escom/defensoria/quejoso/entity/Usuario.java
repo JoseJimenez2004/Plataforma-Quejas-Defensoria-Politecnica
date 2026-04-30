@@ -2,6 +2,7 @@ package ipn.escom.defensoria.quejoso.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,6 +37,7 @@ public class Usuario {
     private String telefonoTutor;
 
     @OneToMany(mappedBy = "quejoso")
+    @ToString.Exclude
     private List<Queja> quejas;
 
     // En tu entidad Usuario.java
