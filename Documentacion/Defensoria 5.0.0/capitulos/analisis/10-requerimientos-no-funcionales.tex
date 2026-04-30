@@ -1,27 +1,19 @@
-\section{Requerimientos Funcionales}
+\section{Requerimientos no Funcionales}
 \begin{table}[h!]
 \centering
-\small
-\caption{Listado Consolidado de Requerimientos Funcionales.}
-\label{tab:func_req}
-\begin{tabular}{@{} l p{9.5cm} l @{}}
+\caption{Atributos de Calidad y Restricciones Técnicas.}
+\label{tab:non_func}
+\begin{tabular}{@{} l p{9cm} l @{}}
 \toprule
 \rowcolor[HTML]{2D3E50} 
-\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción del Requerimiento} & \textbf{\color[HTML]{FFFFFF} Actor} \\ \midrule
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción del Atributo} & \textbf{\color[HTML]{FFFFFF} Categoría} \\ \midrule
 \rowcolor[HTML]{F2F4F7} 
-RF-01 & Registro de cuenta, acceso y recuperación de contraseña[cite: 4]. & Quejoso \\
-RF-02 & Levantamiento de queja con generación de folio único automático[cite: 1]. & Quejoso \\
+RNF-01 & Seguridad: Solo el Defensor puede modificar roles y permisos de terceros. & Seguridad \\
+RNF-02 & Integridad: Un acuerdo firmado digitalmente no admite modificaciones posteriores. & Integridad \\
 \rowcolor[HTML]{F2F4F7} 
-RF-03 & Carga y visualización de evidencias y línea de tiempo de la queja[cite: 1]. & Quejoso \\
-RF-04 & Validación de quejas, consulta de antecedentes y rechazo motivado[cite: 2]. & Recepcionista \\
+RNF-03 & Disponibilidad: Los tableros estadísticos deben reflejar datos actualizados al momento. & Rendimiento \\
+RNF-04 & Usabilidad: La interfaz de firma debe ser clara para evitar errores en la conclusión. & Usabilidad \\
 \rowcolor[HTML]{F2F4F7} 
-RF-05 & Apertura y análisis de expedientes digitales con agregado de notas[cite: 3]. & Analista \\
-RF-06 & Determinación de competencia y generación de acuerdos de admisión[cite: 3]. & Analista \\
-\rowcolor[HTML]{F2F4F7} 
-RF-07 & Generación de remisiones y envío de notificaciones oficiales[cite: 3]. & Analista \\
-RF-08 & Agendamiento y gestión de citas con el quejoso[cite: 3]. & Analista \\
-\rowcolor[HTML]{F2F4F7} 
-RF-09 & Solicitud de actos de investigación y actualización de estatus[cite: 3]. & Analista \\
-RF-10 & Canalización formal al abogado correspondiente (Asignación)[cite: 2, 3]. & Recepcionista/Analista \\ \bottomrule
+RNF-05 & No Repudio: La firma digital debe asegurar la autoría del Defensor en cada cierre. & Legal \\ \bottomrule
 \end{tabular}
 \end{table}
