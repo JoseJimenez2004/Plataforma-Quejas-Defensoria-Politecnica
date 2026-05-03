@@ -1,55 +1,42 @@
 \section{Requerimientos de Usuario}
+
+En esta sección se detallan las necesidades específicas de cada actor que interactúa con la plataforma. Estos requerimientos representan las acciones fundamentales que el sistema debe permitir para garantizar el ciclo de vida de la queja y el cumplimiento normativo institucional.
+
 \begin{table}[h!]
 \centering
-
-\caption{Requerimientos de Usuario por Actor (Ciclo Completo).}
-\label{tab:user_req}
-\begin{tabular}{@{} l l p{9cm} @{}}
+\caption{Requerimientos de Usuario Específicos por Actor.}
+\label{tab:user_req_detallado}
+\begin{tabular}{@{} l l p{8.5cm} @{}}
 \toprule
 \rowcolor[HTML]{2D3E50} 
-\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Actor} & \textbf{\color[HTML]{FFFFFF} Descripción de la Necesidad} \\ \midrule
-\rowcolor[HTML]{F2F4F7} 
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Actor} & \textbf{\color[HTML]{FFFFFF} Descripción de la Necesidad (Acción Específica)} \\ \midrule
 
-RU-01 & Quejoso & Registro, acceso seguro y gestión de perfil personal/tutor[cite: 1]. \\
-RU-02 & Recepcionista & Gestión y validación de quejas entrantes desde un panel central[cite: 2]. \\
 \rowcolor[HTML]{F2F4F7} 
-RU-03 & Analista & Evaluación de fondo de quejas y gestión de expedientes digitales[cite: 3]. \\
-RU-04 & Subdefensor & Supervisión de investigación, gestión de plazos y acuerdos iniciales[cite: 4]. \\
+RU-01 & Quejoso & Registro de cuenta mediante credenciales institucionales (boleta/empleado). \\
+RU-02 & Quejoso & Gestión de perfil personal y carga de datos de tutor (en caso de ser menor de edad). \\
 \rowcolor[HTML]{F2F4F7} 
-RU-05 & Defensor & Visualización global de la gestión mediante tableros y estadísticas. \\
-RU-06 & Defensor & Validación final y firma digital de los acuerdos de conclusión. \\
+RU-03 & Quejoso & Levantamiento de queja detallando hechos, lugar y autoridades involucradas . \\
+RU-04 & Quejoso & Carga de evidencias multimedia (PDF, imágenes, audio, video) para sustentar la queja . \\
 \rowcolor[HTML]{F2F4F7} 
-RU-07 & Defensor & Administración de la configuración del sistema y privilegios de usuario. \\ \bottomrule
-\end{tabular}
-\end{table}
-2. Requerimientos de Sistema
-Fragmento de código
-\section{Requerimientos de Sistema}
-\begin{table}[h!]
-\centering
-\caption{Requerimientos de Sistema e Infraestructura.}
-\label{tab:sys_req}
-\begin{tabular}{@{} p{3cm} p{8.5cm} l @{}}
-\toprule
-\rowcolor[HTML]{2D3E50} 
-\textbf{\color[HTML]{FFFFFF} Categoría} & \textbf{\color[HTML]{FFFFFF} Especificación Técnica} & \textbf{\color[HTML]{FFFFFF} Alcance} \\ \midrule
+RU-05 & Quejoso & Consulta del estatus de la queja en tiempo real mediante un folio digital único . \\
+RU-06 & Quejoso & Recepción de notificaciones automáticas sobre actualizaciones en su expediente . \\ \midrule
+
 \rowcolor[HTML]{F2F4F7} 
-Firma Digital & Módulo de firma electrónica para la validez legal de acuerdos de conclusión. & Defensor \\
-Analítica & Motor de generación de estadísticas generales y tableros de control global. & Defensor \\
+RU-07 & Recepcionista & Visualización de quejas entrantes en una bandeja de entrada centralizada . \\
+RU-08 & Recepcionista & Validación de requisitos mínimos y triaje inicial de la documentación recibida . \\ \midrule
+
 \rowcolor[HTML]{F2F4F7} 
-Administración & Interfaz para la asignación de roles y permisos del personal administrativo. & Defensor \\
-Archivado & Sistema de almacenamiento histórico para quejas en estatus "Finalizado". & Defensor \\
+RU-09 & Analista & Evaluación jurídica de fondo de los hechos narrados para determinar competencia . \\
+RU-10 & Analista & Gestión del expediente digital, incluyendo la adición de notas y documentos internos . \\ \midrule
+
 \rowcolor[HTML]{F2F4F7} 
-Notificaciones & Alertas automáticas para quejas pendientes de firma de conclusión. & Defensor \\ \bottomrule
-RU-01 & Quejoso & Registro, acceso seguro y gestión de perfil personal/tutor\\
-RU-02 & Quejoso & Levantamiento de quejas con evidencias y seguimiento de folios \\
+RU-11 & Subdefensor & Supervisión de los plazos legales para evitar el rezago administrativo . \\
+RU-12 & Subdefensor & Gestión de actos de investigación y seguimiento de oficios enviados a autoridades . \\ \midrule
+
 \rowcolor[HTML]{F2F4F7} 
-RU-03 & Recepcionista & Gestión y validación de quejas entrantes desde un panel central. \\
-RU-04 & Analista & Evaluación de fondo de las quejas y gestión de expedientes digitales. \\
+RU-13 & Defensor & Visualización de estadísticas generales y tableros de control de gestión institucional . \\
+RU-14 & Defensor & Emisión, firma digital avanzada y validación de acuerdos de conclusión del caso . \\
 \rowcolor[HTML]{F2F4F7} 
-RU-05 & Subdefensor & Supervisión de acuerdos de admisión y expedientes en curso. \\
-RU-06 & Subdefensor & Gestión de actos de investigación y seguimiento de plazos de respuesta. \\
-\rowcolor[HTML]{F2F4F7} 
-RU-07 & Subdefensor & Determinación de conclusión de casos y emisión de oficios finales. \\ \bottomrule
+RU-15 & Defensor & Administración de privilegios de usuario y configuración de roles del sistema (RBAC) . \\ \bottomrule
 \end{tabular}
 \end{table}
