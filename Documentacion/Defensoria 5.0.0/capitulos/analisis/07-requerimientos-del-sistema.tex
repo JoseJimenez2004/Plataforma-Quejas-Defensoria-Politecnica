@@ -1,27 +1,30 @@
 \section{Requerimientos de Sistema}
+
+En esta sección se definen las capacidades técnicas y funcionales que el sistema debe ejecutar para dar soporte a los procesos operativos de la Defensoría. Estos requerimientos están enfocados en la lógica de procesamiento, seguridad de datos y automatización de trámites.
+
 \begin{table}[h!]
 \centering
-\caption{Requerimientos de Sistema e Infraestructura.}
-\label{tab:sys_req}
-\begin{tabular}{@{} p{3cm} p{8.5cm} l @{}}
+\caption{Requerimientos de Sistema (Funcionales y Técnicos).}
+\label{tab:sys_req_explicito}
+\begin{tabular}{@{} l p{9cm} l @{}}
 \toprule
 \rowcolor[HTML]{2D3E50} 
-\textbf{\color[HTML]{FFFFFF} Categoría} & \textbf{\color[HTML]{FFFFFF} Especificación Técnica} & \textbf{\color[HTML]{FFFFFF} Alcance} \\ \midrule
-\rowcolor[HTML]{F2F4F7} 
-Firma Digital & Módulo de firma electrónica para la validez legal de acuerdos de conclusión. & Defensor \\
-Analítica & Motor de generación de estadísticas generales y tableros de control global. & Defensor \\
-\rowcolor[HTML]{F2F4F7} 
-Administración & Interfaz para la asignación de roles y permisos del personal administrativo. & Defensor \\
-Archivado & Sistema de almacenamiento histórico para quejas en estatus "Finalizado". & Defensor \\
-\rowcolor[HTML]{F2F4F7} 
-Notificaciones & Alertas automáticas para quejas pendientes de firma de conclusión. & Defensor \\ \bottomrule
-Seguridad & Control de acceso basado en roles (RBAC) con niveles de jerarquía. & General \\
-Gestión de Plazos & Motor de alertas y notificaciones para plazos de respuesta vencidos. & Subdefensor \\
-\rowcolor[HTML]{F2F4F7} 
-Documentación & Generador de oficios a UA, recordatorios y acuerdos de conclusión. & Subdefensor \\
-Notificaciones & Módulo de notificaciones internas para supervisión de acuerdos. & General \\
-\rowcolor[HTML]{F2F4F7} 
-Persistencia & Base de datos con soporte para estados de investigación y conclusión. & General \\ \bottomrule
+\textbf{\color[HTML]{FFFFFF} Categoría} & \textbf{\color[HTML]{FFFFFF} Especificación Técnica (Funcionalidad)} & \textbf{\color[HTML]{FFFFFF} Alcance} \\ \midrule
 
+\rowcolor[HTML]{F2F4F7} 
+Inteligencia Artificial & Motor de clasificación neuro-simbólico basado en PLN para determinar la competencia de las quejas de forma automática. & Sistema \\
+Seguridad (RBAC) & Sistema de autenticación con JWT y control de acceso basado en roles para restringir la visibilidad de datos sensibles. & General \\
+\rowcolor[HTML]{F2F4F7} 
+Gestión Documental & Generador automático de plantillas para oficios a Unidades Académicas, acuerdos de admisión y de conclusión en PDF . & Subdefensor \\
+Firma Electrónica & Módulo de sellado digital y firma avanzada para garantizar la integridad y validez jurídica de los acuerdos finales . & Defensor \\
+\rowcolor[HTML]{F2F4F7} 
+Gestión de Plazos & Lógica de monitoreo de términos procesales (2 a 15 días) con alertas automáticas por vencimiento de plazos legales . & Subdefensor \\
+Notificaciones & Servicio de mensajería automática (email/notificación push) para informar al quejoso cambios en el estatus de su folio . & General \\
+\rowcolor[HTML]{F2F4F7} 
+Búsqueda Avanzada & Motor de indexación GIN para realizar búsquedas de texto completo (full-text search) dentro del repositorio de expedientes . & Analista \\
+Trazabilidad & Sistema de registro de auditoría (logs) para rastrear cada modificación, acceso o cambio de estado en el expediente digital . & Administrador \\
+\rowcolor[HTML]{F2F4F7} 
+Analítica de Datos & Dashboard interactivo con generación de métricas sobre reincidencia de autoridades y tipos de derechos vulnerados . & Defensor \\
+Cifrado en Reposo & Implementación de pgcrypto (AES-256) para el almacenamiento cifrado de datos personales e imágenes de evidencia . & Sistema \\ \bottomrule
 \end{tabular}
 \end{table}
