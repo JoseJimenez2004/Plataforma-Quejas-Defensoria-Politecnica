@@ -1,28 +1,124 @@
-\section{Requerimientos Funcionales}
+\section{Requerimientos Funcionales Detallados}
+
+A partir del análisis de los 75 casos de uso definidos para la plataforma de la Defensoría de los Derechos Politécnicos (DDP), se extraen los siguientes requerimientos funcionales desglosados por módulos operativos.
+
+% --- TABLA 1 ---
 \begin{table}[h!]
 \centering
-\small
-\caption{Listado Consolidado de Requerimientos Funcionales.}
-\label{tab:func_req}
+\scriptsize
+\caption{Módulo de Acceso y Gestión de Identidad.}
+\label{tab:rf_acceso}
 \begin{tabular}{@{} l p{9.5cm} l @{}}
 \toprule
 \rowcolor[HTML]{2D3E50} 
-\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción del Requerimiento} & \textbf{\color[HTML]{FFFFFF} Actor} \\ \midrule
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción Detallada del Requerimiento} & \textbf{\color[HTML]{FFFFFF} Actor} \\ \midrule
+RF-01 & Registro de usuarios con validación de identidad institucional (Boleta/Número de Empleado). & Quejoso \\
 \rowcolor[HTML]{F2F4F7} 
-RF-01 & Registro de queja con generación de folio único automático. & Quejoso \\
-RF-02 & Validación de quejas, consulta de antecedentes y canalización. & Recepcionista \\
+RF-02 & Recuperación de contraseña mediante el envío de tokens temporales al correo registrado. & Usuario \\
+RF-03 & Gestión de perfil de usuario permitiendo la actualización de datos de contacto y domicilio. & Quejoso \\
 \rowcolor[HTML]{F2F4F7} 
-RF-03 & Análisis de expedientes, notas internas y acuerdos de admisión. & Analista \\
-RF-04 & Gestión de plazos de respuesta y actos de investigación. & Subdefensor \\
-\rowcolor[HTML]{F2F4F7} 
-RF-05 & Consulta de tableros de control de gestión global y estadísticas. & Defensor \\
-RF-06 & Acceder al panel de quejas con acuerdo de conclusión pendiente. & Defensor \\
-\rowcolor[HTML]{F2F4F7} 
-RF-07 & Realizar la firma digital de acuerdos de conclusión de forma individual o masiva. & Defensor \\
-RF-08 & Cambiar automáticamente el estatus de la queja a "Finalizado" tras la firma. & Defensor \\
-\rowcolor[HTML]{F2F4F7} 
-RF-09 & Enviar expedientes concluidos al archivo histórico del sistema. & Defensor \\
-RF-10 & Asignar roles y permisos específicos a los usuarios de la plataforma. & Defensor \\ \bottomrule
+RF-04 & Captura obligatoria de datos del tutor y documentos de identidad para quejosos menores de edad. & Quejoso \\
+RF-05 & Autenticación de personal administrativo mediante roles definidos en el sistema (RBAC). & Personal DDP \\ \bottomrule
+\end{tabular}
+\end{table}
 
+% --- TABLA 2 ---
+\begin{table}[h!]
+\centering
+\scriptsize
+\caption{Módulo de Gestión de Quejas (Front-end).}
+\label{tab:rf_frontend}
+\begin{tabular}{@{} l p{9.5cm} l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50} 
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción Detallada del Requerimiento} & \textbf{\color[HTML]{FFFFFF} Actor} \\ \midrule
+RF-06 & Formulario dinámico para el levantamiento de quejas con narrativa de hechos y geolocalización. & Quejoso \\
+\rowcolor[HTML]{F2F4F7} 
+RF-07 & Carga de evidencias en múltiples formatos (PDF, JPG, MP3, MP4) con límite de tamaño por archivo. & Quejoso \\
+RF-08 & Generación de folio único con nomenclatura institucional tras finalizar el registro exitoso. & Sistema \\
+\rowcolor[HTML]{F2F4F7} 
+RF-09 & Visualización de tablero personal con el listado de quejas activas y su estatus actual. & Quejoso \\
+RF-10 & Consultar línea de tiempo interactiva que detalle el historial de pasos de la queja. & Quejoso \\
+\rowcolor[HTML]{F2F4F7} 
+RF-11 & Descarga de acuse de recibo y documentos oficiales en formato PDF. & Quejoso \\ \bottomrule
+\end{tabular}
+\end{table}
+
+% --- TABLA 3 ---
+\begin{table}[h!]
+\centering
+\scriptsize
+\caption{Módulo de Recepción y Triaje Administrativo.}
+\label{tab:rf_recepcion}
+\begin{tabular}{@{} l p{9.5cm} l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50} 
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción Detallada del Requerimiento} & \textbf{\color[HTML]{FFFFFF} Actor} \\ \midrule
+RF-12 & Bandeja de entrada centralizada para la recepción de solicitudes con filtros de prioridad. & Recepcionista \\
+\rowcolor[HTML]{F2F4F7} 
+RF-13 & Búsqueda de antecedentes históricos para detectar duplicidad o reincidencia de quejas. & Recepcionista \\
+RF-14 & Emisión de notificaciones de prevención para solicitar información faltante al quejoso. & Recepcionista \\
+\rowcolor[HTML]{F2F4F7} 
+RF-15 & Función para rechazar quejas no competentes con justificación legal obligatoria. & Recepcionista \\
+RF-16 & Turnar expedientes validados al área de análisis para el inicio del proceso formal. & Recepcionista \\ \bottomrule
+\end{tabular}
+\end{table}
+
+% --- TABLA 4 ---
+\begin{table}[h!]
+\centering
+\scriptsize
+\caption{Módulo de Análisis y Sustanciación.}
+\label{tab:rf_analisis}
+\begin{tabular}{@{} l p{9.5cm} l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50} 
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción Detallada del Requerimiento} & \textbf{\color[HTML]{FFFFFF} Actor} \\ \midrule
+RF-17 & Determinación automática de competencia preliminar mediante el motor de IA. & Sistema \\
+\rowcolor[HTML]{F2F4F7} 
+RF-18 & Adición de notas internas y comentarios técnicos visibles solo para personal jurídico. & Analista \\
+RF-19 & Generación de Acuerdo de Admisión vinculando los hechos con la normativa del IPN. & Analista \\
+\rowcolor[HTML]{F2F4F7} 
+RF-20 & Asignación de expediente a un abogado específico para la etapa de investigación. & Subdefensor \\
+RF-21 & Registro y control de solicitudes de actos de investigación dirigidos a autoridades UA. & Subdefensor \\
+\rowcolor[HTML]{F2F4F7} 
+RF-22 & Gestión de plazos con semáforo de alertas (Verde, Amarillo, Rojo) según el vencimiento. & Subdefensor \\
+RF-23 & Redacción y envío de recordatorios automáticos a autoridades que no han rendido informes. & Subdefensor \\ \bottomrule
+\end{tabular}
+\end{table}
+
+% --- TABLA 5 ---
+\begin{table}[h!]
+\centering
+\scriptsize
+\caption{Módulo de Resolución, Firma y Cierre.}
+\label{tab:rf_resolucion}
+\begin{tabular}{@{} l p{9.5cm} l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50} 
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción Detallada del Requerimiento} & \textbf{\color[HTML]{FFFFFF} Actor} \\ \midrule
+RF-24 & Elaboración de propuestas de conciliación y envío para aceptación o rechazo del quejoso. & Analista \\
+\rowcolor[HTML]{F2F4F7} 
+RF-25 & Consultar tableros de gestión global con estadísticas de eficiencia operativa de la DDP. & Defensor \\
+RF-26 & Ejecución de Firma Digital Avanzada sobre el Acuerdo de Conclusión individual o masiva. & Defensor \\
+\rowcolor[HTML]{F2F4F7} 
+RF-27 & Actualización automática del estado del expediente a "FINALIZADO" tras la firma digital. & Sistema \\
+RF-28 & Transferencia de expedientes concluidos al repositorio de archivo histórico digital. & Sistema \\ \bottomrule
+\end{tabular}
+\end{table}
+
+% --- TABLA 6 ---
+\begin{table}[h!]
+\centering
+\scriptsize
+\caption{Módulo de Administración Técnica.}
+\label{tab:rf_admin}
+\begin{tabular}{@{} l p{9.5cm} l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50} 
+\textbf{\color[HTML]{FFFFFF} ID} & \textbf{\color[HTML]{FFFFFF} Descripción Detallada del Requerimiento} & \textbf{\color[HTML]{FFFFFF} Actor} \\ \midrule
+RF-29 & Configuración de plantillas dinámicas para oficios, acuerdos y notificaciones institucionales. & Administrador \\
+\rowcolor[HTML]{F2F4F7} 
+RF-30 & Gestión del catálogo de dependencias politécnicas y autoridades registradas en el sistema. & Administrador \\ \bottomrule
 \end{tabular}
 \end{table}
