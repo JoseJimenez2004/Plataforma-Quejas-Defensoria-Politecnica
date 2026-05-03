@@ -19,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.PageRequest; // Importar esto
 
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -36,8 +38,20 @@ public class QuejaService {
     @Autowired
     private EvidenciaRepository evidenciaRepository;
 
-    // En QuejaService.java
     public Queja registrarQueja(Queja nuevaQueja, String identificacion, String correo) {
+        // Validar fechaHechos: no futura, no mayor a 90 días
+        LocalDateTime fechaHechos = nuevaQueja.getFechaHechos();
+        if (fechaHechos != null) {
+            LocalDate hoy = LocalDate.now();
+            LocalDate fechaHechosFecha = fechaHechos.toLocalDate();
+            if (fechaHechosFecha.isAfter(hoy)) {
+                throw new RuntimeException("La fecha de los hechos no puede ser una fecha futura.");
+            }
+            if (fechaHechosFecha.isBefore(hoy.minusDays(90))) {
+                throw new RuntimeException("La fecha de los hechos no puede ser mayor a 90 días anteriores.");
+            }
+        }
+
         // 1. Generar Folio Automático
         nuevaQueja.setFolio(generarNuevoFolio());
 

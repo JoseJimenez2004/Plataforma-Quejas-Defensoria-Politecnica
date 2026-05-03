@@ -1,116 +1,306 @@
-<div class="min-h-screen bg-white font-sans text-gray-800">
-
-  <div class="bg-red-900 text-white text-[10px] py-1 px-4 md:px-20 flex justify-end gap-4 uppercase tracking-wider">
-    <a href="#" class="hover:underline">Trámites</a>
-    <a href="#" class="hover:underline">Gobierno</a>
-    <span class="opacity-50">|</span>
-    <span class="font-bold">IPN</span>
-  </div>
-
-  <header class="flex justify-between items-center px-6 md:px-20 py-6 border-b border-gray-100">
-    <div class="flex items-center gap-6">
-      <div class="flex items-center gap-4">
-        <div class="w-14 h-14 bg-gray-200 rounded flex items-center justify-center border-2 border-dashed border-gray-400 text-[10px] text-gray-500 uppercase p-1 text-center">Logo IPN</div>
-        <div class="w-14 h-14 bg-gray-200 rounded flex items-center justify-center border-2 border-dashed border-gray-400 text-[10px] text-gray-500 uppercase p-1 text-center">Logo DDP</div>
+<div class="min-h-screen flex flex-col">
+  <!-- Header guinda IPN -->
+  <header class="bg-ipn-maroon text-white flex-shrink-0">
+    <div class="bg-gray-900 py-1 px-4 text-xs flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <img
+          src="/assets/gob-mx.svg"
+          alt="Gobierno de México"
+          class="h-4"
+          onerror="this.style.display = 'none'"
+        />
+        <span>Gobierno de México</span>
       </div>
-      <div class="hidden md:block h-10 w-[1px] bg-gray-300 mx-2"></div>
-      <h2 class="hidden md:block text-sm font-bold text-gray-600 leading-tight">
-        Defensoría de los <br> Derechos Politécnicos
-      </h2>
+      <div class="flex gap-4">
+        <a routerLink="/dashboard" class="hover:underline">Trámites</a>
+        <a routerLink="/login" class="hover:underline">Gobierno</a>
+      </div>
     </div>
-    
-    <div class="flex items-center gap-2">
-      <button title="Aumentar texto" class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 text-sm font-bold">A+</button>
-      <button title="Disminuir texto" class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 text-sm font-bold">A-</button>
+    <div class="flex items-center justify-between px-6 py-4">
+      <div class="flex items-center gap-3">
+        <img
+          src="/assets/ipn-logo.png"
+          alt="IPN"
+          class="h-12"
+          onerror="this.style.display = 'none'"
+        />
+        <img
+          src="/assets/ddp-logo.png"
+          alt="DDP"
+          class="h-12"
+          onerror="this.style.display = 'none'"
+        />
+      </div>
     </div>
+    <nav class="px-6 pb-3 flex gap-6 text-sm font-medium">
+      <a routerLink="/" class="hover:underline border-b-2 border-white pb-0.5">Inicio</a>
+      <a href="#" class="hover:underline">Conócenos</a>
+      <a href="#" class="hover:underline">Orientación</a>
+      <a routerLink="/queja/nueva" class="hover:underline">Queja</a>
+      <a href="#" class="hover:underline">Contacto</a>
+    </nav>
   </header>
 
-  <nav class="bg-red-950 text-white sticky top-0 z-50 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 md:px-20 flex flex-wrap gap-4 md:gap-8 py-3 text-xs md:text-sm font-medium uppercase tracking-tight">
-      <a href="#" class="hover:text-red-200 transition-colors border-b-2 border-transparent hover:border-red-200 py-1">Inicio</a>
-      <a href="#" class="hover:text-red-200 transition-colors py-1">Conócenos</a>
-      <a href="#" class="hover:text-red-200 transition-colors py-1">Orientación</a>
-      <a href="#" class="hover:text-red-200 transition-colors py-1">Queja</a>
-      <a href="#" class="hover:text-red-200 transition-colors py-1">Promoción y Formación</a>
-      <a href="#" class="hover:text-red-200 transition-colors py-1">Contacto</a>
-    </div>
-  </nav>
+  <!-- Hero -->
+  <section class="bg-gray-100 py-12 text-center">
+    <h1 class="text-3xl font-bold text-ipn-maroon">Defensoría de los Derechos Politécnicos</h1>
+  </section>
 
-  <section class="flex flex-col md:flex-row items-stretch">
-    <div class="w-full md:w-1/2 bg-gray-50 flex items-center justify-center p-12 lg:p-24 border-r border-gray-200">
-      <div class="w-full aspect-video border-2 border-gray-300 bg-white relative rounded-lg shadow-inner overflow-hidden flex items-center justify-center">
-         <span class="text-gray-300 font-bold text-6xl">X</span>
+  <!-- Servicios en Línea -->
+  <section class="bg-white py-10 px-4 flex-1">
+    <h2 class="text-xl font-bold text-gray-700 text-center mb-8">Servicios en Línea</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+      <!-- Presentar Queja -->
+      <div
+        class="border-2 border-yellow-400 rounded-lg p-8 text-center flex flex-col items-center gap-4"
+      >
+        <lucide-icon name="hand" class="w-16 h-16 text-ipn-maroon" />
+        <h3 class="font-bold text-gray-800">Presentar una QUEJA</h3>
+        <a
+          routerLink="/queja/nueva"
+          class="bg-ipn-maroon text-white font-semibold px-8 py-2.5 rounded hover:bg-red-900 transition"
+        >
+          Iniciar aquí
+        </a>
       </div>
-    </div>
-    <div class="w-full md:w-1/2 bg-indigo-50/50 flex flex-col justify-center p-12 lg:p-20">
-      <h1 class="text-3xl lg:text-5xl font-black text-red-900 leading-tight uppercase">
-        Conoce a la <span class="text-red-700">Defensoría</span> de los <br>
-        <span class="bg-red-900 text-white px-2">Derechos Politécnicos</span>
-      </h1>
-      <p class="mt-6 text-gray-600 max-w-md">
-        Garantizamos el respeto a los derechos de la comunidad del Instituto Politécnico Nacional.
-      </p>
+
+      <!-- Seguimiento de Queja -->
+      <div class="border-2 border-yellow-400 rounded-lg p-8 flex flex-col items-center gap-3">
+        <lucide-icon name="search" class="w-12 h-12 text-ipn-maroon" />
+        <h3 class="font-bold text-gray-800 text-center">Seguimiento de Queja</h3>
+
+        <input
+          [(ngModel)]="correoSeguimiento"
+          type="email"
+          placeholder="Ingresar Correo"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+        />
+        <input
+          [(ngModel)]="folioSeguimiento"
+          type="text"
+          placeholder="Ingresar Folio"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+        />
+
+        @if (errorSeguimiento) {
+          <p class="text-red-600 text-xs">{{ errorSeguimiento }}</p>
+        }
+
+        <button
+          (click)="consultar()"
+          [disabled]="buscando"
+          class="w-full bg-ipn-maroon text-white font-semibold py-2.5 rounded hover:bg-red-900 transition disabled:opacity-60"
+        >
+          {{ buscando ? 'Consultando...' : 'Consultar' }}
+        </button>
+      </div>
+
+      <!-- Iniciar Sesión -->
+      <div
+        class="border-2 border-yellow-400 rounded-lg p-8 text-center flex flex-col items-center gap-4"
+      >
+        <lucide-icon name="users" class="w-16 h-16 text-ipn-maroon" />
+        <h3 class="font-bold text-gray-800">Iniciar sesión</h3>
+        <a
+          routerLink="/login"
+          class="bg-ipn-maroon text-white font-semibold px-8 py-2.5 rounded hover:bg-red-900 transition"
+        >
+          Continuar
+        </a>
+      </div>
     </div>
   </section>
 
-  <section class="max-w-7xl mx-auto py-16 px-6 md:px-20">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      
-      <div class="group bg-emerald-50 p-10 rounded-2xl text-center border border-emerald-100 cursor-pointer hover:bg-emerald-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <div class="text-emerald-600 text-5xl mb-6 group-hover:scale-110 transition-transform">🖐️</div>
-        <h2 class="text-xl font-extrabold text-emerald-900 mb-3 uppercase tracking-wide">Presentar una QUEJA</h2>
-        <p class="text-emerald-800/70 text-sm leading-relaxed">Inicia tu proceso formal en línea de manera segura y confidencial.</p>
+  <!-- Recursos informativos -->
+  <section class="bg-gray-50 py-10 px-4 border-t border-gray-200">
+    <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
+      <div class="flex flex-col items-center gap-2 cursor-pointer group">
+        <lucide-icon name="help-circle" class="w-8 h-8 text-ipn-maroon" />
+        <span class="text-xs text-gray-700 group-hover:text-ipn-maroon"
+          >¿Cómo solicitar orientación?</span
+        >
       </div>
-
-      <div class="group bg-sky-50 p-10 rounded-2xl text-center border border-sky-100 cursor-pointer hover:bg-sky-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <div class="text-sky-600 text-5xl mb-6 group-hover:scale-110 transition-transform">🔍</div>
-        <h2 class="text-xl font-extrabold text-sky-900 mb-3 uppercase tracking-wide">Seguimiento de Queja</h2>
-        <p class="text-sky-800/70 text-sm leading-relaxed">Consulta el estatus actual de tu trámite utilizando tu número de folio.</p>
+      <div class="flex flex-col items-center gap-2 cursor-pointer group">
+        <lucide-icon name="book-open" class="w-8 h-8 text-ipn-maroon" />
+        <span class="text-xs text-gray-700 group-hover:text-ipn-maroon">Marco Normativo</span>
       </div>
-
-      <div class="group bg-purple-50 p-10 rounded-2xl text-center border border-purple-100 cursor-pointer hover:bg-purple-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <div class="text-purple-600 text-5xl mb-6 group-hover:scale-110 transition-transform">💬</div>
-        <h2 class="text-xl font-extrabold text-purple-900 mb-3 uppercase tracking-wide">Preguntas Frecuentes</h2>
-        <p class="text-purple-800/70 text-sm leading-relaxed">Resuelve tus dudas sobre los procesos y alcances de la Defensoría.</p>
+      <div class="flex flex-col items-center gap-2 cursor-pointer group">
+        <lucide-icon name="graduation-cap" class="w-8 h-8 text-ipn-maroon" />
+        <span class="text-xs text-gray-700 group-hover:text-ipn-maroon"
+          >Promoción para la Formación de DDHH</span
+        >
       </div>
-
+      <div class="flex flex-col items-center gap-2 cursor-pointer group">
+        <lucide-icon name="clipboard-list" class="w-8 h-8 text-ipn-maroon" />
+        <span class="text-xs text-gray-700 group-hover:text-ipn-maroon"
+          >Acuerdo de Creación de la DDP</span
+        >
+      </div>
+      <div class="flex flex-col items-center gap-2 cursor-pointer group">
+        <lucide-icon name="scale" class="w-8 h-8 text-ipn-maroon" />
+        <span class="text-xs text-gray-700 group-hover:text-ipn-maroon"
+          >Intervención de la DDP en casos de Violencia de Género</span
+        >
+      </div>
     </div>
   </section>
 
-  <footer class="bg-emerald-50/30 border-t border-emerald-100 py-16 px-6 md:px-20">
-    <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
-      
-      <div class="flex flex-col items-center gap-3 cursor-pointer group">
-        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-all text-xl">❓</div>
-        <span class="text-[10px] font-bold text-gray-700 leading-tight uppercase">¿Cómo solicitar orientación?</span>
-      </div>
-
-      <div class="flex flex-col items-center gap-3 cursor-pointer group">
-        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-all text-xl">📖</div>
-        <span class="text-[10px] font-bold text-gray-700 leading-tight uppercase">Marco Normativo</span>
-      </div>
-
-      <div class="flex flex-col items-center gap-3 cursor-pointer group">
-        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-all text-xl">🤝</div>
-        <span class="text-[10px] font-bold text-gray-700 leading-tight uppercase font-sans">Promoción de DDHH</span>
-      </div>
-
-      <div class="flex flex-col items-center gap-3 cursor-pointer group">
-        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-all text-xl">📋</div>
-        <span class="text-[10px] font-bold text-gray-700 leading-tight uppercase">Guía del Proceso</span>
-      </div>
-
-      <div class="flex flex-col items-center gap-3 cursor-pointer group">
-        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-all text-xl">📜</div>
-        <span class="text-[10px] font-bold text-gray-700 leading-tight uppercase">Acuerdo de Creación</span>
-      </div>
-
-      <div class="flex flex-col items-center gap-3 cursor-pointer group">
-        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-all text-xl">⚖️</div>
-        <span class="text-[10px] font-bold text-gray-700 leading-tight uppercase">Violencia de Género</span>
-      </div>
-
+  <!-- Footer -->
+  <footer class="bg-ipn-maroon text-white text-center py-6 text-xs flex-shrink-0">
+    <div class="flex justify-center gap-4 mb-2">
+      <img src="/assets/ipn-logo.png" alt="IPN" class="h-8" onerror="this.style.display = 'none'" />
+      <img src="/assets/ddp-logo.png" alt="DDP" class="h-8" onerror="this.style.display = 'none'" />
+    </div>
+    <p>© {{ currentYear }} - Todos los derechos reservados.</p>
+    <div class="flex justify-center gap-4 mt-2 flex-wrap">
+      <a href="#" class="hover:underline">Aviso de Privacidad</a>
+      <a href="#" class="hover:underline">Marco Normativo</a>
+      <a href="#" class="hover:underline">Acuerdo de Creación</a>
+      <a href="#" class="hover:underline">Promoción para la Formación de DDHH</a>
     </div>
   </footer>
-
 </div>
+
+<!-- Modal resultado seguimiento público -->
+@if (mostrarModal && resultadoSeguimiento) {
+  <div
+    class="fixed inset-0 bg-black/50 flex items-start justify-center z-50 px-4 py-8 overflow-y-auto"
+    (click)="cerrarModal()"
+  >
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="flex items-start justify-between px-6 pt-6 pb-4 border-b border-gray-200">
+        <h2 class="text-lg font-bold text-gray-900">
+          Detalle de Queja - Folio {{ resultadoSeguimiento.folio }}
+        </h2>
+        <div class="flex items-center gap-3 flex-shrink-0 ml-4">
+          <span class="text-xs font-bold px-3 py-1 rounded uppercase" [class]="badgeClass">
+            {{ etiquetaEstatus(resultadoSeguimiento.estatusActual) }}
+          </span>
+          <button
+            (click)="cerrarModal()"
+            class="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+
+      <!-- Body: dos columnas -->
+      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Columna izquierda: Resumen -->
+        <div class="space-y-4 text-sm">
+          <h3 class="font-bold text-gray-800 text-base">Resumen de la Denuncia</h3>
+
+          <div>
+            <p class="text-gray-500 text-xs font-medium uppercase tracking-wide">
+              Fecha de Registro:
+            </p>
+            <p class="text-gray-800 mt-0.5">
+              {{ resultadoSeguimiento.fechaRegistro | date: 'dd/MM/yyyy' }}
+            </p>
+          </div>
+
+          <div>
+            <p class="text-gray-500 text-xs font-medium uppercase tracking-wide">Asunto:</p>
+            <p class="text-ipn-maroon font-medium mt-0.5">{{ resultadoSeguimiento.asunto }}</p>
+          </div>
+
+          <div>
+            <p class="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">
+              Descripción de hechos:
+            </p>
+            <div
+              class="border border-gray-200 rounded p-3 bg-gray-50 text-gray-700 min-h-20 text-sm leading-relaxed"
+            >
+              {{ resultadoSeguimiento.descripcionHechos }}
+            </div>
+          </div>
+
+          @if (resultadoSeguimiento.evidencias.length > 0) {
+            <div>
+              <p class="text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">
+                Evidencias Presentadas
+              </p>
+              @for (ev of resultadoSeguimiento.evidencias; track ev.id) {
+                <div
+                  class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                >
+                  <span class="text-gray-700 text-xs flex items-center gap-1.5">
+                    <lucide-icon name="file-text" class="w-4 h-4 flex-shrink-0" /> {{ ev.nombreArchivo }}
+                  </span>
+                  <a
+                    [href]="ev.urlDescarga"
+                    target="_blank"
+                    class="bg-ipn-maroon text-white text-xs px-3 py-1 rounded hover:bg-red-900 flex items-center gap-1"
+                  >
+                    <lucide-icon name="download" class="w-3 h-3" /> Descargar
+                  </a>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Columna derecha: Estado del Trámite (stepper) -->
+        <div>
+          <h3 class="font-bold text-gray-800 text-base mb-4">Estado del Trámite</h3>
+          <div class="relative">
+            @for (paso of pasos; track paso.label; let last = $last) {
+              <div class="flex gap-3 pb-6 relative" [class.pb-0]="last">
+                @if (!last) {
+                  <div class="absolute left-3 top-7 bottom-0 w-0.5 bg-gray-200"></div>
+                }
+                <!-- Círculo de paso -->
+                <div
+                  class="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-white text-sm font-bold z-10"
+                  [class]="
+                    paso.completado ? 'bg-green-500' : paso.activo ? 'bg-yellow-500' : 'bg-gray-300'
+                  "
+                >
+                  @if (paso.completado) {
+                    <lucide-icon name="check" class="w-3 h-3" />
+                  } @else if (paso.activo) {
+                    •
+                  } @else {}
+                </div>
+                <!-- Texto del paso -->
+                <div class="pt-0.5">
+                  <p
+                    class="font-semibold text-sm"
+                    [class]="
+                      paso.completado
+                        ? 'text-gray-900'
+                        : paso.activo
+                          ? 'text-yellow-700'
+                          : 'text-gray-400'
+                    "
+                  >
+                    {{ paso.label }}
+                  </p>
+                  @if (paso.fecha) {
+                    <p class="text-xs text-gray-500 mt-0.5">
+                      {{ paso.fecha | date: 'dd/MM/yyyy' }}
+                    </p>
+                  } @else {
+                    <p class="text-xs text-gray-400 mt-0.5">Pendiente</p>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 pb-6 flex justify-center border-t border-gray-100 pt-4">
+        <button
+          class="bg-ipn-maroon text-white font-semibold px-6 py-2.5 rounded hover:bg-red-900 transition flex items-center gap-2 text-sm"
+        >
+          <lucide-icon name="printer" class="w-4 h-4" /> Descargar Acuse Actualizado
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -127,4 +127,8 @@ public class usuarioEntity {
     public void setNotificaciones(List<NotificacionEntity> notificaciones) {
         this.notificaciones = notificaciones;
     }
+
+    
+    
+    
 }   

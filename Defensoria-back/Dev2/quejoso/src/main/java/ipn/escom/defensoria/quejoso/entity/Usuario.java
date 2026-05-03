@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -42,6 +43,7 @@ public class Usuario {
     private String telefonoTutor;
 
     @OneToMany(mappedBy = "quejoso")
+    @ToString.Exclude
     private List<Queja> quejas;
 
     // En tu entidad Usuario.java

@@ -1,0 +1,122 @@
+<!-- Header guinda IPN -->
+<header class="bg-ipn-maroon text-white">
+  <div class="bg-gray-900 py-1 px-4 text-xs"><span>Gobierno de México</span></div>
+  <div class="px-6 py-3 flex items-center gap-3">
+    <img src="/assets/ipn-logo.png" alt="IPN" class="h-10" onerror="this.style.display='none'">
+    <img src="/assets/ddp-logo.png" alt="DDP" class="h-10" onerror="this.style.display='none'">
+  </div>
+  <nav class="px-6 pb-2 flex gap-6 text-sm font-medium">
+    <a routerLink="/" class="hover:underline">Inicio</a>
+    <a routerLink="/queja/nueva" class="hover:underline">Queja</a>
+    <a routerLink="/login" class="hover:underline">Iniciar Sesión</a>
+  </nav>
+</header>
+
+<main class="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4">
+  <div class="bg-white rounded-lg shadow-md w-full max-w-md p-8">
+    <h1 class="text-2xl font-bold text-ipn-maroon mb-1 text-center">Configuración de Acceso</h1>
+    <p class="text-gray-600 text-sm mb-6 text-center">Establece tus credenciales para acceder al portal de seguimiento.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="space-y-4">
+
+      <!-- Correo electrónico -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico:</label>
+        <div class="flex items-center border border-gray-300 rounded px-3 py-2 focus-within:border-ipn-maroon">
+          <lucide-icon name="mail" class="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+          <input
+            formControlName="correo"
+            type="email"
+            class="flex-1 outline-none text-sm bg-transparent"
+            placeholder="correo@ipn.mx"
+          />
+        </div>
+        @if (form.get('correo')?.invalid && form.get('correo')?.touched) {
+          <p class="text-red-600 text-xs mt-1">Ingresa un correo válido.</p>
+        }
+      </div>
+
+      <!-- Número de folio -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Número de folio</label>
+        <div class="flex items-center border border-gray-300 rounded px-3 py-2 focus-within:border-ipn-maroon">
+          <lucide-icon name="hash" class="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+          <input
+            formControlName="numeroFolio"
+            type="text"
+            class="flex-1 outline-none text-sm bg-transparent"
+            placeholder="DDP-2026-0001"
+          />
+        </div>
+        @if (form.get('numeroFolio')?.invalid && form.get('numeroFolio')?.touched) {
+          <p class="text-red-600 text-xs mt-1">El folio es requerido.</p>
+        }
+      </div>
+
+      <!-- Contraseña -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña:</label>
+        <div class="flex items-center border border-gray-300 rounded px-3 py-2 focus-within:border-ipn-maroon">
+          <lucide-icon name="lock" class="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+          <input
+            formControlName="password"
+            [type]="mostrarPassword ? 'text' : 'password'"
+            class="flex-1 outline-none text-sm bg-transparent"
+            placeholder="Mínimo 8 caracteres, 1 mayúscula, 1 número"
+          />
+          <button type="button" (click)="mostrarPassword = !mostrarPassword" class="text-gray-400 hover:text-gray-600 ml-2">
+            @if (mostrarPassword) { <lucide-icon name="eye-off" class="w-4 h-4" /> } @else { <lucide-icon name="eye" class="w-4 h-4" /> }
+          </button>
+        </div>
+        @if (form.get('password')?.invalid && form.get('password')?.touched) {
+          <p class="text-red-600 text-xs mt-1">Mínimo 8 caracteres.</p>
+        }
+        <p class="text-xs text-blue-600 mt-1">La contraseña debe tener al menos 8 caracteres, una mayúscula y un número.</p>
+      </div>
+
+      <!-- Confirmar contraseña -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña:</label>
+        <div class="flex items-center border border-gray-300 rounded px-3 py-2 focus-within:border-ipn-maroon">
+          <lucide-icon name="lock" class="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+          <input
+            formControlName="confirmarPassword"
+            [type]="mostrarConfirmar ? 'text' : 'password'"
+            class="flex-1 outline-none text-sm bg-transparent"
+            placeholder="Repite tu contraseña"
+          />
+          <button type="button" (click)="mostrarConfirmar = !mostrarConfirmar" class="text-gray-400 hover:text-gray-600 ml-2">
+            @if (mostrarConfirmar) { <lucide-icon name="eye-off" class="w-4 h-4" /> } @else { <lucide-icon name="eye" class="w-4 h-4" /> }
+          </button>
+        </div>
+        @if (form.errors?.['noCoinciden'] && form.get('confirmarPassword')?.touched) {
+          <p class="text-red-600 text-xs mt-1">Las contraseñas no coinciden.</p>
+        }
+      </div>
+
+      <p class="text-xs text-blue-600">
+        Su identidad será validada con su número de boleta/empleado proporcionado anteriormente.
+      </p>
+
+      @if (error) {
+        <div class="bg-red-50 border border-red-300 text-red-700 text-sm rounded px-3 py-2">{{ error }}</div>
+      }
+
+      <button
+        type="submit"
+        [disabled]="cargando"
+        class="w-full bg-ipn-maroon text-white font-semibold py-3 rounded hover:bg-red-900 transition disabled:opacity-60"
+      >
+        {{ cargando ? 'Activando cuenta...' : 'Activar Cuenta y Finalizar' }}
+      </button>
+
+      <a routerLink="/login" class="block text-center text-sm text-ipn-maroon hover:underline">
+        Volver al inicio de sesión
+      </a>
+    </form>
+  </div>
+</main>
+
+<footer class="bg-ipn-maroon text-white text-center py-6 text-xs">
+  <p>© {{ currentYear }} - Todos los derechos reservados.</p>
+</footer>

@@ -1,0 +1,71 @@
+<div class="p-6">
+
+  <h1 class="text-2xl font-bold text-gray-800 mb-6">Centro de Notificaciones y Requerimientos</h1>
+
+  <!-- Alertas de requerimiento -->
+  @for (req of requerimientos; track req.id) {
+    <div class="flex items-center justify-between bg-white border-2 border-red-400 rounded-lg px-5 py-4 mb-4">
+      <div class="flex items-start gap-3">
+        <lucide-icon name="alert-triangle" class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+        <p class="text-sm text-gray-800">{{ req.mensaje }}</p>
+      </div>
+      <button
+        class="bg-ipn-maroon text-white text-sm px-4 py-2 rounded hover:bg-red-900 transition whitespace-nowrap ml-4">
+        Completar Requerimiento
+      </button>
+    </div>
+  }
+
+  <!-- Tabs -->
+  <div class="flex gap-1 border-b border-gray-200 mb-4">
+    <button (click)="tabActiva = 'todas'"
+      [class]="tabActiva === 'todas' ? 'border-b-2 border-ipn-maroon text-ipn-maroon font-semibold' : 'text-gray-600'"
+      class="px-4 py-2 text-sm">
+      Todas ({{ notificaciones.length }})
+    </button>
+    <button (click)="tabActiva = 'pendientes'"
+      [class]="tabActiva === 'pendientes' ? 'border-b-2 border-ipn-maroon text-ipn-maroon font-semibold' : 'text-gray-600'"
+      class="px-4 py-2 text-sm">
+      Pendientes ({{ cantidadPendientes }})
+    </button>
+    <button (click)="tabActiva = 'leidas'"
+      [class]="tabActiva === 'leidas' ? 'border-b-2 border-ipn-maroon text-ipn-maroon font-semibold' : 'text-gray-600'"
+      class="px-4 py-2 text-sm">
+      Leídas
+    </button>
+  </div>
+
+  <!-- Historial de avisos -->
+  <div class="bg-white rounded-lg shadow-sm p-5">
+    <h2 class="font-bold text-gray-800 mb-4">Historial de avisos</h2>
+
+    @if (cargando) {
+      <p class="text-gray-500 text-sm text-center py-4">Cargando notificaciones...</p>
+    } @else if (notifFiltradas.length === 0) {
+      <p class="text-gray-500 text-sm text-center py-4">No hay notificaciones.</p>
+    } @else {
+      @for (n of notifFiltradas; track n.id) {
+        <div class="flex items-start justify-between py-3 border-b border-gray-100 last:border-0"
+          (click)="marcarLeida(n.id)">
+          <div class="flex items-start gap-3">
+            <div class="mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0"
+              [class]="n.leida ? 'bg-gray-300' : 'bg-blue-500'"></div>
+            <div>
+              <p class="text-sm text-gray-800 font-medium">{{ n.titulo }}</p>
+              <p class="text-sm text-gray-600">{{ n.mensaje }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 ml-4 flex-shrink-0">
+            <span class="text-xs text-gray-400 whitespace-nowrap">{{ n.fecha }}</span>
+            @if (n.tipo === 'CONCILIACION') {
+              <button (click)="verConciliacion(n.folioRelacionado)"
+                class="border border-gray-400 text-gray-700 text-xs px-3 py-1 rounded hover:bg-gray-50 whitespace-nowrap">
+                Ver Propuesta
+              </button>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>

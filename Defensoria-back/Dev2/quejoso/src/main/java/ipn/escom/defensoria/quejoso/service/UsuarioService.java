@@ -61,8 +61,9 @@ public class UsuarioService {
         } else {
             // Escenario: Queja llegó sin cuenta vinculada. Creamos el usuario "Just-in-Time".
             usuario = new Usuario();
-            // Usamos la boleta/id institucional como nombre inicial
-            usuario.setNombre(queja.getIdentificacionInstitucional());
+            String nombreCompleto = queja.getNombreQuejoso();
+            usuario.setNombre(nombreCompleto != null && !nombreCompleto.isBlank()
+                    ? nombreCompleto : queja.getIdentificacionInstitucional());
             usuario.setCorreoInstitucional(queja.getCorreoQuejoso());
             usuario.setBoleta(queja.getIdentificacionInstitucional());
             usuario.setUnidadAcademica(queja.getUnidaddondeOcurrio());

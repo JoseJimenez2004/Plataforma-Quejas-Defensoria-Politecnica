@@ -1,0 +1,121 @@
+<!-- Header guinda IPN -->
+<header class="bg-ipn-maroon text-white">
+  <div class="bg-gray-900 py-1 px-4 text-xs flex justify-between">
+    <span>Gobierno de México</span>
+    <div class="flex gap-4">
+      <a routerLink="/dashboard" class="hover:underline">Trámites</a>
+      <a routerLink="/login" class="hover:underline">Gobierno</a>
+    </div>
+  </div>
+  <div class="px-6 py-3 flex items-center gap-3">
+    <img src="/assets/ipn-logo.png" alt="IPN" class="h-10" onerror="this.style.display='none'">
+    <img src="/assets/ddp-logo.png" alt="DDP" class="h-10" onerror="this.style.display='none'">
+  </div>
+  <nav class="px-6 pb-2 flex gap-6 text-sm font-medium">
+    <a routerLink="/" class="hover:underline">Inicio</a>
+    <a href="#" class="hover:underline">Conócenos</a>
+    <a href="#" class="hover:underline">Orientación</a>
+    <a routerLink="/queja/nueva" class="hover:underline">Queja</a>
+    <a href="#" class="hover:underline">Contacto</a>
+  </nav>
+</header>
+
+<!-- Stepper -->
+<div class="bg-white border-b border-gray-200 py-3 px-4">
+  <div class="flex justify-center gap-6 text-sm">
+    <span class="text-green-600 font-medium flex items-center gap-1"><lucide-icon name="check-circle" class="w-4 h-4" /> Paso 1: Registro</span>
+    <span class="text-green-600 font-medium flex items-center gap-1"><lucide-icon name="check-circle" class="w-4 h-4" /> Paso 2: Folio</span>
+    <span class="text-ipn-maroon font-bold flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Paso 3: Activar Cuenta</span>
+  </div>
+</div>
+
+<main class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+  <div class="bg-white rounded-lg shadow-md w-full max-w-md p-8">
+    <h1 class="text-2xl font-bold text-ipn-maroon mb-1 text-center">Configuración de Acceso</h1>
+    <p class="text-gray-600 text-sm mb-6 text-center">Establece tus credenciales para acceder al portal de seguimiento.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="space-y-4">
+      <!-- Correo (read-only) -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1 text-center">Correo Electrónico:</label>
+        <div class="flex items-center border border-gray-200 rounded px-3 py-2 bg-gray-50">
+          <lucide-icon name="mail" class="w-4 h-4 text-gray-400 mr-2" />
+          <span class="text-sm text-gray-700">{{ correo }}</span>
+        </div>
+      </div>
+
+      <!-- Nueva contraseña -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1 text-center">Nueva Contraseña:</label>
+        <div class="flex items-center border border-gray-300 rounded px-3 py-2 focus-within:border-ipn-maroon">
+          <lucide-icon name="lock" class="w-4 h-4 text-gray-400 mr-2" />
+          <input
+            formControlName="password"
+            [type]="mostrarPassword ? 'text' : 'password'"
+            class="flex-1 outline-none text-sm bg-transparent"
+          />
+          <button type="button" (click)="mostrarPassword = !mostrarPassword" class="text-gray-400 hover:text-gray-600 ml-2">
+            @if (mostrarPassword) { <lucide-icon name="eye-off" class="w-4 h-4" /> } @else { <lucide-icon name="eye" class="w-4 h-4" /> }
+          </button>
+        </div>
+        <p class="text-gray-400 text-xs mt-1">La contraseña debe tener al menos 8 caracteres, una mayúscula y un número.</p>
+        @if (form.get('password')?.invalid && form.get('password')?.touched) {
+          <p class="text-red-600 text-xs mt-1">Mínimo 8 caracteres.</p>
+        }
+      </div>
+
+      <!-- Confirmar contraseña -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1 text-center">Confirmar Contraseña:</label>
+        <div class="flex items-center border border-gray-300 rounded px-3 py-2 focus-within:border-ipn-maroon">
+          <lucide-icon name="lock" class="w-4 h-4 text-gray-400 mr-2" />
+          <input
+            formControlName="confirmarPassword"
+            [type]="mostrarConfirmar ? 'text' : 'password'"
+            class="flex-1 outline-none text-sm bg-transparent"
+          />
+          <button type="button" (click)="mostrarConfirmar = !mostrarConfirmar" class="text-gray-400 hover:text-gray-600 ml-2">
+            @if (mostrarConfirmar) { <lucide-icon name="eye-off" class="w-4 h-4" /> } @else { <lucide-icon name="eye" class="w-4 h-4" /> }
+          </button>
+        </div>
+        @if (form.errors?.['noCoinciden'] && form.get('confirmarPassword')?.touched) {
+          <p class="text-red-600 text-xs mt-1">Las contraseñas no coinciden.</p>
+        }
+      </div>
+
+      <p class="text-ipn-maroon text-xs text-center">
+        Su identidad será validada con su número de boleta/empleado proporcionado anteriormente.
+      </p>
+
+      @if (error) {
+        <div class="bg-red-50 border border-red-300 text-red-700 text-sm rounded px-3 py-2">{{ error }}</div>
+      }
+
+      <button
+        type="submit"
+        [disabled]="cargando"
+        class="w-full bg-ipn-maroon text-white font-semibold py-3 rounded hover:bg-red-900 transition disabled:opacity-60"
+      >
+        {{ cargando ? 'Activando...' : 'Activar Cuenta y Finalizar' }}
+      </button>
+
+      <a routerLink="/" class="block text-center text-sm text-ipn-maroon hover:underline">
+        Regresar al Inicio
+      </a>
+    </form>
+  </div>
+</main>
+
+<footer class="bg-ipn-maroon text-white text-center py-6 text-xs">
+  <div class="flex justify-center gap-4 mb-2">
+    <img src="/assets/ipn-logo.png" alt="IPN" class="h-8" onerror="this.style.display='none'">
+    <img src="/assets/ddp-logo.png" alt="DDP" class="h-8" onerror="this.style.display='none'">
+  </div>
+  <p>© {{ currentYear }} - Todos los derechos reservados.</p>
+  <div class="flex justify-center gap-4 mt-2 flex-wrap">
+    <a href="#" class="hover:underline">Aviso de Privacidad</a>
+    <a href="#" class="hover:underline">Marco Normativo</a>
+    <a href="#" class="hover:underline">Acuerdo de Creación</a>
+    <a href="#" class="hover:underline">Promoción para la Formación de DDHH</a>
+  </div>
+</footer>

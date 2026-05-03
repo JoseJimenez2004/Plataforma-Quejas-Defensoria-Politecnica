@@ -8,6 +8,7 @@ module.exports = {
     extend: {
       colors: {
         'ipn-maroon': '#611232',
+        'ipn-gold': '#A57F2C',
       },
     },
   },

@@ -1,5 +1,7 @@
 package ipn.escom.defensoria.quejoso.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import ipn.escom.defensoria.quejoso.config.JsonDateDeserializer;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -17,6 +19,7 @@ public class QuejaRegistroDTO {
 
     // Datos de la Queja
     private String unidadAcademica;
+    @JsonDeserialize(using = JsonDateDeserializer.class)
     private LocalDateTime fechaHechos;
     private String asunto;
     private String descripcionHechos;
