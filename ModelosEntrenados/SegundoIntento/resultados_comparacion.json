@@ -1,0 +1,56 @@
+{
+  "spacy_avg__SVM_RBF__20260429_215334": {
+    "vectorizador": "spacy_avg",
+    "clasificador": "SVM_RBF",
+    "ruta_pkl": "modelos/spacy_avg__SVM_RBF__20260429_215334.pkl",
+    "accuracy": 1.0,
+    "f1": 1.0,
+    "cv_f1_mean": 0.9809,
+    "cv_f1_std": 0.0164
+  },
+  "spacy_avg__RegLog__20260429_215334": {
+    "vectorizador": "spacy_avg",
+    "clasificador": "RegLog",
+    "ruta_pkl": "modelos/spacy_avg__RegLog__20260429_215334.pkl",
+    "accuracy": 1.0,
+    "f1": 1.0,
+    "cv_f1_mean": 0.9809,
+    "cv_f1_std": 0.0164
+  },
+  "spacy_avg__RandomForest__20260429_215334": {
+    "vectorizador": "spacy_avg",
+    "clasificador": "RandomForest",
+    "ruta_pkl": "modelos/spacy_avg__RandomForest__20260429_215334.pkl",
+    "accuracy": 0.981,
+    "f1": 0.9809,
+    "cv_f1_mean": 0.9216,
+    "cv_f1_std": 0.0381
+  },
+  "sentence_bert__SVM_RBF__20260429_215334": {
+    "vectorizador": "sentence_bert",
+    "clasificador": "SVM_RBF",
+    "ruta_pkl": "modelos/sentence_bert__SVM_RBF__20260429_212440.pkl",
+    "accuracy": 1.0,
+    "f1": 1.0,
+    "cv_f1_mean": 1.0,
+    "cv_f1_std": 0.0
+  },
+  "sentence_bert__RegLog__20260429_215334": {
+    "vectorizador": "sentence_bert",
+    "clasificador": "RegLog",
+    "ruta_pkl": "modelos/sentence_bert__RegLog__20260429_215334.pkl",
+    "accuracy": 1.0,
+    "f1": 1.0,
+    "cv_f1_mean": 1.0,
+    "cv_f1_std": 0.0
+  },
+  "sentence_bert__RandomForest__20260429_215334": {
+    "vectorizador": "sentence_bert",
+    "clasificador": "RandomForest",
+    "ruta_pkl": "modelos/sentence_bert__RandomForest__20260429_215334.pkl",
+    "accuracy": 0.981,
+    "f1": 0.9809,
+    "cv_f1_mean": 0.979,
+    "cv_f1_std": 0.0257
+  }
+}

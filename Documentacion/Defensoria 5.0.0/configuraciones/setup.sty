@@ -36,6 +36,7 @@
 \definecolor{azulESCOM}{RGB}{0, 68, 129}
 \definecolor{grayCode}{RGB}{245,245,245}  % Para fondos de código
 
+
 \usepackage{graphicx}
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows, calc}
@@ -249,9 +250,14 @@
 \newenvironment{observacion}[1][Observación:]%
     {\par\medskip\noindent\textbf{\color{azulESCOM}#1}\space\itshape}%
     {\par\medskip}
+    
+
+	% ==============================================================================
+% 11. Soporte para Gráficas y Diagramas (Necesario para el Cap. 8)
+% ==============================================================================
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18} % O la versión que tengas instalada
+\usetikzlibrary{positioning, shapes, arrows.meta}
 
 \endinput
 
-\usepackage{float}
-\usepackage{tikz}
-\usetikzlibrary{positioning,shapes,arrows}

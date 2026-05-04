@@ -1,0 +1,23 @@
+{
+  "clave_experimento": "spacy_avg__SVM_RBF__20260429_215334",
+  "timestamp": "20260429_215334",
+  "vectorizador": "spacy_avg",
+  "clasificador": "SVM_RBF",
+  "ruta_pkl": "modelos/spacy_avg__SVM_RBF__20260429_215334.pkl",
+  "metricas": {
+    "accuracy": 1.0,
+    "f1_weighted": 1.0,
+    "cv_f1_mean": 0.9809,
+    "cv_f1_std": 0.0164
+  },
+  "campos_juridicos_usados": [
+    "es_conflicto_laboral_art4_I",
+    "es_evaluacion_academica_pura_art4_II",
+    "hay_vulneracion_notoria_de_derechos_en_evaluacion",
+    "es_resolucion_disciplinaria_art4_III",
+    "es_afectacion_colectiva_art4_IV",
+    "involucra_oic_art4_V",
+    "hay_acto_u_omision_de_autoridad_institucional"
+  ],
+  "descripcion": "Mejor modelo del experimento 20260429_215334. Vectorizador: spacy_avg, Clasificador: SVM_RBF."
+}
