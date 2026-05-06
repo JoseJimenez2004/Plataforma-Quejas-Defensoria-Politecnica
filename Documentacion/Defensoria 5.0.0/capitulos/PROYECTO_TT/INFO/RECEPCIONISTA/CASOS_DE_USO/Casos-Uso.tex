@@ -1,0 +1,335 @@
+\subsection{Casos de Uso del Recepcionista}
+\label{subsec:casos_uso_recepcionista}
+
+La figura \ref{fig:casos_uso_recepcionista} presenta los casos de uso que definen el comportamiento funcional del sistema desde la perspectiva del recepcionista. En este diagrama se identifican las interacciones relacionadas con la gestión, validación y canalización de las quejas recibidas.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{imagenes/recepcion/Diagrama_CU/CasosUso_Recepcion.png}
+    \caption{Diagrama de Casos de Uso del Microservicio Recepcionista}
+    \label{fig:casos_uso_recepcionista}
+\end{figure}
+
+A continuación, se describen de manera detallada las especificaciones de los Casos de Uso representados, estableciendo los flujos estándar y las reglas de negocio que rigen la operación administrativa de la plataforma.
+
+\vspace{0.5cm}
+% ================= CU25 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU25: Iniciar sesión administrativa}
+\label{tab:cu25_login} \\
+\hline
+\textbf{Identificador} & CU25 & \textbf{Nombre} & Iniciar sesión administrativa \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al personal acceder a las funciones de gestión mediante credenciales.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario accede a la URL administrativa del sistema.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe estar registrado en la base de datos de personal.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Usuario ingresa correo institucional y contraseña.\newline 2. El Sistema valida las credenciales contra el servicio de autenticación.\newline 3. El Sistema redirige al Dashboard correspondiente.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Olvido de contraseña:}\newline 1. El usuario selecciona ``Recuperar acceso'' (CU26).} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Credenciales incorrectas; cuenta bloqueada.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema muestra mensaje de error y permanece en el login.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión activa con token de seguridad (JWT).} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.6cm}
+
+% ================= CU27 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU27: Registrar nueva queja}
+\label{tab:cu27_registro} \\
+\hline
+\textbf{Identificador} & CU27 & \textbf{Nombre} & Registrar nueva queja \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Captura manual de denuncias recibidas por medios físicos.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Recepción de documentación física en ventanilla.} \\ \hline
+\textbf{Precondiciones} & \textbf{CU25} & \textbf{Postcondiciones} & Registro en BD y folio generado (CU28). \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Recepcionista captura datos del quejoso.\newline 2. El Sistema genera el folio automáticamente (CU28).\newline 3. El Sistema actualiza estatus a RECIBIDA (CU04).\newline 4. Se confirma el registro.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{Captura incompleta: El sistema solicita campos obligatorios.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Fallo en el servicio de generación de folios.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{No se guarda el registro.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.6cm}
+
+% ================= CU29 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU29: Consultar panel de recepción}
+\label{tab:cu29_panel} \\
+\hline
+\textbf{Identificador} & CU29 & \textbf{Nombre} & Consultar panel de recepción de quejas \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Visualización de la bandeja de entrada de quejas pendientes.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona ``Bandeja de Entrada''.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema consulta las quejas con estatus RECIBIDA.\newline 2. Se despliega lista paginada.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{Búsqueda por filtros (fecha, nombre).} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de conexión con la base de datos.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Se muestra mensaje de ``Servicio no disponible''.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.6cm}
+% ================= CU25 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU25: Iniciar sesión administrativa}
+\label{tab:cu25} \\
+\hline
+\textbf{Identificador} & CU25 & \textbf{Nombre} & Iniciar sesión administrativa \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista (Hereda de Usuario)} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al personal acceder al sistema mediante credenciales institucionales.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario accede a la interfaz de login administrativa.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe estar registrado en el sistema.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El usuario ingresa correo y contraseña. \newline 2. El sistema valida las credenciales. \newline 3. El sistema otorga acceso al panel.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Olvido de datos:} Se extiende a CU26.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Credenciales inválidas.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Mensaje de error y denegación de acceso.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión iniciada correctamente.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU26 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU26: Recuperar acceso}
+\label{tab:cu26} \\
+\hline
+\textbf{Identificador} & CU26 & \textbf{Nombre} & Recuperar acceso \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Proceso para restablecer la contraseña de acceso.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona "Olvidé mi contraseña" en CU25.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Tener una cuenta registrada.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El usuario ingresa su correo. \newline 2. El sistema envía un enlace de recuperación. \newline 3. El usuario actualiza su contraseña.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Correo no registrado.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Mensaje de correo inexistente.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Contraseña actualizada.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU27 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU27: Registrar nueva queja}
+\label{tab:cu27} \\
+\hline
+\textbf{Identificador} & CU27 & \textbf{Nombre} & Registrar nueva queja \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Registro manual de quejas recibidas de forma externa o presencial.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El Recepcionista recibe documentación de una queja física.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión iniciada (CU25).} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Recepcionista ingresa datos del quejoso y hechos. \newline 2. El sistema incluye CU28 para generar folio. \newline 3. El sistema incluye CU04 para poner estatus RECIBIDA.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Datos obligatorios faltantes.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{No se guarda el registro.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Queja registrada con éxito.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU28 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU28: Generar número de folio}
+\label{tab:cu28} \\
+\hline
+\textbf{Identificador} & CU28 & \textbf{Nombre} & Generar número de folio \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Sistema (Iniciado por Recepcionista)} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Crea un identificador único para el seguimiento de la queja.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Se invoca desde el registro de queja (CU27).} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Datos de la queja validados.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema calcula el siguiente número de folio según el año. \newline 2. Se asigna al registro actual.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Colisión de folios en base de datos.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Fallo en el registro.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Folio único asignado.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU29 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU29: Consultar panel de recepción}
+\label{tab:cu29} \\
+\hline
+\textbf{Identificador} & CU29 & \textbf{Nombre} & Consultar panel de recepción de quejas \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Visualización de la bandeja de entrada con las quejas en estatus RECIBIDA.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona la opción "Panel de Recepción".} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión activa.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema busca quejas con estatus RECIBIDA. \newline 2. Se despliega la lista paginada.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Extensión:} El usuario puede seleccionar una queja para CU30.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de conexión a BD.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Mensaje de error técnico.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Lista de quejas visualizada.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU30 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU30: Abrir queja}
+\label{tab:cu30} \\
+\hline
+\textbf{Identificador} & CU30 & \textbf{Nombre} & Abrir queja \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite ver el detalle completo de un folio específico.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona una queja del panel (CU29).} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Queja existente.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema recupera datos y evidencias. \newline 2. Se muestra la vista detallada.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Extensión:} Puede optar por CU31 (Rechazar) o CU34 (Aceptar).} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Folio no encontrado.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Redirección al panel.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Información expuesta para análisis.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU31 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU31: Rechazar queja}
+\label{tab:cu31} \\
+\hline
+\textbf{Identificador} & CU31 & \textbf{Nombre} & Rechazar queja \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Descarte de quejas que no son competencia de la Defensoría.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario determina improcedencia desde CU30.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Queja abierta.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El usuario ingresa motivo. \newline 2. El sistema incluye CU32 (Estatus RECHAZADA) y CU33 (Notificar).} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Fallo en envío de notificación.} \\ \hline
+\textbf{Estado en error} & \textbf{Postcondiciones} & Queja cerrada y usuario notificado. \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU33 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU33: Notificar rechazo de queja}
+\label{tab:cu33_notificar_rechazo} \\
+\hline
+\textbf{Identificador} & CU33 & \textbf{Nombre} & Notificar rechazo de queja \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Sistema} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Envía de forma automática un correo electrónico al quejoso informándole que su solicitud ha sido rechazada, incluyendo los motivos legales o administrativos del descarte.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Se invoca automáticamente cuando el Recepcionista confirma la acción de rechazo (CU31).} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{La queja debe tener un correo electrónico de contacto válido registrado y el estatus debe haber cambiado a ``RECHAZADA''.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema recupera el nombre del quejoso, el folio y el motivo del rechazo ingresado en el CU31.\newline 2. El Sistema redacta el mensaje utilizando la plantilla institucional predefinida.\newline 3. El Sistema envía el correo electrónico a través del servidor de mensajería SMTP.\newline 4. El Sistema registra en el log de la queja que la notificación fue enviada.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Fallo de conexión con el servidor SMTP; dirección de correo electrónico con formato inválido o inexistente.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema muestra un aviso al Recepcionista indicando que la notificación no pudo ser entregada, aunque el estatus de la queja sí se actualiza.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El quejoso queda formalmente notificado sobre la resolución de su trámite.} \\ \hline
+\end{longtable}
+\endgroup
+
+% ================= CU35 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU35: Buscar antecedencia}
+\label{tab:cu35} \\
+\hline
+\textbf{Identificador} & CU35 & \textbf{Nombre} & Buscar antecedencia \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Localiza expedientes previos del mismo quejoso.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario requiere validar reincidencias.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión activa.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El usuario selecciona método de búsqueda. \newline 2. Se ejecuta búsqueda por correo (35.1) o boleta (35.2). \newline 3. Se muestran coincidencias.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Formato de boleta/correo inválido.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Mensaje de error de formato.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Historial de antecedentes visualizado.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU36 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU36: Turnar a primer contacto}
+\label{tab:cu36} \\
+\hline
+\textbf{Identificador} & CU36 & \textbf{Nombre} & Turnar a primer contacto \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Envío de la queja al área jurídica para análisis inicial.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona "Turnar" tras aceptar la queja.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Queja aceptada.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema incluye CU37 (Estatus EN ANÁLISIS). \newline 2. El sistema incluye CU394 para notificar al quejoso.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de actualización de registro.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Estatus no cambia.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Expediente en bandeja de abogados.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU38 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU38: Canalizar a abogado}
+\label{tab:cu38} \\
+\hline
+\textbf{Identificador} & CU38 & \textbf{Nombre} & Canalizar a abogado correspondiente \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Asignación directa de un responsable legal al caso.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Se identifica al abogado encargado del área.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Queja en análisis.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El usuario selecciona un abogado de la lista. \newline 2. El sistema vincula al abogado. \newline 3. Incluye CU40 (Estatus ASIGNADO A ABOGADO).} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Abogado no disponible.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{La queja queda sin asignar.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Abogado asignado al folio.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU39 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU39: Cerrar sesión}
+\label{tab:cu39} \\
+\hline
+\textbf{Identificador} & CU39 & \textbf{Nombre} & Cerrar sesión \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Recepcionista} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Finaliza la sesión actual del usuario en el sistema.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona "Salir".} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión iniciada.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema invalida el token de acceso. \newline 2. El usuario es redirigido al login.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{N/A} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{N/A} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión cerrada de forma segura.} \\ \hline
+\end{longtable}
+\endgroup
