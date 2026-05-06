@@ -1,63 +1,35 @@
 \section{Fundamentos de arquitectura de software}
 
 \subsection{Definición de arquitectura de software}
-La arquitectura de software se concibe como el conjunto de decisiones fundamentales que definen la estructura, organización y comportamiento de un sistema, así como las relaciones e interacciones entre sus componentes. Dichas decisiones, sustentadas en el uso de patrones arquitectónicos, principios de diseño y mecanismos de abstracción, establecen un marco de referencia que orienta no solo la construcción del sistema, sino también su evolución y mantenimiento a lo largo del tiempo.
+La arquitectura de software es el conjunto de decisiones fundamentales que definen la estructura, organización y comportamiento de un sistema. Al utilizar patrones y principios de diseño, establece un marco de referencia para la construcción, evolución y mantenimiento del software. 
 
-Desde esta perspectiva, la arquitectura trasciende la mera disposición de componentes, al incorporar criterios que impactan directamente en los atributos de calidad del sistema, tales como la escalabilidad, mantenibilidad, seguridad, interoperabilidad y desempeño. De este modo, determina cómo se estructuran los elementos del sistema, cómo se gestionan sus dependencias y cómo se coordinan sus interacciones para satisfacer tanto los requerimientos funcionales como no funcionales del negocio.
-
-De igual forma, la arquitectura actúa como un mecanismo de alineación entre los objetivos organizacionales y las soluciones tecnológicas, al traducir necesidades del dominio en estructuras técnicas coherentes, evaluables y sostenibles. Por consiguiente, su definición constituye una actividad crítica dentro del proceso de desarrollo de software, en tanto establece las bases sobre las cuales se construye la integridad, consistencia y viabilidad del sistema en contextos operativos reales \cite{27}.
+Más allá de organizar componentes, la arquitectura determina cómo se gestionan las interacciones para cumplir con los atributos de calidad (escalabilidad, seguridad, desempeño) y los requerimientos funcionales y no funcionales. Constituye el puente entre los objetivos organizacionales y las soluciones tecnológicas, siendo esencial para garantizar la integridad y viabilidad del sistema \cite{27}.
 
 \subsection{Importancia en el Desarrollo de Sistemas}
 
+La arquitectura es el cimiento técnico que asegura la correcta construcción del sistema adecuado para el negocio, destacando por:
+
 \begin{itemize}
-\item \textbf{Gestión de la Complejidad:} Es una aproximación estratégica que coordina procesos y flujos de trabajo en organizaciones para reducir, controlar y prevenir los efectos de sistemas donde existen factores desconocidos, interdependencias y cambios no anticipados. A diferencia de la gestión tradicional que busca la estandarización y el control rígido, este enfoque advierte la incertidumbre y busca articular fines diversos mediante la flexibilidad, la transparencia y la adaptación continua.
-
-\item \textbf{Mitigación de Riesgos Tempranos:} Es un enfoque proactivo que busca detectar señales de alerta y neutralizar amenazas en su origen antes de que se conviertan en crisis, en lugar de esperar a que ocurran los eventos adversos. Este método utiliza sistemas de alerta temprana, análisis de datos y tecnología (como IA) para identificar patrones de riesgo, vulnerabilidades o posibles incumplimientos con anticipación, permitiendo a las organizaciones actuar para reducir la probabilidad o el impacto de manera efectiva.
-
-\item \textbf{Escalabilidad} es la capacidad de un sistema para adaptarse a un aumento o disminución de la carga de trabajo sin comprometer su rendimiento, estabilidad o disponibilidad, permitiendo manejar más usuarios, datos o transacciones sin reingeniería completa.
-
-\item \textbf{Mantenibilidad} Se refiere a la facilidad con la que un software puede ser modificado, corregido o mejorado a lo largo del tiempo, lo que se logra mediante un diseño bien organizado, documentación clara y código que facilita la identificación de problemas y la implementación de nuevas funcionalidades.
-
-\item \textbf{Toma de Decisiones:} Proporciona el marco de referencia necesario para elegir el \textit{stack} tecnológico adecuado (bases de datos, lenguajes, frameworks) y para gestionar los \textit{trade-offs} o compromisos técnicos, como decidir entre priorizar la latencia mínima o la consistencia absoluta de los datos.
+\item \textbf{Gestión de la Complejidad:} Coordina procesos y dependencias mediante flexibilidad y adaptación, controlando factores desconocidos o cambios no anticipados.
+\item \textbf{Mitigación de Riesgos Tempranos:} Permite un enfoque proactivo para detectar y neutralizar vulnerabilidades antes de que afecten la operación.
+\item \textbf{Escalabilidad:} Garantiza la adaptación del sistema ante variaciones en la carga de trabajo sin afectar su rendimiento ni requerir reingeniería.
+\item \textbf{Mantenibilidad:} Facilita modificaciones, correcciones y mejoras futuras gracias a un diseño organizado y claro.
+\item \textbf{Toma de Decisiones:} Establece el marco para la elección de tecnologías y la gestión de compromisos técnicos (\textit{trade-offs}).
 \end{itemize}
-
-En definitiva, la arquitectura no es solo un artefacto técnico, sino el cimiento que asegura que el equipo no solo construya el sistema correctamente, sino que construya el sistema \textit{adecuado} para las necesidades del negocio.
 
 \subsection{Factores de calidad}
 
-Para asegurar que la estructura seleccionada sea la adecuada, esta debe ser evaluada bajo atributos de calidad que garanticen su viabilidad a largo plazo. De acuerdo con los modelos de calidad internacionales como el ISO/IEC 9126 (y su evolución en la norma ISO/IEC 25010), estos atributos permiten medir la capacidad del software para satisfacer necesidades explícitas e implícitas bajo condiciones determinadas \cite{28}.
-
-En el contexto de un sistema de gestión institucional de denuncias, destacan los siguientes pilares:
+Basados en modelos internacionales (ISO/IEC 25010), los atributos de calidad evalúan y garantizan la viabilidad a largo plazo de la arquitectura elegida \cite{28}. En un sistema de gestión de denuncias, destacan:
 
 \begin{itemize}
-\item \textbf{Rendimiento y Eficiencia:} Evalúa el comportamiento temporal del sistema y la utilización óptima de recursos al procesar transacciones. En una arquitectura de microservicios, esto implica garantizar latencias mínimas en la comunicación entre servicios (vía API REST) para que la experiencia del usuario sea fluida, incluso durante procesos complejos de carga de evidencias o archivos adjuntos \cite{28}.
-
-\item \textbf{Mantenibilidad:} Representa la facilidad con la que el software puede ser modificado para corregir defectos, mejorar el desempeño o adaptarse a cambios normativos en el IPN. Gracias al uso de \textit{Docker} y una estructura de tres capas, el sistema permite que cada microservicio sea actualizado de forma independiente, reduciendo el riesgo de introducir errores en módulos no relacionados y garantizando la estabilidad operativa \cite{28}.
-
-\item \textbf{Escalabilidad (Horizontal y Vertical):} Es la capacidad del sistema para ajustarse a variaciones en la demanda de procesamiento. Para la Defensoría, esto es vital en periodos de alta afluencia de usuarios; la arquitectura permite realizar un escalado horizontal (añadir más instancias de un microservicio crítico como el de denuncias) sin necesidad de replicar toda la aplicación, optimizando el uso de la infraestructura institucional \cite{29}.
-
-\item \textbf{Seguridad y Confidencialidad:} Dado el carácter sensible de las quejas procesadas, este atributo asegura que la información solo sea accesible por personal autorizado mediante esquemas de RBAC (Control de Acceso Basado en Roles). La arquitectura debe garantizar el cifrado de datos en reposo y en tránsito, protegiendo la identidad del denunciante y la integridad del expediente digital.
-
-\item \textbf{Disponibilidad y Tolerancia a Fallos:} Asegura que el servicio permanezca operativo la mayor parte del tiempo posible. El enfoque de microservicios previene que la caída del clasificador de texto (Python) afecte el funcionamiento del módulo de gestión de usuarios (Java), permitiendo que el sistema degrade sus funciones de manera elegante en lugar de sufrir un colapso total.
+\item \textbf{Rendimiento y Eficiencia:} Optimización de recursos y latencias mínimas en la comunicación entre microservicios, asegurando una experiencia fluida al cargar evidencias \cite{28}.
+\item \textbf{Mantenibilidad:} Facilidad para actualizar o corregir el sistema. El uso de \textit{Docker} y el patrón de tres capas permite modificar microservicios independientemente sin afectar la estabilidad \cite{28}.
+\item \textbf{Escalabilidad:} Capacidad de escalar horizontalmente servicios críticos ante altas demandas de usuarios, optimizando la infraestructura institucional \cite{29}.
+\item \textbf{Seguridad y Confidencialidad:} Protección de la identidad del denunciante e integridad del expediente mediante cifrado de datos y control de acceso (RBAC).
+\item \textbf{Disponibilidad y Tolerancia a Fallos:} Aislamiento de errores entre servicios (ej. la caída del módulo analítico no afecta el sistema central), previniendo el colapso total.
 \end{itemize}
 
-La evaluación constante de estos factores permite que la plataforma no solo cumpla con sus requerimientos funcionales, sino que se consolide como una herramienta robusta, confiable y con una vida útil prolongada dentro del ecosistema digital del Instituto.
-
-\subsection{Clasificación de arquitecturas}
-
-Históricamente, las arquitecturas se han clasificado según la forma en que distribuyen sus responsabilidades y cómo gestionan el flujo de datos. De acuerdo con la literatura clásica y los referentes actuales de la industria, destacan las siguientes categorías fundamentales:
-
-\begin{itemize}
-\item \textbf{Arquitecturas Monolíticas:} Representan el modelo tradicional de diseño donde todos los componentes funcionales (interfaz, lógica y datos) se integran en una unidad lógica única con una base de código compartida. Este enfoque facilita el despliegue inicial, pero presenta desafíos críticos de escalabilidad: si un servicio popular requiere más recursos, se debe escalar toda la aplicación innecesariamente, consumiendo recursos del servidor de forma ineficiente. Además, constituye un punto único de fallo, donde un error en cualquier módulo puede provocar la caída total del sistema.
-
-\item \textbf{Arquitecturas Distribuidas:} Son colecciones de computadores independientes que aparecen ante el usuario como un único sistema coherente. En este modelo, los componentes de hardware y software se comunican y coordinan exclusivamente mediante el paso de mensajes. Su objetivo primordial es compartir recursos e información, logrando una mayor tolerancia a fallos y permitiendo el uso de procesadores poderosos a un menor costo comparativo.
-
-\item \textbf{Arquitecturas de Microservicios:} Evolución que descompone una aplicación en servicios pequeños, autónomos y altamente cohesivos que pueden ser desarrollados, probados y escalados de forma independiente. Este patrón permite reducir la complejidad operativa y ganar agilidad en la innovación al permitir que diferentes equipos utilicen diversos \textit{stacks} tecnológicos (como Java y Python) de manera simultánea. Se comunican mediante protocolos ligeros, facilitando el despliegue continuo sin interrumpir el funcionamiento global de la plataforma.
-
-\item \textbf{Arquitecturas por Capas (N-Layer):} Este estilo organiza el software en una distribución jerárquica de roles para proporcionar una división efectiva de problemas. Se basa en el principio de que las capas inferiores no dependen de las superiores, comunicándose mediante interfaces bien definidas para lograr un bajo acoplamiento. Facilita el aislamiento de cambios, permitiendo realizar actualizaciones internas en una capa (como la de persistencia de datos) sin afectar al resto del sistema.
-
-\item \textbf{Arquitectura Orientada a Eventos (EDA):} Modelo centrado en la producción y consumo de eventos para articular reglas de negocio. En este esquema, el flujo de trabajo es activado por cambios significativos de estado, lo que permite una alta capacidad de respuesta y trazabilidad de las acciones del usuario. Es fundamental en sistemas que requieren una gestión dinámica de elementos basándose en sucesos producidos durante la ejecución.
-\end{itemize}
+Estos factores aseguran que la plataforma sea una herramienta robusta, confiable y duradera para la Defensoría.
 
 \section{Arquitectura del Sistema}
 

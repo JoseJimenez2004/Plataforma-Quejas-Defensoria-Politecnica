@@ -1,0 +1,455 @@
+\subsection{Casos de Uso}
+\label{subsec:casos_uso_quejoso}
+
+La figura \ref{fig:casos_uso_quejoso} presenta los casos de uso que definen el comportamiento funcional del sistema desde la perspectiva del quejoso. Donde se
+identifican las interacciones principales entre el actor (Quejoso) y el sistema.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{imagenes/quejoso/Diagrama_CU/CasosUso_Quejoso.png}
+    \caption{Diagrama de Casos de Uso del Microservicio Quejoso}
+    \label{fig:casos_uso_quejoso}
+\end{figure}
+
+A continuación, se describen de manera detallada las especificaciones de cada uno de los Casos de Uso delineando las interacciones necesarias para completar procesos específicos, estableciendo las precondiciones, los flujos estándar y las reglas de negocio que rigen la operación de la plataforma.
+
+\vspace{0.5cm}
+
+% ================= CU01 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU01: Levantar una queja}
+\label{tab:cu01_levantar_queja} \\
+\hline
+\textbf{Identificador} & CU01 & \textbf{Nombre} & Levantar una queja \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite a cualquier miembro de la comunidad politécnica registrar formalmente una queja por presuntas vulneraciones a sus derechos, adjuntando la evidencia requerida para generar un folio de seguimiento e iniciar el proceso de atención en la Defensoría.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El Quejoso sufre una presunta vulneración de derechos y decide reportarla en el portal.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El sistema debe estar accesible vía web. No se requiere inicio de sesión.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona el botón ``Presentar una QUEJA'' en el portal de inicio.\newline 2. El Sistema despliega la vista de ``Formulario de Queja''.\newline 3. El Quejoso ingresa la información requerida.\newline 4. El Sistema valida que la fecha de nacimiento corresponde a un mayor de edad.\newline 5. El Quejoso puede adjuntar archivos de evidencia.\newline 6. El Quejoso selecciona el botón ``Enviar queja''.\newline 7. El Sistema valida los campos obligatorios, guarda el registro y genera un folio digital único.\newline 8. El Sistema despliega la ``Pantalla de Éxito'' mostrando el folio.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{4a. El Quejoso es menor de edad:}\newline 1. El Sistema detecta minoría de edad y pide datos del tutor.\newline 2. El Quejoso ingresa datos y confirma.\newline 3. El flujo retorna al paso 5.\newline\newline \textbf{7a. Datos erróneos:}\newline 1. El Sistema detecta campos faltantes o inválidos.\newline 2. Detiene envío y muestra aviso.\newline 3. El flujo retorna al paso 3.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Faltan datos obligatorios; los archivos adjuntos son inválidos; el usuario es menor de edad y no proporciona tutor.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema no guarda el registro, no genera folio y el usuario permanece en el formulario.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El expediente queda registrado en el sistema y se genera un folio de seguimiento único.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU02 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU02: Ingresar datos del tutor}
+\label{tab:cu02_datos_tutor} \\
+\hline
+\textbf{Identificador} & CU02 & \textbf{Nombre} & Ingresar datos del tutor \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite registrar la información de contacto de un adulto responsable cuando el quejoso es menor de edad, cumpliendo con los requisitos legales para la procedencia de la queja.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El sistema detecta que el quejoso es menor de edad basándose en la fecha de nacimiento ingresada en el formulario de queja.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El Quejoso debe estar en el proceso de registro de queja (CU01) y haber ingresado una fecha de nacimiento que indique minoría de edad.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema identifica la minoría de edad.\newline 2. El Sistema despliega el formulario para los datos del tutor.\newline 3. El Quejoso ingresa nombre completo, parentesco, teléfono y correo electrónico del tutor.\newline 4. El Quejoso selecciona ``Confirmar datos''.\newline 5. El Sistema valida que los campos estén completos y cierra el formulario para permitir continuar con la queja.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{4a. Cancelación del proceso:}\newline 1. El usuario decide no ingresar los datos.\newline 2. El sistema borra la fecha de nacimiento ingresada en la queja principal para evitar inconsistencias.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Campos obligatorios vacíos o formatos de contacto (correo/teléfono) inválidos.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema no permite guardar la información del tutor y resalta los campos erróneos. El envío de la queja principal permanece bloqueado.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Los datos del tutor quedan vinculados temporalmente a la queja en curso.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU03 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU03: Crear Cuenta}
+\label{tab:cu03_crear_cuenta} \\
+\hline
+\textbf{Identificador} & CU03 & \textbf{Nombre} & Crear Cuenta \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario registrar sus credenciales de acceso para habilitar el portal personalizado (Dashboard), vinculando su nueva cuenta a un expediente existente mediante folio y correo.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario desea tener un perfil personalizado de seguimiento y selecciona la opción de registrarse o activar cuenta utilizando un folio previo.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El Quejoso debe haber registrado previamente al menos una queja en el sistema y contar con el correo y folio asignado.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona ``Crear cuenta de seguimiento'' en la Pantalla de Éxito.\newline 2. El Sistema despliega la vista y autocompleta el correo.\newline 3. El Quejoso ingresa su contraseña y confirmación.\newline 4. El Quejoso selecciona ``Activar cuenta y Finalizar''.\newline 5. El Sistema valida que el folio exista y corresponda.\newline 6. El Sistema registra al usuario y vincula el historial.\newline 7. El Sistema redirige a ``Iniciar Sesión''.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Registro desde Inicio de Sesión:}\newline 1. El Quejoso ingresa correo y folio manualmente.\newline 2. El flujo retorna al paso 3.\newline\newline \textbf{5a. Folio incorrecto:}\newline 1. El Sistema detecta discrepancia.\newline 2. Muestra mensaje de alerta.\newline 3. El flujo retorna al paso 3.\newline\newline \textbf{5b. Contraseñas no coinciden:}\newline 1. El Sistema detecta el error, muestra alerta y limpia contraseñas. Retorna al paso 3.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El folio o el correo ingresados no coinciden con ningún registro. La contraseña no cumple la longitud o confirmación.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{No se crea la cuenta en la base de datos. El sistema limpia los campos de seguridad y mantiene al usuario en la vista.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Se crea un nuevo registro de usuario en el sistema y su queja previa queda automáticamente vinculada a su Dashboard.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU04 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU04: Descargar acuses}
+\label{tab:cu04_descargar_acuses} \\
+\hline
+\textbf{Identificador} & CU04 & \textbf{Nombre} & Descargar acuses \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario generar y descargar un documento oficial en formato PDF basado en los formatos oficiales de la Defensoría con el propósito de servir como comprobante formal.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario requiere un comprobante oficial de su trámite y hace clic en el botón ``Descargar acuse''.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{La queja debe estar registrada en el sistema y tener un folio asignado.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona la opción ``Descargar acuse de recibo''.\newline 2. El Sistema procesa la solicitud y recopila los datos necesarios del formato.\newline 3. El Sistema genera dinámicamente un archivo PDF utilizando la plantilla oficial de la DDP.\newline 4. El Sistema transmite el archivo al navegador del usuario para su descarga local.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{3a. Error en la generación del documento:}\newline 1. El Sistema experimenta un error al compilar el PDF o al conectar con la base de datos.\newline 2. El Sistema detiene la descarga y muestra una alerta: ``Error al generar el documento. Intente más tarde''.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Falla la conexión con la base de datos para recuperar los datos, o existe un error en el motor del sistema al compilar la plantilla PDF.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El archivo PDF no se genera ni se descarga. El sistema muestra un mensaje de error y la información permanece inalterada.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario obtiene una copia local del acuse en formato PDF. El estado de la base de datos no se modifica.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU05 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU05: Consultar estatus}
+\label{tab:cu05_consultar_estatus} \\
+\hline
+\textbf{Identificador} & CU05 & \textbf{Nombre} & Consultar estatus \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite a un usuario sin sesión activa verificar el estado actual de una queja específica mediante datos de identificación rápidos.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario desea saber el progreso de su trámite sin necesidad de entrar a un Dashboard.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Contar con el folio de la queja y el correo electrónico asociado.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso ingresa folio y correo en la sección de seguimiento del portal.\newline 2. El Sistema busca el registro correspondiente.\newline 3. El Sistema despliega una vista resumida con el estatus (ej. RECIBIDA, EN REVISIÓN) y los detalles generales.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{2a. Búsqueda sin resultados:}\newline 1. El Sistema indica que el folio o correo son incorrectos.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de conexión con la base de datos o datos de entrada no válidos.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{No se muestra información privada y el sistema solicita verificar los datos ingresados.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario visualiza el estado de su trámite en tiempo real.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU06 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU06: Iniciar sesión}
+\label{tab:cu06_iniciar_sesion} \\
+\hline
+\textbf{Identificador} & CU06 & \textbf{Nombre} & Iniciar sesión \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Autentica al usuario en el sistema mediante sus credenciales para otorgarle acceso a su entorno privado (Dashboard) y proteger la confidencialidad de sus trámites.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario necesita acceder a su Dashboard y navega a la pantalla de inicio de sesión.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El Quejoso debe tener una cuenta previamente registrada y activada en el sistema.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso accede a la pantalla de Iniciar Sesión.\newline 2. El Quejoso ingresa su correo electrónico y contraseña.\newline 3. El Quejoso selecciona el botón ``Iniciar Sesión''.\newline 4. El Sistema valida las credenciales contra la base de datos y genera el token JWT.\newline 5. El Sistema redirige al Quejoso a la pantalla principal del Dashboard.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{4a. Credenciales inválidas:}\newline 1. El Sistema detecta correo inexistente o contraseña incorrecta.\newline 2. El Sistema muestra ``Credenciales incorrectas''.\newline 3. Retorna al paso 2.\newline\newline \textbf{1a. Recuperación de contraseña (Extensión CU07):}\newline 1. El Quejoso selecciona ``\textquestiondown Olvidaste tu contraseña?''.\newline 2. El Sistema despliega la vista de recuperación.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El correo electrónico no está registrado en el sistema o la contraseña ingresada es incorrecta.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Se deniega el acceso al Dashboard. No se genera token y el usuario permanece en el formulario.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario queda autenticado en el sistema y se habilita su sesión activa.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU07 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU07: Recuperar contraseña}
+\label{tab:cu07_recuperar_contrasena} \\
+\hline
+\textbf{Identificador} & CU07 & \textbf{Nombre} & Recuperar contraseña \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Provee al usuario el cambio de contraseña enviando un enlace de verificación a su correo electrónico institucional para garantizar la identidad del solicitante.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario olvida sus credenciales y solicita restablecer su contraseña en la pantalla de inicio de sesión.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe contar con una cuenta previamente registrada y activa en la plataforma.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona ``\textquestiondown Olvidaste tu contraseña?''.\newline 2. El Sistema despliega la vista ``Restablecer Contraseña''.\newline 3. El Quejoso ingresa su correo y selecciona ``Enviar''.\newline 4. El Sistema manda un correo electrónico con código de seguridad.\newline 5. El Quejoso ingresa el código recibido.\newline 6. El Sistema valida su vigencia.\newline 7. El Quejoso ingresa nueva contraseña y confirmación.\newline 8. El Sistema persiste el cambio y redirige al Inicio de Sesión.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{4a. Correo no registrado:}\newline El Sistema muestra advertencia y detiene flujo.\newline\newline \textbf{6a. Código incorrecto:}\newline El Sistema muestra error de código inválido.\newline\newline \textbf{7a. Contraseñas no coinciden:}\newline El Sistema muestra error y pide intentar de nuevo.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El correo ingresado no pertenece a una cuenta activa. El código es incorrecto o expiró.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{La contraseña original no se modifica en la base de datos.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El sistema cambia la contraseña y despacha la notificación.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU08 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU08: Ver Resumen (Dashboard)}
+\label{tab:cu08_ver_resumen} \\
+\hline
+\textbf{Identificador} & CU08 & \textbf{Nombre} & Ver Resumen (Dashboard) \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario visualizar una vista general de sus trámites más recientes y el estado global de su cuenta tras iniciar sesión.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario completa el inicio de sesión exitosamente o hace clic en la opción ``Resumen'' del menú lateral.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe estar autenticado en el sistema.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema recupera la lista de quejas asociadas al ID del usuario.\newline 2. El Sistema contabiliza los estatus (Recibidas, En revisión, Concluidas).\newline 3. El Sistema despliega tarjetas informativas y una tabla con los últimos movimientos.\newline 4. El Sistema muestra accesos directos a las funciones principales.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Usuario sin quejas registradas:}\newline 1. El Sistema muestra un mensaje de bienvenida y una invitación a presentar su primera queja.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de red al intentar obtener el conteo de trámites desde la API.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El Dashboard se muestra vacío o con indicadores de carga infinitos. Se despliega una alerta de ``Error al cargar resumen''.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario tiene un panorama claro de la situación actual de sus expedientes.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU09 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU09: Modificar queja}
+\label{tab:cu09_modificar_queja} \\
+\hline
+\textbf{Identificador} & CU09 & \textbf{Nombre} & Modificar queja \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario editar la información de una queja previamente enviada, siempre y cuando se encuentre en estatus ``RECIBIDA'', para corregir la narrativa o gestionar evidencias.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona la acción ``Modificar'' (icono de lápiz) en un trámite desde su Tablero.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe estar autenticado. La queja debe estar en estatus ``RECIBIDA''.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona ``Modificar''.\newline 2. El Sistema despliega la vista ``Edición de Queja''.\newline 3. El Quejoso ajusta la narrativa y evidencias (invoca CU10).\newline 4. El Quejoso selecciona ``Guardar cambios''.\newline 5. El Sistema valida los datos, actualiza en BD y notifica éxito.\newline 6. El Sistema redirige al Tablero.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{4a. Cancelación:}\newline 1. El Quejoso selecciona ``Cancelar''.\newline 2. El Sistema descarta cambios y retorna al Tablero.\newline\newline \textbf{5a. Datos incompletos:}\newline 1. El Sistema detecta descripción menor a 30 caracteres.\newline 2. Resalta error y detiene guardado.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Usuario elimina campos obligatorios. Trámite cambió de estatus internamente.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{La base de datos no registra los cambios.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{La información se actualiza sin alterar folio ni fecha de creación.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU10 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU10: Agregar evidencia}
+\label{tab:cu10_agregar_evidencia} \\
+\hline
+\textbf{Identificador} & CU10 & \textbf{Nombre} & Agregar evidencia \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Facilita la carga de archivos multimedia adicionales a un expediente en proceso de modificación.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario hace clic en ``Adjuntar archivo'' durante la edición de una queja.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe encontrarse dentro de la vista de ``Edición de queja'' (CU09).} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona ``Adjuntar archivo''.\newline 2. El Sistema invoca el explorador de archivos.\newline 3. El Quejoso selecciona archivos a subir.\newline 4. El Sistema valida técnica (formato y tamaño).\newline 5. El Sistema previsualiza el archivo.\newline 6. El flujo retorna a CU09 a la espera de guardar.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{4a. Formato no permitido o Exceso de peso:}\newline 1. El Sistema detecta la anomalía.\newline 2. El Sistema rechaza la carga y muestra alerta indicando la restricción.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El archivo tiene formato inseguro o excede el peso máximo permitido.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema rechaza el archivo instantáneamente y lanza advertencia.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El archivo queda vinculado temporalmente y se persiste al guardar en CU09.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU11 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU11: Eliminar Queja}
+\label{tab:cu11_eliminar_queja} \\
+\hline
+\textbf{Identificador} & CU11 & \textbf{Nombre} & Eliminar Queja \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario desistir de un trámite mediante la eliminación (cancelación lógica) de un registro previamente enviado.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona la opción ``Eliminar'' en una queja con estatus ``RECIBIDA''.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{La queja debe estar en estatus ``RECIBIDA''. No se pueden eliminar quejas que ya han sido admitidas para revisión.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso hace clic en el icono de eliminar.\newline 2. El Sistema solicita una confirmación de la acción.\newline 3. El Quejoso confirma la eliminación.\newline 4. El Sistema actualiza el estado a ``CANCELADA'' y oculta el registro de la vista activa.\newline 5. El Sistema confirma la acción exitosa.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{3a. Cancelar acción:}\newline 1. El usuario selecciona ``No'' en la confirmación.\newline 2. El sistema cierra el diálogo sin realizar cambios.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El estatus de la queja cambió a ``EN REVISIÓN'' mientras el usuario tenía la pantalla abierta.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema deniega la petición y muestra un aviso: ``No es posible eliminar una queja en proceso de revisión''.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{La queja cambia su estado de forma permanente y deja de ser editable.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU12 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU12: Ver Detalles de Queja}
+\label{tab:cu12_ver_detalles} \\
+\hline
+\textbf{Identificador} & CU12 & \textbf{Nombre} & Ver Detalles de Queja \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario consultar toda la información detallada de un expediente específico, incluyendo la narrativa, evidencias y bitácora de cambios.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona una queja de la lista mediante el botón ``Ver detalles''.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe tener permisos de acceso sobre el folio solicitado.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona el registro.\newline 2. El Sistema realiza una petición GET al backend con el ID del trámite.\newline 3. El Sistema despliega una vista completa con datos del quejoso, hechos y archivos adjuntos.\newline 4. El Sistema muestra el historial de estatus del expediente.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{3a. Evidencias inexistentes:}\newline 1. El sistema oculta la sección de descargas si no se adjuntaron archivos originalmente.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El folio solicitado no pertenece al usuario autenticado (intento de acceso no autorizado).} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema muestra una pantalla de ``403 Prohibido'' o redirige al Dashboard con un error de seguridad.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario queda informado sobre el contenido y progreso exacto de su trámite.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU13 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU13: Mis Quejas (Historial)}
+\label{tab:cu13_mis_quejas} \\
+\hline
+\textbf{Identificador} & CU13 & \textbf{Nombre} & Mis Quejas (Historial) \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Proporciona un listado tabular de todos los expedientes registrados por el usuario, permitiendo el filtrado por estatus o fecha.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona la opción ``Mis Quejas'' en el menú lateral.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión activa del usuario.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema carga la tabla con la totalidad de quejas del usuario.\newline 2. El Quejoso utiliza los filtros de búsqueda (Folio, Estatus).\newline 3. El Sistema actualiza la lista en tiempo real.\newline 4. El Quejoso visualiza las opciones de acción para cada registro.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{2a. Sin resultados en filtros:}\newline 1. El sistema muestra: ``No se encontraron quejas que coincidan con los criterios''.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Fallo en el servicio de búsqueda del servidor.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{La tabla se muestra vacía y el sistema sugiere refrescar la página.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario puede localizar y administrar cualquier expediente de su propiedad.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU14 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU14: Nueva Queja (Autenticado)}
+\label{tab:cu14_nueva_queja} \\
+\hline
+\textbf{Identificador} & CU14 & \textbf{Nombre} & Nueva Queja (Autenticado) \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite realizar un nuevo registro de queja, con la ventaja de tener el formulario pre-llenado con los datos de contacto del perfil del usuario.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona ``Nueva Denuncia'' dentro del Dashboard.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión activa y datos de perfil completos.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema despliega el formulario de registro.\newline 2. El Sistema carga automáticamente nombre, correo y teléfono del usuario.\newline 3. El Quejoso ingresa solo la narrativa y evidencias del nuevo hecho.\newline 4. El Quejoso selecciona ``Enviar''.\newline 5. El Sistema genera el nuevo folio y lo vincula a la cuenta actual.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{3a. Guardar Borrador:}\newline 1. El usuario selecciona ``Guardar para después''.\newline 2. El sistema almacena los datos sin generar folio oficial aún.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El usuario intenta enviar una queja con los campos obligatorios vacíos.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El formulario se bloquea y resalta los errores. No se genera un nuevo registro en la base de datos.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Un nuevo expediente es añadido al historial del usuario autenticado.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU15 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU15: Ver Notificaciones}
+\label{tab:cu15_ver_notificaciones} \\
+\hline
+\textbf{Identificador} & CU15 & \textbf{Nombre} & Ver Notificaciones \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Centro de mensajes donde el usuario recibe avisos sobre cambios de estatus, requerimientos de información o propuestas de la Defensoría.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario hace clic en el icono de campana o en la sección ``Notificaciones''.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión activa.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema muestra una lista cronológica de alertas.\newline 2. El Quejoso selecciona una notificación para ver el detalle.\newline 3. El Sistema marca la notificación como ``leída''.\newline 4. El Sistema redirige al trámite relacionado si la notificación contiene un enlace.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Limpiar notificaciones:}\newline 1. El usuario selecciona ``Marcar todas como leídas''.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error al actualizar el estado de lectura en la base de datos.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{La notificación permanece como ``no leída'' a pesar de haber sido abierta.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario está al tanto de las novedades administrativas de sus casos.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU16 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU16: Revisar Propuesta de Conciliación}
+\label{tab:cu16_revisar_propuesta} \\
+\hline
+\textbf{Identificador} & CU16 & \textbf{Nombre} & Revisar Propuesta de Conciliación \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario visualizar la medida o solución propuesta por el defensor para resolver la queja de manera amistosa.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario abre una notificación de ``Propuesta de Conciliación''.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{La queja debe estar en estatus ``PROPUESTA ENVIADA''.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema despliega el documento o texto de la propuesta redactada por el Defensor.\newline 2. El Quejoso analiza los términos de la solución.\newline 3. El Sistema habilita los botones para aceptar o rechazar (CU17).} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{2a. Solicitar aclaración:}\newline 1. El usuario utiliza el canal de contacto para dudas antes de decidir.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{La propuesta no carga correctamente debido a un error en el campo de texto enriquecido.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El usuario visualiza una pantalla en blanco y debe reportar el fallo técnico.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario queda habilitado para tomar una decisión vinculante sobre el caso.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU17 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU17: Rechazar/Aceptar Conciliación}
+\label{tab:cu17_conciliacion} \\
+\hline
+\textbf{Identificador} & CU17 & \textbf{Nombre} & Rechazar/Aceptar Conciliación \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario emitir respuesta vinculante frente a propuesta de la Defensoría.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario confirma su decisión haciendo clic en los botones de aceptación o rechazo.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Encontrarse en vista ``Consultar propuesta'' y que la propuesta esté vigente.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona el botón correspondiente.\newline 2. El Sistema despliega confirmación.\newline 3. El Quejoso confirma (y llena justificación si rechaza).\newline 4. El Sistema registra en base de datos.\newline 5. El Sistema genera aviso interno y redirige al tablero.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{2a. Cancelación:}\newline El Quejoso cierra la ventana de confirmación antes de enviar.\newline\newline \textbf{3a. Motivo faltante:}\newline El Sistema detiene la acción hasta ingresar motivo.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Usuario deja vacío el motivo de rechazo. Falla de red al guardar la decisión.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{La decisión no se guarda. La propuesta mantiene estatus ``Pendiente''.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{La propuesta cambia de estatus irreversiblemente y se notifica al sistema.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU18 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU18: Justificar Rechazo de Propuesta}
+\label{tab:cu18_justificar_rechazo} \\
+\hline
+\textbf{Identificador} & CU18 & \textbf{Nombre} & Justificar Rechazo de Propuesta \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario proporcionar los motivos detallados por los cuales no acepta la propuesta de solución emitida por la Defensoría.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona la opción ``Rechazar'' dentro de la revisión de la propuesta (CU16).} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El expediente debe estar en estatus ``PROPUESTA ENVIADA''.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona el botón ``Rechazar''.\newline 2. El Sistema despliega un cuadro de texto obligatorio para la justificación.\newline 3. El Quejoso redacta los argumentos del rechazo.\newline 4. El Quejoso selecciona ``Confirmar rechazo''.\newline 5. El Sistema almacena el comentario y actualiza el estatus del expediente a ``EN REVISIÓN''.\newline 6. El Sistema notifica al Defensor sobre el rechazo.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{4a. Cancelar acción:}\newline 1. El usuario cierra el cuadro de texto sin guardar.\newline 2. El sistema mantiene el estatus de la queja como ``PROPUESTA ENVIADA''.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El usuario intenta enviar el rechazo con el campo de justificación vacío.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema no procesa el cambio de estatus y resalta el campo de texto indicando que es requerido.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{La propuesta queda invalidada y el expediente regresa a la bandeja del defensor para un nuevo análisis.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU19 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU19: Ver Perfil}
+\label{tab:cu19_ver_perfil} \\
+\hline
+\textbf{Identificador} & CU19 & \textbf{Nombre} & Ver Perfil \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario consultar su información personal y de contacto registrada en el sistema, incluyendo los datos del tutor si aplica.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona la opción ``Perfil'' en el menú lateral del Dashboard.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe tener una sesión activa.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso hace clic en ``Perfil''.\newline 2. El Sistema realiza una consulta a la base de datos de usuarios.\newline 3. El Sistema recupera nombre completo, correo, teléfono y datos de tutor.\newline 4. El Sistema despliega la información en una vista de solo lectura con opción a edición.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de comunicación con el servicio de autenticación o base de datos.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Se muestra un mensaje de ``Error al cargar la información del perfil'' y se invita a reintentar.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario visualiza sus datos vigentes en la plataforma.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU20 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU20: Actualizar datos}
+\label{tab:cu20_actualizar_datos} \\
+\hline
+\textbf{Identificador} & CU20 & \textbf{Nombre} & Actualizar datos \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite modificar información de contacto o datos del tutor.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona ``Guardar Cambios'' tras modificar datos en la vista de perfil.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe encontrarse dentro de la vista ``Mi Perfil''.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso ingresa a vista de perfil.\newline 2. El Quejoso modifica la información deseada.\newline 3. El Quejoso selecciona ``Guardar Cambios''.\newline 4. El Sistema valida los formatos de los campos.\newline 5. El Sistema persiste la información y notifica éxito.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{4a. Formato inválido:}\newline El Sistema detiene el guardado y resalta los campos con error.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Los datos ingresados no cumplen el formato requerido por el sistema.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Los cambios no se persisten y los campos se revierten visualmente al valor anterior.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{La información personal se actualiza correctamente en la base de datos.} \\ \hline
+\end{longtable}
+\endgroup
+% FIN DEL ARCHIVO
