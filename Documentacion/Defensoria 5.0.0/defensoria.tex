@@ -8,7 +8,23 @@
 \lstset{inputencoding=utf8, extendedchars=true}
 %imagenes
 \usepackage{pdfpages} % Permite insertar páginas de archivos PDF externos
+
+% Definición de estilo para JSON
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily\small,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{gray!5}
+}
+
+
 \usepackage{ragged2e}
+
  
 \begin{document}
 
@@ -38,6 +54,7 @@
 \include{capitulos/00-anexoC}
 \include{capitulos/00-anexoD}
 \include{capitulos/00-anexoE}
+\include{capitulos/00-anexoF}
 \include{capitulos/00-referencias}
 
 \end{document}

@@ -22,10 +22,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Crea el filtro JWT como @Bean (ya no es @Component).
-     * Esto evita el auto-registro como servlet filter que causaba el 403.
-     */
     @Bean
     public JwtRequestFilter jwtRequestFilter(JwtUtil jwtUtil, UsuarioRepository usuarioRepository) {
         return new JwtRequestFilter(jwtUtil, usuarioRepository);
@@ -37,17 +33,20 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Preflight CORS: siempre público
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // 1. RUTAS PÚBLICAS (Sin Token)
+                        
+                        // --- RUTAS PÚBLICAS DE SWAGGER ---
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/swagger-ui.html").permitAll()
+                        
+                        // 1. RUTAS PÚBLICAS EXISTENTES
                         .requestMatchers("/api/quejoso/auth/**").permitAll()
                         .requestMatchers("/api/quejoso/quejas/registrar").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
-
-                        // Permitimos el acceso al endpoint que pide Folio y Correo
                         .requestMatchers("/api/quejoso/quejas/seguimiento/publico").permitAll()
 
-                        // 2. RUTAS PROTEGIDAS (Requieren JWT)
+                        // 2. RUTAS PROTEGIDAS
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -1,0 +1,850 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/api/quejoso/quejas/editar/{folio}": {
+      "put": {
+        "tags": [
+          "queja-controller"
+        ],
+        "operationId": "editar",
+        "parameters": [
+          {
+            "name": "folio",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "datos": {
+                    "$ref": "#/components/schemas/QuejaEditarDTO"
+                  },
+                  "nuevosArchivos": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                },
+                "required": [
+                  "datos"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/perfil/actualizar": {
+      "put": {
+        "tags": [
+          "perfil-controller"
+        ],
+        "operationId": "actualizar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsuarioPerfilDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/notificaciones/{id}/leer": {
+      "put": {
+        "tags": [
+          "notificacion-controller"
+        ],
+        "operationId": "leer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/quejoso/quejas/registrar": {
+      "post": {
+        "tags": [
+          "queja-controller"
+        ],
+        "operationId": "registrarQueja",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "datos": {
+                    "$ref": "#/components/schemas/QuejaRegistroDTO"
+                  },
+                  "archivos": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                },
+                "required": [
+                  "datos"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuejaSeguimientoDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/auth/solicitar-codigo": {
+      "post": {
+        "tags": [
+          "auth-controller"
+        ],
+        "operationId": "solicitarCodigo",
+        "parameters": [
+          {
+            "name": "correo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/auth/reset-password": {
+      "post": {
+        "tags": [
+          "auth-controller"
+        ],
+        "operationId": "resetPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/auth/login": {
+      "post": {
+        "tags": [
+          "auth-controller"
+        ],
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/auth/activar-cuenta": {
+      "post": {
+        "tags": [
+          "auth-controller"
+        ],
+        "operationId": "activar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivacionCuentaDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/tramites/resumen": {
+      "get": {
+        "tags": [
+          "tramites-controller"
+        ],
+        "operationId": "getResumen",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TramitesResumenDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/tramites/historial": {
+      "get": {
+        "tags": [
+          "tramites-controller"
+        ],
+        "operationId": "getHistorial",
+        "parameters": [
+          {
+            "name": "filtro",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/QuejaFiltroDTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuejaSeguimientoDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/quejas/seguimiento/publico": {
+      "get": {
+        "tags": [
+          "queja-controller"
+        ],
+        "operationId": "consultarSeguimientoPublico",
+        "parameters": [
+          {
+            "name": "folio",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "correo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/quejas/seguimiento/privado/{folio}": {
+      "get": {
+        "tags": [
+          "queja-controller"
+        ],
+        "operationId": "consultarSeguimientoPrivado",
+        "parameters": [
+          {
+            "name": "folio",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuejaSeguimientoDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/perfil": {
+      "get": {
+        "tags": [
+          "perfil-controller"
+        ],
+        "operationId": "verPerfil",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioPerfilDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/notificaciones": {
+      "get": {
+        "tags": [
+          "notificacion-controller"
+        ],
+        "operationId": "listar",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificacionDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/conciliacion/{folio}": {
+      "get": {
+        "tags": [
+          "conciliacion-controller"
+        ],
+        "operationId": "verPropuesta",
+        "parameters": [
+          {
+            "name": "folio",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConciliacionDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/tramites/{folio}": {
+      "delete": {
+        "tags": [
+          "tramites-controller"
+        ],
+        "operationId": "eliminar",
+        "parameters": [
+          {
+            "name": "folio",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quejoso/quejas/borrar/{folio}": {
+      "delete": {
+        "tags": [
+          "queja-controller"
+        ],
+        "operationId": "eliminar_1",
+        "parameters": [
+          {
+            "name": "folio",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "QuejaEditarDTO": {
+        "type": "object",
+        "properties": {
+          "asunto": {
+            "type": "string"
+          },
+          "descripcionHechos": {
+            "type": "string"
+          },
+          "evidenciasBorrarIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        }
+      },
+      "UsuarioPerfilDTO": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string"
+          },
+          "correoInstitucional": {
+            "type": "string"
+          },
+          "boleta": {
+            "type": "string"
+          },
+          "unidadAcademica": {
+            "type": "string"
+          },
+          "correoPersonal": {
+            "type": "string"
+          },
+          "telefonoCelular": {
+            "type": "string"
+          },
+          "nombreTutor": {
+            "type": "string"
+          },
+          "parentescoTutor": {
+            "type": "string"
+          },
+          "telefonoTutor": {
+            "type": "string"
+          }
+        }
+      },
+      "QuejaRegistroDTO": {
+        "type": "object",
+        "properties": {
+          "nombreQuejoso": {
+            "type": "string"
+          },
+          "primerApellido": {
+            "type": "string"
+          },
+          "segundoApellido": {
+            "type": "string"
+          },
+          "correo": {
+            "type": "string"
+          },
+          "fechaNacimiento": {
+            "type": "string"
+          },
+          "identificacionInstitucional": {
+            "type": "string"
+          },
+          "tipoIdentificacion": {
+            "type": "string"
+          },
+          "unidadAcademica": {
+            "type": "string"
+          },
+          "fechaHechos": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "asunto": {
+            "type": "string"
+          },
+          "descripcionHechos": {
+            "type": "string"
+          },
+          "nombreDenunciado": {
+            "type": "string"
+          },
+          "primerApellidoDenunciado": {
+            "type": "string"
+          },
+          "tutor": {
+            "$ref": "#/components/schemas/TutorDTO"
+          }
+        }
+      },
+      "TutorDTO": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string"
+          },
+          "primerApellido": {
+            "type": "string"
+          },
+          "segundoApellido": {
+            "type": "string"
+          },
+          "parentesco": {
+            "type": "string"
+          },
+          "correo": {
+            "type": "string"
+          },
+          "telefono": {
+            "type": "string"
+          }
+        }
+      },
+      "EvidenciaDTO": {
+        "type": "object",
+        "properties": {
+          "nombreArchivo": {
+            "type": "string"
+          },
+          "urlDescarga": {
+            "type": "string"
+          }
+        }
+      },
+      "QuejaSeguimientoDTO": {
+        "type": "object",
+        "properties": {
+          "folio": {
+            "type": "string"
+          },
+          "fechaRegistro": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "asunto": {
+            "type": "string"
+          },
+          "descripcionHechos": {
+            "type": "string"
+          },
+          "estatusActual": {
+            "type": "string",
+            "enum": [
+              "RECIBIDA",
+              "EN_ANALISIS",
+              "COMPETENTE",
+              "IMPROCEDENTE",
+              "ASIGNADO_A_ABOGADO",
+              "EN_INVESTIGACION",
+              "PROCESO_CONCLUSION",
+              "FINALIZADA",
+              "REMISION",
+              "CANCELADA"
+            ]
+          },
+          "evidencias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenciaDTO"
+            }
+          }
+        }
+      },
+      "ResetPasswordDTO": {
+        "type": "object",
+        "properties": {
+          "correo": {
+            "type": "string"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "nuevaPassword": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginDTO": {
+        "type": "object",
+        "properties": {
+          "correo": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "ActivacionCuentaDTO": {
+        "type": "object",
+        "properties": {
+          "correo": {
+            "type": "string"
+          },
+          "numeroFolio": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "confirmarPassword": {
+            "type": "string"
+          }
+        }
+      },
+      "TramitesResumenDTO": {
+        "type": "object",
+        "properties": {
+          "totales": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "enProceso": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "finalizadas": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "QuejaFiltroDTO": {
+        "type": "object",
+        "properties": {
+          "folio": {
+            "type": "string"
+          },
+          "estatus": {
+            "type": "string",
+            "enum": [
+              "RECIBIDA",
+              "EN_ANALISIS",
+              "COMPETENTE",
+              "IMPROCEDENTE",
+              "ASIGNADO_A_ABOGADO",
+              "EN_INVESTIGACION",
+              "PROCESO_CONCLUSION",
+              "FINALIZADA",
+              "REMISION",
+              "CANCELADA"
+            ]
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaFin": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "NotificacionDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "mensaje": {
+            "type": "string"
+          },
+          "fecha": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "leida": {
+            "type": "boolean"
+          },
+          "folioRelacionado": {
+            "type": "string"
+          }
+        }
+      },
+      "ConciliacionDTO": {
+        "type": "object",
+        "properties": {
+          "folioQueja": {
+            "type": "string"
+          },
+          "tituloAcuerdo": {
+            "type": "string"
+          },
+          "contenidoHtml": {
+            "type": "string"
+          },
+          "fechaPropuesta": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
