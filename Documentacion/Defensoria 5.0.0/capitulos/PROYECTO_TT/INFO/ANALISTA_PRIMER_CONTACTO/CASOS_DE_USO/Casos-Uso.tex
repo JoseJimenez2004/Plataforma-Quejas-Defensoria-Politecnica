@@ -1,0 +1,255 @@
+\subsection{Casos de Uso del Analista de Primer Contacto}
+\label{subsec:casos_uso_analista}
+
+La figura \ref{fig:casos_uso_analista} presenta los casos de uso que definen el comportamiento funcional del sistema para el Analista de Primer Contacto, encargado de la evaluación técnico-jurídica inicial.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{imagenes/primercontacto/Diagrama_CU/CasosUso_PrimerContacto.png}
+    \caption{Diagrama de Casos de Uso del Microservicio Analista de Primer Contacto}
+    \label{fig:casos_uso_analista}
+\end{figure}
+
+A continuación, se describen de manera detallada las especificaciones de cada Caso de Uso:
+
+\vspace{0.5cm}
+
+% ================= CU41 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU41: Consultar panel de análisis}
+\label{tab:cu41} \\
+\hline
+\textbf{Identificador} & CU41 & \textbf{Nombre} & Consultar panel de análisis \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Analista de Primer Contacto} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite visualizar la bandeja de expedientes turnados para análisis inicial.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona la opción "Bandeja de Análisis" en el sistema.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe haber iniciado sesión administrativa (CU25).} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Analista solicita la lista de quejas.\newline 2. El sistema recupera los expedientes con estatus "EN ANÁLISIS" o "ASIGNADO A ABOGADO".\newline 3. Se despliega la lista con filtros por prioridad y fecha.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Extensión:} El analista puede seleccionar una queja para abrirla (CU42).} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Fallo de conexión con el microservicio de expedientes.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Se muestra mensaje de "Bandeja no disponible" y tabla vacía.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario visualiza la carga de trabajo pendiente.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU42 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU42: Abrir queja para análisis}
+\label{tab:cu42} \\
+\hline
+\textbf{Identificador} & CU42 & \textbf{Nombre} & Abrir queja para análisis \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Analista de Primer Contacto} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Acceso al expediente detallado para su evaluación jurídica.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Selección de un folio desde el panel de análisis (CU41).} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El expediente debe estar disponible en la bandeja del analista.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema carga los datos generales, descripción de hechos y evidencias.\newline 2. Se habilitan las herramientas de evaluación técnico-jurídica.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error al recuperar los archivos adjuntos (evidencias).} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Se muestra el expediente pero con advertencia de "Archivos no disponibles".} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Información lista para dictaminación inicial.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU43 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU43: Evaluar procedencia técnico-jurídica}
+\label{tab:cu43} \\
+\hline
+\textbf{Identificador} & CU43 & \textbf{Nombre} & Evaluar procedencia técnico-jurídica \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Analista de Primer Contacto} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Evaluación de los hechos para determinar si existe una presunta violación a derechos.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El Analista inicia la revisión del cuerpo de la queja.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Expediente abierto (CU42).} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Analista revisa los hechos narrados.\newline 2. Registra observaciones técnicas sobre la competencia de la Defensoría.\newline 3. Prepara la resolución para aceptar, rechazar o prevenir.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Incompetencia detectada:} Se procede al rechazo (CU44).} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Pérdida de datos en el formulario de observaciones.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema solicita guardar cambios antes de salir.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Evaluación registrada en el historial del expediente.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU44 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU44: Rechazar queja por improcedencia}
+\label{tab:cu44} \\
+\hline
+\textbf{Identificador} & CU44 & \textbf{Nombre} & Rechazar queja por improcedencia \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Analista de Primer Contacto} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Cierre del expediente cuando se determina que no hay elementos jurídicos suficientes.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El Analista selecciona "Rechazar" tras la evaluación (CU43).} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Justificación técnica redactada.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Analista confirma el rechazo.\newline 2. El sistema incluye CU45 para actualizar estatus a RECHAZADA.\newline 3. El sistema incluye CU46 para notificar al quejoso.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Fallo en el microservicio de notificaciones.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Estatus actualizado, pero se genera alerta de notificación pendiente.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Expediente cerrado y archivado como rechazado.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU45 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU45: Cambiar estatus a rechazada}
+\label{tab:cu45} \\
+\hline
+\textbf{Identificador} & CU45 & \textbf{Nombre} & Cambiar estatus a rechazada \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Sistema} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Actualización automatizada del estado del expediente tras un dictamen de improcedencia.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Se invoca desde el Caso de Uso CU44 (Rechazar queja).} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Existencia de una justificación técnica de rechazo registrada.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema localiza el registro por folio.\newline 2. El Sistema modifica el atributo 'estatus' al valor 'RECHAZADA'.\newline 3. El Sistema registra la fecha y hora de la modificación.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Fallo de escritura en BD.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema reintenta la operación antes de abortar.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{La queja cambia su flujo hacia el archivo histórico.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU46 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU46: Notificar rechazo de queja}
+\label{tab:cu46} \\
+\hline
+\textbf{Identificador} & CU46 & \textbf{Nombre} & Notificar rechazo de queja \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Sistema} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Envío de comunicación oficial al quejoso informando la improcedencia.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Cambio de estatus exitoso en el CU45.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Correo electrónico del quejoso validado.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema genera el cuerpo del mensaje.\newline 2. Se envía el correo electrónico institucional.\newline 3. Se adjunta el documento de resolución.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Servidor SMTP fuera de línea.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Se registra el fallo en la bitácora de notificaciones.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario es informado legalmente del rechazo.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU47 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU47: Emitir prevención}
+\label{tab:cu47} \\
+\hline
+\textbf{Identificador} & CU47 & \textbf{Nombre} & Emitir prevención \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Analista de Primer Contacto} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Solicitud de información adicional o aclaraciones al quejoso.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El Analista detecta falta de claridad o pruebas esenciales.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Expediente abierto en análisis.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Analista redacta los puntos a aclarar.\newline 2. El sistema incluye CU48 (Estatus PREVENCIÓN).\newline 3. El sistema incluye CU49 (Notificar prevención).} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El quejoso no tiene medio de contacto válido.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema impide emitir la prevención.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El expediente queda en espera de respuesta.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU48 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU48: Cambiar estatus a prevención}
+\label{tab:cu48} \\
+\hline
+\textbf{Identificador} & CU48 & \textbf{Nombre} & Cambiar estatus a prevención \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Sistema} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Actualización del estado del expediente a fase de espera.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Se invoca desde el Caso de Uso CU47.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Registro de puntos pendientes aclarado.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema identifica el folio.\newline 2. Actualiza el estatus a 'PREVENCIÓN'.\newline 3. Inicia temporizador legal.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de concurrencia.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Mensaje de error al usuario analista.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Expediente bloqueado para edición.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU49 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU49: Notificar prevención}
+\label{tab:cu49} \\
+\hline
+\textbf{Identificador} & CU49 & \textbf{Nombre} & Notificar prevención \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Sistema} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Comunicación automática solicitando complementar la queja.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Cambio de estatus exitoso en el CU48.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Existencia de medio de contacto.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema redacta la notificación.\newline 2. Envía correo con acuse digital.\newline 3. Habilita portal para subida de documentos.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Dirección de correo errónea.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Se genera tarea de contacto telefónico.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Quejoso notificado formalmente.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU50 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU50: Admitir queja}
+\label{tab:cu50} \\
+\hline
+\textbf{Identificador} & CU50 & \textbf{Nombre} & Admitir queja \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Analista de Primer Contacto} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Validar la queja como procedente para investigación formal.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El Analista selecciona "Admitir" en el expediente.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Revisión técnico-jurídica aprobada.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Analista confirma la admisión.\newline 2. El Sistema incluye CU51 (Estatus ADMITIDA).\newline 3. El Sistema genera PDF del auto de admisión.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error en motor de PDF.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Se actualiza estatus pero se pide generación manual.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Queja lista para turno a investigación.} \\ \hline
+\end{longtable}
+\endgroup
+
+\vspace{0.8cm}
+
+% ================= CU51 =================
+\begingroup
+\setlength{\parskip}{0pt}
+\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
+\caption{Especificación de Caso de Uso CU51: Cambiar estatus a admitida}
+\label{tab:cu51} \\
+\hline
+\textbf{Identificador} & CU51 & \textbf{Nombre} & Cambiar estatus a admitida \\ \hline
+\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Sistema} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Formalizar entrada de queja al proceso de investigación.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Confirmación de admisión en CU50.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Expediente en estatus de análisis.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema cambia estado a 'ADMITIDA'.\newline 2. Libera folio para área de investigación.\newline 3. Crea entrada en histórico.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Fallo de red en persistencia.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Rollback de operación.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Queja admitida formalmente.} \\ \hline
+\end{longtable}
+\endgroup
