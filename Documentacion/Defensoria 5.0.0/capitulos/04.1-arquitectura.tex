@@ -149,15 +149,6 @@ El núcleo de Spring Boot se basa en el contenedor de Inversión de Control (IoC
 
 Spring Boot Actuator es un subproyecto del ecosistema Spring que proporciona funcionalidades críticas para la \textit{observabilidad} y el monitoreo de aplicaciones en entornos de producción. Según \cite{51}, esta herramienta permite obtener información detallada sobre el estado de ejecución de los componentes internos de la aplicación sin necesidad de implementar código adicional para la recolección de métricas.
 
-\paragraph{Configuración e Implementación}
-La integración de Actuator en un proyecto se realiza de manera simplificada mediante la inclusión de su \textit{starter} en el archivo de gestión de dependencias (\texttt{pom.xml}):
-
-\begin{verbatim}
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-actuator</artifactId>
-</dependency>
-\end{verbatim}
 
 Una vez habilitado, el framework expone una serie de puntos de acceso o \textit{endpoints} bajo la ruta base \texttt{/actuator}. Por defecto, y por razones de seguridad, solo el \textit{endpoint} de salud (\texttt{/health}) se encuentra activo, devolviendo un estado simplificado como \texttt{\{"status":"UP"\}} para confirmar que la aplicación está operativa.
 
@@ -198,18 +189,6 @@ Para que un servidor de recursos sea funcional y capaz de decodificar y verifica
     \item \texttt{spring-security-oauth2-resource-server}: Contiene el soporte base para la gestión de servidores de recursos.
     \item \texttt{spring-security-oauth2-jose}: Proporciona la infraestructura necesaria para el procesamiento de objetos \textit{Javascript Object Signing and Encryption} (JOSE), requerida para validar los JWT.
 \end{itemize}
-
-\paragraph{Configuración del Servidor de Autorización}
-En un entorno de Spring Boot, la configuración se simplifica mediante la especificación del emisor (\textit{Issuer URI}). Esta propiedad permite al sistema descubrir automáticamente las llaves públicas del servidor de identidad para validar los tokens entrantes \cite{52}:
-
-\begin{verbatim}
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: https://idp.example.com/issuer
-\end{verbatim}
 
 Al establecer esta propiedad, el sistema lanza un proceso de descubrimiento determinista que consulta los \textit{metadata endpoints} del proveedor para configurar las estrategias de validación de firmas y algoritmos de confianza (por defecto RS256) \cite{52}.
 
@@ -278,14 +257,6 @@ Las interfaces de programación de aplicaciones bajo el estilo arquitectónico R
 \paragraph{Estándares de Interoperabilidad y HTTP/2}
 Para garantizar una comunicación eficiente y escalable, el sistema se adhiere a los principios de REST, utilizando los verbos de transferencia HTTP (GET, POST, PUT, DELETE) para definir operaciones semánticas sobre los recursos. La implementación aprovecha las ventajas de \textbf{HTTP/2}, que introduce la multiplexación de peticiones y la compresión de cabeceras, reduciendo significativamente la latencia en la carga de expedientes y reportes dentro de la plataforma \cite{54}.
 
-\paragraph{Documentación con OpenAPI y Swagger}
-La transparencia en la comunicación entre equipos de desarrollo se logra mediante el uso de la especificación \textbf{OpenAPI} (anteriormente Swagger). Esta herramienta permite:
-\begin{itemize}
-    \item \textbf{Contratos de API:} Definir de manera formal los esquemas de entrada y salida de cada microservicio \cite{54}.
-    \item \textbf{Interfaz Interactiva:} Proporcionar una consola de pruebas (\textit{Swagger UI}) donde los desarrolladores pueden interactuar con los \textit{endpoints} en tiempo real, facilitando la integración de los módulos de la Defensoría \cite{54}.
-    \item \textbf{Generación Automática:} Sincronizar la documentación con el código fuente en Java, asegurando que la información técnica esté siempre actualizada \cite{54}.
-\end{itemize}
-
 \paragraph{Estrategias de Versionamiento y Rate Limiting}
 Dado que el sistema está sujeto a evoluciones normativas y técnicas, se implementan mecanismos de control para asegurar la compatibilidad:
 \begin{itemize}
@@ -294,12 +265,6 @@ Dado que el sistema está sujeto a evoluciones normativas y técnicas, se implem
 \end{itemize}
 
 Esta capa de servicios garantiza que la información de los derechos politécnicos sea accesible, segura y fácil de integrar con futuros módulos institucionales \cite{54}.
-
-\subsection{Microservicio especializado en Python (PLN)}
-
-Para el sistema, se requiere un asistente tecnológico capaz de procesar el texto de las quejas utilizando algoritmos de procesamiento de lenguaje natural (PLN). La incorporación de Python se justifica por su superioridad técnica en el ecosistema de inteligencia artificial; utilizarlo dentro de su propio microservicio permite delegar la pesada carga del análisis de texto en un entorno especializado.
-
-
 
 \section{Seguridad y Comunicación de Datos (En Tránsito)}
 
@@ -314,34 +279,6 @@ Para cifrar las comunicaciones en la capa de transporte, el sistema implementa e
     \item \textbf{Privacidad de Forwarding:} Garantiza que, incluso si una clave de sesión se ve comprometida en el futuro, las comunicaciones pasadas permanezcan cifradas\cite{55}.
 \end{itemize}
 
-\subsection{Comunicación Asíncrona Orientada a Eventos: Kafka y RabbitMQ}
-
-La comunicación entre microservicios no siempre ocurre de forma síncrona. Para procesos que no requieren una respuesta inmediata, como el registro de auditoría o el envío de notificaciones, se utilizan \textit{Message Brokers}\cite{55}.
-
-\paragraph{Apache Kafka}
-Se utiliza como una plataforma de transmisión de eventos distribuida de alto rendimiento\cite{55}. Kafka permite que el sistema de la Defensoría gestione grandes volúmenes de datos mediante:
-\begin{itemize}
-    \item \textbf{Tópicos y Particiones:} Organiza los mensajes en categorías lógicas (tópicos), permitiendo que múltiples consumidores procesen la información en paralelo\cite{55}.
-    \item \textbf{Persistencia de Eventos:} A diferencia de otros sistemas, Kafka puede almacenar los mensajes por un tiempo determinado, permitiendo que los servicios recuperen información en caso de caídas temporales\cite{55}.
-\end{itemize}
-
-\paragraph{RabbitMQ como Alternativa}
-Para flujos de trabajo que requieren un enrutamiento de mensajes más complejo y una entrega garantizada mediante confirmaciones (\textit{acknowledgments}), se considera RabbitMQ como un intermediario que soporta protocolos como AMQP\cite{55}.
-
-\subsection{Resiliencia: API Gateway y Circuit Breaker}
-
-La comunicación en tránsito debe ser resiliente ante fallos parciales de la red\cite{55}.
-
-\begin{itemize}
-    \item \textbf{Spring Cloud Gateway:} Actúa como el punto de entrada único que gestiona el tráfico externo, aplicando políticas de seguridad y enrutando las peticiones a los microservicios correspondientes de forma transparente\cite{55}.
-    \item \textbf{Circuit Breaker (Resilience4j):} Implementa un mecanismo de protección que interrumpe las llamadas a un servicio que está fallando constantemente. Esto evita que un fallo en un microservicio (como el clasificador de IA) sature la red y provoque una caída en cascada de todo el sistema\cite{55}.
-\end{itemize}
-
-
-\subsection{Protocolos de Transporte Seguro: Implementación de TLS 1.3 para el cifrado de comunicaciones}
-
-La seguridad en la capa de transporte es un pilar fundamental para garantizar la confidencialidad e integridad de los datos de la Defensoría de los Derechos Politécnicos mientras viajan por redes públicas \cite{57}. La implementación de \textbf{TLS (Transport Layer Security) 1.3} representa la evolución más reciente del protocolo, diseñada para corregir vulnerabilidades de versiones previas y optimizar el rendimiento de la red \cite{57}.
-
 \paragraph{Mecanismos de Seguridad Reforzada}
 A diferencia de sus predecesores, TLS 1.3 elimina el soporte para algoritmos criptográficos considerados obsoletos o inseguros (como MD5, SHA-1 y suites de cifrado de exportación), obligando al uso exclusivo de técnicas modernas de cifrado autenticado basadas en \textbf{AEAD} (\textit{Authenticated Encryption with Associated Data}) \cite{1, 56}. Esto garantiza que cada paquete de información no solo esté cifrado, sino que su autenticidad sea verificada de forma simultánea, impidiendo ataques de manipulación de datos \cite{56}.
 
@@ -355,23 +292,7 @@ Una de las mejoras más significativas de TLS 1.3 es la reducción drástica en 
 \paragraph{Perfect Forward Secrecy (PFS)}
 Al hacer obligatorio el intercambio de claves mediante \textit{Ephemeral Diffie-Hellman}, TLS 1.3 asegura que, ante un hipotético compromiso de la clave privada del servidor en el futuro, las sesiones de comunicación capturadas en el pasado permanezcan cifradas e inaccesibles, proporcionando protección a largo plazo para los expedientes digitales \cite{56}.
 
-\subsection{Comunicación Asíncrona Orientada a Eventos: Uso de Message Brokers (Kafka y RabbitMQ)}
 
-La comunicación asíncrona permite desacoplar los componentes del sistema, mejorando la escalabilidad y la disponibilidad de los microservicios ante fallos parciales \cite{1, 57}. En este paradigma, el intercambio de información no requiere una respuesta inmediata del receptor, gestionándose a través de intermediarios denominados \textit{Message Brokers} \cite{56}.
-
-\paragraph{Apache Kafka: Transmisión de Eventos a Gran Escala}
-Apache Kafka se utiliza como una plataforma de \textit{streaming} distribuida de alto rendimiento para gestionar el flujo de eventos en el sistema \cite{56}. Sus capacidades clave incluyen:
-\begin{itemize}
-    \item \textbf{Tópicos y Particiones:} Organiza los mensajes en categorías lógicas (ej. \texttt{nueva\_denuncia}), que se distribuyen en particiones para permitir que múltiples instancias del microservicio de clasificación procesen la carga en paralelo \cite{1, 57}.
-    \item \textbf{Persistencia de Registros:} Kafka almacena los eventos en disco de forma inmutable, permitiendo que los microservicios reconstruyan estados o recuperen información tras un periodo de inactividad técnica \cite{57}.
-\end{itemize}
-
-\paragraph{RabbitMQ: Fiabilidad y Enrutamiento Complejo}
-Como alternativa para flujos que requieren una entrega garantizada, se utiliza RabbitMQ \cite{57}.
-\begin{itemize}
-    \item \textbf{Protocolo AMQP:} Implementa el estándar \textit{Advanced Message Queuing Protocol}, que asegura la interoperabilidad \cite{57}.
-    \item \textbf{Mecanismos de Confirmación (ACK):} RabbitMQ garantiza que un mensaje no sea eliminado hasta que el consumidor confirme su procesamiento \cite{57}.
-\end{itemize}
 
 Esta arquitectura híbrida asegura que los procesos pesados, como el análisis del clasificador neuro-simbólico, no degraden la respuesta del sistema frente al ciudadano \cite{57}.
 
@@ -397,22 +318,6 @@ El patrón de interruptor o \textit{Circuit Breaker} es fundamental para preveni
 
 \paragraph{Estrategias de Fallback}
 Complementando al \textit{Circuit Breaker}, se definen métodos de \textit{fallback} que proporcionan una respuesta alternativa predeterminada cuando un servicio no está disponible \cite{58}. Esto asegura que el ciudadano siempre reciba una respuesta informativa o una versión simplificada del servicio en lugar de un error crítico del sistema, manteniendo la confianza en la plataforma institucional \cite{58}.
-
-\section{Tecnologías de Desarrollo Frontend}
-
-\subsection{Framework de interfaz de usuario: Angular}
-
-Angular es una plataforma de desarrollo y un framework basado en TypeScript para construir aplicaciones web escalables de una sola página (SPA). Se caracteriza por su arquitectura basada en componentes y una amplia colección de herramientas integradas que facilitan el desarrollo, las pruebas y la actualización de aplicaciones robustas \cite{41}.
-
-\textbf{Ventajas de su uso:}
-\begin{itemize}
-\item \textbf{Modularidad y Reutilización:} Organiza el código en componentes aislados que permiten reutilizar lógica y estilos visuales en múltiples secciones de la plataforma \cite{41}.
-\item \textbf{Integración con TypeScript:} Ofrece un tipado fuerte que detecta errores durante el desarrollo, asegurando un código más limpio y fácil de mantener a largo plazo \cite{41}.
-\item \textbf{Arquitectura Estructurada:} Proporciona un marco de trabajo con estándares claros que guían al equipo de desarrollo \cite{41}.
-\end{itemize}
-
-La incorporación de Angular como tecnología frontend se justifica por su madurez como framework empresarial y la integración nativa con el ecosistema de microservicios basado en Java y Python.
-
 
 \section{Infraestructura y Orquestación}
 
@@ -498,18 +403,5 @@ La arquitectura del repositorio digital debe contemplar un crecimiento sostenido
     \item \textbf{Particionamiento por Rango (Table Partitioning):} Se segmentan las tablas de expedientes por periodos anuales o semestrales. Esto mejora el rendimiento de las consultas al realizar un \textit{partition pruning}, donde el motor de búsqueda ignora las particiones que no contienen el rango de fechas solicitado, reduciendo drásticamente las operaciones de E/S en disco \cite{60}.
     \item \textbf{Pooling de Conexiones con PgBouncer:} Dado que los microservicios de Spring Boot operan de forma concurrente, PgBouncer gestiona una cola de conexiones hacia PostgreSQL \cite{60}. Esto evita el consumo excesivo de memoria RAM que implicaría crear un nuevo proceso por cada solicitud, manteniendo la estabilidad del servidor ante picos de tráfico en el módulo ciudadano \cite{60}.
     \item \textbf{Replicación Streaming y Alta Disponibilidad:} Se configura una réplica en modo \textit{Hot Standby}, permitiendo que un servidor secundario reciba de forma continua los registros de transacciones (WAL). Esta técnica no solo sirve como respaldo ante desastres, sino que permite descargar las operaciones de consulta (lectura) del servidor principal para balancear la carga de trabajo \cite{60}.
-\end{itemize}
-
-\section{Control de Versiones y Trabajo Colaborativo}
-
-\subsection{GitHub}
-
-GitHub es una plataforma de desarrollo alojada en la nube que permite gestionar y controlar las versiones del código utilizando Git, un sistema de control de versiones distribuido. Facilita la colaboración entre desarrolladores al registrar cada modificación realizada en los archivos \cite{44} \cite{45}.
-
-\textbf{Ventajas de su uso:}
-\begin{itemize}
-\item \textbf{Control de Versiones Distribuido:} Registra un historial detallado de cambios \cite{45}.
-\item \textbf{Colaboración mediante Ramificaciones:} Permite crear ramas independientes para desarrollar nuevas funciones \cite{44}.
-\item \textbf{Gestión Centralizada en la Nube:} Actúa como un repositorio central que garantiza el respaldo del proyecto \cite{44}.
 \end{itemize}
 
