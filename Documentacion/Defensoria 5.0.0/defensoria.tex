@@ -1,13 +1,15 @@
 \documentclass[12pt, oneside, letterpaper]{book}
 \usepackage{configuraciones/setup}
 
-%Casos de USO
+% Casos de USO
 \input{configuraciones/figuras_casos_uso.tex}
 \usepackage[utf8]{inputenc}
 \usepackage{textcomp}
 \lstset{inputencoding=utf8, extendedchars=true}
-%imagenes
+
+% Imágenes y PDFs
 \usepackage{pdfpages} % Permite insertar páginas de archivos PDF externos
+\usepackage{ragged2e}
 
 % Definición de estilo para JSON
 \lstdefinelanguage{json}{
@@ -22,10 +24,20 @@
     backgroundcolor=\color{gray!5}
 }
 
+% ==============================================================================
+% CONFIGURACIÓN DE HYPERREF (OPCIÓN A)
+% Se carga el paquete sin opciones y se configura con \hypersetup
+% para evitar el error "Option clash".
+% ==============================================================================
+\usepackage{hyperref} 
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    pdftitle={Trabajo Terminal - Defensoría de los Derechos Politécnicos},
+    pdfnewwindow=true % Esto ayuda a que los archivos externos se abran en otra ventana
+}
 
-\usepackage{ragged2e}
-
- 
 \begin{document}
 
 \frontmatter
@@ -47,14 +59,13 @@
 \include{capitulos/07-diseno-del-sistema}
 \include{capitulos/08-desarrollo-clasificador}
 
-
 \backmatter 
 %\include{capitulos/00-anexoA}
 %\include{capitulos/00-anexoB}
 \include{capitulos/00-anexoC}
 \include{capitulos/00-anexoD}
 \include{capitulos/00-anexoE}
-\include{capitulos/00-anexoF}
+\include{capitulos/00-anexoF} % Aquí es donde pusimos el \href{run:...}
 \include{capitulos/00-referencias}
 
 \end{document}
