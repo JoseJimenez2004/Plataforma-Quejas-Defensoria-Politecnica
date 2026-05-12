@@ -272,13 +272,9 @@ SBERT     & Reg. Logística          & 0.3263 & 0.3263 & 0.3404          & 0.0  
 
 Los resultados revelan cuatro patrones relevantes:
 
-\textbf{Inversión del resultado piloto en modelos SBERT lineales.} La
-fase piloto seleccionaba SBERT+SVM-RBF como modelo óptimo con F1\_CV $= 1.0$
-sobre 40 casos sintéticos con atributos jurídicos activos. Con el corpus
-real de 525 casos y evaluación sin atributos, esta combinación colapsa a
-F1 $= 0.3263$, equivalente a la clase mayoritaria. El Ensemble con SBERT
+\textbf{Inversión del resultado piloto en modelos SBERT lineales.} Se esperaba que SVM + Sentence Bert funcionará de manera más optima, sin embargo, con el corpus real de 525 casos y evaluación sin atributos, esta combinación colapsa a F1 $= 0.3263$, equivalente a la clase mayoritaria. El Ensemble con SBERT
 exhibe un comportamiento igualmente deficiente (F1\_holdout $= 0.4197$).
-Este resultado revela que SBERT+SVM y SBERT+RegLog habían aprendido a
+Este resultado expresa que SBERT+SVM y SBERT+RegLog aprendieron a
 depender casi exclusivamente del vector de atributos jurídicos amplificado;
 en ausencia de esa señal, el clasificador lineal no logra separar las
 clases en el espacio semántico de 768 dimensiones.
@@ -301,9 +297,6 @@ en SBERT+SVM y SBERT+RegLog no refleja robustez sino colapso a la clase
 mayoritaria en todos los casos —un artefacto de la distribución sin
 atributos jurídicos, no de generalización.
 
-\textbf{Modelo seleccionado para producción: spaCy avg + Random Forest.}
-Este modelo ofrece el mayor F1 en holdout, opera sin necesidad de atributos
-jurídicos, y su gap de $0.0533$ es aceptable dado el tamaño del corpus.
 
 La \cref{fig:f1_comparacion} resume visualmente el F1 ponderado en holdout
 para las ocho combinaciones.
@@ -403,18 +396,6 @@ nombra con el patrón
 trazabilidad temporal de los experimentos y coexistencia de múltiples
 versiones del modelo en el directorio \texttt{modelos/}.
 
-\subsection{Selección Persistente del Mejor Modelo}
-\label{subsec:mejor_modelo}
-
-Se implementa una política de reemplazo conservadora: el archivo
-\texttt{mejor\_modelo\_metricas.json} solo se sobreescribe si el F1 del
-experimento actual supera al del modelo previamente guardado. Esta decisión
-protege contra regresiones accidentales de desempeño cuando se realizan
-experimentos con conjuntos de datos distintos o hiperparámetros diferentes.
-El JSON resultante incluye metadatos enriquecidos —clave del experimento,
-\textit{timestamp}, rutas de artefactos, métricas completas y campos
-jurídicos utilizados— suficientes para reproducir o auditar el experimento.
-
 % ─────────────────────────────────────────────
 \section{Validación del Flujo de Inferencia}
 \label{sec:inferencia}
@@ -439,134 +420,4 @@ operación:
         clasifica exclusivamente por representación semántica del texto.
 \end{itemize}
 
-\subsection{Casos de Prueba Funcionales}
-\label{subsec:casos_prueba}
 
-Se validó el flujo completo de inferencia sobre casos representativos del
-corpus, verificando que la predicción es consistente en modo autónomo. La
-\cref{tab:casos_prueba} muestra una selección de casos y sus resultados.
-
-\begin{table}[H]
-\centering
-\caption{Casos de prueba funcionales del clasificador (modo autónomo)}
-\label{tab:casos_prueba}
-\begin{tabularx}{\textwidth}{Lcc}
-\toprule
-\textbf{Descripción del caso (resumen)}
-  & \textbf{Clase real} & \textbf{Predicción} \\
-\midrule
-Docente reporta modificación arbitraria de contrato
-  & Laboral (Art.~4-I) & \cmark \\
-Alumno impugna calificación de examen ordinario
-  & Evaluación académica (Art.~4-II) & \cmark \\
-Alumno denuncia represalia por queja previa
-  & Vulneración de derechos & \cmark \\
-Grupo solicita revisión de plan de estudios
-  & Afectación colectiva (Art.~4-IV) & \cmark \\
-Irregularidad en licitación reportada al OIC
-  & OIC (Art.~4-V) & \cmark \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-% ─────────────────────────────────────────────
-\section{Evaluación en Modo Autónomo}
-\label{sec:pruebas_autonomo}
-% ─────────────────────────────────────────────
-
-Para validar la capacidad de generalización del sistema ante usuarios no
-familiarizados con la normativa, se evaluaron las ocho combinaciones
-forzando todos los atributos jurídicos a cero. Esta condición de estrés
-obliga al clasificador a basar su veredicto exclusivamente en la
-representación semántica del texto, reproduciendo fielmente el escenario
-de producción.
-
-\subsection{Desempeño de los Modelos sin Atributos Jurídicos}
-\label{subsec:desempeno_autonomo}
-
-La \cref{tab:resultados_comparacion} ya reporta estas métricas como
-criterio principal de selección. Para sintetizar los resultados más
-relevantes del modo autónomo, la \cref{tab:resumen_autonomo} presenta
-los cuatro modelos con mayor F1 en holdout junto con su exactitud sobre
-el corpus de prueba.
-
-\begin{table}[H]
-\centering
-\caption{Desempeño de los modelos en modo autónomo (solo texto, holdout)}
-\label{tab:resumen_autonomo}
-\begin{tabularx}{0.85\textwidth}{Xcc}
-\toprule
-\textbf{Modelo} & \textbf{F1 holdout} & \textbf{Accuracy holdout} \\
-\midrule
-spaCy avg + Random Forest  & \textbf{0.9873} & \textbf{0.9873} \\
-SBERT + Random Forest      & 0.9747          & 0.9747          \\
-spaCy avg + Ensemble       & 0.9620          & 0.9620          \\
-spaCy avg + SVM-RBF        & 0.9235          & 0.9494          \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-\subsection{Análisis de Casos Críticos}
-\label{subsec:casos_criticos}
-
-Se seleccionaron ejemplos representativos del holdout donde el modelo
-spaCy + Random Forest demostró robustez absoluta en ausencia de metadatos
-jurídicos:
-
-\begin{table}[H]
-\centering
-\caption{Muestra de inferencias autónomas exitosas (spaCy + Random Forest)}
-\label{tab:casos_autonomo}
-\begin{tabularx}{\textwidth}{LccC}
-\toprule
-\textbf{Descripción de la queja (resumen)}
-  & \textbf{Clase real} & \textbf{Predicción} & \textbf{Correcto} \\
-\midrule
-Profesor reporta retiro de pago de estímulo por
-trámites administrativos en la ESIME Zacatenco.
-  & No Comp. & No Comp. & \cmark \\
-Alumna denuncia discriminación por apariencia
-física y trato humillante frente al grupo.
-  & Competente & Competente & \cmark \\
-Investigación activa del OIC por irregularidades
-en papelería de oficina en la ENCB.
-  & No Comp. & No Comp. & \cmark \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-\begin{observacion}
-La \cref{tab:resultados_comparacion} mostraba resultados perfectos en la
-fase piloto porque los atributos jurídicos permanecían activos durante la
-evaluación. Al forzar la predicción únicamente con el texto
-(\cref{tab:resumen_autonomo}), se hace evidente que SBERT+SVM y
-SBERT+RegLog dependen críticamente de esa señal normativa y colapsan en
-producción, mientras que spaCy+RandomForest y SBERT+RandomForest mantienen
-un desempeño robusto. Esta distinción justifica la selección de
-spaCy+RandomForest como modelo de despliegue.
-\end{observacion}
-
-% ─────────────────────────────────────────────
-\section{Limitaciones y Trabajo Futuro}
-\label{sec:limitaciones}
-% ─────────────────────────────────────────────
-
-\textbf{Tamaño del corpus.} Con 525 casos, los valores F1 en holdout
-cercanos a $0.99$ podrían reflejar parcialmente la baja variabilidad
-lexical del conjunto de datos. Se recomienda ampliar el corpus a al menos
-2{,}000 casos etiquetados y reevaluar con validación cruzada estratificada
-$k=10$ antes del despliegue definitivo.
-
-\textbf{Extracción automática de atributos jurídicos.} En la versión
-actual, los atributos booleanos del Artículo 4° son anotados manualmente
-durante el entrenamiento. Una línea de trabajo futura es construir un
-modelo extractor que infiera automáticamente estos atributos a partir del
-relato del quejoso, habilitando el modo asistido sin intervención humana
-previa.
-
-\textbf{Desbalance de clases.} Si la distribución de casos en producción
-difiere de la distribución de entrenamiento, el clasificador podría
-exhibir sesgo hacia la clase mayoritaria. Se sugiere monitorear las tasas
-de falsos negativos en producción y considerar ajuste del umbral de
-decisión para proteger el derecho de los quejosos a no ser descartados
-erróneamente.
