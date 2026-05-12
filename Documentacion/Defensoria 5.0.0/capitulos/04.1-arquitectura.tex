@@ -1,36 +1,3 @@
-\section{Fundamentos de arquitectura de software}
-
-\subsection{Definición de arquitectura de software}
-La arquitectura de software es el conjunto de decisiones fundamentales que definen la estructura, organización y comportamiento de un sistema. Al utilizar patrones y principios de diseño, establece un marco de referencia para la construcción, evolución y mantenimiento del software. 
-
-Más allá de organizar componentes, la arquitectura determina cómo se gestionan las interacciones para cumplir con los atributos de calidad (escalabilidad, seguridad, desempeño) y los requerimientos funcionales y no funcionales. Constituye el puente entre los objetivos organizacionales y las soluciones tecnológicas, siendo esencial para garantizar la integridad y viabilidad del sistema \cite{27}.
-
-\subsection{Importancia en el Desarrollo de Sistemas}
-
-La arquitectura es el cimiento técnico que asegura la correcta construcción del sistema adecuado para el negocio, destacando por:
-
-\begin{itemize}
-\item \textbf{Gestión de la Complejidad:} Coordina procesos y dependencias mediante flexibilidad y adaptación, controlando factores desconocidos o cambios no anticipados.
-\item \textbf{Mitigación de Riesgos Tempranos:} Permite un enfoque proactivo para detectar y neutralizar vulnerabilidades antes de que afecten la operación.
-\item \textbf{Escalabilidad:} Garantiza la adaptación del sistema ante variaciones en la carga de trabajo sin afectar su rendimiento ni requerir reingeniería.
-\item \textbf{Mantenibilidad:} Facilita modificaciones, correcciones y mejoras futuras gracias a un diseño organizado y claro.
-\item \textbf{Toma de Decisiones:} Establece el marco para la elección de tecnologías y la gestión de compromisos técnicos (\textit{trade-offs}).
-\end{itemize}
-
-\subsection{Factores de calidad}
-
-Basados en modelos internacionales (ISO/IEC 25010), los atributos de calidad evalúan y garantizan la viabilidad a largo plazo de la arquitectura elegida \cite{28}. En un sistema de gestión de denuncias, destacan:
-
-\begin{itemize}
-\item \textbf{Rendimiento y Eficiencia:} Optimización de recursos y latencias mínimas en la comunicación entre microservicios, asegurando una experiencia fluida al cargar evidencias \cite{28}.
-\item \textbf{Mantenibilidad:} Facilidad para actualizar o corregir el sistema. El uso de \textit{Docker} y el patrón de tres capas permite modificar microservicios independientemente sin afectar la estabilidad \cite{28}.
-\item \textbf{Escalabilidad:} Capacidad de escalar horizontalmente servicios críticos ante altas demandas de usuarios, optimizando la infraestructura institucional \cite{29}.
-\item \textbf{Seguridad y Confidencialidad:} Protección de la identidad del denunciante e integridad del expediente mediante cifrado de datos y control de acceso (RBAC).
-\item \textbf{Disponibilidad y Tolerancia a Fallos:} Aislamiento de errores entre servicios (ej. la caída del módulo analítico no afecta el sistema central), previniendo el colapso total.
-\end{itemize}
-
-Estos factores aseguran que la plataforma sea una herramienta robusta, confiable y duradera para la Defensoría.
-
 \section{Arquitectura del Sistema}
 
 \subsection{Visión general de la arquitectura híbrida}

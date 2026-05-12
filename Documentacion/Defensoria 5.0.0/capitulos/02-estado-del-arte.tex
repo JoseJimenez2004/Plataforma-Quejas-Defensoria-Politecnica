@@ -2,9 +2,16 @@
 
 \begin{flushleft}
 \justifying
-El diseño y despliegue de una plataforma integral para la gestión de quejas en el ámbito institucional exige un análisis crítico del ecosistema tecnológico actual. No basta con catalogar las herramientas existentes; es imperativo auditar la brecha tecnológica entre los sistemas de seguimiento pasivos y las soluciones proactivas de gobernanza digital. 
+El diseño y despliegue de una plataforma integral para la gestión de quejas en el ámbito institucional exige un análisis crítico del ecosistema tecnológico actual. No basta con catalogar las herramientas existentes; es importante observar que la brecha tecnológica entre los sistemas de seguimiento.
 
-Este estudio disecciona las soluciones del mercado y del sector público bajo tres ejes fundamentales: la integridad inmutable de los datos, la automatización del triaje administrativo. Al identificar las carencias en la arquitectura de las herramientas actuales, se define el valor agregado de esta propuesta: la transición de un simple repositorio de información hacia un ecosistema de \textbf{inteligencia aplicada al derecho administrativo}. Mediante la implementación de microservicios y algoritmos de clasificación, este proyecto busca no solo digitalizar el proceso, sino optimizar la soberanía y protección de la información sensible de la comunidad politécnica.
+Las soluciones que existen en el mercado se rigen por tres ejes fundamentales:
+
+\begin{itemize}
+    \item \textbf{Integridad inmutable de los datos}
+    \item \textbf{Automatización del triaje administrativo}
+    \item \textbf{Seguridad y confidencialidad}
+\end{itemize}
+
 \end{flushleft}
 
 \section{Sistema Integral de Denuncias Ciudadanas (SIDEC)}
@@ -663,49 +670,3 @@ La tabla resumen evidencia que ninguna categoría existente integra todas las fu
 \end{itemize}
 \end{flushleft}
 
-% ==============================================================================
-% SÍNTESIS DE LA BRECHA TECNOLÓGICA Y VALOR AGREGADO
-% ==============================================================================
-
-\subsection{Síntesis de la Brecha Tecnológica y Valor Agregado}
-
-\begin{flushleft}
-\justifying
-
-Con base en el análisis comparativo de 16 plataformas a través de múltiples dimensiones técnicas y funcionales, se identifica una \textbf{brecha tecnológica estructural} que justifica el desarrollo de este Trabajo Terminal:
-
-\subsubsection*{Dimensiones de la Brecha Identificada}
-
-\textbf{1. Dimensión Funcional (IA/ML):} Los sistemas existentes son reactivos (repositorios de información), no proactivos. Carecen de inteligencia aplicada para la detección temprana de patrones de conflicto o la automatización del triaje administrativo. Ninguna plataforma gubernamental mexicana incorpora NLP. La propuesta implementa Procesamiento de Lenguaje Natural para clasificación automática y detección de anomalías.
-
-\textbf{2. Dimensión Arquitectónica:} Predominan arquitecturas monolíticas y centralizadas (SIDEC, MP Virtual, SAM), con puntos de falla únicos y baja escalabilidad. Las soluciones internacionales han migrado a SaaS sobre nubes públicas (Azure, AWS), contraviniendo principios de soberanía de datos de instituciones gubernamentales mexicanas. La propuesta adopta una arquitectura de microservicios que permite despliegue granular, escalabilidad horizontal y aislamiento de datos sensibles en infraestructura on-premise del IPN.
-
-\textbf{3. Dimensión de Seguimiento y Transparencia:} El 87.5\% de las plataformas analizadas (14 de 16) no implementan comunicación bidireccional anónima entre denunciante e investigador. Solo las soluciones europeas de whistleblowing ofrecen esta capacidad. La propuesta integra un tablero de seguimiento granular con visibilidad de etapas, tiempos y responsable, manteniendo el anonimato configurable.
-
-\textbf{4. Dimensión de Geolocalización:} Solo Incorruptible y Alerta IPN incorporan geolocalización entre todas las plataformas analizadas. Ningún sistema institucional de quejas formales (SIDEC, SAM, UNAM) ofrece esta funcionalidad. La propuesta incorpora geolocalización para identificar patrones espaciales de incidencia dentro de las unidades académicas del IPN.
-
-\textbf{5. Dimensión Normativa:} No existe una plataforma alineada específicamente al Marco Jurídico del Instituto Politécnico Nacional (Ley Orgánica, Reglamento Interno, Manual de Procedimientos de la Defensoría). La UNAM cuenta con sistema propio, pero el IPN carece de un equivalente. La propuesta incorpora las figuras jurídicas propias del derecho administrativo politécnico.
-
-\textbf{6. Dimensión de Ciberseguridad:} La soberanía de datos sensibles no está garantizada en soluciones de terceros. Las plataformas mexicanas utilizan cifrado básico en tránsito (TLS) sin implementar cifrado de extremo a extremo. Whistleblower Software establece el estándar con arquitectura Zero-Knowledge. La propuesta adopta cifrado end-to-end para el contenido de denuncias y evidencias.
-
-\subsubsection*{Valor Agregado de la Propuesta}
-
-La plataforma para la Defensoría de los Derechos Politécnicos no busca competir con soluciones comerciales como Whistlelink o EQS Integrity Line, sino \textbf{adaptar las mejores prácticas internacionales} al \textbf{contexto normativo, técnico y presupuestal del IPN}:
-
-\begin{itemize}
-    \item \textbf{Autenticación institucional robusta:} Mediante boleta o número de empleado, combinada con anonimato configurable para casos sensibles.
-    
-    \item \textbf{Inteligencia de datos mediante NLP:} Para triaje automático de denuncias, detección de patrones y clasificación inteligente.
-    
-    \item \textbf{Arquitectura de microservicios:} Despliegue granular, escalabilidad horizontal, aislamiento de datos y resiliencia ante fallos.
-    
-    \item \textbf{Geolocalización:} Identificación de puntos calientes dentro de unidades académicas y administrativas del IPN.
-    
-    \item \textbf{Comunicación bidireccional anónima:} Canal seguro entre denunciante e investigador sin revelar identidad.
-    
-    \item \textbf{Cifrado de extremo a extremo:} Protección de datos sensibles bajo estándares internacionales.
-    
-    \item \textbf{Especialización en derecho politécnico:} Alineación con Ley Orgánica del IPN, Reglamento Interno y Manuales de la Defensoría.
-\end{itemize}
-
-\end{flushleft}
