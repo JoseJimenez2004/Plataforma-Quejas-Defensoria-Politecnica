@@ -3,157 +3,90 @@
 
 La figura \ref{fig:casos_uso_admin_ti} detalla las funciones del Administrador de TI, responsable del mantenimiento técnico, la gestión de catálogos del sistema y la supervisión de la infraestructura de la plataforma.
 
-
-\vspace{0.5cm}
+% Ajustes globales para esta sección para ahorrar espacio
+\begingroup
+\footnotesize % Fuente reducida para todas las tablas
+\setlength{\parskip}{0pt} % Elimina espacio entre párrafos
+\setlength{\belowcaptionskip}{-10pt} % Reduce espacio después del título de la tabla
+\renewcommand{\arraystretch}{1.1} % Ajusta el alto de las filas para que no se vea amontonado
 
 % ================= CU70 =================
-\begingroup
-\setlength{\parskip}{0pt}
-\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
-\caption{Especificación de Caso de Uso CU70: Consultar panel de TI}
-\label{tab:cu70} \\
-\hline
-\textbf{Identificador} & CU70 & \textbf{Nombre} & Consultar panel de TI \\ \hline
-\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Administrador de TI} \\ \hline
-\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Interfaz principal con métricas de salud del sistema, logs recientes y accesos a módulos de configuración.} \\ \hline
-\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario accede a la ruta /admin-ti/dashboard.} \\ \hline
-\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión activa con privilegios de superusuario.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema carga el estatus de los microservicios.\newline 2. Se despliegan opciones de gestión de catálogos y mantenimiento.} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{Visualización de alertas técnicas críticas.} \\ \hline
-\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de comunicación con el servicio de monitoreo.} \\ \hline
-\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema muestra mensaje de "Servicios de monitoreo offline".} \\ \hline
-\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Panel técnico visualizado.} \\ \hline
-\end{longtable}
-\endgroup
+\begin{table}[ht!]
+    \centering
+    \caption{Especificación de Caso de Uso CU70: Consultar panel de TI}
+    \label{tab:cu70}
+    \begin{tabularx}{\textwidth}{|l|p{2cm}|l|X|}
+        \hline
+        \textbf{ID} & CU70 & \textbf{Nombre} & Consultar panel de TI \\ \hline
+        \textbf{Actor} & \multicolumn{3}{X|}{Administrador de TI} \\ \hline
+        \textbf{Descripción} & \multicolumn{3}{X|}{Interfaz principal con métricas de salud del sistema, logs y configuración.} \\ \hline
+        \textbf{Disparador} & \multicolumn{3}{X|}{El usuario accede a la ruta /admin-ti/dashboard.} \\ \hline
+        \textbf{Precondiciones} & \multicolumn{3}{X|}{Sesión activa con privilegios de superusuario.} \\ \hline
+        \textbf{Flujo} & \multicolumn{3}{X|}{1. Carga estatus de microservicios. 2. Despliega opciones de gestión.} \\ \hline
+        \textbf{Error} & \multicolumn{3}{X|}{Error de comunicación con el servicio de monitoreo.} \\ \hline
+        \textbf{Postcondición} & \multicolumn{3}{X|}{Panel técnico visualizado.} \\ \hline
+    \end{tabularx}
+\end{table}
 
-\vspace{0.8cm}
+\vspace{-0.4cm} % Espacio negativo para juntar las tablas
 
 % ================= CU71 =================
-\begingroup
-\setlength{\parskip}{0pt}
-\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
-\caption{Especificación de Caso de Uso CU71: Gestionar catálogos del sistema}
-\label{tab:cu71} \\
-\hline
-\textbf{Identificador} & CU71 & \textbf{Nombre} & Gestionar catálogos del sistema \\ \hline
-\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Administrador de TI} \\ \hline
-\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Control sobre las tablas maestras que alimentan los formularios de la plataforma.} \\ \hline
-\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona "Catálogos" en el menú.} \\ \hline
-\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema lista los catálogos disponibles (Escuelas, Cargos, Materias).\newline 2. El usuario selecciona un catálogo para su edición (CU72).} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
-\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de permisos en BD.} \\ \hline
-\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Redirección al panel principal.} \\ \hline
-\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Módulos de catálogo listos para operar.} \\ \hline
-\end{longtable}
-\endgroup
+\begin{table}[ht!]
+    \centering
+    \caption{Especificación de Caso de Uso CU71: Gestionar catálogos}
+    \label{tab:cu71}
+    \begin{tabularx}{\textwidth}{|l|p{2cm}|l|X|}
+        \hline
+        \textbf{ID} & CU71 & \textbf{Nombre} & Gestionar catálogos del sistema \\ \hline
+        \textbf{Actor} & \multicolumn{3}{X|}{Administrador de TI} \\ \hline
+        \textbf{Descripción} & \multicolumn{3}{X|}{Control sobre las tablas maestras que alimentan los formularios.} \\ \hline
+        \textbf{Disparador} & \multicolumn{3}{X|}{El usuario selecciona "Catálogos" en el menú.} \\ \hline
+        \textbf{Precondiciones} & \multicolumn{3}{X|}{N/A.} \\ \hline
+        \textbf{Flujo} & \multicolumn{3}{X|}{1. Lista catálogos (Escuelas, Cargos). 2. Usuario selecciona uno.} \\ \hline
+        \textbf{Error} & \multicolumn{3}{X|}{Error de permisos en BD.} \\ \hline
+        \textbf{Postcondición} & \multicolumn{3}{X|}{Módulos de catálogo listos para operar.} \\ \hline
+    \end{tabularx}
+\end{table}
 
-\vspace{0.8cm}
+\vspace{-0.4cm}
 
 % ================= CU72 =================
-\begingroup
-\setlength{\parskip}{0pt}
-\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
-\caption{Especificación de Caso de Uso CU72: Gestionar catálogo de escuelas}
-\label{tab:cu72} \\
-\hline
-\textbf{Identificador} & CU72 & \textbf{Nombre} & Gestionar catálogo de escuelas/facultades \\ \hline
-\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Administrador de TI} \\ \hline
-\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Alta, baja o modificación de las entidades académicas institucionales.} \\ \hline
-\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Selección del catálogo de escuelas en CU71.} \\ \hline
-\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema muestra la lista de escuelas registradas.\newline 2. El usuario realiza operaciones CRUD.\newline 3. El sistema actualiza en cascada para nuevos registros.} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
-\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Duplicidad de claves de facultad.} \\ \hline
-\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Aviso de "Clave ya existe".} \\ \hline
-\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Base de datos de escuelas actualizada.} \\ \hline
-\end{longtable}
-\endgroup
+\begin{table}[ht!]
+    \centering
+    \caption{Especificación de Caso de Uso CU72: Catálogo de escuelas}
+    \label{tab:cu72}
+    \begin{tabularx}{\textwidth}{|l|p{2cm}|l|X|}
+        \hline
+        \textbf{ID} & CU72 & \textbf{Nombre} & Gestionar catálogo de escuelas/facultades \\ \hline
+        \textbf{Actor} & \multicolumn{3}{X|}{Administrador de TI} \\ \hline
+        \textbf{Descripción} & \multicolumn{3}{X|}{Alta, baja o modificación de las entidades académicas.} \\ \hline
+        \textbf{Disparador} & \multicolumn{3}{X|}{Selección del catálogo de escuelas en CU71.} \\ \hline
+        \textbf{Precondiciones} & \multicolumn{3}{X|}{N/A.} \\ \hline
+        \textbf{Flujo} & \multicolumn{3}{X|}{1. Muestra lista de escuelas. 2. Operaciones CRUD. 3. Actualización.} \\ \hline
+        \textbf{Error} & \multicolumn{3}{X|}{Duplicidad de claves de facultad.} \\ \hline
+        \textbf{Postcondición} & \multicolumn{3}{X|}{Base de datos de escuelas actualizada.} \\ \hline
+    \end{tabularx}
+\end{table}
 
-\vspace{0.8cm}
+\vspace{-0.4cm}
 
 % ================= CU75 =================
-\begingroup
-\setlength{\parskip}{0pt}
-\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
-\caption{Especificación de Caso de Uso CU75: Gestionar catálogo de cargos}
-\label{tab:cu75} \\
-\hline
-\textbf{Identificador} & CU75 & \textbf{Nombre} & Gestionar catálogo de cargos \\ \hline
-\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Administrador de TI} \\ \hline
-\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Actualización de los puestos o roles de los presuntos responsables (Autoridades).} \\ \hline
-\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Selección del catálogo de cargos en CU71.} \\ \hline
-\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema presenta la lista de cargos actuales.\newline 2. El usuario agrega o edita descripciones de puestos.\newline 3. Se sincroniza con el módulo jurídico.} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{N/A.} \\ \hline
-\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error al eliminar un cargo vinculado a quejas activas.} \\ \hline
-\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Bloqueo de eliminación por integridad referencial.} \\ \hline
-\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Cargos actualizados para formularios.} \\ \hline
-\end{longtable}
+\begin{table}[ht!]
+    \centering
+    \caption{Especificación de Caso de Uso CU75: Catálogo de cargos}
+    \label{tab:cu75}
+    \begin{tabularx}{\textwidth}{|l|p{2cm}|l|X|}
+        \hline
+        \textbf{ID} & CU75 & \textbf{Nombre} & Gestionar catálogo de cargos \\ \hline
+        \textbf{Actor} & \multicolumn{3}{X|}{Administrador de TI} \\ \hline
+        \textbf{Descripción} & \multicolumn{3}{X|}{Actualización de los puestos de los presuntos responsables.} \\ \hline
+        \textbf{Disparador} & \multicolumn{3}{X|}{Selección del catálogo de cargos en CU71.} \\ \hline
+        \textbf{Precondiciones} & \multicolumn{3}{X|}{N/A.} \\ \hline
+        \textbf{Flujo} & \multicolumn{3}{X|}{1. Presenta lista de cargos. 2. Agrega o edita. 3. Sincroniza.} \\ \hline
+        \textbf{Error} & \multicolumn{3}{X|}{Error al eliminar cargo vinculado a quejas activas.} \\ \hline
+        \textbf{Postcondición} & \multicolumn{3}{X|}{Cargos actualizados para formularios.} \\ \hline
+    \end{tabularx}
+\end{table}
+
 \endgroup
-
-\vspace{0.8cm}
-
-% ================= CU78 =================
-\begingroup
-\setlength{\parskip}{0pt}
-\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
-\caption{Especificación de Caso de Uso CU78: Consultar logs de errores}
-\label{tab:cu78} \\
-\hline
-\textbf{Identificador} & CU78 & \textbf{Nombre} & Consultar logs de errores \\ \hline
-\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Administrador de TI} \\ \hline
-\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Revisión de los registros técnicos de fallos para depuración del sistema.} \\ \hline
-\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona "Visor de Logs".} \\ \hline
-\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Servicio de Logger activo.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema carga los últimos eventos del servidor.\newline 2. El usuario filtra por fecha o tipo de error (500, 404, etc.).} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{Exportación de logs a archivo .txt o .json.} \\ \hline
-\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Archivo de logs demasiado grande para lectura en navegador.} \\ \hline
-\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema sugiere descargar el archivo completo.} \\ \hline
-\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Información para mantenimiento disponible.} \\ \hline
-\end{longtable}
-\endgroup
-
-\vspace{0.8cm}
-
-% ================= CU81 =================
-\begingroup
-\setlength{\parskip}{0pt}
-\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
-\caption{Especificación de Caso de Uso CU81: Realizar mantenimiento de base de datos}
-\label{tab:cu81} \\
-\hline
-\textbf{Identificador} & CU81 & \textbf{Nombre} & Realizar mantenimiento de base de datos \\ \hline
-\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Administrador de TI} \\ \hline
-\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Optimización, limpieza de registros temporales y backups.} \\ \hline
-\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Programación semanal o ejecución manual.} \\ \hline
-\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sistema en modo mantenimiento o baja carga de usuarios.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema ejecuta scripts de optimización de índices.\newline 2. El sistema incluye CU82 (Generar Backup).} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{Mantenimiento preventivo de tablas de auditoría.} \\ \hline
-\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Bloqueo de tablas prolongado.} \\ \hline
-\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Abortar proceso y restaurar última imagen estable.} \\ \hline
-\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Base de datos optimizada.} \\ \hline
-\end{longtable}
-\endgroup
-
-\vspace{0.8cm}
-
-% ================= CU82 =================
-\begingroup
-\setlength{\parskip}{0pt}
-\begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
-\caption{Especificación de Caso de Uso CU82: Generar backup del sistema}
-\label{tab:cu82} \\
-\hline
-\textbf{Identificador} & CU82 & \textbf{Nombre} & Generar backup del sistema \\ \hline
-\textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Sistema (Iniciado por Admin TI)} \\ \hline
-\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Respaldo completo de la base de datos y archivos de evidencias adjuntos.} \\ \hline
-\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{Invocado desde CU81.} \\ \hline
-\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Espacio en disco suficiente en el servidor de respaldo.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El sistema empaqueta la BD.\newline 2. El sistema cifra el archivo resultante.\newline 3. Se traslada a almacenamiento externo.} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{Respaldo incremental.} \\ \hline
-\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de escritura en el destino.} \\ \hline
-\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{Notificación crítica al Administrador.} \\ \hline
-\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Respaldo seguro generado.} \\ \hline
-\end{longtable}
-\endgroup
+\clearpage

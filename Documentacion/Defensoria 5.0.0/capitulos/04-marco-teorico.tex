@@ -206,25 +206,30 @@ un punto en un espacio $\mathbb{R}^d$, donde $d$ es el número de dimensiones
 del vector. Documentos semánticamente similares ocupan regiones cercanas en dicho
 espacio.
 
+Sea $\mathbf{v} \in \mathbb{R}^d$ un vector de representación de un documento.
+La \textbf{similitud coseno} entre dos documentos $\mathbf{u}$ y $\mathbf{v}$
+se define como:
 
-  Sea $\mathbf{v} \in \mathbb{R}^d$ un vector de representación de un documento.
-  La \textbf{similitud coseno} entre dos documentos $\mathbf{u}$ y $\mathbf{v}$
-  se define como:
-  \begin{equation}
-    \text{sim}(\mathbf{u}, \mathbf{v})
-    = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \, \|\mathbf{v}\|}
-    = \frac{\displaystyle\sum_{i=1}^{d} u_i v_i}
-           {\sqrt{\displaystyle\sum_{i=1}^{d} u_i^2}
-            \cdot \sqrt{\displaystyle\sum_{i=1}^{d} v_i^2}}
-    \label{eq:coseno}
-  \end{equation}
-  donde $\text{sim} \in [-1, 1]$. Un valor cercano a $1$ indica alta similitud semántica.
-  
+\begin{equation}
+  \text{sim}(\mathbf{u}, \mathbf{v})
+  = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \, \|\mathbf{v}\|}
+  = \frac{\displaystyle\sum_{i=1}^{d} u_i v_i}
+         {\sqrt{\displaystyle\sum_{i=1}^{d} u_i^2}
+          \cdot \sqrt{\displaystyle\sum_{i=1}^{d} v_i^2}}
+  \label{eq:coseno}
+\end{equation}
+
+donde $\text{sim} \in [-1, 1]$. Un valor cercano a $1$ indica alta similitud
+semántica; esta métrica es la base del razonamiento por proximidad que subyace
+a todos los vectorizadores empleados en el sistema.
+
 En este proyecto se trabaja con espacios de $d = 300$ dimensiones (spaCy) y
 $d = 768$ dimensiones (Sentence-BERT). La diferencia en dimensionalidad no es
 trivial: a mayor dimensión, el modelo puede capturar matices semánticos más
 finos, pero también requiere mayor capacidad computacional y datos suficientes
-para evitar la \textit{maldición de la dimensionalidad} (el volumen del espacio aumenta exponencialmente con cada nueva dimensión, lo que provoca que los datos se vuelvan muy dispersos).
+para evitar la \textit{maldición de la dimensionalidad} (el volumen del espacio
+aumenta exponencialmente con cada nueva dimensión, lo que provoca que los datos
+se vuelvan muy dispersos).
 
 Las operaciones fundamentales que el sistema ejecuta sobre estos espacios son:
 
@@ -239,7 +244,7 @@ Las operaciones fundamentales que el sistema ejecuta sobre estos espacios son:
 \end{itemize}
 
 % ·············································································
-\subsection{Preprocesamiento avanzado}
+\subsection{Preprocesamiento de la queja}
 % ·············································································
 
 Antes de convertir el texto en vectores, la narrativa libre del quejoso debe
@@ -308,13 +313,14 @@ de lenguaje contextuales de última generación.
 \subsection{Modelos de Bolsa de Palabras y TF-IDF}
 % ·············································································
 
-La caracterización de bolsa de palabras puede ser considerado una forma de procesamiento de texto
-sencilla por su aparente simplicidad en recuento de palabras en un conjunto de textos.
-En bolsa de palabras, cada palabra individual se convierte en una dimensión separada del espacio
-vectorial. Si un conjunto de texto tiene n cantidad de palabras, el espacio vectorial resultante tendrá
-n dimensiones. El modelo trazará cada documento de texto por separado como un punto en el
-espacio vectorial. La posición de un punto está determinada por la cantidad de veces que aparece la
-palabra de esa dimensión dentro del documento del punto.
+La caracterización de bolsa de palabras puede ser considerado una forma de
+procesamiento de texto sencilla por su aparente simplicidad en recuento de
+palabras en un conjunto de textos. En bolsa de palabras, cada palabra individual
+se convierte en una dimensión separada del espacio vectorial. Si un conjunto de
+texto tiene $n$ cantidad de palabras, el espacio vectorial resultante tendrá $n$
+dimensiones. El modelo trazará cada documento de texto por separado como un punto
+en el espacio vectorial. La posición de un punto está determinada por la cantidad
+de veces que aparece la palabra de esa dimensión dentro del documento del punto.
 
 Los modelos de \textbf{Bolsa de Palabras} (\textit{Bag of Words}, BoW) son el
 punto de partida histórico de la representación vectorial. Representan un
@@ -329,7 +335,7 @@ del corpus:
 donde $f(t_i, d)$ es la frecuencia del término $t_i$ en el documento $d$ y $V$
 es el tamaño del vocabulario.
 
-\textbf{TF-IDF} (\textit{Term Frequency – Inverse Document Frequency}) refina
+\textbf{TF-IDF} (\textit{Term Frequency -- Inverse Document Frequency}) refina
 este enfoque ponderando cada término según su frecuencia en el documento y su
 rareza en el corpus:
 
@@ -364,11 +370,11 @@ superioridad de los enfoques basados en embeddings empleados en este sistema.
 
 Los \textbf{embeddings estáticos} resuelven la limitación semántica de BoW al
 representar cada palabra como un vector denso en $\mathbb{R}^{300}$, entrenado
-sobre grandes corpus en español mediante el algoritmo \textit{word2vec}.\cite{mikolov2013} Palabras
-semánticamente relacionadas —como \textit{acoso} y \textit{hostigamiento}—
-ocupan regiones cercanas en este espacio.
+sobre grandes corpus en español mediante el algoritmo \textit{word2vec}.\cite{mikolov2013}
+Palabras semánticamente relacionadas —como \textit{acoso} y
+\textit{hostigamiento}— ocupan regiones cercanas en este espacio.
 
-El modelo \texttt{es\_core\_news\_lg} de spaCy  \cite{honnibal2020} fue entrenado sobre el corpus
+El modelo \texttt{es\_core\_news\_lg} de spaCy \cite{honnibal2020} fue entrenado sobre el corpus
 \textit{Spanish Web Crawl} y genera vectores de 300 dimensiones por token. La
 representación de un documento completo se obtiene promediando los vectores de
 los tokens informativos:
@@ -384,20 +390,20 @@ los tokens informativos:
 donde $\mathbf{w}_t \in \mathbb{R}^{300}$ es el vector del token $t$ y $T$ es
 el conjunto de tokens informativos (con vector disponible y no vacías).
 
-Al promediar todos los vectores del
-documento se pierde el orden sintáctico y el contexto local. La frase
-\textit{``el profesor me acosó condicionando la calificación''} y la frase
-\textit{``el profesor condicionó la calificación — sin acosar''} generarían
-vectores cercanos, a pesar de tener clasificaciones jurídicas distintas.
+Al promediar todos los vectores del documento se pierde el orden sintáctico y el
+contexto local. La frase \textit{``el profesor me acosó condicionando la
+calificación''} y la frase \textit{``el profesor condicionó la calificación —
+sin acosar''} generarían vectores cercanos, a pesar de tener clasificaciones
+jurídicas distintas.
 
 % ·············································································
 \subsection{Sentence Transformers — SBERT
             (\texttt{paraphrase-multilingual-mpnet-base-v2})}
 % ·············································································
 
-\textbf{Sentence-BERT (SBERT)}   representa el estado del arte en codificación
-semántica de textos. \cite{reimers2019}A diferencia de los embeddings estáticos, SBERT genera un
-único vector de representación para toda la oración, capturando las relaciones
+\textbf{Sentence-BERT (SBERT)} representa el estado del arte en codificación
+semántica de textos.\cite{reimers2019} A diferencia de los embeddings estáticos, SBERT genera
+un único vector de representación para toda la oración, capturando las relaciones
 entre palabras a lo largo del texto completo mediante la arquitectura
 \textit{Transformer}.
 
@@ -414,7 +420,7 @@ su relevancia en función de todos los demás tokens del documento:
 \end{equation}
 
 donde $Q$, $K$ y $V$ son las matrices de consulta, clave y valor derivadas
-de los embeddings de entrada, y $d_k$ es la dimensión de la clave.  \cite{vaswani2017} Este
+de los embeddings de entrada, y $d_k$ es la dimensión de la clave.\cite{vaswani2017} Este
 mecanismo permite que el modelo asigne mayor peso a los tokens contextualmente
 relevantes. Por ejemplo, en la queja:
 
@@ -429,7 +435,8 @@ constituye un acto de acoso, no una evaluación académica pura.
 \subsubsection*{Entrenamiento contrastivo de SBERT}
 
 SBERT extiende BERT con una capa de \textit{pooling} sobre los estados ocultos
-y se entrena mediante aprendizaje contrastivo con pares de oraciones semánticamente equivalentes y no equivalentes:
+y se entrena mediante aprendizaje contrastivo con pares de oraciones
+semánticamente equivalentes y no equivalentes:
 
 \begin{equation}
   \mathcal{L}_{contrastiva}
@@ -567,13 +574,51 @@ equilibrio donde la señal jurídica tiene peso suficiente para influir en las
 fronteras de decisión del clasificador, sin dominar completamente sobre la
 información semántica del texto.
 
+% ·············································································
+\subsection{Simulación de producción: entrenamiento con metadatos
+            e inferencia en modo autónomo}
+% ·············································································
+
+Una consideración de diseño fundamental del sistema es la asimetría entre el
+escenario de entrenamiento y el escenario de producción. Durante la construcción
+del corpus, el personal jurídico anota manualmente los siete atributos booleanos
+del Artículo 4° para cada expediente, lo que enriquece la señal de aprendizaje.
+Sin embargo, en el momento de la inferencia, el sistema recibe únicamente el
+relato libre del quejoso: no existe un experto que complete los atributos en
+tiempo real.
+
+Esta asimetría se modela mediante dos modos de operación diferenciados:
+
+\begin{enumerate}
+  \item \textbf{Modo asistido.} El personal de primer contacto completa el
+        formulario con los atributos jurídicos mientras atiende al quejoso. El
+        clasificador opera con el vector completo
+        $\mathbf{x}_{final} = [\mathbf{e} \| \alpha \cdot \mathbf{f}]$,
+        aprovechando tanto la semántica del texto como la señal normativa
+        estructurada.
+
+  \item \textbf{Modo autónomo.} Los atributos jurídicos se fijan en cero
+        ($\mathbf{f} = \mathbf{0}$), de forma que el clasificador basa su
+        veredicto exclusivamente en la representación semántica del texto:
+        $\mathbf{x}_{final} = [\mathbf{e} \| \mathbf{0}]$.
+        Este modo representa el escenario de producción real y constituye la
+        condición de estrés bajo la cual se evalúa la robustez de los modelos.
+\end{enumerate}
+
+La distinción entre ambos modos tiene implicaciones directas para la selección
+del clasificador óptimo: un modelo que dependa excesivamente de la señal
+normativa amplificada puede exhibir métricas perfectas durante el entrenamiento,
+pero degradarse significativamente en producción cuando dicha señal no está
+disponible. Por esta razón, el criterio de selección del modelo final privilegia
+el desempeño en modo autónomo sobre el desempeño con metadatos.
+
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Modelos de Aprendizaje Automático Evaluados}
 % ─────────────────────────────────────────────────────────────────────────────
 
 Para garantizar la selección del clasificador óptimo para el dominio jurídico
-de la DDP, se evaluaron tres familias de algoritmos de aprendizaje supervisado
-con distintos paradigmas de construcción de fronteras de decisión.
+de la DDP, se evaluaron cuatro configuraciones de algoritmos de aprendizaje
+supervisado con distintos paradigmas de construcción de fronteras de decisión.
 
 % ·············································································
 \subsection{Máquinas de Soporte Vectorial (SVM)}
@@ -595,7 +640,7 @@ $y_i \in \{-1, +1\}$, la SVM resuelve el problema de optimización:
 \end{equation}
 
 donde $C$ es el parámetro de regularización que controla la tolerancia al error
-de clasificación ($C = 1.5$ en este sistema) y $\boldsymbol{\xi}$ son variables
+de clasificación ($C = 0.5$ en este sistema) y $\boldsymbol{\xi}$ son variables
 de holgura que permiten clasificación blanda.
 
 \subsubsection*{Kernel RBF}
@@ -622,6 +667,10 @@ La SVM con kernel RBF maximiza el margen de separación entre las clases, lo
 que le confiere una robustez natural ante casos límite: quejas que caen en la
 frontera entre \textit{Competente} y \textit{No Competente} se clasifican
 según el hiperplano de máximo margen, no según la densidad local de puntos.
+No obstante, esta ventaja geométrica está condicionada a la disponibilidad de
+una señal de entrada suficientemente discriminativa; cuando los atributos
+jurídicos no están presentes, la eficacia del clasificador lineal depende
+enteramente de la calidad del embedding semántico.
 
 % ·············································································
 \subsection{Regresión Logística}
@@ -650,7 +699,7 @@ de entropía cruzada binaria:
 \end{equation}
 
 donde $\lambda$ es el término de regularización L2. La configuración empleada
-en este sistema es \texttt{max\_iter=1000} con regularización por defecto.
+en este sistema es \texttt{max\_iter=1000} con $C = 0.3$.
 
 \noindent\textbf{Interpretabilidad.} La Regresión Logística produce coeficientes
 $w_j$ directamente interpretables: un coeficiente positivo asociado a una
@@ -673,16 +722,54 @@ características, promediando sus predicciones para reducir la varianza
   \label{eq:rf}
 \end{equation}
 
-donde $B$ es el número de árboles ($B = 200$ en este sistema) y $T_b$ es el
+donde $B$ es el número de árboles ($B = 300$ en este sistema) y $T_b$ es el
 $b$-ésimo árbol entrenado sobre una muestra bootstrap.
 
-\noindent\textbf{Limitación en alta dimensión.} Los árboles de decisión
-particionan el espacio de características con cortes ortogonales a los ejes.
-En espacios de $d = 768$ dimensiones con distribuciones continuas como los
-embeddings de Sentence-BERT, esta estrategia de partición es menos eficiente
-que la del hiperplano de máximo margen de la SVM. Esto explica el menor
-rendimiento observado del Random Forest frente a SVM y Regresión Logística en
-los experimentos.
+\noindent\textbf{Partición del espacio de características.} Los árboles de
+decisión particionan el espacio de características con cortes ortogonales a
+los ejes, construyendo regiones de decisión rectangulares de forma recursiva.
+Aunque en espacios de dimensión muy alta esta estrategia puede ser menos
+eficiente que el hiperplano de máximo margen de la SVM, el promedio de un
+número grande de árboles con submuestreo aleatorio de características reduce
+significativamente la varianza y confiere al Random Forest una notable
+capacidad de generalización incluso cuando la representación semántica del
+texto no está apoyada por atributos estructurados.
+
+% ·············································································
+\subsection{Ensemble por Votación Suave}
+% ·············································································
+
+La \textbf{votación suave} (\textit{soft voting}) es una estrategia de
+\textit{ensemble} que combina las probabilidades predichas por múltiples
+clasificadores base, promediándolas para obtener una predicción final más
+estable \cite{dietterich2000}:
+
+\begin{equation}
+  \hat{y} = \arg\max_{c} \frac{1}{M} \sum_{m=1}^{M} p_m(c \mid \mathbf{x})
+  \label{eq:soft_voting}
+\end{equation}
+
+donde $M$ es el número de modelos base y $p_m(c \mid \mathbf{x})$ es la
+probabilidad que el modelo $m$ asigna a la clase $c$. A diferencia de la
+\textbf{votación dura} —que cuenta votos de clase— la votación suave aprovecha
+la magnitud de la confianza de cada clasificador, lo que generalmente produce
+predicciones más calibradas cuando los clasificadores base tienen tasas de error
+no correlacionadas.
+
+En este sistema, el \textit{ensemble} integra SVM-RBF, Regresión Logística y
+Random Forest. La motivación es que cada clasificador tiene fortalezas
+complementarias: SVM maximiza el margen geométrico, la Regresión Logística
+produce probabilidades linealmente calibradas, y Random Forest captura fronteras
+no lineales por partición del espacio. Si sus errores no están correlacionados,
+el \textit{ensemble} reduce la varianza de la predicción individual respecto a
+cualquiera de los modelos base.
+
+Para que el \texttt{VotingClassifier} pueda operar en modo
+\texttt{voting="soft"}, todos los estimadores deben exponer el método
+\texttt{predict\_proba}. Dado que \texttt{SVC} no lo implementa de forma
+nativa, se envuelve en \texttt{CalibratedClassifierCV}, que estima
+probabilidades mediante validación cruzada interna sobre el conjunto de
+entrenamiento.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Estrategias de Entrenamiento y Validación Robusta}
@@ -725,11 +812,36 @@ Un $\sigma_{CV}$ cercano a cero indica que el modelo no es sensible a la
 partición específica de los datos, condición deseable para un sistema de apoyo
 en producción.
 
+\noindent\textbf{Nota de implementación.} En la implementación de este proyecto,
+la validación cruzada $K = 5$ se aplica exclusivamente sobre el conjunto de
+entrenamiento (70\% del corpus, 367 casos), no sobre el dataset completo. Esto
+significa que cada \textit{fold} evalúa aproximadamente 73 casos internos del
+entrenamiento. Esta validación se complementa con un conjunto \textit{holdout}
+independiente del 15\% (79 casos), completamente aislado durante el entrenamiento
+y la selección de hiperparámetros, cuyo F1 ponderado —evaluado en modo autónomo,
+sin atributos jurídicos— constituye el criterio definitivo de selección del
+modelo.
+
 % ·············································································
 \subsection{Evaluación mediante Métricas de Inteligencia}
 % ·············································································
 
 \subsubsection*{Accuracy}
+Antes de definir las métricas, es necesario establecer los cuatro resultados
+posibles de una clasificación binaria, organizados en la
+\textbf{matriz de confusión}:
+
+\begin{itemize}
+  \item \textbf{Verdadero Positivo (TP):} la queja es competente y el modelo
+        la clasifica como competente.
+  \item \textbf{Verdadero Negativo (TN):} la queja es incompetente y el modelo
+        la clasifica como incompetente.
+  \item \textbf{Falso Positivo (FP):} la queja es incompetente pero el modelo
+        la clasifica como competente.
+  \item \textbf{Falso Negativo (FN):} la queja es competente pero el modelo
+        la clasifica como incompetente. En el contexto de la DDP, este es el
+        error más grave: implica descartar una queja que debía ser atendida.
+\end{itemize}
 
 La \textbf{exactitud} (\textit{accuracy}) mide la proporción de predicciones
 correctas sobre el total de instancias:
@@ -747,9 +859,23 @@ positivo, la accuracy por sí sola no es suficiente.
 
 \begin{align}
   \text{Precisión} &= \frac{TP}{TP + FP}
-  \label{eq:precision}\\[6pt]
+  \label{eq:precision}\\[4pt]
+\intertext{La \textbf{Precisión} mide qué proporción de las quejas clasificadas
+como competentes realmente lo son; penaliza las falsas alarmas.}
   \text{Recall} &= \frac{TP}{TP + FN}
-  \label{eq:recall}\\[6pt]
+  \label{eq:recall}\\[4pt]
+\intertext{El \textbf{Recall} mide qué proporción de las quejas realmente
+competentes fueron identificadas correctamente; penaliza los casos omitidos.
+En el contexto de la DDP el Recall tiene mayor peso institucional: un Recall
+bajo implica que quejas legítimas están siendo descartadas sin revisión.}
+  F1 &= \frac{2 \cdot \text{Precisión} \cdot \text{Recall}}
+             {\text{Precisión} + \text{Recall}}
+  \label{eq:f1}
+\end{align}
+
+El \textbf{F1-Score} es la media armónica entre Precisión y Recall, ofreciendo
+un balance que penaliza los extremos donde una métrica es alta a costa de la otra.
+\begin{align}
   F1 &= \frac{2 \cdot \text{Precisión} \cdot \text{Recall}}
              {\text{Precisión} + \text{Recall}}
   \label{eq:f1}
@@ -779,11 +905,11 @@ primero es sensible a la distribución particular de los datos en cada pliegue.
 % ·············································································
 
 La \textbf{carga perezosa} (\textit{lazy loading}) es un patrón de diseño donde
-los recursos computacionalmente costosos —como la carga del modelo de Sentence-BERT
-o el modelo de spaCy— se inicializan únicamente en el momento en que son
-requeridos por primera vez, no al inicio del programa. Esto reduce el tiempo
-de arranque del sistema y el consumo de memoria en instancias donde solo se
-requiere predicción.
+los recursos computacionalmente costosos —como la carga del modelo de
+Sentence-BERT o el modelo de spaCy— se inicializan únicamente en el momento en
+que son requeridos por primera vez, no al inicio del programa. Esto reduce el
+tiempo de arranque del sistema y el consumo de memoria en instancias donde solo
+se requiere predicción.
 
 La \textbf{serialización} de los pipelines se realiza mediante la biblioteca
 \texttt{joblib}, que convierte el objeto Python completo —vectorizador y
@@ -821,5 +947,4 @@ La convención de nomenclatura de los archivos serializados es:
 
 lo que permite trazabilidad temporal de los modelos entrenados y facilita la
 comparación y auditoría de versiones en el contexto institucional de la DDP.
-
 \input{capitulos/04.1-arquitectura.tex}
