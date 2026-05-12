@@ -1,60 +1,209 @@
 % ==============================================================================
-% capitulos/05-metodologia.tex - Metodología de Desarrollo
+% CAPÍTULO 5 - METODOLOGÍA DE DESARROLLO
 % ==============================================================================
 
 \chapter{Metodología de Desarrollo}
 \label{cap:metodologia}
-
-\begin{flushleft}
-La elección de una metodología de desarrollo adecuada es un factor crítico para el éxito de cualquier proyecto de ingeniería de software. Para la creación de la plataforma de la Defensoría de los Derechos Politécnicos, se requiere un enfoque que combine la disciplina de la planificación con la flexibilidad necesaria para ajustar requerimientos técnicos complejos, como la integración de inteligencia artificial.
-\end{flushleft}
-
 \justifying
 
-\section{Enfoque Ágil Híbrido: Scrum-ban}
-Para el desarrollo de este proyecto se ha decidido utilizar un enfoque ágil híbrido denominado \textbf{Scrum-ban}. Esta metodología combina la estructura iterativa y la planificación por periodos de \textbf{Scrum} con la gestión visual y la optimización del flujo de trabajo de \textbf{Kanban}. 
+Inicialmente, el proyecto contempló la utilización de una metodología híbrida basada en Scrum-ban debido a la necesidad de gestionar tareas iterativas relacionadas con el desarrollo de software, diseño de interfaces y construcción de módulos funcionales. Sin embargo, conforme avanzó el proyecto, se identificaron limitaciones operativas que afectaron directamente la continuidad de los ciclos ágiles planteados inicialmente.
 
-La adopción de Scrum-ban permite mantener un flujo constante de trabajo evitando cuellos de botella y garantiza entregas parciales de valor (incrementos) mediante Sprints planificados, adaptándose idealmente al calendario académico del Trabajo Terminal.
+La principal problemática estuvo relacionada con la disponibilidad institucional de la Defensoría de los Derechos Politécnicos (DDP), organismo encargado de proporcionar retroalimentación operativa, validación funcional y definición de requerimientos institucionales. Durante diversas etapas críticas del proyecto existieron periodos prolongados sin disponibilidad para reuniones, revisión de avances o validación de cambios, provocando modificaciones constantes en prioridades, requerimientos y tiempos de desarrollo.
 
-\section{Justificación de la Metodología}
-El uso de Scrum-ban se justifica por las siguientes ventajas estratégicas para el equipo:
+Esta situación impactó directamente la estabilidad de los tableros Kanban y la planeación de sprints, ya que múltiples funcionalidades dependían de validaciones institucionales para poder continuar formalmente bajo un esquema ágil tradicional. Debido a ello, se determinó que Scrum-ban no representaba adecuadamente la dinámica real del proyecto ni el comportamiento evolutivo de los requerimientos.
+
+Por esta razón, se optó por una metodología híbrida basada en investigación aplicada, desarrollo incremental y prototipado evolutivo, permitiendo desacoplar el avance técnico del sistema respecto a la disponibilidad inmediata de validación institucional. Este enfoque permitió continuar el desarrollo de componentes funcionales, arquitectura, modelos de datos, interfaces y módulos inteligentes de manera progresiva, integrando posteriormente las validaciones y ajustes derivados de la retroalimentación de la DDP.
+
+La metodología seleccionada resultó más adecuada debido a que el proyecto no se limitó únicamente al desarrollo de software, sino que involucró procesos de análisis normativo, modelado institucional, diseño arquitectónico, integración de inteligencia artificial, gestión documental y construcción progresiva de prototipos funcionales. Bajo este enfoque fue posible mantener continuidad en el desarrollo aun cuando existieran cambios operativos o ausencia temporal de retroalimentación institucional.
+
+\section{Enfoque Metodológico}
+
+La metodología utilizada se estructuró bajo un enfoque incremental basado en prototipado evolutivo, permitiendo construir gradualmente cada componente del sistema conforme se consolidaban los requerimientos funcionales, operativos y normativos de la plataforma.
+
+A diferencia de un enfoque ágil tradicional centrado únicamente en ciclos cortos de entrega, la metodología adoptada permitió trabajar simultáneamente en:
+
 \begin{itemize}
-    \item \textbf{Flexibilidad frente al cambio:} Permite reaccionar ante ajustes en la lógica de negocio institucional sin desestabilizar el plan general.
-    \item \textbf{Visualización del Trabajo (WIP):} Mediante un tablero Kanban, se limita el trabajo en curso (\textit{Work In Progress}), lo que asegura que el equipo (Bastian, Jair y Bryan) se enfoque en terminar tareas antes de iniciar nuevas.
-    \item \textbf{Entregas Incrementales:} La estructura de Sprints de Scrum asegura que existan prototipos funcionales evaluables por los directores del proyecto en fechas establecidas.
+    \item Investigación normativa y jurídica.
+    \item Diseño de arquitectura distribuida.
+    \item Construcción de interfaces funcionales.
+    \item Desarrollo backend y frontend.
+    \item Modelado de base de datos.
+    \item Integración de inteligencia artificial.
+    \item Validación progresiva de módulos.
 \end{itemize}
 
-\section{Fases del Ciclo de Vida del Proyecto}
-El proceso de desarrollo se divide en cuatro fases principales, alineadas con los objetivos del Trabajo Terminal:
+Este enfoque permitió mantener una evolución continua del sistema aun cuando existieran cambios en requerimientos institucionales o retrasos en validaciones externas.
 
-\subsection{Fase 1: Planificación y Definición (Backlog Grooming)}
-En esta fase inicial, se capturaron los requerimientos funcionales y no funcionales, traduciéndolos en \textit{User Stories} (Historias de Usuario). Se priorizaron las tareas críticas, como el diseño de la arquitectura de microservicios y el modelado de la base de datos PostgreSQL.
+\section{Planeación y Levantamiento de Requerimientos}
 
-\subsection{Fase 2: Ejecución Iterativa (Sprints)}
-El desarrollo se organiza en Sprints de dos semanas de duración. Cada Sprint incluye:
+La primera fase del proyecto consistió en comprender el funcionamiento operativo de la Defensoría de los Derechos Politécnicos, identificar actores involucrados y analizar los procesos internos relacionados con la recepción y seguimiento de quejas.
+
+Durante esta etapa se realizaron actividades de:
+
 \begin{itemize}
-    \item \textbf{Sprint Planning:} Definición de los objetivos y selección de tareas del Backlog.
-    \item \textbf{Desarrollo (Build):} Implementación de servicios en Java (Spring Boot) y Python (PLN).
-    \item \textbf{Daily Stand-up:} Sesiones breves para sincronizar esfuerzos y detectar bloqueos técnicos.
+    \item Revisión normativa y documental.
+    \item Análisis de procedimientos institucionales.
+    \item Identificación de actores y roles operativos.
+    \item Definición preliminar de requerimientos.
+    \item Modelado inicial de flujos de trabajo.
 \end{itemize}
 
-\subsection{Fase 3: Control y Optimización (Flujo Kanban)}
-Se utiliza un tablero visual para monitorear el estado de cada componente. Las columnas típicas incluyen: \textit{To Do}, \textit{In Progress}, \textit{Testing} (Pruebas Unitarias y de Integración) y \textit{Done}. Esta fase es crucial para asegurar que el microservicio de IA se integre correctamente con el backend administrativo.
+Como resultado de esta fase se definieron los principales componentes funcionales del sistema, así como los módulos prioritarios para el desarrollo inicial de la plataforma.
 
-\subsection{Fase 4: Revisión y Cierre de Incremento}
-Al finalizar cada Sprint, se realiza una \textbf{Sprint Review} para demostrar las funcionalidades alcanzadas. Posteriormente, se lleva a cabo una \textbf{Retrospectiva} para mejorar los procesos internos del equipo y optimizar el rendimiento en el siguiente ciclo.
+\section{Desarrollo Incremental del Sistema}
 
-\section{Roles y Responsabilidades}
-Dada la estructura del equipo de trabajo, los roles de Scrum se han adaptado de la siguiente manera:
-\begin{table}[htbp]
-\centering
-\small
-\begin{tabular}{|l|p{9cm}|}
-\hline
-\textbf{Rol} & \textbf{Responsabilidad en el Proyecto} \\ \hline
-\textit{Product Owner} & Representado colectivamente por los directores y el equipo, asegurando que el sistema cumpla con la normativa de la DDP. \\ \hline
-\textit{Scrum Master} & Encargado de mantener el flujo de trabajo y eliminar impedimentos técnicos (configuración de Docker, Nginx, etc.). \\ \hline
-\textit{Development Team} & Bryan, Bastian y Jair; responsables del diseño, codificación de microservicios, entrenamiento del modelo PLN y pruebas. \\ \hline
-\end{tabular}
-\caption{Distribución de roles bajo la metodología Scrum-ban.}
-\end{table}
+El desarrollo del sistema se organizó mediante incrementos funcionales independientes, permitiendo construir gradualmente la plataforma y validar progresivamente cada uno de sus componentes.
+
+\subsection{Incremento 1: Prototipo Funcional del Quejoso}
+
+El primer incremento funcional desarrollado correspondió al módulo del quejoso, considerado el núcleo principal de interacción ciudadana dentro de la plataforma.
+
+Durante esta etapa se desarrollaron tanto el frontend como el backend del sistema de recepción de quejas, incluyendo:
+
+\begin{itemize}
+    \item Registro de usuarios.
+    \item Inicio de sesión.
+    \item Recuperación de contraseña.
+    \item Captura de quejas.
+    \item Generación de folios.
+    \item Consulta de estatus.
+    \item Gestión de perfil.
+    \item Carga inicial de evidencias.
+\end{itemize}
+
+Asimismo, se desarrollaron los primeros prototipos visuales y mockups funcionales del sistema, permitiendo validar la estructura general de navegación, formularios y flujo operativo del usuario.
+
+Dentro de este incremento también se construyeron los primeros endpoints REST, mecanismos de autenticación y estructura inicial de persistencia en base de datos.
+
+Actualmente, este módulo cuenta con:
+
+\begin{itemize}
+    \item Interfaces funcionales desarrolladas.
+    \item Backend operativo para autenticación y gestión de quejas.
+    \item Formularios integrados con persistencia de datos.
+    \item Mockups completamente definidos.
+    \item Casos de uso documentados.
+\end{itemize}
+
+\subsection{Incremento 2: Diseño Arquitectónico y Modelado del Sistema}
+
+Posteriormente se desarrolló la arquitectura general del sistema, definiendo la estructura distribuida basada en microservicios y los mecanismos de comunicación entre componentes.
+
+Durante esta fase se trabajó en:
+
+\begin{itemize}
+    \item Definición de arquitectura de microservicios.
+    \item Diseño de API Gateway.
+    \item Modelado de entidades principales.
+    \item Construcción de diagramas UML.
+    \item Diseño inicial de base de datos.
+    \item Definición de reglas de negocio.
+\end{itemize}
+
+Actualmente se cuenta con:
+
+\begin{itemize}
+    \item Arquitectura general definida.
+    \item Diagramas de casos de uso desarrollados.
+    \item Modelo entidad-relación preliminar.
+    \item Diccionario de datos parcial.
+    \item Definición de módulos funcionales.
+\end{itemize}
+
+Sin embargo, aún se encuentran pendientes algunos elementos complementarios, principalmente:
+
+\begin{itemize}
+    \item Refinamiento completo del modelo relacional.
+    \item Diagramas de estados.
+    \item Diagramas de secuencia.
+    \item Validación institucional final de ciertos procesos administrativos.
+\end{itemize}
+
+\subsection{Incremento 3: Desarrollo Administrativo y Gestión Interna}
+
+En esta etapa se inició la construcción de módulos orientados al personal administrativo de la DDP, incluyendo procesos de recepción, revisión y seguimiento interno de expedientes.
+
+Durante esta fase se desarrollaron:
+
+\begin{itemize}
+    \item Mockups administrativos.
+    \item Interfaces de recepción.
+    \item Paneles de gestión.
+    \item Flujos preliminares de análisis.
+    \item Modelado de procesos internos.
+\end{itemize}
+
+Actualmente se cuenta con:
+
+\begin{itemize}
+    \item Diseño visual completo de interfaces administrativas.
+    \item Casos de uso documentados.
+    \item Flujos operativos modelados.
+    \item Estructura funcional definida.
+\end{itemize}
+
+No obstante, aún se encuentran pendientes:
+
+\begin{itemize}
+    \item Integración backend completa de algunos módulos administrativos.
+    \item Validación funcional institucional.
+    \item Integración final con componentes de seguimiento y resolución.
+\end{itemize}
+
+\subsection{Incremento 4: Integración del Clasificador Inteligente}
+
+Una de las etapas más relevantes del proyecto correspondió a la integración del módulo inteligente de clasificación automática de quejas mediante técnicas de procesamiento de lenguaje natural y aprendizaje automático.
+
+Durante esta fase se desarrollaron actividades relacionadas con:
+
+\begin{itemize}
+    \item Construcción del corpus.
+    \item Limpieza y normalización textual.
+    \item Vectorización semántica.
+    \item Entrenamiento de modelos.
+    \item Evaluación experimental.
+    \item Integración preliminar del pipeline inteligente.
+\end{itemize}
+
+Actualmente se cuenta con:
+
+\begin{itemize}
+    \item Pipeline funcional de clasificación.
+    \item Modelos entrenados y evaluados.
+    \item Métricas experimentales documentadas.
+    \item Integración conceptual dentro de la arquitectura general.
+\end{itemize}
+
+Aún permanecen pendientes:
+
+\begin{itemize}
+    \item Mayor volumen de casos reales para entrenamiento.
+    \item Refinamiento de precisión del modelo.
+    \item Integración completa con módulos administrativos.
+\end{itemize}
+
+\section{Prototipado Evolutivo}
+
+El diseño de interfaces se desarrolló mediante un enfoque de prototipado evolutivo, permitiendo construir y refinar progresivamente las distintas pantallas del sistema antes de su implementación definitiva.
+
+A diferencia de un diseño estático, este enfoque permitió modificar flujos, formularios y estructuras visuales conforme se obtenía nueva información institucional o se detectaban mejoras operativas.
+
+Actualmente el proyecto cuenta con:
+
+\begin{itemize}
+    \item Mockups completos del módulo del quejoso.
+    \item Mockups administrativos funcionales.
+    \item Interfaces de autenticación.
+    \item Interfaces de seguimiento de expedientes.
+    \item Paneles administrativos.
+    \item Interfaces de notificaciones y conciliación.
+\end{itemize}
+
+Estos prototipos permitieron validar de manera preliminar:
+
+\begin{itemize}
+    \item Navegación entre módulos.
+    \item Flujo operativo de usuarios.
+    \item Distribución funcional de información.
+    \item Interacción entre actores del sistema.
+\end{itemize}
