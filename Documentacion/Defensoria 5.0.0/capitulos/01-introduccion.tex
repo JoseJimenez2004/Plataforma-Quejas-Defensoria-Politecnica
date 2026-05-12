@@ -5,38 +5,57 @@
 \chapter{Introducción}
 \begin{flushleft}
 \justifying
-El Instituto Politécnico Nacional (IPN), institución rectora de la educación tecnológica en México, establece en su Ley Orgánica \cite{1} y su Reglamento Interno \cite{2} el compromiso de garantizar un entorno de respeto, equidad y legalidad para su comunidad. Ante la identificación de vulneraciones a los derechos de estudiantes, docentes y personal administrativo, el Instituto formalizó la creación de la Defensoría de los Derechos Politécnicos (DDP) mediante su acuerdo de creación oficial \cite{3} . Este órgano, dotado de independencia funcional, constituye el mecanismo institucional responsable de la gestión y seguimiento de inconformidades derivadas de actos u omisiones que contravengan la normativa politécnica.
+La Defensoría de Derechos Politécnicos (DDP)presenta inconvenientes en sus procesos de trabajo. Estos procesos de trabajo están establecidos en el Acuerdo de Creación de la Gaceta Politécnica No. 622 \cite{3}, donde la presentan como el órgano encargado de promover, proteger y defender los derechos de la comunidad frente a actos u omisiones de las autoridades del Instituto. La manera en que estas acciones pueden ser llevadas a cabo, son si ha sido presentada una queja.
 
-La administración de estas quejas es un proceso crítico que exige, además de sensibilidad humana, una gestión operativa de alta precisión. Actualmente, la DDP rige su funcionamiento a través del Manual de Organización \cite{4} y el Manual de Procedimientos \cite{5}, instrumentos que definen las etapas de recepción, radicación, investigación y resolución. Sin embargo, la ejecución de estos procesos enfrenta desafíos tecnológicos sustanciales; el flujo de trabajo actual depende de mecanismos manuales y herramientas de oficina descentralizadas que imposibilitan la integración sistémica de la información. Esta carencia de infraestructura digital, sumada al incremento en el volumen de solicitudes, compromete la eficiencia del personal operativo y prolonga los tiempos de respuesta institucionales.
+Una queja es el documento principal que da pie a una serie de procesos con el fin de salvaguardar los Derechos Politécnicos, Si bien, la DDP rige su funcionamiento a través del Manual de Organización \cite{4} y el Manual de Procedimientos \cite{5}, existen situaciones internas que aplazan la solución:
+\begin{itemize}
+\item Falta de personal.
+\item Acumulación de trabajo
+\item Duplicidad de quejas.
+\item Falta de comunicación interna 
+\end{itemize}
+
+Por ende, en el desarrollo de este documento, se presenta la propuesta solución, con el fin de mejorar las áreas de oportunidad identificadas, esta propuesta denota el desarrollo de un sistema web que permita el intercambio de información, a su vez, permitirá a la persona que presento la queja (quejoso) observar el proceso de la misma.
 
 \section{Planteamiento del Problema}
 \end{flushleft}
 \justifying
-La DDP es el órgano institucional encargado de salvaguardar la legalidad y el respeto a los derechos politécnicos de los estudiantes, docentes y personal administrativo del IPN. Su función es fundamental para la atención y resolución de inconformidades; no obstante, ante la creciente demanda de servicios y la complejidad de los procesos operativos actuales, se ha identificado la necesidad de fortalecer su eficiencia mediante la modernización tecnológica. Bajo el flujo de trabajo vigente, se han detectado tres puntos críticos que fundamentan el desarrollo de la solución propuesta en este proyecto.
+Una vez, establecida que es la DDP y las situaciones que provocan lentitud en los resultados, desarrollaremos el problema a resolver explícitamente.
 
 \subsection{Contexto y situación problemática}
-En primer término, se identifica una vulnerabilidad crítica en la estructura operativa de la Defensoría: la desproporción entre la demanda de atención ciudadana y la capacidad del capital humano especializado. Actualmente, la función sustantiva de protección legal y resolución de controversias recae de forma exclusiva sobre un cuerpo técnico de apenas cinco abogados, quienes tienen la responsabilidad de gestionar la totalidad de las quejas declaradas procedentes dentro de una comunidad que abarca cientos de miles de integrantes.
+En primer término, se identifica una vulnerabilidad crítica en la estructura operativa de la Defensoría: la desproporción entre la demanda de atención a la comunidad Politécnica y la capacidad del capital humano especializado. Actualmente, la función sustantiva de protección legal y resolución de controversias recae de forma exclusiva sobre un cuerpo técnico de apenas cinco abogados, quienes tienen la responsabilidad de gestionar la totalidad de las quejas declaradas procedentes dentro de una comunidad que abarca cientos de miles de integrantes.
 
 Bajo el modelo de gestión vigente, este personal de alta especialización jurídica se ve absorbido por una densidad administrativa abrumadora. Al carecer de una plataforma centralizada, los abogados deben dedicar una fracción significativa de su jornada a tareas procedimentales, tales como el registro manual de expedientes, el seguimiento analógico de plazos procesales y la organización descentralizada de evidencias. Esta carga de trabajo no sustantiva actúa como un factor de erosión del tiempo efectivo, limitando el análisis profundo que cada caso amerita para garantizar el debido proceso.
 
-En consecuencia, la implementación de una solución tecnológica avanzada no debe entenderse simplemente como una herramienta de apoyo, sino como un imperativo estratégico de modernización. Al automatizar los flujos de trabajo repetitivos y digitalizar la trazabilidad de los casos, se faculta a los juristas para recuperar su capacidad de enfoque en la resolución sustantiva. El objetivo es transitar de un modelo de gestión reactivo y manual hacia un ecosistema digital eficiente, donde el talento humano sea liberado de la burocracia técnica para centrarse íntegramente en la salvaguarda de los derechos de la comunidad politécnica.
-
 \subsection{Problema a resolver}
-Derivado de lo anterior, existe un reto en la eficiencia de la recepción y clasificación de solicitudes durante la etapa de \textit{``Primer Contacto''}. Ya que, al recibir información por múltiples canales descentralizados, las solicitudes suelen presentarse de forma incompleta o no son competentes para el órgano de la DDP, resaltando la falta de un asistente tecnológico para el filtrado de competencia, obligando a la revisión manual, retrasando la atención a casos de alta prioridad.
+Entonces, buscamos mejorar la optimización del proceso de gestión y resolución de quejas, con el fin de reducir los tiempos de respuesta y garantizar una atención oportuna al quejoso. Actualmente, la eficiencia se ve comprometida por la gestión manual de las etapas procesales.
 
-Finalmente, la gestión de documentos realizada de forma tradicional y la falta de seguimiento impactan en la transparencia del proceso. La actual dependencia de métodos de archivo físicos dificulta la consulta rápida de antecedentes. La transición a una plataforma integral no solo brindaría certidumbre al quejoso sobre el estatus de su queja, sino que permitiría al personal de la DDP la revisión de documentos y datos importantes sobre los casos.
+El flujo de trabajo que se busca intervenir se compone de las siguientes fases críticas:
+
+\begin{enumerate}
+\item \textbf{Recepción de queja:} Captura inicial y registro del expediente.
+\item \textbf{Análisis de competencia:} Evaluación jurídica para determinar la procedencia.
+\item \textbf{Investigación:} Recopilación de pruebas y diligencias administrativas.
+\item \textbf{Resolución:} Emisión del dictamen o recomendación correspondiente.
+\item \textbf{Cierre:} Notificación a las partes y archivo del caso.
+\end{enumerate}
+
+Para dar respuesta a esta problemática, en el siguiente capítulo se describe la propuesta de solución, la cual busca integrar las capacidades tecnológicas necesarias para transformar el modelo de gestión actual.
 
 \section{Solución Propuesta}
 Se propone el desarrollo de una plataforma web integral diseñada para centralizar, automatizar y optimizar el ciclo de vida de las quejas dentro de la DDP. La solución se fundamenta en una arquitectura basada en microservicios y contempla la implementación de un módulo de asistencia inteligente en la etapa de primer contacto, el cual utiliza técnicas de PLN para asistir al usuario en la determinación preliminar de la competencia de su queja. Se permitirá la gestión basada en roles, garantizando que cada actor interactúe con la información de acuerdo con sus facultades normativas, asegurando el seguimiento total del expediente desde su recepción hasta su resolución final.
 
 \section{Justificación}
-La implementación de esta plataforma web se justifica por la necesidad estratégica de fortalecer los procesos operativos de la DDP, transformando una gestión actual basada en métodos manuales y herramientas de oficina descentralizadas hacia un flujo digital inteligente.
+La implementación de esta plataforma surge de la necesidad imperativa de optimizar los procesos de la DDP, entendiendo que este órgano representa el último recurso de protección para la comunidad. El retraso en la resolución de los casos no es solo un fallo administrativo, sino que puede derivar en la desprotección efectiva de los derechos de la comunidad Politécnica.
 
-\subsection{Ámbito social e institucional}
-En el ámbito social e institucional, el proyecto busca fortalecer varios puntos empezando por la eliminación de barreras que impiden una mejor comunicación entre la comunidad politécnica y la DDP al proporcionar un canal de seguimiento transparente que elimine la incertidumbre del quejoso. De igual forma, al automatizar las tareas administrativas, se potencia la capacidad de respuesta del personal de la Defensoría y se reduce el costo de gestión operativa, permitiendo que el cuerpo de abogados centralice sus esfuerzos en el análisis jurídico de fondo a las quejas procedentes, apoyando una atención equitativa y eficiente ante la creciente demanda de quejas que reciben diariamente.
+Al tener la información en un entorno web, se busca mitigar el impacto de la desproporción actual entre la alta demanda de usuarios y el limitado cuerpo técnico de cinco abogados. Esta solución permitirá:
 
-\subsection{Perspectiva técnica}
-Desde la perspectiva técnica, el desarrollo de este sistema se fundamenta en la adopción de una arquitectura de microservicios permitiendo la oportunidad de escalabilidad y mantenimiento independiente de sus componentes. Ya que la integración de tecnologías como Java Spring Boot y PostgreSQL permite el manejo seguro de información sensible, mientras que la incorporación de un clasificador basado en PLN demuestra una innovación clave para resolver los puntos significativos desde el área de primer contacto. Esta solución resuelve la fragmentación de datos y fortalece la integridad de un repositorio histórico de quejas para futuras consultas y auditorias.
+\begin{itemize}
+\item Erradicar la dispersión de documentos mediante un repositorio digital único.
+\item Eliminar la duplicidad de quejas, optimizando el uso del tiempo del personal especializado.
+\item Reducir significativamente los tiempos de respuesta, mejorando la gestión integral y garantizando una atención oportuna y eficiente.
+\end{itemize}
+
 
 \section{Objetivos}
 
@@ -45,14 +64,23 @@ Desarrollar una plataforma web basada en una arquitectura de microservicios medi
 
 \subsection{Objetivos específicos}
 \begin{itemize}
-    \item Modelar las etapas de proceso y resolución de quejas con base en las reglas de negocio del
-    Manual de Procedimientos de la DDP para automatizar la transición de estados del expediente y el cumplimiento de términos legales.
-    \item Diseñar una arquitectura de microservicios desacoplada empleando el ecosistema de Java
-    Spring Boot y comunicación vía API REST para garantizar la independencia operativa entre
-    el sistema de gestión administrativa y el módulo de inteligencia artificial.
-    \item Implementar un clasificador de texto neuro-simbólico utilizando Word Embeddings y sistemas basados en reglas para determinar la competencia de las solicitudes desde el primer contacto y reducir la carga de clasificación manual.
-    \item Construir un repositorio digital de evidencias y expedientes mediante el sistema de gestión de bases de datos PostgreSQL para centralizar la documentación soporte y asegurar la integridad de la información jurídica manejada por la Defensoría.
-    \item Desarrollar un módulo de consulta y seguimiento para el quejoso a través de un sistema de folios digitales y notificaciones de estatus para brindar certidumbre sobre el avance del proceso y reducir la saturación de los canales de comunicación presenciales.
+    \item \textbf{Analizar} el marco normativo de la Defensoría de los Derechos Politécnicos y sus manuales de procedimientos para definir las reglas de negocio que permitan la transición de la gestión analógica a un flujo de trabajo digitalizado.
+    
+    \item \textbf{Diseñar} la arquitectura del sistema basada en microservicios, asegurando la integridad de los datos y una experiencia de usuario (UX) accesible mediante:
+    \begin{itemize}
+        \item \textit{Arquitectura:} Establecer un diseño modular que soporte la alta demanda de la comunidad Politécnica y garantice la seguridad de la información sensible.
+        \item \textit{Base de datos:} Estructurar un esquema centralizado que elimine la duplicidad de registros y permita la trazabilidad total del expediente.
+        \item \textit{UI/UX:} Proyectar una interfaz intuitiva para el quejoso y un panel de gestión eficiente para el cuerpo técnico jurídico.
+    \end{itemize}
+
+    \item \textbf{Implementar} un módulo mediante técnicas de Procesamiento de Lenguaje Natural (PLN) para asistir en la clasificación preliminar de las quejas y determinar su competencia institucional.
+
+    \item \textbf{Desarrollar} los componentes centrales de la plataforma web, garantizando la operatividad de las siguientes funciones:
+    \begin{itemize}
+        \item \textit{Gestión de expedientes:} Digitalización del ciclo de vida de la queja (recepción, investigación y resolución) para optimizar el tiempo efectivo del personal jurídico.
+        \item \textit{Seguimiento:} Establecer un sistema de consulta para el quejoso que brinde transparencia sobre el estatus de su trámite.
+        \item \textit{Gestión por roles:} Implementar controles de acceso estrictos basados en las facultades normativas de cada actor dentro de la Defensoría.
+    \end{itemize}
 \end{itemize}
 
 \section{Alcances y Limitaciones}
