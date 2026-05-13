@@ -205,7 +205,7 @@ inteligencia artificial que estudia cómo dotar a las computadoras de la capacid
 de leer, interpretar y generar texto humano. Su importancia radica en que el
 lenguaje natural —a diferencia de los datos numéricos o tabulares— es inherentemente
 ambiguo, dependiente del contexto y rico en matices que una máquina no puede
-procesar directamente. Para que un algoritmo pueda razonar sobre un texto, este
+procesar directamente. \cite{jurafsky2023} Para que un algoritmo pueda razonar sobre un texto, este
 debe primero transformarse en una representación matemática que preserve su
 significado.
 
@@ -309,7 +309,7 @@ siguiente orden:
 \subsubsection*{Tokenización}
 
 La \textbf{tokenización} segmenta el texto continuo en unidades mínimas de
-significado (tokens). spaCy realiza una tokenización sensible al contexto que
+significado (tokens) \cite{jurafsky2023}. SpaCy realiza una tokenización sensible al contexto que
 distingue, por ejemplo, contracciones y signos de puntuación:
 
 \begin{center}
@@ -320,7 +320,7 @@ distingue, por ejemplo, contracciones y signos de puntuación:
 \subsubsection*{Lematización}
 
 La \textbf{lematización} reduce cada token a su forma canónica (\textit{lema}),
-eliminando variaciones morfológicas:
+eliminando variaciones morfológicas \cite{jurafsky2023}:
 
 \begin{center}
   \texttt{negaron} $\to$ \texttt{negar}, \quad
@@ -377,7 +377,7 @@ limitaciones que motivan el uso de embeddings semánticos en este sistema. Los
 \textbf{modelos de Bolsa de Palabras} (\textit{Bag of Words}, BoW) representan
 un documento como un vector de frecuencias de términos sobre el vocabulario total
 del corpus. En BoW cada palabra individual se convierte en una dimensión separada
-del espacio vectorial: si un conjunto de texto tiene $n$ palabras, el espacio
+del espacio vectorial \cite{manning2008}: si un conjunto de texto tiene $n$ palabras, el espacio
 vectorial resultante tendrá $n$ dimensiones, y la posición de un documento en ese
 espacio está determinada por la cantidad de veces que aparece cada término.
 Formalmente:
@@ -392,7 +392,7 @@ es el tamaño del vocabulario.
 
 \textbf{TF-IDF} (\textit{Term Frequency -- Inverse Document Frequency}) refina
 este enfoque ponderando cada término según su frecuencia en el documento y su
-rareza en el corpus:
+rareza en el corpus \cite{manning2008}:
 
 \begin{equation}
   \text{tf-idf}(t, d, D)
@@ -731,7 +731,7 @@ sistema calcula la similitud entre dos puntos como:
 donde $\gamma$ controla el radio de influencia de cada vector de soporte. El
 kernel RBF es especialmente adecuado para embeddings de alta dimensión porque
 puede construir fronteras de decisión no lineales arbitrariamente complejas,
-adaptándose a la distribución de los casos jurídicos en el espacio semántico.
+adaptándose a la distribución de los casos jurídicos en el espacio semántico \cite{cortes1995}.
 
 \subsubsection*{Ventaja en el dominio jurídico}
 
