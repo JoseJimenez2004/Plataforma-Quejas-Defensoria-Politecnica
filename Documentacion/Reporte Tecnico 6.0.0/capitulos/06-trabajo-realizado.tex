@@ -1,17 +1,584 @@
 \chapter{Trabajo Realizado}
 \label{cap:trabajo_realizado}
-En el desarrollo de esta capitulo, desglocaremos las actividades a realizar, partiendo desde las reuniones con la Defensoría de Derechos Politécnicos, hasta llegar a la creación de un prototipo para el clasficador de competencia.
 
-Las reuniones con la DDP fueron de gran importancia pues con solo leer los procesos ubicados en la documentación no bastaban, fue por esa razón que una junta con los dirigentes, permitio darle claridad a dudas que impedian darle continuidad al proyecto.
+Este capítulo documenta los avances consolidados durante la primera etapa del 
+Trabajo Terminal, los cuales se articulan en tres grandes componentes: la 
+interacción con el cliente para el levantamiento y refinamiento iterativo de 
+requerimientos, el desarrollo del microservicio de atención al quejoso —que 
+comprende el análisis, diseño, implementación y pruebas del sistema para este 
+actor—, y la construcción, evaluación y validación del clasificador automático 
+de quejas. Cada componente es producto del anterior: los requerimientos delimitaron 
+el diseño del microservicio, y los datos estructurados que este captura constituyen 
+el insumo del módulo de inteligencia artificial. En consecuencia, este capítulo 
+no solo documenta el trabajo ejecutado, sino que evidencia la coherencia técnica 
+del sistema como un todo.
 
-Despues de la primer junta, comenzamos con el desarrollo de vistas, acción que resulto contraproducente, pues si bien, las dudas inciales no existian, ahora nos encontrabamos con falta de acciones realizadas y como manejaban ciertas situaciones, así que regresamos a una segunda reunión, sin embargo, en esta segunda reunión contabamos con un diagrama BPMN, el cual se obtuvo por medio de sus documentos oficiales más el contexto que ya teniamos con anterioridad, al llegar a esa segunda reunión mencionaron que todo el proceso en papel no se seguia de manera manual, así que fuimos eliminando juntos con ellos cada parte innecesario, hasta obtener el siguiente diagrama BPMN:
+
+%─────────────────────────────────────────────
+\section{Interacción con el Cliente}
+\label{sec:interaccion_cliente}
+%─────────────────────────────────────────────
+
+El levantamiento de requerimientos en un sistema institucional de esta naturaleza 
+no puede limitarse a la lectura de documentación oficial, pues la operación real 
+de una organización rara vez coincide en su totalidad con lo que sus documentos 
+formales describen. Por ello, el equipo de desarrollo sostuvo una serie de 
+reuniones con el personal de la Defensoría de los Derechos Politécnicos (DDP) 
+que evolucionaron de forma iterativa: cada sesión aportó claridad sobre aspectos 
+que la anterior había dejado pendientes, y cada avance técnico intermedio sirvió 
+como insumo para la siguiente reunión. A continuación se describe la secuencia 
+de estas interacciones y los productos que derivaron de cada una.
+
+\subsection{Primera Reunión: Comprensión del Proceso General}
+
+La primera sesión de trabajo tuvo como objetivo comprender el contexto operativo 
+de la DDP y resolver las ambigüedades que la documentación oficial no lograba 
+aclarar. En ella se identificaron las áreas involucradas en la gestión de una 
+queja —recepción, primer contacto y subdefensoría— y se obtuvieron los primeros 
+criterios funcionales que guiarían el diseño del sistema. Sin embargo, al iniciar 
+el desarrollo de las primeras vistas a partir de este contexto, el equipo encontró 
+que persistían dudas sobre cómo se manejaban ciertas situaciones específicas del 
+proceso, lo que hizo necesaria una segunda reunión.
+
+\subsection{Segunda Reunión: Validación del Diagrama BPMN}
+
+Para la segunda sesión, el equipo elaboró un diagrama BPMN (Figura \ref{fig:bpmn}) preliminar construido 
+a partir de los documentos oficiales de la DDP y del contexto obtenido en la 
+primera reunión. Este artefacto fue presentado al personal de la institución como 
+base de discusión, lo que resultó especialmente productivo: los responsables de 
+la DDP señalaron que varias etapas del proceso formal no se ejecutaban de manera 
+manual en la práctica, por lo que se procedió a eliminar en conjunto los pasos 
+innecesarios hasta obtener el diagrama que refleja el flujo operativo real.
+
+% --- Inicio de página horizontal ---
+\begin{landscape}
+    \begin{figure}[p] % 'p' indica que se prefiere una página completa para la figura
+        \centering
+        \vspace*{\fill} % Centrado vertical en la hoja
+        \includegraphics[width=1.15\linewidth]{imagenes/Cap8/BPMN.png} 
+        % He usado 1.15 para extenderlo un poco más allá del margen de texto 
+        % estándar, ya que en horizontal suele haber más espacio.
+        
+        \caption{Diagrama BPMN del proceso real de gestión de quejas en la DDP (Vista Extendida)}
+        \label{fig:bpmn}
+        \vspace*{\fill} % Centrado vertical en la hoja
+    \end{figure}
+\end{landscape}
+% --- Regreso a página vertical ---
+
+El diagrama resultante representa el flujo de trabajo dentro de la Defensoría 
+desde la recepción de una queja hasta su resolución y archivo. El proceso inicia 
+con la recepción de la queja; una vez aceptada, se turna al abogado disponible 
+o al que ya gestiona el expediente, quien determina la competencia o incompetencia 
+del caso. Si el caso es incompetente, se notifica al quejoso y se le orienta 
+hacia la instancia adecuada; si es competente, pasa a subdefensoría para solicitar 
+investigación. En caso de que la investigación no sea satisfactoria se generan 
+recordatorios; si se obtiene respuesta, el proceso avanza hacia un acuerdo de 
+conciliación que, de ser aprobado, se envía a la defensora para su sello y 
+finalmente a recepción para su resguardo en archivo.
+
+\subsection{Reuniones por Área: Recepción, Primer Contacto y Subdefensoría}
+
+Una vez validado el BPMN general, el equipo estableció sesiones semanales con 
+cada área por separado, con el objetivo de comprender a detalle las acciones 
+específicas de cada rol y traducirlas en casos de uso y vistas concretas. La 
+secuencia fue la siguiente:
+
+\begin{itemize}
+    \item \textbf{Recepción:} el personal de esta área explicó a detalle sus 
+    actividades dentro del proceso, lo que permitió al equipo construir los casos 
+    de uso y los primeros \textit{mockups} correspondientes.
+
+    \item \textbf{Primer Contacto:} en la sesión siguiente se repitió la misma 
+    dinámica —explicación del proceso, definición de casos de uso y diseño de 
+    vistas— adaptada a las particularidades de este rol.
+
+    \item \textbf{Validación con áreas anteriores:} antes de avanzar a la 
+    siguiente área, se realizó una sesión de revisión con recepción y primer 
+    contacto para presentar las vistas diseñadas, incorporar los cambios sugeridos 
+    y confirmar que los artefactos reflejaban correctamente sus necesidades.
+
+    \item \textbf{Subdefensoría:} finalmente se llevó a cabo la sesión con esta 
+    área, de la cual se derivaron sus respectivos casos de uso y vistas.
+\end{itemize}
+
+Con los requerimientos de todos los departamentos internos levantados y validados, 
+el equipo se concentró en el actor externo del sistema: el quejoso. Este análisis 
+dio paso al diseño de los casos de uso, \textit{mockups} y el modelo de datos 
+del microservicio de atención al quejoso, componente que se desarrolla en la 
+sección siguiente.
 
 
+%─────────────────────────────────────────────
+\section{Microservicio de Atención al Quejoso}
+\label{sec:microservicio_quejoso}
+%─────────────────────────────────────────────
 
-Este diagrama representa el flujo de trabajo dentro de la defensoría, en donde se muestra como una queja pasa por una gran variedad de procesos, el flujo comienza en la recepción de la queja, una vez aceptada, se turna a un abogado disponible o al abogado que ya maneja este expediente, este abogado se encargara de definir la competencia o incompetencia, en caso de ser incompetente se le avisa al quejoso y se le informa cual es el lugar adecuado para su queja, si es competente pasa a subdefensoría a solicitar investigación, si la invetsigación no resulta satisfactoria se generan recordatorios y si se da respuesta a estos actos de investigación pasamos a un acuerdo de concilicación el cual se esperaria que fuera aprovado, si es aprovado se envia a la defensora con el fin de sellar y al ultimo a recepción para guardar en archivo.
+El microservicio de atención al quejoso constituye el punto de entrada del 
+ciudadano al sistema y, por extensión, la fuente de los datos que alimentarán 
+al clasificador automático. Su propósito es gestionar el ciclo de vida completo 
+de una queja —desde el registro inicial del ciudadano hasta la generación de 
+acuses con validez legal— garantizando la persistencia, integridad y seguridad 
+de la información en cada etapa. El desarrollo de este componente siguió un 
+proceso ordenado que inició con el análisis y diseño de los artefactos de 
+ingeniería de software, continuó con la implementación del \textit{backend} y 
+el \textit{frontend}, y concluyó con la ejecución de pruebas que verificaron 
+su correcto funcionamiento. Cada una de estas etapas se detalla a continuación.
 
-Este proceso es meramente manual, pero seguían las dudas, así que una vez a la semana, nos vimos en la necesidad de agendar una cita por áreas separadas, comenzando con Repcionistas quienes nos explicaron a detalle las acciones que hacen y como podriamos mejorar su proceso. Despues de la reunión comenzamos con el desarrollo de los casos de uso y vistas para esta área.
+\subsection{Casos de Uso}
+\label{subsec:casos_uso}
 
-Para la siguiente reunión nos dedicamos al área de primer contacto y ocurrio extamente lo mismo, explicaicón del proceso, creamos CU y vistas
+Los casos de uso del microservicio (Figura \ref{fig:casos_uso})describen las interacciones posibles entre 
+el quejoso y el sistema, delimitando las responsabilidades funcionales del 
+componente con independencia de la tecnología empleada. A partir del análisis 
+de requerimientos se identificaron cuatro agrupaciones funcionales, cada una de 
+las cuales encapsula un conjunto de acciones relacionadas:
 
-De nuevo tuvimos una carta reunión en donde mostramos a los dos departamentos anteriores las vistas 
+\begin{itemize}
+    \item[\textbf{Gestión de Accesos:}] comprende el registro de una nueva 
+    cuenta, el inicio de sesión mediante credenciales verificadas y la 
+    recuperación de contraseña, garantizando que únicamente el quejoso 
+    autorizado pueda operar sobre su expediente.
+
+    \item[\textbf{Ciclo de Vida de la Queja:}] permite el registro inicial 
+    de una queja con su narrativa de hechos, la edición de campos habilitados 
+    mientras el expediente no haya sido formalizado, y la eliminación del 
+    registro antes de su envío definitivo. Cada transición de estado queda 
+    registrada para asegurar trazabilidad.
+
+    \item[\textbf{Gestión de Evidencia Digital:}] administra la carga, 
+    validación y almacenamiento de archivos adjuntos que respaldan la narrativa 
+    del quejoso, asegurando que los documentos probatorios queden vinculados 
+    de forma unívoca al expediente correspondiente.
+
+    \item[\textbf{Seguimiento del Caso:}] proporciona al quejoso visibilidad 
+    sobre el estado de su expediente mediante notificaciones automáticas, 
+    consulta de información general y descarga de acuses con validez legal.
+\end{itemize}
+
+% ── Figura: Diagrama de casos de uso ──
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{imagenes/Cap8/CasosDeUso.png}
+    \caption{Diagrama de casos de uso del microservicio de atención al quejoso}
+    \label{fig:casos_uso}
+\end{figure}
+
+De querer ver las tablas de cada Caso de Uso dirigase al Anexo X
+\subsection{Modelo de Base de Datos}
+\label{subsec:modelo_bd}
+
+El modelo de base de datos (Figura \ref{fig:modelo_bd}) fue diseñado para representar con fidelidad las 
+entidades y relaciones que intervienen en el ciclo de vida de una queja. Las 
+entidades centrales son el quejoso, el expediente de queja y los documentos de 
+evidencia: un quejoso puede tener múltiples expedientes, y cada expediente puede 
+concentrar múltiples archivos adjuntos. Adicionalmente, se modelaron las entidades 
+de seguimiento de estado y generación de acuses, las cuales permiten registrar 
+cada cambio en el ciclo de vida del expediente y vincularlo con los documentos 
+legales producidos. Este diseño garantiza la normalización de los datos y 
+proporciona la trazabilidad completa del proceso desde el registro inicial hasta 
+la resolución del caso.
+
+Figura: Modelo entidad-relación
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{imagenes/Cap8/ModeloBD.png}
+    \caption{Modelo entidad-relación del microservicio de atención al quejoso}
+    \label{fig:modelo_bd}
+\end{figure}
+
+\subsection{\textit{Mockups} de la Interfaz}
+\label{subsec:mockups}
+
+Los \textit{mockups} constituyeron una herramienta de validación temprana con 
+el cliente, permitiendo verificar que el flujo de navegación propuesto era 
+coherente con las expectativas del personal de la DDP antes de comprometer 
+recursos de desarrollo. Se diseñaron prototipos de alta fidelidad para las 
+pantallas principales del flujo del quejoso: inicio de sesión y registro de 
+cuenta, formulario de captura de la queja con su narrativa de hechos, módulo 
+de carga de evidencia y panel de seguimiento del expediente. La retroalimentación 
+obtenida en las sesiones de revisión derivó en ajustes en el orden de los campos 
+del formulario y en la incorporación de mensajes de validación en tiempo real, 
+cambios que posteriormente se implementaron en el \textit{frontend}.
+
+La Figura \ref{fig:mockups} presenta la pantalla principal al iniciar sesión, este le permitira llevar un control de todas las quejas que tenga en proceso o finalizadas.
+
+% ── Figura: Mockups (una figura por pantalla o collage) ──
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{imagenes/Cap8/Mockups.png}
+    \caption{\textit{Mockups} de las pantallas principales del microservicio 
+    de atención al quejoso}
+    \label{fig:mockups}
+\end{figure}
+
+\subsection{Implementación del \textit{Backend}}
+\label{subsec:backend}
+
+Con los artefactos de análisis validados, se procedió a la implementación del 
+\textit{backend} utilizando Spring Boot bajo una arquitectura en capas que separa 
+los controladores REST, la lógica de negocio y el acceso a datos. Cada uno de 
+los cuatro módulos funcionales —gestión de accesos, ciclo de vida de la queja, 
+evidencia digital y seguimiento— se expone mediante \textit{endpoints} REST que 
+reciben y devuelven representaciones JSON, lo que permite la integración 
+desacoplada con el \textit{frontend} y con los demás microservicios del 
+ecosistema. La autenticación se gestiona mediante tokens JWT, garantizando que 
+cada solicitud esté vinculada a un quejoso verificado antes de ejecutar cualquier 
+operación sobre su expediente. Esta separación entre lógica de negocio y capa de 
+presentación permite que el mismo \textit{backend} sirva tanto al \textit{frontend} 
+del quejoso como a futuras interfaces administrativas, manteniendo la coherencia 
+con el principio de responsabilidad única de la arquitectura de microservicios.
+
+En caso de querer ver todos los Mockups dirigase al Anexo X
+
+\subsection{Implementación del \textit{Frontend}}
+\label{subsec:frontend}
+
+El \textit{frontend} fue construido como una \textit{Single Page Application} 
+desarrollada con Angular, estructurada en módulos que corresponden a cada etapa 
+del flujo del quejoso: autenticación, registro y edición de la queja, carga de 
+evidencia y consulta de seguimiento. La comunicación con el \textit{backend} se 
+realiza mediante servicios HTTP reactivos que consumen los \textit{endpoints} 
+REST definidos en Spring Boot, garantizando una integración coherente entre ambas 
+capas. El diseño incorpora validación en tiempo real de los campos del formulario 
+—en particular el campo de narrativa de los hechos—, lo que reduce la posibilidad 
+de capturas incompletas o ambiguas que pudieran afectar la calidad del texto que 
+posteriormente recibirá el clasificador.
+
+La Figura \ref{fig:frontend} muestra la implementación del Mockup planteado en el capitulo 6.2.3, con el fin de mostrar los avances existentes
+
+% ── Figura: Capturas de pantalla del frontend implementado ──
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{imagenes/Cap8/Frontend.png}
+    \caption{Capturas de pantalla del \textit{frontend} del microservicio 
+    de atención al quejoso implementado en Angular}
+    \label{fig:frontend}
+\end{figure}
+
+\subsection{Pruebas del Microservicio}
+\label{subsec:pruebas_microservicio}
+
+La correctitud del microservicio se verificó mediante un esquema de pruebas en 
+dos niveles complementarios. En el nivel unitario se validó el comportamiento 
+aislado de cada componente de la lógica de negocio, comprobando que las reglas 
+de validación, las transiciones de estado y las transformaciones de datos 
+produjeran los resultados esperados ante entradas válidas e inválidas. En el 
+nivel de integración se verificó la comunicación correcta entre las capas del 
+sistema —controladores, servicios y repositorios—, la persistencia adecuada de 
+los datos en la base de datos y la generación correcta de las respuestas HTTP 
+para cada caso de uso. Los resultados de ambos niveles confirmaron que el 
+microservicio cumple con los requerimientos funcionales levantados durante la 
+etapa de interacción con el cliente.
+
+La integración exitosa de estos componentes transforma una petición ciudadana 
+en un registro estructurado dentro del sistema; en consecuencia, la narrativa 
+de los hechos capturada en el formulario constituye el insumo principal del 
+módulo de clasificación automática que se presenta en la sección siguiente.
+
+
+%─────────────────────────────────────────────
+\section{Clasificador Automático de Quejas}
+\label{sec:clasificador}
+%─────────────────────────────────────────────
+
+El clasificador automático de quejas representa el núcleo de inteligencia del 
+sistema: su función es determinar si una queja corresponde a alguna de las 
+categorías previstas en el Artículo 4 del Reglamento de la DDP, reduciendo la 
+dependencia de la intervención manual en la etapa de triaje. Para alcanzar este 
+objetivo se construyeron ocho configuraciones de \textit{pipeline} de aprendizaje 
+automático que combinan representaciones semánticas del texto libre con atributos 
+jurídicos explícitos derivados del expediente; estas configuraciones fueron 
+evaluadas sobre un corpus real de 525 casos bajo un protocolo riguroso que simula 
+las condiciones de producción. El desarrollo completo de este módulo abarca cuatro 
+etapas que se detallan a continuación: la ingeniería de características, la 
+arquitectura del \textit{pipeline}, el protocolo de evaluación y los resultados 
+experimentales que determinaron el modelo de producción.
+
+\subsection{Ingeniería de Características}
+\label{subsec:feature_engineering}
+
+La representación de cada queja ante el clasificador se compone de dos fuentes 
+de información complementarias: una semántica, extraída del texto libre de los 
+hechos, y otra jurídica, derivada del análisis estructurado del expediente. Esta 
+representación híbrida permite al modelo aprovechar tanto la narrativa del 
+ciudadano como el conocimiento normativo codificado por personal experto.
+
+\subsubsection{Atributos Jurídicos Booleanos}
+
+A partir del Artículo 4 del Reglamento de la DDP se definieron siete atributos 
+booleanos que codifican las condiciones normativas relevantes para clasificar una 
+queja. Cada atributo toma el valor $1$ si la condición se cumple y $0$ en caso 
+contrario:
+
+\begin{table}[H]
+\centering
+\caption{Atributos jurídicos utilizados como características del clasificador}
+\label{tab:campos_juridicos}
+\begin{tabularx}{\textwidth}{lL}
+\toprule
+\textbf{Nombre del campo} & \textbf{Descripción} \\
+\midrule
+\texttt{es\_conflicto\_laboral\_art4\_I}
+  & Conflicto de naturaleza laboral (Art.~4-I) \\
+\texttt{es\_evaluacion\_academica\_pura\_art4\_II}
+  & Evaluación académica sin vulneración de derechos (Art.~4-II) \\
+\texttt{hay\_vulneracion\_notoria\_de\_derechos}
+  & Vulneración notoria de derechos en contexto evaluativo \\
+\texttt{es\_resolucion\_disciplinaria\_art4\_III}
+  & Resolución disciplinaria (Art.~4-III) \\
+\texttt{es\_afectacion\_colectiva\_art4\_IV}
+  & Afectación de carácter colectivo (Art.~4-IV) \\
+\texttt{involucra\_oic\_art4\_V}
+  & Involucra al Órgano Interno de Control (Art.~4-V) \\
+\texttt{hay\_acto\_u\_omision\_de\_autoridad}
+  & Existencia de acto u omisión de autoridad institucional \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Estas variables se representan como un vector $\mathbf{j} \in \{0,1\}^7$ 
+determinado por personal jurídico durante la construcción del corpus. En 
+producción, dicho vector se fija en cero para simular el escenario real donde 
+el quejoso redacta libremente sin conocimiento de la normativa.
+
+\subsubsection{Factor de Amplificación $\alpha$}
+
+Los vectores de texto producidos por los modelos de lenguaje tienen entre 300 y 
+768 dimensiones; si los atributos jurídicos se concatenaran sin escalar, quedarían 
+diluidos frente al componente semántico. Para contrarrestar esto, se aplica un 
+factor de amplificación $\alpha = 3.0$ antes de la concatenación:
+
+\begin{equation}
+  \mathbf{x} = \left[\, \mathbf{e} \;\Big|\; \alpha \cdot \mathbf{j}
+  \,\right] \in \mathbb{R}^{d+7}
+  \label{eq:vector_combinado}
+\end{equation}
+
+donde $\mathbf{e} \in \mathbb{R}^{d}$ es el \textit{embedding} textual, 
+$\mathbf{j} \in \{0,1\}^{7}$ el vector de atributos jurídicos y $\alpha = 3.0$ 
+el factor de amplificación. El valor fue seleccionado experimentalmente: valores 
+menores no diferenciaban casos limítrofes y valores superiores a $5.0$ 
+sobreajustaban la predicción a los atributos jurídicos, ignorando matices 
+semánticos del texto.
+
+\subsection{Arquitectura del \textit{Pipeline}}
+\label{subsec:arquitectura_pipeline}
+
+El sistema de clasificación se implementó mediante la interfaz \texttt{Pipeline} 
+de \textit{scikit-learn}, lo que garantiza que cada transformación aprendida en 
+entrenamiento se aplique de forma idéntica en inferencia, eliminando el riesgo de 
+fuga de datos (\textit{data leakage}).\cite{pedregosa2011} El núcleo del 
+\textit{pipeline} es la clase \texttt{VectorizadorCombinado}, que actúa como 
+transformador unificado compatible con las interfaces \texttt{BaseEstimator} y 
+\texttt{TransformerMixin}: recibe un \texttt{DataFrame} con el texto de los hechos 
+y el vector de atributos jurídicos, y produce la matriz de características 
+combinada descrita en la \cref{eq:vector_combinado}. Esta arquitectura modular 
+permite intercambiar el vectorizador o el clasificador sin alterar la estructura 
+fundamental del experimento.
+
+Se evaluaron dos representaciones semánticas y cuatro clasificadores, dando lugar 
+a ocho combinaciones totales:
+
+\begin{itemize}
+    \item \textbf{Vectorización con spaCy (\texttt{es\_core\_news\_lg}):} genera 
+    vectores de 300 dimensiones promediando los tokens con vector que no sean 
+    palabras vacías. La carga del modelo se realiza de forma perezosa 
+    (\textit{lazy loading}) dentro del método \texttt{transform()}, evitando 
+    errores de serialización al guardar el \textit{pipeline} con \texttt{joblib}.
+
+    \item \textbf{Vectorización con Sentence-BERT 
+    (\texttt{paraphrase-multilingual-mpnet-base-v2}):} produce \textit{embeddings} 
+    de 768 dimensiones entrenados explícitamente para capturar similitud semántica 
+    en múltiples idiomas, considerando el contexto completo de la oración mediante 
+    el mecanismo de atención del Transformer.\cite{reimers2019}
+
+    \item \textbf{SVM-RBF:} $C = 0.5$, envuelto en 
+    \texttt{CalibratedClassifierCV} ($cv=3$) para habilitar probabilidades de 
+    clase.
+
+    \item \textbf{Regresión Logística:} $C = 0.3$, \texttt{max\_iter=1000}, 
+    regularización L2.
+
+    \item \textbf{Random Forest:} $B = 300$ árboles, \texttt{max\_depth=8}, 
+    \texttt{min\_samples\_leaf=3}, \texttt{max\_features="sqrt"}.
+
+    \item \textbf{Ensemble (votación suave):} combinación de los tres 
+    clasificadores anteriores mediante \texttt{VotingClassifier} con 
+    \texttt{voting="soft"}, promediando las probabilidades predichas por cada 
+    modelo base.
+\end{itemize}
+
+Todo lo anterior se ve resumido en la Figura \ref{fig:pipeline} pues observamos que los datos de entrada son el texto y los atributos, en seguida se usaran Sentence Bert y Spacy para la tokenización y se hará la amplificación para los aspectos juridicos y para cerrar se hará el entrenamiento del modelo.
+
+% ── Figura: Arquitectura del pipeline ──
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{imagenes/Cap8/ArquitecturaPipeline.png}
+    \caption{Arquitectura del \textit{pipeline} de clasificación combinado}
+    \label{fig:pipeline}
+\end{figure}
+
+\subsection{Protocolo de Evaluación}
+\label{subsec:protocolo}
+
+La evaluación de los ocho \textit{pipelines} siguió un protocolo diseñado para 
+producir una estimación conservadora e imparcial del desempeño real del sistema 
+en producción. Para ello se emplearon tres mecanismos complementarios: una 
+división triple del corpus, una cadena de limpieza y normalización del texto, y 
+métricas que permiten detectar sobreajuste de forma explícita.
+
+El corpus de \textbf{525 casos reales}, anotados por personal jurídico de la DDP, 
+se dividió de forma estratificada en proporción \textbf{70/15/15}:
+
+\begin{itemize}
+    \item \textbf{Entrenamiento (70\%, 367 casos):} texto limpio más atributos 
+    jurídicos reales. Es la única partición que observa los atributos.
+    \item \textbf{Prueba (15\%, 79 casos):} texto limpio con atributos jurídicos 
+    fijados en cero, simulando el escenario de producción.
+    \item \textbf{\textit{Holdout} sorpresa (15\%, 79 casos):} idéntico al 
+    conjunto de prueba, pero completamente aislado durante el entrenamiento y el 
+    ajuste de hiperparámetros, proporcionando una estimación imparcial del 
+    desempeño real.
+\end{itemize}
+
+Antes de la vectorización, todos los textos pasan por una cadena de 
+preprocesamiento específica para el dominio jurídico en español: conversión a 
+minúsculas, eliminación de URLs, correos y números aislados, eliminación de 
+caracteres especiales conservando vocales acentuadas, ñ y guiones, y lematización 
+con \texttt{es\_core\_news\_lg}. Se eliminan las \textit{stop words} nativas más 
+un conjunto personalizado de 18 términos jurídico-institucionales de baja carga 
+discriminativa (\texttt{quejoso}, \texttt{institución}, \texttt{plantel}, entre 
+otros). La métrica principal es el \textbf{F1 ponderado} sobre el 
+\textit{holdout}; adicionalmente se calcula el \textit{gap} entre el F1 de 
+entrenamiento (CV-5) y el F1 de prueba para detectar sobreajuste.
+
+\subsection{Resultados Experimentales}
+\label{subsec:resultados}
+
+Todas las métricas reportadas corresponden a evaluación \textbf{sin atributos 
+jurídicos}, condición que simula el escenario de producción en el que el quejoso 
+redacta libremente.
+
+\begin{table}[H]
+\centering
+\caption{Comparación de modelos de clasificación automática de quejas. 
+Evaluación sin atributos jurídicos. Corpus: 525 casos reales. División: 70/15/15.}
+\label{tab:resultados_comparacion}
+\begin{tabularx}{\textwidth}{llCCCC}
+\toprule
+\textbf{Vectorizador} & \textbf{Clasificador}
+  & \textbf{Acc. test} & \textbf{F1 test}
+  & \textbf{F1 holdout} & \textbf{gap CV} \\
+\midrule
+spaCy avg & \textbf{Random Forest}  & 0.9494 & 0.9493 & \textbf{0.9873} & 0.0533 \\
+SBERT     & Random Forest           & 0.9620 & 0.9620 & 0.9747          & 0.0383 \\
+spaCy avg & Ensemble                & 0.9114 & 0.9113 & 0.9620          & 0.0205 \\
+spaCy avg & SVM-RBF                 & 0.9114 & 0.9114 & 0.9235          & 0.0008 \\
+spaCy avg & Reg. Logística          & 0.8728 & 0.8728 & 0.9106          & 0.0082 \\
+SBERT     & Ensemble                & 0.5591 & 0.5591 & 0.4197          & 0.0    \\
+SBERT     & SVM-RBF                 & 0.3263 & 0.3263 & 0.3404          & 0.0    \\
+SBERT     & Reg. Logística          & 0.3263 & 0.3263 & 0.3404          & 0.0    \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Los resultados revelan cuatro patrones determinantes para la selección del modelo 
+de producción. En primer lugar, los clasificadores lineales sobre Sentence-BERT 
+colapsan a F1 $= 0.3404$ en modo autónomo —equivalente a predecir siempre la 
+clase mayoritaria—, evidenciando que habían aprendido a depender casi 
+exclusivamente del vector de atributos jurídicos amplificado; en ausencia de esa 
+señal, su capacidad de separación en el espacio de 768 dimensiones resulta nula. 
+En segundo lugar, la combinación \textbf{spaCy avg + Random Forest} obtiene el 
+mejor F1 en \textit{holdout} ($0.9873$) con un \textit{gap} de sobreajuste 
+razonable ($0.0533$), demostrando que el promedio de vectores de spaCy captura 
+suficiente señal semántica para que el ensamble de árboles construya fronteras 
+de decisión estables sin depender de la señal normativa. En tercer lugar, 
+\textbf{SBERT + Random Forest} se posiciona como segunda opción viable 
+(F1\_holdout $= 0.9747$, \textit{gap} $= 0.0383$), confirmando que Random Forest 
+es el único clasificador capaz de aprovechar los \textit{embeddings} de SBERT de 
+forma robusta en modo autónomo gracias al muestreo aleatorio de características, 
+que actúa como regularización implícita. Por último, el \textit{gap} nulo en 
+los modelos SBERT lineales no refleja estabilidad sino colapso: ambos modelos 
+predicen la misma clase en todos los casos del \textit{holdout}.
+
+% ── Figura: Gráfica comparativa F1 holdout ──
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \draw[gray!60, -{latex}] (-0.1, 0) -- (9.6, 0);
+  \draw[gray!60, -{latex}] (0, -0.1) -- (0, 1.85)
+        node[above, font=\footnotesize] {F1 holdout};
+  \foreach \y/\lbl in {2.40/0.50, 4.80/0.70, 7.20/0.90}{
+    \draw[dashed, gray!35] (0, \y) -- (9.3, \y);
+    \node[left, font=\tiny, gray] at (0, \y) {\lbl};
+  }
+  \draw[dashed, gray!35] (0, 8.40) -- (9.3, 8.40);
+  \node[left, font=\tiny, gray] at (0, 8.40) {1.00};
+  \fill[azulESCOM!35, draw=azulESCOM] (0.1,0) rectangle (0.65, 8.2476);
+  \node[above, font=\tiny] at (0.375, 8.2476) {0.9873};
+  \node[below, rotate=40, anchor=north east, font=\scriptsize]
+        at (0.375, 0) {spaCy+RF};
+  \fill[azulESCOM!35, draw=azulESCOM] (1.2,0) rectangle (1.75, 7.944);
+  \node[above, font=\tiny] at (1.475, 7.944) {0.9620};
+  \node[below, rotate=40, anchor=north east, font=\scriptsize]
+        at (1.475, 0) {spaCy+ENS};
+  \fill[azulESCOM!35, draw=azulESCOM] (2.3,0) rectangle (2.85, 7.482);
+  \node[above, font=\tiny] at (2.575, 7.482) {0.9235};
+  \node[below, rotate=40, anchor=north east, font=\scriptsize]
+        at (2.575, 0) {spaCy+SVM};
+  \fill[azulESCOM!35, draw=azulESCOM] (3.4,0) rectangle (3.95, 7.327);
+  \node[above, font=\tiny] at (3.675, 7.327) {0.9106};
+  \node[below, rotate=40, anchor=north east, font=\scriptsize]
+        at (3.675, 0) {spaCy+RL};
+  \fill[azulESCOM!80, draw=azulESCOM] (4.8,0) rectangle (5.35, 8.0964);
+  \node[above, font=\tiny] at (5.075, 8.0964) {0.9747};
+  \node[below, rotate=40, anchor=north east, font=\scriptsize]
+        at (5.075, 0) {SBERT+RF};
+  \fill[azulESCOM!80, draw=azulESCOM] (5.9,0) rectangle (6.45, 1.4364);
+  \node[above, font=\tiny] at (6.175, 1.4364) {0.4197};
+  \node[below, rotate=40, anchor=north east, font=\scriptsize]
+        at (6.175, 0) {SBERT+ENS};
+  \fill[azulESCOM!80, draw=azulESCOM] (7.0,0) rectangle (7.55, 0.4848);
+  \node[above, font=\tiny] at (7.275, 0.4848) {0.3404};
+  \node[below, rotate=40, anchor=north east, font=\scriptsize]
+        at (7.275, 0) {SBERT+SVM};
+  \fill[azulESCOM!80, draw=azulESCOM] (8.1,0) rectangle (8.65, 0.4848);
+  \node[above, font=\tiny] at (8.375, 0.4848) {0.3404};
+  \node[below, rotate=40, anchor=north east, font=\scriptsize]
+        at (8.375, 0) {SBERT+RL};
+  \fill[azulESCOM!35, draw=azulESCOM] (0.2, 9.2) rectangle (0.6, 9.55);
+  \node[right, font=\tiny] at (0.65, 9.375) {spaCy avg};
+  \fill[azulESCOM!80, draw=azulESCOM] (2.2, 9.2) rectangle (2.6, 9.55);
+  \node[right, font=\tiny] at (2.65, 9.375) {SBERT};
+\end{tikzpicture}
+\caption{F1 ponderado en \textit{holdout} por combinación de modelo 
+(evaluación sin atributos jurídicos)}
+\label{fig:f1_comparacion}
+\end{figure}
+
+\subsection{Selección del Modelo de Producción y Persistencia}
+\label{subsec:modelo_produccion}
+
+Con base en los resultados anteriores, la combinación \textbf{spaCy avg + Random 
+Forest} fue seleccionada como modelo de producción al obtener el mejor F1 en 
+\textit{holdout} ($0.9873$) con un \textit{gap} de sobreajuste razonable 
+($0.0533$). Su desempeño no solo es superior en términos cuantitativos, sino que 
+demuestra una generalización genuina a partir de la semántica del texto, condición 
+indispensable para un sistema de triaje automatizado confiable. Una vez 
+seleccionado, el \textit{pipeline} completo fue serializado con \texttt{joblib} 
+bajo el patrón de nombre \texttt{<vectorizador>\_\_<clasificador>\_\_<timestamp>}, 
+lo que permite trazabilidad temporal de los experimentos y coexistencia de 
+múltiples versiones en el directorio \texttt{modelos/}.
+
+La función \texttt{predecir()} encapsula el flujo completo de inferencia: carga 
+dinámicamente el mejor modelo disponible, aplica la misma cadena de limpieza y 
+lematización del entrenamiento, construye el \texttt{DataFrame} con atributos 
+jurídicos en cero y devuelve la clase predicha. Esta función habilita dos modos 
+de operación: el \textbf{modo asistido}, en el que el personal jurídico completa 
+el formulario con los atributos del Artículo 4° combinando semántica y señal 
+normativa; y el \textbf{modo autónomo}, en el que el quejoso redacta libremente 
+y el sistema clasifica exclusivamente por representación semántica del texto. 
+Este segundo modo es el criterio bajo el cual fue evaluado y seleccionado el 
+modelo, garantizando que el desempeño reportado sea una estimación fiel de su 
+comportamiento en producción.
