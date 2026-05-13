@@ -1,0 +1,83 @@
+% ==============================================================================
+% capitulos/00-portada.tex - Portada Oficial ESCOM (Ajuste de logos y líneas)
+% ==============================================================================
+\begin{titlepage}
+    % Forzamos los márgenes específicos de la carátula
+    \newgeometry{top=2cm, bottom=2cm, right=2cm, left=3cm}
+    \centering
+
+    % --- ELEMENTOS GRÁFICOS (TikZ para líneas y logos con efecto de corte) ---
+    \begin{tikzpicture}[remember picture, overlay]
+        
+        % 1. Dibujamos la línea triple azul continua (de arriba a abajo de la hoja)
+        \foreach \i in {0, 0.15, 0.3} {
+            \draw[azulESCOM, line width=1.5pt] 
+                ([xshift=1.45cm + \i cm]current page.north west) -- 
+                ([xshift=1.45cm + \i cm]current page.south west);
+        }
+
+        % 2. TRUCO: Dibujamos rectángulos blancos para "tapar" la línea donde irán los logos
+        % Rectángulo superior (detrás del logo IPN)
+        \fill[white] ([xshift=0.35cm, yshift=-0.8cm]current page.north west) 
+            rectangle ++(2.8cm, -3.0cm);
+            
+        % Rectángulo inferior (detrás del logo ESCOM)
+        \fill[white] ([xshift=0.35cm, yshift=0.8cm]current page.south west) 
+            rectangle ++(2.8cm, 3.0cm);
+
+        % 3. Colocamos los logos (más grandes y sobre los rectángulos blancos)
+        % Logo IPN (Esquina superior izquierda)
+        \node[anchor=north west, xshift=0.35cm, yshift=-1cm] at (current page.north west) {
+            \includegraphics[width=0.20\textwidth]{imagenes/logoIPN} % Aumentado a 20%
+        };
+        
+        % Logo ESCOM (Esquina inferior izquierda)
+        \node[anchor=south west, xshift=0.35cm, yshift=1cm] at (current page.south west) {
+            \includegraphics[width=0.20\textwidth]{imagenes/logoESCOM} % Aumentado a 20%
+        };
+        
+    \end{tikzpicture}
+
+    \centering
+    \vspace*{0.5cm} % Pequeño espacio inicial
+
+    % --- BLOQUE INSTITUCIONAL ---
+    {\fontsize{20}{24}\selectfont \textbf{INSTITUTO POLITÉCNICO NACIONAL}}\\[0.5cm]
+    {\fontsize{16}{19.2}\selectfont \textbf{ESCUELA SUPERIOR DE CÓMPUTO}}\\[0.5cm]
+    {\fontsize{16}{19.2}\selectfont \textbf{ESCOM}}\\[1.5cm]
+
+    % --- BLOQUE DEL PROYECTO ---
+    {\fontsize{14}{16.8}\selectfont \textit{Trabajo Terminal}}\\[0.8cm]
+    % Título con formato de comillas de LaTeX
+    {\fontsize{16}{19.2}\selectfont \bfseries Plataforma Web para la Denuncia Segura y Prevención de Riesgos Digitales}\\[0.6cm]
+    {\fontsize{14}{16.8}\selectfont 2026-B009}\\[1.5cm]
+
+    \vfill
+
+    % --- BLOQUE DE AUTORES ---
+    {\large \textit{Presentan}}\\[0.4cm]
+    {\large \textbf{Edgar Jair Flores Espinosa}}\\[1.5cm]
+    {\large \textbf{Jose Bryan Omar Jimenez Velazquez}}\\[1.5cm]
+    {\large \textbf{Leilani Shareni Santos Rivera}}\\[1.5cm]
+
+
+    % --- BLOQUE DE ASESORES (Dos columnas) ---
+    {\large \textit{Directores}}\\[0.8cm]
+    % Usamos minipages para las dos columnas
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \textbf{\textit{M. en C.Ulises Velez Saldaña}}
+    \end{minipage}
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \textbf{\textit{Dr. Jessie Paulina Guzmán Flores}}
+    \end{minipage}
+
+    \vfill
+
+    % --- PIE DE PÁGINA ---
+    {\fontsize{12}{14.4}\selectfont Ciudad de México, \today}
+
+    % Restauramos los márgenes normales del documento
+    \restoregeometry
+\end{titlepage}
