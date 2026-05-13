@@ -28,6 +28,12 @@ export interface UsuarioPerfilDTO {
   telefonoTutor: string;
 }
 
+export interface CambiarPasswordDTO {
+  passwordActual: string;
+  nuevaPassword: string;
+  confirmarPassword: string;
+}
+
 export interface AuthRespuestaDTO {
   token: string;
   perfil: UsuarioPerfilDTO;

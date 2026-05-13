@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators, FormGroup } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { HeaderComponent } from '../../../components/header/header.component';
+import { FooterComponent } from '../../../components/footer/footer.component';
 import { QuejaService } from '../../../core/services/queja.service';
 import { TutorDTO } from '../../../models/queja.models';
 
@@ -25,7 +27,7 @@ function fechaHechosValidator(control: AbstractControl): ValidationErrors | null
 @Component({
   selector: 'app-formulario-queja',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, HeaderComponent, FooterComponent],
   templateUrl: './formulario-queja.component.html',
 })
 /**

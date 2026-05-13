@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { PerfilService } from '../../../core/services/perfil.service';
@@ -24,6 +24,71 @@ export class PerfilComponent implements OnInit {
   guardando = false;
   exito = '';
   error = '';
+
+  // Modal cambiar contraseña
+  modalPassword = false;
+  cambiando = false;
+  errorPassword = '';
+  exitoPassword = '';
+  mostrarActual = false;
+  mostrarNueva = false;
+  mostrarConfirmar = false;
+
+  formPassword = this.fb.group(
+    {
+      passwordActual: ['', Validators.required],
+      nuevaPassword: ['', [Validators.required, Validators.minLength(8)]],
+      confirmarPassword: ['', Validators.required],
+    },
+    {
+      validators: (g) => {
+        const n = g.get('nuevaPassword')?.value;
+        const c = g.get('confirmarPassword')?.value;
+        return n === c ? null : { noCoinciden: true };
+      },
+    }
+  );
+
+  abrirModalPassword(): void {
+    this.formPassword.reset();
+    this.errorPassword = '';
+    this.exitoPassword = '';
+    this.modalPassword = true;
+  }
+
+  cerrarModalPassword(): void {
+    this.modalPassword = false;
+  }
+
+  cambiarPassword(): void {
+    if (this.formPassword.invalid) {
+      this.formPassword.markAllAsTouched();
+      return;
+    }
+    this.cambiando = true;
+    this.errorPassword = '';
+
+    const { passwordActual, nuevaPassword, confirmarPassword } = this.formPassword.value;
+    this.authService
+      .cambiarPassword({
+        passwordActual: passwordActual!,
+        nuevaPassword: nuevaPassword!,
+        confirmarPassword: confirmarPassword!,
+      })
+      .subscribe({
+        next: () => {
+          this.exitoPassword = 'Contraseña actualizada correctamente.';
+          this.cambiando = false;
+          this.cdr.detectChanges();
+          setTimeout(() => this.cerrarModalPassword(), 1500);
+        },
+        error: (err) => {
+          this.errorPassword = err.error?.mensaje ?? 'Error al cambiar la contraseña.';
+          this.cambiando = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
 
   form = this.fb.group({
     correoPersonal: [''],

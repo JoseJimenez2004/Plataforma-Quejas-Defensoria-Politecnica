@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { HeaderComponent } from '../header/header.component';
+import { FooterComponent } from '../footer/footer.component';
 import { QuejaService } from '../../core/services/queja.service';
 import { QuejaSeguimientoDTO, EstatusQueja, ESTATUS_LABEL } from '../../models/queja.models';
 
@@ -16,7 +18,7 @@ interface PasoSeguimiento {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule, HeaderComponent, FooterComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -79,7 +81,7 @@ export class HomeComponent {
       { label: 'Queja Recibida', fecha, completado: true, activo: false },
       { label: 'En Revisión', fecha: enRevision ? fecha : undefined, completado: asignado || finalizado, activo: enRevision && !asignado },
       { label: 'Asignación de Defensor', completado: finalizado, activo: asignado && !finalizado },
-      { label: 'Resolución Final', completado: finalizado, activo: finalizado },
+      { label: 'Resolución Final', completado: finalizado, activo: e === EstatusQueja.PROCESO_CONCLUSION },
     ];
   }
 

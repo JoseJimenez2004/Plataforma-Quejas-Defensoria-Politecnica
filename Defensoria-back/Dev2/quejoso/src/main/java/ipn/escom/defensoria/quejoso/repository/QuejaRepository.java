@@ -30,4 +30,8 @@ public interface QuejaRepository extends JpaRepository<Queja, Long> {
 
     // Para MQ-15: Historial con filtros
     List<Queja> findByQuejosoIdOrderByFechaRegistroDesc(Long usuarioId);
+
+    // Acuerdos de conciliación pendientes del quejoso
+    @Query("SELECT q FROM Queja q WHERE q.quejoso.id = :usuarioId AND q.estatus = ipn.escom.defensoria.quejoso.entity.EstatusQuejaEntity.PROCESO_CONCLUSION ORDER BY q.fechaRegistro DESC")
+    List<Queja> findAcuerdosPendientes(@Param("usuarioId") Long usuarioId);
 }

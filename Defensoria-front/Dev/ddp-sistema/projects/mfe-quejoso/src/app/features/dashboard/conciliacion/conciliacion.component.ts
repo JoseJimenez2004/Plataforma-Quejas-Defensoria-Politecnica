@@ -1,7 +1,8 @@
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { LucideAngularModule } from 'lucide-angular';
 import { ConciliacionService } from '../../../core/services/conciliacion.service';
 import { ConciliacionDTO } from '../../../models/perfil.models';
@@ -14,20 +15,29 @@ import { ConciliacionDTO } from '../../../models/perfil.models';
 })
 export class ConciliacionComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private conciliacionService = inject(ConciliacionService);
   private cdr = inject(ChangeDetectorRef);
+  private sanitizer = inject(DomSanitizer);
 
   conciliacion: ConciliacionDTO | null = null;
+  pdfSeguro: SafeResourceUrl | null = null;
   cargando = true;
   error = '';
   mostrarRechazo = false;
   justificacion = '';
+  procesando = false;
+  exito = '';
+  errorAccion = '';
 
   ngOnInit(): void {
     const folio = this.route.snapshot.paramMap.get('folio')!;
     this.conciliacionService.obtener(folio).subscribe({
       next: (c) => {
         this.conciliacion = c;
+        if (c.urlPdf) {
+          this.pdfSeguro = this.sanitizer.bypassSecurityTrustResourceUrl(c.urlPdf);
+        }
         this.cargando = false;
         this.cdr.detectChanges();
       },
@@ -40,17 +50,45 @@ export class ConciliacionComponent implements OnInit {
   }
 
   aceptar(): void {
-    // TODO: llamar endpoint de aceptación cuando exista
-    alert('Propuesta aceptada. Se procederá con los términos del acuerdo.');
+    if (!this.conciliacion) return;
+    this.procesando = true;
+    this.errorAccion = '';
+    this.conciliacionService.aceptar(this.conciliacion.folioQueja).subscribe({
+      next: () => {
+        this.exito = 'Acuerdo aceptado. El defensor será notificado para proceder.';
+        this.procesando = false;
+        this.cdr.detectChanges();
+        setTimeout(() => this.router.navigate(['/dashboard/acuerdos']), 1800);
+      },
+      error: (err) => {
+        this.errorAccion = err.error?.mensaje ?? 'No se pudo registrar la aceptación.';
+        this.procesando = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   rechazar(): void {
     this.mostrarRechazo = true;
+    this.errorAccion = '';
   }
 
   confirmarRechazo(): void {
-    if (!this.justificacion.trim()) return;
-    // TODO: llamar endpoint de rechazo cuando exista
-    alert('Propuesta rechazada. El defensor analizará su caso nuevamente.');
+    if (!this.conciliacion || !this.justificacion.trim()) return;
+    this.procesando = true;
+    this.errorAccion = '';
+    this.conciliacionService.rechazar(this.conciliacion.folioQueja, this.justificacion.trim()).subscribe({
+      next: () => {
+        this.exito = 'Rechazo registrado. El defensor analizará tu justificación.';
+        this.procesando = false;
+        this.cdr.detectChanges();
+        setTimeout(() => this.router.navigate(['/dashboard/acuerdos']), 1800);
+      },
+      error: (err) => {
+        this.errorAccion = err.error?.mensaje ?? 'No se pudo registrar el rechazo.';
+        this.procesando = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 }

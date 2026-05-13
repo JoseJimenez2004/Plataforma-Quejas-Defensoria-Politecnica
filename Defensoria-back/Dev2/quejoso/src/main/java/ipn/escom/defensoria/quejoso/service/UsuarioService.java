@@ -193,6 +193,20 @@ public class UsuarioService {
         mailSender.send(message);
     }
 
+    public void cambiarPassword(Long usuarioId, ipn.escom.defensoria.quejoso.dto.CambiarPasswordDTO dto) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (!passwordEncoder.matches(dto.getPasswordActual(), usuario.getPassword())) {
+            throw new RuntimeException("La contraseña actual es incorrecta");
+        }
+
+        validarPassword(dto.getNuevaPassword(), dto.getConfirmarPassword());
+
+        usuario.setPassword(passwordEncoder.encode(dto.getNuevaPassword()));
+        usuarioRepository.save(usuario);
+    }
+
     public void validarCodigoYCambiarPassword(String correo, String codigoRecuperado, String nuevaPassword) {
         Usuario usuario = usuarioRepository.findByCorreoInstitucional(correo)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));

@@ -10,4 +10,12 @@ export interface ConciliacionDTO {
   tituloAcuerdo: string;
   contenidoHtml: string;
   fechaPropuesta: string;
+  urlPdf: string;
+}
+
+export interface AcuerdoPendienteDTO {
+  folio: string;
+  fechaRegistro: string;
+  asunto: string;
+  unidadAcademica: string;
 }

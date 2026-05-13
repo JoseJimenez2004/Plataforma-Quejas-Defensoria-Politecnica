@@ -1,0 +1,47 @@
+<div class="p-6">
+  <h1 class="text-2xl font-bold text-ipn-maroon mb-6">Acuerdos de Conciliación</h1>
+
+  @if (cargando) {
+    <div class="text-center py-12 text-gray-500">Cargando acuerdos...</div>
+  } @else if (error) {
+    <div class="text-center py-12 text-red-600">{{ error }}</div>
+  } @else if (acuerdos.length === 0) {
+    <div class="bg-white rounded-lg shadow-sm p-12 text-center text-gray-500">
+      <lucide-icon name="inbox" class="w-12 h-12 text-gray-300 mx-auto mb-3" />
+      <p class="text-sm">No tienes acuerdos de conciliación pendientes por revisar.</p>
+    </div>
+  } @else {
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="border-b border-gray-200">
+          <tr class="text-left">
+            <th class="px-6 py-3 font-semibold text-gray-700">Folio</th>
+            <th class="px-6 py-3 font-semibold text-gray-700">Fecha de Registro</th>
+            <th class="px-6 py-3 font-semibold text-gray-700">Asunto</th>
+            <th class="px-6 py-3 font-semibold text-gray-700">Unidad Académica</th>
+            <th class="px-6 py-3 font-semibold text-gray-700 text-center">Acuerdo a revisar</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of acuerdos; track a.folio) {
+            <tr class="border-b border-gray-100 hover:bg-gray-50">
+              <td class="px-6 py-3 text-ipn-maroon font-medium">{{ a.folio }}</td>
+              <td class="px-6 py-3 text-gray-700">{{ a.fechaRegistro | date: 'dd/MM/yyyy' }}</td>
+              <td class="px-6 py-3 text-gray-700">{{ a.asunto }}</td>
+              <td class="px-6 py-3 text-gray-700">{{ a.unidadAcademica }}</td>
+              <td class="px-6 py-3 text-center">
+                <a
+                  [routerLink]="['/dashboard/acuerdos', a.folio]"
+                  class="inline-flex items-center justify-center w-8 h-8 rounded text-gray-600 hover:text-ipn-maroon hover:bg-red-50 transition"
+                  title="Revisar acuerdo"
+                >
+                  <lucide-icon name="pencil" class="w-4 h-4" />
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

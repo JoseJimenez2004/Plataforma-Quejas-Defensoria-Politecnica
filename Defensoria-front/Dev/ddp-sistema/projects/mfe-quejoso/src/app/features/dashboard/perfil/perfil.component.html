@@ -1,8 +1,10 @@
 <div class="p-6">
-
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-800">Mi Perfil</h1>
-    <button class="border border-ipn-maroon text-ipn-maroon text-sm px-4 py-2 rounded hover:bg-red-50">
+    <button
+      (click)="abrirModalPassword()"
+      class="border border-ipn-maroon text-ipn-maroon text-sm px-4 py-2 rounded hover:bg-red-50 transition"
+    >
       Cambiar Contraseña
     </button>
   </div>
@@ -10,36 +12,48 @@
   @if (cargando) {
     <div class="text-center py-12 text-gray-500">Cargando perfil...</div>
   } @else if (perfil) {
-
     <!-- Identidad institucional (solo lectura) -->
     <div class="bg-white rounded-lg shadow-sm p-6 mb-5">
       <h2 class="font-bold text-gray-800 mb-4">Identidad Institucional</h2>
-      <div class="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded px-3 py-2 mb-4 flex items-center gap-2">
-        <lucide-icon name="info" class="w-4 h-4 flex-shrink-0" /> Estos datos son proporcionados por el sistema y no pueden ser modificados.
+      <div
+        class="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded px-3 py-2 mb-4 flex items-center gap-2"
+      >
+        <lucide-icon name="info" class="w-4 h-4 flex-shrink-0" /> Estos datos son solo de lectura y
+        no pueden ser modificados.
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">Nombre Completo</label>
-          <div class="flex items-center border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-700">
+          <div
+            class="flex items-center border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-700"
+          >
             {{ perfil.nombre }} <lucide-icon name="lock" class="ml-auto w-4 h-4 text-gray-300" />
           </div>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">Boleta</label>
-          <div class="flex items-center border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-700">
+          <div
+            class="flex items-center border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-700"
+          >
             {{ perfil.boleta }} <lucide-icon name="lock" class="ml-auto w-4 h-4 text-gray-300" />
           </div>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">Correo Institucional</label>
-          <div class="flex items-center border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-700">
-            {{ perfil.correoInstitucional }} <lucide-icon name="lock" class="ml-auto w-4 h-4 text-gray-300" />
+          <div
+            class="flex items-center border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-700"
+          >
+            {{ perfil.correoInstitucional }}
+            <lucide-icon name="lock" class="ml-auto w-4 h-4 text-gray-300" />
           </div>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">Unidad Académica</label>
-          <div class="flex items-center border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-700">
-            {{ perfil.unidadAcademica }} <lucide-icon name="lock" class="ml-auto w-4 h-4 text-gray-300" />
+          <div
+            class="flex items-center border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-700"
+          >
+            {{ perfil.unidadAcademica }}
+            <lucide-icon name="lock" class="ml-auto w-4 h-4 text-gray-300" />
           </div>
         </div>
       </div>
@@ -47,19 +61,26 @@
 
     <!-- Información de contacto adicional (editable) -->
     <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
-
       <div class="bg-white rounded-lg shadow-sm p-6 mb-5">
         <h2 class="font-bold text-gray-800 mb-4">Información de Contacto Adicional</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Correo Personal / Alternativo</label>
-            <input formControlName="correoPersonal" type="email"
-              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon" />
+            <label class="block text-xs font-medium text-gray-600 mb-1"
+              >Correo Personal / Alternativo</label
+            >
+            <input
+              formControlName="correoPersonal"
+              type="email"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Teléfono Celular</label>
-            <input formControlName="telefonoCelular" type="tel"
-              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon" />
+            <input
+              formControlName="telefonoCelular"
+              type="tel"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
           </div>
         </div>
       </div>
@@ -69,44 +90,219 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Nombre del Tutor</label>
-            <input formControlName="nombreTutor" type="text"
-              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon" />
+            <input
+              formControlName="nombreTutor"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Parentesco</label>
-            <select formControlName="parentescoTutor"
-              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon bg-white">
+            <select
+              formControlName="parentescoTutor"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon bg-white"
+            >
               <option value="">Seleccionar</option>
-              <option>Padre</option><option>Madre</option><option>Tutor Legal</option>
-              <option>Abuelo/a</option><option>Tío/a</option><option>Otro</option>
+              <option>Padre</option>
+              <option>Madre</option>
+              <option>Tutor Legal</option>
+              <option>Abuelo/a</option>
+              <option>Tío/a</option>
+              <option>Otro</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Teléfono del Tutor</label>
-            <input formControlName="telefonoTutor" type="tel"
-              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon" />
+            <input
+              formControlName="telefonoTutor"
+              type="tel"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-ipn-maroon"
+            />
           </div>
         </div>
       </div>
 
       @if (exito) {
-        <div class="bg-green-50 border border-green-300 text-green-700 text-sm rounded px-4 py-3 mb-4">{{ exito }}</div>
+        <div
+          class="bg-green-50 border border-green-300 text-green-700 text-sm rounded px-4 py-3 mb-4"
+        >
+          {{ exito }}
+        </div>
       }
       @if (error) {
-        <div class="bg-red-50 border border-red-300 text-red-700 text-sm rounded px-4 py-3 mb-4">{{ error }}</div>
+        <div class="bg-red-50 border border-red-300 text-red-700 text-sm rounded px-4 py-3 mb-4">
+          {{ error }}
+        </div>
       }
 
       <div class="flex justify-end gap-3">
-        <button type="button" routerLink="/dashboard"
-          class="border border-gray-300 text-gray-700 px-6 py-2.5 rounded hover:bg-gray-50 text-sm">
+        <button
+          type="button"
+          routerLink="/dashboard"
+          class="border border-gray-300 text-gray-700 px-6 py-2.5 rounded hover:bg-gray-50 text-sm"
+        >
           Cancelar
         </button>
-        <button type="submit" [disabled]="guardando"
-          class="bg-ipn-maroon text-white px-6 py-2.5 rounded hover:bg-red-900 text-sm disabled:opacity-60">
+        <button
+          type="submit"
+          [disabled]="guardando"
+          class="bg-ipn-maroon text-white px-6 py-2.5 rounded hover:bg-red-900 text-sm disabled:opacity-60"
+        >
           {{ guardando ? 'Guardando...' : 'Guardar Cambios' }}
         </button>
       </div>
-
     </form>
   }
 </div>
+
+<!-- Modal Cambiar Contraseña -->
+@if (modalPassword) {
+  <div
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
+    (click)="cerrarModalPassword()"
+  >
+    <div
+      class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-bold text-gray-900">Cambiar Contraseña</h2>
+        <button
+          (click)="cerrarModalPassword()"
+          class="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+        >
+          ×
+        </button>
+      </div>
+
+      <form [formGroup]="formPassword" (ngSubmit)="cambiarPassword()" novalidate class="space-y-4">
+        <!-- Contraseña actual -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña actual</label>
+          <div
+            class="flex items-center border border-gray-300 rounded px-3 py-2 focus-within:border-ipn-maroon"
+          >
+            <lucide-icon name="lock" class="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+            <input
+              formControlName="passwordActual"
+              [type]="mostrarActual ? 'text' : 'password'"
+              class="flex-1 outline-none text-sm bg-transparent"
+              placeholder="Tu contraseña actual"
+            />
+            <button
+              type="button"
+              (click)="mostrarActual = !mostrarActual"
+              class="text-gray-400 hover:text-gray-600 ml-2"
+            >
+              @if (mostrarActual) {
+                <lucide-icon name="eye-off" class="w-4 h-4" />
+              } @else {
+                <lucide-icon name="eye" class="w-4 h-4" />
+              }
+            </button>
+          </div>
+          @if (
+            formPassword.get('passwordActual')?.invalid &&
+            formPassword.get('passwordActual')?.touched
+          ) {
+            <p class="text-red-600 text-xs mt-1">Este campo es requerido.</p>
+          }
+        </div>
+
+        <!-- Nueva contraseña -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nueva contraseña</label>
+          <div
+            class="flex items-center border border-gray-300 rounded px-3 py-2 focus-within:border-ipn-maroon"
+          >
+            <lucide-icon name="lock" class="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+            <input
+              formControlName="nuevaPassword"
+              [type]="mostrarNueva ? 'text' : 'password'"
+              class="flex-1 outline-none text-sm bg-transparent"
+              placeholder="Mínimo 8 caracteres"
+            />
+            <button
+              type="button"
+              (click)="mostrarNueva = !mostrarNueva"
+              class="text-gray-400 hover:text-gray-600 ml-2"
+            >
+              @if (mostrarNueva) {
+                <lucide-icon name="eye-off" class="w-4 h-4" />
+              } @else {
+                <lucide-icon name="eye" class="w-4 h-4" />
+              }
+            </button>
+          </div>
+          @if (
+            formPassword.get('nuevaPassword')?.invalid && formPassword.get('nuevaPassword')?.touched
+          ) {
+            <p class="text-red-600 text-xs mt-1">Mínimo 8 caracteres.</p>
+          }
+        </div>
+
+        <!-- Confirmar contraseña -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Confirmar nueva contraseña</label
+          >
+          <div
+            class="flex items-center border border-gray-300 rounded px-3 py-2 focus-within:border-ipn-maroon"
+          >
+            <lucide-icon name="lock" class="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+            <input
+              formControlName="confirmarPassword"
+              [type]="mostrarConfirmar ? 'text' : 'password'"
+              class="flex-1 outline-none text-sm bg-transparent"
+              placeholder="Repite la nueva contraseña"
+            />
+            <button
+              type="button"
+              (click)="mostrarConfirmar = !mostrarConfirmar"
+              class="text-gray-400 hover:text-gray-600 ml-2"
+            >
+              @if (mostrarConfirmar) {
+                <lucide-icon name="eye-off" class="w-4 h-4" />
+              } @else {
+                <lucide-icon name="eye" class="w-4 h-4" />
+              }
+            </button>
+          </div>
+          @if (
+            formPassword.errors?.['noCoinciden'] && formPassword.get('confirmarPassword')?.touched
+          ) {
+            <p class="text-red-600 text-xs mt-1">Las contraseñas no coinciden.</p>
+          }
+        </div>
+
+        @if (errorPassword) {
+          <div class="bg-red-50 border border-red-300 text-red-700 text-sm rounded px-3 py-2">
+            {{ errorPassword }}
+          </div>
+        }
+        @if (exitoPassword) {
+          <div class="bg-green-50 border border-green-300 text-green-700 text-sm rounded px-3 py-2">
+            {{ exitoPassword }}
+          </div>
+        }
+
+        <div class="flex gap-3 pt-1">
+          <button
+            type="button"
+            (click)="cerrarModalPassword()"
+            class="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded hover:bg-gray-50 text-sm transition"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="cambiando"
+            class="flex-1 bg-ipn-maroon text-white py-2.5 rounded hover:bg-red-900 text-sm transition disabled:opacity-60"
+          >
+            {{ cambiando ? 'Guardando...' : 'Actualizar Contraseña' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

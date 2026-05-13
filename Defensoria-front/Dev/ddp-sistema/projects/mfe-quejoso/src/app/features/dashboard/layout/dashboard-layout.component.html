@@ -1,41 +1,5 @@
 <div class="min-h-screen flex flex-col">
-  <!-- Header guinda IPN -->
-  <header class="bg-ipn-maroon text-white flex-shrink-0">
-    <div class="flex items-center justify-between px-6 py-3">
-      <div class="flex items-center gap-3">
-        <img
-          src="/assets/ipn-logo.png"
-          alt="IPN"
-          class="h-10"
-          onerror="this.style.display = 'none'"
-        />
-        <img
-          src="/assets/ddp-logo.png"
-          alt="DDP"
-          class="h-10"
-          onerror="this.style.display = 'none'"
-        />
-      </div>
-      <div class="flex items-center gap-4">
-        @if (perfil) {
-          <span class="text-sm flex items-center gap-1"> <lucide-icon name="user" class="w-4 h-4" /> {{ perfil.nombre }} </span>
-        }
-        <button
-          (click)="cerrarSesion()"
-          class="border border-white text-white text-sm px-4 py-1.5 rounded hover:bg-red-900 transition"
-        >
-          Cerrar Sesión
-        </button>
-      </div>
-    </div>
-    <nav class="px-6 pb-2 flex gap-6 text-sm font-medium">
-      <a routerLink="/" class="hover:underline">Inicio</a>
-      <a href="#" class="hover:underline">Conócenos</a>
-      <a href="#" class="hover:underline">Orientación</a>
-      <a routerLink="/queja/nueva" class="hover:underline">Queja</a>
-      <a href="#" class="hover:underline">Contacto</a>
-    </nav>
-  </header>
+  <app-header />
 
   <!-- Body: sidebar + content -->
   <div class="flex flex-1">
@@ -63,6 +27,14 @@
           class="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
         >
           <lucide-icon name="circle-plus" class="w-4 h-4 text-ipn-maroon" /> Nueva Queja
+        </a>
+        <a
+          routerLink="/dashboard/acuerdos"
+          routerLinkActive="bg-gray-100 font-semibold"
+          class="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+        >
+          <lucide-icon name="file-signature" class="w-4 h-4 text-ipn-maroon" /> Acuerdos de
+          Conciliación
         </a>
         <a
           routerLink="/dashboard/notificaciones"
@@ -97,11 +69,5 @@
     </main>
   </div>
 
-  <!-- Footer -->
-  <footer class="bg-ipn-maroon text-white text-center py-4 text-xs flex-shrink-0">
-    <div class="flex justify-center gap-4">
-      <a href="#" class="hover:underline">Aviso de Privacidad</a>
-      <a href="#" class="hover:underline">Marco Normativo</a>
-    </div>
-  </footer>
+  <app-footer />
 </div>

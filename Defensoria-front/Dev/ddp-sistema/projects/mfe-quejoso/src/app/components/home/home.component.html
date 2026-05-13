@@ -1,45 +1,5 @@
 <div class="min-h-screen flex flex-col">
-  <!-- Header guinda IPN -->
-  <header class="bg-ipn-maroon text-white flex-shrink-0">
-    <div class="bg-gray-900 py-1 px-4 text-xs flex justify-between items-center">
-      <div class="flex items-center gap-2">
-        <img
-          src="/assets/gob-mx.svg"
-          alt="Gobierno de México"
-          class="h-4"
-          onerror="this.style.display = 'none'"
-        />
-        <span>Gobierno de México</span>
-      </div>
-      <div class="flex gap-4">
-        <a routerLink="/dashboard" class="hover:underline">Trámites</a>
-        <a routerLink="/login" class="hover:underline">Gobierno</a>
-      </div>
-    </div>
-    <div class="flex items-center justify-between px-6 py-4">
-      <div class="flex items-center gap-3">
-        <img
-          src="/assets/ipn-logo.png"
-          alt="IPN"
-          class="h-12"
-          onerror="this.style.display = 'none'"
-        />
-        <img
-          src="/assets/ddp-logo.png"
-          alt="DDP"
-          class="h-12"
-          onerror="this.style.display = 'none'"
-        />
-      </div>
-    </div>
-    <nav class="px-6 pb-3 flex gap-6 text-sm font-medium">
-      <a routerLink="/" class="hover:underline border-b-2 border-white pb-0.5">Inicio</a>
-      <a href="#" class="hover:underline">Conócenos</a>
-      <a href="#" class="hover:underline">Orientación</a>
-      <a routerLink="/queja/nueva" class="hover:underline">Queja</a>
-      <a href="#" class="hover:underline">Contacto</a>
-    </nav>
-  </header>
+  <app-header />
 
   <!-- Hero -->
   <section class="bg-gray-100 py-12 text-center">
@@ -115,51 +75,38 @@
   <!-- Recursos informativos -->
   <section class="bg-gray-50 py-10 px-4 border-t border-gray-200">
     <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
-      <div class="flex flex-col items-center gap-2 cursor-pointer group">
+      <a href="https://www.ipn.mx/defensoria/orientacion.html" target="_blank" rel="noopener noreferrer" class="flex flex-col items-center gap-2 cursor-pointer group">
         <lucide-icon name="help-circle" class="w-8 h-8 text-ipn-maroon" />
         <span class="text-xs text-gray-700 group-hover:text-ipn-maroon"
           >¿Cómo solicitar orientación?</span
         >
-      </div>
-      <div class="flex flex-col items-center gap-2 cursor-pointer group">
+      </a>
+      <a href="https://www.ipn.mx/defensoria/normatividad.html" target="_blank" rel="noopener noreferrer" class="flex flex-col items-center gap-2 cursor-pointer group">
         <lucide-icon name="book-open" class="w-8 h-8 text-ipn-maroon" />
         <span class="text-xs text-gray-700 group-hover:text-ipn-maroon">Marco Normativo</span>
-      </div>
-      <div class="flex flex-col items-center gap-2 cursor-pointer group">
+      </a>
+      <a href="https://www.ipn.mx/defensoria/promocionddhh.html" target="_blank" rel="noopener noreferrer" class="flex flex-col items-center gap-2 cursor-pointer group">
         <lucide-icon name="graduation-cap" class="w-8 h-8 text-ipn-maroon" />
         <span class="text-xs text-gray-700 group-hover:text-ipn-maroon"
           >Promoción para la Formación de DDHH</span
         >
-      </div>
-      <div class="flex flex-col items-center gap-2 cursor-pointer group">
+      </a>
+      <a href="https://www.ipn.mx/assets/files/imageninstitucional/docs/gaceta-extraordinaria/2006/01/622-31-enero-gaceta-extra-.pdf" target="_blank" rel="noopener noreferrer" class="flex flex-col items-center gap-2 cursor-pointer group">
         <lucide-icon name="clipboard-list" class="w-8 h-8 text-ipn-maroon" />
         <span class="text-xs text-gray-700 group-hover:text-ipn-maroon"
           >Acuerdo de Creación de la DDP</span
         >
-      </div>
-      <div class="flex flex-col items-center gap-2 cursor-pointer group">
+      </a>
+      <a href="https://www.ipn.mx/defensoria/ingerencia-de-defensoria-en-la-violencia-de-genero.html" target="_blank" rel="noopener noreferrer" class="flex flex-col items-center gap-2 cursor-pointer group">
         <lucide-icon name="scale" class="w-8 h-8 text-ipn-maroon" />
         <span class="text-xs text-gray-700 group-hover:text-ipn-maroon"
           >Intervención de la DDP en casos de Violencia de Género</span
         >
-      </div>
+      </a>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="bg-ipn-maroon text-white text-center py-6 text-xs flex-shrink-0">
-    <div class="flex justify-center gap-4 mb-2">
-      <img src="/assets/ipn-logo.png" alt="IPN" class="h-8" onerror="this.style.display = 'none'" />
-      <img src="/assets/ddp-logo.png" alt="DDP" class="h-8" onerror="this.style.display = 'none'" />
-    </div>
-    <p>© {{ currentYear }} - Todos los derechos reservados.</p>
-    <div class="flex justify-center gap-4 mt-2 flex-wrap">
-      <a href="#" class="hover:underline">Aviso de Privacidad</a>
-      <a href="#" class="hover:underline">Marco Normativo</a>
-      <a href="#" class="hover:underline">Acuerdo de Creación</a>
-      <a href="#" class="hover:underline">Promoción para la Formación de DDHH</a>
-    </div>
-  </footer>
+  <app-footer />
 </div>
 
 <!-- Modal resultado seguimiento público -->
@@ -228,7 +175,8 @@
                   class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
                 >
                   <span class="text-gray-700 text-xs flex items-center gap-1.5">
-                    <lucide-icon name="file-text" class="w-4 h-4 flex-shrink-0" /> {{ ev.nombreArchivo }}
+                    <lucide-icon name="file-text" class="w-4 h-4 flex-shrink-0" />
+                    {{ ev.nombreArchivo }}
                   </span>
                   <a
                     [href]="ev.urlDescarga"

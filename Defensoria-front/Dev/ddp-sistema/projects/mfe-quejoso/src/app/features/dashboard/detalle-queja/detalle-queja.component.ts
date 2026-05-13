@@ -47,7 +47,7 @@ export class DetalleQuejaComponent implements OnInit {
       { label: 'Queja Recibida', fecha: this.queja.fechaRegistro, completado: true, activo: false },
       { label: 'En Revisión', fecha: enRevision ? this.queja.fechaRegistro : undefined, completado: enRevision, activo: e === EstatusQueja.EN_ANALISIS },
       { label: 'Asignación de Defensor', completado: asignado, activo: e === EstatusQueja.ASIGNADO_A_ABOGADO },
-      { label: 'Resolución Final', completado: finalizado, activo: finalizado },
+      { label: 'Resolución Final', completado: finalizado, activo: e === EstatusQueja.PROCESO_CONCLUSION },
     ];
   }
 

@@ -51,13 +51,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'conciliacion/:folio',
-    loadComponent: () =>
-      import('./features/dashboard/conciliacion/conciliacion.component').then(
-        (m) => m.ConciliacionComponent
-      ),
-  },
-  {
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () =>
@@ -97,6 +90,20 @@ export const routes: Routes = [
         path: 'perfil',
         loadComponent: () =>
           import('./features/dashboard/perfil/perfil.component').then((m) => m.PerfilComponent),
+      },
+      {
+        path: 'acuerdos',
+        loadComponent: () =>
+          import('./features/dashboard/acuerdos/acuerdos.component').then(
+            (m) => m.AcuerdosComponent
+          ),
+      },
+      {
+        path: 'acuerdos/:folio',
+        loadComponent: () =>
+          import('./features/dashboard/conciliacion/conciliacion.component').then(
+            (m) => m.ConciliacionComponent
+          ),
       },
       {
         path: 'queja/:folio',

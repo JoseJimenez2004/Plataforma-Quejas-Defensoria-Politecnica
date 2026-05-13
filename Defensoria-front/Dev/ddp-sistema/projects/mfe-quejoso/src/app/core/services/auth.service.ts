@@ -7,6 +7,7 @@ import {
   LoginDTO,
   ActivacionCuentaDTO,
   ResetPasswordDTO,
+  CambiarPasswordDTO,
   AuthRespuestaDTO,
   UsuarioPerfilDTO,
 } from '../../models/auth.models';
@@ -40,6 +41,12 @@ export class AuthService {
 
   resetPassword(dto: ResetPasswordDTO): Observable<string> {
     return this.http.post(`${BASE}/reset-password`, dto, { responseType: 'text' });
+  }
+
+  cambiarPassword(dto: CambiarPasswordDTO): Observable<string> {
+    return this.http.post('http://localhost:8080/api/quejoso/perfil/cambiar-password', dto, {
+      responseType: 'text',
+    });
   }
 
   logout(): void {

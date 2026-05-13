@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { HeaderComponent } from '../../../components/header/header.component';
+import { FooterComponent } from '../../../components/footer/footer.component';
 import { AuthService } from '../../../core/services/auth.service';
 
 type Paso = 'correo' | 'codigo';
@@ -10,7 +12,7 @@ type Paso = 'correo' | 'codigo';
 @Component({
   selector: 'app-restablecer-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, HeaderComponent, FooterComponent],
   templateUrl: './restablecer-password.component.html',
 })
 export class RestablecerPasswordComponent {

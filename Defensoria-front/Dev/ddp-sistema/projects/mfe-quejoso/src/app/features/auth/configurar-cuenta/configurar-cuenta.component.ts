@@ -3,12 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { HeaderComponent } from '../../../components/header/header.component';
+import { FooterComponent } from '../../../components/footer/footer.component';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-configurar-cuenta',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, HeaderComponent, FooterComponent],
   templateUrl: './configurar-cuenta.component.html',
 })
 export class ConfigurarCuentaComponent implements OnInit {

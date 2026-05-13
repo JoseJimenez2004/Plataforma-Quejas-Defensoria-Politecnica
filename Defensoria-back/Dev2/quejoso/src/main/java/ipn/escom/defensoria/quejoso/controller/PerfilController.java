@@ -1,5 +1,6 @@
 package ipn.escom.defensoria.quejoso.controller;
 
+import ipn.escom.defensoria.quejoso.dto.CambiarPasswordDTO;
 import ipn.escom.defensoria.quejoso.dto.UsuarioPerfilDTO;
 import ipn.escom.defensoria.quejoso.entity.Usuario;
 import ipn.escom.defensoria.quejoso.service.UsuarioService;
@@ -26,11 +27,19 @@ public class PerfilController {
 
     @PutMapping("/actualizar")
     public ResponseEntity<String> actualizar(@RequestBody UsuarioPerfilDTO dto) {
-        // Evitamos que alguien actualice un perfil ajeno
         Usuario usuarioAutenticado = (Usuario) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal();
 
         usuarioService.actualizarPerfil(usuarioAutenticado.getId(), dto);
         return ResponseEntity.ok("Perfil actualizado correctamente");
+    }
+
+    @PostMapping("/cambiar-password")
+    public ResponseEntity<String> cambiarPassword(@RequestBody CambiarPasswordDTO dto) {
+        Usuario usuarioAutenticado = (Usuario) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+
+        usuarioService.cambiarPassword(usuarioAutenticado.getId(), dto);
+        return ResponseEntity.ok("Contraseña actualizada correctamente");
     }
 }

@@ -10,4 +10,5 @@ public class ConciliacionDTO {
     private String tituloAcuerdo; // "ACUERDO DE CONCILIACIÓN"
     private String contenidoHtml; // El texto con los puntos detallados
     private String fechaPropuesta;
+    private String urlPdf; // URL del PDF enviado por el defensor
 }
