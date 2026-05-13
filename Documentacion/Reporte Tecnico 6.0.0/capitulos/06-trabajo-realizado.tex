@@ -198,7 +198,7 @@ pantallas principales del flujo del quejoso: inicio de sesión y registro de
 cuenta, formulario de captura de la queja con su narrativa de hechos, módulo 
 de carga de evidencia y panel de seguimiento del expediente. La retroalimentación 
 obtenida en las sesiones de revisión derivó en ajustes en el orden de los campos 
-del formulario y en la incorporación de mensajes de validación en tiempo real, 
+del formulario y en la incorporación de mensajes de validación, 
 cambios que posteriormente se implementaron en el \textit{frontend}.
 
 La Figura \ref{fig:mockups} presenta la pantalla principal al iniciar sesión, este le permitira llevar un control de todas las quejas que tenga en proceso o finalizadas.
@@ -240,7 +240,7 @@ del flujo del quejoso: autenticación, registro y edición de la queja, carga de
 evidencia y consulta de seguimiento. La comunicación con el \textit{backend} se 
 realiza mediante servicios HTTP reactivos que consumen los \textit{endpoints} 
 REST definidos en Spring Boot, garantizando una integración coherente entre ambas 
-capas. El diseño incorpora validación en tiempo real de los campos del formulario 
+capas. El diseño incorpora validación de los campos del formulario 
 —en particular el campo de narrativa de los hechos—, lo que reduce la posibilidad 
 de capturas incompletas o ambiguas que pudieran afectar la calidad del texto que 
 posteriormente recibirá el clasificador.

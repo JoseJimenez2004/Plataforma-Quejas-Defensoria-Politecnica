@@ -118,7 +118,7 @@ A diferencia de las configuraciones tradicionales de Spring, este framework se b
 Para satisfacer los requisitos de sistemas distribuidos y alta disponibilidad, Spring Boot se integra con módulos especializados:
 
 \begin{enumerate}
-    \item \textbf{Spring Boot Actuator:} Proporciona herramientas esenciales para la \textit{observabilidad}. A través de diversos \textit{endpoints} HTTP, permite monitorear el estado de salud (\textit{health}), recolectar métricas de rendimiento y auditar el comportamiento del sistema en tiempo real.
+    \item \textbf{Spring Boot Actuator:} Proporciona herramientas esenciales para la \textit{observabilidad}. A través de diversos \textit{endpoints} HTTP, permite monitorear el estado de salud (\textit{health}), recolectar métricas de rendimiento y auditar el comportamiento del sistema.
     \item \textbf{Spring Security:} Gestiona los mecanismos de autenticación y autorización. Facilita la implementación de esquemas modernos como \textbf{JWT (JSON Web Tokens)} y \textbf{OAuth2}, asegurando la comunicación entre microservicios mediante un control de acceso granular.
     \item \textbf{Spring Cloud:}
     \begin{itemize}
@@ -251,7 +251,7 @@ La seguridad en Java no es una capa superficial, sino una característica intrí
 \subsubsection{Arquitectura de la Java Virtual Machine (JVM)}
 La JVM es el corazón técnico que permite la independencia de plataforma mediante una capa de abstracción entre el código fuente y el hardware.
 \begin{itemize}
-\item \textbf{Compilación JIT (Just-In-Time):} El código Java se compila inicialmente a \textit{bytecode}. Durante la ejecución, el compilador JIT analiza las secciones de código que se ejecutan con mayor frecuencia (puntos calientes) y las traduce directamente a código máquina optimizado. Este proceso utiliza perfiles de ejecución en tiempo real para mejorar el rendimiento de los microservicios de la plataforma conforme se utilizan.
+\item \textbf{Compilación JIT (Just-In-Time):} El código Java se compila inicialmente a \textit{bytecode}. Durante la ejecución, el compilador JIT analiza las secciones de código que se ejecutan con mayor frecuencia (puntos calientes) y las traduce directamente a código máquina optimizado. Este proceso utiliza perfiles de ejecución para mejorar el rendimiento de los microservicios de la plataforma conforme se utilizan.
 \end{itemize}
 
 \subsubsection{Gestión de Memoria: Garbage Collection (GC)}

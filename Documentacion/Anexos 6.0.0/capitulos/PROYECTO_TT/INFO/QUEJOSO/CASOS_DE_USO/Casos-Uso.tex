@@ -112,7 +112,7 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{2a. Búsqueda sin resultados:}\newline 1. El Sistema indica que el folio o correo son incorrectos.} \\ \hline
 \textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de conexión con la base de datos o datos de entrada no válidos.} \\ \hline
 \textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{No se muestra información privada y el sistema solicita verificar los datos ingresados.} \\ \hline
-\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario visualiza el estado de su trámite en tiempo real.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario visualiza el estado de su trámite.} \\ \hline
 \end{longtable}
 \endgroup
 
@@ -284,7 +284,7 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Proporciona un listado tabular de todos los expedientes registrados por el usuario, permitiendo el filtrado por estatus o fecha.} \\ \hline
 \textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona la opción ``Mis Quejas'' en el menú lateral.} \\ \hline
 \textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión activa del usuario.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema carga la tabla con la totalidad de quejas del usuario.\newline 2. El Quejoso utiliza los filtros de búsqueda (Folio, Estatus).\newline 3. El Sistema actualiza la lista en tiempo real.\newline 4. El Quejoso visualiza las opciones de acción para cada registro.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema carga la tabla con la totalidad de quejas del usuario.\newline 2. El Quejoso utiliza los filtros de búsqueda (Folio, Estatus).\newline 3. El Sistema actualiza la lista constantemente.\newline 4. El Quejoso visualiza las opciones de acción para cada registro.} \\ \hline
 \textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{2a. Sin resultados en filtros:}\newline 1. El sistema muestra: ``No se encontraron quejas que coincidan con los criterios''.} \\ \hline
 \textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Fallo en el servicio de búsqueda del servidor.} \\ \hline
 \textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{La tabla se muestra vacía y el sistema sugiere refrescar la página.} \\ \hline

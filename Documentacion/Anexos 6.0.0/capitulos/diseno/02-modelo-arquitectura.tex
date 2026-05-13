@@ -54,7 +54,7 @@ Cada microservicio que integra la plataforma implementa internamente una estruct
 Esta capa constituye el nivel más externo del microservicio y actúa como la frontera de comunicación con el exterior. Su responsabilidad principal es capturar las peticiones de los usuarios y presentar los resultados de forma estructurada .
 
 \begin{itemize}
-    \item \textbf{Interfaz de Usuario (Angular):} Gestiona la interacción reactiva con el quejoso y el personal de la DDP. Utiliza servicios inyectables para realizar peticiones asíncronas hacia el backend, manejando estados de carga y errores de red en tiempo real.
+    \item \textbf{Interfaz de Usuario (Angular):} Gestiona la interacción reactiva con el quejoso y el personal de la DDP. Utiliza servicios inyectables para realizar peticiones asíncronas hacia el backend, manejando estados de carga y errores de red.
     \item \textbf{Controladores REST (Spring Boot / FastAPI):} Representan los \textit{endpoints} de la API. Se encargan de la validación sintáctica de entrada (formatos de archivos, tipos de datos) y de la serialización de los objetos de negocio a formato JSON para su transmisión.
 \end{itemize}
 
