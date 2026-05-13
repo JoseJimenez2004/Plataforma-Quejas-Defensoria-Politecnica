@@ -36,4 +36,13 @@ export class QuejaService {
   borrar(folio: string): Observable<string> {
     return this.http.delete(`${BASE}/borrar/${folio}`, { responseType: 'text' });
   }
+
+  /**
+   * Descarga autenticada de una evidencia.
+   * El interceptor de Angular agrega el JWT automáticamente.
+   * Se usa desde el detalle de queja en el dashboard.
+   */
+  descargarEvidencia(id: number): Observable<Blob> {
+    return this.http.get(`${BASE}/evidencias/${id}`, { responseType: 'blob' });
+  }
 }

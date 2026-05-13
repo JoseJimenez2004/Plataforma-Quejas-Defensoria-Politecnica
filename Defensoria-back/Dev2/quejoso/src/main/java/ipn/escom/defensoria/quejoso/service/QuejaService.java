@@ -12,6 +12,7 @@ import ipn.escom.defensoria.quejoso.repository.UsuarioRepository;
 import ipn.escom.defensoria.quejoso.dto.QuejaSeguimientoDTO;
 import ipn.escom.defensoria.quejoso.dto.TramitesResumenDTO;
 import ipn.escom.defensoria.quejoso.dto.EvidenciaDTO;
+import ipn.escom.defensoria.quejoso.storage.StorageService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,10 @@ public class QuejaService {
     @Autowired
     private EvidenciaRepository evidenciaRepository;
 
-    public Queja registrarQueja(Queja nuevaQueja, String identificacion, String correo) {
+    @Autowired
+    private StorageService storageService;
+
+    public Queja registrarQueja(Queja nuevaQueja, String identificacion, String correo, List<MultipartFile> archivos) {
         // Validar fechaHechos: no futura, no mayor a 90 días
         LocalDateTime fechaHechos = nuevaQueja.getFechaHechos();
         if (fechaHechos != null) {
@@ -70,7 +74,12 @@ public class QuejaService {
         }
         // Si no existe, los datos ya están en 'nuevaQueja' por el mapeo previo del controlador
 
-        // 3. Guardar en BD
+        // 3. Guardar evidencias en disco usando el folio ya generado
+        if (archivos != null && !archivos.isEmpty()) {
+            validarYGuardarEvidencias(nuevaQueja, archivos);
+        }
+
+        // 4. Guardar en BD (las evidencias se persisten por cascade)
         return quejaRepository.save(nuevaQueja);
     }
 
@@ -83,7 +92,7 @@ public class QuejaService {
                         .descripcionHechos(queja.getDescripcion())
                         .estatusActual(queja.getEstatus())
                         .evidencias(queja.getEvidencias().stream()
-                                .map(e -> new EvidenciaDTO(e.getNombreArchivo(), e.getUrlAlmacenamiento()))
+                                .map(e -> new EvidenciaDTO(e.getId(), e.getNombreArchivo(), null))
                                 .collect(Collectors.toList()))
                         .build());
     }
@@ -97,7 +106,7 @@ public class QuejaService {
                         .descripcionHechos(queja.getDescripcion())
                         .estatusActual(queja.getEstatus())
                         .evidencias(queja.getEvidencias().stream()
-                                .map(e -> new EvidenciaDTO(e.getNombreArchivo(), e.getUrlAlmacenamiento()))
+                                .map(e -> new EvidenciaDTO(e.getId(), e.getNombreArchivo(), null))
                                 .collect(Collectors.toList()))
                         .build());
     }
@@ -121,34 +130,26 @@ public class QuejaService {
         return prefijo + String.format("%04d", consecutivo);
     }
 
-    // Aquí iría la lógica de validación de los 30MB de archivos
     public void validarYGuardarEvidencias(Queja queja, List<MultipartFile> archivos) {
         if (archivos == null || archivos.isEmpty()) return;
 
-        // 1. Validar el tamaño total (Regla de 30MB)
-        long tamanoTotalBytes = archivos.stream()
-                .mapToLong(MultipartFile::getSize)
-                .sum();
-
-        long limiteMaximo = 30 * 1024 * 1024; // 30MB en bytes
-
-        if (tamanoTotalBytes > limiteMaximo) {
+        // Validar que el total no supere 30MB
+        long total = archivos.stream().mapToLong(MultipartFile::getSize).sum();
+        if (total > 30 * 1024 * 1024) {
             throw new RuntimeException("El tamaño total de los archivos excede el límite de 30MB.");
         }
 
-        // 2. Procesar cada archivo
         for (MultipartFile archivo : archivos) {
-            // En un entorno real, aquí llamarías a un S3 o Google Cloud Storage
-            // Por ahora simulamos la ruta como String en BD como acordamos
-            String urlSimulada = "/storage/evidencias/" + queja.getFolio() + "_" + archivo.getOriginalFilename();
+            // Delegar el guardado físico al StorageService (local ahora, nube después)
+            String clave = storageService.guardar(archivo, queja.getFolio());
 
             EvidenciaEntity evidencia = new EvidenciaEntity();
             evidencia.setNombreArchivo(archivo.getOriginalFilename());
-            evidencia.setUrlAlmacenamiento(urlSimulada);
+            evidencia.setUrlAlmacenamiento(clave); // clave retornada por StorageService
             evidencia.setTamano(archivo.getSize());
+            evidencia.setTipoContenido(archivo.getContentType()); // MIME para servir con Content-Type correcto
             evidencia.setQueja(queja);
 
-            // Guardar relación (se puede hacer via Cascade en Queja o directo)
             queja.getEvidencias().add(evidencia);
         }
     }
@@ -210,7 +211,13 @@ public class QuejaService {
             throw new RuntimeException("Solo se pueden eliminar evidencias en estatus 'RECIBIDA'");
         }
 
-        // Lógica para borrar el archivo del storage y de la base de datos
+        // Borrar el archivo físico antes de eliminar el registro en BD
+        evidenciaRepository.findById(evidenciaId).ifPresent(ev -> {
+            if (ev.getUrlAlmacenamiento() != null) {
+                storageService.eliminar(ev.getUrlAlmacenamiento());
+            }
+        });
+
         evidenciaRepository.deleteById(evidenciaId);
     }
 

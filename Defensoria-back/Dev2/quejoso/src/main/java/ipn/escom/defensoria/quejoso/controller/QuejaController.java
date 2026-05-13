@@ -4,12 +4,18 @@ import ipn.escom.defensoria.quejoso.dto.EvidenciaDTO;
 import ipn.escom.defensoria.quejoso.dto.QuejaRegistroDTO;
 import ipn.escom.defensoria.quejoso.dto.QuejaSeguimientoDTO;
 import ipn.escom.defensoria.quejoso.dto.QuejaEditarDTO;
+import ipn.escom.defensoria.quejoso.entity.EvidenciaEntity;
 import ipn.escom.defensoria.quejoso.entity.Queja;
+import ipn.escom.defensoria.quejoso.repository.EvidenciaRepository;
 import ipn.escom.defensoria.quejoso.service.QuejaService;
+import ipn.escom.defensoria.quejoso.storage.StorageService;
 import ipn.escom.defensoria.quejoso.entity.Tutor;
 import ipn.escom.defensoria.quejoso.entity.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +30,16 @@ public class QuejaController {
     @Autowired
     private QuejaService quejaService;
 
+    @Autowired
+    private EvidenciaRepository evidenciaRepository;
+
+    @Autowired
+    private StorageService storageService;
+
+    /** URL base del backend, configurable en application.properties. */
+    @Value("${app.base-url:http://localhost:8080}")
+    private String baseUrl;
+
     /**
      * Endpoint para el Mockup MQ-02 y MQ-03
      * Registra la queja, genera folio y vincula tutor si es necesario.
@@ -36,16 +52,12 @@ public class QuejaController {
         // 1. Convertimos el DTO que viene en el JSON a nuestra Entidad
         Queja nuevaQueja = mappearDtoAEntidad(registroDTO);
 
-        // 2. Validamos los 30MB y preparamos las evidencias (si existen)
-        if (archivos != null && !archivos.isEmpty()) {
-            quejaService.validarYGuardarEvidencias(nuevaQueja, archivos);
-        }
-
-        // 3. Guardamos todo en la BD (Genera folio y vincula cuenta automáticamente)
+        // 2. Registrar queja: genera folio, vincula quejoso y guarda evidencias en disco + BD
         Queja quejaGuardada = quejaService.registrarQueja(
                 nuevaQueja,
                 registroDTO.getIdentificacionInstitucional(),
-                registroDTO.getCorreo()
+                registroDTO.getCorreo(),
+                archivos // el servicio guarda los archivos después de asignar el folio
         );
 
         // 4. Mapeamos a la respuesta que espera el Mockup MQ-04
@@ -65,32 +77,105 @@ public class QuejaController {
                 .estatusActual(queja.getEstatus())
                 .evidencias(queja.getEvidencias() != null ?
                         queja.getEvidencias().stream()
-                                .map(e -> new EvidenciaDTO(e.getNombreArchivo(), e.getUrlAlmacenamiento()))
+                                .map(e -> new EvidenciaDTO(
+                                        e.getId(),
+                                        e.getNombreArchivo(),
+                                        baseUrl + "/api/quejoso/quejas/evidencias/" + e.getId()))
                                 .collect(java.util.stream.Collectors.toList())
                         : new java.util.ArrayList<>())
                 .build();
     }
 
+    /**
+     * Descarga pública de una evidencia. Requiere el folio y correo del quejoso
+     * para validar la propiedad sin necesidad de autenticación JWT.
+     * Usado desde el modal de seguimiento público en la página de inicio.
+     */
+    @GetMapping("/evidencias/{id}/publico")
+    public ResponseEntity<byte[]> descargarPublico(
+            @PathVariable Long id,
+            @RequestParam String folio,
+            @RequestParam String correo) {
+
+        EvidenciaEntity evidencia = evidenciaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Evidencia no encontrada"));
+
+        Queja queja = evidencia.getQueja();
+        boolean folioCoincide = queja.getFolio().equals(folio);
+        boolean correoCoincide = queja.getCorreoQuejoso() != null
+                && queja.getCorreoQuejoso().equalsIgnoreCase(correo);
+
+        if (!folioCoincide || !correoCoincide) {
+            throw new RuntimeException("No tienes permiso para descargar este archivo");
+        }
+
+        return construirRespuestaDescarga(evidencia);
+    }
+
+    /**
+     * Descarga autenticada de una evidencia. El JWT del quejoso se valida
+     * mediante el interceptor de Angular y el filtro JWT de Spring Security.
+     * Usado desde el detalle de queja en el dashboard.
+     */
+    @GetMapping("/evidencias/{id}")
+    public ResponseEntity<byte[]> descargar(@PathVariable Long id) {
+        Usuario usuarioAutenticado = (Usuario) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+
+        EvidenciaEntity evidencia = evidenciaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Evidencia no encontrada"));
+
+        Queja queja = evidencia.getQueja();
+        if (queja.getQuejoso() == null
+                || !queja.getQuejoso().getId().equals(usuarioAutenticado.getId())) {
+            throw new RuntimeException("No tienes permiso para descargar este archivo");
+        }
+
+        return construirRespuestaDescarga(evidencia);
+    }
+
+    /** Lógica de descarga compartida: lee los bytes del storage y los devuelve con headers correctos. */
+    private ResponseEntity<byte[]> construirRespuestaDescarga(EvidenciaEntity evidencia) {
+        byte[] contenido = storageService.leer(evidencia.getUrlAlmacenamiento());
+        String mime = evidencia.getTipoContenido() != null
+                ? evidencia.getTipoContenido()
+                : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, mime)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + evidencia.getNombreArchivo() + "\"")
+                .body(contenido);
+    }
+
 
     // VÍA 1: CONSULTA RÁPIDA (Pública - MQ-06)
-// Se permite en SecurityConfig con .permitAll()
     @GetMapping("/seguimiento/publico")
     public ResponseEntity<?> consultarSeguimientoPublico(
             @RequestParam String folio,
             @RequestParam String correo) {
 
         return quejaService.obtenerSeguimiento(folio, correo)
-                .map(ResponseEntity::ok)
+                .map(dto -> {
+                    // URL pública: incluye folio y correo como parámetros de validación
+                    String urlBase = baseUrl + "/api/quejoso/quejas/evidencias/";
+                    dto.getEvidencias().forEach(e -> e.setUrlDescarga(
+                            urlBase + e.getId() + "/publico?folio=" + folio + "&correo=" + correo));
+                    return ResponseEntity.ok(dto);
+                })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    // VÍA 2: SEGUIMIENTO DETALLADO (Privada - Con cuenta)
-// Requiere Token porque NO está en la lista de permitidos
+    // VÍA 2: SEGUIMIENTO DETALLADO (Privada - JWT requerido)
     @GetMapping("/seguimiento/privado/{folio}")
     public ResponseEntity<QuejaSeguimientoDTO> consultarSeguimientoPrivado(@PathVariable String folio) {
-        // Aquí el servicio debería validar que el dueño del Token sea el dueño de la queja
         return quejaService.obtenerSeguimiento(folio)
-                .map(ResponseEntity::ok)
+                .map(dto -> {
+                    // URL privada: el interceptor de Angular agrega el JWT automáticamente
+                    String urlBase = baseUrl + "/api/quejoso/quejas/evidencias/";
+                    dto.getEvidencias().forEach(e -> e.setUrlDescarga(urlBase + e.getId()));
+                    return ResponseEntity.ok(dto);
+                })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 

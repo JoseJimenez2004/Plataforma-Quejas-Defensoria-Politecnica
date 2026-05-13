@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { QuejaService } from '../../../core/services/queja.service';
-import { QuejaSeguimientoDTO, EstatusQueja, ESTATUS_LABEL } from '../../../models/queja.models';
+import { QuejaSeguimientoDTO, EvidenciaDTO, EstatusQueja, ESTATUS_LABEL } from '../../../models/queja.models';
 
 interface PasoTramite {
   label: string;
@@ -69,5 +69,22 @@ export class DetalleQuejaComponent implements OnInit {
 
   etiquetaEstatus(e: EstatusQueja): string {
     return ESTATUS_LABEL[e] ?? e;
+  }
+
+  /**
+   * Descarga una evidencia mediante HttpClient (el interceptor agrega el JWT).
+   * Crea un enlace temporal en el DOM para forzar la descarga del blob.
+   */
+  descargar(ev: EvidenciaDTO): void {
+    this.quejaService.descargarEvidencia(ev.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = ev.nombreArchivo;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+    });
   }
 }

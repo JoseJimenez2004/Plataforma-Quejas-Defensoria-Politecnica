@@ -97,4 +97,14 @@ export class HomeComponent {
   etiquetaEstatus(e: EstatusQueja): string {
     return ESTATUS_LABEL[e] ?? e;
   }
+
+  /**
+   * Construye la URL de descarga pública de una evidencia.
+   * El endpoint es público (no requiere JWT) pero valida que el folio y correo
+   * coincidan con los que se usaron para consultar la queja.
+   */
+  urlDescargaPublica(id: number): string {
+    const base = 'http://localhost:8080/api/quejoso/quejas/evidencias';
+    return `${base}/${id}/publico?folio=${this.folioSeguimiento}&correo=${this.correoSeguimiento}`;
+  }
 }

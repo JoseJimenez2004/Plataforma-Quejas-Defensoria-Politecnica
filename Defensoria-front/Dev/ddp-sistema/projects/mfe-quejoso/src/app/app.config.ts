@@ -8,7 +8,7 @@ import {
   Hand, Search, Users, HelpCircle, BookOpen, GraduationCap, ClipboardList, Scale,
   FileText, Download, Check, Printer, CheckCircle, Mail, Lock, EyeOff, Eye, KeyRound,
   ThumbsUp, X, Paperclip, Trash2, Pencil, AlertTriangle, User, Folder, CirclePlus,
-  Bell, Settings, Info, LockOpen, Hash
+  Bell, Settings, Info, LockOpen, Hash, FileSignature
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -24,7 +24,7 @@ export const appConfig: ApplicationConfig = {
         Hand, Search, Users, HelpCircle, BookOpen, GraduationCap, ClipboardList, Scale,
         FileText, Download, Check, Printer, CheckCircle, Mail, Lock, EyeOff, Eye, KeyRound,
         ThumbsUp, X, Paperclip, Trash2, Pencil, AlertTriangle, User, Folder, CirclePlus,
-        Bell, Settings, Info, LockOpen, Hash
+        Bell, Settings, Info, LockOpen, Hash, FileSignature
       })
     )
   ],

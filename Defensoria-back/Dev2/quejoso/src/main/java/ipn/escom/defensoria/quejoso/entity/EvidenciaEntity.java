@@ -19,8 +19,9 @@ public class EvidenciaEntity {
     private Long id;
 
     private String nombreArchivo;
-    private String urlAlmacenamiento; // Link al servicio de storage
+    private String urlAlmacenamiento; // Clave retornada por StorageService (ruta relativa o key de nube)
     private Long tamano; // Para validar los 30MB totales
+    private String tipoContenido; // MIME type, ej. "application/pdf", "image/jpeg"
 
     @ManyToOne
     @JoinColumn(name = "queja_id")
