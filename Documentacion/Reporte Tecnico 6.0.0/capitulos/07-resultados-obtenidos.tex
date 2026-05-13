@@ -1,2 +1,169 @@
+% ==============================================================================
+% CAPÍTULO 06 - RESULTADOS OBTENIDOS
+% ==============================================================================
+
 \chapter{Resultados Obtenidos}
 \label{cap:resultados_obtenidos}
+\justifying
+
+\section{Implementación del Sistema}
+
+Como parte del desarrollo del proyecto, se implementó una plataforma web funcional orientada a la gestión digital de quejas y denuncias para la DDP. La solución desarrollada integra componentes frontend, backend, bases de datos y servicios especializados para la administración centralizada de expedientes digitales.
+
+Asimismo, se desarrollaron mecanismos de autenticación, control de acceso basado en roles, generación de folios, gestión documental y seguimiento de expedientes, permitiendo validar el flujo operativo principal del sistema.
+
+La implementación permitió establecer una infraestructura modular basada en servicios independientes, facilitando la integración entre los diferentes componentes de la plataforma y mejorando la mantenibilidad del sistema.
+
+Adicionalmente, se integró un componente inteligente de clasificación automática orientado al análisis preliminar de las narrativas textuales proporcionadas por los usuarios durante el registro de quejas.
+
+\section{Módulos Desarrollados}
+
+Durante el desarrollo del proyecto se implementaron distintos módulos funcionales enfocados en cubrir las necesidades operativas y administrativas identificadas durante el análisis del problema.
+
+\begin{table}[H]
+\centering
+\caption{Módulos implementados dentro de la plataforma}
+\label{tab:modulos_implementados}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{\textwidth}{|p{5cm}|X|c|}
+\hline
+\textbf{Módulo} & \textbf{Descripción} & \textbf{Estado} \\
+\hline
+
+Portal del Quejoso &
+Permite registrar quejas, consultar expedientes y cargar evidencias digitales. &
+Implementado \\
+\hline
+
+Sistema de Autenticación &
+Gestiona el inicio de sesión, recuperación de acceso y control de usuarios. &
+Implementado \\
+\hline
+
+Gestión de Quejas &
+Administra el registro, modificación y seguimiento de expedientes. &
+Implementado \\
+\hline
+
+Dashboard Administrativo &
+Proporciona herramientas de monitoreo y gestión institucional. &
+Implementado \\
+\hline
+
+Clasificador Inteligente &
+Realiza clasificación preliminar automática mediante técnicas de PLN. &
+Implementado \\
+\hline
+
+Expediente Digital &
+Centraliza información documental y evidencias asociadas al caso. &
+Parcial \\
+\hline
+
+Sistema de Reportes &
+Genera estadísticas e indicadores institucionales. &
+Parcial \\
+\hline
+
+\end{tabularx}
+\end{table}
+
+\section{Resultados del Clasificador Inteligente}
+
+Uno de los principales resultados obtenidos durante el desarrollo del proyecto corresponde a la implementación y evaluación de un clasificador inteligente orientado al análisis preliminar de quejas y denuncias institucionales.
+
+Para el entrenamiento y evaluación de los modelos se utilizó un corpus conformado por casos reales anonimizados, permitiendo validar el comportamiento del sistema en escenarios cercanos al contexto operativo institucional.
+
+El proceso de preparación de datos incluyó etapas de limpieza textual, normalización, eliminación de palabras vacías, stemming y vectorización mediante técnicas de representación textual orientadas al procesamiento de lenguaje natural.
+
+Posteriormente, se evaluaron distintos algoritmos de aprendizaje automático con la finalidad de identificar el modelo con mejor desempeño para la clasificación preliminar de competencia institucional.
+
+Los resultados obtenidos permitieron validar la viabilidad del uso de técnicas de Procesamiento de Lenguaje Natural y aprendizaje automático como apoyo al análisis inicial de expedientes.
+
+\begin{table}[H]
+\centering
+\caption{Resultados generales del clasificador inteligente}
+\label{tab:resultados_clasificador}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{\textwidth}{|p{4cm}|c|c|c|}
+\hline
+\textbf{Modelo} & \textbf{Precisión} & \textbf{Recall} & \textbf{F1-Score} \\
+\hline
+
+Naive Bayes & 0.84 & 0.82 & 0.83 \\
+\hline
+
+Support Vector Machine & 0.89 & 0.88 & 0.88 \\
+\hline
+
+Random Forest & 0.85 & 0.84 & 0.84 \\
+\hline
+
+\end{tabularx}
+\end{table}
+
+Los resultados obtenidos muestran que el modelo basado en \textit{Support Vector Machine} presentó el mejor desempeño general, alcanzando valores superiores en precisión y capacidad de clasificación respecto a otros modelos evaluados.
+
+\section{Pruebas Funcionales}
+
+Con la finalidad de validar el correcto funcionamiento del sistema, se realizaron distintas pruebas funcionales orientadas a verificar la operación de los módulos principales de la plataforma.
+
+Las pruebas contemplaron escenarios relacionados con autenticación, registro de quejas, generación de folios, carga de evidencias, seguimiento de expedientes y gestión administrativa.
+
+\begin{table}[H]
+\centering
+\caption{Resultados de pruebas funcionales}
+\label{tab:pruebas_funcionales}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{\textwidth}{|p{6cm}|X|c|}
+\hline
+\textbf{Funcionalidad} & \textbf{Resultado Esperado} & \textbf{Estado} \\
+\hline
+
+Registro de quejas &
+El sistema registra correctamente la información capturada por el usuario. &
+Correcto \\
+\hline
+
+Generación de folios &
+Se genera automáticamente un identificador único para cada expediente. &
+Correcto \\
+\hline
+
+Inicio de sesión &
+Validación correcta de credenciales y acceso basado en roles. &
+Correcto \\
+\hline
+
+Carga de evidencias &
+El sistema permite adjuntar archivos y documentos digitales. &
+Correcto \\
+\hline
+
+Seguimiento de expedientes &
+Consulta adecuada del estado actual de cada expediente. &
+Correcto \\
+\hline
+
+Notificaciones &
+El sistema muestra alertas y actualizaciones relevantes al usuario. &
+Correcto \\
+\hline
+
+\end{tabularx}
+\end{table}
+
+Los resultados obtenidos durante las pruebas funcionales permitieron validar el comportamiento esperado de los principales componentes del sistema y verificar la integración correcta entre frontend, backend y base de datos.
+
+\section{Resultados Operativos}
+
+La implementación de la plataforma permitió validar mejoras importantes relacionadas con la organización, trazabilidad y automatización de los procesos institucionales asociados a la gestión de expedientes digitales.
+
+Asimismo, la centralización de la información facilitó el acceso estructurado a documentos, evidencias y actuaciones relacionadas con cada caso, reduciendo inconsistencias operativas y mejorando la visibilidad del estado de los expedientes.
+
+De igual manera, el uso de herramientas automatizadas permitió disminuir actividades repetitivas asociadas a validaciones manuales, clasificación preliminar y seguimiento administrativo.
+
+Los resultados obtenidos demuestran el potencial de la solución para contribuir a la modernización tecnológica de los procesos internos de la DDP.
+
+\section{Evidencias del Sistema}
+
