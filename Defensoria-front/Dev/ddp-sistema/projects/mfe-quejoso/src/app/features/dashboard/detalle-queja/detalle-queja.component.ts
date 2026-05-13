@@ -72,6 +72,24 @@ export class DetalleQuejaComponent implements OnInit {
   }
 
   /**
+   * Descarga el acuse de recibo de la queja actual.
+   * Usa el endpoint autenticado; el interceptor agrega el JWT automáticamente.
+   */
+  descargarAcuse(): void {
+    if (!this.queja) return;
+    this.quejaService.descargarAcuse(this.queja.folio).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `acuse-${this.queja!.folio}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+    });
+  }
+
+  /**
    * Descarga una evidencia mediante HttpClient (el interceptor agrega el JWT).
    * Crea un enlace temporal en el DOM para forzar la descarga del blob.
    */

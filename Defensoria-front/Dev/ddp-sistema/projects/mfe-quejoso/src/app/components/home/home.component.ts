@@ -107,4 +107,16 @@ export class HomeComponent {
     const base = 'http://localhost:8080/api/quejoso/quejas/evidencias';
     return `${base}/${id}/publico?folio=${this.folioSeguimiento}&correo=${this.correoSeguimiento}`;
   }
+
+  /**
+   * Descarga el acuse de recibo desde el modal de seguimiento público.
+   * Usa el endpoint público; el backend valida folio y correo.
+   */
+  descargarAcuse(): void {
+    const url = this.quejaService.urlAcusePublico(
+      this.resultadoSeguimiento!.folio,
+      this.correoSeguimiento
+    );
+    window.open(url, '_blank');
+  }
 }

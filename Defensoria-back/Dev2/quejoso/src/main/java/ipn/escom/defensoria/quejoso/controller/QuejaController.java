@@ -7,12 +7,14 @@ import ipn.escom.defensoria.quejoso.dto.QuejaEditarDTO;
 import ipn.escom.defensoria.quejoso.entity.EvidenciaEntity;
 import ipn.escom.defensoria.quejoso.entity.Queja;
 import ipn.escom.defensoria.quejoso.repository.EvidenciaRepository;
+import ipn.escom.defensoria.quejoso.repository.QuejaRepository;
 import ipn.escom.defensoria.quejoso.service.QuejaService;
 import ipn.escom.defensoria.quejoso.storage.StorageService;
 import ipn.escom.defensoria.quejoso.entity.Tutor;
 import ipn.escom.defensoria.quejoso.entity.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -29,6 +32,9 @@ public class QuejaController {
 
     @Autowired
     private QuejaService quejaService;
+
+    @Autowired
+    private QuejaRepository quejaRepository;
 
     @Autowired
     private EvidenciaRepository evidenciaRepository;
@@ -210,6 +216,83 @@ public class QuejaController {
         }
     }
 
+
+    /**
+     * Descarga autenticada del acuse de recibo de una queja.
+     * Valida que el JWT corresponda al dueño de la queja.
+     *
+     * Pendiente: cuando se integre generación dinámica de PDF (iText/OpenPDF),
+     * solo se reemplaza el cuerpo de {@link #cargarPdfAcuse()} — el endpoint
+     * y la URL no cambian.
+     */
+    @GetMapping("/{folio}/acuse")
+    public ResponseEntity<byte[]> descargarAcuse(@PathVariable String folio) {
+        Usuario usuarioAutenticado = (Usuario) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+
+        Queja queja = quejaRepository.findByFolio(folio)
+                .orElseThrow(() -> new RuntimeException("Queja no encontrada"));
+
+        if (queja.getQuejoso() == null
+                || !queja.getQuejoso().getId().equals(usuarioAutenticado.getId())) {
+            throw new RuntimeException("No tienes permiso para descargar este acuse");
+        }
+
+        return construirRespuestaAcuse(folio);
+    }
+
+    /**
+     * Descarga pública del acuse de recibo. Valida que el folio y correo
+     * coincidan con los registrados en la queja, sin requerir JWT.
+     * Usado desde la pantalla de éxito y el modal de seguimiento del home.
+     */
+    @GetMapping("/{folio}/acuse/publico")
+    public ResponseEntity<byte[]> descargarAcusePublico(
+            @PathVariable String folio,
+            @RequestParam String correo) {
+
+        Queja queja = quejaRepository.findByFolio(folio)
+                .orElseThrow(() -> new RuntimeException("Queja no encontrada"));
+
+        boolean correoCoincide = queja.getCorreoQuejoso() != null
+                && queja.getCorreoQuejoso().equalsIgnoreCase(correo);
+
+        if (!correoCoincide) {
+            throw new RuntimeException("No tienes permiso para descargar este acuse");
+        }
+
+        return construirRespuestaAcuse(folio);
+    }
+
+    /**
+     * Construye la respuesta HTTP con el PDF del acuse.
+     * El nombre del archivo incluye el folio para identificarlo fácilmente
+     * en la carpeta de descargas del usuario.
+     */
+    private ResponseEntity<byte[]> construirRespuestaAcuse(String folio) {
+        byte[] pdf = cargarPdfAcuse();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF_VALUE)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"acuse-" + folio + ".pdf\"")
+                .body(pdf);
+    }
+
+    /**
+     * Lee el PDF placeholder desde el classpath (resources/static/acuse-placeholder.pdf).
+     *
+     * MIGRACIÓN FUTURA: reemplazar este método con generación dinámica usando
+     * iText o OpenPDF, poblando el PDF con los datos de la queja (folio, fecha,
+     * asunto, nombre del quejoso, estatus actual). El resto del controlador no cambia.
+     */
+    private byte[] cargarPdfAcuse() {
+        try {
+            ClassPathResource resource = new ClassPathResource("static/acuse-placeholder.pdf");
+            return resource.getInputStream().readAllBytes();
+        } catch (IOException e) {
+            throw new RuntimeException("El acuse no está disponible temporalmente. Intenta más tarde.");
+        }
+    }
 
     private Queja mappearDtoAEntidad(QuejaRegistroDTO dto) {
         Queja q = new Queja();

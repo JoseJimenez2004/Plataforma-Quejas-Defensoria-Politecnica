@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { HeaderComponent } from '../../../components/header/header.component';
 import { FooterComponent } from '../../../components/footer/footer.component';
+import { QuejaService } from '../../../core/services/queja.service';
 
 @Component({
   selector: 'app-pantalla-exito',
@@ -13,6 +14,7 @@ import { FooterComponent } from '../../../components/footer/footer.component';
 })
 export class PantallaExitoComponent implements OnInit {
   private router = inject(Router);
+  private quejaService = inject(QuejaService);
 
   folio = '';
   correo = '';
@@ -33,5 +35,14 @@ export class PantallaExitoComponent implements OnInit {
     this.router.navigate(['/queja/configurar-cuenta'], {
       state: { folio: this.folio, correo: this.correo },
     });
+  }
+
+  /**
+   * Descarga el acuse usando la URL pública (no requiere JWT).
+   * El backend valida que el correo coincida con el de la queja.
+   * Se abre en una nueva pestaña para que el navegador maneje la descarga.
+   */
+  descargarAcuse(): void {
+    window.open(this.quejaService.urlAcusePublico(this.folio, this.correo), '_blank');
   }
 }

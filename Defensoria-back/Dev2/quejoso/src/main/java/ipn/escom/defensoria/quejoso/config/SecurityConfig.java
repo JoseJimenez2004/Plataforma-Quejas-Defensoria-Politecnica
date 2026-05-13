@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/quejoso/quejas/seguimiento/publico").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/quejoso/quejas/evidencias/*/publico").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/quejoso/quejas/*/acuse/publico").permitAll()
 
                         // 2. RUTAS PROTEGIDAS
                         .anyRequest().authenticated()

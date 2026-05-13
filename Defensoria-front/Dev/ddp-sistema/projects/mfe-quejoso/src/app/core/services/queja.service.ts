@@ -45,4 +45,22 @@ export class QuejaService {
   descargarEvidencia(id: number): Observable<Blob> {
     return this.http.get(`${BASE}/evidencias/${id}`, { responseType: 'blob' });
   }
+
+  /**
+   * Descarga autenticada del acuse de recibo de una queja.
+   * El interceptor agrega el JWT automáticamente.
+   * Se usa desde el detalle de queja en el dashboard.
+   */
+  descargarAcuse(folio: string): Observable<Blob> {
+    return this.http.get(`${BASE}/${folio}/acuse`, { responseType: 'blob' });
+  }
+
+  /**
+   * Construye la URL del acuse público (sin JWT).
+   * Se usa desde la pantalla de éxito y el modal de seguimiento del home,
+   * donde el usuario aún no tiene sesión iniciada.
+   */
+  urlAcusePublico(folio: string, correo: string): string {
+    return `${BASE}/${folio}/acuse/publico?correo=${encodeURIComponent(correo)}`;
+  }
 }
