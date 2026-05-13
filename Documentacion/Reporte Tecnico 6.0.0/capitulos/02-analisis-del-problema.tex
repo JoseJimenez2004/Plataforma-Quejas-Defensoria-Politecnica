@@ -1,5 +1,73 @@
-\chapter{Análisis del problema}
+% ==============================================================================
+% CAPÍTULO - ANÁLISIS DEL PROBLEMA
+% ==============================================================================
+
+\chapter{Análisis del Problema}
+\label{cap:analisis_problema}
+\justifying
+
 \section{Problema General}
-\section{Problemas especificos}
+
+La DDP enfrenta diversos retos operativos derivados de la gestión manual y parcialmente digitalizada de las quejas y denuncias presentadas por la comunidad politécnica. Actualmente, gran parte de los procesos relacionados con el registro, validación, seguimiento y resolución de expedientes depende de mecanismos administrativos fragmentados, lo que genera retrasos en la atención, dificultades de trazabilidad y una limitada capacidad de supervisión institucional.
+
+Asimismo, la ausencia de una plataforma centralizada dificulta la comunicación entre las áreas involucradas en el procedimiento, provocando inconsistencias en el flujo operativo, duplicidad de información y complicaciones para dar seguimiento oportuno a cada expediente. Esta situación impacta directamente en la eficiencia institucional, en la experiencia del usuario y en la capacidad de respuesta de la DDP ante situaciones que requieren atención inmediata.
+
+De igual manera, la administración de expedientes y evidencias digitales presenta limitaciones importantes en términos de organización, consulta y resguardo seguro de la información. Lo anterior incrementa el riesgo de pérdida documental, errores administrativos y dificultades para garantizar la integridad de los datos durante todo el ciclo de vida de la queja.
+
+Por otra parte, la determinación preliminar de competencia y procedencia depende en gran medida de la revisión manual de las narrativas redactadas por los usuarios, lo que incrementa la carga operativa del personal y puede generar inconsistencias en la clasificación inicial de los casos. En consecuencia, la DDP enfrenta dificultades para optimizar sus tiempos de respuesta, reducir el rezago administrativo y mantener un flujo de atención eficiente y transparente.
+
+\section{Problemas Específicos}
+
+A partir del análisis del flujo operativo institucional y de los procesos actuales de atención de quejas, se identificaron los siguientes problemas específicos:
+
+\begin{itemize}
+
+    \item Ausencia de una plataforma centralizada para la gestión integral de expedientes, evidencias y seguimiento de casos.
+
+    \item Dependencia de procesos manuales para el registro, validación y canalización de las quejas.
+
+    \item Dificultad para determinar de manera rápida y consistente la competencia institucional de cada caso.
+
+    \item Escasa trazabilidad del ciclo de vida de las quejas y limitada visibilidad del estado actual de los expedientes.
+
+    \item Retrasos administrativos derivados de la revisión manual de documentos y evidencias digitales.
+
+    \item Problemas de comunicación entre las diferentes áreas involucradas en el proceso de atención.
+
+    \item Riesgos asociados al manejo de información sensible y evidencias digitales sin mecanismos robustos de control y auditoría.
+
+    \item Falta de mecanismos automatizados para validar información incompleta, inconsistente o incorrectamente capturada por los usuarios.
+
+    \item Dificultad para mantener un historial estructurado de actuaciones, acuerdos, notificaciones y resoluciones relacionadas con cada expediente.
+
+    \item Limitaciones tecnológicas para generar estadísticas, indicadores y reportes institucionales en tiempo real.
+
+\end{itemize}
+
 \section{Causas}
-\section{Solución}
+
+Las problemáticas identificadas tienen origen en diversos factores tecnológicos, operativos y organizacionales que afectan directamente el desempeño de los procesos internos de la DDP.
+
+En primer lugar, una parte importante del procedimiento administrativo depende de actividades manuales realizadas por el personal institucional, incluyendo la validación de información, clasificación de casos, revisión documental y seguimiento de expedientes. Esta dependencia incrementa la probabilidad de errores humanos, inconsistencias operativas y retrasos en la atención.
+
+Asimismo, la inexistencia de una arquitectura tecnológica centralizada provoca fragmentación de la información entre distintas áreas y dificulta la integración eficiente de los procesos institucionales. Como consecuencia, la información relacionada con las quejas puede encontrarse dispersa, duplicada o desactualizada, afectando la continuidad operativa y la trazabilidad del expediente.
+
+Otro factor relevante corresponde a la ausencia de mecanismos automatizados de análisis y clasificación de las narrativas presentadas por los usuarios. Actualmente, la determinación preliminar de competencia depende principalmente de la interpretación humana de los hechos descritos en cada queja, situación que incrementa la carga operativa y puede generar diferencias de criterio entre operadores.
+
+De igual manera, la falta de herramientas especializadas para el control de accesos, administración de evidencias digitales y monitoreo de actividades limita la capacidad institucional para garantizar seguridad, privacidad e integridad documental.
+
+Finalmente, el crecimiento en el volumen de información y la complejidad de los procesos administrativos evidencian limitaciones en la infraestructura tecnológica tradicional, dificultando la escalabilidad, mantenibilidad y modernización de los servicios digitales institucionales.
+
+\section{Solución Propuesta}
+
+Como respuesta a las problemáticas identificadas, se propone el desarrollo de una plataforma web integral orientada a la gestión digital de quejas y denuncias dentro de la DDP.
+
+La solución contempla una arquitectura híbrida basada en microservicios, permitiendo separar los distintos módulos operativos del sistema y facilitar su escalabilidad, mantenimiento, disponibilidad y seguridad. Esta arquitectura permite además desacoplar los procesos administrativos, el almacenamiento de información y los componentes inteligentes encargados del análisis automatizado de las quejas.
+
+La plataforma incorpora un portal digital para el registro de denuncias y seguimiento de expedientes, permitiendo a los usuarios consultar el estado de sus casos, adjuntar evidencias digitales y mantener comunicación con las áreas correspondientes de la DDP. Asimismo, el sistema centraliza la información institucional en un expediente digital único, mejorando la organización documental y la trazabilidad del procedimiento.
+
+Adicionalmente, se integra un clasificador inteligente basado en técnicas de Procesamiento de Lenguaje Natural y aprendizaje automático, cuya finalidad es asistir en la determinación preliminar de competencia institucional a partir de la narrativa textual proporcionada por el usuario. Este componente busca reducir tiempos de análisis, optimizar la canalización de casos y disminuir la carga operativa del personal administrativo.
+
+La solución también incorpora mecanismos de control de acceso basado en roles, gestión segura de evidencias digitales, validación automática de información, auditoría de acciones y generación de reportes institucionales. En conjunto, estas funcionalidades permiten fortalecer la eficiencia operativa, mejorar la transparencia institucional y garantizar un manejo más seguro y estructurado de la información.
+
+Finalmente, la implementación de esta plataforma contribuye a modernizar los procesos de atención de la DDP, reducir el rezago administrativo y proporcionar una experiencia digital más eficiente, accesible y confiable para la comunidad politécnica.
