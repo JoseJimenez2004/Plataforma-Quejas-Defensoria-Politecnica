@@ -1,0 +1,72 @@
+\documentclass[12pt, oneside, letterpaper]{book}
+\usepackage{configuraciones/setup}
+
+% Casos de USO
+\input{configuraciones/figuras_casos_uso.tex}
+\usepackage[utf8]{inputenc}
+\usepackage{textcomp}
+\lstset{inputencoding=utf8, extendedchars=true}
+
+% Imágenes y PDFs
+\usepackage{pdfpages} % Permite insertar páginas de archivos PDF externos
+\usepackage{ragged2e}
+
+% Definición de estilo para JSON
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily\small,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{gray!5}
+}
+
+\usepackage{tabularx} % Para que las tablas ocupen el ancho de la página
+\usepackage{enumitem} % Para reducir espacio en listas si las usas
+\usepackage[table]{xcolor} % Por si quieres dar color a las cabeceras
+
+% ==============================================================================
+\usepackage{hyperref} 
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    pdftitle={Trabajo Terminal - Defensoría de los Derechos Politécnicos},
+    pdfnewwindow=true % Esto ayuda a que los archivos externos se abran en otra ventana
+}
+
+\begin{document}
+
+\frontmatter
+% Referencias para los archivos de capítulos
+%\include{capitulos/00-portada} 
+%\include{capitulos/00-advertencia} 
+%\include{capitulos/00-agradecimientos}
+%\include{capitulos/00-indices}
+%\include{capitulos/00-glosario}
+
+\mainmatter
+\pagestyle{fancy}
+%\include{capitulos/01-introduccion}
+\include{capitulos/02-estado-del-arte}
+%\include{capitulos/03-marco-normativo}
+%\include{capitulos/04-marco-teorico}
+%\include{capitulos/05-metodologia}
+%\include{capitulos/06-analisis-del-sistema}
+%\include{capitulos/07-diseno-del-sistema}
+%\include{capitulos/08-desarrollo-clasificador}
+
+\backmatter 
+%\include{capitulos/00-anexoA}
+%\include{capitulos/00-anexoB}
+%\include{capitulos/00-anexoC}
+%\include{capitulos/00-anexoD}
+%\include{capitulos/00-anexoE}
+%\include{capitulos/00-anexoF}
+%\include{capitulos/00-referencias}
+
+
+\end{document}
