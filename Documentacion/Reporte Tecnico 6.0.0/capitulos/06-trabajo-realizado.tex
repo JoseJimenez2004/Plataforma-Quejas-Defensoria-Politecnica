@@ -359,7 +359,18 @@ las cuales encapsula un conjunto de acciones relacionadas:
     \label{fig:casos_uso}
 \end{figure}
 
+Los casos de uso de la Figura \ref{fig:casos_uso} describen las interacciones posibles entre el personal de la Defensoría, delimitando las responsabilidades funcionales del componente con independencia de la tecnología empleada. A partir del análisis de requerimientos se identificaron cuatro agrupaciones funcionales: Usuario/Recepcionista, Analista de primer contacto, Subdefensoría/Defensor y Administrador. Esta figura representa el funcionamiento integral de la Defensoría; sin embargo, el hecho de que todas las interacciones aparezcan en un mismo diagrama no implica que constituyan un único microservicio, sino que cada microservicio deberá delimitarse conforme al conjunto de actores que participan en sus flujos correspondientes.
+% ── Figura: Diagrama de casos de uso ──
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{imagenes/Cap8/CasosUsoDefensoria.png}
+    \caption{Diagrama de casos de uso del microservicio de atención al quejoso}
+    \label{fig:casos_uso2}
+\end{figure}
+
 \footnote{Para mayores especificaciones, consultar el \textbf{Anexo Casos de USO}.}
+
+
 \subsection{Modelo de Base de Datos}
 \label{subsec:modelo_bd}
 
@@ -407,6 +418,9 @@ La Figura \ref{fig:mockups} presenta la pantalla principal al iniciar sesión, e
     \label{fig:mockups}
 \end{figure}
 
+\footnote{Para mayores especificaciones, consultar el \textbf{Anexo Mockups}.}
+
+\clearpage
 \subsection{Implementación del \textit{Backend}}
 \label{subsec:backend}
 

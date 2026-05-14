@@ -1,32 +1,49 @@
-\documentclass[12pt]{article}
+\documentclass[12pt, oneside, letterpaper]{book}
+\usepackage{configuraciones/setup}
 
+% Casos de USO
+\input{configuraciones/figuras_casos_uso.tex}
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[spanish]{babel}
-\usepackage[margin=2.5cm]{geometry}
-\usepackage{booktabs}
-\usepackage{tabularx}
-\usepackage{colortbl}
-\usepackage[table]{xcolor}
-\usepackage{float}
-\usepackage{hyperref}
+\usepackage{textcomp}
+\lstset{inputencoding=utf8, extendedchars=true}
 
-\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+% Imágenes y PDFs
+\usepackage{pdfpages} % Permite insertar páginas de archivos PDF externos
+\usepackage{ragged2e}
 
-\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+% Definición de estilo para JSON
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily\small,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{gray!5}
+}
 
-\title{\textbf{Análisis Detallado de Costos del Proyecto (12 meses)}\\
-\large Plataforma Web DDP-IPN}
-\date{}
+\usepackage{tabularx} % Para que las tablas ocupen el ancho de la página
+\usepackage{enumitem} % Para reducir espacio en listas si las usas
+\usepackage[table]{xcolor} % Por si quieres dar color a las cabeceras
+
+% ==============================================================================
+\usepackage{hyperref} 
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    pdftitle={Trabajo Terminal - Defensoría de los Derechos Politécnicos},
+    pdfnewwindow=true % Esto ayuda a que los archivos externos se abran en otra ventana
+}
 
 \begin{document}
-
-\maketitle
-\thispagestyle{empty}
+\section{Análisis Detallado de Costos del Proyecto (12 meses)}
 
 El éxito financiero y operativo de la plataforma para la denuncia segura depende de una estimación precisa de los recursos. El presente presupuesto se ha personalizado para reflejar los gastos operativos reales del equipo de trabajo, asegurando que la infraestructura soporte los estándares de seguridad y disponibilidad requeridos por la normativa mexicana.
 
-\section{Inversión en Hardware (Pago Único)}
+\subsection{Inversión en Hardware (Pago Único)}
 
 La infraestructura de cómputo representa la base técnica del desarrollo. Se han contabilizado los equipos de alto rendimiento necesarios para la ejecución de entornos de microservicios, contenedores (Docker/Podman) y herramientas de análisis estático de código que demandan una carga considerable de memoria RAM y procesamiento.
 
@@ -43,7 +60,7 @@ Bastian & Acer Nitro Lite 16" (Core i5-13420H, 16GB RAM) & \$14,999.00 \\ \hline
 \end{tabular}
 \end{table}
 
-\section{Gastos Operativos Individuales (Mensuales)}
+\subsection{Gastos Operativos Individuales (Mensuales)}
 
 A diferencia de un cálculo genérico, se aplican los costos específicos reportados por cada miembro del equipo. Estos gastos cubren la conectividad de alta velocidad indispensable para la sincronización de repositorios y la energía eléctrica necesaria para mantener las estaciones de trabajo operativas durante las jornadas de desarrollo y pruebas de integración.
 
@@ -61,7 +78,7 @@ Bastian & \$250.00 & \$389.00 & \$639.00 \\ \hline
 \end{tabular}
 \end{table}
 
-\section{Licenciamiento y Herramientas Especializadas}
+\subsection{Licenciamiento y Herramientas Especializadas}
 
 Para garantizar la integridad y seguridad de la plataforma, se han seleccionado herramientas líderes en la industria. El uso de \textbf{Termius} permite una gestión cifrada de servidores, mientras que \textbf{Kiuwan} y \textbf{SonarQube} se implementan como filtros críticos de seguridad (SAST) para mitigar vulnerabilidades antes del despliegue. Los costos en moneda extranjera consideran un tipo de cambio base de \$17.34 MXN.
 
@@ -81,7 +98,7 @@ SonarQube & \$12,484.80/año & Mes 2 al 12 & \$12,484.80 \\ \hline
 \end{tabular}
 \end{table}
 
-\section{Resumen Consolidado de la Inversión}
+\subsection{Resumen Consolidado de la Inversión}
 
 El costo total refleja la inversión integral para el desarrollo de la plataforma. La categoría de Capital Humano constituye el rubro principal, contemplando el trabajo especializado de tres ingenieros becarios. Se incluye un margen destinado a la capacitación técnica inicial necesaria para dominar el stack tecnológico seleccionado, asegurando que el desarrollo cumpla con los estándares de calidad exigidos por la institución.
 
