@@ -1,0 +1,446 @@
+\documentclass[12pt, oneside, letterpaper]{book}
+\usepackage{configuraciones/setup}
+
+% Casos de USO
+\input{configuraciones/figuras_casos_uso.tex}
+\usepackage[utf8]{inputenc}
+\usepackage{textcomp}
+\lstset{inputencoding=utf8, extendedchars=true}
+
+% Imágenes y PDFs
+\usepackage{pdfpages} % Permite insertar páginas de archivos PDF externos
+\usepackage{ragged2e}
+
+% Definición de estilo para JSON
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily\small,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{gray!5}
+}
+
+\usepackage{tabularx} % Para que las tablas ocupen el ancho de la página
+\usepackage{enumitem} % Para reducir espacio en listas si las usas
+\usepackage[table]{xcolor} % Por si quieres dar color a las cabeceras
+
+% ==============================================================================
+\usepackage{hyperref} 
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    pdftitle={Trabajo Terminal - Defensoría de los Derechos Politécnicos},
+    pdfnewwindow=true % Esto ayuda a que los archivos externos se abran en otra ventana
+}
+
+\begin{document}
+
+\section{Catálogo de Requerimientos y Reglas de Negocio}
+
+Este documento presenta el catálogo completo de requerimientos y reglas de negocio
+levantados durante la etapa de interacción con el cliente. Los artefactos se
+organizan en cinco categorías: requerimientos de usuario (RU), requerimientos de
+sistema (RS), requerimientos funcionales (RF), requerimientos no funcionales (RNF)
+y reglas de negocio (RN).
+
+%============================================================
+\subsection{Requerimientos de Usuario}
+%============================================================
+
+En esta sección se detallan las necesidades específicas de cada actor que
+interactúa con la plataforma. Estos requerimientos representan las acciones
+fundamentales que el sistema debe permitir para garantizar el ciclo de vida
+de la queja y el cumplimiento normativo institucional.
+
+\begin{table}[H]
+\centering
+\caption{Requerimientos de Usuario Específicos por Actor.}
+\begin{tabularx}{\textwidth}{@{} l l L @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Actor} &
+\textbf{\color{white} Descripción de la Necesidad} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RU-01 & Quejoso & Registro de cuenta mediante credenciales institucionales (boleta/empleado). \\
+RU-02 & Quejoso & Gestión de perfil personal y carga de datos de tutor (en caso de ser menor de edad). \\
+\rowcolor[HTML]{F2F4F7}
+RU-03 & Quejoso & Levantamiento de queja detallando hechos, lugar y autoridades involucradas. \\
+RU-04 & Quejoso & Carga de evidencias multimedia (PDF, imágenes, audio, video) para sustentar la queja. \\
+\rowcolor[HTML]{F2F4F7}
+RU-05 & Quejoso & Consulta del estatus de la queja en tiempo real mediante un folio digital único. \\
+RU-06 & Quejoso & Recepción de notificaciones automáticas sobre actualizaciones en su expediente. \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RU-07 & Recepcionista & Visualización de quejas entrantes en una bandeja de entrada centralizada. \\
+RU-08 & Recepcionista & Validación de requisitos mínimos y triaje inicial de la documentación recibida. \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RU-09 & Analista & Evaluación jurídica de fondo de los hechos narrados para determinar competencia. \\
+RU-10 & Analista & Gestión del expediente digital, incluyendo la adición de notas y documentos internos. \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RU-11 & Subdefensor & Supervisión de los plazos legales para evitar el rezago administrativo. \\
+RU-12 & Subdefensor & Gestión de actos de investigación y seguimiento de oficios enviados a autoridades. \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RU-13 & Defensor & Visualización de estadísticas generales y tableros de control de gestión institucional. \\
+RU-14 & Defensor & Emisión, firma digital avanzada y validación de acuerdos de conclusión del caso. \\
+\rowcolor[HTML]{F2F4F7}
+RU-15 & Defensor & Administración de privilegios de usuario y configuración de roles del sistema (RBAC). \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+
+%============================================================
+\subsection{Requerimientos de Sistema}
+%============================================================
+
+En esta sección se definen las capacidades técnicas y funcionales que el sistema
+debe ejecutar para dar soporte a los procesos operativos de la Defensoría. Estos
+requerimientos están enfocados en la lógica de procesamiento, seguridad de datos
+y automatización de trámites.
+
+\begin{table}[H]
+\centering
+\caption{Requerimientos de Sistema (Funcionales y Técnicos).}
+\begin{tabularx}{\textwidth}{@{} l L l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} Categoría} & \textbf{\color{white} Especificación Técnica} &
+\textbf{\color{white} Alcance} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+Inteligencia Artificial & Motor de clasificación basado en PLN para determinar la competencia de las quejas de forma automática. & Sistema \\
+Seguridad (RBAC) & Sistema de autenticación con JWT y control de acceso basado en roles para restringir la visibilidad de datos sensibles. & General \\
+\rowcolor[HTML]{F2F4F7}
+Gestión Documental & Generador automático de plantillas para oficios a Unidades Académicas, acuerdos de admisión y de conclusión en PDF. & Subdefensor \\
+Firma Electrónica & Módulo de sellado digital y firma avanzada para garantizar la integridad y validez jurídica de los acuerdos finales. & Defensor \\
+\rowcolor[HTML]{F2F4F7}
+Gestión de Plazos & Lógica de monitoreo de términos procesales (2 a 15 días) con alertas automáticas por vencimiento de plazos legales. & Subdefensor \\
+Notificaciones & Servicio de mensajería automática (email/notificación push) para informar al quejoso cambios en el estatus de su folio. & General \\
+\rowcolor[HTML]{F2F4F7}
+Búsqueda Avanzada & Motor de indexación GIN para realizar búsquedas de texto completo (\textit{full-text search}) dentro del repositorio. & Analista \\
+Trazabilidad & Sistema de registro de auditoría (\textit{logs}) para rastrear cada modificación, acceso o cambio de estado en el expediente. & Administrador \\
+\rowcolor[HTML]{F2F4F7}
+Analítica de Datos & Dashboard interactivo con generación de métricas sobre reincidencia de autoridades y tipos de derechos vulnerados. & Defensor \\
+Cifrado en Reposo & Implementación de \texttt{pgcrypto} (AES-256) para el almacenamiento cifrado de datos personales e imágenes de evidencia. & Sistema \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+
+%============================================================
+\subsection{Requerimientos Funcionales}
+%============================================================
+
+A partir del análisis de los 75 casos de uso definidos para la plataforma,
+se extraen los siguientes requerimientos funcionales desglosados por módulos
+operativos.
+
+\begin{table}[H]
+\centering
+\caption{RF — Módulo de Acceso y Gestión de Identidad.}
+\begin{tabularx}{\textwidth}{@{} l L l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Descripción} & \textbf{\color{white} Actor} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RF-01 & Registro de usuarios con validación de identidad institucional (Boleta/Número de Empleado). & Quejoso \\
+RF-02 & Recuperación de contraseña mediante el envío de tokens temporales al correo registrado. & Usuario \\
+\rowcolor[HTML]{F2F4F7}
+RF-03 & Gestión de perfil de usuario permitiendo la actualización de datos de contacto y domicilio. & Quejoso \\
+RF-04 & Captura obligatoria de datos del tutor y documentos de identidad para quejosos menores de edad. & Quejoso \\
+\rowcolor[HTML]{F2F4F7}
+RF-05 & Autenticación de personal administrativo mediante roles definidos en el sistema (RBAC). & Personal DDP \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{RF — Módulo de Gestión de Quejas (\textit{Front-end}).}
+\begin{tabularx}{\textwidth}{@{} l L l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Descripción} & \textbf{\color{white} Actor} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RF-06 & Formulario dinámico para el levantamiento de quejas con narrativa de hechos y geolocalización. & Quejoso \\
+RF-07 & Carga de evidencias en múltiples formatos (PDF, JPG, MP3, MP4) con límite de tamaño por archivo. & Quejoso \\
+\rowcolor[HTML]{F2F4F7}
+RF-08 & Generación de folio único con nomenclatura institucional tras finalizar el registro exitoso. & Sistema \\
+RF-09 & Visualización de tablero personal con el listado de quejas activas y su estatus actual. & Quejoso \\
+\rowcolor[HTML]{F2F4F7}
+RF-10 & Consultar línea de tiempo interactiva que detalle el historial de pasos de la queja. & Quejoso \\
+RF-11 & Descarga de acuse de recibo y documentos oficiales en formato PDF. & Quejoso \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{RF — Módulo de Recepción y Administrativo.}
+\begin{tabularx}{\textwidth}{@{} l L l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Descripción} & \textbf{\color{white} Actor} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RF-12 & Bandeja de entrada centralizada para la recepción de solicitudes con filtros de prioridad. & Recepcionista \\
+RF-13 & Búsqueda de antecedentes históricos para detectar duplicidad o reincidencia de quejas. & Recepcionista \\
+\rowcolor[HTML]{F2F4F7}
+RF-14 & Emisión de notificaciones de prevención para solicitar información faltante al quejoso. & Recepcionista \\
+RF-15 & Función para rechazar quejas no competentes con justificación legal obligatoria. & Recepcionista \\
+\rowcolor[HTML]{F2F4F7}
+RF-16 & Turnar expedientes validados al área de análisis para el inicio del proceso formal. & Recepcionista \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{RF — Módulo de Análisis.}
+\begin{tabularx}{\textwidth}{@{} l L l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Descripción} & \textbf{\color{white} Actor} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RF-17 & Determinación automática de competencia preliminar mediante el motor de IA. & Sistema \\
+RF-18 & Adición de notas internas y comentarios técnicos visibles solo para personal jurídico. & Analista \\
+\rowcolor[HTML]{F2F4F7}
+RF-19 & Generación de Acuerdo de Admisión vinculando los hechos con la normativa del IPN. & Analista \\
+RF-20 & Asignación de expediente a un abogado específico para la etapa de investigación. & Subdefensor \\
+\rowcolor[HTML]{F2F4F7}
+RF-21 & Registro y control de solicitudes de actos de investigación dirigidos a autoridades de Unidades Académicas. & Subdefensor \\
+RF-22 & Gestión de plazos con semáforo de alertas (Verde, Amarillo, Rojo) según el vencimiento. & Subdefensor \\
+\rowcolor[HTML]{F2F4F7}
+RF-23 & Redacción y envío de recordatorios automáticos a autoridades que no han rendido informes. & Subdefensor \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{RF — Módulo de Resolución, Firma y Cierre.}
+\begin{tabularx}{\textwidth}{@{} l L l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Descripción} & \textbf{\color{white} Actor} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RF-24 & Elaboración de propuestas de conciliación y envío para aceptación o rechazo del quejoso. & Analista \\
+RF-25 & Consultar tableros de gestión global con estadísticas de eficiencia operativa de la DDP. & Defensor \\
+\rowcolor[HTML]{F2F4F7}
+RF-26 & Ejecución de Firma Digital Avanzada sobre el Acuerdo de Conclusión individual o masiva. & Defensor \\
+RF-27 & Actualización automática del estado del expediente a ``FINALIZADO'' tras la firma digital. & Sistema \\
+\rowcolor[HTML]{F2F4F7}
+RF-28 & Transferencia de expedientes concluidos al repositorio de archivo histórico digital. & Sistema \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{RF — Módulo de Administración Técnica.}
+\begin{tabularx}{\textwidth}{@{} l L l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Descripción} & \textbf{\color{white} Actor} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RF-29 & Configuración de plantillas dinámicas para oficios, acuerdos y notificaciones institucionales. & Administrador \\
+RF-30 & Gestión del catálogo de dependencias politécnicas y autoridades registradas en el sistema. & Administrador \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+
+%============================================================
+\subsection{Requerimientos No Funcionales}
+%============================================================
+
+Los requerimientos no funcionales definen los atributos de calidad,
+restricciones técnicas y estándares de seguridad que el sistema debe cumplir
+para garantizar una operación robusta, confiable y alineada con la normativa
+institucional.
+
+\begin{table}[H]
+\centering
+\caption{RNF — Atributos de Seguridad y Privacidad.}
+\begin{tabularx}{\textwidth}{@{} l L l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Descripción del Atributo} & \textbf{\color{white} Categoría} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RNF-01 & El acceso administrativo debe estar restringido mediante el modelo RBAC (Role-Based Access Control). & Seguridad \\
+RNF-02 & Implementación de tokens JWT con tiempo de expiración para la gestión de sesiones seguras. & Seguridad \\
+\rowcolor[HTML]{F2F4F7}
+RNF-03 & Cifrado de datos personales y evidencias en reposo utilizando el estándar AES-256 (\texttt{pgcrypto}). & Seguridad \\
+RNF-04 & Uso obligatorio del protocolo TLS 1.3 para el cifrado de toda información en tránsito. & Seguridad \\
+\rowcolor[HTML]{F2F4F7}
+RNF-05 & Anonimización de datos sensibles en el motor de IA para proteger la identidad durante el entrenamiento. & Privacidad \\
+RNF-06 & Garantizar el no repudio de los documentos oficiales mediante el uso de firma electrónica avanzada. & Legal \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{RNF — Atributos de Rendimiento, Eficiencia y Escalabilidad.}
+\begin{tabularx}{\textwidth}{@{} l L l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Descripción del Atributo} & \textbf{\color{white} Categoría} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RNF-07 & El tiempo de respuesta para consultas de estatus no debe superar los 2 segundos bajo carga normal. & Rendimiento \\
+RNF-08 & El sistema debe soportar al menos 100 usuarios concurrentes sin degradación del servicio. & Escalabilidad \\
+\rowcolor[HTML]{F2F4F7}
+RNF-09 & La clasificación automática de quejas por el motor de IA debe realizarse en un tiempo menor a 5 segundos. & Rendimiento \\
+RNF-10 & Capacidad de escalado horizontal de microservicios mediante orquestación con Docker Compose o Kubernetes. & Escalabilidad \\
+\rowcolor[HTML]{F2F4F7}
+RNF-11 & Optimización de búsquedas en el repositorio digital mediante el uso de índices GIN en PostgreSQL. & Eficiencia \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{RNF — Atributos de Fiabilidad y Disponibilidad.}
+\begin{tabularx}{\textwidth}{@{} l L l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Descripción del Atributo} & \textbf{\color{white} Categoría} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RNF-12 & El sistema debe garantizar una disponibilidad del 99.5\,\% (\textit{Uptime}) durante el calendario escolar del IPN. & Disponibilidad \\
+RNF-13 & Tolerancia a fallos: la caída del microservicio de IA no debe afectar la gestión administrativa de quejas. & Resiliencia \\
+\rowcolor[HTML]{F2F4F7}
+RNF-14 & Integridad de los datos: las transacciones en la base de datos deben cumplir estrictamente con el modelo ACID. & Fiabilidad \\
+RNF-15 & El sistema debe realizar respaldos automáticos diarios (\textit{Backups}) del repositorio digital de evidencias. & Recuperación \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{RNF — Atributos de Mantenibilidad y Portabilidad.}
+\begin{tabularx}{\textwidth}{@{} l L l @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Descripción del Atributo} & \textbf{\color{white} Categoría} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RNF-16 & Arquitectura desacoplada de microservicios para permitir actualizaciones modulares sin afectar todo el sistema. & Mantenibilidad \\
+RNF-17 & Código fuente documentado y gestionado mediante control de versiones en GitHub para facilitar la colaboración. & Mantenibilidad \\
+\rowcolor[HTML]{F2F4F7}
+RNF-18 & Contenerización de todos los servicios mediante Docker para asegurar la portabilidad entre entornos. & Portabilidad \\
+RNF-19 & El sistema debe ser compatible con los navegadores modernos (Chrome, Firefox, Edge) mediante un diseño \textit{responsive}. & Compatibilidad \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+
+%============================================================
+\subsection{Reglas de Negocio}
+%============================================================
+
+Las reglas de negocio establecen las restricciones y directrices operativas
+que el sistema debe validar para garantizar que los procesos administrativos
+se realicen bajo los principios de legalidad, transparencia y seguridad
+institucional de la Defensoría.
+
+\begin{table}[H]
+\centering
+\caption{RN — Acceso, Seguridad y Auditoría.}
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Regla de Negocio} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RN-01 & Solo miembros activos de la comunidad politécnica con boleta o número de empleado pueden registrar quejas. \\
+RN-02 & El acceso administrativo es restringido por roles; un actor no puede ejecutar funciones de un nivel superior (RBAC). \\
+\rowcolor[HTML]{F2F4F7}
+RN-03 & La asignación, alta o modificación de permisos de usuario debe registrarse en un \textit{log} de auditoría inmutable. \\
+RN-04 & Los datos personales del quejoso deben permanecer cifrados en la base de datos y solo ser visibles por personal autorizado. \\
+\rowcolor[HTML]{F2F4F7}
+RN-05 & Ningún usuario administrativo puede eliminar registros de auditoría o historiales de transacciones del sistema. \\
+RN-06 & El sistema debe cerrar la sesión automáticamente tras 15 minutos de inactividad para prevenir accesos no autorizados. \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{RN — Registro y Determinación de Competencia.}
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Regla de Negocio} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RN-07 & Toda queja debe incluir obligatoriamente una narrativa de hechos, autoridad imputada y unidad académica. \\
+RN-08 & Si el quejoso es menor de edad, el sistema exige el registro de un tutor con identificación oficial válida. \\
+\rowcolor[HTML]{F2F4F7}
+RN-09 & No se aceptarán quejas anónimas; la identidad del promovente debe ser validada contra bases de datos del IPN. \\
+RN-10 & Las quejas presentadas después de 90 días naturales de ocurrido el hecho se clasificarán como extemporáneas. \\
+\rowcolor[HTML]{F2F4F7}
+RN-11 & El sistema no admitirá quejas de carácter laboral o sindical según lo estipulado en el Artículo 13. \\
+RN-12 & El motor de IA solo proporciona una sugerencia de competencia; la decisión final es siempre humana. \\
+\rowcolor[HTML]{F2F4F7}
+RN-13 & La generación del folio único es automática e irreversible; no puede existir duplicidad de folios en el sistema. \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{RN — Proceso, Sustanciación e Investigación.}
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Regla de Negocio} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RN-14 & El estatus ``En Análisis'' se activa únicamente cuando el Recepcionista turna el expediente a la Subdefensoría. \\
+RN-15 & El sistema debe bloquear el avance del folio si no se ha cargado el Acuerdo de Admisión correspondiente. \\
+\rowcolor[HTML]{F2F4F7}
+RN-16 & Todo expediente radicado debe tener asignado obligatoriamente a un abogado analista responsable. \\
+RN-17 & Los oficios enviados a Unidades Académicas deben generar automáticamente un recordatorio de respuesta. \\
+\rowcolor[HTML]{F2F4F7}
+RN-18 & El plazo de respuesta otorgado a la autoridad debe ser de 2 a 15 días hábiles según la normativa. \\
+RN-19 & No se puede pasar a la fase de resolución si existen actos de investigación con plazos de respuesta vigentes. \\
+\rowcolor[HTML]{F2F4F7}
+RN-20 & Las notas internas del Analista no son descargables ni visibles para el quejoso en el portal público. \\
+RN-21 & El estatus ``En Investigación'' es obligatorio antes de emitir cualquier propuesta de conclusión de fondo. \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{RN — Conclusión, Firma y Archivo.}
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Regla de Negocio} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RN-22 & El Acuerdo de Conclusión debe ser visado por el Subdefensor antes de enviarse a firma del Titular. \\
+RN-23 & La notificación al quejoso de la propuesta de conclusión es requisito previo para el cierre del folio. \\
+\rowcolor[HTML]{F2F4F7}
+RN-24 & La Firma Digital Avanzada del Defensor es el único medio para validar legalmente el cierre del caso. \\
+RN-25 & El sistema impedirá la modificación de cualquier documento una vez que haya sido firmado digitalmente. \\
+\rowcolor[HTML]{F2F4F7}
+RN-26 & El estatus ``Finalizado'' solo se activa mediante la aplicación exitosa de la firma electrónica del Defensor. \\
+RN-27 & Todo expediente finalizado debe ser transferido al archivo histórico en un periodo no mayor a 24 horas. \\
+\rowcolor[HTML]{F2F4F7}
+RN-28 & El envío a archivo histórico es irreversible y bloquea cualquier edición posterior de los datos del caso. \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{RN — Estadísticas y Administración.}
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+\toprule
+\rowcolor[HTML]{2D3E50}
+\textbf{\color{white} ID} & \textbf{\color{white} Regla de Negocio} \\ \midrule
+\rowcolor[HTML]{F2F4F7}
+RN-29 & Solo el rol de Defensor (Titular) tiene facultad para visualizar tableros de control global y estadísticas. \\
+RN-30 & Las métricas de reincidencia deben calcularse automáticamente basándose en los datos históricos del repositorio. \\
+\rowcolor[HTML]{F2F4F7}
+RN-31 & La configuración de plantillas de documentos oficiales es de acceso restringido al perfil Administrador. \\
+RN-32 & El sistema debe generar alertas preventivas ante el rezago administrativo (expedientes sin movimiento en 10 días). \\
+\rowcolor[HTML]{F2F4F7}
+RN-33 & Las copias de seguridad de los expedientes deben almacenarse en un repositorio inmutable y externo al sistema. \\
+RN-34 & Toda actualización de estado del folio debe generar una notificación automática al correo del quejoso. \\
+\rowcolor[HTML]{F2F4F7}
+RN-35 & El catálogo de Unidades Académicas y dependencias debe estar sincronizado con la estructura oficial del IPN. \\
+RN-36 & No se pueden emitir oficios si la autoridad responsable no se encuentra debidamente registrada en el sistema. \\
+\rowcolor[HTML]{F2F4F7}
+RN-37 & Los acuerdos de prevención deben otorgar al quejoso un plazo improrrogable de 5 días para subsanar omisiones. \\
+RN-38 & El rechazo de una queja por incompetencia debe estar fundado obligatoriamente en los criterios del Artículo 13. \\
+\rowcolor[HTML]{F2F4F7}
+RN-39 & Las propuestas de conciliación requieren la firma de aceptación del quejoso cargada en el sistema para proceder. \\
+RN-40 & El sistema debe garantizar que el folio digital se mantenga accesible para consulta del quejoso por un año mínimo. \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\end{document}
