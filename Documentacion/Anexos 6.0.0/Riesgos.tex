@@ -1,0 +1,641 @@
+\documentclass[12pt,oneside,letterpaper]{book}
+
+% ==============================================================================
+% CONFIGURACIONES GENERALES
+% ==============================================================================
+
+\usepackage{configuraciones/setup}
+
+\input{configuraciones/figuras_casos_uso.tex}
+
+% ==============================================================================
+% PAQUETES
+% ==============================================================================
+
+\usepackage[utf8]{inputenc}
+\usepackage{textcomp}
+\usepackage{ragged2e}
+\usepackage{pdfpages}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage[table]{xcolor}
+\usepackage{siunitx}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{colortbl}
+\usepackage{longtable}
+
+% ==============================================================================
+% CONFIGURACIÓN DE TABLAS
+% ==============================================================================
+
+\renewcommand{\arraystretch}{1.3}
+
+\sisetup{
+    output-decimal-marker = {.},
+    group-separator = {,},
+    group-minimum-digits = 4
+}
+
+\definecolor{headerblue}{RGB}{220,230,242}
+
+% ==============================================================================
+% LISTINGS
+% ==============================================================================
+
+\lstset{
+    inputencoding=utf8,
+    extendedchars=true
+}
+
+% ==============================================================================
+% DEFINICIÓN JSON
+% ==============================================================================
+
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily\small,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{gray!5}
+}
+
+% ==============================================================================
+% HIPERVÍNCULOS
+% ==============================================================================
+
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    pdftitle={Trabajo Terminal - Defensoría de los Derechos Politécnicos},
+    pdfnewwindow=true
+}
+
+% ==============================================================================
+% DOCUMENTO
+% ==============================================================================
+
+\begin{document}
+% ==============================================================================
+% 7.16 ANÁLISIS DE RIESGO
+% ==============================================================================
+
+% ==============================================================================
+% 7.16 ANÁLISIS DE RIESGO
+% ==============================================================================
+
+\section{Análisis de Riesgo}
+\label{sec:analisis_riesgo}
+
+Debido a la naturaleza jurídica, institucional y tecnológica de la plataforma propuesta para la Defensoría de los Derechos Politécnicos (DDP-IPN), resulta indispensable realizar un análisis integral de riesgos que contemple amenazas técnicas, operativas, legales y organizacionales.
+
+El sistema administra información altamente sensible relacionada con denuncias, expedientes digitales, evidencias multimedia y datos personales de la comunidad politécnica. Asimismo, integra componentes distribuidos basados en microservicios, mecanismos de inteligencia artificial y almacenamiento persistente de evidencias, incrementando la superficie de ataque y la complejidad operativa.
+
+Con el objetivo de identificar vulnerabilidades potenciales y establecer estrategias preventivas, correctivas y detectivas, se realizó un análisis estático de seguridad (SAST), evaluación arquitectónica y análisis de gobernanza tecnológica (GRC), considerando atributos de seguridad, disponibilidad, integridad, trazabilidad, confidencialidad y cumplimiento normativo.
+
+\subsection{Clasificación General de Riesgos}
+
+Los riesgos identificados se clasifican en diferentes categorías con base en el impacto que podrían generar sobre la operación de la plataforma.
+
+\begin{table}[H]
+\centering
+\caption{Clasificación General de Riesgos}
+\label{tab:clasificacion_riesgos}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Categoría} & \textbf{Descripción} \\ \hline
+
+Seguridad &
+Amenazas relacionadas con vulnerabilidades de software, ataques externos, robo de información y manipulación de datos. \\ \hline
+
+Legal y Normativo &
+Riesgos asociados al incumplimiento de normativas institucionales, privacidad y protección de datos personales. \\ \hline
+
+Operacional &
+Eventos que afectan la continuidad operativa del sistema y los procesos internos de la DDP. \\ \hline
+
+Tecnológico &
+Problemas derivados de dependencias, infraestructura, microservicios y arquitectura distribuida. \\ \hline
+
+Inteligencia Artificial &
+Riesgos asociados al desempeño, sesgo y comportamiento del clasificador automático. \\ \hline
+
+Humano y Organizacional &
+Errores operativos, malas configuraciones y uso inadecuado de la plataforma por parte del personal. \\ \hline
+
+Financiero &
+Riesgos relacionados con costos operativos, mantenimiento y escalabilidad tecnológica. \\ \hline
+
+\end{tabular}
+\end{table}
+
+% ==============================================================================
+% RIESGO INTEGRAL
+% ==============================================================================
+
+\subsection{Análisis de Riesgo Integral del Sistema}
+
+\subsubsection{Núcleo Administrativo y Repositorio (Java / PostgreSQL)}
+
+Este componente constituye el núcleo de persistencia jurídica y gestión documental de la plataforma institucional.
+
+\begin{itemize}
+
+\item \textbf{Compromiso de Datos en Reposo:}
+El uso de mecanismos criptográficos mediante \textit{pgcrypto} y cifrado AES-256 requiere una administración segura de llaves maestras. Una gestión inadecuada expondría información sensible de estudiantes, docentes y personal administrativo.
+
+\item \textbf{Fallas en la Cadena de Custodia Digital:}
+Existe el riesgo de alteración o sustitución de evidencias multimedia almacenadas dentro del expediente digital. Aunque se utilizan funciones hash SHA-512 para garantizar integridad documental, una vulnerabilidad en almacenamiento podría comprometer la validez jurídica de los archivos.
+
+\item \textbf{Inyección sobre consultas JSONB:}
+El uso de búsquedas avanzadas y datos semi-estructurados mediante JSONB introduce riesgos de inyección y manipulación de consultas si no se implementan mecanismos estrictos de parametrización.
+
+\item \textbf{Pérdida de Trazabilidad Jurídica:}
+La ausencia de auditorías completas y registros históricos comprometería la reconstrucción del ciclo de vida de una queja y afectaría la validez procesal del expediente.
+
+\item \textbf{Exposición de Información Sensible:}
+Un acceso indebido a expedientes digitales podría derivar en filtración de datos personales sensibles y vulneración de privacidad institucional.
+
+\end{itemize}
+
+% ==============================================================================
+% IA
+% ==============================================================================
+
+\subsubsection{Microservicio de Inteligencia Artificial (Python)}
+
+El clasificador inteligente basado en Procesamiento de Lenguaje Natural constituye uno de los componentes críticos de apoyo a la toma de decisiones.
+
+\begin{itemize}
+
+\item \textbf{Denegación de Servicio (DoS) Semántico:}
+Los modelos \textit{Sentence-Transformers} consumen recursos computacionales elevados. Narrativas excesivamente extensas o cargas concurrentes podrían saturar la memoria RAM y detener el flujo de admisión de quejas.
+
+\item \textbf{Sesgo en Clasificación Jurídica:}
+Errores en la determinación de competencia respecto al Artículo 4º podrían provocar el rechazo incorrecto de quejas válidas, afectando el debido proceso.
+
+\item \textbf{Deriva del Modelo (Model Drift):}
+Cambios progresivos en el lenguaje utilizado por la comunidad politécnica podrían degradar la precisión del modelo con el paso del tiempo.
+
+\item \textbf{Sobreajuste del Modelo:}
+Existe el riesgo de que el clasificador presente alto rendimiento en entrenamiento pero bajo desempeño en escenarios reales no observados previamente.
+
+\item \textbf{Falta de Explicabilidad:}
+Las recomendaciones automáticas generadas por el clasificador podrían dificultar la justificación jurídica de determinadas decisiones administrativas.
+
+\item \textbf{Dependencia Operativa de la IA:}
+Una dependencia excesiva de recomendaciones automatizadas podría reducir la supervisión humana en procesos críticos.
+
+\end{itemize}
+
+% ==============================================================================
+% MICROSERVICIO QUEJOSO
+% ==============================================================================
+
+\subsection{Análisis de Riesgo: Microservicio del Quejoso}
+
+El microservicio de atención al quejoso fue evaluado mediante herramientas de análisis estático de seguridad y revisión arquitectónica.
+
+\begin{itemize}
+
+\item \textbf{Indicadores de Estado:}
+El microservicio presenta un índice de riesgo de 0.51 y un indicador global de 90.54. No obstante, la calificación técnica de seguridad es baja, indicando la necesidad de fortalecer controles de protección.
+
+\item \textbf{Inyección Cross-site Scripting (XSS):}
+Se detectaron vulnerabilidades críticas asociadas a neutralización insuficiente de entradas en módulos de autenticación, perfil y gestión de trámites.
+
+\item \textbf{Debilidad Criptográfica:}
+Se identificó el uso de generadores pseudoaleatorios no seguros en procesos de autenticación y generación de tokens.
+
+\item \textbf{Gestión de Dependencias Obsoletas:}
+Se identificaron componentes con riesgo de obsolescencia tecnológica que podrían incorporar vulnerabilidades conocidas.
+
+\item \textbf{Error Humano Operativo:}
+Configuraciones incorrectas o manejo indebido de expedientes podrían comprometer la integridad y disponibilidad de la información.
+
+\item \textbf{Revictimización Digital:}
+La exposición accidental de narrativas sensibles o evidencias podría afectar psicológica y jurídicamente a las personas denunciantes.
+
+\end{itemize}
+
+% ==============================================================================
+% INFRAESTRUCTURA
+% ==============================================================================
+
+\subsection{Riesgos de Infraestructura y Arquitectura Distribuida}
+
+La arquitectura basada en microservicios, contenedores y orquestación introduce riesgos adicionales relacionados con disponibilidad y coordinación entre componentes.
+
+\begin{itemize}
+
+\item \textbf{Punto Único de Falla en API Gateway:}
+La indisponibilidad del gateway central impediría la comunicación entre microservicios y bloquearía el acceso integral a la plataforma.
+
+\item \textbf{Escalada de Privilegios en Contenedores:}
+Configuraciones inseguras en Docker o Kubernetes podrían permitir accesos indebidos a recursos internos del sistema.
+
+\item \textbf{Inconsistencia Transaccional:}
+La comunicación distribuida entre servicios podría generar estados inconsistentes entre expedientes, evidencias y notificaciones.
+
+\item \textbf{Fallas de Disponibilidad:}
+Errores en infraestructura, contenedores o balanceadores podrían afectar la continuidad operativa del sistema institucional.
+
+\item \textbf{Dependencia de Servicios Internos:}
+La caída de un microservicio crítico podría impactar el funcionamiento global de la plataforma.
+
+\end{itemize}
+
+% ==============================================================================
+% LEGAL
+% ==============================================================================
+
+\subsection{Riesgos Legales y de Cumplimiento Normativo}
+
+Debido al tratamiento de información sensible y expedientes jurídicos, la plataforma debe garantizar cumplimiento normativo y protección de derechos.
+
+\begin{itemize}
+
+\item \textbf{Incumplimiento de la LFPDPPP:}
+Una gestión inadecuada de datos personales podría derivar en responsabilidades administrativas y sanciones legales.
+
+\item \textbf{Violación de Confidencialidad Institucional:}
+La exposición de expedientes o evidencias comprometería la confianza institucional y la seguridad de las personas involucradas.
+
+\item \textbf{Incumplimiento del Debido Proceso:}
+Errores tecnológicos o administrativos podrían afectar la correcta atención y seguimiento de las quejas.
+
+\item \textbf{Alteración de Evidencias Digitales:}
+La manipulación de documentos comprometería la integridad jurídica del expediente digital.
+
+\end{itemize}
+
+% ==============================================================================
+% FINANCIERO
+% ==============================================================================
+
+\subsection{Riesgos Financieros y Operativos}
+
+\begin{itemize}
+
+\item \textbf{Sobrecosto Operativo por Escalamiento:}
+El crecimiento en procesamiento de IA y almacenamiento multimedia podría superar la capacidad presupuestal inicial.
+
+\item \textbf{Incremento en Costos de Infraestructura:}
+La expansión de servicios distribuidos incrementa costos de mantenimiento, monitoreo y respaldo.
+
+\item \textbf{Dependencia Tecnológica:}
+Actualizaciones futuras de librerías y herramientas podrían requerir inversión adicional en mantenimiento.
+
+\end{itemize}
+
+% ==============================================================================
+% MATRIZ
+% ==============================================================================
+
+\subsection{Modelo Cuantitativo de Evaluación de Riesgos}
+
+La prioridad de cada riesgo se determina mediante la siguiente relación:
+
+\[
+R = P \times I
+\]
+
+Donde:
+
+\begin{itemize}
+\item \(R\): Nivel de riesgo
+\item \(P\): Probabilidad de ocurrencia
+\item \(I\): Impacto sobre el sistema
+\end{itemize}
+
+\begin{center}
+\[
+R = P \times I
+\]
+\end{center}
+
+La escala utilizada considera valores del 1 al 5 tanto para probabilidad como para impacto.
+
+% ==============================================================================
+% MATRIZ GENERAL
+% ==============================================================================
+
+\subsection{Matriz Consolidada de Riesgos}
+
+\begin{table}[H]
+\centering
+\caption{Matriz Consolidada de Riesgos}
+\label{tab:matriz_riesgos_consolidada}
+\renewcommand{\arraystretch}{1.3}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|p{5cm}|c|c|c|c|c|}
+\hline
+\textbf{ID} &
+\textbf{Riesgo} &
+\textbf{Categoría} &
+\textbf{P} &
+\textbf{I} &
+\textbf{R} &
+\textbf{Prioridad} \\ \hline
+
+R-01 &
+Inyección XSS en controladores &
+Seguridad &
+5 &
+5 &
+25 &
+Crítica \\ \hline
+
+R-02 &
+Clasificación jurídica incorrecta por IA &
+IA / Legal &
+4 &
+5 &
+20 &
+Crítica \\ \hline
+
+R-03 &
+Exposición de datos personales &
+Legal &
+3 &
+5 &
+15 &
+Alta \\ \hline
+
+R-04 &
+Saturación del motor de IA &
+Operacional &
+3 &
+4 &
+12 &
+Alta \\ \hline
+
+R-05 &
+Alteración de evidencias digitales &
+Seguridad &
+3 &
+5 &
+15 &
+Alta \\ \hline
+
+R-06 &
+Dependencias obsoletas &
+Tecnológico &
+3 &
+3 &
+9 &
+Media \\ \hline
+
+R-07 &
+Falla del API Gateway &
+Infraestructura &
+4 &
+4 &
+16 &
+Alta \\ \hline
+
+R-08 &
+Escalada de privilegios en contenedores &
+Infraestructura &
+3 &
+5 &
+15 &
+Alta \\ \hline
+
+R-09 &
+Pérdida de trazabilidad jurídica &
+Legal &
+2 &
+5 &
+10 &
+Media \\ \hline
+
+R-10 &
+Sobrecosto operativo &
+Financiero &
+3 &
+3 &
+9 &
+Media \\ \hline
+
+\end{tabular}
+}
+\end{table}
+
+% ==============================================================================
+% TRAZABILIDAD
+% ==============================================================================
+
+\subsection{Mapa de Trazabilidad de Riesgos}
+
+\begin{table}[H]
+\centering
+\caption{Trazabilidad entre Riesgos y Componentes}
+\label{tab:trazabilidad_riesgos}
+\renewcommand{\arraystretch}{1.3}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|p{4cm}|p{4cm}|p{4cm}|}
+\hline
+\textbf{ID} &
+\textbf{Componente Afectado} &
+\textbf{Atributo Comprometido} &
+\textbf{Impacto Principal} \\ \hline
+
+R-01 &
+Microservicio Quejoso &
+Seguridad &
+Ejecución de scripts maliciosos \\ \hline
+
+R-02 &
+Clasificador IA &
+Confiabilidad Jurídica &
+Rechazo de quejas válidas \\ \hline
+
+R-03 &
+Base de Datos PostgreSQL &
+Confidencialidad &
+Filtración de información sensible \\ \hline
+
+R-04 &
+Motor de IA &
+Disponibilidad &
+Interrupción del servicio \\ \hline
+
+R-05 &
+Repositorio de Evidencias &
+Integridad &
+Manipulación documental \\ \hline
+
+R-06 &
+Dependencias externas &
+Mantenibilidad &
+Vulnerabilidades heredadas \\ \hline
+
+R-07 &
+API Gateway &
+Disponibilidad &
+Caída general del sistema \\ \hline
+
+R-08 &
+Docker / Kubernetes &
+Seguridad &
+Acceso indebido a servicios \\ \hline
+
+R-09 &
+Sistema de auditoría &
+Trazabilidad &
+Pérdida de evidencia jurídica \\ \hline
+
+R-10 &
+Infraestructura general &
+Operación &
+Incremento presupuestal \\ \hline
+
+\end{tabular}
+}
+\end{table}
+
+% ==============================================================================
+% CONTROLES
+% ==============================================================================
+
+\subsection{Estrategias de Mitigación y Controles}
+
+Las estrategias implementadas consideran controles preventivos, detectivos y correctivos.
+
+\begin{table}[H]
+\centering
+\caption{Controles de Mitigación}
+\label{tab:controles_mitigacion}
+\renewcommand{\arraystretch}{1.3}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|p{4cm}|p{4cm}|p{4cm}|}
+\hline
+\textbf{Preventivos} &
+\textbf{Detectivos} &
+\textbf{Correctivos} \\ \hline
+
+Validación estricta de entradas &
+Monitoreo mediante logs y auditorías &
+Restauración de respaldos \\ \hline
+
+Uso de TLS 1.3 y cifrado AES-256 &
+Alertas automáticas de fallos &
+Actualización de dependencias \\ \hline
+
+RBAC y control de acceso &
+Supervisión humana del clasificador &
+Escalamiento automático de contenedores \\ \hline
+
+Uso de SecureRandom &
+Monitoreo de desempeño del modelo IA &
+Reentrenamiento periódico del modelo \\ \hline
+
+Parametrización de consultas SQL &
+Detección de anomalías operativas &
+Contención de incidentes de seguridad \\ \hline
+
+\end{tabular}
+}
+\end{table}
+
+% ==============================================================================
+% RESUMEN
+% ==============================================================================
+
+\subsection{Resumen del Análisis de Riesgo}
+
+Debido a la naturaleza jurídica, institucional y tecnológica de la plataforma propuesta para la Defensoría de los Derechos Politécnicos (DDP-IPN), resulta indispensable realizar un análisis integral de riesgos que contemple amenazas técnicas, operativas, legales y organizacionales.
+
+El sistema administra información altamente sensible relacionada con denuncias, expedientes digitales, evidencias multimedia y datos personales de la comunidad politécnica. Asimismo, integra componentes distribuidos basados en microservicios, mecanismos de inteligencia artificial y almacenamiento persistente de evidencias, incrementando la superficie de ataque y la complejidad operativa.
+
+Con el objetivo de identificar vulnerabilidades potenciales y establecer estrategias preventivas, correctivas y detectivas, se realizó un análisis estático de seguridad (SAST), evaluación arquitectónica y análisis de gobernanza tecnológica (GRC), considerando atributos de seguridad, disponibilidad, integridad, trazabilidad, confidencialidad y cumplimiento normativo.
+
+\subsection{Clasificación General de Riesgos}
+
+Los riesgos identificados se clasifican en diferentes categorías con base en el impacto que podrían generar sobre la operación de la plataforma.
+
+\begin{table}[H]
+\centering
+\caption{Clasificación General de Riesgos}
+\label{tab:clasificacion_riesgos}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Categoría} & \textbf{Descripción} \\ \hline
+
+Seguridad &
+Amenazas relacionadas con vulnerabilidades de software, ataques externos, robo de información y manipulación de datos. \\ \hline
+
+Legal y Normativo &
+Riesgos asociados al incumplimiento de normativas institucionales, privacidad y protección de datos personales. \\ \hline
+
+Operacional &
+Eventos que afectan la continuidad operativa del sistema y los procesos internos de la DDP. \\ \hline
+
+Tecnológico &
+Problemas derivados de dependencias, infraestructura, microservicios y arquitectura distribuida. \\ \hline
+
+Inteligencia Artificial &
+Riesgos asociados al desempeño, sesgo y comportamiento del clasificador automático. \\ \hline
+
+Humano y Organizacional &
+Errores operativos, malas configuraciones y uso inadecuado de la plataforma por parte del personal. \\ \hline
+
+Financiero &
+Riesgos relacionados con costos operativos, mantenimiento y escalabilidad tecnológica. \\ \hline
+
+\end{tabular}
+\end{table}
+
+\subsection{Análisis de Riesgo Integral del Sistema}
+
+Esta sección aborda los riesgos que afectan la cohesión de la plataforma y el flujo de trabajo institucional entre los diferentes componentes.
+
+\begin{itemize}
+    \item \textbf{Fallas en la Cadena de Custodia Digital:} Riesgo de alteración o sustitución de evidencias multimedia almacenadas en el expediente. Una vulnerabilidad en el almacenamiento central podría comprometer la integridad documental y la validez jurídica de los archivos ante un proceso legal.
+    \item \textbf{Denegación de Servicio (DoS) Semántico en IA:} Los modelos de procesamiento de lenguaje natural (NLP) requieren recursos computacionales elevados. Cargas de trabajo concurrentes o narrativas extremadamente extensas podrían saturar la memoria RAM, deteniendo el flujo de recepción de quejas.
+    \item \textbf{Punto Único de Falla en API Gateway:} Al utilizar una arquitectura de microservicios, la indisponibilidad del gateway central bloquearía completamente la comunicación interna, impidiendo el acceso a cualquier funcionalidad de la plataforma institucional.
+    \item \textbf{Inconsistencia Transaccional Distribuida:} La comunicación entre servicios autónomos podría generar estados inconsistentes, donde un expediente sea registrado pero su procesamiento de IA o notificación falle, afectando la trazabilidad del proceso.
+\end{itemize}
+
+\subsection{Análisis de Riesgo Específico: Microservicio del Quejoso}
+
+Basado en los reportes de análisis estático (SAST) realizados al código fuente del módulo, se identificaron los siguientes riesgos técnicos específicos:
+
+\begin{itemize}
+    \item \textbf{Inyección Cross-site Scripting (XSS):} Se detectaron vulnerabilidades críticas en controladores como \textit{AuthController} y \textit{QuejaController} debido a una neutralización insuficiente de entradas. Esto permitiría la ejecución de scripts maliciosos en el navegador de los administradores.
+    \item \textbf{Debilidad Criptográfica (PRNG no seguro):} El uso de generadores pseudoaleatorios estándar en el servicio de usuarios compromete la seguridad de tokens y contraseñas temporales, haciéndolos predecibles para un atacante con conocimientos técnicos.
+    \item \textbf{Obsolescencia de Dependencias:} El sistema cuenta con componentes de terceros (Jakarta, Hibernate) con riesgos de mantenimiento. La falta de actualizaciones podría exponer al microservicio a vulnerabilidades conocidas públicamente (CVEs).
+    \item \textbf{Indicadores de Seguridad:} Aunque el índice de riesgo global es aceptable (0.51), el indicador técnico de seguridad es bajo, requiriendo un esfuerzo de remediación estimado de 2.5 horas para corregir defectos de alta prioridad.
+\end{itemize}
+
+\subsection{Estrategias de Mitigación y Controles}
+
+A continuación, se describen brevemente las acciones preventivas y correctivas diseñadas para reducir el impacto de los riesgos detectados.
+
+\begin{itemize}
+    \item \textbf{Saneamiento y Validación de Entradas:} Implementar filtros de limpieza en el servidor para eliminar cualquier rastro de código HTML o scripts en los formularios de queja y perfil de usuario, mitigando ataques de inyección.
+    \item \textbf{Fortalecimiento de Criptografía:} Reemplazar el uso de clases aleatorias estándar por \textit{SecureRandom} con semillas de alta entropía para garantizar que la generación de identificadores y tokens sea matemáticamente impredecible.
+    \item \textbf{Gestión de Actualizaciones (Patch Management):} Establecer un cronograma de revisión de dependencias para actualizar librerías obsoletas, priorizando aquellas que presenten riesgos de seguridad medios o altos.
+    \item \textbf{Supervisión Humana en Procesos de IA:} Implementar un protocolo donde toda decisión sugerida por el clasificador de IA deba ser ratificada por un operario jurídico, evitando errores por sesgo o derivación del modelo.
+    \item \textbf{Implementación de Hash de Integridad:} Generar y almacenar una firma digital (SHA-512) por cada evidencia cargada, permitiendo verificar en cualquier momento que el archivo no ha sido manipulado desde su origen.
+\end{itemize}
+
+\subsection{Resumen del Análisis de Riesgo}
+
+El análisis de riesgo presentado integra una evaluación integral de la plataforma institucional, combinando hallazgos técnicos específicos del microservicio del quejoso con los riesgos operativos y legales del sistema completo. 
+
+Se destaca que, si bien la arquitectura basada en microservicios e Inteligencia Artificial aporta escalabilidad y eficiencia, también introduce puntos críticos como la dependencia del API Gateway y el consumo elevado de recursos. Los hallazgos del análisis SAST revelaron vulnerabilidades de inyección y debilidad criptográfica que deben ser atendidas con prioridad máxima. No obstante, mediante la aplicación de las estrategias de mitigación propuestas —que incluyen saneamiento de datos, supervisión humana y gobernanza tecnológica— se concluye que el sistema posee la viabilidad técnica y normativa necesaria para operar de manera segura y resiliente dentro de la Defensoría de los Derechos Politécnicos.
+\end{document}
