@@ -108,6 +108,200 @@ dio paso al diseño de los casos de uso, \textit{mockups} y el modelo de datos
 del microservicio de atención al quejoso, componente que se desarrolla en la 
 sección siguiente.
 
+%─────────────────────────────────────────────
+\subsection{Requerimientos del Sistema}
+\label{subsec:requerimientos_sistema}
+%─────────────────────────────────────────────
+
+El resultado acumulado de las reuniones con el cliente —la comprensión del 
+proceso general, la validación del BPMN y las sesiones por área— se materializó 
+en un catálogo de requerimientos que abarca cinco categorías: requerimientos de 
+usuario (RU), requerimientos de sistema (RS), requerimientos funcionales (RF), 
+requerimientos no funcionales (RNF) y reglas de negocio (RN). A continuación se 
+presentan los artefactos más representativos de cada categoría; el catálogo 
+completo puede consultarse en el \textbf{Anexo: Catálogo de Requerimientos y 
+Reglas de Negocio}.
+
+\subsubsection{Requerimientos de Usuario}
+
+Los requerimientos de usuario sintetizan las necesidades de cada actor que 
+interactúa con la plataforma. De los quince requerimientos identificados, cinco 
+resultan determinantes para la coherencia del sistema: el registro de cuenta 
+(RU-01), que constituye la puerta de entrada al sistema sin la cual ningún 
+trámite puede iniciarse; el levantamiento de la queja con narrativa de hechos 
+(RU-03), cuyo texto libre es precisamente el insumo principal del clasificador 
+automático; la consulta de estatus mediante folio digital (RU-05), que resuelve 
+la necesidad central de trazabilidad que motivó el proyecto; la evaluación 
+jurídica de competencia por parte del analista (RU-09), que representa el núcleo 
+del problema institucional que el sistema busca apoyar; y la visualización de 
+tableros de control por el defensor (RU-13), que cierra el ciclo al proporcionar 
+visibilidad global para la toma de decisiones. El Cuadro \ref{tab:ru_destacados} 
+presenta estos requerimientos.
+
+\begin{table}[H]
+\centering
+\caption{Requerimientos de usuario destacados por actor}
+\label{tab:ru_destacados}
+\begin{tabularx}{\textwidth}{llL}
+\toprule
+\textbf{ID} & \textbf{Actor} & \textbf{Descripción de la Necesidad} \\
+\midrule
+RU-01 & Quejoso       & Registro de cuenta mediante credenciales institucionales (boleta/empleado). \\
+RU-03 & Quejoso       & Levantamiento de queja detallando hechos, lugar y autoridades involucradas. \\
+RU-05 & Quejoso       & Consulta del estatus de la queja en tiempo real mediante un folio digital único. \\
+RU-09 & Analista      & Evaluación jurídica de fondo de los hechos narrados para determinar competencia. \\
+RU-13 & Defensor      & Visualización de estadísticas generales y tableros de control de gestión institucional. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Requerimientos de Sistema}
+
+En el nivel de sistema se identificaron diez capacidades técnicas transversales. 
+Cuatro de ellas condicionan la viabilidad del proyecto en su conjunto: el motor 
+de clasificación basado en procesamiento de lenguaje natural, que constituye la 
+innovación central de la plataforma; el modelo de control de acceso basado en 
+roles (RBAC) con autenticación JWT, sin el cual el sistema no puede operar dentro 
+de un entorno institucional; la lógica de monitoreo de plazos procesales con 
+alertas automáticas, que ataca directamente el rezago administrativo identificado 
+como causa principal del problema; y el sistema de auditoría con registro 
+inmutable de eventos, que garantiza el no repudio y satisface las exigencias de 
+trazabilidad legal. El Cuadro \ref{tab:rs_destacados} resume estas capacidades.
+
+\begin{table}[H]
+\centering
+\caption{Requerimientos de sistema destacados}
+\label{tab:rs_destacados}
+\begin{tabularx}{\textwidth}{lLl}
+\toprule
+\textbf{Categoría} & \textbf{Especificación Técnica} & \textbf{Alcance} \\
+\midrule
+Inteligencia Artificial  & Motor de clasificación basado en PLN para determinar la competencia de las quejas de forma automática. & Sistema \\
+Seguridad (RBAC)         & Sistema de autenticación con JWT y control de acceso basado en roles para restringir la visibilidad de datos sensibles. & General \\
+Gestión de Plazos        & Lógica de monitoreo de términos procesales (2 a 15 días) con alertas automáticas por vencimiento de plazos legales. & Subdefensor \\
+Trazabilidad             & Sistema de registro de auditoría (\textit{logs}) para rastrear cada modificación, acceso o cambio de estado en el expediente. & Administrador \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Requerimientos Funcionales}
+
+De los treinta requerimientos funcionales distribuidos en seis módulos operativos, 
+ocho representan con mayor precisión el alcance funcional del sistema. El registro 
+de usuarios con validación institucional (RF-01) establece la base de todo el 
+sistema. El formulario con narrativa de hechos (RF-06) genera el dato que alimenta 
+al clasificador. La generación automática del folio único (RF-08) garantiza la 
+trazabilidad desde el primer momento. La descarga de acuses oficiales en PDF 
+(RF-11) resuelve la demanda histórica de los quejosos de contar con un comprobante 
+con validez legal. La determinación automática de competencia mediante el motor de 
+inteligencia artificial (RF-17) constituye el requerimiento más innovador del 
+catálogo. El semáforo de plazos (RF-22) traduce la normativa de términos procesales 
+en una alerta visual accionable. La firma digital avanzada del defensor (RF-26) 
+es el único mecanismo con validez jurídica para cerrar un caso. Finalmente, la 
+actualización automática al estado \texttt{FINALIZADO} (RF-27) elimina la 
+posibilidad de error humano en la transición de estado más crítica del proceso. 
+El Cuadro \ref{tab:rf_destacados} presenta estos requerimientos agrupados por módulo.
+
+\begin{table}[H]
+\centering
+\caption{Requerimientos funcionales destacados por módulo}
+\label{tab:rf_destacados}
+\begin{tabularx}{\textwidth}{llL}
+\toprule
+\textbf{ID} & \textbf{Módulo} & \textbf{Descripción} \\
+\midrule
+RF-01 & Acceso e Identidad      & Registro con validación de identidad institucional (Boleta/Número de Empleado). \\
+RF-06 & Gestión de Quejas       & Formulario dinámico con narrativa de hechos y geolocalización. \\
+RF-08 & Gestión de Quejas       & Generación de folio único con nomenclatura institucional tras el registro exitoso. \\
+RF-11 & Gestión de Quejas       & Descarga de acuse de recibo y documentos oficiales en formato PDF. \\
+RF-17 & Análisis                & Determinación automática de competencia preliminar mediante el motor de IA. \\
+RF-22 & Análisis                & Gestión de plazos con semáforo de alertas (Verde, Amarillo, Rojo) según vencimiento. \\
+RF-26 & Resolución y Cierre     & Ejecución de firma digital avanzada sobre el acuerdo de conclusión. \\
+RF-27 & Resolución y Cierre     & Actualización automática del estado del expediente a \texttt{FINALIZADO} tras la firma. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Requerimientos No Funcionales}
+
+Los atributos de calidad más críticos del sistema se concentran en cinco 
+requerimientos. El RBAC (RNF-01) es transversal a toda la plataforma, pues 
+ninguna operación puede ejecutarse sin verificar primero el rol del actor. El 
+cifrado AES-256 de datos personales y evidencias (RNF-03) protege información 
+sensible de la comunidad politécnica, cuya exposición implicaría consecuencias 
+legales directas. El tiempo máximo de clasificación de cinco segundos por parte 
+del motor de IA (RNF-09) garantiza que la asistencia automática no represente 
+un cuello de botella en el flujo operativo. La resiliencia del sistema ante la 
+caída del microservicio de inteligencia artificial (RNF-13) asegura la continuidad 
+del proceso administrativo incluso sin clasificación automática. Por último, el 
+cumplimiento estricto del modelo ACID en todas las transacciones de base de datos 
+(RNF-14) protege la integridad jurídica de cada expediente. El Cuadro 
+\ref{tab:rnf_destacados} presenta estos atributos.
+
+\begin{table}[H]
+\centering
+\caption{Requerimientos no funcionales destacados}
+\label{tab:rnf_destacados}
+\begin{tabularx}{\textwidth}{llL}
+\toprule
+\textbf{ID} & \textbf{Categoría} & \textbf{Descripción del Atributo} \\
+\midrule
+RNF-01 & Seguridad      & El acceso administrativo debe estar restringido mediante el modelo RBAC. \\
+RNF-03 & Seguridad      & Cifrado de datos personales y evidencias en reposo utilizando AES-256 (\texttt{pgcrypto}). \\
+RNF-09 & Rendimiento    & La clasificación automática de quejas por el motor de IA debe realizarse en menos de 5 segundos. \\
+RNF-13 & Resiliencia    & La caída del microservicio de IA no debe afectar la gestión administrativa de quejas. \\
+RNF-14 & Fiabilidad     & Las transacciones en la base de datos deben cumplir estrictamente con el modelo ACID. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Reglas de Negocio}
+
+Las reglas de negocio establecen las restricciones operativas que el sistema 
+debe validar para garantizar la legalidad del proceso. De las cuarenta reglas 
+identificadas, ocho son determinantes. La restricción de acceso a miembros activos 
+de la comunidad politécnica (RN-01) define el universo de usuarios admisibles. 
+La obligatoriedad de la narrativa de hechos, la autoridad imputada y la unidad 
+académica (RN-07) asegura que el texto libre que alimenta al clasificador sea 
+siempre completo. El plazo de 90 días naturales para presentar una queja (RN-10) 
+es una restricción normativa que el sistema debe validar automáticamente. La regla 
+que establece que la decisión de competencia del motor de IA es únicamente una 
+sugerencia —siendo siempre humana la decisión final— (RN-12) protege jurídicamente 
+a la institución. La inmutabilidad e irrepetibilidad del folio una vez generado 
+(RN-13) garantiza la integridad del registro. El rango de 2 a 15 días hábiles 
+para los plazos de respuesta a autoridades (RN-18) proviene directamente de la 
+normativa institucional. La firma digital avanzada del defensor como único mecanismo 
+de cierre legal del caso (RN-24) es la restricción que cierra el ciclo de vida 
+del expediente. Finalmente, la exigencia de que el rechazo por incompetencia se 
+funde obligatoriamente en el Artículo 13 del Reglamento (RN-38) conecta el 
+clasificador automático con el marco normativo que lo sustenta. El Cuadro 
+\ref{tab:rn_destacados} presenta estas reglas organizadas por temática.
+
+\begin{table}[H]
+\centering
+\caption{Reglas de negocio destacadas}
+\label{tab:rn_destacados}
+\begin{tabularx}{\textwidth}{llL}
+\toprule
+\textbf{ID} & \textbf{Temática} & \textbf{Regla de Negocio} \\
+\midrule
+RN-01 & Acceso           & Solo miembros activos de la comunidad politécnica pueden registrar quejas. \\
+RN-07 & Registro         & Toda queja debe incluir narrativa de hechos, autoridad imputada y unidad académica. \\
+RN-10 & Registro         & Las quejas presentadas después de 90 días del hecho se clasificarán como extemporáneas. \\
+RN-12 & IA y Competencia & El motor de IA solo proporciona sugerencia; la decisión final es siempre humana. \\
+RN-13 & Folio            & El folio único es automático e irreversible; no puede existir duplicidad en el sistema. \\
+RN-18 & Plazos           & El plazo de respuesta a la autoridad debe ser de 2 a 15 días hábiles según normativa. \\
+RN-24 & Cierre Legal     & La firma digital avanzada del defensor es el único medio de validar el cierre del caso. \\
+RN-38 & Incompetencia    & El rechazo por incompetencia debe fundarse obligatoriamente en los criterios del Artículo 13. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+La coherencia entre estos cinco niveles de requerimientos —usuario, sistema, 
+funcional, no funcional y reglas de negocio— evidencia que el diseño del 
+microservicio de atención al quejoso, que se detalla en la sección siguiente, 
+no es una decisión técnica aislada, sino la traducción directa de las necesidades 
+institucionales levantadas con el cliente.
 
 %─────────────────────────────────────────────
 \section{Microservicio de Atención al Quejoso}
@@ -257,29 +451,11 @@ La Figura \ref{fig:frontend} muestra la implementación del Mockup planteado en 
     \label{fig:frontend}
 \end{figure}
 
-\subsection{Pruebas del Microservicio}
-\label{subsec:pruebas_microservicio}
 
-La correctitud del microservicio se verificó mediante un esquema de pruebas en 
-dos niveles complementarios. En el nivel unitario se validó el comportamiento 
-aislado de cada componente de la lógica de negocio, comprobando que las reglas 
-de validación, las transiciones de estado y las transformaciones de datos 
-produjeran los resultados esperados ante entradas válidas e inválidas. En el 
-nivel de integración se verificó la comunicación correcta entre las capas del 
-sistema —controladores, servicios y repositorios—, la persistencia adecuada de 
-los datos en la base de datos y la generación correcta de las respuestas HTTP 
-para cada caso de uso. Los resultados de ambos niveles confirmaron que el 
-microservicio cumple con los requerimientos funcionales levantados durante la 
-etapa de interacción con el cliente.
-
-La integración exitosa de estos componentes transforma una petición ciudadana 
-en un registro estructurado dentro del sistema; en consecuencia, la narrativa 
-de los hechos capturada en el formulario constituye el insumo principal del 
-módulo de clasificación automática que se presenta en la sección siguiente.
 
 
 %─────────────────────────────────────────────
-\section{Clasificador Automático de Quejas}
+\section{Clasificador de Quejas}
 \label{sec:clasificador}
 %─────────────────────────────────────────────
 
