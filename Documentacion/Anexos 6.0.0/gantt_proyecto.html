@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagrama de Gantt — Plataforma DDP-IPN 2026-B009</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6f9;
+      color: #2c3e50;
+      padding: 24px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    header h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #1a2b4a;
+    }
+    header p {
+      font-size: 0.82rem;
+      color: #5a6a7a;
+      margin-top: 4px;
+    }
+
+    /* ---- LEGEND ---- */
+    .legend {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .legend-swatch {
+      width: 22px;
+      height: 14px;
+      border-radius: 3px;
+    }
+
+    /* ---- TABLE ---- */
+    .gantt-wrapper {
+      overflow-x: auto;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+      background: #fff;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 600px;
+    }
+
+    /* Header rows */
+    .hdr-period td, .hdr-months td {
+      padding: 6px 4px;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border: 1px solid #d0d7e2;
+    }
+
+    /* TT period */
+    .tt1 { background: #dce8f8; color: #1a4a8a; }
+
+    /* Month header */
+    .month-hdr { background: #f0f3f8; color: #3a4a60; font-size: 0.70rem; }
+
+    /* Activity rows */
+    tr.activity-row {
+      border-bottom: 1px solid #e8edf4;
+    }
+    tr.activity-row:hover {
+      background: #f7f9fc;
+    }
+
+    /* Section header row */
+    tr.section-row td {
+      background: #2c3e50;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 5px 10px;
+      letter-spacing: 0.04em;
+      border: 1px solid #1a2b3c;
+    }
+
+    /* Activity label */
+    .activity-label {
+      padding: 5px 10px;
+      font-size: 0.72rem;
+      min-width: 220px;
+      max-width: 260px;
+      border-right: 2px solid #d0d7e2;
+      line-height: 1.35;
+      vertical-align: middle;
+    }
+
+    /* Responsible tag */
+    .resp-tag {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      margin-top: 2px;
+      color: #fff;
+    }
+    .resp-bryan  { background: #2e6da4; }
+    .resp-jair   { background: #2a7a4b; }
+    .resp-leilani{ background: #b8460b; }
+
+    /* Month cell */
+    .month-cell {
+      width: 60px;
+      min-width: 50px;
+      height: 34px;
+      border: 1px solid #e8edf4;
+      vertical-align: middle;
+    }
+
+    /* Filled cells */
+    .bar-bryan   { background: #4a90d9; }
+    .bar-jair    { background: #3aaa6a; }
+    .bar-leilani { background: #e07030; }
+
+    footer {
+      text-align: center;
+      font-size: 0.72rem;
+      color: #8090a0;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Diagrama de Gantt — 2026-B009</h1>
+  <p>Plataforma Web para la Denuncia Segura y Prevención de Riesgos Digitales · ESCOM-IPN · Enero–Junio 2026 (Trabajo Terminal 1)</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:#4a90d9"></div>
+    Bryan — Scrum Máster / Analista de Requisitos
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:#3aaa6a"></div>
+    Jair — Ingeniero de Backend y Arquitecto
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:#e07030"></div>
+    Leilani — Desarrollador Frontend / Especialista en Contenido
+  </div>
+</div>
+
+<div class="gantt-wrapper">
+<table>
+  <colgroup>
+    <col style="width:240px">
+    <col><col><col><col><col><col>
+  </colgroup>
+
+  <!-- Period header -->
+  <tr class="hdr-period">
+    <td style="background:#f0f3f8;border:1px solid #d0d7e2;"></td>
+    <td colspan="6" class="tt1">TRABAJO TERMINAL 1</td>
+  </tr>
+
+  <!-- Month header -->
+  <tr class="hdr-months">
+    <td class="month-hdr" style="border:1px solid #d0d7e2;">Actividad</td>
+    <td class="month-hdr">Ene</td>
+    <td class="month-hdr">Feb</td>
+    <td class="month-hdr">Mar</td>
+    <td class="month-hdr">Abr</td>
+    <td class="month-hdr">May</td>
+    <td class="month-hdr">Jun</td>
+  </tr>
+
+  <!-- ============================================================
+       FASE 1: INVESTIGACIÓN Y PLANIFICACIÓN
+  ============================================================ -->
+  <tr class="section-row">
+    <td colspan="7">FASE 1 — INVESTIGACIÓN Y PLANIFICACIÓN</td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Reuniones con stakeholders (objetivos y alcance)
+      <br><span class="resp-tag resp-bryan">Bryan</span>
+    </td>
+    <td class="month-cell bar-bryan"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Creación y refinamiento del Product Backlog
+      <br><span class="resp-tag resp-bryan">Bryan</span>
+    </td>
+    <td class="month-cell bar-bryan"></td>
+    <td class="month-cell bar-bryan"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Investigación del marco teórico y normativo
+      <br><span class="resp-tag resp-bryan">Bryan</span>
+    </td>
+    <td class="month-cell bar-bryan"></td>
+    <td class="month-cell bar-bryan"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Investigación de soluciones tecnológicas (backend)
+      <br><span class="resp-tag resp-jair">Jair</span>
+    </td>
+    <td class="month-cell bar-jair"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Investigación tipología de delitos y catálogo de sanciones
+      <br><span class="resp-tag resp-leilani">Leilani</span>
+    </td>
+    <td class="month-cell bar-leilani"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Recopilación y calificación inicial de casos de prueba
+      <br><span class="resp-tag resp-leilani">Leilani</span>
+    </td>
+    <td class="month-cell bar-leilani"></td>
+    <td class="month-cell bar-leilani"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <!-- ============================================================
+       FASE 2: DISEÑO Y ARQUITECTURA
+  ============================================================ -->
+  <tr class="section-row">
+    <td colspan="7">FASE 2 — DISEÑO Y ARQUITECTURA</td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Definición de la arquitectura del sistema
+      <br><span class="resp-tag resp-bryan">Bryan</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-bryan"></td>
+    <td class="month-cell bar-bryan"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Diseño de BD y diagramas conceptuales
+      <br><span class="resp-tag resp-bryan">Bryan</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-bryan"></td>
+    <td class="month-cell bar-bryan"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Diseño de diagramas UML (casos de uso y estados)
+      <br><span class="resp-tag resp-bryan">Bryan</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-bryan"></td>
+    <td class="month-cell bar-bryan"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Configuración del entorno de desarrollo e infraestructura
+      <br><span class="resp-tag resp-jair">Jair</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-jair"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Diseño de diagramas de secuencia y flujo de datos
+      <br><span class="resp-tag resp-jair">Jair</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-jair"></td>
+    <td class="month-cell bar-jair"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Diseño de prototipos y maquetación UI/UX
+      <br><span class="resp-tag resp-leilani">Leilani</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-leilani"></td>
+    <td class="month-cell bar-leilani"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <!-- ============================================================
+       FASE 3: IMPLEMENTACIÓN
+  ============================================================ -->
+  <tr class="section-row">
+    <td colspan="7">FASE 3 — IMPLEMENTACIÓN DEL SISTEMA</td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Lógica de gestión de usuarios y autenticación
+      <br><span class="resp-tag resp-jair">Jair</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-jair"></td>
+    <td class="month-cell bar-jair"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Backend para gestión de denuncias (microservicio quejoso)
+      <br><span class="resp-tag resp-jair">Jair</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-jair"></td>
+    <td class="month-cell bar-jair"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Procesamiento y almacenamiento de archivos multimedia
+      <br><span class="resp-tag resp-jair">Jair</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-jair"></td>
+    <td class="month-cell bar-jair"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Implementación del clasificador inteligente de quejas (NLP/ML)
+      <br><span class="resp-tag resp-jair">Jair</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-jair"></td>
+    <td class="month-cell bar-jair"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Interfaz de autenticación y registro de usuarios
+      <br><span class="resp-tag resp-leilani">Leilani</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-leilani"></td>
+    <td class="month-cell bar-leilani"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Interfaz para levantar y visualizar denuncias
+      <br><span class="resp-tag resp-leilani">Leilani</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-leilani"></td>
+    <td class="month-cell bar-leilani"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+  <tr class="activity-row">
+    <td class="activity-label">
+      Interfaz de administración y generación de reportes
+      <br><span class="resp-tag resp-leilani">Leilani</span>
+    </td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell"></td>
+    <td class="month-cell bar-leilani"></td>
+    <td class="month-cell"></td>
+  </tr>
+
+</table>
+</div>
+
+<footer>
+  Trabajo Terminal 2026-B009 · ESCOM — Instituto Politécnico Nacional ·
+  Directores: M.C. Ulises Vélez Saldaña &amp; Dr. Jessie Paulina Guzmán Flores
+</footer>
+
+</body>
+</html>
