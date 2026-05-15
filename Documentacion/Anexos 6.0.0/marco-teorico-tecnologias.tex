@@ -1,3 +1,45 @@
+\documentclass[12pt, oneside, letterpaper]{book}
+\usepackage{configuraciones/setup}
+
+% Casos de USO
+\input{configuraciones/figuras_casos_uso.tex}
+\usepackage[utf8]{inputenc}
+\usepackage{textcomp}
+\lstset{inputencoding=utf8, extendedchars=true}
+
+% Imágenes y PDFs
+\usepackage{pdfpages} % Permite insertar páginas de archivos PDF externos
+\usepackage{ragged2e}
+
+% Definición de estilo para JSON
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily\small,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{gray!5}
+}
+
+\usepackage{tabularx} % Para que las tablas ocupen el ancho de la página
+\usepackage{enumitem} % Para reducir espacio en listas si las usas
+\usepackage[table]{xcolor} % Por si quieres dar color a las cabeceras
+
+% ==============================================================================
+\usepackage{hyperref} 
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    pdftitle={Trabajo Terminal - Defensoría de los Derechos Politécnicos},
+    pdfnewwindow=true % Esto ayuda a que los archivos externos se abran en otra ventana
+}
+
+\begin{document}
+
 \justify
 
 \section{Arquitecturas híbridas en sistemas distribuidos}
@@ -848,3 +890,7 @@ PDF & Baja & Baja & Baja \\
 
 Debido a estos requerimientos computacionales, los sistemas modernos de compresión multimedia suelen implementar procesamiento concurrente, paralelización y aceleración mediante hardware especializado con el objetivo de mejorar el rendimiento operativo.
 
+
+
+
+\end{document}

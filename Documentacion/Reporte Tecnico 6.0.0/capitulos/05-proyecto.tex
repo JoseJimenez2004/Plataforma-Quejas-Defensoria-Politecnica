@@ -6,6 +6,8 @@
 \label{cap:propuesta_proyecto}
 \justifying
 
+En este capítulo se presenta la propuesta tecnológica planteada para atender las problemáticas identificadas dentro de la DDP, describiendo la estructura general de la plataforma, sus principales componentes funcionales y la arquitectura utilizada para su implementación. Asimismo, se exponen las funcionalidades, elementos de innovación, beneficios esperados y el alcance de la solución, con el propósito de establecer una visión integral del sistema propuesto y de su contribución al fortalecimiento operativo, administrativo y tecnológico de la institución.
+
 \section{Descripción General de la Propuesta}
 
 La propuesta consiste en el desarrollo de una plataforma web integral orientada a la gestión digital de quejas y denuncias para la DDP del IPN. El sistema tiene como finalidad modernizar y optimizar los procesos institucionales relacionados con el registro, validación, seguimiento, análisis y resolución de expedientes, mediante el uso de tecnologías de automatización, centralización documental y análisis inteligente de información.
@@ -149,20 +151,139 @@ Sin embargo, el sistema no busca sustituir la toma de decisiones jurídicas ni r
 
 Finalmente, el alcance de la propuesta se limita al fortalecimiento tecnológico y operativo de los procesos internos relacionados con la gestión de quejas y denuncias dentro del entorno institucional de la DDP.
 
+
+
 \section{Costo del proyecto}
-Debemos tener en cuenta que el desarrollo de la presente plataforma requiere una inversión planificada. A fin de garantizar la viabilidad económica del proyecto, se realizó un análisis detallado de los recursos necesarios, considerando los gastos operativos reales de cada integrante del equipo, las herramientas especializadas requeridas por el stack tecnológico seleccionado y el capital humano involucrado durante un horizonte de doce meses. La siguiente tabla presenta el resumen consolidado de dicha inversión, organizada por categoría de gasto.
-\begin{table}[h!]
+
+El análisis financiero consolidado refleja la inversión total requerida para el desarrollo integral de la plataforma durante un periodo estimado de 12 meses.
+
+Se observa que el capital humano representa el mayor porcentaje del presupuesto total, situación consistente con proyectos de ingeniería de software donde el principal recurso corresponde al trabajo técnico especializado.
+
+\begin{table}[H]
 \centering
-\caption{Resumen consolidado de la inversión (12 meses)}
-\begin{tabular}{|l|r|c|}
-\hline
-\textbf{Categoría} & \textbf{Costo Total (MXN)} & \textbf{Porcentaje (\%)} \\ \hline
-Hardware (Inversión Inicial)            & \$34{,}999.00    & 3.48\%  \\ \hline
-Servicios Individuales (Luz e Internet) & \$24{,}708.00    & 2.46\%  \\ \hline
-Licenciamiento y VPS                    & \$52{,}761.60    & 5.25\%  \\ \hline
-Capital Humano y Capacitación           & \$892{,}657.50   & 88.81\% \\ \hline
-\textbf{COSTO TOTAL DEL PROYECTO}       & \textbf{\$1{,}005{,}126.10} & \textbf{100.00\%} \\ \hline
+\caption{Resumen consolidado de inversión}
+\rowcolors{2}{gray!8}{white}
+
+\begin{tabular}{lrr}
+\toprule
+\rowcolor{headerblue}
+\textbf{Categoría} & \textbf{Costo Total (MXN)} & \textbf{Porcentaje} \\
+\midrule
+
+Infraestructura de Hardware &
+\$34,999.00 &
+4.27\% \\
+
+Costos Operativos &
+\$24,708.00 &
+3.01\% \\
+
+Licenciamiento y Herramientas &
+\$39,645.00 &
+4.84\% \\
+
+Capital Humano &
+\$720,000.00 &
+87.88\% \\
+
+\midrule
+\textbf{Costo Total del Proyecto} &
+\textbf{\$819,352.00} &
+\textbf{100\%} \\
+
+\bottomrule
 \end{tabular}
 \end{table}
 
-Como podemos observar el 88.81\% de la inversión se concentra en Capital Humano.
+\vspace{0.5cm}
+
+\section{Riesgos del proyecto}
+% ==============================================================================
+% 7.16 ANÁLISIS DE RIESGO
+% ==============================================================================
+
+\section{Análisis de Riesgo}
+
+Debido a la naturaleza jurídica, institucional y tecnológica de la plataforma propuesta para la DDP, resulta indispensable realizar un análisis integral de riesgos que contemple amenazas técnicas, operativas, legales y organizacionales.
+
+El sistema administra información altamente sensible relacionada con denuncias, expedientes digitales, evidencias multimedia y datos personales de la comunidad politécnica. Asimismo, integra componentes distribuidos basados en microservicios, mecanismos de inteligencia artificial y almacenamiento persistente de evidencias, incrementando la superficie de ataque y la complejidad operativa.
+
+Con el objetivo de identificar vulnerabilidades potenciales y establecer estrategias preventivas, correctivas y detectivas, se realizó un análisis estático de seguridad (SAST), evaluación arquitectónica y análisis de gobernanza tecnológica (GRC), considerando atributos de seguridad, disponibilidad, integridad, trazabilidad, confidencialidad y cumplimiento normativo.
+
+\subsection{Clasificación General de Riesgos}
+
+Los riesgos identificados se clasifican en diferentes categorías con base en el impacto que podrían generar sobre la operación de la plataforma.
+
+\begin{table}[H]
+\centering
+\caption{Clasificación General de Riesgos}
+\label{tab:clasificacion_riesgos}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Categoría} & \textbf{Descripción} \\ \hline
+
+Seguridad &
+Amenazas relacionadas con vulnerabilidades de software, ataques externos, robo de información y manipulación de datos. \\ \hline
+
+Legal y Normativo &
+Riesgos asociados al incumplimiento de normativas institucionales, privacidad y protección de datos personales. \\ \hline
+
+Operacional &
+Eventos que afectan la continuidad operativa del sistema y los procesos internos de la DDP. \\ \hline
+
+Tecnológico &
+Problemas derivados de dependencias, infraestructura, microservicios y arquitectura distribuida. \\ \hline
+
+Inteligencia Artificial &
+Riesgos asociados al desempeño, sesgo y comportamiento del clasificador automático. \\ \hline
+
+Humano y Organizacional &
+Errores operativos, malas configuraciones y uso inadecuado de la plataforma por parte del personal. \\ \hline
+
+Financiero &
+Riesgos relacionados con costos operativos, mantenimiento y escalabilidad tecnológica. \\ \hline
+
+\end{tabular}
+\end{table}
+
+\subsection{Análisis de Riesgo Integral del Sistema}
+
+Esta sección aborda los riesgos que afectan la cohesión de la plataforma y el flujo de trabajo institucional entre los diferentes componentes.
+
+\begin{itemize}
+    \item \textbf{Fallas en la Cadena de Custodia Digital:} Riesgo de alteración o sustitución de evidencias multimedia almacenadas en el expediente. Una vulnerabilidad en el almacenamiento central podría comprometer la integridad documental y la validez jurídica de los archivos ante un proceso legal.
+    \item \textbf{Denegación de Servicio (DoS) Semántico en IA:} Los modelos de procesamiento de lenguaje natural (NLP) requieren recursos computacionales elevados. Cargas de trabajo concurrentes o narrativas extremadamente extensas podrían saturar la memoria RAM, deteniendo el flujo de recepción de quejas.
+    \item \textbf{Punto Único de Falla en API Gateway:} Al utilizar una arquitectura de microservicios, la indisponibilidad del gateway central bloquearía completamente la comunicación interna, impidiendo el acceso a cualquier funcionalidad de la plataforma institucional.
+    \item \textbf{Inconsistencia Transaccional Distribuida:} La comunicación entre servicios autónomos podría generar estados inconsistentes, donde un expediente sea registrado pero su procesamiento de IA o notificación falle, afectando la trazabilidad del proceso.
+\end{itemize}
+
+\subsection{Análisis de Riesgo Específico: Microservicio del Quejoso}
+
+Basado en los reportes de análisis estático (SAST) realizados al código fuente del módulo, se identificaron los siguientes riesgos técnicos específicos:
+
+\begin{itemize}
+    \item \textbf{Inyección Cross-site Scripting (XSS):} Se detectaron vulnerabilidades críticas en controladores como \textit{AuthController} y \textit{QuejaController} debido a una neutralización insuficiente de entradas. Esto permitiría la ejecución de scripts maliciosos en el navegador de los administradores.
+    \item \textbf{Debilidad Criptográfica (PRNG no seguro):} El uso de generadores pseudoaleatorios estándar en el servicio de usuarios compromete la seguridad de tokens y contraseñas temporales, haciéndolos predecibles para un atacante con conocimientos técnicos.
+    \item \textbf{Obsolescencia de Dependencias:} El sistema cuenta con componentes de terceros (Jakarta, Hibernate) con riesgos de mantenimiento. La falta de actualizaciones podría exponer al microservicio a vulnerabilidades conocidas públicamente (CVEs).
+    \item \textbf{Indicadores de Seguridad:} Aunque el índice de riesgo global es aceptable (0.51), el indicador técnico de seguridad es bajo, requiriendo un esfuerzo de remediación estimado de 2.5 horas para corregir defectos de alta prioridad.
+\end{itemize}
+
+\subsection{Estrategias de Mitigación y Controles}
+
+A continuación, se describen brevemente las acciones preventivas y correctivas diseñadas para reducir el impacto de los riesgos detectados.
+
+\begin{itemize}
+    \item \textbf{Saneamiento y Validación de Entradas:} Implementar filtros de limpieza en el servidor para eliminar cualquier rastro de código HTML o scripts en los formularios de queja y perfil de usuario, mitigando ataques de inyección.
+    \item \textbf{Fortalecimiento de Criptografía:} Reemplazar el uso de clases aleatorias estándar por \textit{SecureRandom} con semillas de alta entropía para garantizar que la generación de identificadores y tokens sea matemáticamente impredecible.
+    \item \textbf{Gestión de Actualizaciones (Patch Management):} Establecer un cronograma de revisión de dependencias para actualizar librerías obsoletas, priorizando aquellas que presenten riesgos de seguridad medios o altos.
+    \item \textbf{Supervisión Humana en Procesos de IA:} Implementar un protocolo donde toda decisión sugerida por el clasificador de IA deba ser ratificada por un operario jurídico, evitando errores por sesgo o derivación del modelo.
+    \item \textbf{Implementación de Hash de Integridad:} Generar y almacenar una firma digital (SHA-512) por cada evidencia cargada, permitiendo verificar en cualquier momento que el archivo no ha sido manipulado desde su origen.
+\end{itemize}
+
+\subsection{Resumen del Análisis de Riesgo}
+
+El análisis de riesgo presentado integra una evaluación integral de la plataforma institucional, combinando hallazgos técnicos específicos del microservicio del quejoso con los riesgos operativos y legales del sistema completo. 
+
+Se destaca que, si bien la arquitectura basada en microservicios e Inteligencia Artificial aporta escalabilidad y eficiencia, también introduce puntos críticos como la dependencia del API Gateway y el consumo elevado de recursos. Los hallazgos del análisis SAST revelaron vulnerabilidades de inyección y debilidad criptográfica que deben ser atendidas con prioridad máxima. No obstante, mediante la aplicación de las estrategias de mitigación propuestas —que incluyen saneamiento de datos, supervisión humana y gobernanza tecnológica— se concluye que el sistema posee la viabilidad técnica y normativa necesaria para operar de manera segura y resiliente dentro de la Defensoría de los Derechos Politécnicos.
+

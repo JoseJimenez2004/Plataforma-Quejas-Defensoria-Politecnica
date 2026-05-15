@@ -1,17 +1,60 @@
-\documentclass[12pt, oneside, letterpaper]{book}
+\documentclass[12pt,oneside,letterpaper]{book}
+
+% ==============================================================================
+% CONFIGURACIONES GENERALES
+% ==============================================================================
+
 \usepackage{configuraciones/setup}
 
-% Casos de USO
 \input{configuraciones/figuras_casos_uso.tex}
+
+% ==============================================================================
+% PAQUETES
+% ==============================================================================
+
 \usepackage[utf8]{inputenc}
 \usepackage{textcomp}
-\lstset{inputencoding=utf8, extendedchars=true}
-
-% Imágenes y PDFs
-\usepackage{pdfpages} % Permite insertar páginas de archivos PDF externos
 \usepackage{ragged2e}
+\usepackage{pdfpages}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage[table]{xcolor}
+\usepackage{siunitx}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{colortbl}
+\usepackage{longtable}
 
-% Definición de estilo para JSON
+% ==============================================================================
+% CONFIGURACIÓN DE TABLAS
+% ==============================================================================
+
+\renewcommand{\arraystretch}{1.3}
+
+\sisetup{
+    output-decimal-marker = {.},
+    group-separator = {,},
+    group-minimum-digits = 4
+}
+
+\definecolor{headerblue}{RGB}{220,230,242}
+
+% ==============================================================================
+% LISTINGS
+% ==============================================================================
+
+\lstset{
+    inputencoding=utf8,
+    extendedchars=true
+}
+
+% ==============================================================================
+% DEFINICIÓN JSON
+% ==============================================================================
+
 \lstdefinelanguage{json}{
     basicstyle=\normalfont\ttfamily\small,
     numbers=left,
@@ -24,96 +67,439 @@
     backgroundcolor=\color{gray!5}
 }
 
-\usepackage{tabularx} % Para que las tablas ocupen el ancho de la página
-\usepackage{enumitem} % Para reducir espacio en listas si las usas
-\usepackage[table]{xcolor} % Por si quieres dar color a las cabeceras
-
 % ==============================================================================
-\usepackage{hyperref} 
+% HIPERVÍNCULOS
+% ==============================================================================
+
+\usepackage{hyperref}
+
 \hypersetup{
     colorlinks=true,
     linkcolor=blue,
     urlcolor=blue,
     pdftitle={Trabajo Terminal - Defensoría de los Derechos Politécnicos},
-    pdfnewwindow=true % Esto ayuda a que los archivos externos se abran en otra ventana
+    pdfnewwindow=true
 }
 
+% ==============================================================================
+% DOCUMENTO
+% ==============================================================================
+
 \begin{document}
+
+% ==============================================================================
 \section{Análisis Detallado de Costos del Proyecto (12 meses)}
+% ==============================================================================
 
-El éxito financiero y operativo de la plataforma para la denuncia segura depende de una estimación precisa de los recursos. El presente presupuesto se ha personalizado para reflejar los gastos operativos reales del equipo de trabajo, asegurando que la infraestructura soporte los estándares de seguridad y disponibilidad requeridos por la normativa mexicana.
+El desarrollo de la plataforma web para la gestión digital de quejas y denuncias de la Defensoría de los Derechos Politécnicos requiere una planificación financiera orientada a garantizar la viabilidad técnica, operativa y humana del proyecto durante todo su ciclo de vida.
 
-\subsection{Inversión en Hardware (Pago Único)}
+La estimación económica presentada contempla los recursos de infraestructura, herramientas especializadas, servicios operativos y capital humano necesarios para mantener un entorno de desarrollo seguro, estable y alineado con prácticas modernas de ingeniería de software, integración continua y DevSecOps.
 
-La infraestructura de cómputo representa la base técnica del desarrollo. Se han contabilizado los equipos de alto rendimiento necesarios para la ejecución de entornos de microservicios, contenedores (Docker/Podman) y herramientas de análisis estático de código que demandan una carga considerable de memoria RAM y procesamiento.
+Asimismo, el análisis financiero permite identificar la distribución presupuestal del proyecto, evaluar la viabilidad tecnológica de la propuesta y estimar el esfuerzo requerido para la implementación integral de la plataforma.
 
-\begin{table}[h!]
+\vspace{0.5cm}
+
+% ==============================================================================
+\subsection{Metodología de Estimación de Costos}
+% ==============================================================================
+
+La estimación económica del proyecto se realizó tomando como referencia criterios derivados del modelo \textbf{COCOMO II (Constructive Cost Model II)}, ampliamente utilizado en ingeniería de software para estimar esfuerzo, tiempo de desarrollo y costos asociados a proyectos tecnológicos.
+
+La metodología considera factores relacionados con:
+
+\begin{itemize}
+    \item Complejidad técnica del sistema.
+    \item Tamaño estimado del software.
+    \item Recursos tecnológicos requeridos.
+    \item Nivel de experiencia del equipo de desarrollo.
+    \item Infraestructura de soporte.
+    \item Tiempo estimado de implementación.
+    \item Actividades de análisis, pruebas y documentación.
+\end{itemize}
+
+El modelo COCOMO II permite estimar el esfuerzo en Persona-Mes (PM) a partir del tamaño del sistema expresado en miles de líneas de código fuente (KSLOC).
+
+La ecuación base utilizada es:
+
+\[
+PM = A \times (KSLOC)^B
+\]
+
+Donde:
+
+\begin{itemize}
+    \item \(PM\): esfuerzo estimado en Persona-Mes.
+    \item \(A\): constante de productividad del modelo.
+    \item \(KSLOC\): miles de líneas de código estimadas.
+    \item \(B\): factor de escala asociado a la complejidad del proyecto.
+\end{itemize}
+
+Para el presente proyecto se realizó una estimación aproximada considerando la arquitectura híbrida del sistema, los módulos frontend y backend, la implementación de medidas de seguridad y la integración de herramientas DevSecOps.
+
+\vspace{0.3cm}
+
+\begin{table}[H]
 \centering
-\caption{Desglose de equipo de cómputo por integrante}
-\begin{tabular}{|l|l|r|}
-\hline
-\textbf{Integrante} & \textbf{Equipo} & \textbf{Costo (MXN)} \\ \hline
-Bryan & Acer Nitro (Core i7 8th Gen, 24GB RAM) & \$6,500.00 \\ \hline
-Yayo & Huawei Matebook D16 (Core i5-12450H, 16GB RAM) & \$13,500.00 \\ \hline
-Bastian & Acer Nitro Lite 16" (Core i5-13420H, 16GB RAM) & \$14,999.00 \\ \hline
-\multicolumn{2}{|r|}{\textbf{Total Hardware}} & \textbf{\$34,999.00} \\ \hline
+\caption{Estimación preliminar basada en criterios COCOMO II}
+\rowcolors{2}{gray!8}{white}
+
+\begin{tabular}{p{5cm} p{5cm}}
+\toprule
+\rowcolor{headerblue}
+\textbf{Parámetro} & \textbf{Valor estimado} \\
+\midrule
+
+Tamaño estimado del sistema & 18 KSLOC \\
+
+Esfuerzo estimado & 21 Persona-Mes \\
+
+Duración estimada & 12 meses \\
+
+Equipo de desarrollo & 3 integrantes \\
+
+Complejidad del sistema & Media-Alta \\
+
+Arquitectura & Web híbrida multicapa \\
+
+\bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Gastos Operativos Individuales (Mensuales)}
+\vspace{0.3cm}
 
-A diferencia de un cálculo genérico, se aplican los costos específicos reportados por cada miembro del equipo. Estos gastos cubren la conectividad de alta velocidad indispensable para la sincronización de repositorios y la energía eléctrica necesaria para mantener las estaciones de trabajo operativas durante las jornadas de desarrollo y pruebas de integración.
+A partir de esta estimación, se identificó que el proyecto presenta características propias de un sistema de complejidad intermedia-alta, debido a la incorporación de componentes de seguridad, autenticación, trazabilidad, control documental y arquitectura basada en servicios.
 
-\begin{table}[h!]
+\vspace{0.5cm}
+
+% ==============================================================================
+\subsection{Distribución General de Roles}
+% ==============================================================================
+
+El desarrollo del proyecto se llevó a cabo bajo un esquema de trabajo colaborativo, donde cada integrante participó activamente en múltiples áreas del proceso de ingeniería de software.
+
+Debido a la naturaleza académica y multidisciplinaria del proyecto, las actividades fueron distribuidas de manera compartida entre los integrantes, permitiendo la participación conjunta en tareas de análisis, diseño, desarrollo, pruebas y documentación.
+
+\begin{table}[H]
 \centering
-\caption{Desglose de servicios básicos por integrante}
-\begin{tabular}{|l|r|r|r|}
-\hline
-\textbf{Integrante} & \textbf{Luz (Mensual)} & \textbf{Internet (Mensual)} & \textbf{Subtotal Mensual} \\ \hline
-Bryan & \$270.00 & \$500.00 & \$770.00 \\ \hline
-Yayo & \$250.00 & \$400.00 & \$650.00 \\ \hline
-Bastian & \$250.00 & \$389.00 & \$639.00 \\ \hline
-\multicolumn{3}{|r|}{\textbf{Total Servicios Mensual (Equipo)}} & \textbf{\$2,059.00} \\ \hline
-\multicolumn{3}{|r|}{\textbf{Total Servicios Anual (12 meses)}} & \textbf{\$24,708.00} \\ \hline
+\caption{Distribución general de actividades del equipo}
+\rowcolors{2}{gray!8}{white}
+
+\begin{tabular}{p{3cm} p{10cm}}
+\toprule
+\rowcolor{headerblue}
+\textbf{Integrante} & \textbf{Actividades desarrolladas} \\
+\midrule
+
+BRYAN &
+Análisis de requerimientos, desarrollo backend, implementación de APIs REST, integración DevSecOps, pruebas de seguridad, despliegue y documentación técnica. \\
+
+JAIR &
+Diseño frontend, desarrollo de interfaces en Angular, integración cliente-servidor, modelado del sistema, pruebas funcionales y documentación técnica. \\
+
+LEILANI &
+Diseño de interfaces, validación funcional, pruebas del sistema, documentación, análisis de procesos y apoyo en integración frontend/backend. \\
+
+\bottomrule
 \end{tabular}
 \end{table}
 
+\vspace{0.5cm}
+
+% ==============================================================================
+\subsection{Infraestructura de Hardware}
+% ==============================================================================
+
+La infraestructura de hardware constituye el soporte tecnológico fundamental para garantizar la ejecución eficiente de las actividades de desarrollo, integración, pruebas y despliegue continuo de la plataforma.
+
+La capacidad de procesamiento y memoria de los equipos utilizados permite ejecutar simultáneamente entornos virtualizados, contenedores Docker, herramientas de análisis estático de seguridad y múltiples servicios backend sin afectar el rendimiento operativo del entorno de desarrollo.
+
+\begin{table}[H]
+\centering
+\caption{Infraestructura de hardware utilizada en el proyecto}
+\rowcolors{2}{gray!8}{white}
+
+\begin{tabular}{p{3cm} p{8cm} r}
+\toprule
+\rowcolor{headerblue}
+\textbf{Rol} & \textbf{Especificaciones principales} & \textbf{Costo (MXN)} \\
+\midrule
+
+BRYAN &
+Intel Core i7, 24 GB RAM, SSD &
+\$6,500.00 \\
+
+JAIR &
+Intel Core i5-12450H, 16 GB RAM, SSD &
+\$13,500.00 \\
+
+LEILANI &
+Intel Core i5-13420H, 16 GB RAM, SSD &
+\$14,999.00 \\
+
+\midrule
+\textbf{Total Hardware} & & \textbf{\$34,999.00} \\
+
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.5cm}
+
+% ==============================================================================
+\subsection{Costos Operativos}
+% ==============================================================================
+
+Los costos operativos contemplan los servicios básicos necesarios para garantizar la continuidad del desarrollo colaborativo, sincronización de repositorios, pruebas remotas y despliegues en infraestructura virtual.
+
+El consumo energético considera el uso continuo de estaciones de trabajo de alto rendimiento, mientras que los costos de conectividad corresponden a servicios de Internet de banda ancha requeridos para actividades de integración continua y trabajo remoto.
+
+\begin{table}[H]
+\centering
+\caption{Costos operativos mensuales}
+\rowcolors{2}{gray!8}{white}
+
+\begin{tabular}{lrrr}
+\toprule
+\rowcolor{headerblue}
+\textbf{Rol} & \textbf{Energía eléctrica} & \textbf{Internet} & \textbf{Subtotal} \\
+\midrule
+
+BRYAN & \$270.00 & \$500.00 & \$770.00 \\
+
+JAIR & \$250.00 & \$400.00 & \$650.00 \\
+
+LEILANI & \$250.00 & \$389.00 & \$639.00 \\
+
+\midrule
+\textbf{Total mensual} & & & \textbf{\$2,059.00} \\
+
+\textbf{Total anual (12 meses)} & & & \textbf{\$24,708.00} \\
+
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.5cm}
+
+% ==============================================================================
 \subsection{Licenciamiento y Herramientas Especializadas}
+% ==============================================================================
 
-Para garantizar la integridad y seguridad de la plataforma, se han seleccionado herramientas líderes en la industria. El uso de \textbf{Termius} permite una gestión cifrada de servidores, mientras que \textbf{Kiuwan} y \textbf{SonarQube} se implementan como filtros críticos de seguridad (SAST) para mitigar vulnerabilidades antes del despliegue. Los costos en moneda extranjera consideran un tipo de cambio base de \$17.34 MXN.
+Con el objetivo de fortalecer la calidad, seguridad y administración de la plataforma, se incorporaron herramientas especializadas utilizadas comúnmente en entornos profesionales de ingeniería de software.
 
-\begin{table}[h!]
+La integración de herramientas SAST (Static Application Security Testing) como \textbf{SonarQube} y \textbf{Kiuwan} permitió detectar vulnerabilidades, deuda técnica y errores críticos durante etapas tempranas del desarrollo, reduciendo riesgos asociados al despliegue en producción.
+
+Asimismo, herramientas como \textbf{Termius} facilitaron la administración segura de servidores mediante conexiones cifradas y gestión centralizada de accesos remotos.
+
+\begin{table}[H]
 \centering
-\caption{Cronograma de herramientas y licencias}
-\begin{tabular}{|l|c|c|r|}
-\hline
-\textbf{Herramienta} & \textbf{Costo Unitario} & \textbf{Periodo / Cantidad} & \textbf{Total (MXN)} \\ \hline
-Balsamiq & \$237.00/mes & Mes 1 al 3 & \$711.00 \\ \hline
-Visual Paradigm & \$123.00/mes & Mes 1 al 6 & \$738.00 \\ \hline
-Termius & \$346.80/mes (\$20 USD) & 3 pers. $\times$ 12 meses & \$12,484.80 \\ \hline
-VPS & \$389.00/mes & 12 meses & \$4,668.00 \\ \hline
-Kiuwan & \$21,675.00/año & Mes 2 al 12 & \$21,675.00 \\ \hline
-SonarQube & \$12,484.80/año & Mes 2 al 12 & \$12,484.80 \\ \hline
-\multicolumn{3}{|r|}{\textbf{Total Software y Licencias}} & \textbf{\$52,761.60} \\ \hline
+\caption{Licenciamiento y herramientas especializadas}
+\rowcolors{2}{gray!8}{white}
+
+\begin{tabular}{p{4cm} p{4cm} p{4cm} r}
+\toprule
+\rowcolor{headerblue}
+\textbf{Herramienta} & \textbf{Costo Unitario} & \textbf{Periodo} & \textbf{Total} \\
+\midrule
+
+Balsamiq &
+\$237.00 / mes &
+6 meses &
+\$1,422.00 \\
+
+Visual Paradigm &
+\$123.00 / mes &
+6 meses &
+\$738.00 \\
+
+Termius &
+\$345.00 / mes &
+4 meses &
+\$1,380.00 \\
+
+Servidor VPS &
+\$389.00 / mes &
+5 meses &
+\$1,945.00 \\
+
+Kiuwan &
+\$21,675.00 / anual &
+Uso parcial del proyecto &
+\$21,675.00 \\
+
+SonarQube &
+\$12,485.00 / anual &
+Uso parcial del proyecto &
+\$12,485.00 \\
+
+\midrule
+\textbf{Total Licenciamiento} & & & \textbf{\$39,645.00} \\
+
+\bottomrule
 \end{tabular}
 \end{table}
 
+\vspace{0.3cm}
+
+\noindent
+\textbf{Nota:} Tanto \textbf{SonarQube} como \textbf{Kiuwan} proporcionaron versiones gratuitas de evaluación utilizadas durante etapas iniciales del proyecto. Estas versiones permitieron validar la integración de análisis estático de seguridad dentro del flujo DevSecOps antes de contemplar esquemas completos de licenciamiento.
+
+\vspace{0.5cm}
+
+% ==============================================================================
+\subsection{Estimación de Capital Humano}
+% ==============================================================================
+
+El capital humano constituye el principal recurso estratégico del proyecto, debido a que el desarrollo de software depende fundamentalmente del trabajo especializado de análisis, diseño, implementación, pruebas, aseguramiento de calidad y documentación técnica.
+
+Para efectos de estimación financiera, se consideró una beca mensual equivalente de \$20,000.00 MXN por integrante durante un periodo de 12 meses.
+
+\begin{table}[H]
+\centering
+\caption{Estimación de capital humano}
+\rowcolors{2}{gray!8}{white}
+
+\begin{tabular}{lccc}
+\toprule
+\rowcolor{headerblue}
+\textbf{Rol} & \textbf{Pago mensual} & \textbf{Periodo} & \textbf{Total} \\
+\midrule
+
+BRYAN &
+\$20,000.00 &
+12 meses &
+\$240,000.00 \\
+
+JAIR &
+\$20,000.00 &
+12 meses &
+\$240,000.00 \\
+
+LEILANI &
+\$20,000.00 &
+12 meses &
+\$240,000.00 \\
+
+\midrule
+\textbf{Total Capital Humano} & & & \textbf{\$720,000.00} \\
+
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.5cm}
+
+% ==============================================================================
 \subsection{Resumen Consolidado de la Inversión}
+% ==============================================================================
 
-El costo total refleja la inversión integral para el desarrollo de la plataforma. La categoría de Capital Humano constituye el rubro principal, contemplando el trabajo especializado de tres ingenieros becarios. Se incluye un margen destinado a la capacitación técnica inicial necesaria para dominar el stack tecnológico seleccionado, asegurando que el desarrollo cumpla con los estándares de calidad exigidos por la institución.
+El análisis financiero consolidado refleja la inversión total requerida para el desarrollo integral de la plataforma durante un periodo estimado de 12 meses.
 
-\begin{table}[h!]
+Se observa que el capital humano representa el mayor porcentaje del presupuesto total, situación consistente con proyectos de ingeniería de software donde el principal recurso corresponde al trabajo técnico especializado.
+
+\begin{table}[H]
 \centering
-\caption{Resumen consolidado de la inversión (12 meses)}
-\begin{tabular}{|l|r|c|}
-\hline
-\textbf{Categoría} & \textbf{Costo Total (MXN)} & \textbf{Porcentaje (\%)} \\ \hline
-Hardware (Inversión Inicial) & \$34,999.00 & 3.48\% \\ \hline
-Servicios Individuales (Luz e Internet) & \$24,708.00 & 2.46\% \\ \hline
-Licenciamiento y VPS & \$52,761.60 & 5.25\% \\ \hline
-Capital Humano y Capacitación & \$892,657.50 & 88.81\% \\ \hline
-\textbf{COSTO TOTAL DEL PROYECTO} & \textbf{\$1,005,126.10} & \textbf{100.00\%} \\ \hline
+\caption{Resumen consolidado de inversión}
+\rowcolors{2}{gray!8}{white}
+
+\begin{tabular}{lrr}
+\toprule
+\rowcolor{headerblue}
+\textbf{Categoría} & \textbf{Costo Total (MXN)} & \textbf{Porcentaje} \\
+\midrule
+
+Infraestructura de Hardware &
+\$34,999.00 &
+4.27\% \\
+
+Costos Operativos &
+\$24,708.00 &
+3.01\% \\
+
+Licenciamiento y Herramientas &
+\$39,645.00 &
+4.84\% \\
+
+Capital Humano &
+\$720,000.00 &
+87.88\% \\
+
+\midrule
+\textbf{Costo Total del Proyecto} &
+\textbf{\$819,352.00} &
+\textbf{100\%} \\
+
+\bottomrule
 \end{tabular}
 \end{table}
 
+\vspace{0.5cm}
+
+% ==============================================================================
+
+
+
+\subsection{Análisis Financiero del Proyecto}
+% ==============================================================================
+
+Desde una perspectiva financiera, el proyecto presenta una estructura de costos típica de iniciativas de desarrollo de software especializado, donde la mayor carga presupuestal se concentra en el capital humano debido a la naturaleza intensiva en conocimiento de las actividades de ingeniería de software.
+
+Las actividades de análisis, diseño arquitectónico, implementación backend y frontend, pruebas de seguridad, integración continua y documentación técnica requieren personal capacitado y dedicación constante durante todo el ciclo de vida del proyecto.
+
+Por otra parte, los costos asociados a infraestructura y licenciamiento representan una proporción considerablemente menor del presupuesto total, gracias al aprovechamiento de tecnologías open source como Docker, PostgreSQL, Spring Boot y Angular, las cuales reducen significativamente los costos asociados a software propietario.
+
+Asimismo, la incorporación de herramientas DevSecOps y análisis estático de seguridad fortalece la calidad del sistema, disminuye vulnerabilidades potenciales y mejora la mantenibilidad del software a largo plazo.
+
+El beneficio esperado del sistema no se limita únicamente a un retorno económico directo, sino al fortalecimiento institucional de la Defensoría de los Derechos Politécnicos mediante la digitalización de procesos, automatización del seguimiento de casos, reducción de tiempos administrativos y mejora en la trazabilidad documental.
+
+\vspace{0.5cm}
+
+% ==============================================================================
+\subsection{Riesgos Financieros del Proyecto}
+% ==============================================================================
+
+Todo proyecto de ingeniería de software se encuentra expuesto a riesgos financieros derivados de factores técnicos, operativos y administrativos que pueden impactar el presupuesto inicialmente estimado.
+
+En este contexto, se identificaron los principales riesgos económicos asociados al desarrollo de la plataforma.
+
+\begin{table}[H]
+\centering
+\caption{Principales riesgos financieros identificados}
+\rowcolors{2}{gray!8}{white}
+
+\begin{tabular}{p{5cm} p{5cm} p{4cm}}
+\toprule
+\rowcolor{headerblue}
+\textbf{Riesgo} & \textbf{Impacto potencial} & \textbf{Medida de mitigación} \\
+\midrule
+
+Incremento en costos de licencias &
+Aumento del presupuesto operativo &
+Uso de herramientas open source y versiones académicas \\
+
+Retrasos en el desarrollo &
+Incremento del costo humano y operativo &
+Planificación incremental y seguimiento continuo \\
+
+Fallas de infraestructura &
+Pérdida temporal de productividad &
+Respaldos periódicos y virtualización \\
+
+Cambios de alcance del sistema &
+Incremento del esfuerzo estimado &
+Control de requerimientos y validación continua \\
+
+Vulnerabilidades de seguridad &
+Costos adicionales de corrección &
+Integración temprana de prácticas DevSecOps \\
+
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+
+La identificación temprana de riesgos financieros permite establecer medidas preventivas orientadas a reducir desviaciones presupuestales y garantizar la continuidad operativa del proyecto durante sus distintas etapas de desarrollo.
+
+% ==============================================================================
 \end{document}
