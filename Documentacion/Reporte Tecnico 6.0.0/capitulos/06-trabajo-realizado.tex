@@ -353,7 +353,7 @@ las cuales encapsula un conjunto de acciones relacionadas:
 % ── Figura: Diagrama de casos de uso ──
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{imagenes/Cap8/CasosDeUso.png}
+    \includegraphics[width=0.9\textwidth]{imagenes/quejoso/Diagrama_CU/CasosUso_Quejoso.png}
     \caption{Diagrama de casos de uso del microservicio de atención al quejoso}
     \label{fig:casos_uso}
 \end{figure}
@@ -430,7 +430,7 @@ los cuatro módulos funcionales —gestión de accesos, ciclo de vida de la quej
 evidencia digital y seguimiento— se expone mediante \textit{endpoints} REST que 
 reciben y devuelven representaciones JSON, lo que permite la integración 
 desacoplada con el \textit{frontend} y con los demás microservicios del 
-ecosistema. La autenticación se gestiona mediante tokens JWT, garantizando que 
+ecosistema. La autenticación se gestionará mediante tokens JWT, garantizando que 
 cada solicitud esté vinculada a un quejoso verificado antes de ejecutar cualquier 
 operación sobre su expediente. Esta separación entre lógica de negocio y capa de 
 presentación permite que el mismo \textit{backend} sirva tanto al \textit{frontend} 

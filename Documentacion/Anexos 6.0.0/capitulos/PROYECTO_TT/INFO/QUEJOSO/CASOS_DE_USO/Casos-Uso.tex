@@ -100,15 +100,15 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \begingroup
 \setlength{\parskip}{0pt}
 \begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
-\caption{Especificación de Caso de Uso CU05: Consultar estatus}
+\caption{Especificación de Caso de Uso CU05: Consultar estatus como invitado}
 \label{tab:cu05_consultar_estatus} \\
 \hline
-\textbf{Identificador} & CU05 & \textbf{Nombre} & Consultar estatus \\ \hline
+\textbf{Identificador} & CU05 & \textbf{Nombre} & Consultar estatus como invitado \\ \hline
 \textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
 \textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite a un usuario sin sesión activa verificar el estado actual de una queja específica mediante datos de identificación rápidos.} \\ \hline
 \textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario desea saber el progreso de su trámite sin necesidad de entrar a un Dashboard.} \\ \hline
 \textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Contar con el folio de la queja y el correo electrónico asociado.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso ingresa folio y correo en la sección de seguimiento del portal.\newline 2. El Sistema busca el registro correspondiente.\newline 3. El Sistema despliega una vista resumida con el estatus (ej. RECIBIDA, EN REVISIÓN) y los detalles generales.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso ingresa folio y correo en la sección de seguimiento del portal.\newline 2. El Sistema busca el registro correspondiente.\newline 3. El Sistema despliega una vista resumida con el estatus y los detalles generales.} \\ \hline
 \textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{2a. Búsqueda sin resultados:}\newline 1. El Sistema indica que el folio o correo son incorrectos.} \\ \hline
 \textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de conexión con la base de datos o datos de entrada no válidos.} \\ \hline
 \textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{No se muestra información privada y el sistema solicita verificar los datos ingresados.} \\ \hline
@@ -174,8 +174,8 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario visualizar una vista general de sus trámites más recientes y el estado global de su cuenta tras iniciar sesión.} \\ \hline
 \textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario completa el inicio de sesión exitosamente o hace clic en la opción ``Resumen'' del menú lateral.} \\ \hline
 \textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe estar autenticado en el sistema.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema recupera la lista de quejas asociadas al ID del usuario.\newline 2. El Sistema contabiliza los estatus (Recibidas, En revisión, Concluidas).\newline 3. El Sistema despliega tarjetas informativas y una tabla con los últimos movimientos.\newline 4. El Sistema muestra accesos directos a las funciones principales.} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Usuario sin quejas registradas:}\newline 1. El Sistema muestra un mensaje de bienvenida y una invitación a presentar su primera queja.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema recupera la lista de quejas asociadas al ID del usuario.\newline 2. El Sistema contabiliza los estatus (Totales, En Proceso, Finalizadas y Acciones Pendientes).\newline 3. El Sistema despliega tarjetas informativas y una tabla con los últimos movimientos.\newline 4. El Sistema muestra accesos directos a las funciones principales.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Usuario sin quejas en proceso:}\newline 1. El Sistema muestra al menos 1 queja eliminada.} \\ \hline
 \textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error de red al intentar obtener el conteo de trámites desde la API.} \\ \hline
 \textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El Dashboard se muestra vacío o con indicadores de carga infinitos. Se despliega una alerta de ``Error al cargar resumen''.} \\ \hline
 \textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario tiene un panorama claro de la situación actual de sus expedientes.} \\ \hline
@@ -218,8 +218,8 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Facilita la carga de archivos multimedia adicionales a un expediente en proceso de modificación.} \\ \hline
 \textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario hace clic en ``Adjuntar archivo'' durante la edición de una queja.} \\ \hline
 \textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe encontrarse dentro de la vista de ``Edición de queja'' (CU09).} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona ``Adjuntar archivo''.\newline 2. El Sistema invoca el explorador de archivos.\newline 3. El Quejoso selecciona archivos a subir.\newline 4. El Sistema valida técnica (formato y tamaño).\newline 5. El Sistema previsualiza el archivo.\newline 6. El flujo retorna a CU09 a la espera de guardar.} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{4a. Formato no permitido o Exceso de peso:}\newline 1. El Sistema detecta la anomalía.\newline 2. El Sistema rechaza la carga y muestra alerta indicando la restricción.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona ``Adjuntar archivo''.\newline 2. El Sistema invoca el explorador de archivos.\newline 3. El Quejoso selecciona archivos a subir.\newline 4. El Sistema valida formato y tamaño (30mb).\newline 5. El Sistema previsualiza el archivo.\newline 6. El flujo retorna a CU09 a la espera de guardar.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{4a. Formato no permitido o Exceso de peso:}\newline 1. El Sistema detecta alguno de los casos.\newline 2. El Sistema rechaza la carga y muestra alerta indicando la restricción.} \\ \hline
 \textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El archivo tiene formato inseguro o excede el peso máximo permitido.} \\ \hline
 \textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema rechaza el archivo instantáneamente y lanza advertencia.} \\ \hline
 \textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El archivo queda vinculado temporalmente y se persiste al guardar en CU09.} \\ \hline
@@ -259,13 +259,13 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \hline
 \textbf{Identificador} & CU12 & \textbf{Nombre} & Ver Detalles de Queja \\ \hline
 \textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
-\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario consultar toda la información detallada de un expediente específico, incluyendo la narrativa, evidencias y bitácora de cambios.} \\ \hline
-\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona una queja de la lista mediante el botón ``Ver detalles''.} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario consultar la información detallada de un expediente específico, incluyendo la narrativa, evidencias y estatus.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona una queja de la lista mediante el botón (ojo abierto) para ver detalles.} \\ \hline
 \textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario debe tener permisos de acceso sobre el folio solicitado.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona el registro.\newline 2. El Sistema realiza una petición GET al backend con el ID del trámite.\newline 3. El Sistema despliega una vista completa con datos del quejoso, hechos y archivos adjuntos.\newline 4. El Sistema muestra el historial de estatus del expediente.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona el registro.\newline 2. El Sistema realiza una petición GET al backend con el ID del trámite.\newline 3. El Sistema despliega una vista completa con datos del quejoso, hechos, status y archivos adjuntos.} \\ \hline
 \textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{3a. Evidencias inexistentes:}\newline 1. El sistema oculta la sección de descargas si no se adjuntaron archivos originalmente.} \\ \hline
-\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El folio solicitado no pertenece al usuario autenticado (intento de acceso no autorizado).} \\ \hline
-\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema muestra una pantalla de ``403 Prohibido'' o redirige al Dashboard con un error de seguridad.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{No se logra acceder a la información del expediente solicitado.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema muestra una pantalla de error o redirige al Dashboard marcando error..} \\ \hline
 \textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario queda informado sobre el contenido y progreso exacto de su trámite.} \\ \hline
 \end{longtable}
 \endgroup
@@ -281,7 +281,7 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \hline
 \textbf{Identificador} & CU13 & \textbf{Nombre} & Mis Quejas (Historial) \\ \hline
 \textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
-\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Proporciona un listado tabular de todos los expedientes registrados por el usuario, permitiendo el filtrado por estatus o fecha.} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Proporciona un listado tabular de todos los expedientes registrados por el usuario, permitiendo el filtrado por folio, estatus o fecha.} \\ \hline
 \textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona la opción ``Mis Quejas'' en el menú lateral.} \\ \hline
 \textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión activa del usuario.} \\ \hline
 \textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema carga la tabla con la totalidad de quejas del usuario.\newline 2. El Quejoso utiliza los filtros de búsqueda (Folio, Estatus).\newline 3. El Sistema actualiza la lista constantemente.\newline 4. El Quejoso visualiza las opciones de acción para cada registro.} \\ \hline
@@ -304,10 +304,10 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \textbf{Identificador} & CU14 & \textbf{Nombre} & Nueva Queja (Autenticado) \\ \hline
 \textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
 \textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite realizar un nuevo registro de queja, con la ventaja de tener el formulario pre-llenado con los datos de contacto del perfil del usuario.} \\ \hline
-\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona ``Nueva Denuncia'' dentro del Dashboard.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona ``Nueva Queja'' dentro del Dashboard.} \\ \hline
 \textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión activa y datos de perfil completos.} \\ \hline
 \textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema despliega el formulario de registro.\newline 2. El Sistema carga automáticamente nombre, correo y teléfono del usuario.\newline 3. El Quejoso ingresa solo la narrativa y evidencias del nuevo hecho.\newline 4. El Quejoso selecciona ``Enviar''.\newline 5. El Sistema genera el nuevo folio y lo vincula a la cuenta actual.} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{3a. Guardar Borrador:}\newline 1. El usuario selecciona ``Guardar para después''.\newline 2. El sistema almacena los datos sin generar folio oficial aún.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{3a: Click al boton Cancelar}\newline 1. El usuario selecciona ``Cancelar''.\newline 2. El sistema redirige al Dashboard.} \\ \hline
 \textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El usuario intenta enviar una queja con los campos obligatorios vacíos.} \\ \hline
 \textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El formulario se bloquea y resalta los errores. No se genera un nuevo registro en la base de datos.} \\ \hline
 \textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Un nuevo expediente es añadido al historial del usuario autenticado.} \\ \hline
@@ -329,7 +329,7 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario hace clic en el icono de campana o en la sección ``Notificaciones''.} \\ \hline
 \textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión activa.} \\ \hline
 \textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema muestra una lista cronológica de alertas.\newline 2. El Quejoso selecciona una notificación para ver el detalle.\newline 3. El Sistema marca la notificación como ``leída''.\newline 4. El Sistema redirige al trámite relacionado si la notificación contiene un enlace.} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Limpiar notificaciones:}\newline 1. El usuario selecciona ``Marcar todas como leídas''.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{1a. Filtrar notificaciones:}\newline 1. El usuario selecciona entre las notificaciones leidas, pendientes o todas.} \\ \hline
 \textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error al actualizar el estado de lectura en la base de datos.} \\ \hline
 \textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{La notificación permanece como ``no leída'' a pesar de haber sido abierta.} \\ \hline
 \textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario está al tanto de las novedades administrativas de sus casos.} \\ \hline
@@ -342,16 +342,16 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \begingroup
 \setlength{\parskip}{0pt}
 \begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
-\caption{Especificación de Caso de Uso CU16: Revisar Propuesta de Conciliación}
+\caption{Especificación de Caso de Uso CU16: Consultar Propuesta de Conciliación}
 \label{tab:cu16_revisar_propuesta} \\
 \hline
-\textbf{Identificador} & CU16 & \textbf{Nombre} & Revisar Propuesta de Conciliación \\ \hline
+\textbf{Identificador} & CU16 & \textbf{Nombre} & Consultar Propuesta de Conciliación \\ \hline
 \textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
-\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario visualizar la medida o solución propuesta por el defensor para resolver la queja de manera amistosa.} \\ \hline
-\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario abre una notificación de ``Propuesta de Conciliación''.} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario visualizar la medida o solución propuesta por el defensor para resolver su queja.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario hace clic en una queja con estatus ``PROPUESTA ENVIADA'' o entra desde la seccion de Notificaciones.} \\ \hline
 \textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{La queja debe estar en estatus ``PROPUESTA ENVIADA''.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema despliega el documento o texto de la propuesta redactada por el Defensor.\newline 2. El Quejoso analiza los términos de la solución.\newline 3. El Sistema habilita los botones para aceptar o rechazar (CU17).} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{2a. Solicitar aclaración:}\newline 1. El usuario utiliza el canal de contacto para dudas antes de decidir.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso hace click al icono de lapicito para entrar a la propuesta de una queja.\newline 3. El sistema abre el documento de la propuesta.\newline 4. El Sistema habilita los botones para aceptar o rechazar (CU17).} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{2a. Fallo al cargar la propuesta:}\newline 1. El sistema muestra un mensaje de que no se pudo acceder a la propuesta.} \\ \hline
 \textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{La propuesta no carga correctamente debido a un error en el campo de texto enriquecido.} \\ \hline
 \textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El usuario visualiza una pantalla en blanco y debe reportar el fallo técnico.} \\ \hline
 \textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario queda habilitado para tomar una decisión vinculante sobre el caso.} \\ \hline
@@ -386,19 +386,19 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \begingroup
 \setlength{\parskip}{0pt}
 \begin{longtable}{|p{3.5cm}|p{2cm}|p{2.5cm}|p{7cm}|}
-\caption{Especificación de Caso de Uso CU18: Justificar Rechazo de Propuesta}
-\label{tab:cu18_justificar_rechazo} \\
+\caption{Especificación de Caso de Uso CU18: Revisar Acuerdos de Conciliación}
+\label{tab:cu18_revisar_acuerdos} \\
 \hline
-\textbf{Identificador} & CU18 & \textbf{Nombre} & Justificar Rechazo de Propuesta \\ \hline
+\textbf{Identificador} & CU18 & \textbf{Nombre} & Revisar Acuerdos de Conciliación \\ \hline
 \textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
-\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario proporcionar los motivos detallados por los cuales no acepta la propuesta de solución emitida por la Defensoría.} \\ \hline
-\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona la opción ``Rechazar'' dentro de la revisión de la propuesta (CU16).} \\ \hline
-\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{El expediente debe estar en estatus ``PROPUESTA ENVIADA''.} \\ \hline
-\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso selecciona el botón ``Rechazar''.\newline 2. El Sistema despliega un cuadro de texto obligatorio para la justificación.\newline 3. El Quejoso redacta los argumentos del rechazo.\newline 4. El Quejoso selecciona ``Confirmar rechazo''.\newline 5. El Sistema almacena el comentario y actualiza el estatus del expediente a ``EN REVISIÓN''.\newline 6. El Sistema notifica al Defensor sobre el rechazo.} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{4a. Cancelar acción:}\newline 1. El usuario cierra el cuadro de texto sin guardar.\newline 2. El sistema mantiene el estatus de la queja como ``PROPUESTA ENVIADA''.} \\ \hline
-\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El usuario intenta enviar el rechazo con el campo de justificación vacío.} \\ \hline
-\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema no procesa el cambio de estatus y resalta el campo de texto indicando que es requerido.} \\ \hline
-\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{La propuesta queda invalidada y el expediente regresa a la bandeja del defensor para un nuevo análisis.} \\ \hline
+\textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario revisar la lista de quejas con acuerdos de conciliación de las quejas en estatus ``PROPUESTA ENVIADA''.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona la opción ``Acuerdos de Conciliación''.} \\ \hline
+\textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{La queja debe estar en estatus ``PROPUESTA ENVIADA''.} \\ \hline
+\textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El quejoso selecciona la opción ``Acuerdos de Conciliación''.\newline 2. El sistema muestra la lista de quejas con acuerdos de conciliación.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{2a. No hay quejas con acuerdos de conciliación:}\newline 1. El sistema muestra un mensaje indicando que no hay revision de acuerdos pendientes.} \\ \hline
+\textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{Error con acceder a la base de datos.} \\ \hline
+\textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El sistema muestra mensaje de error mostrar la lista de quejas.} \\ \hline
+\textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{El usuario visualiza la lista de quejas con acuerdos de conciliación.} \\ \hline
 \end{longtable}
 \endgroup
 
