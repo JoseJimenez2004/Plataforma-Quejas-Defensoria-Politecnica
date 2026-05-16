@@ -19,10 +19,10 @@ public interface QuejaRepository extends JpaRepository<Queja, Long> {
     // Dentro de QuejaRepository.java
     long countByQuejosoId(Long usuarioId);
 
-    @Query("SELECT COUNT(q) FROM Queja q WHERE q.quejoso.id = :usuarioId AND q.estatus NOT IN ('FINALIZADA', 'REMISION')")
+    @Query("SELECT COUNT(q) FROM Queja q WHERE q.quejoso.id = :usuarioId AND q.estatus NOT IN ('FINALIZADA', 'REMISION', 'CANCELADA')")
     long countEnProcesoByUsuarioId(@Param("usuarioId") Long usuarioId);
 
-    @Query("SELECT COUNT(q) FROM Queja q WHERE q.quejoso.id = :usuarioId AND q.estatus IN ('FINALIZADA', 'REMISION')")
+    @Query("SELECT COUNT(q) FROM Queja q WHERE q.quejoso.id = :usuarioId AND q.estatus IN ('FINALIZADA', 'REMISION', 'CANCELADA')")
     long countFinalizadasByUsuarioId(@Param("usuarioId") Long usuarioId);
 
     @Query("SELECT q.folio FROM Queja q WHERE q.folio LIKE :prefijo ORDER BY q.folio DESC")

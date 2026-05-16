@@ -41,6 +41,11 @@
 \begin{document}
 
 \section{Diagramas de Secuencia}
+
+El presente anexo concentra los diagramas de secuencia correspondientes a los distintos departamentos de la DDP que conforman el sistema en general. Su propósito es mostrar el orden cronológico de los mensajes y llamadas entre los componentes de un sistema, siguiendo la notación UML.
+
+Los diagramas se organizan por departamento (Quejoso, Recepción, Primer Contacto, Subdefensoría, Defensoría y Administración de TI) con el fin de facilitar la trazabilidad entre la especificación funcional y la implementación técnica de cada flujo del sistema.
+
 \subsection{Microservicio: Quejoso}
 \label{sec:ds_quejoso}
 
@@ -77,7 +82,7 @@ Los diagramas de secuencia presentados en esta sección describen las interaccio
     % ---- CU03b ----
     \subsubsection{CU03: Crear Cuenta (Éxito)}
 
-    Representa el flujo de creacion de una cuenta pero cuando el quejoso levanta una queja, una vez superadas las validaciones. Describe la secuencia de mensajes para el establecimiento de la contraseña, el almacenamiento seguro de las credenciales y la notificación de activación exitosa de la cuenta, habilitando el acceso al dashboard del quejoso.
+    Representa el flujo de creación de una cuenta pero cuando el quejoso levanta una queja, una vez superadas las validaciones. Describe la secuencia de mensajes para el establecimiento de la contraseña, el almacenamiento seguro de las credenciales y la notificación de activación exitosa de la cuenta, habilitando el acceso al dashboard del quejoso.
 
     \begin{figure}[H]
         \centering

@@ -62,8 +62,9 @@
                   'text-green-600': q.estatusActual === EstatusQueja.RECIBIDA,
                   'text-yellow-600': q.estatusActual === EstatusQueja.EN_ANALISIS,
                   'text-blue-600': q.estatusActual === EstatusQueja.ASIGNADO_A_ABOGADO || q.estatusActual === EstatusQueja.EN_INVESTIGACION,
-                  'text-gray-500': q.estatusActual === EstatusQueja.FINALIZADA || q.estatusActual === EstatusQueja.CANCELADA
-                }">
+                  'text-gray-500': q.estatusActual === EstatusQueja.FINALIZADA
+                }"
+                [style.color]="q.estatusActual === EstatusQueja.CANCELADA ? '#FF0000' : null">
                   {{ etiquetaEstatus(q.estatusActual) }}
                 </span>
               </td>

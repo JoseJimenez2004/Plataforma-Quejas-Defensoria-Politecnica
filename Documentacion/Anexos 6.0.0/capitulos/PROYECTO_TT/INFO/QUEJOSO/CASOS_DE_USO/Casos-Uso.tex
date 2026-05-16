@@ -307,7 +307,7 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario selecciona ``Nueva Queja'' dentro del Dashboard.} \\ \hline
 \textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{Sesión activa y datos de perfil completos.} \\ \hline
 \textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Sistema despliega el formulario de registro.\newline 2. El Sistema carga automáticamente nombre, correo y teléfono del usuario.\newline 3. El Quejoso ingresa solo la narrativa y evidencias del nuevo hecho.\newline 4. El Quejoso selecciona ``Enviar''.\newline 5. El Sistema genera el nuevo folio y lo vincula a la cuenta actual.} \\ \hline
-\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{3a: Click al boton Cancelar}\newline 1. El usuario selecciona ``Cancelar''.\newline 2. El sistema redirige al Dashboard.} \\ \hline
+\textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{3a: Click al botón Cancelar}\newline 1. El usuario selecciona ``Cancelar''.\newline 2. El sistema redirige al Dashboard.} \\ \hline
 \textbf{Situaciones de error} & \multicolumn{3}{p{11.5cm}|}{El usuario intenta enviar una queja con los campos obligatorios vacíos.} \\ \hline
 \textbf{Estado en error} & \multicolumn{3}{p{11.5cm}|}{El formulario se bloquea y resalta los errores. No se genera un nuevo registro en la base de datos.} \\ \hline
 \textbf{Postcondiciones} & \multicolumn{3}{p{11.5cm}|}{Un nuevo expediente es añadido al historial del usuario autenticado.} \\ \hline
@@ -348,7 +348,7 @@ A continuación, se describen de manera detallada las especificaciones de cada C
 \textbf{Identificador} & CU16 & \textbf{Nombre} & Consultar Propuesta de Conciliación \\ \hline
 \textbf{Actor Principal} & \multicolumn{3}{p{11.5cm}|}{Quejoso} \\ \hline
 \textbf{Descripción} & \multicolumn{3}{p{11.5cm}|}{Permite al usuario visualizar la medida o solución propuesta por el defensor para resolver su queja.} \\ \hline
-\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario hace clic en una queja con estatus ``PROPUESTA ENVIADA'' o entra desde la seccion de Notificaciones.} \\ \hline
+\textbf{Disparador} & \multicolumn{3}{p{11.5cm}|}{El usuario hace clic en una queja con estatus ``PROPUESTA ENVIADA'' o entra desde la sección de Notificaciones.} \\ \hline
 \textbf{Precondiciones} & \multicolumn{3}{p{11.5cm}|}{La queja debe estar en estatus ``PROPUESTA ENVIADA''.} \\ \hline
 \textbf{Flujo Principal} & \multicolumn{3}{p{11.5cm}|}{1. El Quejoso hace click al icono de lapicito para entrar a la propuesta de una queja.\newline 3. El sistema abre el documento de la propuesta.\newline 4. El Sistema habilita los botones para aceptar o rechazar (CU17).} \\ \hline
 \textbf{Flujos Alternativos} & \multicolumn{3}{p{11.5cm}|}{\textbf{2a. Fallo al cargar la propuesta:}\newline 1. El sistema muestra un mensaje de que no se pudo acceder a la propuesta.} \\ \hline

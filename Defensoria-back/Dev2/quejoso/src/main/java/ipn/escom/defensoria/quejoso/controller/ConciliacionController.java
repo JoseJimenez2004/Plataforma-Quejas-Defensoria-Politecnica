@@ -119,7 +119,7 @@ public class ConciliacionController {
             throw new RuntimeException("La justificación del rechazo es obligatoria");
         }
 
-        queja.setEstatus(EstatusQuejaEntity.EN_ANALISIS);
+        queja.setEstatus(EstatusQuejaEntity.EN_INVESTIGACION);
         quejaRepository.save(queja);
 
         return ResponseEntity.ok("Acuerdo rechazado. El defensor analizará tu justificación.");

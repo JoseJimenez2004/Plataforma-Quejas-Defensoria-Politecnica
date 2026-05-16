@@ -127,7 +127,7 @@ La tabla \texttt{notificaciones} almacena los mensajes generados por el sistema,
 \rowcolor{azulESCOM} 
 \color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
 id & BIGINT & PK, IDENTITY & Identificador \'unico de la notificaci\'on. \\ \hline
-titulo & VARCHAR(255) & NOT NULL & Encabezado o asunto del mensaje. \\ \hline
+título & VARCHAR(255) & NOT NULL & Encabezado o asunto del mensaje. \\ \hline
 mensaje & TEXT & NOT NULL & Contenido detallado de la notificaci\'on. \\ \hline
 boleta & VARCHAR(50) & - & Boleta asociada al evento (redundancia para optimizaci\'on de consultas). \\ \hline
 fecha & TIMESTAMP & NOT NULL & Fecha y hora de creaci\'on del registro (por defecto la actual). \\ \hline
@@ -153,7 +153,7 @@ public class NotificacionEntity {
     private Long id;
 
     @Column(nullable = false)
-    private String titulo;
+    private String título;
     
     @Column(nullable = false, columnDefinition = "TEXT")
     private String mensaje;
@@ -178,7 +178,7 @@ Script definitivo para la creaci\'on de la estructura f\'isica en PostgreSQL, in
 \begin{lstlisting}[language=SQL, caption={Script de creaci\'on para el m\'odulo de notificaciones.}, label={lst:sql_notificaciones}]
 CREATE TABLE notificaciones (
     id BIGSERIAL PRIMARY KEY,
-    titulo VARCHAR(255) NOT NULL,
+    título VARCHAR(255) NOT NULL,
     mensaje TEXT NOT NULL,
     boleta VARCHAR(50),
     fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -213,11 +213,11 @@ Debido a la naturaleza integral del formulario de denuncia, la tabla \texttt{fol
 \color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
 \multicolumn{4}{|l|}{\cellcolor[HTML]{EFEFEF}\textbf{Datos del Expediente}} \\ \hline
 id & BIGINT & PK, IDENTITY & Identificador interno de la base de datos. \\ \hline
-codigo\_folio & VARCHAR(255) & UNIQUE, NOT NULL & Folio p\'ublico generado para el seguimiento. \\ \hline
+código\_folio & VARCHAR(255) & UNIQUE, NOT NULL & Folio p\'ublico generado para el seguimiento. \\ \hline
 fecha\_creacion & TIMESTAMP & DEFAULT NOW() & Fecha y hora de registro en el sistema. \\ \hline
 asunto & VARCHAR(255) & - & T\'itulo descriptivo de la queja. \\ \hline
 fecha\_hechos & VARCHAR(255) & - & Fecha aproximada en que ocurrieron los hechos. \\ \hline
-descripcion & TEXT & - & Descripci\'on detallada de los hechos denunciados. \\ \hline
+descripción & TEXT & - & Descripci\'on detallada de los hechos denunciados. \\ \hline
 unidad & VARCHAR(255) & - & Unidad acad\'emica o administrativa destino. \\ \hline
 \multicolumn{4}{|l|}{\cellcolor[HTML]{EFEFEF}\textbf{Datos del Quejoso}} \\ \hline
 boleta & VARCHAR(50) & - & N\'umero de boleta o empleado del titular. \\ \hline
@@ -229,7 +229,7 @@ correo & VARCHAR(255) & - & Correo electr\'onico de contacto. \\ \hline
 nombre\_tutor & VARCHAR(255) & - & Nombre completo del tutor legal. \\ \hline
 parentesco & VARCHAR(100) & - & Relaci\'on jur\'idica con el menor. \\ \hline
 correo\_tutor & VARCHAR(255) & - & Correo de contacto del representante. \\ \hline
-telefono\_tutor & VARCHAR(20) & - & Tel\'efono de contacto del tutor. \\ \hline
+teléfono\_tutor & VARCHAR(20) & - & Tel\'efono de contacto del tutor. \\ \hline
 \end{tabularx}
 \caption{Diccionario de datos de la entidad Folios (segmentado).}
 \label{tab:dict_folios}
@@ -255,7 +255,7 @@ public class FolioEntity {
     private LocalDateTime fechaCreacion;
     private String asunto;
     private String fechaHechos;
-    private String descripcion;
+    private String descripción;
     private String unidad;
     
     // Datos del quejoso
@@ -297,7 +297,7 @@ CREATE TABLE folios (
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     asunto VARCHAR(255),
     fecha_hechos VARCHAR(255),
-    descripcion TEXT,
+    descripción TEXT,
     unidad VARCHAR(255),
     nombre VARCHAR(255),
     primer_apellido VARCHAR(255),
@@ -338,7 +338,7 @@ id & BIGINT & PK, IDENTITY & Identificador \'unico de la evidencia. \\ \hline
 nombre\_archivo & VARCHAR(255) & NOT NULL & Nombre original del documento cargado. \\ \hline
 tipo\_archivo & VARCHAR(100) & - & Extensi\'on o tipo MIME (PDF, PNG, JPG). \\ \hline
 ruta\_almacenamiento & VARCHAR(500) & NOT NULL & Trayectoria f\'isica o URI en el sistema de archivos. \\ \hline
-codigo\_folio & VARCHAR(50) & - & Referencia textual del folio (redundancia controlada). \\ \hline
+código\_folio & VARCHAR(50) & - & Referencia textual del folio (redundancia controlada). \\ \hline
 folio\_id & BIGINT & FK, NOT NULL & Relaci\'on con la entidad principal \texttt{folios}. \\ \hline
 \end{tabularx}
 \caption{Diccionario de datos de la entidad Evidencias.}
@@ -503,7 +503,7 @@ La tabla \texttt{queja\_hitos} mantiene una relaci\'on de muchos a uno con la ta
 \rowcolor{azulESCOM} 
 \color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
 id & BIGINT & PK, IDENTITY & Identificador \'unico del hito. \\ \hline
-descripcion & VARCHAR(255) & NOT NULL & Detalle del evento o acci\'on realizada. \\ \hline
+descripción & VARCHAR(255) & NOT NULL & Detalle del evento o acci\'on realizada. \\ \hline
 fecha\_hito & TIMESTAMP & NOT NULL & Fecha y hora en que ocurri\'o el evento. \\ \hline
 folio\_id & VARCHAR(255) & FK, NOT NULL & Referencia al folio de la queja asociada. \\ \hline
 \end{tabularx}
@@ -526,7 +526,7 @@ public class HitoEntity {
     private Long id;
 
     @Column(nullable = false)
-    private String descripcion; 
+    private String descripción; 
     
     @Column(nullable = false)
     private LocalDateTime fechaHito;
@@ -543,7 +543,7 @@ A continuaci\'on se detalla el script DDL para la creaci\'on de la tabla de hito
 \begin{lstlisting}[language=SQL, caption={Script de creaci\'on para la tabla de hitos de seguimiento.}, label={lst:sql_hitos}]
 CREATE TABLE queja_hitos (
     id BIGSERIAL PRIMARY KEY,
-    descripcion VARCHAR(255) NOT NULL,
+    descripción VARCHAR(255) NOT NULL,
     fecha_hito TIMESTAMP NOT NULL,
     folio_id VARCHAR(255) NOT NULL,
     CONSTRAINT fk_queja_hito 
@@ -577,7 +577,7 @@ Para estandarizar la clasificaci\'on de la informaci\'on y mantener la integrida
 \color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
 id & SERIAL & PK & Identificador \'unico del estatus. \\ \hline
 nombre & VARCHAR(50) & UNIQUE, NOT NULL & Nombre corto del estado. \\ \hline
-descripcion & VARCHAR(255) & - & Explicaci\'on detallada del estado. \\ \hline
+descripción & VARCHAR(255) & - & Explicaci\'on detallada del estado. \\ \hline
 \end{tabularx}
 \caption{Cat\'alogo de estatus de queja.}
 \label{tab:dict_cat_estatus}
@@ -597,7 +597,7 @@ public class CatEstatusQueja {
     private String nombre;
     
     @Column(length = 255)
-    private String descripcion;
+    private String descripción;
 }
 \end{lstlisting}
 
@@ -605,10 +605,10 @@ public class CatEstatusQueja {
 CREATE TABLE cat_estatus_queja (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(50) UNIQUE NOT NULL,
-    descripcion VARCHAR(255)
+    descripción VARCHAR(255)
 );
 
-INSERT INTO cat_estatus_queja (nombre, descripcion) VALUES 
+INSERT INTO cat_estatus_queja (nombre, descripción) VALUES 
 ('PENDIENTE', 'Queja registrada pendiente de revisi\'on inicial'),
 ('EN_PROCESO', 'Queja aceptada y asignada para an\'alisis y seguimiento'),
 ('RESUELTO', 'Queja con resoluci\'on final o cierre administrativo'),
@@ -626,7 +626,7 @@ INSERT INTO cat_estatus_queja (nombre, descripcion) VALUES
 \color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
 id & SERIAL & PK & Identificador \'unico del tema. \\ \hline
 nombre & VARCHAR(100) & UNIQUE, NOT NULL & Nombre de la categor\'ia tem\'atica. \\ \hline
-descripcion & VARCHAR(255) & - & Descripci\'on detallada del tema. \\ \hline
+descripción & VARCHAR(255) & - & Descripci\'on detallada del tema. \\ \hline
 \end{tabularx}
 \caption{Cat\'alogo de temas.}
 \label{tab:dict_cat_tema}
@@ -646,7 +646,7 @@ public class CatTema {
     private String nombre;
     
     @Column(length = 255)
-    private String descripcion;
+    private String descripción;
 }
 \end{lstlisting}
 
@@ -654,10 +654,10 @@ public class CatTema {
 CREATE TABLE cat_tema (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) UNIQUE NOT NULL,
-    descripcion VARCHAR(255)
+    descripción VARCHAR(255)
 );
 
-INSERT INTO cat_tema (nombre, descripcion) VALUES 
+INSERT INTO cat_tema (nombre, descripción) VALUES 
 ('Acoso escolar', 'Conductas de hostigamiento entre pares dentro del \'ambito escolar'),
 ('Discriminaci\'on', 'Trato diferenciado o excluyente por motivos de g\'enero, origen, etc.'),
 ('Abuso de autoridad', 'Ejercicio irregular del poder por parte de personal institucional'),
@@ -677,7 +677,7 @@ INSERT INTO cat_tema (nombre, descripcion) VALUES
 \color{white}\textbf{Campo} & \color{white}\textbf{Tipo de Dato} & \color{white}\textbf{Restricciones} & \color{white}\textbf{Descripci\'on} \\ \hline
 id & SERIAL & PK & Identificador \'unico del tipo de documento. \\ \hline
 nombre & VARCHAR(50) & UNIQUE, NOT NULL & Nombre del tipo de documento. \\ \hline
-descripcion & VARCHAR(255) & - & Descripci\'on del prop\'osito del documento. \\ \hline
+descripción & VARCHAR(255) & - & Descripci\'on del prop\'osito del documento. \\ \hline
 \end{tabularx}
 \caption{Cat\'alogo de tipos de documento.}
 \label{tab:dict_cat_tipo_doc}
@@ -697,7 +697,7 @@ public class CatTipoDocumento {
     private String nombre;
     
     @Column(length = 255)
-    private String descripcion;
+    private String descripción;
 }
 \end{lstlisting}
 
@@ -705,10 +705,10 @@ public class CatTipoDocumento {
 CREATE TABLE cat_tipo_documento (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(50) UNIQUE NOT NULL,
-    descripcion VARCHAR(255)
+    descripción VARCHAR(255)
 );
 
-INSERT INTO cat_tipo_documento (nombre, descripcion) VALUES 
+INSERT INTO cat_tipo_documento (nombre, descripción) VALUES 
 ('Queja formal', 'Documento que expresa inconformidad por actos u omisiones'),
 ('Denuncia', 'Se\~nalamiento de faltas o irregularidades graves'),
 ('Solicitud de orientaci\'on', 'Petici\'on de asesor\'ia o informaci\'on sobre derechos'),

@@ -1,0 +1,82 @@
+\documentclass[12pt, oneside, letterpaper]{book}
+\usepackage{configuraciones/setup}
+
+% Casos de USO
+\input{configuraciones/figuras_casos_uso.tex}
+\usepackage[utf8]{inputenc}
+\usepackage{textcomp}
+\lstset{inputencoding=utf8, extendedchars=true}
+
+% Imágenes y PDFs
+\usepackage{pdfpages}
+\usepackage{ragged2e}
+
+% Definición de estilo para JSON
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily\small,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{gray!5}
+}
+
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage[table]{xcolor}
+
+% ==============================================================================
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    pdftitle={Trabajo Terminal - Defensoría de los Derechos Politécnicos},
+    pdfnewwindow=true
+}
+
+\begin{document}
+
+\section{Diagrama de Actividades}
+
+El presente anexo concentra los diagramas de actividades correspondientes a los distintos departamentos de la DDP que conforman el sistema en general. Su propósito es representar, mediante notación UML, el flujo de trabajo de cada perfil dentro del sistema, mostrando las acciones y decisiones que componen los procesos operativos. 
+
+Los diagramas se organizan por departamento (Quejoso, Recepción, Primer Contacto, Subdefensoría, Defensoría y Administración de TI) con el fin de ofrecer una visión integral del comportamiento del sistema y facilitar la comprensión de las responsabilidades asignadas a cada actor a lo largo del ciclo de atención de una queja.
+
+\subsection{Microservicio: Quejoso}
+\label{sec:da_quejoso}
+
+El diagrama de actividades presentado en esta sección describe el flujo general de trabajo del perfil Quejoso dentro de la plataforma. 
+
+Debido a la extensión del diagrama completo, este se ha dividido en dos partes para facilitar su lectura: la primera parte abarca el flujo desde el acceso inicial al portal hasta el levantamiento de la queja, mientras que la segunda parte continúa con las actividades posteriores relacionadas con la autenticación y entrada al dashboard del usuario, mostrando las acciones de consulta, modificación y seguimiento de quejas.
+
+    % ---- DA-Quejoso Parte 1 ----
+    \subsubsection{Diagrama de Actividades del Quejoso (Parte 1)}
+
+    Primera parte del diagrama de actividades general del Quejoso. Representa las actividades iniciales del usuario en la plataforma: el acceso al portal, las decisiones entre registrar una nueva queja o dar seguimiento a un trámite existente sin iniciar sesión y el flujo de captura de información de la queja.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.90\textwidth, height=0.85\textheight, keepaspectratio]{imagenes/quejoso/D_Actividad/P1_DA-Quejoso.png}
+        \caption{Diagrama de Actividades del Quejoso - Parte 1}
+        \label{fig:da_quejoso_parte1}
+    \end{figure}
+
+    \clearpage
+
+    % ---- DA-Quejoso Parte 2 ----
+    \subsubsection{Diagrama de Actividades del Quejoso (Parte 2)}
+
+    La segunda parte del diagrama de actividades general del Quejoso continúa el flujo en las rutas de autenticación y creación de cuenta para el seguimiento del expediente.
+   Una vez que el usuario inicia sesion, entra en el dashboard, mostrando las actividades de consulta, modificación y eliminación de quejas, levantamiento de quejas, la revisión de notificaciones y el proceso de respuesta ante propuestas de conciliación emitidas por la Defensoría, hasta la finalización del trámite.
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=1\textwidth, height=0.90\textheight, keepaspectratio]{imagenes/quejoso/D_Actividad/P2_DA-Quejoso.png}
+        \caption{Diagrama de Actividades del Quejoso - Parte 2}
+        \label{fig:da_quejoso_parte2}
+    \end{figure}
+
+\end{document}
