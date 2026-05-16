@@ -60,6 +60,28 @@ De igual manera, la falta de herramientas especializadas para el control de acce
 
 Finalmente, el crecimiento en el volumen de información y la complejidad de los procesos administrativos evidencian limitaciones en la infraestructura tecnológica tradicional, dificultando la escalabilidad, mantenibilidad y modernización de los servicios digitales institucionales.
 
+
+\subsection{Alcances}
+
+El presente proyecto delimita su alcance a la Defensoría de Derechos Politécnicos del Instituto Politécnico Nacional, abarcando únicamente los procesos internos de gestión de quejas de dicha institución. La plataforma será accesible desde navegador web en dispositivos de escritorio y portátil; no se contempla el desarrollo de una aplicación móvil nativa.
+
+El sistema cubre el ciclo operativo completo de una queja, desde su recepción hasta su resolución, incluyendo módulos diferenciados para cada rol institucional: Quejoso, Recepcionista, Área de Primer Contacto, Defensor, Subdefensor y Titular. Adicionalmente, se integra un módulo de clasificación automática asistida basado en Procesamiento de Lenguaje Natural, que determina la competencia preliminar de cada queja. El quejoso podrá consultar el estado de su caso en cualquier momento mediante un folio digital único generado automáticamente al momento del registro.
+
+Quedan explícitamente excluidos del alcance: la integración con sistemas externos al IPN, la gestión de procesos distintos al flujo de quejas de la DDP, y la emisión de resoluciones o dictámenes legales de forma automatizada.
+
+\subsection{Limitaciones}
+
+La ejecución del proyecto está condicionada por los siguientes factores:
+
+En cuanto al tiempo, al tratarse de un proyecto académico con entregas parciales, no todos los módulos institucionales se encuentran operativos en la presente etapa; los componentes desarrollados hasta el momento son el microservicio de gestión de quejas y el módulo clasificador de competencia, quedando los módulos restantes para una entrega posterior.
+
+Respecto a los datos, el clasificador fue entrenado con un corpus sintético supervisado por expertos jurídicos. Su desempeño en producción estará condicionado a la disponibilidad de casos históricos reales y anonimizados proporcionados por la DDP, dado que la calidad y volumen de los datos de entrenamiento impactan directamente en la precisión del modelo.
+
+En cuanto a la adopción institucional, la efectividad del sistema depende de la disposición del personal de la DDP para incorporar la plataforma a sus procesos cotidianos y validar las clasificaciones sugeridas por el modelo de inteligencia artificial.
+
+Finalmente, por restricción ética y normativa, el sistema no sustituye en ningún caso el criterio jurídico humano. Todas las resoluciones finales son responsabilidad exclusiva del personal de la Defensoría, en cumplimiento con las reglas de negocio establecidas y la normativa aplicable en materia de protección de datos personales.
+
+
 \section{Solución Propuesta}
 
 Como respuesta a las problemáticas identificadas, se propone el desarrollo de una plataforma web integral orientada a la gestión digital de quejas dentro de la DDP.

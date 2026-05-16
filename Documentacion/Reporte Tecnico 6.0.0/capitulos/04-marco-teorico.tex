@@ -1021,3 +1021,21 @@ La convención de nomenclatura de los archivos serializados es:
 
 lo que permite trazabilidad temporal de los modelos entrenados y facilita la
 comparación y auditoría de versiones en el contexto institucional de la DDP.
+
+\section{Algoritmo de Compresión Multimedia}
+
+El algoritmo de compresión multimedia implementado dentro del sistema se fundamenta en un conjunto de técnicas orientadas a reducir el tamaño de archivos digitales mediante la eliminación de redundancia y la optimización de estructuras de almacenamiento. Su objetivo principal consiste en disminuir el consumo de espacio, ancho de banda y recursos de transferencia sin comprometer significativamente la calidad perceptual de los archivos procesados.
+
+El funcionamiento general del algoritmo inicia con la detección automática del tipo de archivo multimedia utilizando herramientas especializadas de análisis de formatos y metadatos. Posteriormente, dependiendo de si el archivo corresponde a imágenes, audio, video o documentos PDF, se aplican técnicas específicas de compresión adaptadas a las características estructurales de cada formato.
+
+En el caso de imágenes digitales, el algoritmo emplea mecanismos de transformación y reducción perceptual, tales como cuantización, submuestreo cromático y codificación estadística, permitiendo alcanzar reducciones considerables en formatos como JPG y WEBP. Para imágenes que requieren conservación total de la información, se utilizan métodos de compresión sin pérdida basados en Deflate y codificación Huffman.
+
+Para archivos de audio, el sistema implementa técnicas fundamentadas en análisis frecuencial y modelos psicoacústicos, eliminando componentes sonoras poco perceptibles para el oído humano y reduciendo el bitrate de transmisión. En archivos de video, el algoritmo utiliza mecanismos avanzados de estimación y compensación de movimiento, aprovechando la redundancia temporal existente entre cuadros consecutivos para disminuir significativamente el tamaño final del contenido multimedia.
+
+Asimismo, el sistema incorpora procesos de optimización para documentos PDF mediante reducción de imágenes embebidas, compactación estructural y eliminación de metadatos redundantes. Estas operaciones permiten mejorar el almacenamiento y acelerar la transferencia de documentos dentro de arquitecturas distribuidas.
+
+La arquitectura del algoritmo se complementa con procesamiento concurrente y técnicas de paralelización implementadas sobre Java y herramientas especializadas como FFmpeg, Thumbnailator y Apache PDFBox. Esto permite procesar múltiples archivos simultáneamente y optimizar el aprovechamiento de recursos computacionales dentro de entornos distribuidos basados en microservicios.
+
+Adicionalmente, el sistema evalúa la eficiencia de compresión mediante métricas de porcentaje de reducción, comparando el tamaño original y el tamaño comprimido del archivo procesado. Dependiendo del tipo de contenido y del algoritmo utilizado, pueden alcanzarse reducciones superiores al 90\% en ciertos formatos multimedia modernos.
+
+Para mayor información sobre los fundamentos teóricos, algoritmos, tecnologías multimedia y mecanismos de procesamiento utilizados, consultar el \textbf{Anexo Marco Teórico Tecnologías}.
