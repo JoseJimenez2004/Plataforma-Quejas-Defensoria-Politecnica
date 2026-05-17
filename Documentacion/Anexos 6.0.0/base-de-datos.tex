@@ -67,63 +67,6 @@
 \tableofcontents
 \newpage
 
-\section{Arquitectura del Sistema}
-
-\subsection{Tecnologías utilizadas}
-\begin{longtable}{|p{4.5cm}|p{9cm}|}
-\hline
-\rowcolor{lightgray} \textbf{Tecnología} & \textbf{Descripción} \\
-\hline
-PostgreSQL 15+ & Motor de base de datos relacional principal \\
-\hline
-Spring Boot 3.x & Framework backend para microservicios \\
-\hline
-Spring Security & Autenticación y autorización con JWT \\
-\hline
-Spring Data JPA / Hibernate & ORM para persistencia \\
-\hline
-BCrypt & Cifrado de contraseñas (factor 10) \\
-\hline
-SHA-256 & Hash de integridad para evidencias \\
-\hline
-Flyway & Migraciones versionadas de esquema \\
-\hline
-Redis & Cache de sesiones y tokens \\
-\hline
-MinIO / S3 & Almacenamiento de evidencias digitales \\
-\hline
-\end{longtable}
-
-\subsection{Arquitectura general}
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[node distance=0.8cm, auto]
-\tikzset{
-    capa/.style={rectangle, draw=black, thick, minimum width=10cm, minimum height=0.8cm, align=center, font=\small},
-    servicio/.style={rectangle, draw=black, thick, minimum width=3.2cm, minimum height=0.6cm, align=center, font=\scriptsize}
-}
-\node[capa, fill=lightgray] (cliente) {Capa de Presentación (React / Angular)};
-\node[capa, below=of cliente] (api) {API Gateway (Spring Cloud Gateway)};
-\node[servicio, below left=0.5cm of api.south, xshift=-2cm] (users) {Usuarios};
-\node[servicio, below=of api] (quejas) {Quejas};
-\node[servicio, below right=0.5cm of api.south, xshift=2cm] (notif) {Notificaciones};
-\node[servicio, below=1cm of quejas] (evidencias) {Evidencias};
-\node[servicio, below=0.5cm of notif] (ia) {Clasificación IA};
-\node[capa, below=1.5cm of evidencias, fill=lightgray] (bd) {Base de Datos Relacional (PostgreSQL)};
-\node[capa, below=of bd] (storage) {Almacenamiento de Archivos (MinIO/S3)};
-\draw[{Stealth[length=6pt]}-, thick] (cliente) -- (api);
-\draw[{Stealth[length=6pt]}-, thick] (api) -- (users);
-\draw[{Stealth[length=6pt]}-, thick] (api) -- (quejas);
-\draw[{Stealth[length=6pt]}-, thick] (api) -- (notif);
-\draw[{Stealth[length=6pt]}-, thick] (quejas) -- (evidencias);
-\draw[{Stealth[length=6pt]}-, thick] (quejas) -- (ia);
-\draw[{Stealth[length=6pt]}-, thick] (users) -- (bd);
-\draw[{Stealth[length=6pt]}-, thick] (quejas) -- (bd);
-\draw[{Stealth[length=6pt]}-, thick] (notif) -- (bd);
-\draw[{Stealth[length=6pt]}-, thick] (evidencias) -- (storage);
-\end{tikzpicture}
-\caption{Arquitectura general de la plataforma}
-\end{figure}
 
 \subsection{Relación con los módulos del sistema}
 \begin{longtable}{|p{4cm}|p{4.5cm}|p{6cm}|}
