@@ -84,25 +84,31 @@ Los resultados obtenidos permitieron validar la viabilidad del uso de técnicas 
 \centering
 \caption{Resultados generales del clasificador inteligente}
 \label{tab:resultados_clasificador}
-\renewcommand{\arraystretch}{1.4}
-\begin{tabularx}{\textwidth}{|p{4cm}|c|c|c|}
-\hline
-\textbf{Modelo} & \textbf{Precisión} & \textbf{Recall} & \textbf{F1-Score} \\
-\hline
-
-Naive Bayes & 0.84 & 0.82 & 0.83 \\
-\hline
-
-Support Vector Machine & 0.89 & 0.88 & 0.88 \\
-\hline
-
-Random Forest & 0.85 & 0.84 & 0.84 \\
-\hline
-
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{llCCCC}
+\toprule
+\textbf{Vectorizador} & \textbf{Clasificador} & \textbf{Acc. test} & \textbf{F1 test} & \textbf{F1 holdout} & \textbf{gap CV} \\
+\midrule
+spaCy avg & \textbf{Random Forest}  & 0.9494 & 0.9493 & \textbf{0.9873} & 0.0533 \\
+SBERT     & Random Forest           & 0.9620 & 0.9620 & 0.9747          & 0.0383 \\
+spaCy avg & Ensemble                & 0.9114 & 0.9113 & 0.9620          & 0.0205 \\
+spaCy avg & SVM-RBF                 & 0.9114 & 0.9114 & 0.9235          & 0.0008 \\
+spaCy avg & Reg. Logística          & 0.8728 & 0.8728 & 0.9106          & 0.0082 \\
+SBERT     & Ensemble                & 0.5591 & 0.5591 & 0.4197          & 0.0    \\
+SBERT     & SVM-RBF                 & 0.3263 & 0.3263 & 0.3404          & 0.0    \\
+SBERT     & Reg. Logística          & 0.3263 & 0.3263 & 0.3404          & 0.0    \\
+\bottomrule
 \end{tabularx}
 \end{table}
 
-Los resultados obtenidos muestran que el modelo basado en \textit{Support Vector Machine} presentó el mejor desempeño general, alcanzando valores superiores en precisión y capacidad de clasificación respecto a otros modelos evaluados.
+Los resultados obtenidos muestran que la combinación \textbf{spaCy avg + Random Forest} 
+presentó el mejor desempeño general en el conjunto de \textit{holdout}, alcanzando un 
+F1 de $0.9873$, lo que evidencia una generalización genuina a partir de la representación 
+semántica del texto. Por su parte, los clasificadores lineales aplicados sobre 
+\textit{embeddings} de SBERT mostraron un colapso en modo autónomo, prediciendo 
+únicamente la clase mayoritaria en ausencia de atributos jurídicos. Con base en estos 
+resultados, la combinación \textbf{spaCy avg + Random Forest} fue seleccionada como 
+modelo de producción para el clasificador inteligente integrado en la plataforma.
 
 \section{Pruebas Funcionales}
 
