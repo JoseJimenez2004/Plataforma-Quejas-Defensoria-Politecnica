@@ -10,7 +10,7 @@ En este capítulo se presenta la propuesta tecnológica planteada para atender l
 
 \section{Descripción General de la Propuesta}
 
-La propuesta consiste en el desarrollo de una plataforma web integral orientada a la gestión digital de quejas y denuncias para la DDP del IPN. El sistema tiene como finalidad modernizar y optimizar los procesos institucionales relacionados con el registro, validación, seguimiento, análisis y resolución de expedientes, mediante el uso de tecnologías de automatización, centralización documental y análisis inteligente de información.
+La propuesta consiste en el desarrollo de una plataforma web integral orientada a la gestión digital de quejas y denuncias para la DDP del IPN. El sistema tiene como finalidad optimizar los procesos institucionales relacionados con el registro, validación, seguimiento, análisis y resolución de expedientes, mediante el uso de tecnologías de automatización, centralización documental y análisis inteligente de información.
 
 La plataforma busca sustituir diversos procesos manuales y fragmentados que actualmente dificultan la operación eficiente de la DDP, permitiendo establecer un entorno digital centralizado para la administración de expedientes, evidencias y comunicaciones institucionales.
 
@@ -61,7 +61,7 @@ Implementa mecanismos de autenticación, autorización basada en roles, auditor�
 
 La solución propuesta se encuentra basada en una arquitectura híbrida de microservicios, diseñada para proporcionar modularidad, escalabilidad y mantenibilidad a los distintos componentes del sistema.
 
-La arquitectura contempla la separación de responsabilidades mediante servicios independientes especializados, permitiendo desacoplar los procesos administrativos, la gestión documental, el manejo de usuarios y el componente inteligente de clasificación automática.
+La arquitectura propuesta \ref{fig:arquitectura_general} contempla la separación de responsabilidades mediante servicios independientes especializados, permitiendo desacoplar los procesos administrativos, la gestión documental, el manejo de usuarios y el componente inteligente de clasificación automática.
 
 Asimismo, la plataforma incorpora un API Gateway encargado de centralizar la comunicación entre los diferentes microservicios, facilitando el control de seguridad, monitoreo y administración de solicitudes.
 
@@ -204,7 +204,8 @@ Capital Humano &
 
 \vspace{0.5cm}
 
-\section{Riesgos del proyecto}
+\footnote{Para mayores especificaciones, consultar el \textbf{Anexo Costos}.}
+
 % ==============================================================================
 % 7.16 ANÁLISIS DE RIESGO
 % ==============================================================================
@@ -219,7 +220,7 @@ Con el objetivo de identificar vulnerabilidades potenciales y establecer estrate
 
 \subsection{Clasificación General de Riesgos}
 
-Los riesgos identificados se clasifican en diferentes categorías con base en el impacto que podrían generar sobre la operación de la plataforma.
+Los riesgos identificados se clasifican en diferentes categorías (Tabla \ref{tab:clasificacion_riesgos}) con base en el impacto que podrían generar sobre la operación de la plataforma.
 
 \begin{table}[H]
 \centering
@@ -294,112 +295,4 @@ El análisis de riesgo presentado integra una evaluación integral de la platafo
 
 Se destaca que, si bien la arquitectura basada en microservicios e Inteligencia Artificial aporta escalabilidad y eficiencia, también introduce puntos críticos como la dependencia del API Gateway y el consumo elevado de recursos. Los hallazgos del análisis SAST revelaron vulnerabilidades de inyección y debilidad criptográfica que deben ser atendidas con prioridad máxima. No obstante, mediante la aplicación de las estrategias de mitigación propuestas —que incluyen saneamiento de datos, supervisión humana y gobernanza tecnológica— se concluye que el sistema posee la viabilidad técnica y normativa necesaria para operar de manera segura y resiliente dentro de la Defensoría de los Derechos Politécnicos.
 
-
-% ==============================================================================
-% SECCIÓN - BASE DE DATOS
-% ==============================================================================
-
-\section{Diseño de la Base de Datos}
-\label{sec:base_datos}
-
-La plataforma DDP-IPN requiere una base de datos estructurada que permita almacenar, organizar y administrar la información relacionada con las quejas, usuarios, evidencias, notificaciones y seguimiento de expedientes dentro del sistema. 
-
-El diseño de la base de datos fue desarrollado bajo un modelo relacional utilizando PostgreSQL, considerando principios de integridad, seguridad, trazabilidad y escalabilidad. La estructura propuesta permite mantener un control adecuado del flujo de atención de las quejas, así como garantizar la consistencia de la información en cada etapa del proceso.
-
-La arquitectura de datos se diseñó para soportar los distintos módulos funcionales del sistema, incluyendo el registro de usuarios, recepción de quejas, carga de evidencias, gestión de tutores para menores de edad, historial de cambios y envío de notificaciones automáticas.
-
-\subsection{Modelo Entidad-Relación General}
-
-La Figura~\ref{fig:der_general} muestra el modelo entidad-relación general de la plataforma, donde se representan las principales entidades del sistema y las relaciones existentes entre ellas.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{imagenes/der_general.png}
-\caption{Modelo Entidad-Relación general de la plataforma DDP-IPN}
-\label{fig:der_general}
-\end{figure}
-
-\subsection{Descripción General de las Entidades}
-
-La base de datos está conformada por las siguientes entidades principales:
-
-\begin{itemize}
-
-\item \textbf{Usuarios:} 
-Almacena la información de los usuarios registrados dentro de la plataforma, incluyendo datos personales, correos institucionales, autenticación y recuperación de cuenta.
-
-\item \textbf{Quejas:}
-Representa el núcleo principal del sistema. Contiene la información relacionada con cada denuncia o queja registrada, incluyendo folio, descripción de hechos, estado actual y datos del quejoso.
-
-\item \textbf{Evidencias:}
-Permite almacenar los archivos asociados a una queja, tales como imágenes, documentos o archivos multimedia utilizados como evidencia.
-
-\item \textbf{Notificaciones:}
-Gestiona los mensajes enviados a los usuarios para informar cambios de estado, alertas o avisos importantes dentro del sistema.
-
-\item \textbf{Historial:}
-Registra cada transición de estado realizada sobre una queja, permitiendo mantener trazabilidad y auditoría de los movimientos realizados por el personal autorizado.
-
-\item \textbf{Tutores:}
-Contiene la información de tutores o responsables legales en casos donde el quejoso sea menor de edad.
-
-\end{itemize}
-
-\subsection{Relaciones Principales}
-
-Las relaciones más importantes dentro del modelo son las siguientes:
-
-\begin{itemize}
-
-\item Un usuario puede registrar múltiples quejas.
-\item Una queja puede contener múltiples evidencias.
-\item Una queja puede generar múltiples registros en el historial.
-\item Un usuario puede recibir múltiples notificaciones.
-\item Una queja puede asociarse opcionalmente a un tutor.
-
-\end{itemize}
-
-\subsection{Integridad y Seguridad}
-
-El diseño implementa restricciones de integridad referencial mediante llaves primarias y foráneas para garantizar la consistencia de los datos. Además, se incorporaron mecanismos de seguridad tales como:
-
-\begin{itemize}
-
-\item Contraseñas cifradas mediante BCrypt.
-\item Restricciones de unicidad para correos y folios.
-\item Control de acceso basado en roles.
-\item Registro histórico de cambios.
-\item Validación de estados permitidos dentro del flujo de atención.
-\item Protección de datos sensibles y control de acceso mediante políticas de seguridad.
-
-\end{itemize}
-
-\subsection{Optimización y Rendimiento}
-
-Para mejorar el rendimiento de las consultas, se implementaron índices sobre los campos más utilizados en búsquedas y filtrados, tales como folios, correos institucionales, estados de quejas y relaciones entre entidades.
-
-El diseño permite mantener tiempos de respuesta eficientes incluso con grandes volúmenes de información y facilita la escalabilidad futura del sistema.
-
-\subsection{Conclusión}
-
-La estructura de base de datos propuesta proporciona una arquitectura sólida, segura y escalable para la plataforma DDP-IPN. El modelo permite gestionar adecuadamente el ciclo completo de atención de quejas, garantizando integridad de la información, trazabilidad de procesos y soporte para futuras ampliaciones funcionales del sistema.
-
-
-\section{Fundamentos Teóricos de Compresión Multimedia}
-
-La compresión multimedia comprende técnicas orientadas a reducir el tamaño de archivos digitales mediante la eliminación de redundancia y optimización del almacenamiento. Su objetivo principal es disminuir el consumo de espacio, ancho de banda y recursos computacionales en sistemas distribuidos.
-
-Existen dos tipos principales de compresión:
-
-\begin{itemize}
-\item \textbf{Compresión sin pérdida:} Permite recuperar exactamente el archivo original. Se utiliza en formatos como PNG y ZIP.
-\item \textbf{Compresión con pérdida:} Elimina información poco perceptible para reducir significativamente el tamaño del archivo. Es utilizada en formatos como JPG, MP3 y MP4.
-\end{itemize}
-
-Entre los algoritmos más utilizados destacan Huffman, LZW, RLE y Deflate, los cuales permiten representar la información utilizando menos bits y optimizar la transmisión de datos.
-
-En imágenes digitales se emplean técnicas como la Transformada Discreta del Coseno (DCT), cuantización y submuestreo de color para reducir tamaño manteniendo calidad visual aceptable. En audio se utilizan transformaciones frecuenciales y modelos psicoacústicos para eliminar sonidos poco perceptibles. Por su parte, la compresión de video utiliza métodos avanzados como estimación y compensación de movimiento, además de cuadros I, P y B para reducir redundancia entre secuencias.
-
-La eficiencia de la compresión depende del tipo de archivo, algoritmo utilizado y nivel de calidad deseado. Algunos formatos pueden alcanzar reducciones superiores al 90\%, especialmente en video y audio comprimido.
-
-Asimismo, los sistemas modernos de compresión multimedia integran herramientas como FFmpeg, Thumbnailator y Apache PDFBox, además de técnicas de procesamiento concurrente y distribuido para mejorar el rendimiento en aplicaciones multimedia de gran escala.
+\footnote{Para mayores especificaciones, consultar el \textbf{Anexo Análisis de riesgo}.}
