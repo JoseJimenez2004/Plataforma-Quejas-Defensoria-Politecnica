@@ -373,23 +373,138 @@ Los casos de uso de la Figura \ref{fig:casos_uso} describen las interacciones po
 \subsection{Modelo de Base de Datos}
 \label{subsec:modelo_bd}
 
-El modelo de base de datos (Figura \ref{fig:modelo_bd}) fue diseñado para representar con fidelidad las 
-entidades y relaciones que intervienen en el ciclo de vida de una queja. Las 
-entidades centrales son el quejoso, el expediente de queja y los documentos de 
-evidencia: un quejoso puede tener múltiples expedientes, y cada expediente puede 
-concentrar múltiples archivos adjuntos. Adicionalmente, se modelaron las entidades 
-de seguimiento de estado y generación de acuses, las cuales permiten registrar 
-cada cambio en el ciclo de vida del expediente y vincularlo con los documentos 
-legales producidos. Este diseño garantiza la normalización de los datos y 
-proporciona la trazabilidad completa del proceso desde el registro inicial hasta 
-la resolución del caso.
+La base de datos fue diseñada para soportar de manera integral los distintos módulos operativos de la Plataforma DDP-IPN: Quejoso, Recepción, Primer Contacto, Titular y Subdefensoría. El modelo relacional, normalizado hasta la tercera forma normal, garantiza el flujo continuo de información desde el registro inicial de la queja hasta su resolución e investigación, centralizando en un único esquema los datos generados por cada área de la institución.
 
-Figura: Modelo entidad-relación
+Las entidades principales del sistema son \textit{Usuarios}, \textit{Quejas},
+\textit{Evidencias}, \textit{Notificaciones}, \textit{Historial} y \textit{Tutores}:
+
+\begin{itemize}
+    \item \textbf{Usuarios:} centraliza la gestión de cuentas institucionales y los roles del sistema.
+    \item \textbf{Quejas:} Entidad que contiene el cuerpo de la queja, registra la narrativa de los hechos, el folio único y el estatus del expediente.
+    \item \textbf{Tutores:} Entidad crucial para el cumplimiento normativo; gestiona la información del tutor o representante legal cuando el quejoso es menor de edad.
+    \item \textbf{Evidencias:} Referencia de forma segura los archivos adjuntos al caso.
+    \item \textbf{Historial} y \textbf{Notificaciones:} Entidades dedicadas a la trazabilidad, los cambios de estado y la comunicación oportuna con el usuario a lo largo del procedimiento.
+\end{itemize}
+
+Más allá del almacenamiento, el modelo hace cumplir activamente las reglas de negocio de la plataforma. El ciclo de vida de los expedientes se controla mediante estados definidos (\texttt{RECIBIDA}, \texttt{EN\_ANÁLISIS},
+\texttt{RESUELTA}, \texttt{CERRADA}, entre otros), y se implementaron restricciones a nivel de base de datos (\textit{constraints}) para garantizar la consistencia: unicidad de correos institucionales y de boletas, así como la verificación automática de la mayoría de edad para determinar si el registro de un tutor es requerido. Las políticas de integridad referencial
+(\texttt{CASCADE}, \texttt{RESTRICT}, \texttt{SET NULL}) se asignan de forma diferenciada según la naturaleza de cada relación.
+
+El diagrama entidad-relación completo se muestra en la Figura~\ref{fig:modelo_bd}; el diccionario de datos, las cardinalidades detalladas, los índices y los \textit{scripts} de creación se documentan en el anexo correspondiente.%
+\footnote{Para mayores especificaciones del modelado, diccionario de datos
+completo, reglas de integridad, índices y \textit{scripts} SQL, consultar el
+\textbf{Anexo: Base de Datos}.}
+
+% Diagrama entidad-relación de anexos
+\definecolor{encabezadoBD}{RGB}{220,220,220}
+\tikzset{
+    tablaUML/.style={
+        matrix of nodes,
+        row sep=-\pgflinewidth,
+        column sep=-\pgflinewidth,
+        nodes={
+            rectangle, draw=black, align=left,
+            font=\scriptsize\ttfamily,
+            inner xsep=6pt, inner ysep=4pt,
+            text width=5.8cm
+        },
+        column 1/.style={nodes={text width=5.8cm}},
+        row 1/.style={nodes={fill=encabezadoBD, font=\bfseries\small, align=center}}
+    },
+    lineaRel/.style={draw=black, thick, -{Stealth[length=6pt]}}
+}
+
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{imagenes/Cap8/ModeloBD.png}
-    \caption{Modelo entidad-relación del microservicio de atención al quejoso}
-    \label{fig:modelo_bd}
+\centering
+\resizebox{0.95\textwidth}{!}{
+\begin{tikzpicture}[node distance=1.8cm, auto]
+\matrix (gQuejas) [tablaUML] {
+    |[fill=encabezadoBD]| \textbf{Quejas} \\
+    id : BIGINT (PK) \\
+    usuario\_id : BIGINT (FK) \\
+    descripcion : TEXT \\
+    fecha\_hechos : TIMESTAMP \\
+    fecha\_registro : TIMESTAMP \\
+    folio : VARCHAR(255) \\
+    asunto : VARCHAR(255) \\
+    unidad\_donde\_ocurrio : VARCHAR(255) \\
+    estatus : VARCHAR(50) \\
+    nombre\_denunciado : VARCHAR(255) \\
+    correo\_quejoso : VARCHAR(255) \\
+    nombre\_quejoso : VARCHAR(255) \\
+    identificacion\_institucional : VARCHAR(255) \\
+    tipo\_identificacion : VARCHAR(255) \\
+    fecha\_nacimiento : VARCHAR(255) \\
+};
+\matrix (gUsuarios) [tablaUML, above=2.8cm of gQuejas] {
+    |[fill=encabezadoBD]| \textbf{Usuarios} \\
+    id : BIGINT (PK) \\
+    activo : BOOLEAN \\
+    fecha\_expiracion\_codigo : TIMESTAMP \\
+    nombre : VARCHAR(255) \\
+    correo\_institucional : VARCHAR(255) \\
+    boleta : VARCHAR(255) \\
+    password : VARCHAR(255) \\
+    unidad\_academica : VARCHAR(255) \\
+    correo\_personal : VARCHAR(255) \\
+    telefono\_celular : VARCHAR(255) \\
+    nombre\_tutor : VARCHAR(255) \\
+    parentesco\_tutor : VARCHAR(255) \\
+    telefono\_tutor : VARCHAR(255) \\
+    codigo\_recuperacion : VARCHAR(255) \\
+};
+\matrix (gNotificaciones) [tablaUML, right=4.5cm of gQuejas.north east, anchor=north west] {
+    |[fill=encabezadoBD]| \textbf{Notificaciones} \\
+    id : BIGINT (PK) \\
+    usuario\_id : BIGINT (FK) \\
+    mensaje : TEXT \\
+    fecha\_creacion : TIMESTAMP \\
+    fecha\_expiracion : TIMESTAMP \\
+    leida : BOOLEAN \\
+    titulo : VARCHAR(255) \\
+    tipo : VARCHAR(50) \\
+    folio\_queja : VARCHAR(255) \\
+};
+\matrix (gEvidencias) [tablaUML, left=4cm of gQuejas.south west, anchor=south east] {
+    |[fill=encabezadoBD]| \textbf{Evidencias} \\
+    id : BIGINT (PK) \\
+    queja\_id : BIGINT (FK) \\
+    tamano : BIGINT \\
+    nombre\_archivo : VARCHAR(255) \\
+    url\_almacenamiento : VARCHAR(255) \\
+};
+\matrix (gTutores) [tablaUML, below=2.8cm of gQuejas] {
+    |[fill=encabezadoBD]| \textbf{Tutores} \\
+    id : BIGINT (PK) \\
+    queja\_id : BIGINT (FK) \\
+    nombre : VARCHAR(255) \\
+    primer\_apellido : VARCHAR(255) \\
+    segundo\_apellido : VARCHAR(255) \\
+    parentesco : VARCHAR(255) \\
+    correo : VARCHAR(255) \\
+    telefono : VARCHAR(255) \\
+    url\_identificacion : VARCHAR(255) \\
+};
+\matrix (gHistorial) [tablaUML, right=4.5cm of gQuejas.south east, anchor=south west] {
+    |[fill=encabezadoBD]| \textbf{Historial} \\
+    id : BIGINT (PK) \\
+    queja\_id : BIGINT (FK) \\
+    usuario\_origen : BIGINT (FK) \\
+    usuario\_destino : BIGINT (FK) \\
+    fecha\_cambio : TIMESTAMP \\
+    estado\_anterior : VARCHAR(50) \\
+    estado\_nuevo : VARCHAR(50) \\
+    observaciones : TEXT \\
+};
+\draw[lineaRel] (gUsuarios.south) -- node[right, font=\tiny] {1} node[near end, left, font=\tiny] {0..*} (gQuejas.north);
+\draw[lineaRel] (gUsuarios.east) -- ++(1,0) |- node[above, font=\tiny] {1} node[near end, above, font=\tiny] {0..*} (gNotificaciones.west);
+\draw[lineaRel] (gQuejas.west) -- ++(-1,0) |- node[above, font=\tiny] {1} node[near end, above, font=\tiny] {0..*} (gEvidencias.east);
+\draw[lineaRel] (gQuejas.south) -- node[right, font=\tiny] {1} node[near end, left, font=\tiny] {0..1} (gTutores.north);
+\draw[lineaRel] (gQuejas.east) -- ++(0.5,0) |- node[above, font=\tiny] {1} node[near end, above, font=\tiny] {0..*} (gHistorial.west);
+\end{tikzpicture}
+}
+\caption{Diagrama entidad-relación general de la Plataforma DDP-IPN}
+\label{fig:modelo_bd}
 \end{figure}
 
 \subsection{\textit{Mockups} de la Interfaz}
