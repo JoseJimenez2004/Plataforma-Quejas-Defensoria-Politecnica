@@ -130,7 +130,7 @@ fundamentales:
 
   \item \textbf{Optimización del entrenamiento.} Desde la perspectiva del
         aprendizaje automático, concentrar la muestra en dos etiquetas permite
-        una mayor densidad de datos por categoría. Dado que el volumen de
+        una mayor densidad de datos por categoría \cite{manning2008}. Dado que el volumen de
         expedientes históricos etiquetados es finito, un modelo binario es más
         robusto y menos propenso al error que un modelo multiclase que intentara
         identificar simultáneamente el tipo específico de exclusión: laboral,
@@ -512,7 +512,7 @@ y $y_{ij} = 0$ en caso contrario.
 
 El modelo \texttt{paraphrase-multilingual-mpnet-base-v2} fue entrenado sobre
 más de 50 idiomas, incluido el español. Genera embeddings de \textbf{768
-dimensiones} por documento y ha demostrado superioridad frente a los promedios
+dimensiones} por documento \cite{huggingface2023} y ha demostrado superioridad frente a los promedios
 de \textit{word embeddings} en tareas de clasificación de texto corto y mediano.
 Esta capacidad es crítica para distinguir los casos límite de la DDP, donde
 el acto jurídicamente relevante puede estar expresado en una sola oración dentro
@@ -1022,20 +1022,21 @@ La convención de nomenclatura de los archivos serializados es:
 lo que permite trazabilidad temporal de los modelos entrenados y facilita la
 comparación y auditoría de versiones en el contexto institucional de la DDP.
 
-\section{Algoritmo de Compresión Multimedia}
+\section{Fundamentos Teóricos de Compresión Multimedia}
 
-El algoritmo de compresión multimedia implementado dentro del sistema se fundamenta en un conjunto de técnicas orientadas a reducir el tamaño de archivos digitales mediante la eliminación de redundancia y la optimización de estructuras de almacenamiento. Su objetivo principal consiste en disminuir el consumo de espacio, ancho de banda y recursos de transferencia sin comprometer significativamente la calidad perceptual de los archivos procesados.
+La compresión multimedia comprende técnicas orientadas a reducir el tamaño de archivos digitales mediante la eliminación de redundancia y optimización del almacenamiento. Su objetivo principal es disminuir el consumo de espacio, ancho de banda y recursos computacionales en sistemas distribuidos.
 
-El funcionamiento general del algoritmo inicia con la detección automática del tipo de archivo multimedia utilizando herramientas especializadas de análisis de formatos y metadatos. Posteriormente, dependiendo de si el archivo corresponde a imágenes, audio, video o documentos PDF, se aplican técnicas específicas de compresión adaptadas a las características estructurales de cada formato.
+Existen dos tipos principales de compresión:
 
-En el caso de imágenes digitales, el algoritmo emplea mecanismos de transformación y reducción perceptual, tales como cuantización, submuestreo cromático y codificación estadística, permitiendo alcanzar reducciones considerables en formatos como JPG y WEBP. Para imágenes que requieren conservación total de la información, se utilizan métodos de compresión sin pérdida basados en Deflate y codificación Huffman.
+\begin{itemize}
+\item \textbf{Compresión sin pérdida:} Permite recuperar exactamente el archivo original. Se utiliza en formatos como PNG y ZIP.
+\item \textbf{Compresión con pérdida:} Elimina información poco perceptible para reducir significativamente el tamaño del archivo. Es utilizada en formatos como JPG, MP3 y MP4.
+\end{itemize}
 
-Para archivos de audio, el sistema implementa técnicas fundamentadas en análisis frecuencial y modelos psicoacústicos, eliminando componentes sonoras poco perceptibles para el oído humano y reduciendo el bitrate de transmisión. En archivos de video, el algoritmo utiliza mecanismos avanzados de estimación y compensación de movimiento, aprovechando la redundancia temporal existente entre cuadros consecutivos para disminuir significativamente el tamaño final del contenido multimedia.
+Entre los algoritmos más utilizados destacan Huffman, LZW, RLE y Deflate, los cuales permiten representar la información utilizando menos bits y optimizar la transmisión de datos.
 
-Asimismo, el sistema incorpora procesos de optimización para documentos PDF mediante reducción de imágenes embebidas, compactación estructural y eliminación de metadatos redundantes. Estas operaciones permiten mejorar el almacenamiento y acelerar la transferencia de documentos dentro de arquitecturas distribuidas.
+En imágenes digitales se emplean técnicas como la Transformada Discreta del Coseno (DCT), cuantización y submuestreo de color para reducir tamaño manteniendo calidad visual aceptable. En audio se utilizan transformaciones frecuenciales y modelos psicoacústicos para eliminar sonidos poco perceptibles. Por su parte, la compresión de video utiliza métodos avanzados como estimación y compensación de movimiento, además de cuadros I, P y B para reducir redundancia entre secuencias.
 
-La arquitectura del algoritmo se complementa con procesamiento concurrente y técnicas de paralelización implementadas sobre Java y herramientas especializadas como FFmpeg, Thumbnailator y Apache PDFBox. Esto permite procesar múltiples archivos simultáneamente y optimizar el aprovechamiento de recursos computacionales dentro de entornos distribuidos basados en microservicios.
+La eficiencia de la compresión depende del tipo de archivo, algoritmo utilizado y nivel de calidad deseado. Algunos formatos pueden alcanzar reducciones superiores al 90\%, especialmente en video y audio comprimido.
 
-Adicionalmente, el sistema evalúa la eficiencia de compresión mediante métricas de porcentaje de reducción, comparando el tamaño original y el tamaño comprimido del archivo procesado. Dependiendo del tipo de contenido y del algoritmo utilizado, pueden alcanzarse reducciones superiores al 90\% en ciertos formatos multimedia modernos.
-
-Para mayor información sobre los fundamentos teóricos, algoritmos, tecnologías multimedia y mecanismos de procesamiento utilizados, consultar el \textbf{Anexo Marco Teórico Tecnologías}.
+Asimismo, los sistemas modernos de compresión multimedia integran herramientas como FFmpeg, Thumbnailator y Apache PDFBox, además de técnicas de procesamiento concurrente y distribuido para mejorar el rendimiento en aplicaciones multimedia de gran escala.

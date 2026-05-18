@@ -55,7 +55,7 @@ innecesarios hasta obtener el diagrama que refleja el flujo operativo real.
     \begin{figure}[p] % 'p' indica que se prefiere una página completa para la figura
         \centering
         \vspace*{\fill} % Centrado vertical en la hoja
-        \includegraphics[width=1.15\linewidth]{imagenes/Cap8/BPMN.png} 
+        \includegraphics[width=0.9\linewidth]{imagenes/Cap8/BPMN.png} 
         % He usado 1.15 para extenderlo un poco más allá del margen de texto 
         % estándar, ya que en horizontal suele haber más espacio.
         
@@ -224,19 +224,19 @@ RF-27 & Resolución y Cierre     & Actualización automática del estado del exp
 
 \subsubsection{Requerimientos No Funcionales}
 
-Los atributos de calidad más críticos del sistema se concentran en cinco 
-requerimientos. El RBAC (RNF-01) es transversal a toda la plataforma, pues 
-ninguna operación puede ejecutarse sin verificar primero el rol del actor. El 
-cifrado AES-256 de datos personales y evidencias (RNF-03) protege información 
-sensible de la comunidad politécnica, cuya exposición implicaría consecuencias 
-legales directas. El tiempo máximo de clasificación de cinco segundos por parte 
-del motor de IA (RNF-09) garantiza que la asistencia automática no represente 
-un cuello de botella en el flujo operativo. La resiliencia del sistema ante la 
-caída del microservicio de inteligencia artificial (RNF-13) asegura la continuidad 
-del proceso administrativo incluso sin clasificación automática. Por último, el 
-cumplimiento estricto del modelo ACID en todas las transacciones de base de datos 
-(RNF-14) protege la integridad jurídica de cada expediente. El Cuadro 
-\ref{tab:rnf_destacados} presenta estos atributos.
+Los atributos de calidad más críticos del sistema se concentran en cinco
+requerimientos. El RBAC (RNF-01) es transversal a toda la plataforma, pues
+ninguna operación puede ejecutarse sin verificar primero el rol del actor. La
+anonimización de datos sensibles en el motor de IA (RNF-03) protege la identidad
+de los miembros de la comunidad politécnica durante el procesamiento automatizado,
+cuya exposición implicaría consecuencias legales directas. El tiempo máximo de
+clasificación de cinco segundos por parte del motor de IA (RNF-05) garantiza que
+la asistencia automática no represente un cuello de botella en el flujo operativo.
+La resiliencia del sistema ante la caída del microservicio de inteligencia
+artificial (RNF-07) asegura la continuidad del proceso administrativo incluso sin
+clasificación automática. Por último, el cumplimiento estricto del modelo ACID en
+todas las transacciones de base de datos (RNF-08) protege la integridad jurídica
+de cada expediente. El Cuadro~\ref{tab:rnf_destacados} presenta estos atributos.
 
 \begin{table}[H]
 \centering
@@ -246,10 +246,11 @@ cumplimiento estricto del modelo ACID en todas las transacciones de base de dato
 \toprule
 \textbf{ID} & \textbf{Categoría} & \textbf{Descripción del Atributo} \\
 \midrule
-RNF-01 & Seguridad      & El acceso administrativo debe estar restringido mediante el modelo RBAC. \\
-RNF-03 & Seguridad      & Cifrado de datos personales y evidencias en reposo utilizando AES-256 (\texttt{pgcrypto}). \\
-RNF-13 & Resiliencia    & La caída del microservicio de IA no debe afectar la gestión administrativa de quejas. \\
-RNF-14 & Fiabilidad     & Las transacciones en la base de datos deben cumplir estrictamente con el modelo ACID. \\
+RNF-01 & Seguridad   & El acceso administrativo debe estar restringido mediante el modelo RBAC. \\
+RNF-03 & Privacidad  & Anonimización de datos sensibles en el motor de IA para proteger la identidad durante el entrenamiento. \\
+RNF-05 & Rendimiento & La clasificación automática de quejas debe realizarse en un tiempo menor a 5 segundos. \\
+RNF-07 & Resiliencia & La caída del microservicio de IA no debe afectar la gestión administrativa de quejas. \\
+RNF-08 & Fiabilidad  & Las transacciones en la base de datos deben cumplir estrictamente con el modelo ACID. \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -301,6 +302,10 @@ funcional, no funcional y reglas de negocio— evidencia que el diseño del
 microservicio de atención al quejoso, que se detalla en la sección siguiente, 
 no es una decisión técnica aislada, sino la traducción directa de las necesidades 
 institucionales levantadas con el cliente.
+
+
+\footnote{Para mayores especificaciones, consultar el \textbf{Anexo Requerimientos}.}
+
 
 %─────────────────────────────────────────────
 \section{Microservicio de Atención al Quejoso}
@@ -358,7 +363,7 @@ las cuales encapsula un conjunto de acciones relacionadas:
     \label{fig:casos_uso}
 \end{figure}
 
-Los casos de uso de la Figura \ref{fig:casos_uso} describen las interacciones posibles entre el personal de la Defensoría, delimitando las responsabilidades funcionales del componente con independencia de la tecnología empleada. A partir del análisis de requerimientos se identificaron cuatro agrupaciones funcionales: Usuario/Recepcionista, Analista de primer contacto, Subdefensoría/Defensor y Administrador. Esta figura representa el funcionamiento integral de la Defensoría; sin embargo, el hecho de que todas las interacciones aparezcan en un mismo diagrama no implica que constituyan un único microservicio, sino que cada microservicio deberá delimitarse conforme al conjunto de actores que participan en sus flujos correspondientes.
+Los casos de uso de la Figura \ref{fig:casos_uso2} describen las interacciones posibles entre el personal de la Defensoría, delimitando las responsabilidades funcionales del componente con independencia de la tecnología empleada. A partir del análisis de requerimientos se identificaron cuatro agrupaciones funcionales: Usuario/Recepcionista, Analista de primer contacto, Subdefensoría/Defensor y Administrador. Esta figura representa el funcionamiento integral de la Defensoría; sin embargo, el hecho de que todas las interacciones aparezcan en un mismo diagrama no implica que constituyan un único microservicio, sino que cada microservicio deberá delimitarse conforme al conjunto de actores que participan en sus flujos correspondientes.
 % ── Figura: Diagrama de casos de uso ──
 \begin{figure}[H]
     \centering
@@ -507,7 +512,9 @@ completo, reglas de integridad, índices y \textit{scripts} SQL, consultar el
 \label{fig:modelo_bd}
 \end{figure}
 
-\subsection{\textit{Mockups} de la Interfaz}
+\footnote{Para mayores especificaciones, consultar el \textbf{Anexo Base de Datos}.}
+
+\subsection{Mockups de la Interfaz}
 \label{subsec:mockups}
 
 Los \textit{mockups} constituyeron una herramienta de validación temprana con 
@@ -552,7 +559,7 @@ presentación permite que el mismo \textit{backend} sirva tanto al \textit{front
 del quejoso como a futuras interfaces administrativas, manteniendo la coherencia 
 con el principio de responsabilidad única de la arquitectura de microservicios.
 
-\footnote{Para mayores especificaciones, consultar el \textbf{Anexo Mockups}.}
+
 
 \subsection{Implementación del \textit{Frontend}}
 \label{subsec:frontend}
@@ -761,7 +768,7 @@ entrenamiento (CV-5) y el F1 de prueba para detectar sobreajuste.
 \subsection{Resultados Experimentales}
 \label{subsec:resultados}
 
-Todas las métricas reportadas corresponden a evaluación \textbf{sin atributos 
+Todas las métricas reportadas (Tabla \ref{tab:resultados_comparacion}) corresponden a evaluación \textbf{sin atributos 
 jurídicos}, condición que simula el escenario de producción en el que el quejoso 
 redacta libremente.
 
@@ -807,83 +814,21 @@ que actúa como regularización implícita. Por último, el \textit{gap} nulo en
 los modelos SBERT lineales no refleja estabilidad sino colapso: ambos modelos 
 predicen la misma clase en todos los casos del \textit{holdout}.
 
-% ── Figura: Gráfica comparativa F1 holdout ──
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}
-  \draw[gray!60, -{latex}] (-0.1, 0) -- (9.6, 0);
-  \draw[gray!60, -{latex}] (0, -0.1) -- (0, 1.85)
-        node[above, font=\footnotesize] {F1 holdout};
-  \foreach \y/\lbl in {2.40/0.50, 4.80/0.70, 7.20/0.90}{
-    \draw[dashed, gray!35] (0, \y) -- (9.3, \y);
-    \node[left, font=\tiny, gray] at (0, \y) {\lbl};
-  }
-  \draw[dashed, gray!35] (0, 8.40) -- (9.3, 8.40);
-  \node[left, font=\tiny, gray] at (0, 8.40) {1.00};
-  \fill[azulESCOM!35, draw=azulESCOM] (0.1,0) rectangle (0.65, 8.2476);
-  \node[above, font=\tiny] at (0.375, 8.2476) {0.9873};
-  \node[below, rotate=40, anchor=north east, font=\scriptsize]
-        at (0.375, 0) {spaCy+RF};
-  \fill[azulESCOM!35, draw=azulESCOM] (1.2,0) rectangle (1.75, 7.944);
-  \node[above, font=\tiny] at (1.475, 7.944) {0.9620};
-  \node[below, rotate=40, anchor=north east, font=\scriptsize]
-        at (1.475, 0) {spaCy+ENS};
-  \fill[azulESCOM!35, draw=azulESCOM] (2.3,0) rectangle (2.85, 7.482);
-  \node[above, font=\tiny] at (2.575, 7.482) {0.9235};
-  \node[below, rotate=40, anchor=north east, font=\scriptsize]
-        at (2.575, 0) {spaCy+SVM};
-  \fill[azulESCOM!35, draw=azulESCOM] (3.4,0) rectangle (3.95, 7.327);
-  \node[above, font=\tiny] at (3.675, 7.327) {0.9106};
-  \node[below, rotate=40, anchor=north east, font=\scriptsize]
-        at (3.675, 0) {spaCy+RL};
-  \fill[azulESCOM!80, draw=azulESCOM] (4.8,0) rectangle (5.35, 8.0964);
-  \node[above, font=\tiny] at (5.075, 8.0964) {0.9747};
-  \node[below, rotate=40, anchor=north east, font=\scriptsize]
-        at (5.075, 0) {SBERT+RF};
-  \fill[azulESCOM!80, draw=azulESCOM] (5.9,0) rectangle (6.45, 1.4364);
-  \node[above, font=\tiny] at (6.175, 1.4364) {0.4197};
-  \node[below, rotate=40, anchor=north east, font=\scriptsize]
-        at (6.175, 0) {SBERT+ENS};
-  \fill[azulESCOM!80, draw=azulESCOM] (7.0,0) rectangle (7.55, 0.4848);
-  \node[above, font=\tiny] at (7.275, 0.4848) {0.3404};
-  \node[below, rotate=40, anchor=north east, font=\scriptsize]
-        at (7.275, 0) {SBERT+SVM};
-  \fill[azulESCOM!80, draw=azulESCOM] (8.1,0) rectangle (8.65, 0.4848);
-  \node[above, font=\tiny] at (8.375, 0.4848) {0.3404};
-  \node[below, rotate=40, anchor=north east, font=\scriptsize]
-        at (8.375, 0) {SBERT+RL};
-  \fill[azulESCOM!35, draw=azulESCOM] (0.2, 9.2) rectangle (0.6, 9.55);
-  \node[right, font=\tiny] at (0.65, 9.375) {spaCy avg};
-  \fill[azulESCOM!80, draw=azulESCOM] (2.2, 9.2) rectangle (2.6, 9.55);
-  \node[right, font=\tiny] at (2.65, 9.375) {SBERT};
-\end{tikzpicture}
-\caption{F1 ponderado en \textit{holdout} por combinación de modelo 
-(evaluación sin atributos jurídicos)}
-\label{fig:f1_comparacion}
-\end{figure}
 
-\subsection{Selección del Modelo de Producción y Persistencia}
-\label{subsec:modelo_produccion}
+\section{Algoritmo de Compresión Multimedia}
 
-Con base en los resultados anteriores, la combinación \textbf{spaCy avg + Random 
-Forest} fue seleccionada como modelo de producción al obtener el mejor F1 en 
-\textit{holdout} ($0.9873$) con un \textit{gap} de sobreajuste razonable 
-($0.0533$). Su desempeño no solo es superior en términos cuantitativos, sino que 
-demuestra una generalización genuina a partir de la semántica del texto, condición 
-indispensable para un sistema de triaje automatizado confiable. Una vez 
-seleccionado, el \textit{pipeline} completo fue serializado con \texttt{joblib} 
-bajo el patrón de nombre \texttt{<vectorizador>\_\_<clasificador>\_\_<timestamp>}, 
-lo que permite trazabilidad temporal de los experimentos y coexistencia de 
-múltiples versiones en el directorio \texttt{modelos/}.
+El algoritmo de compresión multimedia implementado dentro del sistema se fundamenta en un conjunto de técnicas orientadas a reducir el tamaño de archivos digitales mediante la eliminación de redundancia y la optimización de estructuras de almacenamiento. Su objetivo principal consiste en disminuir el consumo de espacio, ancho de banda y recursos de transferencia sin comprometer significativamente la calidad perceptual de los archivos procesados.
 
-La función \texttt{predecir()} encapsula el flujo completo de inferencia: carga 
-dinámicamente el mejor modelo disponible, aplica la misma cadena de limpieza y 
-lematización del entrenamiento, construye el \texttt{DataFrame} con atributos 
-jurídicos en cero y devuelve la clase predicha. Esta función habilita dos modos 
-de operación: el \textbf{modo asistido}, en el que el personal jurídico completa 
-el formulario con los atributos del Artículo 4° combinando semántica y señal 
-normativa; y el \textbf{modo autónomo}, en el que el quejoso redacta libremente 
-y el sistema clasifica exclusivamente por representación semántica del texto. 
-Este segundo modo es el criterio bajo el cual fue evaluado y seleccionado el 
-modelo, garantizando que el desempeño reportado sea una estimación fiel de su 
-comportamiento en producción.
+El funcionamiento general del algoritmo inicia con la detección automática del tipo de archivo multimedia utilizando herramientas especializadas de análisis de formatos y metadatos. Posteriormente, dependiendo de si el archivo corresponde a imágenes, audio, video o documentos PDF, se aplican técnicas específicas de compresión adaptadas a las características estructurales de cada formato.
+
+En el caso de imágenes digitales, el algoritmo emplea mecanismos de transformación y reducción perceptual, tales como cuantización, submuestreo cromático y codificación estadística, permitiendo alcanzar reducciones considerables en formatos como JPG y WEBP. Para imágenes que requieren conservación total de la información, se utilizan métodos de compresión sin pérdida basados en Deflate y codificación Huffman.
+
+Para archivos de audio, el sistema implementa técnicas fundamentadas en análisis frecuencial y modelos psicoacústicos, eliminando componentes sonoras poco perceptibles para el oído humano y reduciendo el bitrate de transmisión. En archivos de video, el algoritmo utiliza mecanismos avanzados de estimación y compensación de movimiento, aprovechando la redundancia temporal existente entre cuadros consecutivos para disminuir significativamente el tamaño final del contenido multimedia.
+
+Asimismo, el sistema incorpora procesos de optimización para documentos PDF mediante reducción de imágenes embebidas, compactación estructural y eliminación de metadatos redundantes. Estas operaciones permiten mejorar el almacenamiento y acelerar la transferencia de documentos dentro de arquitecturas distribuidas.
+
+La arquitectura del algoritmo se complementa con procesamiento concurrente y técnicas de paralelización implementadas sobre Java y herramientas especializadas como FFmpeg, Thumbnailator y Apache PDFBox. Esto permite procesar múltiples archivos simultáneamente y optimizar el aprovechamiento de recursos computacionales dentro de entornos distribuidos basados en microservicios.
+
+Adicionalmente, el sistema evalúa la eficiencia de compresión mediante métricas de porcentaje de reducción, comparando el tamaño original y el tamaño comprimido del archivo procesado. Dependiendo del tipo de contenido y del algoritmo utilizado, pueden alcanzarse reducciones superiores al 90\% en ciertos formatos multimedia modernos.
+
+Para mayor información sobre los fundamentos teóricos, algoritmos, tecnologías multimedia y mecanismos de procesamiento utilizados, consultar el \textbf{Anexo Marco Teórico Tecnologías}.
