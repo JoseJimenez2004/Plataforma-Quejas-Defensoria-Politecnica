@@ -295,7 +295,94 @@ El análisis de riesgo presentado integra una evaluación integral de la platafo
 Se destaca que, si bien la arquitectura basada en microservicios e Inteligencia Artificial aporta escalabilidad y eficiencia, también introduce puntos críticos como la dependencia del API Gateway y el consumo elevado de recursos. Los hallazgos del análisis SAST revelaron vulnerabilidades de inyección y debilidad criptográfica que deben ser atendidas con prioridad máxima. No obstante, mediante la aplicación de las estrategias de mitigación propuestas —que incluyen saneamiento de datos, supervisión humana y gobernanza tecnológica— se concluye que el sistema posee la viabilidad técnica y normativa necesaria para operar de manera segura y resiliente dentro de la Defensoría de los Derechos Politécnicos.
 
 
+% ==============================================================================
+% SECCIÓN - BASE DE DATOS
+% ==============================================================================
 
+\section{Diseño de la Base de Datos}
+\label{sec:base_datos}
+
+La plataforma DDP-IPN requiere una base de datos estructurada que permita almacenar, organizar y administrar la información relacionada con las quejas, usuarios, evidencias, notificaciones y seguimiento de expedientes dentro del sistema. 
+
+El diseño de la base de datos fue desarrollado bajo un modelo relacional utilizando PostgreSQL, considerando principios de integridad, seguridad, trazabilidad y escalabilidad. La estructura propuesta permite mantener un control adecuado del flujo de atención de las quejas, así como garantizar la consistencia de la información en cada etapa del proceso.
+
+La arquitectura de datos se diseñó para soportar los distintos módulos funcionales del sistema, incluyendo el registro de usuarios, recepción de quejas, carga de evidencias, gestión de tutores para menores de edad, historial de cambios y envío de notificaciones automáticas.
+
+\subsection{Modelo Entidad-Relación General}
+
+La Figura~\ref{fig:der_general} muestra el modelo entidad-relación general de la plataforma, donde se representan las principales entidades del sistema y las relaciones existentes entre ellas.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{imagenes/der_general.png}
+\caption{Modelo Entidad-Relación general de la plataforma DDP-IPN}
+\label{fig:der_general}
+\end{figure}
+
+\subsection{Descripción General de las Entidades}
+
+La base de datos está conformada por las siguientes entidades principales:
+
+\begin{itemize}
+
+\item \textbf{Usuarios:} 
+Almacena la información de los usuarios registrados dentro de la plataforma, incluyendo datos personales, correos institucionales, autenticación y recuperación de cuenta.
+
+\item \textbf{Quejas:}
+Representa el núcleo principal del sistema. Contiene la información relacionada con cada denuncia o queja registrada, incluyendo folio, descripción de hechos, estado actual y datos del quejoso.
+
+\item \textbf{Evidencias:}
+Permite almacenar los archivos asociados a una queja, tales como imágenes, documentos o archivos multimedia utilizados como evidencia.
+
+\item \textbf{Notificaciones:}
+Gestiona los mensajes enviados a los usuarios para informar cambios de estado, alertas o avisos importantes dentro del sistema.
+
+\item \textbf{Historial:}
+Registra cada transición de estado realizada sobre una queja, permitiendo mantener trazabilidad y auditoría de los movimientos realizados por el personal autorizado.
+
+\item \textbf{Tutores:}
+Contiene la información de tutores o responsables legales en casos donde el quejoso sea menor de edad.
+
+\end{itemize}
+
+\subsection{Relaciones Principales}
+
+Las relaciones más importantes dentro del modelo son las siguientes:
+
+\begin{itemize}
+
+\item Un usuario puede registrar múltiples quejas.
+\item Una queja puede contener múltiples evidencias.
+\item Una queja puede generar múltiples registros en el historial.
+\item Un usuario puede recibir múltiples notificaciones.
+\item Una queja puede asociarse opcionalmente a un tutor.
+
+\end{itemize}
+
+\subsection{Integridad y Seguridad}
+
+El diseño implementa restricciones de integridad referencial mediante llaves primarias y foráneas para garantizar la consistencia de los datos. Además, se incorporaron mecanismos de seguridad tales como:
+
+\begin{itemize}
+
+\item Contraseñas cifradas mediante BCrypt.
+\item Restricciones de unicidad para correos y folios.
+\item Control de acceso basado en roles.
+\item Registro histórico de cambios.
+\item Validación de estados permitidos dentro del flujo de atención.
+\item Protección de datos sensibles y control de acceso mediante políticas de seguridad.
+
+\end{itemize}
+
+\subsection{Optimización y Rendimiento}
+
+Para mejorar el rendimiento de las consultas, se implementaron índices sobre los campos más utilizados en búsquedas y filtrados, tales como folios, correos institucionales, estados de quejas y relaciones entre entidades.
+
+El diseño permite mantener tiempos de respuesta eficientes incluso con grandes volúmenes de información y facilita la escalabilidad futura del sistema.
+
+\subsection{Conclusión}
+
+La estructura de base de datos propuesta proporciona una arquitectura sólida, segura y escalable para la plataforma DDP-IPN. El modelo permite gestionar adecuadamente el ciclo completo de atención de quejas, garantizando integridad de la información, trazabilidad de procesos y soporte para futuras ampliaciones funcionales del sistema.
 
 
 \section{Fundamentos Teóricos de Compresión Multimedia}
