@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scrumban — Sprints DDP-IPN 2026-B009</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #f4f6f9;
+        color: #2c3e50;
+        padding: 20px;
+      }
+
+      .page-header {
+        text-align: center;
+        margin-bottom: 18px;
+      }
+      .page-header h1 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a2b4a;
+      }
+      .page-header p {
+        font-size: 0.78rem;
+        color: #5a6a7a;
+        margin-top: 3px;
+      }
+
+      .btn-download {
+        display: block;
+        margin: 0 auto 18px;
+        padding: 8px 22px;
+        background: #1a2b4a;
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        letter-spacing: 0.03em;
+      }
+      .btn-download:hover {
+        background: #2e4a7a;
+      }
+      .btn-download:disabled {
+        background: #8090a0;
+        cursor: wait;
+      }
+
+      #contenido-sprint {
+        background: #f4f6f9;
+        padding: 16px;
+        border-radius: 10px;
+      }
+
+      /* ---- TIMELINE ---- */
+      .timeline-section {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        padding: 14px 16px;
+        margin-bottom: 18px;
+      }
+      .timeline-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #5a6a7a;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 10px;
+      }
+      .tl-grid {
+        display: grid;
+        grid-template-columns: 170px repeat(5, 1fr);
+        gap: 2px;
+        font-size: 0.68rem;
+      }
+      .tl-header {
+        background: #f0f3f8;
+        color: #3a4a60;
+        font-weight: 700;
+        text-align: center;
+        padding: 4px 2px;
+        border-radius: 3px;
+      }
+      .tl-label {
+        display: flex;
+        align-items: center;
+        font-size: 0.68rem;
+        color: #2c3e50;
+        padding-right: 6px;
+        font-weight: 600;
+      }
+      .tl-cell {
+        height: 22px;
+        border-radius: 3px;
+        border: 1px solid #e8edf4;
+      }
+      .tl-fill-0 {
+        background: #6c7a8a;
+      }
+      .tl-fill-1 {
+        background: #1f8a55;
+      }
+      .tl-fill-2 {
+        background: #2a6db0;
+      }
+      .tl-fill-3 {
+        background: #c05a20;
+      }
+      .tl-fill-4 {
+        background: #7d3dab;
+      }
+
+      /* ---- SPRINT GRID ---- */
+      .sprint-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+      }
+
+      /* ---- SPRINT CARD ---- */
+      .sprint-card {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .card-header {
+        padding: 10px 12px 8px;
+        color: #fff;
+      }
+      .card-header.c0 {
+        background: #4a5568;
+      }
+      .card-header.c1 {
+        background: #1f8a55;
+      }
+      .card-header.c2 {
+        background: #2a6db0;
+      }
+      .card-header.c3 {
+        background: #c05a20;
+      }
+      .card-header.c4 {
+        background: #7d3dab;
+      }
+
+      .card-sprint-num {
+        font-size: 0.72rem;
+        font-weight: 700;
+        opacity: 0.85;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .card-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        line-height: 1.25;
+        margin: 3px 0 5px;
+      }
+      .card-dates {
+        display: inline-block;
+        font-size: 0.72rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+        padding: 1px 6px;
+        font-weight: 600;
+      }
+
+      .card-body {
+        padding: 10px 12px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .section-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 4px;
+      }
+      .label-done {
+        color: #1f8a55;
+      }
+      .label-pending {
+        color: #b87a00;
+      }
+
+      .task-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .task-list li {
+        font-size: 0.78rem;
+        line-height: 1.3;
+        padding-left: 14px;
+        position: relative;
+        color: #2c3e50;
+      }
+      .task-list li::before {
+        position: absolute;
+        left: 0;
+        font-size: 0.82rem;
+      }
+      .task-list.done li::before {
+        content: "✓";
+        color: #1f8a55;
+        font-weight: 700;
+      }
+      .task-list.pending li::before {
+        content: "◷";
+        color: #b87a00;
+      }
+      .task-list.pending li {
+        color: #8a7020;
+      }
+
+      .card-footer {
+        padding: 7px 12px;
+        border-top: 1px solid #e8edf4;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      .resp-tag {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 3px;
+        color: #fff;
+      }
+      .resp-bryan {
+        background: #2e6da4;
+      }
+      .resp-jair {
+        background: #2a7a4b;
+      }
+      .resp-leilani {
+        background: #b8460b;
+      }
+
+      /* ---- LEGEND ---- */
+      .sprint-legend {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.74rem;
+        font-weight: 600;
+      }
+      .legend-swatch {
+        width: 18px;
+        height: 12px;
+        border-radius: 3px;
+      }
+
+      footer {
+        text-align: center;
+        font-size: 0.68rem;
+        color: #8090a0;
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-header">
+      <h1>Metodología Scrumban — Desarrollo Incremental</h1>
+      <p>Plataforma DDP-IPN · 2026-B009 · ESCOM-IPN · Enero–Mayo 2026</p>
+    </div>
+
+    <button class="btn-download" onclick="descargarImagen()">
+      ⬇ Descargar como imagen PNG
+    </button>
+
+    <div id="contenido-sprint">
+      <!-- LEGEND -->
+      <div class="sprint-legend">
+        <div class="legend-item">
+          <div class="legend-swatch" style="background: #4a90d9"></div>
+          Bryan — Scrum Máster / Analista
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background: #3aaa6a"></div>
+          Jair — Backend y Arquitecto
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background: #e07030"></div>
+          Leilani — Frontend / Contenido
+        </div>
+      </div>
+
+      <!-- TIMELINE -->
+      <div class="timeline-section">
+        <div class="timeline-title">Línea de tiempo — Incrementos</div>
+        <div class="tl-grid">
+          <div></div>
+          <div class="tl-header">Ene</div>
+          <div class="tl-header">Feb</div>
+          <div class="tl-header">Mar</div>
+          <div class="tl-header">Abr</div>
+          <div class="tl-header">May</div>
+
+          <div class="tl-label">Sprint 0 · Planificación</div>
+          <div class="tl-cell tl-fill-0"></div>
+          <div class="tl-cell tl-fill-0"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+
+          <div class="tl-label">Incremento 1 · Arquitectura</div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell tl-fill-1"></div>
+          <div class="tl-cell tl-fill-1"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+
+          <div class="tl-label">Incremento 2 · Quejoso</div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell tl-fill-2"></div>
+          <div class="tl-cell tl-fill-2"></div>
+          <div class="tl-cell"></div>
+
+          <div class="tl-label">Incremento 3 · Administrativo</div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell tl-fill-3"></div>
+          <div class="tl-cell tl-fill-3"></div>
+
+          <div class="tl-label">Incremento 4 · Clasificador</div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell tl-fill-4"></div>
+        </div>
+      </div>
+
+      <!-- SPRINT CARDS -->
+      <div class="sprint-grid">
+        <!-- SPRINT 0 -->
+        <div class="sprint-card">
+          <div class="card-header c0">
+            <div class="card-sprint-num">Sprint 0</div>
+            <div class="card-title">Planificación e Investigación</div>
+            <span class="card-dates">Ene – Feb 2026</span>
+          </div>
+          <div class="card-body">
+            <div>
+              <div class="section-label label-done">Completado</div>
+              <ul class="task-list done">
+                <li>Reuniones con stakeholders DDP</li>
+                <li>Revisión normativa y documental</li>
+                <li>Identificación de actores y roles</li>
+                <li>Definición del Product Backlog</li>
+                <li>Investigación del marco teórico</li>
+                <li>Modelado inicial de flujos</li>
+                <li>Recopilación de casos de prueba</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="resp-tag resp-bryan">Bryan</span>
+            <span class="resp-tag resp-jair">Jair</span>
+            <span class="resp-tag resp-leilani">Leilani</span>
+          </div>
+        </div>
+
+        <!-- INCREMENTO 1 — Diseño Arquitectónico (antes I2) -->
+        <div class="sprint-card">
+          <div class="card-header c1">
+            <div class="card-sprint-num">Incremento 1</div>
+            <div class="card-title">Diseño Arquitectónico y Modelado</div>
+            <span class="card-dates">Feb – Mar 2026</span>
+          </div>
+          <div class="card-body">
+            <div>
+              <div class="section-label label-done">Completado</div>
+              <ul class="task-list done">
+                <li>Arquitectura de microservicios</li>
+                <li>Diseño de API Gateway</li>
+                <li>Modelado de entidades principales</li>
+                <li>Construcción de diagramas UML</li>
+                <li>Diseño inicial de base de datos</li>
+                <li>Definición de reglas de negocio</li>
+                <li>Modelo entidad-relación preliminar</li>
+              </ul>
+            </div>
+            <div>
+              <div class="section-label label-pending">Pendiente</div>
+              <ul class="task-list pending">
+                <li>Refinamiento modelo relacional</li>
+                <li>Diagramas de estados y secuencia</li>
+                <li>Validación institucional final</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="resp-tag resp-bryan">Bryan</span>
+            <span class="resp-tag resp-jair">Jair</span>
+            <span class="resp-tag resp-leilani">Leilani</span>
+          </div>
+        </div>
+
+        <!-- INCREMENTO 2 — Prototipo Quejoso (antes I1, ahora Mar-Abr) -->
+        <div class="sprint-card">
+          <div class="card-header c2">
+            <div class="card-sprint-num">Incremento 2</div>
+            <div class="card-title">Prototipo Funcional del Quejoso</div>
+            <span class="card-dates">Mar – Abr 2026</span>
+          </div>
+          <div class="card-body">
+            <div>
+              <div class="section-label label-done">Completado</div>
+              <ul class="task-list done">
+                <li>Registro e inicio de sesión</li>
+                <li>Recuperación de contraseña</li>
+                <li>Captura y generación de folios</li>
+                <li>Consulta de estatus</li>
+                <li>Gestión de perfil</li>
+                <li>Carga inicial de evidencias</li>
+                <li>Mockups funcionales definidos</li>
+                <li>Endpoints REST y autenticación</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="resp-tag resp-bryan">Bryan</span>
+            <span class="resp-tag resp-jair">Jair</span>
+            <span class="resp-tag resp-leilani">Leilani</span>
+          </div>
+        </div>
+
+        <!-- INCREMENTO 3 -->
+        <div class="sprint-card">
+          <div class="card-header c3">
+            <div class="card-sprint-num">Incremento 3</div>
+            <div class="card-title">
+              Desarrollo Administrativo y Gestión Interna
+            </div>
+            <span class="card-dates">Abr – May 2026</span>
+          </div>
+          <div class="card-body">
+            <div>
+              <div class="section-label label-done">Completado</div>
+              <ul class="task-list done">
+                <li>Mockups administrativos</li>
+                <li>Paneles de gestión</li>
+                <li>Flujos preliminares de análisis</li>
+                <li>Modelado de procesos internos</li>
+                <li>Casos de uso documentados</li>
+              </ul>
+            </div>
+            <div>
+              <div class="section-label label-pending">Pendiente</div>
+              <ul class="task-list pending">
+                <li>Integración backend administrativo</li>
+                <li>Validación funcional institucional</li>
+                <li>Integración con seguimiento y resolución</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="resp-tag resp-bryan">Bryan</span>
+            <span class="resp-tag resp-jair">Jair</span>
+            <span class="resp-tag resp-leilani">Leilani</span>
+          </div>
+        </div>
+
+        <!-- INCREMENTO 4 -->
+        <div class="sprint-card">
+          <div class="card-header c4">
+            <div class="card-sprint-num">Incremento 4</div>
+            <div class="card-title">
+              Integración del Clasificador Inteligente
+            </div>
+            <span class="card-dates">May 2026</span>
+          </div>
+          <div class="card-body">
+            <div>
+              <div class="section-label label-done">Completado</div>
+              <ul class="task-list done">
+                <li>Construcción del corpus (525 casos)</li>
+                <li>Limpieza y normalización textual</li>
+                <li>Vectorización semántica (SBERT)</li>
+                <li>Entrenamiento de modelos ML</li>
+                <li>Evaluación experimental (F1 ponderado)</li>
+                <li>Pipeline funcional de clasificación</li>
+                <li>Métricas experimentales documentadas</li>
+              </ul>
+            </div>
+            <div>
+              <div class="section-label label-pending">Pendiente</div>
+              <ul class="task-list pending">
+                <li>Mayor volumen de casos reales</li>
+                <li>Refinamiento de precisión del modelo</li>
+                <li>Integración completa con módulos admin</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="resp-tag resp-bryan">Bryan</span>
+            <span class="resp-tag resp-jair">Jair</span>
+            <span class="resp-tag resp-leilani">Leilani</span>
+          </div>
+        </div>
+      </div>
+      <!-- /sprint-grid -->
+    </div>
+    <!-- /contenido-sprint -->
+
+    <footer>
+      Trabajo Terminal 2026-B009 · ESCOM — Instituto Politécnico Nacional ·
+      Directores: M.C. Ulises Vélez Saldaña &amp; Dr. Jessie Paulina Guzmán
+      Flores
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+      function descargarImagen() {
+        const btn = document.querySelector(".btn-download");
+        btn.disabled = true;
+        btn.textContent = "Generando imagen…";
+        const target = document.getElementById("contenido-sprint");
+        html2canvas(target, {
+          scale: 3,
+          backgroundColor: "#f4f6f9",
+          useCORS: true,
+          scrollX: 0,
+          scrollY: 0,
+          width: target.scrollWidth,
+          height: target.scrollHeight,
+        }).then((canvas) => {
+          const link = document.createElement("a");
+          link.download = "scrumban-sprints-DDP-IPN.png";
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+          btn.disabled = false;
+          btn.textContent = "⬇ Descargar como imagen PNG";
+        });
+      }
+    </script>
+  </body>
+</html>

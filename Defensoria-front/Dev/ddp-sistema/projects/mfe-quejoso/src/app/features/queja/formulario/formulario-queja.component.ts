@@ -1,6 +1,13 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators, FormGroup } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+  FormGroup,
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { HeaderComponent } from '../../../components/header/header.component';
@@ -8,7 +15,62 @@ import { FooterComponent } from '../../../components/footer/footer.component';
 import { QuejaService } from '../../../core/services/queja.service';
 import { TutorDTO } from '../../../models/queja.models';
 
-const UNIDADES = ['ESCOM', 'ENCB', 'ESIQIE', 'ESIA', 'UPIICSA', 'CECYT', 'OTRA'];
+const UNIDADES = [
+  // Nivel Superior
+  'ESCOM',
+  'ESFM',
+  'ESIA Unidad Tecamachalco',
+  'ESIA Unidad Ticomán',
+  'ESIA Unidad Zacatenco',
+  'ESIME Unidad Azcapotzalco',
+  'ESIME Unidad Culhuacán',
+  'ESIME Unidad Ticomán',
+  'ESIME Unidad Zacatenco',
+  'ESIQIE',
+  'ESIT',
+  'CICS Unidad Milpa Alta',
+  'CICS Unidad Santo Tomás',
+  'ENCB',
+  'ENMH',
+  'ESEO',
+  'ESM',
+  'ESE',
+  'ESCA Unidad Santo Tomás',
+  'ESCA Unidad Tepepan',
+  'EST',
+  'ENBA',
+  'UPIBI',
+  'UPIIG Campus Guanajuato',
+  'UPIIH Campus Hidalgo',
+  'UPIIZ Campus Zacatecas',
+  'UPIEM',
+  'UPIICSA',
+  'UPIITA',
+  'UPIIP Campus Palenque',
+  'UPIIT Campus Tlaxcala',
+  // Nivel Medio Superior
+  'CECyT 1 "Gonzalo Vázquez Vela"',
+  'CECyT 2 "Miguel Bernard Perales"',
+  'CECyT 3 "Estanislao Ramírez Ruíz"',
+  'CECyT 4 "Lázaro Cárdenas"',
+  'CECyT 5 "Benito Juárez García"',
+  'CECyT 6 "Miguel Othón de Mendizábal"',
+  'CECyT 7 "Cuauhtémoc"',
+  'CECyT 8 "Narciso Bassols García"',
+  'CECyT 9 "Juan de Dios Bátiz Paredes"',
+  'CECyT 10 "Carlos Vallejo Márquez"',
+  'CECyT 11 "Wilfrido Massieu"',
+  'CECyT 12 "José María Morelos"',
+  'CECyT 13 "Ricardo Flores Magón"',
+  'CECyT 14 "Luis Enrique Erro Soler"',
+  'CECyT 15 "Diódoro Antúnez Echagaray"',
+  'CECyT 16 "Unidad Hidalgo"',
+  'CECyT 17 "Unidad Guanajuato"',
+  'CECyT 18 "Unidad Zacatecas"',
+  'CECyT 19 "Leona Vicario" Unidad Tecámac',
+  'CET 1 "Walter Cross Buchanan"',
+  'OTRA',
+];
 const PARENTESCOS = ['Padre', 'Madre', 'Tutor Legal', 'Abuelo/a', 'Tío/a', 'Otro'];
 
 function fechaHechosValidator(control: AbstractControl): ValidationErrors | null {
@@ -27,7 +89,14 @@ function fechaHechosValidator(control: AbstractControl): ValidationErrors | null
 @Component({
   selector: 'app-formulario-queja',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, HeaderComponent, FooterComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    LucideAngularModule,
+    HeaderComponent,
+    FooterComponent,
+  ],
   templateUrl: './formulario-queja.component.html',
 })
 /**
@@ -156,7 +225,7 @@ export class FormularioQuejaComponent {
       tipoIdentificacion: v.tipoIdentificacion!,
       unidadAcademica: v.unidadAcademica!,
       fechaHechos: v.fechaHechos ? `${v.fechaHechos}T00:00:00` : '',
-      asunto: "", // Se envía vacío por regla de negocio, lo llena recepción
+      asunto: '', // Se envía vacío por regla de negocio, lo llena recepción
       descripcionHechos: v.descripcionHechos!,
       nombreDenunciado: v.nombreDenunciado!,
       primerApellidoDenunciado: v.primerApellidoDenunciado!,
