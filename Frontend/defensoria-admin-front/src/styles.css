@@ -1,1 +1,14 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Montserrat', sans-serif;
+  background-color: #f4f5f7; /* Un gris muuuy sutil para que la tarjeta blanca resalte */
+  color: #333333;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}

@@ -1,4 +1,4 @@
-package ipn.escom.defensoria.admin;
+package ipn.escom.defensoria.administracion;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
