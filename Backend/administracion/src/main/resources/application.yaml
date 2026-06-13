@@ -1,0 +1,42 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: administracion
+
+  # ---------------------------------------------------------
+  # Configuración de Conexión a PostgreSQL (Esquema defensoria)
+  # ---------------------------------------------------------
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ddp_admin_db?currentSchema=defensoria
+    username: admin_defensoria
+    password: AdminDDP2026!
+    driver-class-name: org.postgresql.Driver
+
+  # ---------------------------------------------------------
+  # Configuración de JPA / Hibernate
+  # ---------------------------------------------------------
+  jpa:
+    hibernate:
+      # Verifica que el código Java coincida con las tablas SQL
+      ddl-auto: validate
+    
+    # Muestra las consultas SQL en la consola
+    show-sql: true
+    
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# ---------------------------------------------------------
+# Configuración de Logs
+# ---------------------------------------------------------
+logging:
+  level:
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE # Muestra los parámetros exactos de las consultas
