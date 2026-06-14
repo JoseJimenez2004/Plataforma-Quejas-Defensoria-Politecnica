@@ -11,7 +11,7 @@ import jakarta.persistence.JoinColumn;
 import lombok.Data;
 
 @Entity
-@Table(name = "evidencias")
+@Table(name = "evidencias", schema = "defensoria")
 @Data
 public class EvidenciaEntity {
     @Id

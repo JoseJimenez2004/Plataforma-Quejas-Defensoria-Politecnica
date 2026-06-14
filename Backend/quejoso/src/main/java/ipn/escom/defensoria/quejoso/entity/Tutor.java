@@ -10,7 +10,7 @@ import jakarta.persistence.OneToOne;
 import lombok.Data;
 
 @Entity
-@Table(name = "tutores")
+@Table(name = "tutores", schema = "defensoria")
 @Data
 public class Tutor {
     @Id

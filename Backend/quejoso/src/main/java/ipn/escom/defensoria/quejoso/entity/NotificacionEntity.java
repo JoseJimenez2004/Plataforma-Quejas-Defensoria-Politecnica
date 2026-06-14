@@ -14,7 +14,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "notificaciones")
+@Table(name = "notificaciones", schema = "defensoria")
 @Data
 public class NotificacionEntity {
     @Id
