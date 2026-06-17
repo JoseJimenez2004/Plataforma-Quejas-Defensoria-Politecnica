@@ -8,12 +8,12 @@ spring:
     name: administracion
 
   # ---------------------------------------------------------
-  # Configuración de Conexión a PostgreSQL (Esquema defensoria)
+  # Configuración de Conexión a PostgreSQL (Neon / Vercel)
   # ---------------------------------------------------------
   datasource:
-    url: jdbc:postgresql://localhost:5432/ddp_admin_db?currentSchema=defensoria
-    username: admin_defensoria
-    password: AdminDDP2026!
+    url: jdbc:postgresql://ep-dry-dew-aidiojqw-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&currentSchema=defensoria
+    username: neondb_owner
+    password: npg_41TzgIinHmsU
     driver-class-name: org.postgresql.Driver
 
   # ---------------------------------------------------------
@@ -31,6 +31,7 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: defensoria
 
 # ---------------------------------------------------------
 # Configuración de Logs
