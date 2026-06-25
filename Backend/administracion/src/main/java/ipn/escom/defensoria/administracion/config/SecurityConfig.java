@@ -11,9 +11,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -66,9 +69,24 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // --- SOLUCIÓN AL STACKOVERFLOW ERROR ---
+    // NUEVO: Proveedor de usuarios en memoria para pruebas de desarrollo
+    @Bean
+    public UserDetailsService userDetailsService() {
+        UserDetails adminTi = User.builder()
+            .username("bicho_admin")
+            .password("ti123") // Como usas NoOpPasswordEncoder, la contraseña va en texto plano
+            .roles("ADMIN_TI")
+            .build();
 
-    // A. Configuramos el proveedor de autenticación explícito
+        UserDetails recepcion = User.builder()
+            .username("usuario_recepcion")
+            .password("recepcion123")
+            .roles("RECEPCION")
+            .build();
+
+        return new InMemoryUserDetailsManager(adminTi, recepcion);
+    }
+
     @Bean
     public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -77,7 +95,6 @@ public class SecurityConfig {
         return provider;
     }
 
-    // B. Creamos el administrador de autenticación sin usar proxies circulares
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationProvider authenticationProvider) {
         return new ProviderManager(authenticationProvider); 
