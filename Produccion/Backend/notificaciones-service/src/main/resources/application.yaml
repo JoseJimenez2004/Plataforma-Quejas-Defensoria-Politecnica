@@ -1,0 +1,17 @@
+server:
+  port: 8085
+spring:
+  application:
+    name: notificaciones-service
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: jair100flo@gmail.com
+    password: rozzvatswkacxvqf
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true

@@ -1,0 +1,37 @@
+server:
+  port: 8083
+
+spring:
+  datasource:
+    url: jdbc:postgresql://2.25.78.22:5432/defensoria_db
+    username: postgres
+    password: Temporal2026@
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: jair100flo@gmail.com
+    password: rozzvatswkacxvqf
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+jwt:
+  secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
+  expiration: 3600000
+
+quejas:
+  service:
+    url: http://2.25.78.22:8084
