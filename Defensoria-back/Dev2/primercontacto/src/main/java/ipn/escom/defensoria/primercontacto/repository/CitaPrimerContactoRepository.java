@@ -17,4 +17,8 @@ public interface CitaPrimerContactoRepository extends JpaRepository<CitaPrimerCo
     List<CitaPrimerContacto> findByAnalistaIdOrderByFechaCitaAscHoraCitaAsc(Long analistaId);
 
     List<CitaPrimerContacto> findByEstatusOrderByFechaCitaAscHoraCitaAsc(String estatus);
+
+    boolean existsByFolioAndEstatusNot(String folio, String estatus);
+
+    boolean existsByQuejaIdAndEstatusNot(Long quejaId, String estatus);
 }

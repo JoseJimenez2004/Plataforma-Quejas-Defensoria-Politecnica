@@ -1,0 +1,159 @@
+<section class="page">
+  @if (cargando) {
+    <mat-card class="card">
+      <p style="color: #6b7280; text-align: center; padding: var(--space-4);">Cargando expediente…</p>
+    </mat-card>
+  } @else if (sinDatos) {
+    <mat-card class="card">
+      <p style="color: #6b7280; padding: var(--space-4);">
+        Aún no se ha recibido de Subdefensoría ninguna queja con folio
+        <strong>{{ folio }}</strong>. En cuanto Subdefensoría la envíe, aparecerá aquí.
+      </p>
+    </mat-card>
+  } @else {
+  
+  <div class="page-header">
+    <div>
+      <h2>{{ expediente.folio }}</h2>
+      <p>{{ expediente.asunto }} · Ingreso: {{ expediente.fechaIngreso }} · {{ expediente.quejoso.unidadAcademica }}</p>
+    </div>
+
+    <div class="hero-chips">
+      <mat-chip class="priority-chip">{{ expediente.prioridad }} prioridad</mat-chip>
+      <mat-chip class="status-chip">{{ expediente.estatus }}</mat-chip>
+    </div>
+  </div>
+
+  <div class="expediente-grid">
+    
+    <mat-card class="card">
+      <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-lg); font-weight: 900; color: #111827;">
+        Narrativa del Quejoso
+      </h3>
+      <div class="document-box">
+        <p>{{ expediente.narrativa }}</p>
+      </div>
+    </mat-card>
+
+    <mat-card class="card">
+      <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-lg); font-weight: 900; color: #111827;">
+        Datos del Quejoso
+      </h3>
+      <div class="info-list">
+        <div>
+          <span>Nombre</span>
+          <strong>{{ expediente.quejoso.nombre }}</strong>
+        </div>
+        <div>
+          <span>Boleta</span>
+          <strong>{{ expediente.quejoso.boleta }}</strong>
+        </div>
+        <div>
+          <span>Correo electrónico</span>
+          <strong>{{ expediente.quejoso.correo }}</strong>
+        </div>
+        <div>
+          <span>Teléfono de contacto</span>
+          <strong>{{ expediente.quejoso.telefono }}</strong>
+        </div>
+        <div>
+          <span>Unidad académica</span>
+          <strong>{{ expediente.quejoso.unidadAcademica }}</strong>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="card">
+      <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-lg); font-weight: 900; color: #111827;">
+        Evidencias
+      </h3>
+      <div class="evidence-list">
+        @for (evidencia of expediente.evidencias; track evidencia.nombre) {
+          <div class="evidence-row">
+            <div class="evidence-file">
+              <mat-icon>description</mat-icon>
+              <div>
+                <strong>{{ evidencia.nombre }}</strong>
+                <span>{{ evidencia.tipo }}</span>
+              </div>
+            </div>
+
+            <div class="evidence-actions">
+              <button mat-button class="link-btn">
+                <mat-icon>visibility</mat-icon> Ver
+              </button>
+              <button mat-button class="link-btn">
+                <mat-icon>download</mat-icon> Descargar
+              </button>
+            </div>
+          </div>
+        }
+        <p class="evidence-count">{{ expediente.evidencias.length }} evidencias adjuntas</p>
+      </div>
+    </mat-card>
+
+    <mat-card class="card notes-card">
+      <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-lg); font-weight: 900; color: #111827;">
+        Notas de Análisis
+      </h3>
+      
+      <div class="timeline-notes">
+        @for (nota of expediente.notas; track nota) {
+          <div class="timeline-note">
+            <div class="note-meta">
+              <strong>Analista Jurídico 01</strong>
+              <span>Hace unos minutos</span>
+            </div>
+            <p>{{ nota }}</p>
+          </div>
+        }
+      </div>
+
+      <mat-form-field appearance="outline" class="note-input">
+        <mat-label>Nueva nota de análisis</mat-label>
+        <textarea matInput rows="3" [(ngModel)]="nuevaNota"></textarea>
+      </mat-form-field>
+
+      <button mat-flat-button class="primary-btn" (click)="agregarNota()">
+        <mat-icon>add</mat-icon> Agregar nota
+      </button>
+    </mat-card>
+  </div>
+
+  <mat-card class="actions-card">
+    <div>
+      <h3>Acciones del expediente</h3>
+      <p>Seleccione la siguiente acción dentro del flujo de Primer Contacto.</p>
+    </div>
+
+    <div class="actions">
+      <button mat-flat-button class="primary-btn" (click)="agendarCita()">
+        <mat-icon>event</mat-icon> Agendar cita
+      </button>
+      <button mat-stroked-button class="outline-btn">
+        <mat-icon>mail</mat-icon> Solicitar aclaración
+      </button>
+      <button mat-stroked-button class="outline-btn">
+        <mat-icon>download</mat-icon> Descargar expediente
+      </button>
+    </div>
+  </mat-card>
+
+  <mat-card class="decision-card">
+    <div>
+      <span class="eyebrow-small">Resolución preliminar</span>
+      <h3>Determinación del análisis</h3>
+      <p>Seleccione si el asunto corresponde o no a la competencia de la Defensoría.</p>
+    </div>
+
+    <div class="decision-actions">
+      <button mat-flat-button class="success-btn" (click)="marcarCompetente()">
+        <mat-icon>check_circle</mat-icon> Competente
+      </button>
+      <button mat-flat-button class="danger-btn" (click)="marcarImprocedente()">
+        <mat-icon>cancel</mat-icon> Improcedente
+      </button>
+    </div>
+  </mat-card>
+  }
+</section>

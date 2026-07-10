@@ -22,6 +22,13 @@ public class CitaPrimerContactoService {
 
     public CitaDTO crearCita(CrearCitaDTO dto) {
 
+        boolean yaTieneCita = citaPrimerContactoRepository
+                .existsByFolioAndEstatusNot(dto.getFolio(), "CANCELADA");
+
+        if (yaTieneCita) {
+            throw new RuntimeException("El expediente ya tiene una cita programada");
+        }
+
         CitaPrimerContacto cita = CitaPrimerContacto.builder()
                 .quejaId(dto.getQuejaId())
                 .folio(dto.getFolio())
@@ -41,7 +48,6 @@ public class CitaPrimerContactoService {
 
         return convertirADTO(guardada);
     }
-
     public List<CitaDTO> listarPorQueja(Long quejaId) {
         return citaPrimerContactoRepository
                 .findByQuejaIdOrderByFechaCitaDescHoraCitaDesc(quejaId)

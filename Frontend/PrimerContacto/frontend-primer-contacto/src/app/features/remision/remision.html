@@ -1,0 +1,119 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Remisión Externa</h2>
+      <p>Expediente {{ folio }} · Determinación de improcedencia o incompetencia.</p>
+    </div>
+
+    <mat-chip class="danger-chip">Improcedente</mat-chip>
+  </div>
+
+  <div class="flow-card">
+    <div class="step done">
+      <mat-icon>check_circle</mat-icon>
+      <span>Recibido</span>
+    </div>
+
+    <div class="line"></div>
+
+    <div class="step done">
+      <mat-icon>check_circle</mat-icon>
+      <span>Analizado</span>
+    </div>
+
+    <div class="line"></div>
+
+    <div class="step active">
+      <mat-icon>outgoing_mail</mat-icon>
+      <span>Remisión</span>
+    </div>
+
+    <div class="line"></div>
+
+    <div class="step">
+      <mat-icon>mark_email_read</mat-icon>
+      <span>Enviado</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    
+    <mat-card class="card">
+      <h3>Datos del expediente</h3>
+
+      <div class="info-list">
+        <div>
+          <span>Folio</span>
+          <strong>{{ folio }}</strong>
+        </div>
+
+        <div>
+          <span>Quejoso</span>
+          <strong>{{ expediente?.quejoso?.nombre }}</strong>
+        </div>
+
+        <div>
+          <span>Asunto</span>
+          <strong>{{ expediente?.asunto }}</strong>
+        </div>
+
+        <div>
+          <span>Unidad académica</span>
+          <strong>{{ expediente?.quejoso?.unidadAcademica }}</strong>
+        </div>
+
+        <div>
+          <span>Estado</span>
+          <strong>{{ expediente?.estatus }}</strong>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="card form-card">
+      <h3>Datos de la remisión</h3>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Institución o área destino</mat-label>
+        <mat-select [(ngModel)]="institucion">
+          @for (item of instituciones; track item) {
+            <mat-option [value]="item">{{ item }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (institucion === 'Otra') {
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre de la institución</mat-label>
+          <input matInput [(ngModel)]="institucionOtra">
+        </mat-form-field>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Fundamento de la remisión</mat-label>
+        <textarea matInput rows="3" [(ngModel)]="fundamento"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Motivo de remisión</mat-label>
+        <textarea matInput rows="4" [(ngModel)]="motivo"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Observaciones internas</mat-label>
+        <textarea matInput rows="2" [(ngModel)]="observaciones"></textarea>
+      </mat-form-field>
+
+      <div class="actions">
+        <button mat-stroked-button class="outline-btn" (click)="guardarBorrador()">
+          <mat-icon>save</mat-icon>
+          Guardar borrador
+        </button>
+
+        <button mat-flat-button class="danger-btn" (click)="enviarRemision()">
+          <mat-icon>send</mat-icon>
+          Enviar remisión
+        </button>
+      </div>
+    </mat-card>
+  </div>
+</section>

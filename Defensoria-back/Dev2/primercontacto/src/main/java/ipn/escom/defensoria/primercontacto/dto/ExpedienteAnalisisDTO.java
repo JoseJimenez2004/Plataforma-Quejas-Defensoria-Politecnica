@@ -13,6 +13,7 @@ public class ExpedienteAnalisisDTO {
 
     private Long quejaId;
     private String folio;
+    private String tema;
     private String descripcionHechos;
     private String fechaRecepcion;
     private String estatus;

@@ -1,0 +1,140 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Dictamen de Competencia</h2>
+      <p>Expediente {{ folio }} · Presunto acoso · Etapa de resolución preliminar.</p>
+    </div>
+
+    <mat-chip class="success-chip">Competente</mat-chip>
+  </div>
+
+  <div class="flow-card">
+    <div class="step done">
+      <mat-icon>check_circle</mat-icon>
+      <span>Recibido</span>
+    </div>
+
+    <div class="line"></div>
+
+    <div class="step done">
+      <mat-icon>check_circle</mat-icon>
+      <span>Analizado</span>
+    </div>
+
+    <div class="line"></div>
+
+    <div class="step active">
+      <mat-icon>edit_document</mat-icon>
+      <span>Dictamen</span>
+    </div>
+
+    <div class="line"></div>
+
+    <div class="step">
+      <mat-icon>person</mat-icon>
+      <span>Titular</span>
+    </div>
+  </div>
+
+  <div class="summary-card">
+    <div>
+      <span>Narrativa recibida</span>
+      <strong>Completada</strong>
+    </div>
+
+    <div>
+      <span>Evidencias adjuntas</span>
+      <strong>{{ expediente?.evidencias?.length ?? 0 }} archivos</strong>
+    </div>
+
+    <div>
+      <span>Notas de análisis</span>
+      <strong>{{ expediente?.notas?.length ?? 0 }} notas</strong>
+    </div>
+
+    <div>
+      <span>Cita realizada</span>
+      <strong>Registrada</strong>
+    </div>
+  </div>
+
+  <div class="grid">
+    
+    <mat-card class="card">
+      <h3>Datos del expediente</h3>
+
+      <div class="info-list">
+        <div>
+          <span>Folio</span>
+          <strong>{{ folio }}</strong>
+        </div>
+
+        <div>
+          <span>Quejoso</span>
+          <strong>{{ expediente?.quejoso?.nombre }}</strong>
+        </div>
+
+        <div>
+          <span>Asunto</span>
+          <strong>{{ expediente?.asunto }}</strong>
+        </div>
+
+        <div>
+          <span>Unidad académica</span>
+          <strong>{{ expediente?.quejoso?.unidadAcademica }}</strong>
+        </div>
+
+        <div>
+          <span>Fecha de ingreso</span>
+          <strong>{{ expediente?.fechaIngreso }}</strong>
+        </div>
+
+        <div>
+          <span>Prioridad</span>
+          <strong>{{ expediente?.prioridad }}</strong>
+        </div>
+
+        <div>
+          <span>Estado actual</span>
+          <strong>{{ expediente?.estatus }}</strong>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="card form-card">
+      <h3>Dictamen Preliminar</h3>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Justificación del dictamen</mat-label>
+        <textarea
+          matInput
+          rows="7"
+          [(ngModel)]="justificacion"
+          placeholder="Describa los elementos que permiten determinar la competencia preliminar del expediente.">
+        </textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Observaciones internas</mat-label>
+        <textarea
+          matInput
+          rows="3"
+          [(ngModel)]="observaciones"
+          placeholder="Escriba comentarios para el Titular o información complementaria.">
+        </textarea>
+      </mat-form-field>
+
+      <div class="actions">
+        <button mat-stroked-button class="outline-btn" (click)="guardarBorrador()">
+          <mat-icon>save</mat-icon>
+          Guardar borrador
+        </button>
+
+        <button mat-flat-button class="primary-btn" (click)="enviarTitular()">
+          <mat-icon>send</mat-icon>
+          Enviar al Titular
+        </button>
+      </div>
+    </mat-card>
+  </div>
+</section>
