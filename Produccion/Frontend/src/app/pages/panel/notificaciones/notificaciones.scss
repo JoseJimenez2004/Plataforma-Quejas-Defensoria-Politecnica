@@ -1,0 +1,35 @@
+.aviso-pendiente {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+}
+
+.aviso-item {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--borde);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  p {
+    margin: 0 0 8px 0;
+    font-size: 0.9rem;
+  }
+}
+
+.aviso-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--texto-suave);
+
+  button {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+}

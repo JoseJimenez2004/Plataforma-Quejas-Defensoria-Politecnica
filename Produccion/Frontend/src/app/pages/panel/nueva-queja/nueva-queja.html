@@ -1,0 +1,75 @@
+@if (quejaCreada) {
+  <div class="card exito">
+    <div class="icono-exito">✅</div>
+    <h2>¡Queja enviada con éxito!</h2>
+    <p>Tu número de folio para seguimiento es:</p>
+    <div class="folio">{{ quejaCreada.numeroFolio }}</div>
+    <p class="nota">Por favor, guarda este número. Es indispensable para consultar el estatus de tu trámite.</p>
+    <button class="btn-secondary" (click)="volverAlTablero()">Volver al Tablero</button>
+  </div>
+} @else {
+  <h2>Levantar Nueva Queja</h2>
+  <div class="aviso-pendiente">
+    Las quejas sobre incidentes ocurridos hace más de 90 días no serán procesadas.
+  </div>
+
+  <form (submit)="$event.preventDefault(); enviar()" class="card">
+    <h3>Detalles del Hecho</h3>
+    <div class="fila">
+      <div class="input-group">
+        <label>Lugar donde sucedieron los hechos</label>
+        <select [(ngModel)]="unidadAcademica" name="unidadAcademica" required>
+          <option value="">Seleccione una UA</option>
+          <option value="ESCOM">ESCOM</option>
+          <option value="ESIA">ESIA</option>
+          <option value="ESCA">ESCA</option>
+          <option value="ENCB">ENCB</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Fecha de los hechos</label>
+        <input type="date" [(ngModel)]="fechaHechos" name="fechaHechos" />
+      </div>
+    </div>
+
+    <div class="fila">
+      <div class="input-group">
+        <label>Nombre del denunciado</label>
+        <input type="text" [(ngModel)]="nombreDenunciado" name="nombreDenunciado" />
+      </div>
+      <div class="input-group">
+        <label>Apellidos del denunciado</label>
+        <input type="text" [(ngModel)]="apellidoDenunciado" name="apellidoDenunciado" />
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>Relato de los Hechos</label>
+      <textarea
+        rows="6"
+        [(ngModel)]="relato"
+        name="relato"
+        placeholder="Describe cronológicamente lo sucedido…"
+        required
+      ></textarea>
+    </div>
+
+    <div class="input-group">
+      <label>Adjunta un archivo (PDF, JPG, PNG)</label>
+      <input type="file" (change)="onArchivoSeleccionado($event)" />
+      @if (archivo) {
+        <p class="archivo-nombre">{{ archivo.name }}</p>
+      }
+    </div>
+
+    @if (error) {
+      <p class="error">{{ error }}</p>
+    }
+
+    <div class="acciones">
+      <button type="submit" class="btn-primary" [disabled]="cargando">
+        {{ cargando ? 'Enviando…' : 'Enviar Queja' }}
+      </button>
+    </div>
+  </form>
+}

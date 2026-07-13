@@ -1,0 +1,38 @@
+<div class="contenedor">
+  <div class="card">
+    <h2>Seguimiento de Queja</h2>
+
+    <div class="input-group">
+      <label>Folio</label>
+      <input type="text" [(ngModel)]="folio" placeholder="DDP-2026-XXXX" />
+    </div>
+    <div class="input-group">
+      <label>Correo</label>
+      <input type="email" [(ngModel)]="correo" placeholder="ejemplo@ipn.mx" />
+    </div>
+
+    <button class="btn-primary" (click)="consultar()" [disabled]="cargando">
+      {{ cargando ? 'Consultando…' : 'Consultar' }}
+    </button>
+
+    @if (error) {
+      <p class="error">{{ error }}</p>
+    }
+
+    @if (resultado === 'encontrada') {
+      <div class="resultado ok">
+        <p>✅ El folio existe y coincide con el correo proporcionado.</p>
+        <p class="nota">
+          Para ver el detalle completo del trámite necesitas una cuenta de seguimiento.
+        </p>
+        <a routerLink="/cuenta/activar" class="btn-secondary">Activar mi cuenta con este folio</a>
+      </div>
+    }
+
+    @if (resultado === 'no-encontrada') {
+      <div class="resultado error-resultado">
+        <p>❌ No encontramos ninguna queja con ese folio y correo.</p>
+      </div>
+    }
+  </div>
+</div>

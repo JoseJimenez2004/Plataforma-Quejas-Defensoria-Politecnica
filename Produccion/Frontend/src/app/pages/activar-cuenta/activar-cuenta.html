@@ -1,0 +1,42 @@
+<div class="contenedor">
+  <div class="card">
+    <h2>Configuración de Acceso</h2>
+    <p class="subtitulo">Establece tus credenciales para acceder al portal de seguimiento</p>
+
+    @if (exito) {
+      <div class="resultado ok">
+        <p>✅ Cuenta activada con éxito. Redirigiendo a inicio de sesión…</p>
+      </div>
+    } @else {
+      <form (submit)="$event.preventDefault(); activar()">
+        <div class="input-group">
+          <label>Correo Electrónico</label>
+          <input type="email" [(ngModel)]="correo" name="correo" required />
+        </div>
+        <div class="input-group">
+          <label>Número de folio</label>
+          <input type="text" [(ngModel)]="numeroFolio" name="numeroFolio" placeholder="DDP-2026-XXXX" required />
+        </div>
+        <div class="input-group">
+          <label>Nueva Contraseña</label>
+          <input type="password" [(ngModel)]="password" name="password" required />
+          <p class="ayuda">Mínimo 8 caracteres, una mayúscula y un número.</p>
+        </div>
+        <div class="input-group">
+          <label>Confirmar Contraseña</label>
+          <input type="password" [(ngModel)]="confirmarPassword" name="confirmarPassword" required />
+        </div>
+
+        @if (error) {
+          <p class="error">{{ error }}</p>
+        }
+
+        <button type="submit" class="btn-primary" [disabled]="cargando">
+          {{ cargando ? 'Activando…' : 'Activar Cuenta y Finalizar' }}
+        </button>
+      </form>
+
+      <a routerLink="/" class="volver">Regresar al inicio</a>
+    }
+  </div>
+</div>

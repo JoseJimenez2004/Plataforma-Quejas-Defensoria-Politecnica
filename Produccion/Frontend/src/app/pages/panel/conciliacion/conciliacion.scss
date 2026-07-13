@@ -1,0 +1,34 @@
+.aviso-pendiente {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+}
+
+.tabla-contenedor {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid var(--borde);
+    font-size: 0.85rem;
+  }
+
+  th {
+    color: var(--texto-suave);
+  }
+
+  a {
+    text-decoration: none;
+    font-weight: 600;
+  }
+}

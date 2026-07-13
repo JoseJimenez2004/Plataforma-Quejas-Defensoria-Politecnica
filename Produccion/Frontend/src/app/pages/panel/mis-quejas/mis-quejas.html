@@ -1,0 +1,64 @@
+<h2>Historial y Seguimiento de Quejas</h2>
+
+<div class="aviso-pendiente">
+  ⚠️ Datos de ejemplo — falta un endpoint de listado en queja-service. Ver docs/HALLAZGOS.md.
+</div>
+
+<div class="filtros card">
+  <div class="input-group">
+    <label>Búsqueda por Folio</label>
+    <input type="text" [(ngModel)]="filtroFolio" placeholder="DDP-2026-001" />
+  </div>
+  <div class="input-group">
+    <label>Estatus</label>
+    <select [(ngModel)]="filtroEstatus">
+      <option>Todos</option>
+      <option>Recibida</option>
+      <option>En Revisión</option>
+      <option>Finalizada</option>
+    </select>
+  </div>
+</div>
+
+<div class="card tabla-contenedor">
+  <table>
+    <thead>
+      <tr>
+        <th>Folio</th>
+        <th>Fecha de Registro</th>
+        <th>Asunto</th>
+        <th>Unidad Académica</th>
+        <th>Estatus</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (q of quejasFiltradas; track q.folio) {
+        <tr>
+          <td>{{ q.folio }}</td>
+          <td>{{ q.fecha }}</td>
+          <td>{{ q.asunto }}</td>
+          <td>{{ q.unidadAcademica }}</td>
+          <td>
+            <span
+              class="badge"
+              [class.recibida]="q.estatus === 'Recibida'"
+              [class.en-revision]="q.estatus === 'En Revisión'"
+              [class.finalizada]="q.estatus === 'Finalizada'"
+            >
+              {{ q.estatus }}
+            </span>
+          </td>
+          <td>
+            <a [routerLink]="['/panel/mis-quejas', q.folio]">Ver / Editar</a>
+          </td>
+        </tr>
+      }
+      @empty {
+        <tr>
+          <td colspan="6" class="vacio">No hay resultados con ese filtro.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

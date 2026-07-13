@@ -1,0 +1,21 @@
+<h2>Centro de Notificaciones y Requerimientos</h2>
+
+<div class="aviso-pendiente">
+  ⚠️ notificaciones-service hoy solo envía correos — no hay un endpoint para listar avisos por
+  usuario. Datos de ejemplo.
+</div>
+
+<div class="card">
+  <h3>Historial de avisos</h3>
+  @for (a of avisos; track a.texto) {
+    <div class="aviso-item">
+      <p>{{ a.texto }}</p>
+      <div class="aviso-meta">
+        <span>{{ a.hace }}</span>
+        @if (a.accion) {
+          <button class="btn-secondary">{{ a.accion }}</button>
+        }
+      </div>
+    </div>
+  }
+</div>

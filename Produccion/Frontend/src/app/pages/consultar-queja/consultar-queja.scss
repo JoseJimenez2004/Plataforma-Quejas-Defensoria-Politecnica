@@ -1,0 +1,32 @@
+.contenedor {
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.resultado {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 6px;
+
+  &.ok {
+    background: #e8f5e9;
+  }
+
+  &.error-resultado {
+    background: #ffebee;
+  }
+
+  .nota {
+    font-size: 0.85rem;
+    color: var(--texto-suave);
+    margin-bottom: 12px;
+  }
+}
+
+.btn-secondary {
+  display: inline-block;
+  text-decoration: none;
+  text-align: center;
+  width: 100%;
+}

@@ -30,23 +30,28 @@ mostrar_ayuda() {
     echo "Servicios validos: auth-service, quejas-service, notificaciones-service"
 }
 
-# Construir una unica imagen base reutilizable para todos los micros
+# Construir una imagen dedicada por microservicio (cada uno con su propio tag,
+# ya no comparten "defensoria-base-img" para evitar confundir qué imagen es cuál
+# y dejar de generar imagenes "dangling" cada vez que se reconstruye otro servicio)
 build_service() {
     SERVICE=$1
-    echo "Construyendo/Actualizando imagen base unica usando el JAR de $SERVICE..."
+    PORT=$(get_port "$SERVICE")
+    echo "Construyendo/Actualizando imagen defensoria-${SERVICE} (puerto ${PORT})..."
     cd $BASE_DIR
-    
+
     if [ ! -f "artifact/${SERVICE}.jar" ]; then
         echo "Error: No se encontro el archivo artifact/${SERVICE}.jar"
         exit 1
     fi
-    
-    # Todos compilan bajo el mismo nombre de imagen: defensoria-base-img
-    podman build --build-arg JAR_FILE=artifact/${SERVICE}.jar -t defensoria-base-img .
-    echo "Imagen base actualizada exitosamente."
+
+    podman build \
+      --build-arg JAR_FILE=artifact/${SERVICE}.jar \
+      --build-arg SERVICE_PORT=${PORT} \
+      -t "defensoria-${SERVICE}" .
+    echo "Imagen defensoria-${SERVICE} actualizada exitosamente."
 }
 
-# Levantar contenedor utilizando la imagen unica
+# Levantar contenedor utilizando su propia imagen dedicada
 start_service() {
     SERVICE=$1
     PORT=$(get_port "$SERVICE")
@@ -58,7 +63,6 @@ start_service() {
 
     echo "Levantando contenedor para $SERVICE en el puerto $PORT..."
 
-    # Todos los contenedores se crean a partir de la misma imagen 'localhost/defensoria-base-img'
     podman run -d \
       --name "$SERVICE" \
       -p $PORT:$PORT \
@@ -66,7 +70,7 @@ start_service() {
       -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
       -e SPRING_CONFIG_NAME="$SERVICE" \
       -e QUEJAS_SERVICE_URL="http://2.25.78.22:8084" \
-      localhost/defensoria-base-img
+      "localhost/defensoria-${SERVICE}"
 
     echo "Contenedor $SERVICE iniciado."
 }

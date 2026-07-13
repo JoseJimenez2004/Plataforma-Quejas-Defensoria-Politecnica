@@ -1,0 +1,160 @@
+<div class="contenedor">
+  <h2>Formulario de Registro de Quejas</h2>
+
+  <div class="aviso">
+    <strong>Nota importante:</strong>
+    <ul>
+      <li>Las quejas sobre incidentes ocurridos hace más de 90 días no serán procesadas.</li>
+      <li>
+        Podrás editar o eliminar esta queja mientras su estatus sea "Recibida". Una vez pase a
+        "En Revisión", la información será definitiva.
+      </li>
+    </ul>
+  </div>
+
+  @if (mensajeBackendPendiente) {
+    <div class="aviso-pendiente">
+      <p>
+        Esta función todavía no está disponible: el registro público de quejas requiere un
+        endpoint nuevo en el backend (hoy solo se puede registrar una queja estando ya
+        autenticado). Si ya tienes cuenta,
+        <a routerLink="/portal/login">inicia sesión</a> y usa "Nueva Queja" en tu panel.
+      </p>
+    </div>
+  } @else {
+    <form (submit)="$event.preventDefault(); enviarQueja()">
+      <h3>Datos del Quejoso</h3>
+      <div class="fila">
+        <div class="input-group">
+          <label>Nombre:</label>
+          <input type="text" [(ngModel)]="nombre" name="nombre" required />
+        </div>
+        <div class="input-group">
+          <label>Primer Apellido:</label>
+          <input type="text" [(ngModel)]="apellidoPaterno" name="apellidoPaterno" required />
+        </div>
+      </div>
+      <div class="fila">
+        <div class="input-group">
+          <label>Segundo Apellido:</label>
+          <input type="text" [(ngModel)]="apellidoMaterno" name="apellidoMaterno" />
+        </div>
+        <div class="input-group">
+          <label>Correo:</label>
+          <input type="email" [(ngModel)]="correo" name="correo" required />
+        </div>
+      </div>
+      <div class="fila">
+        <div class="input-group">
+          <label>Fecha de nacimiento:</label>
+          <input
+            type="date"
+            [(ngModel)]="fechaNacimiento"
+            name="fechaNacimiento"
+            (change)="onFechaNacimientoChange()"
+            required
+          />
+        </div>
+        <div class="input-group">
+          <label>Identificación institucional:</label>
+          <div class="radios">
+            <label><input type="radio" name="identificacion" value="alumno" [(ngModel)]="identificacion" /> Alumno</label>
+            <label><input type="radio" name="identificacion" value="empleado" [(ngModel)]="identificacion" /> Empleado</label>
+          </div>
+        </div>
+      </div>
+
+      <h3>Datos de la Queja</h3>
+      <div class="fila">
+        <div class="input-group">
+          <label>Lugar donde sucedieron los hechos:</label>
+          <select [(ngModel)]="unidadAcademica" name="unidadAcademica" required>
+            <option value="">Seleccione una UA</option>
+            <option value="ESCOM">ESCOM</option>
+            <option value="ESIA">ESIA</option>
+            <option value="ESCA">ESCA</option>
+            <option value="ENCB">ENCB</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Fecha de los hechos:</label>
+          <input type="date" [(ngModel)]="fechaHechos" name="fechaHechos" required />
+        </div>
+      </div>
+
+      <h3>Datos del Denunciado</h3>
+      <div class="fila">
+        <div class="input-group">
+          <label>Nombre del denunciado:</label>
+          <input type="text" [(ngModel)]="nombreDenunciado" name="nombreDenunciado" />
+        </div>
+        <div class="input-group">
+          <label>Primer Apellido del denunciado:</label>
+          <input type="text" [(ngModel)]="apellidoDenunciado" name="apellidoDenunciado" />
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Descripción de los hechos:</label>
+        <textarea rows="5" [(ngModel)]="descripcion" name="descripcion" required></textarea>
+      </div>
+
+      <div class="input-group">
+        <label>Adjunta archivos que sustenten tu queja (PDF, JPG, PNG, MP4, MP3):</label>
+        <input type="file" (change)="onArchivoSeleccionado($event)" />
+        @if (archivo) {
+          <p class="archivo-nombre">{{ archivo.name }}</p>
+        }
+      </div>
+
+      <button type="submit" class="btn-primary">Enviar Queja</button>
+    </form>
+  }
+</div>
+
+@if (mostrarModalTutor) {
+  <div class="modal-overlay">
+    <div class="modal card">
+      <h3>Información del Tutor / Adulto Responsable</h3>
+      <p class="aviso-inline">Se requiere un responsable legal para solicitantes menores de edad.</p>
+
+      <div class="input-group">
+        <label>Nombre(s):</label>
+        <input type="text" [(ngModel)]="tutor.nombre" name="tutorNombre" />
+      </div>
+      <div class="fila">
+        <div class="input-group">
+          <label>Primer Apellido:</label>
+          <input type="text" [(ngModel)]="tutor.apellidoPaterno" name="tutorApellidoPaterno" />
+        </div>
+        <div class="input-group">
+          <label>Segundo Apellido:</label>
+          <input type="text" [(ngModel)]="tutor.apellidoMaterno" name="tutorApellidoMaterno" />
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Parentesco:</label>
+        <select [(ngModel)]="tutor.parentesco" name="tutorParentesco">
+          <option>Padre</option>
+          <option>Madre</option>
+          <option>Tutor legal</option>
+        </select>
+      </div>
+      <div class="fila">
+        <div class="input-group">
+          <label>Correo Electrónico:</label>
+          <input type="email" [(ngModel)]="tutor.correo" name="tutorCorreo" />
+        </div>
+        <div class="input-group">
+          <label>Teléfono de Contacto (10 dígitos):</label>
+          <input type="tel" [(ngModel)]="tutor.telefono" name="tutorTelefono" />
+        </div>
+      </div>
+
+      <div class="modal-acciones">
+        <button class="btn-primary" (click)="confirmarTutor()">Confirmar Datos</button>
+        <button class="btn-secondary" (click)="cancelarTutor()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}

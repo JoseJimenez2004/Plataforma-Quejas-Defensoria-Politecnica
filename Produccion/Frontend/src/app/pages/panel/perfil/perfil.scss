@@ -1,0 +1,39 @@
+.seccion {
+  margin-bottom: 20px;
+}
+
+.aviso-pendiente {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  margin-bottom: 16px;
+}
+
+.fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+input:disabled {
+  background: #f0f0f0;
+  color: var(--texto-suave);
+}
+
+.ok {
+  color: var(--exito);
+  font-size: 0.85rem;
+}
+
+.cambiar-password {
+  display: inline-block;
+  margin-left: 16px;
+  font-size: 0.85rem;
+  text-decoration: none;
+}

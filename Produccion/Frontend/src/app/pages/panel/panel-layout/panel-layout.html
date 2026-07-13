@@ -1,0 +1,21 @@
+<header class="topbar">
+  <span class="usuario">{{ authService.usuarioActual()?.nombre }}</span>
+  <button class="btn-cerrar" (click)="cerrarSesion()">Cerrar Sesión</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <a routerLink="/panel" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">
+      🏠 Resumen
+    </a>
+    <a routerLink="/panel/mis-quejas" routerLinkActive="activo">📋 Mis Quejas</a>
+    <a routerLink="/panel/nueva-queja" routerLinkActive="activo">➕ Nueva Queja</a>
+    <a routerLink="/panel/conciliacion" routerLinkActive="activo">🤝 Acuerdos de Conciliación</a>
+    <a routerLink="/panel/notificaciones" routerLinkActive="activo">🔔 Notificaciones</a>
+    <a routerLink="/panel/perfil" routerLinkActive="activo">⚙️ Configuración de Perfil</a>
+  </aside>
+
+  <main class="contenido">
+    <router-outlet />
+  </main>
+</div>
