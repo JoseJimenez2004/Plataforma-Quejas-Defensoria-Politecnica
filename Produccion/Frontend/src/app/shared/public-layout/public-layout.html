@@ -1,0 +1,80 @@
+<header class="site-header">
+  <div class="top-bar">
+    <span class="top-bar__brand">Gobierno de México</span>
+    <nav class="top-bar__links">
+      <a href="https://www.ipn.mx" target="_blank" rel="noopener">IPN</a>
+      <a routerLink="/">Directorio</a>
+      <a routerLink="/">Contacto</a>
+    </nav>
+  </div>
+
+  <div class="brand-band">
+    <div class="brand-band__logo">
+      <div class="logo-mark" aria-hidden="true">IPN</div>
+      <div class="logo-text">
+        <strong>Instituto Politécnico Nacional</strong>
+        <span>“La Técnica al Servicio de la Patria”</span>
+      </div>
+    </div>
+    <div class="brand-band__title">
+      <span>Defensoría de los</span>
+      <strong>Derechos Politécnicos</strong>
+    </div>
+  </div>
+
+  <nav class="nav-band">
+    <div class="nav-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+        >Inicio</a
+      >
+      <a routerLink="/">Conócenos</a>
+      <a routerLink="/">Orientación</a>
+      <a routerLink="/queja/registro" routerLinkActive="active">Queja</a>
+      <a routerLink="/">Promoción y Formación</a>
+      <a routerLink="/">Contacto</a>
+    </div>
+    <a routerLink="/portal/login" class="nav-login">Iniciar sesión</a>
+  </nav>
+</header>
+
+<main class="public-content">
+  <router-outlet />
+</main>
+
+<footer class="public-footer">
+  <div class="footer-social">
+    <p>¡Conéctate con la Defensoría!</p>
+    <div class="social-icons">
+      <a href="#" aria-label="Facebook">f</a>
+      <a href="#" aria-label="X / Twitter">X</a>
+      <a href="#" aria-label="Instagram">Ig</a>
+      <a href="#" aria-label="YouTube">Yt</a>
+    </div>
+  </div>
+
+  <div class="footer-columns">
+    <div class="footer-col">
+      <strong>Instituto Politécnico Nacional</strong>
+      <p>
+        Av. Luis Enrique Erro S/N, Unidad Profesional Adolfo López Mateos, Zacatenco, Alcaldía
+        Gustavo A. Madero, C.P. 07738, Ciudad de México.
+      </p>
+    </div>
+    <div class="footer-col">
+      <strong>Enlaces</strong>
+      <a routerLink="/">Marco Normativo</a>
+      <a routerLink="/">Acuerdo de Creación</a>
+      <a routerLink="/">Aviso de Privacidad</a>
+    </div>
+    <div class="footer-col">
+      <strong>Servicios</strong>
+      <a routerLink="/queja/registro">Presentar una queja</a>
+      <a routerLink="/queja/consultar">Consultar folio</a>
+      <a routerLink="/portal/login">Iniciar sesión</a>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    © {{ anio }} Defensoría de los Derechos Politécnicos — Todos los derechos reservados
+  </div>
+</footer>

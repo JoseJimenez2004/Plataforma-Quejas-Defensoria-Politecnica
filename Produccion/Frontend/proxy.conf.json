@@ -1,0 +1,20 @@
+{
+  "/api/auth": {
+    "target": "http://2.25.78.22:8083",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/api/quejoso": {
+    "target": "http://2.25.78.22:8084",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/api/notificaciones": {
+    "target": "http://2.25.78.22:8085",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

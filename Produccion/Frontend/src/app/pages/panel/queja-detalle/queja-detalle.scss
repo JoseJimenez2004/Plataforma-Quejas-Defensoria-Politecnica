@@ -1,0 +1,105 @@
+.encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.aviso-pendiente {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  margin-bottom: 20px;
+}
+
+.columnas {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.descripcion-box {
+  background: #fafafa;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  padding: 12px;
+  min-height: 80px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.evidencia {
+  font-size: 0.85rem;
+}
+
+.aviso-inline {
+  background: #fff8e1;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.acciones-edicion {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+
+  button {
+    flex: 1;
+  }
+}
+
+.linea-tiempo {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  li {
+    position: relative;
+    padding: 8px 0 8px 24px;
+    font-size: 0.85rem;
+    color: var(--texto-suave);
+
+    .punto {
+      position: absolute;
+      left: 0;
+      top: 12px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--borde);
+    }
+
+    &.completado {
+      color: var(--exito);
+      font-weight: 600;
+
+      .punto {
+        background: var(--exito);
+      }
+    }
+
+    &.actual {
+      color: var(--advertencia);
+      font-weight: 600;
+
+      .punto {
+        background: var(--advertencia);
+      }
+    }
+  }
+}
+
+.volver {
+  display: inline-block;
+  margin-top: 20px;
+  text-decoration: none;
+  font-size: 0.85rem;
+}

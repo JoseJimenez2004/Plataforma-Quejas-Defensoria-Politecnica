@@ -1,0 +1,30 @@
+<div class="contenedor">
+  <div class="card">
+    <h2>Portal de Seguimiento de Quejas</h2>
+    <p class="subtitulo">Ingresa tus credenciales para gestionar tus trámites.</p>
+
+    <form (submit)="$event.preventDefault(); ingresar()">
+      <div class="input-group">
+        <label>Usuario / Correo</label>
+        <input type="email" [(ngModel)]="correo" name="correo" required placeholder="ejemplo@ipn.mx" />
+      </div>
+      <div class="input-group">
+        <label>Contraseña</label>
+        <input type="password" [(ngModel)]="password" name="password" required placeholder="********" />
+      </div>
+
+      @if (error) {
+        <p class="error">{{ error }}</p>
+      }
+
+      <button type="submit" class="btn-primary" [disabled]="cargando">
+        {{ cargando ? 'Ingresando…' : 'Iniciar Sesión' }}
+      </button>
+    </form>
+
+    <div class="footer-links">
+      <a routerLink="/portal/recuperar">¿Olvidaste tu contraseña?</a>
+      <p>¿No tienes cuenta? <a routerLink="/cuenta/crear">¡Regístrate aquí!</a></p>
+    </div>
+  </div>
+</div>

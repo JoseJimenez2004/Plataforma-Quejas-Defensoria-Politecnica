@@ -1,0 +1,224 @@
+/* Estilos globales - Defensoría de los Derechos Politécnicos */
+
+:root {
+  --guinda: #6c1d45;
+  --guinda-oscuro: #501533;
+  --guinda-vivo: #9d2449;
+  --guinda-suave: #f7eef1;
+  --negro-inst: #1a1a1a;
+  --crema: #f2ece0;
+  --gris-fondo: #f5f5f5;
+  --texto: #333;
+  --texto-suave: #666;
+  --borde: #ddd;
+  --exito: #2e7d32;
+  --advertencia: #b8860b;
+  --peligro: #c62828;
+}
+
+/* Utilidades institucionales compartidas (header/footer/secciones tipo gob.mx) */
+.section-title {
+  text-align: center;
+  font-size: 1.4rem;
+  color: var(--negro-inst);
+  margin-bottom: 28px;
+  font-weight: 700;
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 28px;
+  text-align: center;
+
+  .icon-grid-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--texto);
+    background: none;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 4px;
+
+    svg {
+      width: 46px;
+      height: 46px;
+      stroke: var(--guinda-vivo);
+    }
+
+    span {
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    &:hover span {
+      text-decoration: underline;
+    }
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--gris-fondo);
+  color: var(--texto);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--guinda);
+  margin: 0 0 0.5em 0;
+}
+
+a {
+  color: var(--guinda);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--guinda);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background-color: var(--guinda-oscuro);
+  }
+
+  &:disabled {
+    background-color: #b79aa8;
+    cursor: not-allowed;
+  }
+}
+
+.btn-secondary {
+  background-color: white;
+  color: var(--guinda);
+  border: 1px solid var(--guinda);
+  border-radius: 4px;
+  padding: 12px 20px;
+  font-size: 1rem;
+
+  &:hover {
+    background-color: #f7eef3;
+  }
+}
+
+.input-group {
+  text-align: left;
+  margin-bottom: 18px;
+
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--texto);
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid var(--borde);
+    border-radius: 4px;
+    background: #fafafa;
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+
+  .error {
+    margin-top: 4px;
+    margin-bottom: 0;
+  }
+}
+
+/* Mensaje de error visible (login, formularios, consultas) — antes era texto plano sin
+ * estilo cuando no estaba anidado en .input-group; ahora siempre se ve como alerta. */
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #fdecea;
+  border-left: 3px solid var(--peligro);
+  color: var(--peligro);
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-align: left;
+  margin: 8px 0 16px;
+
+  &::before {
+    content: '⚠';
+    flex-shrink: 0;
+  }
+}
+
+/* Banner informativo de contexto (explica qué hace una sección/pestaña, no es un error) */
+.info-banner {
+  background: var(--guinda-suave);
+  border-left: 3px solid var(--guinda-vivo);
+  color: var(--texto);
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  text-align: left;
+  margin: 0 0 16px;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  padding: 30px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &.recibida {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+
+  &.en-revision {
+    background: #fff8e1;
+    color: var(--advertencia);
+  }
+
+  &.finalizada {
+    background: #e8f5e9;
+    color: var(--exito);
+  }
+}

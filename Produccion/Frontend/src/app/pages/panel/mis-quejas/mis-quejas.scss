@@ -1,0 +1,50 @@
+.aviso-pendiente {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  margin-bottom: 20px;
+}
+
+.filtros {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  .input-group {
+    margin-bottom: 0;
+  }
+}
+
+.tabla-contenedor {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid var(--borde);
+    font-size: 0.85rem;
+  }
+
+  th {
+    color: var(--texto-suave);
+  }
+
+  a {
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .vacio {
+    text-align: center;
+    color: var(--texto-suave);
+  }
+}

@@ -1,0 +1,58 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: #1a1a1a;
+  color: white;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 24px;
+
+  .usuario {
+    font-size: 0.9rem;
+  }
+
+  .btn-cerrar {
+    background: var(--guinda);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+  }
+}
+
+.layout {
+  display: flex;
+  min-height: calc(100vh - 44px);
+}
+
+.sidebar {
+  width: 230px;
+  background: var(--guinda);
+  padding: 20px 0;
+  flex-shrink: 0;
+
+  a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    padding: 12px 24px;
+    font-size: 0.9rem;
+
+    &:hover,
+    &.activo {
+      background: rgba(255, 255, 255, 0.15);
+      font-weight: 600;
+    }
+  }
+}
+
+.contenido {
+  flex: 1;
+  padding: 30px;
+}

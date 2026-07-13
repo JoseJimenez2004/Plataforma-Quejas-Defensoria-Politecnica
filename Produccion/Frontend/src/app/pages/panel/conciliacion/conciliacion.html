@@ -1,0 +1,31 @@
+<h2>Acuerdos de Conciliación</h2>
+
+<div class="aviso-pendiente">
+  ⚠️ Todavía no existe backend para conciliación (propuestas, aceptar/rechazar). Esta vista es
+  solo el diseño de la UI, con datos de ejemplo.
+</div>
+
+<div class="card tabla-contenedor">
+  <table>
+    <thead>
+      <tr>
+        <th>Folio</th>
+        <th>Fecha de Registro</th>
+        <th>Asunto</th>
+        <th>Unidad Académica</th>
+        <th>Acuerdo a revisar</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (a of acuerdos; track a.folio) {
+        <tr>
+          <td>{{ a.folio }}</td>
+          <td>{{ a.fecha }}</td>
+          <td>{{ a.asunto }}</td>
+          <td>{{ a.unidadAcademica }}</td>
+          <td><a href="javascript:void(0)">Ver propuesta</a></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

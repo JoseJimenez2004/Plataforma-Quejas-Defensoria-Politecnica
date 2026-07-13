@@ -1,0 +1,58 @@
+.aviso-pendiente {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  margin-bottom: 20px;
+}
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.tarjeta {
+  text-align: center;
+
+  .numero {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--guinda);
+  }
+
+  .etiqueta {
+    font-size: 0.8rem;
+    color: var(--texto-suave);
+  }
+}
+
+.tabla-contenedor {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid var(--borde);
+    font-size: 0.85rem;
+  }
+
+  th {
+    color: var(--texto-suave);
+    font-weight: 600;
+  }
+
+  a {
+    text-decoration: none;
+    font-weight: 600;
+  }
+}
