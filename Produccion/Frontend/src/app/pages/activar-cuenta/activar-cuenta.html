@@ -1,5 +1,15 @@
 <div class="contenedor">
   <div class="card">
+    @if (modoPrefilled && !exito) {
+      <div class="pasos">
+        <span class="paso paso--hecho">1. Registro</span>
+        <span class="separador">›</span>
+        <span class="paso paso--hecho">2. Folio</span>
+        <span class="separador">›</span>
+        <span class="paso paso--actual">3. Activar Cuenta</span>
+      </div>
+    }
+
     <h2>Configuración de Acceso</h2>
     <p class="subtitulo">Establece tus credenciales para acceder al portal de seguimiento</p>
 
@@ -11,20 +21,70 @@
       <form (submit)="$event.preventDefault(); activar()">
         <div class="input-group">
           <label>Correo Electrónico</label>
-          <input type="email" [(ngModel)]="correo" name="correo" required />
+          <input
+            type="email"
+            [(ngModel)]="correo"
+            name="correo"
+            [readOnly]="modoPrefilled"
+            [class.campo-fijo]="modoPrefilled"
+            required
+          />
         </div>
-        <div class="input-group">
-          <label>Número de folio</label>
-          <input type="text" [(ngModel)]="numeroFolio" name="numeroFolio" placeholder="DDP-2026-XXXX" required />
-        </div>
+
+        @if (!modoPrefilled) {
+          <div class="input-group">
+            <label>Número de folio</label>
+            <input
+              type="text"
+              [(ngModel)]="numeroFolio"
+              name="numeroFolio"
+              placeholder="DDP-2026-XXXX"
+              required
+            />
+          </div>
+        }
+
         <div class="input-group">
           <label>Nueva Contraseña</label>
-          <input type="password" [(ngModel)]="password" name="password" required />
-          <p class="ayuda">Mínimo 8 caracteres, una mayúscula y un número.</p>
+          <div class="campo-password">
+            <input
+              [type]="mostrarPassword ? 'text' : 'password'"
+              [(ngModel)]="password"
+              name="password"
+              required
+            />
+            <button
+              type="button"
+              class="alternar-password"
+              (click)="mostrarPassword = !mostrarPassword"
+              [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              {{ mostrarPassword ? '🙈' : '👁️' }}
+            </button>
+          </div>
+          <app-password-requisitos [password]="password"></app-password-requisitos>
         </div>
         <div class="input-group">
           <label>Confirmar Contraseña</label>
-          <input type="password" [(ngModel)]="confirmarPassword" name="confirmarPassword" required />
+          <div class="campo-password">
+            <input
+              [type]="mostrarConfirmar ? 'text' : 'password'"
+              [(ngModel)]="confirmarPassword"
+              name="confirmarPassword"
+              required
+            />
+            <button
+              type="button"
+              class="alternar-password"
+              (click)="mostrarConfirmar = !mostrarConfirmar"
+              [attr.aria-label]="mostrarConfirmar ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              {{ mostrarConfirmar ? '🙈' : '👁️' }}
+            </button>
+          </div>
+          @if (confirmarPassword && confirmarPassword !== password) {
+            <span class="mensaje-campo">Las contraseñas no coinciden.</span>
+          }
         </div>
 
         @if (error) {

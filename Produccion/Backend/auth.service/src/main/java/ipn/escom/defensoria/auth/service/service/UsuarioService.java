@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ipn.escom.defensoria.auth.service.client.QuejasClient;
 import ipn.escom.defensoria.auth.service.model.ActivacionCuentaModel;
+import ipn.escom.defensoria.auth.service.model.QuejaResumenModel;
 
 @Service
 public class UsuarioService {
@@ -91,10 +92,18 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
+    // Requisitos: mínimo 8 caracteres, al menos una mayúscula y al menos un número. El resto
+    // de los caracteres ("." al final del lookahead) puede ser cualquier cosa: minúsculas,
+    // acentos y símbolos/caracteres especiales (!@#$%^&*, etc.) están permitidos explícitamente,
+    // no hay una lista blanca que los excluya.
     private void validarPassword(String p1) {
+        if (p1 == null || p1.isBlank()) {
+            throw new RuntimeException("La contraseña no puede estar vacía.");
+        }
         String regex = "^(?=.*[A-Z])(?=.*\\d).{8,}$";
         if (!p1.matches(regex)) {
-            throw new RuntimeException("La contraseña no cumple con los requisitos mínimos (8 caracteres, una mayúscula y un número).");
+            throw new RuntimeException(
+                    "La contraseña no cumple con los requisitos mínimos: 8 caracteres, una mayúscula y un número. Puedes usar también símbolos y caracteres especiales.");
         }
     }
 
@@ -131,13 +140,44 @@ public class UsuarioService {
 
         if (usuario.getId() == null) {
             usuario.setCorreoInstitucional(model.getCorreo());
-            usuario.setBoleta("PENDIENTE"); // Se podría traer del quejas-service luego
-            usuario.setNombre("Ciudadano Defensoría"); // Se podría traer del quejas-service luego
+            usuario.setBoleta("PENDIENTE");
+            usuario.setNombre("Ciudadano Defensoría");
+
+            // Traemos el nombre y número de identificación reales de la queja que ya validamos
+            // arriba, en vez de dejar los placeholders. Si por algo falla esta llamada (la
+            // queja es de un flujo autenticado viejo sin esos campos, error de red, etc.) no
+            // tumbamos la activación de la cuenta — nos quedamos con el placeholder.
+            try {
+                QuejaResumenModel resumen = quejasClient.obtenerPorFolio(model.getNumeroFolio(), model.getCorreo());
+                String nombreCompleto = construirNombre(resumen);
+                if (nombreCompleto != null) {
+                    usuario.setNombre(nombreCompleto);
+                }
+                if (resumen.getNumeroIdentificacionQuejoso() != null && !resumen.getNumeroIdentificacionQuejoso().isBlank()) {
+                    usuario.setBoleta(resumen.getNumeroIdentificacionQuejoso());
+                }
+            } catch (RuntimeException ex) {
+                // No es crítico: la cuenta se activa igual, solo con datos genéricos.
+            }
         }
 
         usuario.setPassword(passwordEncoder.encode(model.getPassword()));
         usuario.setActivo(true);
 
         usuarioRepository.save(usuario);
+    }
+
+    private String construirNombre(QuejaResumenModel resumen) {
+        if (resumen.getNombreQuejoso() == null || resumen.getNombreQuejoso().isBlank()) {
+            return null;
+        }
+        StringBuilder nombre = new StringBuilder(resumen.getNombreQuejoso());
+        if (resumen.getApellidoPaternoQuejoso() != null && !resumen.getApellidoPaternoQuejoso().isBlank()) {
+            nombre.append(' ').append(resumen.getApellidoPaternoQuejoso());
+        }
+        if (resumen.getApellidoMaternoQuejoso() != null && !resumen.getApellidoMaternoQuejoso().isBlank()) {
+            nombre.append(' ').append(resumen.getApellidoMaternoQuejoso());
+        }
+        return nombre.toString();
     }
 }

@@ -1,61 +1,71 @@
 <h2>Gestión de Trámites</h2>
 
-<div class="aviso-pendiente">
-  ⚠️ Esta vista usa datos de ejemplo: el backend todavía no tiene un endpoint para listar las
-  quejas de un usuario. Ver <code>docs/HALLAZGOS.md</code>.
-</div>
+@if (cargando) {
+  <div class="tarjetas">
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="card tarjeta tarjeta--esqueleto"></div>
+    }
+  </div>
+} @else {
+  <div class="tarjetas">
+    <div class="card tarjeta" style="--retraso: 0">
+      <span class="numero">{{ totales }}</span>
+      <span class="etiqueta">Totales</span>
+    </div>
+    <div class="card tarjeta" style="--retraso: 1">
+      <span class="numero">{{ enProceso }}</span>
+      <span class="etiqueta">En Proceso</span>
+    </div>
+    <div class="card tarjeta" style="--retraso: 2">
+      <span class="numero">{{ finalizadas }}</span>
+      <span class="etiqueta">Finalizadas</span>
+    </div>
+    <div class="card tarjeta" style="--retraso: 3">
+      <span class="numero">0</span>
+      <span class="etiqueta">Acciones Pendientes</span>
+    </div>
+  </div>
 
-<div class="tarjetas">
-  <div class="card tarjeta">
-    <span class="numero">{{ totales }}</span>
-    <span class="etiqueta">Totales</span>
+  <div class="card tabla-contenedor">
+    @if (quejas.length) {
+      <table>
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>Fecha de Ingreso</th>
+            <th>Asunto</th>
+            <th>Estatus actual</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (q of quejas; track q.numeroFolio; let i = $index) {
+            <tr [style.--retraso]="i">
+              <td>{{ q.numeroFolio }}</td>
+              <td>{{ q.fechaCreacion | slice: 0 : 10 }}</td>
+              <td>{{ q.motivo }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [class.recibida]="etiqueta(q.estatus) === 'Recibida'"
+                  [class.en-revision]="etiqueta(q.estatus) === 'En Revisión'"
+                  [class.finalizada]="etiqueta(q.estatus) === 'Finalizada'"
+                >
+                  {{ etiqueta(q.estatus) }}
+                </span>
+              </td>
+              <td>
+                <a [routerLink]="['/panel/mis-quejas', q.numeroFolio]">Ver</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <div class="vacio-estado">
+        <p>Todavía no tienes quejas registradas.</p>
+        <a routerLink="/panel/nueva-queja" class="btn-primary">Levantar una queja</a>
+      </div>
+    }
   </div>
-  <div class="card tarjeta">
-    <span class="numero">{{ enProceso }}</span>
-    <span class="etiqueta">En Proceso</span>
-  </div>
-  <div class="card tarjeta">
-    <span class="numero">{{ finalizadas }}</span>
-    <span class="etiqueta">Finalizadas</span>
-  </div>
-  <div class="card tarjeta">
-    <span class="numero">0</span>
-    <span class="etiqueta">Acciones Pendientes</span>
-  </div>
-</div>
-
-<div class="card tabla-contenedor">
-  <table>
-    <thead>
-      <tr>
-        <th>Folio</th>
-        <th>Fecha de Ingreso</th>
-        <th>Asunto</th>
-        <th>Estatus actual</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (q of quejasEjemplo; track q.folio) {
-        <tr>
-          <td>{{ q.folio }}</td>
-          <td>{{ q.fecha }}</td>
-          <td>{{ q.asunto }}</td>
-          <td>
-            <span
-              class="badge"
-              [class.recibida]="q.estatus === 'Recibida'"
-              [class.en-revision]="q.estatus === 'En Revisión'"
-              [class.finalizada]="q.estatus === 'Finalizada'"
-            >
-              {{ q.estatus }}
-            </span>
-          </td>
-          <td>
-            <a [routerLink]="['/panel/mis-quejas', q.folio]">Ver</a>
-          </td>
-        </tr>
-      }
-    </tbody>
-  </table>
-</div>
+}

@@ -9,12 +9,13 @@ Este README es el punto de entrada. El detalle está en `docs/`.
 
 ```
 Produccion/
-├── Backend/                  # Los 3 microservicios (Spring Boot / Maven) + su config de producción
+├── Backend/                  # Los 4 microservicios (Spring Boot / Maven) + su config de producción
 │   ├── auth.service/         # Login, JWT, activación de cuenta, recuperación de contraseña
 │   ├── queja-service/        # Registro y consulta de quejas, folios, evidencias
 │   ├── notificaciones-service/ # Envío de correos (activación, códigos, avisos)
+│   ├── catalogo-service/     # Catálogos institucionales (dependencias del IPN, puerto 8086)
 │   ├── config-files/         # application.yml "de producción" por servicio (montados como volumen en el VPS)
-│   └── podman-compose.sh     # Build + despliegue de los 3 microservicios en Podman
+│   └── podman-compose.sh     # Build + despliegue de los 4 microservicios en Podman
 ├── Frontend/                  # Proyecto Angular (código fuente) — reconstruido de cero
 │   └── src/app/...            # ver Frontend/README.md para instalar/compilar/desplegar
 ├── front/                    # Destino del BUILD estático (lo que sirve Nginx), aún vacío
@@ -33,9 +34,12 @@ Produccion/
 
 ## Estado actual (2026-07-12)
 
-- **Backend**: funcional. Los 3 microservicios corren en Podman sobre la VPS 2.25.78.22
-  (Hostinger), con Postgres 16 en el mismo servidor, cada uno con su propia imagen Docker.
-  Puertos 8083-8085 restringidos por IP de origen (solo accesibles desde la VPS frontend).
+- **Backend**: funcional. Ahora son **4 microservicios** corriendo en Podman sobre la VPS
+  2.25.78.22 (Hostinger), con Postgres 16 en el mismo servidor, cada uno con su propia imagen
+  Docker: `auth-service` (8083), `quejas-service` (8084), `notificaciones-service` (8085) y el
+  nuevo `catalogo-service` (8086, catálogo de dependencias del IPN). Puertos 8083-8086
+  restringidos por IP de origen (solo accesibles desde la VPS frontend). Los 4 exponen
+  Swagger/OpenAPI 3 en `/swagger-ui.html`.
 - **Frontend**: reconstruido en `Frontend/` — todas las pantallas del PDF están construidas,
   compiladas y desplegadas. Login/recuperar/activar/consultar-folio/nueva-queja conectados al
   backend real. Rediseño visual institucional (inspirado en ipn.mx/defensoria) aplicado al
@@ -57,7 +61,7 @@ Produccion/
 | Dominio | https://defensoria-escom.ddns.net (No-IP + Certbot, HTTP redirige a HTTPS) |
 | IP pública VPS backend + BD | 2.25.78.22 |
 | IP pública VPS frontend | 2.25.64.47 |
-| Puertos backend | auth 8083 · quejas 8084 · notificaciones 8085 (solo accesibles desde 2.25.64.47) |
+| Puertos backend | auth 8083 · quejas 8084 · notificaciones 8085 · catálogo 8086 (solo accesibles desde 2.25.64.47) |
 | Base de datos | Postgres 16, puerto 5432, `defensoria_db` |
 | Frontend | `defensoria-web` (Nginx interno :8090) + `router-nginx` (proxy público :80/:443) |
 

@@ -9,29 +9,28 @@
   </div>
 } @else {
   <h2>Levantar Nueva Queja</h2>
-  <div class="aviso-pendiente">
-    Las quejas sobre incidentes ocurridos hace más de 90 días no serán procesadas.
-  </div>
 
-  <form (submit)="$event.preventDefault(); enviar()" class="card">
-    <h3>Detalles del Hecho</h3>
+  <form (submit)="$event.preventDefault(); enviar()" class="card formulario-queja">
+    <h3 class="paso">Detalles del Hecho</h3>
     <div class="fila">
       <div class="input-group">
         <label>Lugar donde sucedieron los hechos</label>
         <select [(ngModel)]="unidadAcademica" name="unidadAcademica" required>
-          <option value="">Seleccione una UA</option>
-          <option value="ESCOM">ESCOM</option>
-          <option value="ESIA">ESIA</option>
-          <option value="ESCA">ESCA</option>
-          <option value="ENCB">ENCB</option>
+          <option value="">
+            {{ cargandoDependencias ? 'Cargando dependencias…' : 'Seleccione una dependencia' }}
+          </option>
+          @for (dep of dependencias; track dep.clave) {
+            <option [value]="dep.clave">{{ dep.nombre }}</option>
+          }
         </select>
       </div>
-      <div class="input-group">
+      <div class="input-group input-fecha">
         <label>Fecha de los hechos</label>
-        <input type="date" [(ngModel)]="fechaHechos" name="fechaHechos" />
+        <app-datepicker [(ngModel)]="fechaHechos" name="fechaHechos" [max]="fechaMaxima"></app-datepicker>
       </div>
     </div>
 
+    <h3 class="paso">Datos del Denunciado</h3>
     <div class="fila">
       <div class="input-group">
         <label>Nombre del denunciado</label>
@@ -55,10 +54,17 @@
     </div>
 
     <div class="input-group">
-      <label>Adjunta un archivo (PDF, JPG, PNG)</label>
-      <input type="file" (change)="onArchivoSeleccionado($event)" />
-      @if (archivo) {
-        <p class="archivo-nombre">{{ archivo.name }}</p>
+      <label>Adjunta archivos (PDF, JPG, PNG, MP4, MP3) — puedes elegir varios</label>
+      <input type="file" multiple (change)="onArchivosSeleccionados($event)" />
+      @if (archivos.length) {
+        <ul class="lista-archivos">
+          @for (archivo of archivos; track archivo.name; let i = $index) {
+            <li>
+              <span>{{ archivo.name }}</span>
+              <button type="button" class="quitar" (click)="quitarArchivo(i)" aria-label="Quitar archivo">✕</button>
+            </li>
+          }
+        </ul>
       }
     </div>
 
@@ -72,4 +78,10 @@
       </button>
     </div>
   </form>
+
+  <app-nota-flotante titulo="Nota importante">
+    <ul>
+      <li>Las quejas sobre incidentes ocurridos hace más de 90 días no serán procesadas.</li>
+    </ul>
+  </app-nota-flotante>
 }

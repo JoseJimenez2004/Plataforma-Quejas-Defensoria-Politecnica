@@ -5,7 +5,7 @@
 # ==============================================================================
 
 BASE_DIR="/apps/aplicaciones/defensoria/back"
-SERVICIOS=("auth-service" "quejas-service" "notificaciones-service")
+SERVICIOS=("auth-service" "quejas-service" "notificaciones-service" "catalogo-service")
 
 # Mapa de puertos por microservicio
 get_port() {
@@ -13,6 +13,7 @@ get_port() {
         "auth-service") echo 8083 ;;
         "quejas-service") echo 8084 ;;
         "notificaciones-service") echo 8085 ;;
+        "catalogo-service") echo 8086 ;;
         *) echo 0 ;;
     esac
 }
@@ -27,7 +28,7 @@ mostrar_ayuda() {
     echo "  delete                  Detiene y elimina TODOS los microservicios."
     echo "  delete-container <srv>  Detiene y elimina UN microservicio especifico."
     echo ""
-    echo "Servicios validos: auth-service, quejas-service, notificaciones-service"
+    echo "Servicios validos: auth-service, quejas-service, notificaciones-service, catalogo-service"
 }
 
 # Construir una imagen dedicada por microservicio (cada uno con su propio tag,

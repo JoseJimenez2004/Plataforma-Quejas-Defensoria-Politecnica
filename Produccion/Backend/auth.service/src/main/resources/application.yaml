@@ -1,6 +1,6 @@
 spring:
   application:
-    name: auth.serviceç
+    name: auth.service
   datasource:
     url: ${DB_URL}
     username: ${DB_USER}
@@ -33,3 +33,9 @@ mail:
 
 service:
     url: ${QUEJAS_SERVICE_URL:http://localhost:8084} # Fallback a localhost si no existe la variable
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

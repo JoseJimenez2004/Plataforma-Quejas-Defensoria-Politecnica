@@ -18,12 +18,21 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      # Por archivo (antes bastaba con 1 evidencia); ahora pueden ser varios en la misma
+      # petición, así que max-request-size (el total combinado) se subió también.
+      # NOTA: el overhead de multipart (boundaries, headers por parte) hace que el
+      # Content-Length real sea mayor a la suma de los archivos — se deja margen extra.
+      max-file-size: 30MB
+      max-request-size: 100MB
 
 jwt:
   secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
 
-# Ruta local de pruebas para las evidencias de las quejas (cambia según tu OS)
-storage:
-  location: ./uploads
+# NOTA: ya no se usa almacenamiento en disco para evidencias — se guardan completas como
+# BYTEA en la tabla queja_evidencias (ver entity/QuejaEvidencia.java y docs/CAMBIOS.md).
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

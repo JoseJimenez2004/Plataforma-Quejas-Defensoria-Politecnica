@@ -32,6 +32,16 @@ public class WebConfig {
             .authorizeHttpRequests(auth -> auth
                 // Dejamos público el endpoint que llamará OpenFeign desde el auth-service
                 .requestMatchers("/api/quejoso/quejas/validar-folio").permitAll()
+                // Registro público de quejas (sin sesión iniciada) — ver RegistroQuejaPublicaRequest
+                .requestMatchers("/api/quejoso/quejas/registro-publico").permitAll()
+                // Detalle público por folio+correo (misma llave que validar-folio) — lo usan
+                // "Consultar queja" y auth-service para poblar nombre/boleta reales
+                .requestMatchers("/api/quejoso/quejas/folio/**").permitAll()
+                .requestMatchers(
+                    "/v3/api-docs/**",
+                    "/swagger-ui.html",
+                    "/swagger-ui/**"
+                ).permitAll()
                 // Cualquier otra gestión de quejas requerirá token
                 .anyRequest().authenticated()
             )

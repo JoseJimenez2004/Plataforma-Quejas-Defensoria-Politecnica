@@ -386,3 +386,360 @@ curl -I http://localhost:8090/
 ```
 
 Y verificar en el navegador contra `https://defensoria-escom.ddns.net`.
+
+### Revertida la fusión de "Seguimiento" + "Iniciar sesión" — no gustó visualmente
+
+Tras compilar y ver la fusión en pestañas en vivo, el usuario reportó que se veía "feo"
+comparado con el diseño de 3 cards separados de antes. Se revirtió el cambio estructural,
+conservando lo demás:
+
+- **`pages/inicio/`**: el hero vuelve a tener **3 cards**: "Presentar una queja" (igual),
+  "Seguimiento de queja" (correo + folio + botón, sin pestañas), e "Iniciar sesión" (vuelve a
+  ser un link simple a `/portal/login`, ya no tiene formulario de login embebido). Se
+  eliminaron `accesoTab`, `seleccionarAccesoTab()`, `loginCorreo`, `loginPassword`,
+  `loginCargando`, `loginError`, `ingresar()` y la dependencia de `AuthService` en `Inicio`
+  (vuelve a ser el mismo componente ligero de antes).
+- **Se conservó** la validación mejorada de `consultar()` (mensajes claros si faltan datos o
+  el correo no tiene formato válido) y la corrección global de estilos de `.error` en
+  `styles.scss` (esa sí aplicaba a varias pantallas, no solo a Inicio, y no tenía que ver con
+  lo que se veía "feo").
+- **Verificación**: `ng build --configuration development` compiló limpio; el chunk de
+  `inicio` volvió a su tamaño original (~26 kB, antes había subido a ~34 kB por la lógica de
+  login agregada).
+
+**Pendiente**: redesplegar con el mismo pipeline de arriba para que el usuario vea el Inicio
+de vuelta a como le gustaba.
+
+## Nueva fase: lógica fuerte de backend, nuevos microservicios/endpoints y mejoras de BD
+
+A partir de aquí arranca la siguiente etapa del proyecto: trabajar los microservicios de
+verdad (nuevos endpoints, posibles microservicios nuevos, mejoras de base de datos) y del
+frontend en consecuencia. Primer paso: catálogo de dependencias del IPN.
+
+### Catálogo de dependencias del IPN (tabla `dependencias` en `queja-service`)
+
+El formulario de "Presentar una queja" tiene una sección de "datos de la queja" que necesita
+un selector real de la dependencia del IPN involucrada, en vez de texto libre. El usuario
+proporcionó el índice completo del manual de organización del IPN (7 capturas de pantalla,
+listando ~200 dependencias con su página) y pidió transcribirlo a un catálogo, agregando
+además los dos planteles de nueva creación que no están en ese manual: **CECyT No. 18
+"Zacatecas"** (https://cecyt18.ipn.mx/) y **CECyT No. 19 "Leona Vicario"**
+(https://cecyt19.ipn.mx/).
+
+- **Transcripción**: 208 dependencias, organizadas jerárquicamente con una clave propia
+  legible (ej. `SA.1.1` = Secretaría Académica → Dirección de Educación Media Superior →
+  División de Procesos Formativos) en vez de depender de ids autogenerados, para que la
+  carga inicial (seed) sea legible y fácil de auditar. Categorías cubiertas: los órganos y
+  áreas de la administración central (secretarías, direcciones, divisiones, coordinaciones),
+  y todas las unidades académicas (CECyT/CET de nivel medio superior, ESIME/ESIA/ESCOM/etc.
+  de nivel superior, centros de investigación, centros de educación continua, unidades de
+  apoyo educativo y de innovación, y el cluster politécnico de Veracruz).
+- **Nota de transparencia**: el límite entre "Rama de Ciencias Médico Biológicas" y "Rama de
+  Ciencias Sociales y Administrativas" (medio superior, CECyT 5/12/13/14) no se distinguía
+  con claridad en el escaneo entre las páginas 165-167; se usó la clasificación pública
+  conocida de esos planteles y se marcó con una nota en el catálogo (`notas`) para que se
+  pueda verificar contra el manual original si hace falta.
+- **Entregable pedido por el usuario**: `dependencias_ipn.csv` (208 filas, columnas: `clave`,
+  `clave_padre`, `nombre`, `abreviatura`, `tipo`, `categoria`, `nivel`, `pagina_manual`,
+  `activo`, `notas`) — guardado en `Backend/queja-service/src/main/resources/seed/` y
+  entregado también directamente al usuario.
+- **Entidad JPA nueva**: `Backend/queja-service/.../entity/Dependencia.java` (mismo estilo
+  que `Queja.java`: Lombok `@Data`, `@Entity @Table(name = "dependencias")`) +
+  `DependenciaRepository.java` (`findByClave`, `findByActivoTrueOrderByNombreAsc`,
+  `findByActivoTrueAndTipoOrderByNombreAsc`). Como `queja-service` usa
+  `hibernate.ddl-auto: update` (no hay Flyway/Liquibase en el proyecto), la tabla
+  `dependencias` se crea sola en el próximo arranque del servicio — no hace falta escribir
+  una migración a mano.
+- **Seed de datos**: `Backend/queja-service/src/main/resources/seed/dependencias_seed.sql`
+  (generado automáticamente a partir del CSV, con escape de comillas) — son 208 sentencias
+  `INSERT` para correr **una sola vez, después de que el servicio arranque con la entidad
+  nueva y cree la tabla vacía**.
+- **Limitación del entorno**: igual que con Angular al inicio del proyecto, este sandbox no
+  tiene Maven instalado ni acceso a Maven Central (`wget: Failed to fetch
+  https://repo.maven.apache.org/...`), así que no se pudo correr `mvn compile` para verificar
+  en automático. El código sigue exactamente el patrón de `Queja.java`/`QuejaRepository.java`
+  ya existentes y funcionando, pero falta que el usuario confirme que compila.
+
+**Pendiente**: (superado por la siguiente entrada — el catálogo se movió a su propio
+microservicio antes de desplegarse, ver abajo).
+
+### Catálogo movido a un microservicio propio (`catalogo-service`, puerto 8086) + Swagger en los 4
+
+Antes de desplegar nada, se le preguntó al usuario si prefería mantener el catálogo dentro de
+`queja-service` (recomendación inicial, por overhead operativo y porque hoy los 3 servicios ya
+comparten una sola base de datos) o separarlo en su propio microservicio pensando en
+crecimiento futuro. El usuario decidió separarlo: "mejor pensemos a futuro, sé que ahorita
+sería engorroso, pero mejor tener los problemas ahorita". En el mismo mensaje pidió agregar
+Swagger/OpenAPI 3 a los 4 microservicios.
+
+**Nuevo microservicio `Backend/catalogo-service/`** (scaffold completo, calcado del patrón de
+`queja-service`):
+- `pom.xml` — Spring Boot 3.5.16, Java 21, mismas dependencias que queja-service
+  (`spring-boot-starter-data-jpa/security/web`, `postgresql`, `lombok`, `jjwt` 0.12.6) más
+  `springdoc-openapi-starter-webmvc-ui` 2.8.5.
+- `entity/Dependencia.java` + `repository/DependenciaRepository.java` — movidos tal cual desde
+  `queja-service` (se **eliminaron** de ahí para no duplicar).
+- `service/DependenciaService.java` + `controller/DependenciaController.java` — nuevo:
+  `GET /api/catalogos/dependencias` (con filtro opcional `?tipo=`) y
+  `GET /api/catalogos/dependencias/{clave}`.
+- `config/WebConfig.java` + `JwtAuthenticationFilter.java` + `JwtUtil.java` — mismo patrón que
+  queja-service (comparte el mismo `jwt.secret`), con `/api/catalogos/**` y las rutas de
+  Swagger marcadas `permitAll()` — cualquier futuro endpoint de administración del catálogo
+  (crear/editar dependencias) sí requeriría JWT.
+- `config/OpenApiConfig.java` — metadata de Swagger (título, descripción, esquema `bearerAuth`).
+- `resources/application.yaml` (dev, puerto 8086) y `resources/seed/dependencias_ipn.csv` +
+  `dependencias_seed.sql` — movidos desde `queja-service`.
+- `Backend/config-files/catalogo-service/config/catalogo-service.yml` — config de producción
+  nueva, mismo patrón que `quejas-service.yml` (Postgres por IP pública `2.25.78.22`, no
+  `localhost`, porque los contenedores backend no usan `--network host`).
+
+**Swagger/OpenAPI 3 en los 4 microservicios**:
+- `auth.service`: ya tenía las rutas de Swagger permitidas en su `WebConfig` (alguien las había
+  dejado listas de antes) — solo faltaba la dependencia en el `pom.xml`. Se agregó, más
+  `config/OpenApiConfig.java`.
+- `queja-service`: se agregó la dependencia + `OpenApiConfig.java` + se agregaron las 3 rutas
+  de Swagger (`/v3/api-docs/**`, `/swagger-ui.html`, `/swagger-ui/**`) como `permitAll()` en su
+  `WebConfig` existente.
+- `notificaciones-service`: **no tenía ningún `WebConfig`** (ver hallazgo nuevo abajo). Se creó
+  uno por primera vez, con las rutas de Swagger públicas y todo lo demás autenticado (mismo
+  comportamiento restrictivo que ya tenía por default de Spring Security, solo se le agregó la
+  excepción de Swagger). Más `OpenApiConfig.java`.
+- `catalogo-service`: incluido desde el scaffold inicial.
+- Los 4 quedan con Swagger UI en `/swagger-ui.html` y el spec en `/v3/api-docs` — se agregó el
+  bloque `springdoc.swagger-ui.path` / `springdoc.api-docs.path` en los 4 `application.yaml` de
+  desarrollo y en los 4 `config-files/*/config/*.yml` de producción, por explicitud (son los
+  valores por defecto de todos modos).
+
+**Infraestructura actualizada para el 4to servicio**:
+- `Backend/podman-compose.sh`: `catalogo-service` agregado al arreglo `SERVICIOS` y a
+  `get_port()` (puerto 8086).
+- **Pendiente en la VPS backend** (no ejecutado, son pasos que el usuario debe correr):
+  1. Compilar los 4 microservicios (`mvn clean package -DskipTests` en cada uno) — en
+     particular `queja-service` (por la limpieza de `Dependencia`) y el nuevo `catalogo-service`.
+  2. Subir los `.jar` a `/apps/aplicaciones/defensoria/back/artifact/`, respetando el nombre
+     que espera `podman-compose.sh`: `quejas-service.jar`, `catalogo-service.jar`, etc.
+  3. `bash podman-compose.sh up-container catalogo-service` (crea la imagen, el contenedor, y
+     Hibernate crea sola la tabla `dependencias`) y
+     `bash podman-compose.sh up-container quejas-service` (para que compile sin la entidad que
+     se le quitó).
+  4. Abrir el puerto **8086** en el firewall de hPanel de la VPS backend, restringido a la IP
+     de la VPS frontend (`2.25.64.47`) — mismo patrón que 8083-8085.
+  5. Correr el seed: `psql -U postgres -d defensoria_db -f dependencias_seed.sql`.
+  6. Agregar en `router.conf` (VPS frontend, en **ambos** bloques `server` — el de `:80` ya
+     solo redirige, pero el de `:443` sí necesita la ruta nueva):
+     ```nginx
+     location /api/catalogos/ {
+         proxy_pass http://2.25.78.22:8086;
+         proxy_set_header Host $host;
+         proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+         proxy_set_header X-Forwarded-Proto $scheme;
+     }
+     ```
+     y `podman restart router-nginx`.
+  7. Verificar: `curl -I https://defensoria-escom.ddns.net/api/catalogos/dependencias` debe
+     regresar el JSON con las 208 dependencias.
+- **Limitación del entorno (otra vez)**: no se pudo compilar ninguno de los 4 microservicios en
+  este sandbox (sin Maven ni acceso a Maven Central) para confirmar que el código nuevo/movido
+  compila. Sigue exactamente los patrones ya usados en el proyecto, pero falta la confirmación
+  real del usuario.
+
+**Pendiente para después**: conectar el frontend (`Frontend/src/app/pages/panel/nueva-queja` y
+`registro-queja-publico`) al catálogo real (`GET /api/catalogos/dependencias`) en vez de texto
+libre, una vez que el usuario confirme que el endpoint responde en producción.
+
+### Endpoint del catálogo confirmado en producción + formulario de registro conectado
+
+El usuario confirmó `curl -I https://defensoria-escom.ddns.net/api/catalogos/dependencias` →
+`200 OK` con JSON — la cadena completa (Postgres → `catalogo-service` → `router-nginx` →
+HTTPS) quedó verificada end-to-end. De inmediato pidió dos ajustes al formulario público de
+registro de queja: reacomodar el layout (lo sentía "mal acomodado") y agregar un campo para el
+número de boleta o de empleado.
+
+- **`proxy.conf.json`**: se agregó la ruta `/api/catalogos` → `2.25.78.22:8086` para desarrollo
+  local (ya estaban `/api/auth`, `/api/quejoso`, `/api/notificaciones`).
+- **`core/models/catalogo.models.ts`** + **`core/services/catalogo.service.ts`** (nuevos):
+  `CatalogoService.listarDependencias(tipo?)` — `GET /api/catalogos/dependencias`, con filtro
+  opcional por `tipo` (se usa `tipo=Unidad Académica` para no mezclar el selector de "lugar de
+  los hechos" con divisiones administrativas internas del catálogo).
+- **`pages/registro-queja-publico/`**:
+  - El `<select>` de "Lugar donde sucedieron los hechos" pasó de 4 opciones hardcodeadas
+    (ESCOM/ESIA/ESCA/ENCB) a las ~50 Unidades Académicas reales del catálogo, cargadas al
+    entrar a la página (`ngOnInit`), con manejo de error si el catálogo no responde.
+  - Se reordenó "Datos del Quejoso": Nombre/Apellidos y Correo se quedan juntos; Fecha de
+    nacimiento pasó a su propia fila (antes estaba emparejada de forma un poco arbitraria con
+    la identificación institucional); "Identificación institucional" (alumno/empleado) ahora
+    va emparejada con el campo nuevo **"Número de boleta"/"Número de empleado"** — el rótulo y
+    el placeholder cambian dinámicamente según el radio seleccionado (`etiquetaNumeroIdentificacion`).
+  - Este campo (`numeroBoletaEmpleado`) todavía no se envía a ningún backend porque el registro
+    público sigue bloqueado por el mismo gap documentado (`mensajeBackendPendiente`) — cuando
+    se construya el endpoint público de registro, este dato ya está capturado en el formulario.
+- **Verificación**: `ng build --configuration development` compiló limpio (chunk de
+  `registro-queja-publico` subió de ~35 kB a ~39 kB por el nuevo servicio + lógica).
+
+**Pendiente**: recompilar/redesplegar el frontend para ver el catálogo real en el selector, y
+confirmar visualmente el nuevo acomodo del formulario.
+
+## 2026-07-12 (continuación) — Retroalimentación de usuario: evidencias múltiples en BD + rediseño visual
+
+El usuario probó lo anterior en producción y reportó varias observaciones en un solo mensaje:
+el catálogo del selector no traía todas las inserciones, los formularios se veían "desacomodados
+y muy feos", el input de fecha era "muy simple", el modal de datos del tutor se veía feo y no
+dejaba constancia visual de que ya se habían capturado esos datos, solo se podía adjuntar un
+archivo (y preguntó dónde se guarda, porque lo va a necesitar después), y la caja de "Nota
+importante" debía dejar de ser estática y convertirse en un widget flotante de ayuda. También
+preguntó por qué aparece el mensaje "Esta función todavía no está disponible" al enviar el
+formulario público.
+
+Antes de implementar se le presentaron 3 preguntas de decisión (catálogo completo vs. filtrado,
+un archivo vs. varios, mejorar el `<input type="date">` nativo vs. Angular Material) y una
+cuarta sobre dónde guardar los archivos (filesystem+metadata vs. BYTEA en Postgres). El usuario
+eligió: catálogo completo (208), varios archivos guardados en la base de datos, mejorar el input
+nativo con CSS (no Angular Material), y el archivo completo dentro de Postgres como BYTEA.
+
+### Backend (`queja-service`) — evidencias múltiples en BYTEA
+- Nueva entidad `QuejaEvidencia` (`queja_evidencias`): `id`, `queja` (FK), `nombreArchivo`,
+  `tipoMime`, `tamanioBytes`, `contenido` (`byte[]`, columna `bytea` explícita — **sin** `@Lob`,
+  para evitar que Hibernate 6 la mapee como `oid` en Postgres) y `fechaSubida`.
+- `Queja` ahora tiene `@OneToMany` a `QuejaEvidencia` (cascada + orphanRemoval); el campo viejo
+  `rutaEvidencia` (ruta en disco) queda marcado `@Deprecated`, ya no se escribe.
+- `QuejaService.registrarQueja(...)` cambió su firma de un solo `MultipartFile archivo` a
+  `List<MultipartFile> archivos`; se eliminó por completo el guardado en disco
+  (`guardarArchivo`/`storage.location`) — todo el contenido se lee a `byte[]` y se persiste en
+  Postgres junto con la queja.
+- `application.yaml` / `quejas-service.yml`: `max-file-size` 10MB→20MB, `max-request-size`
+  10MB→60MB (para permitir varios archivos por queja).
+
+### Frontend — soporte de múltiples archivos
+- `queja.service.ts`: `registrarQueja(...)` ahora envía cada archivo bajo la misma clave
+  `archivos` repetida en el `FormData` (antes una sola clave `archivo`).
+- `nueva-queja` (panel autenticado) y `registro-queja-publico`: el `<input type="file">` ahora
+  tiene `multiple`, con una lista `<ul class="lista-archivos">` de los archivos elegidos y botón
+  "✕" para quitar uno antes de enviar.
+
+### Frontend — rediseño visual de `registro-queja-publico`
+- **Catálogo sin filtrar**: el selector de "Lugar donde sucedieron los hechos" ahora llama
+  `listarDependencias()` sin el parámetro `tipo`, mostrando las 208 dependencias completas.
+- **Nota importante → widget flotante**: se quitó la caja estática siempre visible; ahora hay un
+  botón circular fijo (esquina inferior derecha) que abre/cierra un panel flotante con el mismo
+  contenido, controlado por `mostrarNotaFlotante`/`toggleNotaFlotante()`.
+- **Banner de confirmación de tutor**: cuando se confirman los datos del tutor
+  (`confirmarTutor()`), aparece un banner persistente en el formulario ("Datos del tutor/adulto
+  responsable capturados: [nombre]") con botón "Editar" (`editarTutor()`) para reabrir el modal.
+  Antes no había ninguna indicación visual de que esos datos ya estaban capturados.
+  - Modal del tutor: se le agregó un `modal-header` con título + botón de cerrar, y se restyleó
+    con los colores institucionales (guinda) en vez del estilo genérico anterior.
+- **Input de fecha nativo mejorado con CSS** (decisión explícita del usuario — no Angular
+  Material): borde, radio, sombra de foco y color del ícono del calendario ajustados a la
+  paleta institucional vía `::-webkit-calendar-picker-indicator`.
+- **Verificación**: `ng build --configuration development` compiló limpio.
+
+### Aclaración: mensaje "Esta función todavía no está disponible"
+No es un error — es un aviso a propósito. El backend actual (`queja-service`) solo expone
+`POST /api/quejoso/quejas/registrar`, protegido por JWT, y toma el correo del quejoso del token
+de sesión. El formulario público (`registro-queja-publico`) está pensado para gente sin cuenta,
+así que no hay token que asociar a la queja — el backend no tiene todavía un endpoint público/
+anónimo que acepte los datos del quejoso directamente en el cuerpo de la petición. Está
+documentado desde antes en `docs/HALLAZGOS.md` y sigue como tarea pendiente (#31 en la lista de
+tareas: "Implementar endpoints de backend faltantes").
+
+**Pendiente**: desplegar backend (`queja-service` recompilado) y frontend; agregar
+`client_max_body_size` en `router.conf` para que Nginx no rechace las peticiones multipart más
+grandes (varios archivos, hasta 60MB).
+
+## 2026-07-13 — Segunda ronda de pulido visual + componente compartido de nota flotante
+
+El usuario probó el sitio (todavía con el build viejo, antes de subir los cambios de esta
+sesión) y reportó que los formularios seguían viéndose desacomodados, que quería el mismo
+tratamiento de "nota flotante" también en el formulario de `nueva-queja` (panel autenticado,
+que aún tenía la caja estática de 90 días), y que la subida de varios archivos no le funcionaba
+— esto último porque el sitio en producción todavía no tenía el build con los cambios de
+sesión, no por un bug de código.
+
+- **Nuevo componente compartido `app-nota-flotante`** (`shared/nota-flotante/`): encapsula el
+  botón circular + panel flotante que antes estaba duplicado directamente en
+  `registro-queja-publico`. Recibe el título por `@Input()` y el contenido por
+  `<ng-content>`, así que cualquier formulario puede usarlo como
+  `<app-nota-flotante titulo="..."><ul>...</ul></app-nota-flotante>`.
+- **`nueva-queja`**: se quitó la caja estática `.aviso-pendiente` (que siempre estaba visible) y
+  se reemplazó por `<app-nota-flotante>` con el mismo aviso de los 90 días, igual que en
+  `registro-queja-publico`.
+- **Encabezados de sección numerados**: los `<h3>` de ambos formularios ahora tienen un círculo
+  numerado (1, 2, 3…) generado con CSS (`counter-reset`/`counter-increment`), para que las
+  secciones del formulario se sientan como pasos en vez de bloques de texto sueltos.
+  `nueva-queja` también se dividió en dos secciones ("Detalles del Hecho" y "Datos del
+  Denunciado") en vez de mezclarlas en una sola.
+- **Estilos globales de formulario** (`styles.scss`, aplican a todos los formularios del sitio):
+  estados de `hover`/`focus` con sombra guinda en inputs/selects/textarea, flecha personalizada
+  en los `<select>`, y la regla `.input-fecha input[type=date]` (antes solo vivía en
+  `registro-queja-publico.scss`) se movió aquí para que cualquier formulario con fecha
+  (incluido `nueva-queja`) tenga el mismo calendario mejorado.
+- **Verificación**: `ng build --configuration development` compiló limpio; se confirmó que los
+   3 archivos `.scss` tocados están dentro del presupuesto de tamaño por componente.
+
+**Aclaración importante para el usuario**: todo lo anterior (multi-archivo, nota flotante,
+banner de tutor, calendario, catálogo completo) vive en el código local — el sitio en
+producción seguía sirviendo el build de antes de esta ronda de cambios. Falta un redeploy
+completo del frontend (y del backend de `queja-service` para BYTEA) para verlo en vivo.
+
+## 2026-07-13 (continuación) — Endpoint público de registro + datos estructurados
+
+Tras confirmar (con `podman ps`/`psql`) que `quejas-service` ni siquiera estaba corriendo en la
+VPS y que la tabla `queja_evidencias` no existía, el usuario pidió explícitamente: **"quiero
+que las quejas estén tanto para nuevos usuarios como para los que ya están registrados"** — es
+decir, construir por fin el endpoint público que documentaba `HALLAZGOS.md` como pendiente
+(tarea #31), para que el formulario público deje de mostrar el aviso de "función no disponible".
+
+Se le preguntó si estructurar bien los datos con columnas propias o seguir concatenando texto
+libre como hasta ahora; eligió **estructurar bien** (columnas propias), pensando a futuro
+(mismo criterio que ya había usado para decidir separar `catalogo-service`).
+
+### Backend (`queja-service`)
+- **`Queja`**: se agregaron columnas propias — `nombreQuejoso`, `apellidoPaternoQuejoso`,
+  `apellidoMaternoQuejoso`, `fechaNacimientoQuejoso`, `tipoIdentificacionQuejoso`,
+  `numeroIdentificacionQuejoso`, `unidadAcademicaClave`, `fechaHechos`, `nombreDenunciado`,
+  `apellidoDenunciado`, `origenRegistro` ("AUTENTICADO"/"PUBLICO"). Antes todo esto (salvo el
+  correo) se guardaba como texto libre concatenado dentro de `descripcion`.
+- **Nueva entidad `QuejaTutor`** (`queja_tutores`, relación `@OneToOne` con `Queja`): nombre,
+  apellidos, parentesco, correo, teléfono del tutor/adulto responsable, solo cuando el quejoso
+  es menor de edad.
+- **Nuevo endpoint público `POST /api/quejoso/quejas/registro-publico`** (`permitAll` en
+  `WebConfig`, sin JWT): recibe un `RegistroQuejaPublicaRequest` vía `@ModelAttribute`
+  (multipart/form-data, para poder incluir archivos en la misma petición) con todos los datos
+  del quejoso + queja + tutor opcional. Valida campos obligatorios a mano y lanza
+  `RuntimeException` con mensaje claro si falta algo.
+- **Endpoint autenticado `/registrar` actualizado**: ahora recibe `unidadAcademicaClave`,
+  `fechaHechos`, `nombreDenunciado`, `apellidoDenunciado` como parámetros propios (antes el
+  frontend los concatenaba a mano dentro de la descripción).
+- **Manejo global de errores**: se copió el patrón de `auth-service`
+  (`GlobalExceptionHandler` + `ErrorResponseModel`) a `queja-service`, que no lo tenía — así
+  las validaciones del endpoint público devuelven `{mensaje, timestamp, codigo}`, el mismo
+  formato que el frontend ya sabe leer (`err?.error?.mensaje`).
+- **Corrección de un bug latente de Lombok**: `Queja`, `QuejaEvidencia` y la nueva `QuejaTutor`
+  tienen relaciones bidireccionales; `@Data` genera `toString()`/`equals()`/`hashCode()`
+  incluyendo todos los campos por default, lo que habría causado una recursión infinita
+  (`Queja.toString()` → `QuejaTutor.toString()` → `Queja.toString()` → ...). Se agregó
+  `@ToString.Exclude`/`@EqualsAndHashCode.Exclude` en el lado "hijo" de cada relación para
+  cortar el ciclo — el mismo riesgo ya existía sin corregir en `QuejaEvidencia`, se corrigió de
+  paso.
+
+### Frontend
+- **`queja.models.ts`**: `Queja` ahora expone los campos estructurados nuevos y `tutor`; nueva
+  interfaz `RegistroQuejaPublicaRequest`.
+- **`queja.service.ts`**: `registrarQueja(...)` cambió a recibir un objeto
+  `DatosQuejaAutenticada` (con los campos estructurados) en vez de solo motivo/descripción;
+  nuevo método `registrarQuejaPublica(...)` que arma el `FormData` completo (quejoso + queja +
+  tutor + archivos) y llama a `/registro-publico`.
+- **`nueva-queja.ts`**: ya no concatena texto libre — manda `unidadAcademicaClave`,
+  `fechaHechos`, `nombreDenunciado`, `apellidoDenunciado` como campos propios.
+- **`registro-queja-publico.ts`**: se quitó el placeholder `mensajeBackendPendiente` — ahora
+  valida los campos obligatorios en el cliente, llama a `registrarQuejaPublica(...)` de verdad,
+  maneja estado de carga/error, y muestra una pantalla de éxito con el folio (mismo patrón que
+  "Nueva Queja" del panel) con un enlace a `/queja/consultar`.
+- **Verificación**: `ng build --configuration development` compiló limpio; presupuesto de
+  tamaño de `registro-queja-publico.scss` dentro de límite.
+
+**Pendiente**: desplegar el backend de `queja-service` (el usuario confirmó que ni siquiera
+estaba corriendo) y el frontend con estos cambios; validar en la base de datos que Hibernate
+creó las columnas nuevas y la tabla `queja_tutores`, y probar un registro público real de punta
+a punta.

@@ -30,19 +30,25 @@ export class AuthService {
     );
   }
 
-  solicitarCodigo(correo: string): Observable<string> {
+  // Antes se pedían con { responseType: 'text' }, pero los errores del backend siempre
+  // llegan como JSON ({mensaje,...}) vía GlobalExceptionHandler. Con responseType:'text',
+  // Angular también interpreta el cuerpo de un error como texto plano, así que
+  // err.error.mensaje quedaba undefined y solo se veía el mensaje genérico de respaldo. Ahora
+  // el backend responde JSON tanto en éxito como en error, así que se pide JSON siempre.
+  solicitarCodigo(correo: string): Observable<{ mensaje: string }> {
     const params = new URLSearchParams({ correo });
-    return this.http.post(`${this.apiUrl}/solicitar-codigo?${params.toString()}`, null, {
-      responseType: 'text',
-    });
+    return this.http.post<{ mensaje: string }>(
+      `${this.apiUrl}/solicitar-codigo?${params.toString()}`,
+      null,
+    );
   }
 
-  resetPassword(datos: ResetPasswordRequest): Observable<string> {
-    return this.http.post(`${this.apiUrl}/reset-password`, datos, { responseType: 'text' });
+  resetPassword(datos: ResetPasswordRequest): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/reset-password`, datos);
   }
 
-  activarCuenta(datos: ActivacionCuentaRequest): Observable<string> {
-    return this.http.post(`${this.apiUrl}/activar-cuenta`, datos, { responseType: 'text' });
+  activarCuenta(datos: ActivacionCuentaRequest): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/activar-cuenta`, datos);
   }
 
   logout(): void {

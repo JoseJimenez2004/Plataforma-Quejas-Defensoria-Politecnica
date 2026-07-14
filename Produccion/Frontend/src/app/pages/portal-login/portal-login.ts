@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -15,12 +15,14 @@ import { AuthService } from '../../core/services/auth.service';
 export class PortalLogin {
   correo = '';
   password = '';
+  mostrarPassword = false;
   cargando = false;
   error = '';
 
   constructor(
     private authService: AuthService,
     private router: Router,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ingresar(): void {
@@ -37,6 +39,9 @@ export class PortalLogin {
       error: (err) => {
         this.cargando = false;
         this.error = err?.error ?? 'Credenciales incorrectas.';
+        // App zoneless (sin zone.js): sin esto, el botón se queda pegado en "Ingresando…"
+        // porque una respuesta HTTP asíncrona no dispara sola un refresco de la vista.
+        this.cdr.detectChanges();
       },
     });
   }

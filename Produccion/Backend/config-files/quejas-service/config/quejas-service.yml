@@ -16,12 +16,17 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 30MB
+      max-request-size: 100MB
 
 jwt:
   secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
 
-# Ruta externa en tu VPS para almacenar los PDFs de las evidencias de las quejas
-storage:
-  location: /apps/aplicaciones/defensoria/back/uploads
+# NOTA: ya no se usa almacenamiento en disco para evidencias — se guardan completas como
+# BYTEA en la tabla queja_evidencias (ver entity/QuejaEvidencia.java y docs/CAMBIOS.md).
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

@@ -16,5 +16,11 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
+  },
+  "/api/catalogos": {
+    "target": "http://2.25.78.22:8086",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
   }
 }

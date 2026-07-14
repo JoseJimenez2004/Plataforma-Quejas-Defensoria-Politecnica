@@ -16,6 +16,8 @@ import ipn.escom.defensoria.auth.service.model.ResetPasswordModel;
 import org.springframework.web.bind.annotation.RequestParam;
 import ipn.escom.defensoria.auth.service.model.ActivacionCuentaModel;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -44,25 +46,31 @@ public class AuthController {
         }
     }
 
+    // Estos 3 endpoints regresaban texto plano (ResponseEntity<String>), pero los errores
+    // pasan por GlobalExceptionHandler y responden JSON ({mensaje,...}). El frontend pedía
+    // la respuesta con responseType:'text', así que en caso de error "err.error" llegaba
+    // como string crudo en vez de objeto — el mensaje real del backend (ej. "Correo no
+    // registrado") nunca se mostraba, solo un texto genérico de respaldo. Unificamos todo a
+    // JSON para que éxito y error se lean igual en el frontend.
     @PostMapping("/solicitar-codigo")
-    public ResponseEntity<String> solicitarCodigo(@RequestParam String correo) {
+    public ResponseEntity<Map<String, String>> solicitarCodigo(@RequestParam String correo) {
         usuarioService.generarCodigoRecuperacion(correo);
-        return ResponseEntity.ok("Código de verificación enviado a tu correo.");
+        return ResponseEntity.ok(Map.of("mensaje", "Código de verificación enviado a tu correo."));
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordModel model) {
+    public ResponseEntity<Map<String, String>> resetPassword(@RequestBody ResetPasswordModel model) {
         usuarioService.validarCodigoYCambiarPassword(
                 model.getCorreo(),
                 model.getCodigo(),
                 model.getNuevaPassword()
         );
-        return ResponseEntity.ok("Contraseña actualizada con éxito. Ya puedes iniciar sesión.");
+        return ResponseEntity.ok(Map.of("mensaje", "Contraseña actualizada con éxito. Ya puedes iniciar sesión."));
     }
 
     @PostMapping("/activar-cuenta")
-    public ResponseEntity<String> activar(@RequestBody ActivacionCuentaModel model) {
+    public ResponseEntity<Map<String, String>> activar(@RequestBody ActivacionCuentaModel model) {
         usuarioService.activarCuenta(model);
-        return ResponseEntity.ok("Cuenta activada con éxito. Ya puedes iniciar sesión.");
+        return ResponseEntity.ok(Map.of("mensaje", "Cuenta activada con éxito. Ya puedes iniciar sesión."));
     }
 }

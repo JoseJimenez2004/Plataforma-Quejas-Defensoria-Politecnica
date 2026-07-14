@@ -51,7 +51,7 @@
     font-size: 1.05rem;
   }
 
-  p:not(.info-banner):not(.error):not(.acceso-link) {
+  p:not(.error) {
     color: var(--texto-suave);
     font-size: 0.85rem;
     margin-bottom: 16px;
@@ -61,57 +61,6 @@
     display: inline-block;
     text-decoration: none;
     width: 100%;
-  }
-}
-
-.servicio--acceso {
-  text-align: left;
-
-  .icono,
-  h3 {
-    text-align: center;
-  }
-
-  .icono {
-    margin: 0 auto 12px;
-  }
-}
-
-.acceso-tabs {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--borde);
-  margin-bottom: 16px;
-}
-
-.acceso-tab-btn {
-  flex: 1;
-  background: none;
-  border: none;
-  padding: 8px 4px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--texto-suave);
-  border-bottom: 3px solid transparent;
-
-  &:hover {
-    color: var(--guinda-vivo);
-  }
-
-  &.active {
-    color: var(--guinda-vivo);
-    border-bottom-color: var(--guinda-vivo);
-  }
-}
-
-.acceso-link {
-  font-size: 0.82rem;
-  text-align: center;
-  color: var(--texto-suave);
-  margin: 12px 0 0;
-
-  a {
-    font-weight: 600;
   }
 }
 

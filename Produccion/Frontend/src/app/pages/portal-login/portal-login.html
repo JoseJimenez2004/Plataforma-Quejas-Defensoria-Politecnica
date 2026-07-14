@@ -10,7 +10,23 @@
       </div>
       <div class="input-group">
         <label>Contraseña</label>
-        <input type="password" [(ngModel)]="password" name="password" required placeholder="********" />
+        <div class="campo-password">
+          <input
+            [type]="mostrarPassword ? 'text' : 'password'"
+            [(ngModel)]="password"
+            name="password"
+            required
+            placeholder="********"
+          />
+          <button
+            type="button"
+            class="alternar-password"
+            (click)="mostrarPassword = !mostrarPassword"
+            [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            {{ mostrarPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
       </div>
 
       @if (error) {

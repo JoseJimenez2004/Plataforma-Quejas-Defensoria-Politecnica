@@ -1,10 +1,8 @@
-.aviso-pendiente {
-  background: #fff8e1;
-  border: 1px solid #ffe082;
-  border-radius: 6px;
-  padding: 10px 14px;
-  font-size: 0.8rem;
-  margin-bottom: 20px;
+.cargando-estado {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
 }
 
 .filtros {
@@ -38,6 +36,16 @@ table {
     color: var(--texto-suave);
   }
 
+  tbody tr {
+    animation: fila-entrada 0.3s ease both;
+    animation-delay: calc(var(--retraso, 0) * 40ms);
+    transition: background 0.12s ease;
+
+    &:hover {
+      background: var(--gris-fondo);
+    }
+  }
+
   a {
     text-decoration: none;
     font-weight: 600;
@@ -46,5 +54,16 @@ table {
   .vacio {
     text-align: center;
     color: var(--texto-suave);
+  }
+}
+
+@keyframes fila-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

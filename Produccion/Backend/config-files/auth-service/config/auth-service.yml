@@ -35,3 +35,9 @@ jwt:
 quejas:
   service:
     url: http://2.25.78.22:8084
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
