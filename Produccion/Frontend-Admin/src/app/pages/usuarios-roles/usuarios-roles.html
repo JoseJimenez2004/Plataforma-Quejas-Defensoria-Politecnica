@@ -1,0 +1,172 @@
+<div class="page-header">
+  <div>
+    <h2>Gestión de Personal Administrativo</h2>
+    <p class="page-header-subtitulo">{{ lista.length }} cuentas registradas en el sistema.</p>
+  </div>
+  <button class="btn-primary" (click)="abrirCrear()">+ Agregar Nuevo Usuario</button>
+</div>
+
+@if (cargando) {
+  <p class="cargando">Cargando personal…</p>
+} @else {
+  <div class="card">
+    <div class="buscador">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" [(ngModel)]="busqueda" name="busqueda" placeholder="Buscar por nombre, correo, boleta o rol…" />
+    </div>
+
+    @if (listaFiltrada.length === 0) {
+      <div class="estado-vacio">
+        <svg class="estado-vacio-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        <p>{{ busqueda ? 'Ningún usuario coincide con tu búsqueda.' : 'Aún no hay personal registrado.' }}</p>
+      </div>
+    } @else {
+      <table class="tabla-admin tabla-usuarios">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Usuario/Boleta</th>
+            <th>Correo</th>
+            <th>Rol Asignado</th>
+            <th>Estatus</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (persona of listaFiltrada; track persona.id) {
+            <tr>
+              <td>
+                <div class="fila-nombre">
+                  <span class="avatar chico">{{ iniciales(persona.nombreCompleto) }}</span>
+                  {{ persona.nombreCompleto }}
+                </div>
+              </td>
+              <td>{{ persona.numeroEmpleado }}</td>
+              <td>{{ persona.correoInstitucional }}</td>
+              <td>{{ etiquetaRol(persona.rol) }}</td>
+              <td>
+                <span class="badge" [class.activo]="persona.activo" [class.inactivo]="!persona.activo">
+                  {{ persona.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+                @if (persona.cuentaTemporal) {
+                  <span class="badge temporal">Temporal</span>
+                }
+              </td>
+              <td class="acciones">
+                <button class="btn-texto" (click)="abrirEditar(persona)">Editar</button>
+                <button class="btn-texto" (click)="resetearPassword(persona)">Reset. contraseña</button>
+                @if (persona.activo) {
+                  <button class="btn-texto peligro" (click)="darDeBaja(persona)">Baja</button>
+                } @else {
+                  <button class="btn-texto" (click)="reactivar(persona)">Reactivar</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+}
+
+@if (mostrarModalCrear) {
+  <div class="modal-overlay" (click)="cerrarCrear()">
+    <div class="modal card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Registro de Nuevo Personal Administrativo</h3>
+        <button class="modal-cerrar" (click)="cerrarCrear()" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="input-group">
+        <label>Nombre Completo:</label>
+        <input type="text" [(ngModel)]="formulario.nombreCompleto" name="nombreCompleto" />
+      </div>
+      <div class="input-group">
+        <label>Número de Empleado / Boleta:</label>
+        <input type="text" [(ngModel)]="formulario.numeroEmpleado" name="numeroEmpleado" />
+      </div>
+      <div class="input-group">
+        <label>Correo Electrónico Institucional:</label>
+        <input type="email" [(ngModel)]="formulario.correoInstitucional" name="correoInstitucional" />
+      </div>
+      <div class="input-group">
+        <label>Asignar Rol de Sistema:</label>
+        <select [(ngModel)]="formulario.rol" name="rol">
+          @for (rol of roles; track rol) {
+            <option [value]="rol">{{ etiquetaRol(rol) }}</option>
+          }
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Contraseña Temporal (opcional, se genera una si la dejas vacía):</label>
+        <input type="text" [(ngModel)]="formulario.passwordTemporal" name="passwordTemporal" />
+      </div>
+
+      <div class="modal-acciones">
+        <button class="btn-primary" (click)="guardarNuevo()">Guardar y Activar Usuario</button>
+        <button class="btn-secondary" (click)="cerrarCrear()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (mostrarModalEditar) {
+  <div class="modal-overlay" (click)="cerrarEditar()">
+    <div class="modal card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Editar Perfil de Usuario</h3>
+        <button class="modal-cerrar" (click)="cerrarEditar()" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="input-group">
+        <label>Nombre Completo:</label>
+        <input type="text" [(ngModel)]="formulario.nombreCompleto" name="nombreCompletoEdit" />
+      </div>
+      <div class="input-group">
+        <label>Correo Electrónico Institucional:</label>
+        <input type="email" [(ngModel)]="formulario.correoInstitucional" name="correoInstitucionalEdit" />
+      </div>
+      <div class="input-group">
+        <label>Asignar Rol de Sistema:</label>
+        <select [(ngModel)]="formulario.rol" name="rolEdit">
+          @for (rol of roles; track rol) {
+            <option [value]="rol">{{ etiquetaRol(rol) }}</option>
+          }
+        </select>
+      </div>
+
+      <label class="opcion-check">
+        <input type="checkbox" [(ngModel)]="formulario.restablecerPassword" name="restablecerPassword" />
+        Restablecer contraseña en el próximo inicio de sesión
+      </label>
+      <label class="opcion-check">
+        <input type="checkbox" [(ngModel)]="formulario.desactivarTemporalmente" name="desactivarTemporalmente" />
+        Desactivar cuenta temporalmente
+      </label>
+
+      <div class="modal-acciones">
+        <button class="btn-primary" (click)="guardarEdicion()">Actualizar Información</button>
+        <button class="btn-secondary" (click)="cerrarEditar()">Volver a la Lista</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (mostrarModalPasswordGenerada) {
+  <div class="modal-overlay" (click)="cerrarModalPassword()">
+    <div class="modal card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Contraseña temporal generada</h3>
+        <button class="modal-cerrar" (click)="cerrarModalPassword()" aria-label="Cerrar">✕</button>
+      </div>
+      <p class="aviso-inline">
+        Comparte estos datos de forma segura con <strong>{{ correoGenerado }}</strong>. Esta
+        contraseña solo se muestra esta vez.
+      </p>
+      <div class="password-generada">{{ passwordGenerada }}</div>
+      <div class="modal-acciones">
+        <button class="btn-primary" (click)="cerrarModalPassword()">Entendido</button>
+      </div>
+    </div>
+  </div>
+}

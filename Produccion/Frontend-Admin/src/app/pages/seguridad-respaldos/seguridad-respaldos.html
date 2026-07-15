@@ -1,0 +1,106 @@
+<div class="page-header">
+  <div>
+    <h2>Gestión de Seguridad y Copias de Respaldo</h2>
+    <p class="page-header-subtitulo">Respaldos de base de datos y auditoría de acciones críticas.</p>
+  </div>
+</div>
+
+<div class="card seccion">
+  <h3>Respaldos de Base de Datos y Expedientes</h3>
+  <p class="estado-ok">
+    <span class="punto-estado"></span>
+    Sistema Seguro
+  </p>
+  <p class="dato">Último respaldo realizado: {{ ultimoRespaldoTexto }}</p>
+
+  <div class="acciones">
+    <button class="btn-primary" (click)="ejecutarRespaldoManual()" [disabled]="ejecutandoRespaldo">
+      {{ ejecutandoRespaldo ? 'Generando…' : 'Ejecutar Respaldo Manual Ahora' }}
+    </button>
+    @if (respaldos.length) {
+      <button class="btn-secondary" (click)="descargar(respaldos[0])">Descargar Último Backup</button>
+    }
+  </div>
+
+  <p class="config-nota">Configuración: respaldo automático cada 24 horas (04:00 AM).</p>
+</div>
+
+<div class="card seccion">
+  <h3>Respaldos disponibles</h3>
+  @if (cargando) {
+    <p class="cargando">Cargando…</p>
+  } @else if (!respaldos.length) {
+    <p class="cargando">Todavía no se ha generado ningún respaldo.</p>
+  } @else {
+    <table class="tabla-admin">
+      <thead>
+        <tr>
+          <th>Archivo</th>
+          <th>Fecha</th>
+          <th>Tamaño</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of respaldos; track r.nombreArchivo) {
+          <tr>
+            <td>{{ r.nombreArchivo }}</td>
+            <td>{{ r.fecha }}</td>
+            <td>{{ formatearTamanio(r.tamanioBytes) }}</td>
+            <td class="acciones-fila">
+              <button class="btn-texto" (click)="descargar(r)">Descargar</button>
+              <button class="btn-texto peligro" (click)="abrirRestaurar(r)">Restaurar</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
+
+<div class="card seccion">
+  <h3>Historial de Acciones Críticas</h3>
+  <table class="tabla-admin">
+    <thead>
+      <tr>
+        <th>Fecha/Hora</th>
+        <th>Usuario</th>
+        <th>Acción Realizada</th>
+        <th>IP</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of bitacora; track item.id) {
+        <tr>
+          <td>{{ item.fecha }}</td>
+          <td>{{ item.usuario }}</td>
+          <td>{{ item.accionRealizada }}</td>
+          <td>{{ item.ip }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (mostrarModalRestaurar) {
+  <div class="modal-overlay" (click)="cerrarRestaurar()">
+    <div class="modal card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Restaurar Punto Anterior</h3>
+        <button class="modal-cerrar" (click)="cerrarRestaurar()" aria-label="Cerrar">✕</button>
+      </div>
+      <p class="aviso-peligro">
+        Esta acción reemplazará TODOS los datos actuales de la base de datos con el contenido
+        del respaldo <strong>{{ archivoARestaurar }}</strong>. No se puede deshacer.
+      </p>
+      <div class="input-group">
+        <label>Escribe RESTAURAR para confirmar:</label>
+        <input type="text" [(ngModel)]="confirmacionTexto" name="confirmacionTexto" />
+      </div>
+      <div class="modal-acciones">
+        <button class="btn-primary boton-peligro" (click)="confirmarRestauracion()">Confirmar Restauración</button>
+        <button class="btn-secondary" (click)="cerrarRestaurar()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}

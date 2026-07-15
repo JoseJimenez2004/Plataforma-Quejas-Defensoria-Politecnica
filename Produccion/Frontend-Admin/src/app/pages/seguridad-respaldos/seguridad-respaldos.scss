@@ -1,0 +1,63 @@
+.seccion {
+  margin-bottom: 20px;
+
+  h3 {
+    margin-bottom: 10px;
+  }
+}
+
+.estado-ok {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--exito);
+  font-weight: 600;
+  margin: 0 0 4px;
+
+  .punto-estado {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--exito);
+  }
+}
+
+.dato {
+  color: var(--texto-suave);
+  font-size: 0.88rem;
+  margin-bottom: 16px;
+}
+
+.acciones {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.config-nota {
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  margin: 0;
+}
+
+.cargando {
+  color: var(--texto-suave);
+}
+
+.acciones-fila {
+  display: flex;
+  gap: 10px;
+
+  .peligro {
+    color: var(--peligro);
+  }
+}
+
+.boton-peligro {
+  background-color: var(--peligro) !important;
+
+  &:hover {
+    background-color: #a31f1f !important;
+  }
+}

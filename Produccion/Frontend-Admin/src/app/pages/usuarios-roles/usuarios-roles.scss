@@ -1,0 +1,57 @@
+.cargando {
+  color: var(--texto-suave);
+}
+
+.buscador {
+  margin-bottom: 16px;
+}
+
+.fila-nombre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.tabla-usuarios {
+  th,
+  td {
+    vertical-align: middle;
+  }
+}
+
+.acciones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .peligro {
+    color: var(--peligro);
+  }
+}
+
+.opcion-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  margin-bottom: 12px;
+  cursor: pointer;
+
+  input {
+    width: auto;
+  }
+}
+
+.password-generada {
+  background: var(--guinda-suave);
+  border: 1px dashed var(--guinda-vivo);
+  border-radius: 6px;
+  padding: 14px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--guinda);
+  margin-bottom: 6px;
+}

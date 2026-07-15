@@ -1,0 +1,52 @@
+<div class="page-header">
+  <div>
+    <h2>Configuración de Plantillas y Oficios</h2>
+    <p class="page-header-subtitulo">Edita los formatos oficiales que se generan automáticamente.</p>
+  </div>
+</div>
+
+@if (cargando) {
+  <p class="cargando">Cargando plantillas…</p>
+} @else {
+  <div class="input-group selector">
+    <label>Seleccione el documento a editar:</label>
+    <select [ngModel]="tipoSeleccionado" (change)="onCambioSelector($event)" name="tipoSeleccionado">
+      @for (p of lista; track p.tipo) {
+        <option [value]="p.tipo">{{ p.nombre }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="card">
+    <textarea rows="10" [(ngModel)]="contenido" name="contenido"></textarea>
+
+    <p class="hint">Placeholders disponibles:</p>
+    <ul class="lista-placeholders">
+      @for (item of listaPlaceholders; track item) {
+        <li>{{ item }}</li>
+      }
+    </ul>
+
+    <div class="acciones">
+      <button class="btn-primary" (click)="guardar()" [disabled]="guardando">
+        {{ guardando ? 'Guardando…' : 'Guardar Cambios y Publicar Plantilla' }}
+      </button>
+      <button class="btn-secondary" (click)="verPrevisualizacion()">Ver Previsualización</button>
+    </div>
+  </div>
+}
+
+@if (mostrarPrevisualizacion) {
+  <div class="modal-overlay" (click)="cerrarPrevisualizacion()">
+    <div class="modal card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Previsualización (con datos de ejemplo)</h3>
+        <button class="modal-cerrar" (click)="cerrarPrevisualizacion()" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="hoja-previsualizacion">{{ textoPrevisualizacion }}</div>
+      <div class="modal-acciones">
+        <button class="btn-primary" (click)="cerrarPrevisualizacion()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

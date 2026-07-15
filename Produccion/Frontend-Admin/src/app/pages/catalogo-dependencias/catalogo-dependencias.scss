@@ -1,0 +1,25 @@
+.encabezado {
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.cargando {
+  color: var(--texto-suave);
+}
+
+.pie-tabla {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.boton-archivo {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  text-align: center;
+}

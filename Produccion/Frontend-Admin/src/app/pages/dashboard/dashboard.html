@@ -1,0 +1,60 @@
+<div class="page-header">
+  <div>
+    <h2>Consola de Administración del Sistema</h2>
+    <p class="page-header-subtitulo">Panorama general de accesos, catálogo y respaldos.</p>
+  </div>
+</div>
+
+@if (cargando) {
+  <p class="cargando">Cargando resumen…</p>
+} @else if (resumen) {
+  <div class="tarjetas">
+    <div class="card tarjeta">
+      <div class="tarjeta-encabezado">
+        <span class="icono-acento azul">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </span>
+        <h3>Estado del Personal</h3>
+      </div>
+      <p class="dato-numero">{{ resumen.totalPersonalActivo }}</p>
+      <p class="dato-etiqueta">usuarios registrados</p>
+      <a routerLink="/usuarios-roles" class="btn-primary">Gestionar Usuarios</a>
+    </div>
+
+    <div class="card tarjeta">
+      <div class="tarjeta-encabezado">
+        <span class="icono-acento morado">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M10 21v-5h4v5"></path></svg>
+        </span>
+        <h3>Directorio IPN</h3>
+      </div>
+      <p class="dato-numero">{{ resumen.totalDependencias }}</p>
+      <p class="dato-etiqueta">Unidades Académicas</p>
+      <a routerLink="/catalogo-dependencias" class="btn-primary">Actualizar Catálogo</a>
+    </div>
+
+    <div class="card tarjeta">
+      <div class="tarjeta-encabezado">
+        <span class="icono-acento verde">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"></path></svg>
+        </span>
+        <h3>Seguridad</h3>
+      </div>
+      <p class="dato-texto">Último respaldo</p>
+      <p class="dato-etiqueta dato-etiqueta-fuerte">{{ resumen.ultimoRespaldo }}</p>
+      <a routerLink="/seguridad-respaldos" class="btn-primary">Ver Bitácora</a>
+    </div>
+
+    <div class="card tarjeta">
+      <div class="tarjeta-encabezado">
+        <span class="icono-acento ambar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>
+        </span>
+        <h3>Formatos Legales</h3>
+      </div>
+      <p class="dato-numero">{{ resumen.totalPlantillasActivas }}</p>
+      <p class="dato-etiqueta">Plantillas activas</p>
+      <a routerLink="/plantillas" class="btn-primary">Editar Formatos</a>
+    </div>
+  </div>
+}
