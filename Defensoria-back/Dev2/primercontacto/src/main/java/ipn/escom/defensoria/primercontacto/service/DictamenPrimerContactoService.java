@@ -3,6 +3,9 @@ package ipn.escom.defensoria.primercontacto.service;
 import ipn.escom.defensoria.primercontacto.dto.CompetenciaDTO;
 import ipn.escom.defensoria.primercontacto.dto.DictamenDTO;
 import ipn.escom.defensoria.primercontacto.dto.ImprocedenciaDTO;
+import ipn.escom.defensoria.primercontacto.dto.QuejosoResumenRequest;
+import ipn.escom.defensoria.primercontacto.dto.ExpedienteAnalisisDTO;
+import ipn.escom.defensoria.primercontacto.dto.ExpedienteEntranteRequest;
 import ipn.escom.defensoria.primercontacto.entity.DictamenPrimerContacto;
 import ipn.escom.defensoria.primercontacto.repository.DictamenPrimerContactoRepository;
 import org.springframework.stereotype.Service;
@@ -14,14 +17,18 @@ public class DictamenPrimerContactoService {
 
     private final DictamenPrimerContactoRepository dictamenPrimerContactoRepository;
     private final PlataformaCentralClientService plataformaCentralClientService;
+    private final SubdefensoriaClientService subdefensoriaClientService;
 
     public DictamenPrimerContactoService(
             DictamenPrimerContactoRepository dictamenPrimerContactoRepository,
-            PlataformaCentralClientService plataformaCentralClientService
+            PlataformaCentralClientService plataformaCentralClientService,
+            SubdefensoriaClientService subdefensoriaClientService
     ) {
         this.dictamenPrimerContactoRepository = dictamenPrimerContactoRepository;
         this.plataformaCentralClientService = plataformaCentralClientService;
+        this.subdefensoriaClientService = subdefensoriaClientService;
     }
+
 
     public DictamenDTO registrarCompetencia(CompetenciaDTO dto, String token) {
 
@@ -39,6 +46,7 @@ public class DictamenPrimerContactoService {
                 .areaTurno(dto.getAreaTurno())
                 .responsableTurno(dto.getResponsableTurno())
                 .fechaDictamen(LocalDateTime.now())
+                .observaciones(dto.getObservaciones())
                 .build();
 
         DictamenPrimerContacto guardado = dictamenPrimerContactoRepository.save(dictamen);
@@ -47,6 +55,29 @@ public class DictamenPrimerContactoService {
                 dto.getQuejaId(),
                 "COMPETENTE",
                 token
+        );
+
+        ExpedienteAnalisisDTO expediente = plataformaCentralClientService.obtenerExpediente(dto.getQuejaId(), token);
+
+        QuejosoResumenRequest quejosoRequest = expediente.getQuejoso() != null
+                ? QuejosoResumenRequest.builder()
+                .nombreCompleto(expediente.getQuejoso().getNombreCompleto())
+                .correo(expediente.getQuejoso().getCorreo())
+                .unidadAcademica(expediente.getQuejoso().getUnidadAcademica())
+                .build()
+                : null;
+
+        subdefensoriaClientService.enviarExpediente(
+                ExpedienteEntranteRequest.builder()
+                        .quejaId(dto.getQuejaId())
+                        .folio(dto.getFolio())
+                        .asunto(expediente.getTema())
+                        .descripcionHechos(expediente.getDescripcionHechos())
+                        .fechaAdmision(java.time.LocalDate.now())
+                        .abogadoAsesorNombre(dto.getResponsableTurno())
+                        .quejoso(quejosoRequest)
+                        .observacionesAnalista(dto.getObservaciones())
+                        .build()
         );
 
         return convertirADTO(guardado);
@@ -110,6 +141,10 @@ public class DictamenPrimerContactoService {
                                 ? dictamen.getFechaDictamen().toString()
                                 : null
                 )
+                .observaciones(dictamen.getObservaciones())
                 .build();
     }
+
+
+
 }

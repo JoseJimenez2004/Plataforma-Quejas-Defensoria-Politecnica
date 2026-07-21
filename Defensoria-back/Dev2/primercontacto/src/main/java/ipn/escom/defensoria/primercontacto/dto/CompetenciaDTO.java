@@ -3,6 +3,7 @@ package ipn.escom.defensoria.primercontacto.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import jakarta.persistence.Column;
 
 @Getter
 @Setter
@@ -31,4 +32,7 @@ public class CompetenciaDTO {
 
     @NotBlank
     private String responsableTurno;
+
+    @Column(name = "observaciones", columnDefinition = "TEXT")
+    private String observaciones;
 }

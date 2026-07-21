@@ -1,0 +1,70 @@
+.page {
+  max-width: 1280px;
+}
+
+.page-header {
+  margin-bottom: var(--space-4);
+}
+
+.page-header h2 {
+  margin: 0;
+  color: #6a1238;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.page-header p {
+  margin: var(--space-1) 0 0;
+  color: #6b7280;
+}
+
+.total-banner {
+  background: #b91c1c;
+  color: white;
+  font-weight: 800;
+  padding: var(--space-4);
+  border-radius: 10px;
+  margin-bottom: var(--space-5);
+}
+
+.table-card {
+  overflow-x: auto;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  padding: 0;
+}
+
+table {
+  width: 100%;
+  min-width: 800px;
+}
+
+th {
+  background: #111827 !important;
+  color: white;
+  font-weight: 800;
+}
+
+td, th {
+  padding: var(--space-4) !important;
+}
+
+tr:hover td {
+  background: #fef2f2;
+}
+
+.retraso {
+  color: #b91c1c;
+  font-weight: 800;
+}
+
+.bell-btn mat-icon {
+  color: #b91c1c;
+}
+
+.empty-state {
+  text-align: center;
+  color: #6b7280;
+  padding: var(--space-6);
+  margin: 0;
+}

@@ -19,4 +19,6 @@ public class DictamenDTO {
     private String areaTurno;
     private String responsableTurno;
     private String fechaDictamen;
+    private String observaciones;
+
 }

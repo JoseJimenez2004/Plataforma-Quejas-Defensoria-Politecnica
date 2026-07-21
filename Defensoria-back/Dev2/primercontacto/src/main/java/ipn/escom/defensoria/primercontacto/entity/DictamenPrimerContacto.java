@@ -44,4 +44,7 @@ public class DictamenPrimerContacto {
 
     @Column(name = "fecha_dictamen", nullable = false)
     private LocalDateTime fechaDictamen;
+
+    @Column(name = "observaciones", columnDefinition = "TEXT")
+    private String observaciones;
 }

@@ -98,8 +98,8 @@ export class Dictamen implements OnInit {
       analistaNombre: this.analistaNombre,
       justificacion: this.justificacion,
       areaTurno: 'Titular de la Defensoría',
-      responsableTurno: this.observaciones.trim() || 'Sin observaciones adicionales'
-    }).subscribe({
+      responsableTurno: 'Titular de la Defensoría',
+      observaciones: this.observaciones.trim() || undefined    }).subscribe({
       next: () => {
         this.snackBar.open('Expediente enviado al Titular correctamente.', 'Cerrar', {
           duration: 3000

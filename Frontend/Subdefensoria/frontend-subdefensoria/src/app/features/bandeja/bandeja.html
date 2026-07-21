@@ -1,0 +1,149 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Bandeja de Expedientes</h2>
+      <p>Todos los expedientes en investigación, sin importar su etapa.</p>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="filters-panel">
+      <h3>Filtros</h3>
+
+      <mat-expansion-panel expanded class="facet-panel">
+        <mat-expansion-panel-header>Estatus</mat-expansion-panel-header>
+        @for (f of facetasEstatus; track f.valor) {
+          <div class="facet-row">
+            <mat-checkbox [checked]="estatusSeleccionados.has(f.valor)" (change)="toggleFacet(estatusSeleccionados, f.valor)">
+              {{ f.etiqueta }}
+            </mat-checkbox>
+            <span class="facet-count">{{ f.total }}</span>
+          </div>
+        }
+      </mat-expansion-panel>
+
+      <mat-expansion-panel class="facet-panel">
+        <mat-expansion-panel-header>Asunto</mat-expansion-panel-header>
+        @for (f of facetasAsunto; track f.valor) {
+          <div class="facet-row">
+            <mat-checkbox [checked]="asuntosSeleccionados.has(f.valor)" (change)="toggleFacet(asuntosSeleccionados, f.valor)">
+              {{ f.etiqueta }}
+            </mat-checkbox>
+            <span class="facet-count">{{ f.total }}</span>
+          </div>
+        }
+      </mat-expansion-panel>
+
+      <mat-expansion-panel class="facet-panel">
+        <mat-expansion-panel-header>Unidad Académica</mat-expansion-panel-header>
+        @for (f of facetasUnidad; track f.valor) {
+          <div class="facet-row">
+            <mat-checkbox [checked]="unidadesSeleccionadas.has(f.valor)" (change)="toggleFacet(unidadesSeleccionadas, f.valor)">
+              {{ f.etiqueta }}
+            </mat-checkbox>
+            <span class="facet-count">{{ f.total }}</span>
+          </div>
+        }
+      </mat-expansion-panel>
+    </aside>
+
+    <div class="main-content">
+      <div class="toolbar">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Buscar por folio, quejoso o asunto</mat-label>
+          <input matInput [(ngModel)]="busqueda" (ngModelChange)="aplicarFiltros()">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="sort-field">
+          <mat-label>Ordenar por</mat-label>
+          <mat-select [(ngModel)]="orden" (ngModelChange)="aplicarFiltros()">
+            <mat-option value="recientes">Más recientes</mat-option>
+            <mat-option value="antiguos">Más antiguos</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <p class="resultados-count">{{ filtrados.length }} expedientes encontrados</p>
+
+      <mat-card class="table-card">
+        <table mat-table [dataSource]="filtrados" class="mat-elevation-z0">
+
+          <ng-container matColumnDef="folio">
+            <th mat-header-cell *matHeaderCellDef>Folio</th>
+            <td mat-cell *matCellDef="let e">{{ e.folio }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="fechaAdmision">
+            <th mat-header-cell *matHeaderCellDef>Admisión</th>
+            <td mat-cell *matCellDef="let e">{{ e.fechaAdmision }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="quejosoNombre">
+            <th mat-header-cell *matHeaderCellDef>Quejoso</th>
+            <td mat-cell *matCellDef="let e">{{ e.quejosoNombre }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="asunto">
+            <th mat-header-cell *matHeaderCellDef>Asunto</th>
+            <td mat-cell *matCellDef="let e">{{ e.asunto }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="unidadAcademica">
+            <th mat-header-cell *matHeaderCellDef>UA</th>
+            <td mat-cell *matCellDef="let e">{{ e.unidadAcademica }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="estatus">
+            <th mat-header-cell *matHeaderCellDef>Estatus</th>
+            <td mat-cell *matCellDef="let e">
+              <span class="status" [ngClass]="'status-' + e.estatus.toLowerCase()">
+                {{ etiquetaEstatus(e.estatus) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="progreso">
+            <th mat-header-cell *matHeaderCellDef>Progreso</th>
+            <td mat-cell *matCellDef="let e">
+              @if (e.numeroOficioVigente) {
+                <span [class.progreso-vencido]="e.estatusOficioVigente === 'VENCIDO'">
+                  {{ e.diasTranscurridos }} de {{ e.diasLimite }} días
+                </span>
+              } @else {
+                <span class="sin-progreso">—</span>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let e">
+              @if (etiquetaAccionPrincipal(e); as etiqueta) {
+                <button mat-flat-button class="action-btn" (click)="accionPrincipal(e)">{{ etiqueta }}</button>
+              }
+              @if (e.oficioIdVigente) {
+                <button mat-icon-button (click)="abrirRecordatorio(e)" matTooltip="Enviar recordatorio">
+                  <mat-icon>notifications</mat-icon>
+                </button>
+                <button mat-icon-button (click)="abrirRespuestaExterna(e)" matTooltip="Registrar respuesta">
+                  <mat-icon>upload_file</mat-icon>
+                </button>
+              }
+              <button mat-icon-button (click)="verDetalle(e)" matTooltip="Ver expediente">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        @if (filtrados.length === 0) {
+          <p class="empty-state">No hay expedientes que coincidan con los filtros.</p>
+        }
+      </mat-card>
+    </div>
+  </div>
+</section>
