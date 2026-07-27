@@ -1,0 +1,40 @@
+.fila-filtros {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+
+  select,
+  input[type='date'] {
+    padding: 9px 12px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font-size: 0.88rem;
+  }
+
+  .select-estatus {
+    max-width: 160px;
+  }
+}
+
+.buscador-ancho {
+  flex: 1;
+  min-width: 220px;
+  max-width: none;
+}
+
+.cargando {
+  color: var(--texto-suave);
+}
+
+.pie-conteo {
+  margin-top: 14px;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+}
+
+.detalle-linea {
+  font-size: 0.9rem;
+  margin: 0 0 8px;
+}

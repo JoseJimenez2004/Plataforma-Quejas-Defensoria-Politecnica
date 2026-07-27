@@ -1,0 +1,90 @@
+<div class="page-header">
+  <div>
+    <h2>Búsqueda de Antecedentes y Turnado</h2>
+    @if (queja) {
+      <p class="page-header-subtitulo">
+        C. {{ queja.nombreCompletoQuejoso }}
+        @if (queja.numeroIdentificacionQuejoso) { | Boleta/Empleado: {{ queja.numeroIdentificacionQuejoso }} }
+      </p>
+    }
+  </div>
+</div>
+
+@if (cargando) {
+  <p class="cargando">Cargando…</p>
+} @else if (queja) {
+  <div class="card">
+    <h3>Historial del Usuario en el Sistema</h3>
+
+    @if (antecedentes.length === 0) {
+      <p class="sin-antecedentes">No se encontraron quejas previas de esta persona.</p>
+    } @else {
+      <table class="tabla-admin">
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>Fecha</th>
+            <th>Asunto</th>
+            <th>Estado Actual</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of antecedentes; track a.numeroFolio) {
+            <tr>
+              <td>{{ a.numeroFolio }}</td>
+              <td>{{ a.fecha | date: 'dd/MM/yy' }}</td>
+              <td>{{ a.asunto }}</td>
+              <td>{{ a.estadoActual }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <p class="aviso-advertencia">
+        Se encontraron {{ antecedentes.length }} antecedente(s) relacionado(s). Verifica si existe
+        duplicidad antes de turnar.
+      </p>
+    }
+  </div>
+
+  <div class="card canalizacion-card">
+    <h3>Canalización del Expediente</h3>
+
+    <div class="input-group">
+      <label>Área a la que se turna:</label>
+      <select [(ngModel)]="areaTurnada" name="areaTurnada">
+        <option value="" disabled selected>Seleccione un área</option>
+        @for (area of areas; track area.clave) {
+          <option [value]="area.nombre">{{ area.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label>Defensor / Abogado Responsable:</label>
+      <select [(ngModel)]="defensorAsignado" name="defensorAsignado">
+        <option value="" disabled selected>Seleccione un responsable</option>
+        @for (defensor of defensores; track defensor.id) {
+          <option [value]="defensor.nombreCompleto">{{ defensor.nombreCompleto }}</option>
+        }
+      </select>
+      @if (defensores.length === 0) {
+        <span class="mensaje-campo aviso-sin-datos">
+          Todavía no hay personal con rol Defensor/Subdefensor dado de alta en Usuarios y Roles.
+        </span>
+      }
+    </div>
+
+    <div class="input-group">
+      <label>Comentarios de Recepción:</label>
+      <textarea rows="4" [(ngModel)]="comentarios" name="comentarios" placeholder="Escriba aquí una nota breve para el abogado…"></textarea>
+    </div>
+
+    <div class="modal-acciones acciones-turnado">
+      <button class="btn-primary" (click)="turnar()" [disabled]="turnando">
+        {{ turnando ? 'Turnando…' : '⬆ Generar Folio Oficial y Turnar' }}
+      </button>
+      <button class="btn-secondary" (click)="pausar()">Pausar / Guardar Avance</button>
+    </div>
+  </div>
+}

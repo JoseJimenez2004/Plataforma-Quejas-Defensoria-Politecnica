@@ -1,0 +1,39 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: revision-service
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 100MB
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000 # 1 hora
+
+catalogo:
+  service:
+    url: ${CATALOGO_SERVICE_URL:http://localhost:8086}
+
+notificaciones:
+  service:
+    url: ${NOTIFICACIONES_SERVICE_URL:http://localhost:8085}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

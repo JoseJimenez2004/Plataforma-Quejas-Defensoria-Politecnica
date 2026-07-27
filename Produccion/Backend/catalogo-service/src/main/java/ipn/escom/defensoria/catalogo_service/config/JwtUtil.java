@@ -30,6 +30,12 @@ public class JwtUtil {
         return extraerClaims(token).getSubject();
     }
 
+    /** Puede ser null (tokens de quejosos emitidos por auth.service no llevan este claim) --
+     * solo los tokens de admin-service lo traen. */
+    public String extraerRol(String token) {
+        return extraerClaims(token).get("rol", String.class);
+    }
+
     public boolean validarToken(String token, String username) {
         String usuarioToken = extraerUsuario(token);
         return (usuarioToken.equals(username) && !isTokenExpirado(token));

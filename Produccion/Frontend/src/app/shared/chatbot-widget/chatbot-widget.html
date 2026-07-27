@@ -1,0 +1,66 @@
+@if (abierto) {
+  <div class="chatbot-panel" role="dialog" aria-label="Asistente de la Defensoría">
+    <div class="chatbot-panel__header">
+      <div class="chatbot-panel__marca">
+        <span class="chatbot-mascota-mini" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="30" r="20" fill="#fff" />
+            <circle cx="24" cy="28" r="3.5" fill="var(--guinda)" />
+            <circle cx="40" cy="28" r="3.5" fill="var(--guinda)" />
+            <path d="M22 37c3 3 17 3 20 0" stroke="var(--guinda)" stroke-width="2.5" stroke-linecap="round" />
+            <rect x="29" y="6" width="6" height="8" rx="3" fill="#fff" />
+          </svg>
+        </span>
+        <div>
+          <strong>Asistente DDP</strong>
+          <span>Preguntas frecuentes</span>
+        </div>
+      </div>
+      <button class="chatbot-panel__cerrar" type="button" (click)="cerrar()" aria-label="Cerrar asistente">
+        ✕
+      </button>
+    </div>
+
+    <div class="chatbot-panel__cuerpo">
+      @if (cargando) {
+        <p class="chatbot-cargando">Cargando información…</p>
+      }
+
+      @for (mensaje of mensajes; track $index) {
+        <div class="chatbot-burbuja" [class.chatbot-burbuja--usuario]="mensaje.autor === 'usuario'">
+          {{ mensaje.texto }}
+        </div>
+      }
+
+      @if (opciones.length > 0) {
+        <div class="chatbot-opciones">
+          @for (opcion of opciones; track opcion.texto) {
+            <button type="button" class="chatbot-opcion" (click)="elegir(opcion)">
+              {{ opcion.texto }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<button
+  type="button"
+  class="chatbot-fab"
+  [class.chatbot-fab--activo]="abierto"
+  (click)="alternarPanel()"
+  aria-label="Abrir asistente de la Defensoría"
+>
+  @if (!abierto) {
+    <span class="chatbot-fab__pulso" aria-hidden="true"></span>
+  }
+  <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+    <circle cx="32" cy="32" r="30" fill="var(--guinda)" />
+    <circle cx="32" cy="30" r="17" fill="#fff" />
+    <circle cx="25" cy="28" r="3.2" fill="var(--guinda)" />
+    <circle cx="39" cy="28" r="3.2" fill="var(--guinda)" />
+    <path d="M23 36c3.5 3 14.5 3 18 0" stroke="var(--guinda)" stroke-width="2.4" stroke-linecap="round" />
+    <rect x="29" y="9" width="6" height="7" rx="3" fill="#fff" />
+  </svg>
+</button>

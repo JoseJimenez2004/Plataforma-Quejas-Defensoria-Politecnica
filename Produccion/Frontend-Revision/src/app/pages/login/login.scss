@@ -1,0 +1,50 @@
+.contenedor {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, var(--sidebar-fondo) 0%, #10141d 100%);
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: var(--sombra-alta);
+  padding: 36px 32px 32px;
+
+  h2 {
+    margin-bottom: 2px;
+  }
+
+  .login-escudo {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--guinda-vivo), var(--guinda-oscuro));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+  }
+
+  .subtitulo {
+    color: var(--texto-suave);
+    font-size: 0.85rem;
+    margin-bottom: 24px;
+  }
+
+  form {
+    text-align: left;
+  }
+
+  button[type='submit'] {
+    width: 100%;
+    margin-top: 6px;
+  }
+}

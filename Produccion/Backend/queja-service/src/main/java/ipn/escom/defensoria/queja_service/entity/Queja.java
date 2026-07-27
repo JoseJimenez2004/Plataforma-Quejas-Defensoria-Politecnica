@@ -100,6 +100,19 @@ public class Queja {
     @Column(name = "estatus")
     private String estatus = "RECIBIDA";
 
+    // Columnas nuevas agregadas por revision-service (panel del recepcionista) sobre esta
+    // MISMA tabla "quejas" -- se mapean aquí también para que este endpoint público (el que
+    // usa "Consultar Queja") le muestre al quejoso el motivo cuando su queja fue rechazada por
+    // documentación incompleta, sin tener que llamar a otro microservicio.
+    @Column(name = "motivo_rechazo", columnDefinition = "TEXT")
+    private String motivoRechazo;
+
+    @Column(name = "area_turnada")
+    private String areaTurnada;
+
+    @Column(name = "fecha_turnado")
+    private LocalDateTime fechaTurnado;
+
     // Se excluye del JSON de respuesta (@JsonIgnore) para no mandar los archivos completos
     // en bytes cada vez que se consulta una queja — la lista de evidencias (sin el contenido)
     // se expone aparte, en un endpoint propio, cuando se construya.

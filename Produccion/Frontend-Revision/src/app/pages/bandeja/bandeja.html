@@ -1,0 +1,84 @@
+<div class="page-header">
+  <div>
+    <h2>Bandeja de Entrada</h2>
+    <p class="page-header-subtitulo">Quejas pendientes de validar y turnar.</p>
+  </div>
+</div>
+
+@if (cargando) {
+  <p class="cargando">Cargando bandeja…</p>
+} @else if (resumen) {
+  <div class="tarjetas">
+    <div class="card tarjeta">
+      <div class="tarjeta-encabezado">
+        <span class="icono-acento rojo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="22 6 12 13 2 6"></polyline></svg>
+        </span>
+        <h3>Pendientes</h3>
+      </div>
+      <p class="dato-numero">{{ resumen.pendientes }}</p>
+    </div>
+
+    <div class="card tarjeta">
+      <div class="tarjeta-encabezado">
+        <span class="icono-acento ambar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </span>
+        <h3>En Proceso</h3>
+      </div>
+      <p class="dato-numero">{{ resumen.enProceso }}</p>
+    </div>
+
+    <div class="card tarjeta">
+      <div class="tarjeta-encabezado">
+        <span class="icono-acento verde">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </span>
+        <h3>Turnadas hoy</h3>
+      </div>
+      <p class="dato-numero">{{ resumen.turnadasHoy }}</p>
+    </div>
+  </div>
+
+  <div class="card tabla-contenedor">
+    <h3>Panel de Gestión de Recepción</h3>
+
+    @if (resumen.lista.length === 0) {
+      <div class="estado-vacio">
+        <svg class="estado-vacio-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="22 6 12 13 2 6"></polyline></svg>
+        <p>No hay quejas pendientes por trabajar.</p>
+      </div>
+    } @else {
+      <table class="tabla-admin">
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>Fecha</th>
+            <th>Quejoso</th>
+            <th>Documentación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of resumen.lista; track item.numeroFolio) {
+            <tr>
+              <td>{{ item.numeroFolio }}</td>
+              <td>{{ item.fechaCreacion | date: 'dd/MM/yy' }}</td>
+              <td>{{ item.nombreQuejoso }}</td>
+              <td>
+                @if (item.documentacionAparenteCompleta) {
+                  <span class="indicador verde" title="Documentación aparente completa">✓</span>
+                } @else {
+                  <span class="indicador rojo" title="Podría faltar documentación">✕</span>
+                }
+              </td>
+              <td>
+                <a [routerLink]="['/validacion', item.numeroFolio]" class="btn-primary boton-validar">Validar</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+}

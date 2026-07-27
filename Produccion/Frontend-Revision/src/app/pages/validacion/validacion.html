@@ -1,0 +1,59 @@
+<div class="page-header">
+  <div>
+    <h2>Validación de Requisitos — {{ folio }}</h2>
+    <p class="page-header-subtitulo">Revisa la queja antes de canalizarla o rechazarla.</p>
+  </div>
+  <a routerLink="/" class="btn-secondary">Volver a la Bandeja</a>
+</div>
+
+@if (cargando) {
+  <p class="cargando">Cargando queja…</p>
+} @else if (queja) {
+  <div class="card">
+    <h3>Resumen de la Queja</h3>
+    <p class="resumen-linea">
+      Presentada el {{ queja.fechaCreacion | date: 'dd/MM/yy, HH:mm' }} — Por:
+      <strong>{{ queja.nombreCompletoQuejoso }}</strong>
+      @if (queja.numeroIdentificacionQuejoso) {
+        — Boleta/Empleado: {{ queja.numeroIdentificacionQuejoso }}
+      }
+    </p>
+    <p class="resumen-linea">
+      <strong>Motivo:</strong> {{ queja.motivo }}
+    </p>
+    <p class="resumen-linea descripcion">{{ queja.descripcion }}</p>
+
+    <h4>Documentos Adjuntos</h4>
+    @if (queja.evidencias.length === 0) {
+      <p class="sin-documentos">No se adjuntaron documentos.</p>
+    } @else {
+      <ul class="lista-documentos">
+        @for (ev of queja.evidencias; track ev.id) {
+          <li>
+            <span>📄 {{ ev.nombreArchivo }}</span>
+            <button class="btn-secondary boton-ver" (click)="verDocumento(ev.id)">Ver Documento</button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  <div class="card requisitos-card">
+    <h3>¿Cumple con todos los requisitos?</h3>
+    <ul class="checklist">
+      @for (req of requisitos; track req.clave) {
+        <li>
+          <label class="check-linea">
+            <input type="checkbox" [(ngModel)]="req.cumplido" [name]="req.clave" />
+            {{ req.etiqueta }}
+          </label>
+        </li>
+      }
+    </ul>
+
+    <div class="acciones-validacion">
+      <button class="btn-exito" (click)="irACanalizar()">→ Canalizar Queja</button>
+      <button class="btn-secondary boton-rechazar" (click)="irARechazar()">Rechazar Queja</button>
+    </div>
+  </div>
+}

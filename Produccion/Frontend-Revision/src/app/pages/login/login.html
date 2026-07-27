@@ -1,0 +1,41 @@
+<div class="contenedor">
+  <div class="card login-card">
+    <div class="login-escudo">DDP</div>
+    <h2>Panel de Revisión</h2>
+    <p class="subtitulo">Defensoría de los Derechos Politécnicos</p>
+
+    <form (submit)="$event.preventDefault(); ingresar()">
+      <div class="input-group">
+        <label>Correo institucional</label>
+        <input type="email" [(ngModel)]="correo" name="correo" required placeholder="nombre@ipn.mx" />
+      </div>
+      <div class="input-group">
+        <label>Contraseña</label>
+        <div class="campo-password">
+          <input
+            [type]="mostrarPassword ? 'text' : 'password'"
+            [(ngModel)]="password"
+            name="password"
+            required
+          />
+          <button
+            type="button"
+            class="alternar-password"
+            (click)="mostrarPassword = !mostrarPassword"
+            [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            {{ mostrarPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+      </div>
+
+      @if (error) {
+        <p class="mensaje-campo">{{ error }}</p>
+      }
+
+      <button type="submit" class="btn-primary" [disabled]="cargando">
+        {{ cargando ? 'Ingresando…' : 'Iniciar Sesión' }}
+      </button>
+    </form>
+  </div>
+</div>

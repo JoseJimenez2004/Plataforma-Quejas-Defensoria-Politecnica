@@ -5,7 +5,7 @@
 # ==============================================================================
 
 BASE_DIR="/apps/aplicaciones/defensoria/back"
-SERVICIOS=("auth-service" "quejas-service" "notificaciones-service" "catalogo-service")
+SERVICIOS=("auth-service" "quejas-service" "notificaciones-service" "catalogo-service" "admin-service" "revision-service" "chatbot-service")
 
 # Mapa de puertos por microservicio
 get_port() {
@@ -14,6 +14,9 @@ get_port() {
         "quejas-service") echo 8084 ;;
         "notificaciones-service") echo 8085 ;;
         "catalogo-service") echo 8086 ;;
+        "admin-service") echo 8087 ;;
+        "revision-service") echo 8088 ;;
+        "chatbot-service") echo 8089 ;;
         *) echo 0 ;;
     esac
 }
@@ -45,7 +48,16 @@ build_service() {
         exit 1
     fi
 
+    # admin-service tiene su propio Dockerfile (necesita postgresql-client instalado para
+    # los respaldos, ver admin-service/Dockerfile) -- los demas usan el Dockerfile compartido
+    # de la raiz.
+    DOCKERFILE="Dockerfile"
+    if [ -f "${SERVICE}/Dockerfile" ]; then
+        DOCKERFILE="${SERVICE}/Dockerfile"
+    fi
+
     podman build \
+      -f "$DOCKERFILE" \
       --build-arg JAR_FILE=artifact/${SERVICE}.jar \
       --build-arg SERVICE_PORT=${PORT} \
       -t "defensoria-${SERVICE}" .
@@ -64,10 +76,19 @@ start_service() {
 
     echo "Levantando contenedor para $SERVICE en el puerto $PORT..."
 
+    # admin-service necesita un volumen para que los .sql de respaldo sobrevivan a que se
+    # reconstruya el contenedor (si no, "up-container admin-service" los borraría cada vez).
+    VOLUMEN_EXTRA=""
+    if [ "$SERVICE" = "admin-service" ]; then
+        mkdir -p "$BASE_DIR/respaldos"
+        VOLUMEN_EXTRA="-v $BASE_DIR/respaldos:/app/respaldos:Z"
+    fi
+
     podman run -d \
       --name "$SERVICE" \
       -p $PORT:$PORT \
       -v $BASE_DIR/config-files/$SERVICE/config:/app/config:Z \
+      $VOLUMEN_EXTRA \
       -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
       -e SPRING_CONFIG_NAME="$SERVICE" \
       -e QUEJAS_SERVICE_URL="http://2.25.78.22:8084" \

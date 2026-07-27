@@ -1,0 +1,8 @@
+<div class="toast-contenedor">
+  @for (mensaje of toastService.mensajes(); track mensaje.id) {
+    <div class="toast" [class]="mensaje.tipo">
+      <span>{{ mensaje.texto }}</span>
+      <button type="button" (click)="toastService.descartar(mensaje.id)" aria-label="Cerrar">✕</button>
+    </div>
+  }
+</div>

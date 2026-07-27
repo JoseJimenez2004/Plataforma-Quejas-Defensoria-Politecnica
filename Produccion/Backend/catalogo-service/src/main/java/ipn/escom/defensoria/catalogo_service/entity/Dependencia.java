@@ -59,6 +59,15 @@ public class Dependencia {
     @Column(columnDefinition = "TEXT")
     private String notas;
 
+    /** Correo y titular actual -- se muestran/editan desde el panel de administración
+     * ("Catálogo de Unidades Académicas y Dependencias"). Nulos en dependencias antiguas
+     * sembradas antes de que existieran estas columnas. */
+    @Column(name = "correo_contacto", length = 150)
+    private String correoContacto;
+
+    @Column(name = "nombre_titular", length = 150)
+    private String nombreTitular;
+
     @Column(name = "creado_en")
     private LocalDateTime creadoEn = LocalDateTime.now();
 }
