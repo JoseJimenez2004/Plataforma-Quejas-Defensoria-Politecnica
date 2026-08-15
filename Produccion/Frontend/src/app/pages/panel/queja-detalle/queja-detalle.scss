@@ -5,6 +5,31 @@
   margin-bottom: 12px;
 }
 
+.encabezado-seccion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    margin: 0;
+  }
+
+  button {
+    font-size: 0.82rem;
+    padding: 8px 14px;
+  }
+}
+
+.fila-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
 .cargando-estado {
   text-align: center;
   padding: 60px 20px;

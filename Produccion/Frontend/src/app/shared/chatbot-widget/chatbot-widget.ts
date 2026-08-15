@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 import { ChatbotService } from '../../core/services/chatbot.service';
 import { CategoriaChatbot, MensajeChatbot, OpcionChatbot, PreguntaChatbot } from '../../core/models/chatbot.models';
@@ -18,7 +18,7 @@ import { CategoriaChatbot, MensajeChatbot, OpcionChatbot, PreguntaChatbot } from
   templateUrl: './chatbot-widget.html',
   styleUrl: './chatbot-widget.scss',
 })
-export class ChatbotWidget {
+export class ChatbotWidget implements OnInit {
   abierto = false;
   cargando = false;
   error = false;
@@ -31,6 +31,15 @@ export class ChatbotWidget {
   private yaSaludo = false;
 
   constructor(private chatbotService: ChatbotService) {}
+
+  /** Precarga el menú en segundo plano tan pronto carga la página (el widget vive en
+   * public-layout, así que esto corre una sola vez por visita) para que, cuando el usuario
+   * haga clic en el ícono, la respuesta sea instantánea en vez de esperar el viaje de red al
+   * abrir el panel. El panel sigue oculto (@if abierto) mientras tanto, así que esto no se
+   * nota visualmente hasta que se abre. */
+  ngOnInit(): void {
+    this.cargarMenu();
+  }
 
   alternarPanel(): void {
     this.abierto = !this.abierto;

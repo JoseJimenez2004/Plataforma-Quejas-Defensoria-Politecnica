@@ -5,7 +5,7 @@
 # ==============================================================================
 
 BASE_DIR="/apps/aplicaciones/defensoria/back"
-SERVICIOS=("auth-service" "quejas-service" "notificaciones-service" "catalogo-service" "admin-service" "revision-service" "chatbot-service")
+SERVICIOS=("auth-service" "quejas-service" "notificaciones-service" "catalogo-service" "admin-service" "revision-service" "chatbot-service" "primer-contacto-service" "subdefensoria-service")
 
 # Mapa de puertos por microservicio
 get_port() {
@@ -17,6 +17,18 @@ get_port() {
         "admin-service") echo 8087 ;;
         "revision-service") echo 8088 ;;
         "chatbot-service") echo 8089 ;;
+        # primer-contacto-service trae 8082 como default en su propio application.properties
+        # (módulo local "primercontacto") y no choca con nada más de esta lista, así que se
+        # respeta el mismo puerto también en producción.
+        "primer-contacto-service") echo 8082 ;;
+        # subdefensoria-service trae 8083 como default en su propio application.properties
+        # (módulo local "subdefensoria") -- CHOCA con auth-service (8083 ya asignado arriba).
+        # 8090 tampoco sirve: ya lo usa defensoria-web en la VPS frontend (puerto distinto host,
+        # sin conflicto real, pero se evita para no confundir). Se reasigna a 8091 vía
+        # config-files/subdefensoria-service (no se tocó el application.properties del módulo,
+        # solo se sobreescribe server.port en el yml de despliegue, igual que ya se hace con el
+        # resto de la config de producción).
+        "subdefensoria-service") echo 8091 ;;
         *) echo 0 ;;
     esac
 }
@@ -31,7 +43,7 @@ mostrar_ayuda() {
     echo "  delete                  Detiene y elimina TODOS los microservicios."
     echo "  delete-container <srv>  Detiene y elimina UN microservicio especifico."
     echo ""
-    echo "Servicios validos: auth-service, quejas-service, notificaciones-service, catalogo-service"
+    echo "Servicios validos: auth-service, quejas-service, notificaciones-service, catalogo-service, admin-service, revision-service, chatbot-service, primer-contacto-service, subdefensoria-service"
 }
 
 # Construir una imagen dedicada por microservicio (cada uno con su propio tag,

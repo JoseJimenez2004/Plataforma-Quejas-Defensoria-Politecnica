@@ -6,6 +6,8 @@ import {
   ActivacionCuentaRequest,
   AuthResponse,
   LoginRequest,
+  PerfilUpdateRequest,
+  PerfilUsuario,
   ResetPasswordRequest,
   UsuarioActual,
 } from '../models/auth.models';
@@ -49,6 +51,16 @@ export class AuthService {
 
   activarCuenta(datos: ActivacionCuentaRequest): Observable<{ mensaje: string }> {
     return this.http.post<{ mensaje: string }>(`${this.apiUrl}/activar-cuenta`, datos);
+  }
+
+  /** Perfil completo del usuario logueado (boleta, unidad académica, domicilio, etc.) —
+   * el login solo trae nombre/correo, esto completa el resto para "Configuración de Perfil". */
+  obtenerPerfil(): Observable<PerfilUsuario> {
+    return this.http.get<PerfilUsuario>(`${this.apiUrl}/me`);
+  }
+
+  actualizarPerfil(datos: PerfilUpdateRequest): Observable<PerfilUsuario> {
+    return this.http.put<PerfilUsuario>(`${this.apiUrl}/perfil`, datos);
   }
 
   logout(): void {

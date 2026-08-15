@@ -1,0 +1,79 @@
+	\section{Introducción}
+	El presente documento reúne el avance del Trabajo Terminal 2026-B009, desarrollado durante el
+	semestre 2025-2 en colaboración con la Defensoría de los Derechos Politécnicos (DDP) del Instituto
+	Politécnico Nacional (IPN), con el objetivo de identificar áreas de oportunidad en sus procesos
+	internos y proponer una solución tecnológica que los optimice.
+	
+	El Instituto Politécnico Nacional es una institución educativa pública mexicana consolidada como una
+	de las principales casas de estudio del país, la cual ofrece una amplia gama de programas académicos
+	en diversas áreas del conocimiento \cite{ipn_ley_organica}.
+	
+	La transformación digital ha modificado profundamente la manera en que las instituciones administran
+	sus procesos internos, resguardan información sensible y prestan servicios a sus usuarios. En este
+	contexto, las organizaciones educativas enfrentan retos nuevos relacionados con la atención de
+	quejas, la protección de los derechos de su comunidad y la necesidad de contar con mecanismos
+	tecnológicos capaces de garantizar seguridad, trazabilidad y eficiencia operativa. Dentro del IPN,
+	la Defensoría de los Derechos Politécnicos desempeña un papel fundamental como órgano encargado de
+	promover, proteger y defender los derechos de estudiantes, docentes, personal administrativo y demás
+	integrantes de la comunidad politécnica \cite{ipn_acuerdo622, ipn_manual_organizacion_ddp}.
+	
+	Actualmente, buena parte de los procedimientos de recepción, análisis y seguimiento de quejas
+	depende de procesos manuales o parcialmente digitalizados, lo que ocasiona diversos problemas
+	operativos \cite{ipn_manual_procedimientos_ddp}. Entre las limitaciones identificadas destacan la
+	saturación administrativa, la dependencia del criterio humano en la etapa de primer contacto, la
+	dificultad para dar seguimiento oportuno a los expedientes y la ausencia de mecanismos inteligentes
+	que automaticen la clasificación y canalización de casos. Estas problemáticas provocan retrasos en
+	la atención, inconsistencias en la interpretación normativa y una capacidad institucional limitada
+	para responder al incremento constante de solicitudes.
+	
+	A partir de este escenario surge la necesidad de desarrollar una plataforma web especializada en la
+	gestión digital de quejas y denuncias dentro de la DDP-IPN. La propuesta que aquí se presenta busca
+	diseñar e implementar una solución tecnológica moderna que optimice el flujo operativo institucional
+	mediante la integración de herramientas de procesamiento de lenguaje natural, aprendizaje
+	automático, arquitectura de microservicios y mecanismos avanzados de seguridad informática. El
+	propósito no se limita a digitalizar formularios o expedientes, sino a construir un ecosistema
+	integral capaz de asistir al personal jurídico y administrativo en la toma de decisiones sobre la
+	admisión y clasificación de quejas.
+	
+	El proyecto se fundamenta en un análisis previo del estado del arte de plataformas gubernamentales,
+	académicas e internacionales orientadas a la gestión de denuncias digitales
+	\cite{sfp_sidec,cdmx_denuncia_digital,whistlelink,eqs_integrity_line,navex_whistleb,unam_ddu_denuncia}.
+	Dicho análisis permitió identificar que las soluciones existentes presentan limitaciones importantes en
+	escalabilidad, automatización inteligente, protección de identidad, interoperabilidad institucional
+	y especialización universitaria. Mientras algunas priorizan el cumplimiento normativo y la
+	formalización administrativa, otras se enfocan en la anonimización o la gestión corporativa, y dejan
+	vacíos relevantes en contextos educativos donde convergen necesidades jurídicas, administrativas y
+	de protección de derechos humanos. De ahí que se identificara una oportunidad tecnológica para
+	desarrollar una solución adaptada a las necesidades operativas de la DDP.
+	
+	Uno de los principales aportes de este trabajo consiste en la incorporación de un clasificador
+	inteligente de quejas basado en técnicas de Procesamiento de Lenguaje Natural (PLN) y aprendizaje
+	supervisado \cite{cortes1995svm, breiman2001rf, reimers2019sbert}. Este componente asiste al
+	personal de primer contacto en la determinación de competencia o incompetencia de una queja, y toma
+	como referencia el marco normativo establecido en el Acuerdo Número Extraordinario 622 de la Gaceta
+	Politécnica \cite{ipn_acuerdo622}. Hoy en día esa decisión depende del análisis manual que realiza
+	el personal administrativo y jurídico, lo cual genera variabilidad en los criterios de
+	interpretación y un consumo considerable de tiempo operativo.
+	
+	Además del componente de inteligencia artificial, el proyecto contempla una arquitectura moderna
+	basada en microservicios, orientada a garantizar modularidad, escalabilidad y mantenibilidad del
+	sistema \cite{aws_microservicios, villamizar_microservices}. Entre los módulos principales destacan
+	el portal del quejoso, el módulo administrativo, el expediente digital, el sistema de seguridad y
+	control de acceso, y el clasificador inteligente. Esta arquitectura desacopla las funcionalidades
+	críticas y facilita futuras ampliaciones sin afectar la operación general de la plataforma.
+	
+	Como parte del trabajo realizado se mantuvo una interacción constante con la DDP mediante reuniones,
+	levantamiento de requerimientos y validación de procesos operativos. Ello permitió modelar el flujo
+	real de atención de quejas con diagramas BPMN, identificar reglas de negocio críticas y diseñar
+	soluciones alineadas con las necesidades institucionales. También se elaboraron prototipos
+	funcionales, mockups, modelos de base de datos, la implementación de backend y frontend del
+	microservicio de atención al quejoso, así como pruebas funcionales y experimentales para validar el
+	comportamiento del sistema.
+	
+	En conjunto, este trabajo presenta una propuesta integral para modernizar la gestión de quejas y
+	denuncias dentro de la Defensoría de los Derechos Politécnicos del IPN. La integración de
+	inteligencia artificial, arquitecturas escalables y mecanismos de seguridad avanzada sienta las
+	bases de una plataforma institucional capaz de optimizar procesos administrativos, reducir tiempos
+	de respuesta y fortalecer la protección de los derechos de la comunidad politécnica. En los
+	capítulos siguientes se desarrollan los fundamentos teóricos, metodológicos y técnicos que sustentan
+	el diseño, la implementación y la validación de la solución propuesta.

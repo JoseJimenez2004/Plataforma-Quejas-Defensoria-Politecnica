@@ -44,4 +44,35 @@ public class NotificacionQuejaService {
             log.error("No se pudo enviar el correo de rechazo para el folio {}: {}", folio, ex.getMessage());
         }
     }
+
+    /** Deja un aviso persistido en el centro de notificaciones del quejoso (POST /registrar,
+     * NO manda correo) cada vez que cambia el estatus de su queja -- lo que pidió el usuario
+     * ("cambios de estatus de mi quejas"). Nunca debe tumbar la operación si falla. */
+    public void registrarCambioEstatus(String correoDestino, String folio, String tituloEvento, String mensaje) {
+        registrarNotificacion(correoDestino, "CAMBIO_ESTATUS", tituloEvento, mensaje, "/panel/mis-quejas/" + folio);
+    }
+
+    /** Igual que arriba, pero para cuando se emite un nuevo acuerdo de conciliación. */
+    public void registrarConciliacion(String correoDestino, String folio, String asunto) {
+        registrarNotificacion(correoDestino, "CONCILIACION",
+                "Nuevo acuerdo de conciliación",
+                "Se te propuso un acuerdo de conciliación relacionado con tu queja " + folio + ": " + asunto,
+                "/panel/conciliacion");
+    }
+
+    private void registrarNotificacion(String correoDestino, String tipo, String titulo, String mensaje, String enlace) {
+        try {
+            restTemplate.postForObject(
+                    notificacionesServiceUrl + "/api/notificaciones/registrar",
+                    Map.of(
+                            "correoDestino", correoDestino,
+                            "tipo", tipo,
+                            "titulo", titulo,
+                            "mensaje", mensaje,
+                            "enlace", enlace),
+                    String.class);
+        } catch (Exception ex) {
+            log.error("No se pudo registrar la notificación ({}) para {}: {}", tipo, correoDestino, ex.getMessage());
+        }
+    }
 }

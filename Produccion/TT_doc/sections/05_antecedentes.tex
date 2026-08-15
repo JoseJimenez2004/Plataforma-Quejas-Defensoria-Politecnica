@@ -1,0 +1,310 @@
+	\section{Estado del Arte}
+	La transformación digital ha impulsado el desarrollo de plataformas orientadas a la gestión
+	electrónica de denuncias, quejas y mecanismos de protección de derechos. Organizaciones
+	gubernamentales, corporativas y académicas han incorporado sistemas capaces de automatizar la
+	recepción de reportes, el seguimiento de expedientes y la administración de evidencia electrónica.
+	
+	Esa evolución, sin embargo, no ha sido homogénea. Algunos sistemas privilegian la validez jurídica y
+	el cumplimiento normativo, mientras que otros se concentran en la anonimización de datos, la
+	movilidad, la trazabilidad o la incorporación de mecanismos de seguridad informática. El resultado es
+	que buena parte de las soluciones disponibles resulta insuficiente para contextos institucionales
+	complejos, en particular para entornos universitarios donde convergen aspectos administrativos,
+	jurídicos, académicos y de protección de derechos humanos.
+	
+	En el caso de la DDP-IPN, una plataforma especializada debe atender exigencias que rebasan las de un
+	sistema convencional de recepción de denuncias. Los aspectos críticos identificados son los
+	siguientes:
+	
+	\begin{itemize}
+		\item Protección e integridad de la información sensible.
+		\item Automatización de procesos administrativos.
+		\item Escalabilidad de la infraestructura tecnológica.
+		\item Trazabilidad de expedientes digitales.
+		\item Protección de identidad y anonimización del denunciante.
+		\item Integración institucional entre distintas áreas administrativas.
+		\item Adaptabilidad a procesos universitarios complejos.
+	\end{itemize}
+	
+	Con ese marco, este capítulo analiza diversas plataformas nacionales e internacionales de denuncia
+	digital y gestión institucional, con el objetivo de identificar las capacidades tecnológicas
+	existentes, las limitaciones arquitectónicas predominantes y las brechas funcionales que justifican
+	el desarrollo de una solución especializada para el Instituto Politécnico Nacional.
+	
+	\subsection{Criterios de evaluación}
+	Para analizar las plataformas seleccionadas bajo una misma óptica, se definieron criterios de
+	evaluación que abarcan tanto aspectos funcionales como arquitectónicos:
+	
+	\begin{itemize}
+		\item \textbf{Escalabilidad arquitectónica:} capacidad del sistema para absorber crecimiento en
+		usuarios, servicios y procesamiento sin degradar de forma significativa su rendimiento.
+	
+		\item \textbf{Seguridad y confidencialidad:} mecanismos con que protege la información sensible,
+		entre ellos cifrado, autenticación y control de acceso.
+	
+		\item \textbf{Anonimización y protección de identidad:} nivel de protección que ofrece al
+		denunciante para preservar su identidad y confidencialidad.
+	
+		\item \textbf{Trazabilidad y seguimiento:} posibilidad de monitorear el estado y el avance de los
+		expedientes o denuncias digitales.
+	
+		\item \textbf{Automatización administrativa:} uso de tecnologías que reducen el trabajo manual
+		mediante reglas de negocio, clasificación automática o asistencia inteligente.
+	
+		\item \textbf{Soporte multimedia:} capacidad de almacenar y gestionar evidencia digital como
+		imágenes, documentos, audio y video.
+	
+		\item \textbf{Interoperabilidad institucional:} facilidad para integrarse con otros servicios,
+		sistemas o plataformas de la propia institución.
+	
+		\item \textbf{Adaptación al entorno universitario:} grado de adecuación funcional y administrativa
+		a instituciones educativas públicas.
+	\end{itemize}
+	
+	Sobre estos criterios se construyó el análisis comparativo que se presenta a continuación.
+	
+	\subsection{Plataformas gubernamentales}
+	Esta sección revisa las herramientas tecnológicas que el Estado mexicano ha implementado para
+	recibir, gestionar y dar seguimiento a denuncias ciudadanas. A partir de soluciones federales, como
+	el Sistema Integral de Denuncias Ciudadanas (SIDEC), y de iniciativas locales, como la plataforma
+	Denuncia Digital de la Ciudad de México, se examinan sus capacidades funcionales, su arquitectura y
+	los retos que aún enfrentan en materia de interoperabilidad, automatización y descentralización.
+	
+	\subsubsection{Sistema Integral de Denuncias Ciudadanas (SIDEC)}
+	El SIDEC es una de las principales plataformas gubernamentales de recepción de quejas
+	administrativas en México y centraliza las denuncias relacionadas con servidores públicos federales
+	\cite{sfp_sidec}.
+	
+	En el plano funcional, el sistema recibe denuncias de forma continua mediante formularios
+	electrónicos y ofrece mecanismos básicos de seguimiento a través de folios únicos y contraseñas de
+	acceso \cite{amexcid_sidec}. Admite además evidencia multimedia en formato de documento, audio y
+	video. Su relevancia como referente se refuerza con los trabajos de mejora que la Secretaría de la
+	Función Pública ha impulsado junto con el BID y GovLab \cite{sfp_bid_govlab_sidec}.
+	
+	El análisis arquitectónico, en cambio, revela varias limitaciones técnicas:
+	
+	\begin{itemize}
+		\item Arquitectura predominantemente centralizada.
+		\item Procesos administrativos parcialmente manuales.
+		\item Seguimiento limitado para el denunciante.
+		\item Ausencia de automatización inteligente.
+		\item Escasa modularidad de servicios.
+	\end{itemize}
+	
+	\subsubsection{Denuncia Digital y sistemas estatales}
+	Diversas entidades federativas han incorporado plataformas digitales para recibir denuncias y
+	querellas. El caso más representativo es el sistema Denuncia Digital de la Ciudad de México
+	\cite{cdmx_denuncia_digital}, que permite iniciar procedimientos por delitos no violentos mediante
+	autenticación electrónica con la Llave CDMX o con firma electrónica gubernamental.
+	
+	La comparación entre entidades revela una fragmentación tecnológica considerable
+	\cite{impunidadcero_denuncia_digital}: algunas plataformas ya admiten videodenuncias y ratificación
+	remota, mientras otras siguen operando con modelos híbridos o trámites presenciales. Aunque
+	representan un avance real en digitalización administrativa, estas soluciones se quedan cortas en
+	interoperabilidad, automatización y protección avanzada de identidad.
+	
+	\subsubsection{Servicios de procuración digital: MP Virtual y denuncia anónima}
+	La Fiscalía General de Justicia de la Ciudad de México ha sumado servicios digitales
+	complementarios, entre ellos el MP Virtual y el sistema de denuncia anónima
+	\cite{fgjcdmx_servicios_linea}.
+	
+	El módulo MP Virtual formaliza a distancia determinados procedimientos jurídicos, lo que facilita la
+	validación documental y reduce la necesidad de comparecencia presencial \cite{fgjcdmx_mp_virtual}.
+	El sistema de denuncia anónima, por su parte, implementa mecanismos básicos de protección de
+	identidad para reportes de delitos de alto impacto.
+	
+	Ambos servicios, no obstante, siguen apoyados en infraestructuras centralizadas y procesos
+	administrativos tradicionales, y carecen de componentes de inteligencia artificial, clasificación
+	automática y analítica institucional.
+	
+	\subsection{Aplicaciones móviles y plataformas ciudadanas}
+	Junto a las plataformas web institucionales ha surgido una generación de aplicaciones móviles y
+	canales ciudadanos que privilegian la accesibilidad y la participación colaborativa por encima de la
+	formalidad administrativa.
+	
+	\subsubsection{Aplicaciones de denuncia georreferenciada}
+	La evolución de los servicios digitales ha impulsado aplicaciones móviles orientadas a la denuncia
+	ciudadana y la participación colaborativa. Uno de los referentes más conocidos es la aplicación
+	Incorruptible, diseñada para registrar actos de corrupción mediante geolocalización
+	\cite{nacion321_apps_corrupcion}. Sus funcionalidades principales son:
+	
+	\begin{itemize}
+		\item Registro georreferenciado de incidentes.
+		\item Publicación colaborativa de reportes.
+		\item Integración de evidencia multimedia.
+		\item Cuantificación económica de los daños reportados.
+	\end{itemize}
+	
+	En una línea complementaria, el Sistema de Atención Mexiquense (SAM) integra canales web, móviles y
+	telefónicos para canalizar denuncias hacia distintas dependencias administrativas
+	\cite{secogem_sam}.
+	
+	Su accesibilidad y facilidad de uso son evidentes, pero este tipo de aplicaciones queda limitado en
+	trazabilidad jurídica, validación institucional y protección de datos sensibles.
+	
+	\subsection{Plataformas internacionales}
+	El mercado internacional de plataformas de denuncia y cumplimiento normativo ofrece soluciones
+	maduras, dirigidas sobre todo a sectores corporativos y regulados. Destacan por sus mecanismos de
+	seguridad, anonimización y administración de casos, aunque suelen tropezar con costos de
+	implementación elevados, dependencia de proveedores externos y dificultades para adaptarse a marcos
+	institucionales específicos.
+	
+	\subsubsection{Whistlelink}
+	Whistlelink gestiona denuncias corporativas de forma anónima y destaca por su soporte multilingüe y
+	por sus canales bidireccionales de comunicación anónima \cite{whistlelink}. Su mayor virtud es
+	reducir las barreras de acceso para denunciantes de distintos países; en contraparte, ofrece poca
+	personalización institucional y se adapta con dificultad a procesos administrativos complejos.
+	
+	\subsubsection{EQS Integrity Line}
+	EQS Integrity Line es una de las soluciones corporativas más robustas del mercado europeo, diseñada
+	para cumplir con la normativa internacional de protección al denunciante \cite{eqs_integrity_line}.
+	Incorpora herramientas avanzadas de administración de casos, monitoreo organizacional y generación
+	de reportes. Su complejidad operativa y la carga administrativa que exige, sin embargo, complican su
+	implementación en instituciones educativas públicas.
+	
+	\subsubsection{NAVEX / WhistleB}
+	NAVEX y su solución WhistleB se apoyan en infraestructura en la nube para garantizar alta
+	disponibilidad y escalabilidad \cite{navex_whistleb}. Entre sus fortalezas figuran:
+	
+	\begin{itemize}
+		\item Integración con plataformas GRC.
+		\item Infraestructura escalable.
+		\item Gestión centralizada de cumplimiento.
+		\item Administración avanzada de casos.
+	\end{itemize}
+	
+	La dependencia de proveedores externos, en cambio, plantea restricciones de soberanía de datos que
+	chocan con las políticas de las instituciones gubernamentales.
+	
+	\subsubsection{Whistleblower Software}
+	Whistleblower Software sobresale por sus mecanismos de cifrado y por adoptar un modelo de
+	arquitectura \textit{Zero-Knowledge} \cite{whistleblower_software}, enfoque que refuerza de manera
+	notable la confidencialidad de la información y la protección del denunciante. Su orientación al
+	entorno corporativo, no obstante, limita su encaje directo en estructuras universitarias públicas.
+	
+	\subsection{Plataformas académicas e institucionales}
+	Esta sección examina las herramientas e iniciativas digitales que instituciones educativas y
+	organismos públicos han desarrollado para atender incidencias en el ámbito académico. Mediante el
+	análisis de BullyButton, Ventanilla Escolar, Alerta IPN y el sistema de Denuncia en Línea de la
+	UNAM se evalúan sus alcances operativos y protocolos de respuesta, y se identifican las brechas
+	tecnológicas comunes a estos entornos: sobre todo la gestión jurídica de expedientes, la
+	automatización del triaje y la falta de mecanismos avanzados para proteger la identidad de los
+	usuarios.
+	
+	\subsubsection{BullyButton}
+	BullyButton se enfoca en la detección y el reporte de casos de acoso escolar \cite{bully_button}. Su
+	diseño privilegia la simplicidad operativa y la facilidad de uso para estudiantes, pero carece de
+	mecanismos formales de trazabilidad jurídica y de administración avanzada de expedientes.
+	
+	\subsubsection{Ventanilla Escolar}
+	Ventanilla Escolar opera como canal de orientación y comunicación entre las instituciones educativas
+	y las autoridades federales \cite{sep_ventanilla_escolar}. Centraliza información relevante para la
+	comunidad educativa, aunque no cubre el seguimiento de denuncias ni la administración formal de
+	expedientes.
+	
+	\subsubsection{Alerta IPN}
+	Alerta IPN es uno de los principales mecanismos institucionales de reporte dentro del Instituto
+	Politécnico Nacional \cite{ipn_alerta} y se orienta sobre todo a emergencias y situaciones de riesgo
+	dentro de las instalaciones. Sus limitaciones se concentran en:
+	
+	\begin{itemize}
+		\item Gestión jurídica de expedientes.
+		\item Clasificación administrativa automatizada.
+		\item Seguimiento integral de casos.
+		\item Protección avanzada de identidad.
+		\item Automatización inteligente de procesos.
+	\end{itemize}
+	
+	\subsubsection{UNAM: Denuncia en Línea}
+	La plataforma de Denuncia en Línea de la UNAM es uno de los referentes más relevantes de gestión
+	universitaria de denuncias en México \cite{unam_ddu_denuncia}. Su mayor fortaleza son los protocolos
+	institucionales consolidados y los procedimientos administrativos claramente definidos. El análisis
+	tecnológico, en cambio, evidencia limitaciones en:
+	
+	\begin{itemize}
+		\item Escalabilidad arquitectónica.
+		\item Integración de inteligencia artificial.
+		\item Automatización del triaje.
+		\item Modularidad de servicios.
+		\item Gestión inteligente de expedientes.
+	\end{itemize}
+	
+	\subsection{Tabla comparativa general}
+	Con base en los criterios definidos al inicio del capítulo, se comparó el conjunto de plataformas
+	analizadas para contrastar sus capacidades funcionales, sus limitaciones arquitectónicas y su nivel
+	de adaptación a entornos institucionales complejos. La Tabla~\ref{tab:comparativa_plataformas}
+	resume las características identificadas durante la investigación.
+	
+	\rowcolors{2}{rowblue}{white}
+	
+	\footnotesize
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{3pt}
+	
+	\begin{longtable}{|p{2.7cm}|p{1.55cm}|p{1.7cm}|p{1.5cm}|p{1.4cm}|p{1.7cm}|p{1.5cm}|p{1.8cm}|}
+		\caption{Comparativa general de plataformas de denuncia digital}
+		\label{tab:comparativa_plataformas} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Plataforma} &
+		\headercell{Seguridad} &
+		\headercell{Anonimato} &
+		\headercell{Segui\-miento} &
+		\headercell{Multi\-media} &
+		\headercell{Automati\-zación} &
+		\headercell{Escala\-bilidad} &
+		\headercell{Adaptación universitaria} \\
+		\hline
+		\endfirsthead
+	
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Plataforma} &
+		\headercell{Seguridad} &
+		\headercell{Anonimato} &
+		\headercell{Segui\-miento} &
+		\headercell{Multi\-media} &
+		\headercell{Automati\-zación} &
+		\headercell{Escala\-bilidad} &
+		\headercell{Adaptación universitaria} \\
+		\hline
+		\endhead
+	
+		SIDEC & Media & Baja & Media & Sí & Baja & Media & No \\ \hline
+		Denuncia Digital CDMX & Media & Baja & Media & Sí & Baja & Media & No \\ \hline
+		MP Virtual & Media & Media & Media & Sí & Baja & Media & No \\ \hline
+		Incorruptible & Baja & Media & Baja & Sí & Baja & Alta & No \\ \hline
+		SAM & Media & Baja & Media & Sí & Baja & Media & No \\ \hline
+		Whistlelink & Alta & Alta & Alta & Sí & Media & Alta & Parcial \\ \hline
+		EQS Integrity Line & Alta & Alta & Alta & Sí & Alta & Alta & Parcial \\ \hline
+		NAVEX / WhistleB & Alta & Alta & Alta & Sí & Alta & Alta & Parcial \\ \hline
+		Whistleblower Software & Muy alta & Muy alta & Alta & Sí & Alta & Alta & Parcial \\ \hline
+		BullyButton & Media & Media & Baja & Limitado & Baja & Media & Sí \\ \hline
+		Ventanilla Escolar & Media & Baja & Baja & No & Baja & Media & Sí \\ \hline
+		Alerta IPN & Media & Baja & Media & Sí & Baja & Media & Sí \\ \hline
+		UNAM Denuncia en Línea & Media & Media & Alta & Sí & Media & Media & Sí \\ \hline
+	\end{longtable}
+	
+	\normalsize
+	\setlength{\tabcolsep}{6pt}
+	\renewcommand{\arraystretch}{1}
+	
+	\subsection{Brechas tecnológicas identificadas}
+	El análisis comparativo muestra que, si bien existen múltiples plataformas dedicadas a la gestión
+	digital de denuncias y quejas, ninguna reúne por completo los requerimientos tecnológicos,
+	administrativos y de protección institucional que exige un entorno universitario público como el
+	Instituto Politécnico Nacional. Las brechas principales son:
+	
+	\begin{itemize}
+		\item Dependencia de arquitecturas centralizadas tradicionales.
+		\item Escasa automatización inteligente de los procesos administrativos.
+		\item Mecanismos limitados de anonimización y protección de identidad.
+		\item Baja interoperabilidad entre servicios institucionales.
+		\item Deficiencias en la trazabilidad integral de los expedientes digitales.
+		\item Escasa adaptación a estructuras universitarias complejas.
+		\item Ausencia de arquitecturas híbridas escalables pensadas para instituciones académicas
+		públicas.
+	\end{itemize}
+	
+	Estas limitaciones justifican el desarrollo de una plataforma especializada que combine seguridad
+	informática avanzada, modularidad arquitectónica, automatización administrativa y adaptación
+	específica al contexto institucional de la DDP-IPN.

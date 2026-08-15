@@ -34,6 +34,14 @@ mail:
 service:
     url: ${QUEJAS_SERVICE_URL:http://localhost:8084} # Fallback a localhost si no existe la variable
 
+quejas:
+  service:
+    url: ${QUEJAS_SERVICE_URL:http://localhost:8084}
+
+notificaciones:
+  service:
+    url: ${NOTIFICACIONES_SERVICE_URL:http://localhost:8085}
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

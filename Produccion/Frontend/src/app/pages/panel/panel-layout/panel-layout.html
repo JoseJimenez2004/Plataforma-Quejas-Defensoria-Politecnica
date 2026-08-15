@@ -1,21 +1,58 @@
-<header class="topbar">
-  <span class="usuario">{{ authService.usuarioActual()?.nombre }}</span>
-  <button class="btn-cerrar" (click)="cerrarSesion()">Cerrar Sesión</button>
-</header>
-
 <div class="layout">
   <aside class="sidebar">
-    <a routerLink="/panel" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">
-      🏠 Resumen
-    </a>
-    <a routerLink="/panel/mis-quejas" routerLinkActive="activo">📋 Mis Quejas</a>
-    <a routerLink="/panel/nueva-queja" routerLinkActive="activo">➕ Nueva Queja</a>
-    <a routerLink="/panel/conciliacion" routerLinkActive="activo">🤝 Acuerdos de Conciliación</a>
-    <a routerLink="/panel/notificaciones" routerLinkActive="activo">🔔 Notificaciones</a>
-    <a routerLink="/panel/perfil" routerLinkActive="activo">⚙️ Configuración de Perfil</a>
+    <div class="marca">
+      <span class="marca-sigla">DDP</span>
+      <span class="marca-texto">Defensoría de los<br />Derechos Politécnicos</span>
+    </div>
+
+    <nav class="menu">
+      <a routerLink="/panel" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        <span>Resumen</span>
+      </a>
+      <a routerLink="/panel/mis-quejas" routerLinkActive="activo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1Z"/><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M8 11h8M8 15h5"/></svg>
+        <span>Mis Quejas</span>
+      </a>
+      <a routerLink="/panel/nueva-queja" routerLinkActive="activo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+        <span>Nueva Queja</span>
+      </a>
+      <a routerLink="/panel/conciliacion" routerLinkActive="activo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 12 2.5 2.5L16 9"/><circle cx="12" cy="12" r="9"/></svg>
+        <span>Acuerdos de Conciliación</span>
+      </a>
+      <a routerLink="/panel/notificaciones" routerLinkActive="activo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span>Notificaciones</span>
+        @if (notificacionService.noLeidas() > 0) {
+          <span class="conteo">{{ notificacionService.noLeidas() }}</span>
+        }
+      </a>
+      <a routerLink="/panel/perfil" routerLinkActive="activo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+        <span>Configuración de Perfil</span>
+      </a>
+    </nav>
   </aside>
 
-  <main class="contenido">
-    <router-outlet />
-  </main>
+  <div class="principal">
+    <header class="topbar">
+      <a routerLink="/panel/notificaciones" class="campana" aria-label="Notificaciones">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        @if (notificacionService.noLeidas() > 0) {
+          <span class="punto-rojo"></span>
+        }
+      </a>
+      <div class="usuario">
+        <span class="avatar">{{ iniciales }}</span>
+        <span class="nombre">{{ authService.usuarioActual()?.nombre }}</span>
+      </div>
+      <button class="btn-cerrar" (click)="cerrarSesion()">Cerrar Sesión</button>
+    </header>
+
+    <main class="contenido">
+      <router-outlet />
+    </main>
+  </div>
 </div>

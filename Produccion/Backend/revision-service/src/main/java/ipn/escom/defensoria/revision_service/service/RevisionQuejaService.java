@@ -121,6 +121,11 @@ public class RevisionQuejaService {
 
         notificacionService.enviarCorreoRechazo(
                 guardada.getCorreoInstitucional(), nombreMostrar(guardada), guardada.getNumeroFolio(), textoCompleto);
+        notificacionService.registrarCambioEstatus(
+                guardada.getCorreoInstitucional(), guardada.getNumeroFolio(),
+                "Tu queja necesita observaciones",
+                "Tu queja " + guardada.getNumeroFolio() + " fue revisada y requiere que atiendas algunas observaciones. "
+                        + "Revisa el detalle para más información.");
 
         return guardada;
     }
@@ -141,7 +146,15 @@ public class RevisionQuejaService {
         queja.setValidadoPor(correoRecepcionista);
         queja.setFechaValidacion(LocalDateTime.now());
         queja.setFechaTurnado(LocalDateTime.now());
-        return quejaRepository.save(queja);
+        Queja guardada = quejaRepository.save(queja);
+
+        notificacionService.registrarCambioEstatus(
+                guardada.getCorreoInstitucional(), guardada.getNumeroFolio(),
+                "Tu queja fue turnada",
+                "Tu queja " + guardada.getNumeroFolio() + " fue admitida y turnada a " + areaTurnada
+                        + " para su atención.");
+
+        return guardada;
     }
 
     // ---------------- Registro Manual ----------------

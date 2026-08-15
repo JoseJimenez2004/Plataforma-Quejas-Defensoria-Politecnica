@@ -25,6 +25,13 @@ export class NuevaQueja implements OnInit {
   apellidoDenunciado = '';
   relato = '';
   archivos: File[] = [];
+  /** Igual que en el registro público: se manda como evidencia renombrada con el prefijo
+   * IDENTIFICACION_ (el backend no distingue "tipos" de evidencia todavía). */
+  identificacionArchivo: File | null = null;
+
+  /** Controla el estado visual del dropzone mientras se arrastra un archivo encima (mismo
+   * patrón que registro-queja-publico). */
+  arrastrandoArchivo = false;
 
   dependencias: Dependencia[] = [];
   cargandoDependencias = true;
@@ -64,6 +71,48 @@ export class NuevaQueja implements OnInit {
     this.archivos.splice(indice, 1);
   }
 
+  onArrastreSobre(event: DragEvent): void {
+    event.preventDefault();
+    this.arrastrandoArchivo = true;
+  }
+
+  onArrastreSale(): void {
+    this.arrastrandoArchivo = false;
+  }
+
+  onArchivosSoltados(event: DragEvent): void {
+    event.preventDefault();
+    this.arrastrandoArchivo = false;
+    if (!event.dataTransfer?.files) return;
+    for (const archivo of Array.from(event.dataTransfer.files)) {
+      this.archivos.push(archivo);
+    }
+  }
+
+  formatearTamanio(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  onIdentificacionSeleccionada(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';
+    if (!archivo) return;
+
+    const extension = '.' + (archivo.name.split('.').pop()?.toLowerCase() ?? '');
+    if (!['.pdf', '.jpg', '.jpeg', '.png'].includes(extension)) {
+      this.error = 'La identificación debe ser un archivo PDF, JPG o PNG.';
+      return;
+    }
+    this.identificacionArchivo = archivo;
+  }
+
+  quitarIdentificacion(): void {
+    this.identificacionArchivo = null;
+  }
+
   enviar(): void {
     this.error = '';
 
@@ -72,10 +121,21 @@ export class NuevaQueja implements OnInit {
       return;
     }
 
+    if (!this.identificacionArchivo) {
+      this.error = 'Adjunta tu identificación oficial de la comunidad politécnica.';
+      return;
+    }
+
     // Antes se combinaba todo a mano dentro de "descripcion" porque el backend no tenía
     // columnas propias para unidad académica/fecha/denunciado — ya se mandan como campos
     // estructurados y el backend los guarda en sus propias columnas (ver docs/CAMBIOS.md).
     const motivo = `Queja en ${this.unidadAcademica}`;
+
+    const archivoIdentificacion = new File(
+      [this.identificacionArchivo],
+      `IDENTIFICACION_${this.identificacionArchivo.name}`,
+      { type: this.identificacionArchivo.type },
+    );
 
     this.cargando = true;
     this.quejaService
@@ -86,7 +146,7 @@ export class NuevaQueja implements OnInit {
         fechaHechos: this.fechaHechos || undefined,
         nombreDenunciado: this.nombreDenunciado || undefined,
         apellidoDenunciado: this.apellidoDenunciado || undefined,
-        archivos: this.archivos,
+        archivos: [archivoIdentificacion, ...this.archivos],
       })
       .subscribe({
         next: (queja) => {

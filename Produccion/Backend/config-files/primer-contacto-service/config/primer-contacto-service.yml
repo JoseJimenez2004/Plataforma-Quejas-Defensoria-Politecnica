@@ -1,0 +1,26 @@
+# Config de producción de primer-contacto-service (módulo local "Backend/primercontacto").
+# Se monta como volumen en /app/config (ver podman-compose.sh -> start_service), y Spring Boot
+# la carga por encima de src/main/resources/application.properties del jar (que sigue siendo
+# el default de desarrollo -- no se tocó). Mismo patrón que el resto de los microservicios.
+#
+# A propósito NO se sobreescribe aquí ninguna clave de datasource/JPA: el servicio sigue
+# corriendo con su base H2 en memoria tal como está hoy (ver application.properties, comentario
+# "H2 temporal") -- eso es lógica/decisión propia del servicio, no una preocupación de
+# despliegue, y no se debía tocar en esta tarea.
+
+server:
+  port: 8082
+
+# Dominio público real (router-nginx). Hoy no existe todavía una ruta de nginx ni un frontend
+# desplegado para Primer Contacto (ver docs/REQUERIMIENTOS.md, sección "Microservicios en
+# desarrollo"), así que este valor es un default seguro para cuando exista -- ya no localhost.
+# Revisar cuando se defina la ruta pública real de este servicio.
+cors:
+  allowed-origins: https://defensoria-escom.ddns.net
+
+# Subdefensoría en producción corre en el puerto 8091 (reasignado por choque con auth-service
+# y con defensoria-web, ver get_port() en podman-compose.sh), en la misma VPS backend (IP
+# pública, mismo patrón que ya usan los otros microservicios para llamarse entre sí -- ver
+# quejas.service.url en auth-service.yml).
+subdefensoria:
+  base-url: http://2.25.78.22:8091

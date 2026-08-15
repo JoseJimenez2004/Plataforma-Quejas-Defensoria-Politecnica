@@ -1,0 +1,170 @@
+
+% =========================
+% PORTADA
+% =========================
+
+
+\newgeometry{top=2cm, bottom=2cm, right=2cm, left=3cm}
+
+\begin{titlepage}
+	\thispagestyle{empty}
+	\centering
+	
+	% --- LÍNEAS Y LOGOS ---
+	\begin{tikzpicture}[remember picture, overlay]
+		
+		% Logo IPN alineado con las líneas azules
+		\node[anchor=north] 
+		at ([xshift=1.60cm, yshift=-1.25cm]current page.north west) {
+			\includegraphics[width=2.25cm]{images/ipn.png}
+		};
+		
+		% Tres líneas azules entre los logos, como en la plantilla
+		% No atraviesan las imágenes
+		\foreach \x in {1.45,1.60,1.75} {
+			\draw[azulESCOM, line width=1.5pt] 
+			([xshift=\x cm, yshift=-3.85cm]current page.north west) -- 
+			([xshift=\x cm, yshift=4.20cm]current page.south west);
+		}
+		
+		% Logo ESCOM alineado con las líneas azules
+		\node[anchor=south] 
+		at ([xshift=1.60cm, yshift=2.0cm]current page.south west) {
+			\includegraphics[width=2.45cm]{images/ESCOM.png}
+		};
+		
+	\end{tikzpicture}
+	
+	\vspace*{0.85cm}
+	
+	% --- BLOQUE INSTITUCIONAL ---
+	{\fontsize{20}{24}\selectfont \textbf{INSTITUTO POLITÉCNICO NACIONAL}}\\[0.35cm]
+	{\fontsize{16}{19.2}\selectfont \textbf{ESCUELA SUPERIOR DE CÓMPUTO}}\\[0.55cm]
+	{\fontsize{20}{24}\selectfont \textbf{ESCOM}}\\[1.45cm]
+	
+	% --- BLOQUE DEL PROYECTO ---
+	{\fontsize{14}{16.8}\selectfont \textit{Trabajo Terminal}}\\[0.75cm]
+	
+	{\fontsize{14}{16.8}\selectfont 2026-B009}\\[0.75cm]
+	
+	{\fontsize{16}{19.2}\selectfont \bfseries
+		``Plataforma Web para la Denuncia Segura y Prevenciòn de Riesgos Digitales''
+	}\\[0.6cm]
+	
+	\vfill
+	
+	% --- BLOQUE DE AUTOR ---
+	{\fontsize{14}{16.8}\selectfont \textit{Presentan}}\\[0.4cm]
+	{\fontsize{14}{16.8}\selectfont \textbf{Edgar Jair Flores Espinosa}}\\[.5cm]
+	{\fontsize{14}{16.8}\selectfont \textbf{Jose Bryan Omar Jimenez Velazquez}}\\[.5cm]
+	{\fontsize{14}{16.8}\selectfont \textbf{Leilani Shareni Santos Rivera}}\\[.5cm]
+
+	
+	% --- BLOQUE DE DIRECTOR ---
+	{\fontsize{14}{16.8}\selectfont \textit{Directores}}\\[0.4cm]
+	{\fontsize{14}{16.8}\selectfont \textbf{Dr. Jessie Paulina Guzman Flores}}\\[.3cm]
+	{\fontsize{14}{16.8}\selectfont \textbf{M. en C. Ulises Velez Saldaña}}\\[.3cm]
+	\vfill
+	
+	% --- PIE DE PÁGINA ---
+	{\fontsize{12}{14.4}\selectfont 29 de Diciembre de 2026}
+	
+\end{titlepage}
+
+\restoregeometry
+
+
+
+
+
+
+	
+	% =========================
+	% PORTADA ADICIONAL CON RESUMEN
+	% =========================
+	\begin{titlepage}
+		\thispagestyle{empty}
+		
+		\begin{center}
+			
+			% Encabezado bien alineado
+			\noindent
+			\begin{minipage}[c]{0.18\textwidth}
+				\centering
+				\includegraphics[width=2.4cm]{images/ipn.png}
+			\end{minipage}
+			\begin{minipage}[c]{0.62\textwidth}
+				\centering
+				{\fontsize{20}{22}\selectfont \textbf{INSTITUTO POLITÉCNICO NACIONAL}\par}
+				{\fontsize{16}{18}\selectfont \textbf{ESCUELA SUPERIOR DE CÓMPUTO}\par}
+				{\fontsize{16}{18}\selectfont \textbf{SUBDIRECCIÓN ACADÉMICA}\par}
+			\end{minipage}
+			\begin{minipage}[c]{0.18\textwidth}
+				\centering
+				\includegraphics[width=3.0cm]{images/ESCOM.png}
+			\end{minipage}
+			
+			\vspace{0.9cm}
+			
+			\noindent
+			\begin{minipage}{0.45\textwidth}
+				\raggedright
+				{\fontsize{14}{16}\selectfont No. de TT: 2026-B009}
+			\end{minipage}
+			\begin{minipage}{0.50\textwidth}
+				\raggedleft
+				{\fontsize{14}{16}\selectfont Fecha de presentación de TT-II: 05 de junio de 2026}
+			\end{minipage}
+			
+			\vspace{0.55cm}
+			
+			{\fontsize{14}{16}\selectfont Documento Técnico\par}
+			
+			\vspace{0.65cm}
+			
+			\begin{minipage}{0.88\textwidth}
+				\centering
+				{\fontsize{16}{18}\selectfont \textbf{``Plataforma Web para la Denuncia Segura y Prevención de Riesgos Digitales''}\par}
+			\end{minipage}
+			
+			\vspace{1.25cm}
+			
+			{\fontsize{14}{16}\selectfont \textit{Presentan:}\par}
+			\vspace{0.15cm}
+			{\fontsize{14}{16}\selectfont \textbf{Edgar Jair Flores Espinosa, Jose Bryan Omar Jimenez Velazquez, Leilani Shareni Santos Rivera}\par}
+			
+			\vspace{1.35cm}
+			
+			{\fontsize{14}{16}\selectfont \textit{Directores:}\par}
+			
+			\vspace{0.45cm}
+			
+			{\fontsize{14}{16}\selectfont \textbf{Dr. Jessie Paulina Guzman Flores}\par}
+			{\fontsize{14}{16}\selectfont \textbf{M. en C. Ulises Velez Saldaña}\par}
+						
+			\vspace{1.1cm}
+			
+			{\fontsize{14}{16}\selectfont \textbf{RESUMEN}\par}
+			
+		\end{center}
+		
+		\vspace{0.25cm}
+		
+		{\fontsize{12}{14}\selectfont
+			En este trabajo terminal se desarrolló una plataforma web para la denuncia segura y prevención de riesgos digitales. La solución propuesta permite a los usuarios reportar situaciones de riesgo digital de manera segura y anónima, facilitando la identificación y respuesta ante estos casos. La plataforma integra funcionalidades de registro, seguimiento y análisis de denuncias, contribuyendo a un entorno digital más seguro para todos los usuarios.
+			\par}
+		
+		\vspace{0.35cm}
+		
+		{\fontsize{12}{14}\selectfont
+			\textbf{Palabras clave:} denuncia segura, prevención de riesgos digitales, plataforma web, seguridad digital.
+			\par}
+		
+		\vfill
+		
+		{\fontsize{12}{14}\selectfont
+			\rule{6cm}{0.4pt}\\[-0.05cm]
+			\textsuperscript{1}\texttt{josebryanomar2004@gmail.com}
+		}
+		
+	\end{titlepage}

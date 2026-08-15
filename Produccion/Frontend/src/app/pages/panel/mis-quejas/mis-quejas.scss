@@ -7,13 +7,26 @@
 
 .filtros {
   display: grid;
-  grid-template-columns: 1fr 200px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 16px;
+  align-items: end;
   margin-bottom: 20px;
 
   .input-group {
     margin-bottom: 0;
   }
+
+  .btn-limpiar {
+    height: fit-content;
+    padding: 11px 16px;
+    white-space: nowrap;
+  }
+}
+
+.conteo-resultados {
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  margin: 0 0 10px;
 }
 
 .tabla-contenedor {

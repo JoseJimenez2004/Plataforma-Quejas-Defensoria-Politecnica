@@ -1,0 +1,421 @@
+	\section{Metodología}
+	
+	En este capítulo se describe la metodología empleada para el desarrollo del prototipo de LSM. Se presenta el enfoque metodológico basado en el modelo de desarrollo en cascada, el cual permite organizar el proceso de investigación y desarrollo en una serie de fases secuenciales claramente definidas.
+	
+	Ademas, se describen las etapas que conforman el desarrollo del proyecto, incluyendo el análisis de requisitos, el diseño del sistema, la construcción del conjunto de datos, el entrenamiento del modelo de clasificación y la integración en el prototipo de reconocimiento de señas. Posteriormente, se detalla el entorno de trabajo utilizado para la implementación del sistema, así como el procedimiento general seguido durante el desarrollo.
+	
+	Como último paso se presentan las técnicas de validación y evaluación empleadas para analizar el desempeño del sistema propuesto, considerando métricas de clasificación y pruebas funcionales que permiten verificar la efectividad del modelo en el reconocimiento continuo de señas mediante la cámara del dispositivo móvil.
+	
+	
+	\subsection{Enfoque metodológico}
+	
+	El desarrollo del presente trabajo se basa en el modelo de desarrollo en cascada,
+	también conocido como modelo lineal secuencial. Este modelo organiza el proceso
+	de desarrollo de software en una serie de etapas claramente definidas que se
+	ejecutan de manera ordenada y secuencial, donde la finalización de una fase es el punto de inicio para la siguiente. De esta manera, cada etapa
+	produce artefactos y resultados que sirven como base para las fases posteriores
+	del proceso de desarrollo \cite{pressman2014,sommerville2016}.
+	
+	El modelo en cascada ha sido ampliamente utilizado en proyectos de ingeniería debido a su estructura clara y a la posibilidad de establecer una
+	planificación precisa de las actividades del proyecto. Este enfoque permite
+	definir con claridad los requisitos del sistema, documentar cada etapa del
+	proceso y facilitar la verificación de los resultados obtenidos en cada fase
+	del desarrollo \cite{mall2018,jalote2005}. La naturaleza secuencial
+	del modelo favorece el control del progreso del proyecto y la trazabilidad de
+	las decisiones tomadas en el proceso de desarrollo \cite{fairley1985}.
+	
+	La adopción del modelo en
+	cascada se justifica debido a que el desarrollo del prototipo de  requiere seguir una serie de etapas dependientes entre sí. En primer
+	lugar, es necesario realizar el análisis de requisitos y definir el alcance del
+	proyecto. Posteriormente, se procede al diseño de la arquitectura de la solución,
+	la construcción del conjunto de datos, el desarrollo y entrenamiento del modelo
+	de reconocimiento, así como la integración de este dentro de una aplicación móvil.
+	
+	Cabe recalcar que diversos modelos utilizados en proyectos
+	de análisis de datos y aprendizaje automático también proponen estructuras de
+	trabajo organizadas en fases secuenciales que incluyen la comprensión del
+	problema, la preparación de los datos, el modelado y la evaluación de los
+	resultados \cite{crispdm2000}. 
+	
+	Bajo este enfoque metodológico, el desarrollo del proyecto se organiza en las
+	siguientes fases: análisis y especificación de requisitos, diseño del sistema
+	y del modelo, adquisición y preparación del conjunto de datos, desarrollo y
+	entrenamiento del modelo, integración y finalmente pruebas y
+	validación del prototipo desarrollado.
+	
+	\subsection{Fases del proyecto}
+	
+	\subsubsection{Fase I: Análisis y especificación de requisitos}
+	
+	La primera etapa del proyecto corresponderá al análisis y especificación de los
+	requisitos del prototipo a desarrollar. En esta fase se identificarán las
+	necesidades que la solución propuesta deberá atender, así como las
+	características funcionales y no funcionales que deberán considerarse durante
+	su desarrollo. El objetivo principal de esta etapa será establecer con claridad
+	el alcance del prototipo y definir los elementos fundamentales que guiarán las
+	etapas posteriores del proyecto \cite{pressman2014,sommerville2016}.
+	
+	Durante esta fase se realizará el análisis del problema relacionado con la
+	comunicación entre personas oyentes y personas usuarias de la LSM. A partir de este análisis se definirán los objetivos del
+	prototipo, el tipo de señas que serán consideradas dentro del modelo de
+	reconocimiento \textbf{(enfocándose en señas estáticas del alfabeto LSM)} y las condiciones generales bajo las cuales el prototipo deberá
+	operar.
+	
+	Además, se establecerán los requisitos funcionales del prototipo, tales como
+	la captura de imágenes mediante la cámara de un dispositivo móvil, el
+	procesamiento de la información visual \textbf{mediante la extracción de puntos clave (landmarks) de la mano} y la generación de una salida textual
+	correspondiente a la seña reconocida. De igual forma, se identificarán
+	requisitos no funcionales relacionados con el rendimiento del modelo, la
+	facilidad de uso y la ejecución de la aplicación en dispositivos móviles con
+	recursos limitados, \textbf{considerando restricciones de tiempo de respuesta y consumo de recursos}.
+	
+	El resultado de esta fase será la definición formal de los requisitos del
+	prototipo, los cuales servirán como base para el diseño de la arquitectura de
+	la solución y del modelo de reconocimiento que se desarrollará en las
+	siguientes etapas del proyecto.
+		
+	\subsubsection{Fase II: Diseño del sistema y del modelo}
+	
+	Ya definidos los requisitos del prototipo, se procederá a la etapa de
+	diseño de la solución propuesta. En esta fase se establecerá la estructura
+	general, así como la organización de los componentes que
+	participarán en el proceso de reconocimiento de señas. El objetivo principal
+	de esta etapa será definir la arquitectura conceptual del prototipo y
+	establecer la forma en que los diferentes elementos del sistema interactuarán
+	entre sí \cite{pressman2014,sommerville2016}.
+	
+	Durante esta fase se definirá el flujo general de funcionamiento del prototipo,
+	considerando las etapas necesarias para la captura de imágenes, el
+	procesamiento de la información visual \textbf{a partir de la detección de la mano y la extracción de puntos clave (landmarks)}, y la generación de una salida textual
+	correspondiente a la seña reconocida se establecerá la estructura
+	general del modelo de reconocimiento que será utilizado para la clasificación
+	de las señas de la LSM, \textbf{considerando representaciones basadas en vectores de características derivados de la configuración espacial de la mano}.
+	
+	De igual manera, se realizará el diseño conceptual de la aplicación móvil que
+	servirá como interfaz de interacción con el usuario. En esta etapa se
+	identificarán los componentes principales de la aplicación, tales como el
+	módulo de captura de imágenes, el módulo de procesamiento \textbf{encargado de la extracción y transformación de características}, y el módulo de
+	visualización de resultados.
+	
+	El resultado de esta fase será la definición de la arquitectura general del
+	prototipo y del flujo de procesamiento de la información, \textbf{incluyendo la secuencia de etapas desde la adquisición de la imagen hasta la obtención del resultado clasificado}, lo cual permitirá
+	establecer una base clara para las etapas posteriores relacionadas con la
+	construcción del conjunto de datos y el entrenamiento del modelo de
+	reconocimiento \cite{mall2018,jalote2005}.
+	
+	Este diseño permite establecer una separación clara entre las etapas de adquisición, procesamiento y clasificación, facilitando la integración de cada componente dentro del prototipo final.
+	
+	\subsubsection{Fase III: Adquisición y preparación del conjunto de datos}
+	
+	Después de definir el diseño general de la solución, se procederá a la
+	construcción del conjunto de datos que será utilizado para el entrenamiento
+	del modelo de reconocimiento. En los proyectos de aprendizaje automático,
+	la calidad y representatividad del conjunto de datos representa un elemento
+	fundamental para el desempeño del modelo, ya que el proceso de aprendizaje
+	depende directamente de la información disponible durante la etapa de
+	entrenamiento \cite{goodfellow2016,geron2019}.
+	
+	Durante esta fase se realizará la adquisición de muestras correspondientes a
+	diferentes señas de la LSM. Para ello se utilizará la
+	cámara de un dispositivo móvil o de una computadora, a partir de la cual se
+	obtendrán imágenes individuales que permitirán capturar la configuración de la
+	mano en cada seña.
+	
+	A partir de estas imágenes, se llevará a cabo la extracción de características
+	mediante el uso de técnicas de detección de puntos clave (landmarks), obteniendo
+	la representación espacial de la mano en forma de coordenadas. Estas
+	coordenadas serán posteriormente transformadas y organizadas como vectores de
+	características, los cuales constituirán las muestras del conjunto de datos.
+	
+	Posteriormente se llevará a cabo la preparación del conjunto de datos,
+	incluyendo la organización de las muestras, el etiquetado de cada una de las
+	clases y la generación de la estructura necesaria para su uso durante el
+	proceso de entrenamiento del modelo. Esta etapa también contemplará la
+	revisión de la consistencia de los datos y la eliminación de muestras que
+	presenten errores o inconsistencias.
+	
+	El resultado de esta fase será la construcción de un conjunto de datos
+	estructurado, compuesto por vectores de características asociados a cada seña,
+	el cual contendrá la información necesaria para el entrenamiento y evaluación
+	del modelo de reconocimiento.
+	
+	Este proceso permite transformar la información visual en una representación numérica estructurada, adecuada para su uso en modelos de clasificación supervisada.
+	
+	\subsubsection{Fase IV: Desarrollo y entrenamiento del modelo}
+	
+	Una vez construido el conjunto de datos, se procederá al desarrollo y
+	entrenamiento del modelo de reconocimiento que permitirá clasificar las
+	señas capturadas por la cámara. En los sistemas de reconocimiento basados en
+	aprendizaje automático, el entrenamiento del modelo consiste en ajustar los
+	parámetros del algoritmo a partir de los datos disponibles, con el fin
+	de aprender patrones que permitan identificar correctamente cada una de las
+	clases consideradas \cite{goodfellow2016,geron2019}.
+	
+	Durante esta fase se realizará la implementación del modelo de clasificación
+	que será utilizado para reconocer las señas de la LSM, \textbf{considerando como entrada vectores de características derivados de la representación espacial de la mano mediante landmarks}.
+	
+	El proceso de entrenamiento se llevará a cabo utilizando el conjunto de datos
+	construido en la fase anterior, permitiendo que el modelo aprenda las
+	relaciones espaciales que distinguen cada una de las señas consideradas dentro del
+	proyecto.
+	
+	Se realizarán pruebas iniciales de desempeño con el fin de analizar el
+	comportamiento del modelo y verificar su capacidad para reconocer las
+	diferentes clases incluidas en el conjunto de datos. Estas pruebas permitirán
+	evaluar la efectividad del modelo antes de su integración dentro de la
+	aplicación final. El modelo obtenido en esta fase corresponde a un modelo previamente entrenado, listo para su uso en procesos de inferencia dentro de un entorno de ejecución.
+	
+	\subsubsection{Fase V: Integración del prototipo}
+	
+	Cuando se disponga del modelo de clasificación entrenado, se procederá a su
+	integración dentro de la aplicación móvil que permitirá la interacción con el
+	usuario. En los proyectos de desarrollo de software, la fase de integración
+	consiste en incorporar los diferentes componentes desarrollados durante las
+	etapas anteriores con el fin de construir una solución funcional que permita
+	evaluar el comportamiento del sistema de manera completa
+	\cite{pressman2014,sommerville2016}.
+	
+	En esta fase se realizará la incorporación del modelo de reconocimiento
+	dentro de la aplicación móvil encargada de capturar las imágenes y procesar la
+	información visual generada por la cámara del dispositivo, \textbf{incluyendo la detección de la mano y la extracción de puntos clave (landmarks)}.
+	
+	De esta manera, se establecerá el flujo de operación que permitirá recibir la entrada visual,
+	\textbf{transformarla en una representación estructurada mediante vectores de características} y procesarla mediante el modelo entrenado, realizando \textbf{inferencias} para generar una salida textual
+	correspondiente a la seña identificada.
+	
+	También se verificará la correcta comunicación entre los distintos módulos
+	de la aplicación, asegurando que el proceso de captura, procesamiento y
+	visualización de resultados funcione de manera adecuada dentro del entorno
+	móvil, \textbf{considerando condiciones de procesamiento continuo y restricciones propias del dispositivo móvil}.
+	
+	\subsubsection{Fase VI: Pruebas y validación del prototipo}
+	
+	La etapa final del proceso metodológico corresponde a la realización de
+	pruebas y actividades de validación orientadas a evaluar el desempeño del
+	prototipo desarrollado. En los procesos de ingeniería de software, las pruebas
+	conforman un mecanismo fundamental para verificar que la solución implementada
+	cumple con los requisitos funcionales y no funcionales definidos durante las
+	etapas iniciales del proyecto, así como para evaluar la calidad del sistema en
+	términos de precisión, eficiencia y confiabilidad \cite{pressman2014,mall2018}.
+	
+	En esta fase se llevarán a cabo diferentes tipos de pruebas con el objetivo de
+	analizar el comportamiento del modelo de reconocimiento y del sistema en su
+	conjunto. En primer lugar, se evaluará el desempeño del modelo de clasificación
+	utilizando el conjunto de datos preparado, verificando su capacidad para
+	identificar correctamente cada una de las señas consideradas dentro del
+	proyecto y para ello se emplearán métricas comúnmente utilizadas en problemas de
+	clasificación supervisada, tales como la exactitud (\textit{accuracy}), la cual
+	permite medir la proporción de predicciones correctas respecto al total de
+	muestras evaluadas. Se utilizarán matrices de confusión con el
+	fin de analizar el comportamiento del modelo frente a cada una de las clases,
+	identificando posibles patrones de error o confusión entre señas similares
+	\cite{geron2019,goodfellow2016}.
+	
+	Se podrán considerar otras métricas complementarias, como precisión
+	(\textit{precision}) y sensibilidad (\textit{recall}), que permiten evaluar el
+	desempeño del modelo desde una perspectiva más detallada, principalmente en
+	escenarios donde existe variabilidad en la representación de las señas. Además de la evaluación del modelo, se realizarán pruebas de funcionamiento del
+	prototipo completo en el entorno de ejecución móvil. Estas pruebas estarán
+	orientadas a verificar la correcta integración de los distintos componentes del
+	sistema, incluyendo la captura de imágenes, la detección de la mano, la
+	extracción de landmarks, la transformación de datos y la generación de
+	predicciones mediante el modelo entrenado.
+	
+	Se evaluará el comportamiento del sistema en condiciones de
+	uso real, considerando aspectos como el tiempo de respuesta del proceso de
+	inferencia, la estabilidad de la aplicación durante su ejecución y la
+	consistencia en los resultados obtenidos. Estos elementos son fundamentales en
+	aplicaciones de reconocimiento gestual con procesamiento continuo, como es el caso del
+	reconocimiento de señas mediante dispositivos móviles. Los resultados obtenidos permitirán validar el cumplimiento de los
+	objetivos planteados en el proyecto, así como determinar el nivel de desempeño
+	alcanzado por el prototipo en el proceso de reconocimiento de señas de la Lengua
+	de Señas Mexicana.
+	
+	\subsection{Procedimiento general}
+	
+	El procedimiento general del proyecto describe la secuencia de actividades que
+	permiten llevar a cabo el reconocimiento de señas de la LSM mediante el prototipo desarrollado. Este procedimiento integra
+	las diferentes etapas del sistema, desde la adquisición de la información
+	visual hasta la generación de una salida textual, estableciendo un flujo de
+	procesamiento estructurado y coherente con el enfoque de aprendizaje automático
+	planteado en el proyecto.
+	
+	Primero se realiza la captura de imágenes utilizando la cámara de un
+	dispositivo móvil. Estas imágenes conforman la entrada
+	del sistema y contienen la información visual necesaria para identificar la
+	configuración de la mano asociada a cada seña. La adquisición de datos visuales
+	representa una etapa fundamental en los sistemas de visión por computadora, ya
+	que la calidad de la entrada influye directamente en el desempeño del proceso
+	de reconocimiento \cite{szeliski2010computer}.
+	
+	Posteriormente, la información capturada es sometida a un proceso de análisis
+	mediante técnicas de visión por computadora orientadas a la detección de la
+	mano y la extracción de puntos clave (\textit{landmarks}). Frameworks como MediaPipe permiten identificar estructuras relevantes de la
+	mano en tiempo real, generando una representación basada en coordenadas que
+	describe su configuración espacial \cite{lugaresi2019mediapipe,zhang2020mediapipehands}.
+	
+	A partir de los landmarks detectados, se lleva a cabo un proceso de
+	transformación de datos que consiste en convertir las coordenadas obtenidas en
+	una representación estructurada adecuada para su procesamiento. Este proceso
+	incluye la generación de coordenadas relativas y la normalización de los datos,
+	con la finalidad de reducir la variabilidad asociada a factores como la posición,
+	escala y orientación de la mano dentro de la imagen. Como resultado, se obtiene
+	un vector de características que resume la configuración espacial de la mano en
+	una forma compacta y consistente.
+	
+	Una vez construido el vector de características, este es utilizado como entrada
+	para el modelo de clasificación previamente entrenado. El modelo realiza el
+	proceso de inferencia, es decir, la predicción de la clase correspondiente a la
+	entrada proporcionada, basándose en los patrones aprendidos durante la etapa de
+	entrenamiento \cite{goodfellow2016,geron2019}. Este proceso permite determinar
+	la seña que corresponde a la configuración de la mano capturada por el sistema.
+	
+	Por ultimo el prototipo presenta el resultado al usuario mediante una salida
+	textual que representa la seña identificada. Esta etapa representa la
+	interfaz de interacción del sistema, permitiendo transformar la información
+	visual capturada en una representación comprensible para el usuario.
+	
+	De manera general, el procedimiento descrito establece un flujo de procesamiento
+	que integra adquisición de datos, extracción de características, transformación
+	de la información y clasificación, lo cual permite implementar un sistema de
+	reconocimiento de señas eficiente y adecuado para su ejecución en entornos
+	móviles.
+	
+	\subsection{Entorno de trabajo}
+	
+	El desarrollo del prototipo se llevará a cabo utilizando un conjunto de
+	herramientas de software orientadas al procesamiento de información visual,
+	aprendizaje automático y desarrollo de aplicaciones móviles. Estas
+	herramientas permiten la implementación de los distintos componentes
+	necesarios para el reconocimiento de señas y su posterior integración
+	dentro de una aplicación funcional.
+	
+	El procesamiento de datos y el desarrollo del modelo de reconocimiento se
+	realizarán utilizando el lenguaje de programación Python, el cual es
+	ampliamente utilizado en proyectos de aprendizaje automático debido a la
+	gran disponibilidad de bibliotecas especializadas para el análisis de datos,
+	procesamiento de información y construcción de modelos de clasificación
+	\cite{python,geron2019}.
+	
+	Para la administración del entorno de desarrollo se utilizará Conda, el cual
+	permite la creación y gestión de entornos virtuales independientes que
+	facilitan la instalación y control de las dependencias necesarias para la
+	implementación del proyecto, asegurando la reproducibilidad del entorno de
+	trabajo.
+	
+	El desarrollo del código se llevará a cabo mediante el editor Visual Studio
+	Code, el cual proporciona herramientas de edición, depuración y ejecución de
+	programas que facilitan el desarrollo de aplicaciones basadas en Python.
+	
+	Para la extracción de características relacionadas con la posición y
+	configuración de la mano se empleará la biblioteca MediaPipe, la cual
+	proporciona soluciones de visión por computadora capaces de detectar y
+	localizar puntos clave (landmarks). Estas
+	herramientas permiten transformar la información visual capturada por la
+	cámara en una representación estructurada basada en coordenadas, adecuada
+	para su uso en modelos de aprendizaje automático \cite{lugaresi2019mediapipe,zhang2020mediapipehands}.
+	
+	El desarrollo y evaluación inicial del modelo de clasificación se apoyará en
+	bibliotecas de aprendizaje automático disponibles en Python, tales como
+	Scikit-learn, las cuales proporcionan herramientas para el entrenamiento,
+	validación y análisis del desempeño de modelos de clasificación
+	\cite{scikit-learn}. Sin embargo, para su ejecución en el entorno móvil, el
+	modelo será adaptado a un formato compatible con frameworks de inferencia
+	optimizados.
+	
+	En particular, la implementación del modelo dentro del dispositivo móvil se
+	realizará utilizando herramientas orientadas a la inferencia eficiente, como
+	TensorFlow Lite, el cual permite ejecutar modelos de aprendizaje automático
+	en dispositivos con recursos limitados mediante técnicas de optimización
+	\cite{tensorflow_lite}.
+	
+	Por último la integración del modelo dentro de una aplicación móvil se
+	llevará a cabo en el entorno de desarrollo Android Studio, el cual permite la
+	construcción de aplicaciones para dispositivos Android y la incorporación de
+	componentes de captura, procesamiento e inferencia dentro de una interfaz
+	interactiva para el usuario.
+	
+	\subsection{Técnicas de validación o evaluación}
+	
+	La validación del prototipo se llevará a cabo mediante un conjunto de técnicas
+	orientadas a verificar tanto su correcto funcionamiento como su desempeño
+	durante el proceso de reconocimiento. En ingeniería de software, la validación
+	permite comprobar que la solución desarrollada satisface los requisitos
+	establecidos, mientras que en los problemas de clasificación supervisada la
+	evaluación cuantitativa permite medir el grado de acierto del modelo ante los
+	datos de entrada \cite{pressman2014,sommerville2016,bishop2006}.
+	
+	Con base en ello, la evaluación del prototipo considerará tres enfoques
+	principales: el análisis de métricas de clasificación, las pruebas de
+	rendimiento durante la ejecución y la validación del cumplimiento de los
+	requisitos funcionales definidos en las etapas iniciales del proyecto.
+	
+	\subsubsection{Métricas de clasificación}
+	
+	Para evaluar el desempeño del prototipo en el reconocimiento de señas se
+	emplearán métricas comúnmente utilizadas en problemas de clasificación
+	supervisada. Estas métricas permiten cuantificar el comportamiento del modelo
+	a partir de las predicciones realizadas sobre un conjunto de datos de prueba
+	y proporcionan una medida objetiva de su capacidad de reconocimiento
+	\cite{bishop2006,geron2019}.
+	
+	Entre las métricas consideradas se incluirá la exactitud (\textit{accuracy}),
+	la cual permite determinar la proporción de predicciones correctas respecto al
+	total de muestras evaluadas, proporcionando una medida general del desempeño
+	del modelo. Se utilizará la matriz de confusión, ya que esta
+	herramienta permite identificar de manera detallada los aciertos y errores de
+	clasificación para cada una de las clases consideradas, lo cual resulta
+	particularmente útil en problemas donde pueden existir similitudes entre
+	diferentes señas \cite{geron2019,goodfellow2016}.
+	
+	Adicionalmente, se considerarán métricas como la precisión (\textit{precision})
+	y la sensibilidad (\textit{recall}), las cuales permiten evaluar el desempeño
+	del modelo desde una perspectiva más específica, analizando su capacidad para
+	evitar errores de clasificación y detectar correctamente cada una de las
+	señas.
+	
+	El análisis conjunto de estas métricas permitirá obtener una evaluación
+	integral del desempeño del modelo, facilitando la identificación de posibles
+	limitaciones y el nivel de efectividad del prototipo en el reconocimiento de
+	señas de la Lengua de Señas Mexicana.
+	
+	
+	\subsubsection{Pruebas de rendimiento}
+	
+	Las pruebas de rendimiento se utilizarán para analizar el comportamiento del
+	prototipo durante su ejecución, evaluando el tiempo de respuesta del sistema
+	ante las entradas proporcionadas por el usuario.. Este tipo de pruebas permite
+	evaluar si la solución mantiene un funcionamiento estable y si su tiempo de
+	respuesta resulta adecuado para las condiciones de uso previstas
+	\cite{pressman2014,sommerville2016}.
+	
+	Durante esta etapa se observará el tiempo requerido para realizar el proceso
+	general de reconocimiento, considerando desde la captura de la información
+	visual hasta la generación del resultado correspondiente. De igual manera, se
+	verificará que el prototipo mantenga un comportamiento consistente durante su
+	operación continua.
+	
+	Estas pruebas permitirán determinar si el prototipo presenta un desempeño
+	adecuado para su utilización como herramienta de apoyo en la comunicación entre personas sordas y oyentes.
+	
+	\subsubsection{Validación de requisitos}
+	
+	La validación de requisitos tendrá como finalidad verificar que el prototipo
+	desarrollado cumpla con las características definidas en la fase
+	de análisis y especificación de requisitos. Esta
+	actividad permite¿irá contrastar la solución implementada con los objetivos y
+	necesidades inicialmente planteados, con el fin de comprobar que el 
+	desarrollo corresponde con lo esperado \cite{pressman2014,mall2018}.
+	
+	Para ello se realizará una revisión del funcionamiento general del prototipo,
+	verificando que sea capaz de captar la información visual requerida,
+	procesarla de manera adecuada y generar una salida textual correspondiente a
+	la seña reconocida. Se comprobará que las funciones principales del
+	prototipo operen de acuerdo con el alcance establecido para el proyecto.
+	
+	El resultado de esta validación permitirá determinar el grado de cumplimiento
+	de los requisitos planteados y servirá como base para el análisis final del
+	prototipo desarrollado.
+	\newpage
+	
+	% ==================================================

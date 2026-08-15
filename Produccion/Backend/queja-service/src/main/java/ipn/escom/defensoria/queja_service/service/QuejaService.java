@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import ipn.escom.defensoria.queja_service.dto.EditarQuejaRequest;
 import ipn.escom.defensoria.queja_service.dto.EvidenciaResumen;
 import ipn.escom.defensoria.queja_service.dto.RegistroQuejaPublicaRequest;
 import ipn.escom.defensoria.queja_service.entity.Queja;
@@ -24,6 +25,9 @@ public class QuejaService {
 
     @Autowired
     private QuejaRepository quejaRepository;
+
+    @Autowired
+    private NotificacionClienteService notificacionClienteService;
 
     public boolean validarFolioYCorreo(String folio, String correo) {
         return quejaRepository.findByNumeroFolioAndCorreoInstitucional(folio, correo).isPresent();
@@ -53,6 +57,41 @@ public class QuejaService {
         Queja queja = quejaRepository.findByNumeroFolioAndCorreoInstitucional(folio, correo)
                 .orElseThrow(() -> new RuntimeException("No se encontró esa queja asociada a tu cuenta."));
         return queja;
+    }
+
+    /** Edita una queja propia MIENTRAS siga en estatus "RECIBIDA" -- una vez que pasa a
+     * revisión (recepcionista la valida/rechaza/turna), la información queda definitiva, tal
+     * como ya se le advertía al quejoso en el formulario ("Nota importante"). Solo se tocan
+     * los campos que vienen no-nulos en la petición. */
+    public Queja editarMiQueja(String folio, String correo, EditarQuejaRequest datos) {
+        Queja queja = obtenerMiQueja(folio, correo);
+
+        String estatusActual = queja.getEstatus() == null ? "RECIBIDA" : queja.getEstatus();
+        if (!"RECIBIDA".equalsIgnoreCase(estatusActual)) {
+            throw new RuntimeException(
+                    "Esta queja ya está en revisión y no se puede editar. Su información es definitiva.");
+        }
+
+        if (datos.getDescripcion() != null) {
+            if (esVacio(datos.getDescripcion())) {
+                throw new RuntimeException("La descripción no puede quedar vacía.");
+            }
+            queja.setDescripcion(datos.getDescripcion());
+        }
+        if (datos.getUnidadAcademicaClave() != null) {
+            queja.setUnidadAcademicaClave(datos.getUnidadAcademicaClave());
+        }
+        if (datos.getFechaHechos() != null) {
+            queja.setFechaHechos(datos.getFechaHechos());
+        }
+        if (datos.getNombreDenunciado() != null) {
+            queja.setNombreDenunciado(datos.getNombreDenunciado().isBlank() ? null : datos.getNombreDenunciado());
+        }
+        if (datos.getApellidoDenunciado() != null) {
+            queja.setApellidoDenunciado(datos.getApellidoDenunciado().isBlank() ? null : datos.getApellidoDenunciado());
+        }
+
+        return quejaRepository.save(queja);
     }
 
     /** Evidencias de una queja propia, SIN el contenido binario (solo para listarlas en el
@@ -98,7 +137,9 @@ public class QuejaService {
 
         agregarEvidencias(queja, archivos);
 
-        return quejaRepository.save(queja);
+        Queja guardada = quejaRepository.save(queja);
+        notificacionClienteService.notificarQuejaCreada(guardada.getCorreoInstitucional(), guardada.getNumeroFolio());
+        return guardada;
     }
 
     /**
@@ -141,7 +182,16 @@ public class QuejaService {
 
         agregarEvidencias(queja, datos.getArchivos());
 
-        return quejaRepository.save(queja);
+        Queja guardada = quejaRepository.save(queja);
+        notificacionClienteService.notificarQuejaCreada(guardada.getCorreoInstitucional(), guardada.getNumeroFolio());
+
+        if (datos.tieneTutor() && datos.getTutorCorreo() != null && !datos.getTutorCorreo().isBlank()) {
+            String nombreMenor = (datos.getNombre() + " " + datos.getApellidoPaterno()).trim();
+            notificacionClienteService.notificarTutorQuejaCreada(
+                    datos.getTutorCorreo(), datos.getTutorNombre(), nombreMenor, guardada.getNumeroFolio());
+        }
+
+        return guardada;
     }
 
     private void validarDatosPublicos(RegistroQuejaPublicaRequest datos) {
@@ -153,6 +203,12 @@ public class QuejaService {
         }
         if (esVacio(datos.getTipoIdentificacion()) || esVacio(datos.getNumeroIdentificacion())) {
             throw new RuntimeException("Falta el número de boleta o de empleado.");
+        }
+        if (!datos.getNumeroIdentificacion().matches("\\d+")) {
+            throw new RuntimeException("El número de boleta o de empleado solo puede contener números.");
+        }
+        if (datos.getNumeroIdentificacion().length() > 12) {
+            throw new RuntimeException("El número de boleta o de empleado no puede tener más de 12 caracteres.");
         }
         if (esVacio(datos.getUnidadAcademicaClave())) {
             throw new RuntimeException("Falta la unidad académica donde ocurrieron los hechos.");

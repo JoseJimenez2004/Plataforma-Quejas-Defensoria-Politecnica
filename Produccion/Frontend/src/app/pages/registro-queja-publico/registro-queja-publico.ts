@@ -65,11 +65,23 @@ export class RegistroQuejaPublico implements OnInit {
   /** Controla el estado visual del dropzone mientras se arrastra un archivo encima. */
   arrastrandoArchivo = false;
 
+  /** Foto/escaneo de la credencial de la comunidad politécnica -- se manda como un archivo
+   * de evidencia más (el backend no distingue "tipos" de evidencia todavía), pero renombrado
+   * con el prefijo "IDENTIFICACION_" para que el recepcionista lo identifique de un vistazo
+   * al validar la queja. Ver docs sobre validación de credencial: por ahora es validación
+   * humana (Nivel 1), no hay OCR/comparación automática. */
+  identificacionArchivo: File | null = null;
+
   // Menor de edad / tutor
   mostrarModalTutor = false;
   /** true una vez que se confirmaron los datos del tutor — para mostrar el banner de
    * confirmación persistente que pidió el usuario ("que yo sepa que tengo datos de tutor"). */
   tutorConfirmado = false;
+  /** true cuando el quejoso tiene menos de 14 años -- regla de negocio: no se bloquea la
+   * queja por completo (el tutor puede presentarla), pero se bloquea el "autoregistro
+   * directo": la mensajería deja explícito que debe completarla el padre/madre/tutor, y los
+   * datos de tutor son obligatorios sin excepción (ver enviarQueja()). */
+  esMenorDe14 = false;
   tutor: DatosTutor = {
     nombre: '',
     apellidoPaterno: '',
@@ -174,6 +186,30 @@ export class RegistroQuejaPublico implements OnInit {
     this.archivos.splice(indice, 1);
   }
 
+  onIdentificacionSeleccionada(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';
+    if (!archivo) return;
+
+    const extension = '.' + (archivo.name.split('.').pop()?.toLowerCase() ?? '');
+    if (!['.pdf', '.jpg', '.jpeg', '.png'].includes(extension)) {
+      this.toast.error('La identificación debe ser un archivo PDF, JPG o PNG.');
+      return;
+    }
+    if (archivo.size > TAMANIO_MAX_ARCHIVO) {
+      this.toast.error(
+        `"${archivo.name}" pesa ${this.formatearTamanio(archivo.size)}; el máximo es 30MB.`,
+      );
+      return;
+    }
+    this.identificacionArchivo = archivo;
+  }
+
+  quitarIdentificacion(): void {
+    this.identificacionArchivo = null;
+  }
+
   formatearTamanio(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -184,11 +220,16 @@ export class RegistroQuejaPublico implements OnInit {
     if (!this.fechaNacimiento) return;
     const edad = this.calcularEdad(this.fechaNacimiento);
     if (edad < 18) {
+      this.esMenorDe14 = edad < 14;
+      this.tutorConfirmado = false;
       this.mostrarModalTutor = true;
       this.toast.advertencia(
-        'Por ser menor de edad, necesitamos los datos de un tutor o adulto responsable.',
+        this.esMenorDe14
+          ? 'Por tratarse de una persona menor de 14 años, este formulario debe completarlo su padre, madre o tutor.'
+          : 'Por ser menor de edad, necesitamos los datos de un tutor o adulto responsable.',
       );
     } else {
+      this.esMenorDe14 = false;
       this.tutorConfirmado = false;
     }
   }
@@ -219,9 +260,13 @@ export class RegistroQuejaPublico implements OnInit {
   }
 
   cancelarTutor(): void {
-    this.fechaNacimiento = '';
+    // Antes esto borraba fechaNacimiento y "desconfirmaba" el tutor sin importar nada,
+    // así que si el usuario abría "Editar tutor" para corregir un dato y luego cancelaba,
+    // perdía TODO el progreso (incluida su fecha de nacimiento ya capturada) aunque ya
+    // hubiera confirmado los datos del tutor antes. Cancelar ahora solo cierra el modal —
+    // no toca fechaNacimiento ni tutorConfirmado. Si el tutor nunca se confirmó, el
+    // bloqueo real ocurre al momento de enviar (ver enviarQueja()).
     this.mostrarModalTutor = false;
-    this.tutorConfirmado = false;
   }
 
   editarTutor(): void {
@@ -245,12 +290,44 @@ export class RegistroQuejaPublico implements OnInit {
       return;
     }
 
+    if (!/^\d+$/.test(this.numeroBoletaEmpleado)) {
+      this.toast.error(`${this.etiquetaNumeroIdentificacion} solo puede contener números.`);
+      return;
+    }
+
+    if (!this.identificacionArchivo) {
+      this.toast.error('Adjunta tu identificación oficial de la comunidad politécnica.');
+      return;
+    }
+
     if (this.mostrarModalTutor) {
       this.toast.advertencia(
         'Termina de confirmar o cancelar los datos del tutor antes de continuar.',
       );
       return;
     }
+
+    // Antes solo se bloqueaba el envío si el modal seguía ABIERTO -- si el usuario lo
+    // cancelaba, la queja de un menor se podía enviar sin ningún dato de tutor. Ahora, si la
+    // fecha de nacimiento indica que es menor de edad, los datos de tutor son obligatorios
+    // sin excepción (para menores de 14 años esto es justamente lo que hace que el trámite
+    // solo pueda completarse a través de su tutor, no directamente).
+    if (this.fechaNacimiento && this.calcularEdad(this.fechaNacimiento) < 18 && !this.tutorConfirmado) {
+      this.toast.error(
+        'Debes completar los datos del tutor o adulto responsable antes de enviar la queja.',
+      );
+      this.mostrarModalTutor = true;
+      return;
+    }
+
+    // La credencial se manda como un archivo de evidencia más (el backend aún no distingue
+    // "tipos" de evidencia), pero renombrada con el prefijo IDENTIFICACION_ para que el
+    // recepcionista la reconozca de inmediato al validar la queja.
+    const archivoIdentificacion = new File(
+      [this.identificacionArchivo],
+      `IDENTIFICACION_${this.identificacionArchivo.name}`,
+      { type: this.identificacionArchivo.type },
+    );
 
     this.cargando = true;
     this.quejaService
@@ -267,7 +344,7 @@ export class RegistroQuejaPublico implements OnInit {
         nombreDenunciado: this.nombreDenunciado || undefined,
         apellidoDenunciado: this.apellidoDenunciado || undefined,
         descripcion: this.descripcion,
-        archivos: this.archivos,
+        archivos: [archivoIdentificacion, ...this.archivos],
         tutor: this.tutorConfirmado ? this.tutor : undefined,
       })
       .subscribe({

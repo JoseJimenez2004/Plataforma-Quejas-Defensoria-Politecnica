@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import {
+  EditarQuejaRequest,
   EvidenciaResumen,
   Queja,
   RegistroQuejaPublicaRequest,
@@ -127,5 +128,11 @@ export class QuejaService {
     return this.http.get<EvidenciaResumen[]>(
       `${this.apiUrl}/mias/${encodeURIComponent(folio)}/evidencias`,
     );
+  }
+
+  /** Edita una queja propia (solo permitido mientras sigue en estatus "RECIBIDA" — el
+   * backend responde 409 si ya se turnó/rechazó/finalizó). */
+  editarMiQueja(folio: string, datos: EditarQuejaRequest): Observable<Queja> {
+    return this.http.put<Queja>(`${this.apiUrl}/mias/${encodeURIComponent(folio)}`, datos);
   }
 }

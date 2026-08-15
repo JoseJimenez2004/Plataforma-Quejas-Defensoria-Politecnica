@@ -1,0 +1,141 @@
+	\section{Antecedentes}
+	
+	Este capítulo realiza una revisión y análisis de los trabajos previos mas relevantes en el campo del reconocimiento de la LSM. 
+	 
+	Únicamente se consideraron aquellas soluciones que al igual que este trabajo, se basan principalmente en el desarrollo y despliegue en dispositivos móviles Android. El objetivo de este análisis es, por un lado, identificar las fortalezas y sobre todo las limitaciones de las propuestas existentes, y por el otro establecer un punto de partida claro y mostrar la originalidad de la solución que se desarrollará en este trabajo terminal. 
+	
+	\subsection{Análisis de soluciones existentes}
+	
+	\subsubsection{Aplicación móvil basada en Deep Learning para la traducción de la Lengua de Señas Mexicana}
+	
+	El trabajo presenta el desarrollo de una aplicación móvil capaz de reconocer la Lengua de Señas Mexicana (LSM) en tiempo real y traducirla a texto, con un enfoque orientado a la accesibilidad en entornos educativos. La propuesta aborda tanto señas estáticas del alfabeto como señas dinámicas, integrando modelos de \textit{deep learning} optimizados para su ejecución directa en dispositivos Android sin requerir conexión a internet. La solución combina la obtención de puntos clave mediante MediaPipe con modelos especializados según el tipo de seña: redes neuronales convolucionales para imágenes estáticas y redes recurrentes tipo LSTM para secuencias de movimiento \cite{cuevas2025lsm_app}.
+	
+	La metodología de desarrollo se fundamenta en un enfoque iterativo, basado en ciclos cortos de implementación y evaluación que permitieron realizar ajustes continuos durante la construcción del sistema. El proceso inició con la creación de un dataset propio, capturado a partir de la grabación de voluntarios para obtener muestras tanto de señas estáticas como dinámicas. Posteriormente, se llevó a cabo la extracción de cuadros y puntos clave de la mano como etapa de preprocesamiento para el entrenamiento de los modelos. Esta separación entre el procesamiento visual y la clasificación permitió reducir el costo computacional y favorecer la ejecución en tiempo real sobre hardware móvil \cite{cuevas2025lsm_app}.
+	
+	El conjunto de datos consideró veintiún señas estáticas del alfabeto dactilológico, así como diversas expresiones dinámicas. Para el entrenamiento, se emplearon modelos ligeros que posteriormente fueron convertidos a TensorFlow Lite para su despliegue en dispositivos móviles. La arquitectura del sistema sigue un flujo definido: captura de imagen mediante la cámara del dispositivo, extracción de puntos clave de la mano, clasificación según el tipo de seña y visualización de la traducción en pantalla. Este diseño prioriza la viabilidad de uso en entornos educativos, donde la baja latencia y la independencia de red son factores determinantes \cite{cuevas2025lsm_app}.
+	
+	Los resultados obtenidos muestran un desempeño eficiente del sistema. Para las señas estáticas se alcanzó una precisión cercana al 95\,\%, mientras que para las señas dinámicas el rendimiento se aproxima al 90\,\%. Estos valores son competitivos dentro del contexto de reconocimiento de señas en dispositivos móviles. Las pruebas se realizaron en diferentes teléfonos inteligentes de distintas gamas, evidenciando que el sistema mantiene un funcionamiento estable y una latencia adecuada para su uso en condiciones reales, incluso en dispositivos con recursos limitados \cite{cuevas2025lsm_app}.
+	
+	El estudio identifica diversas limitaciones del enfoque propuesto. La precisión del sistema disminuye en condiciones de iluminación insuficiente, cuando la distancia entre la mano y la cámara supera aproximadamente el metro y medio, y cuando los movimientos asociados a la seña se realizan a alta velocidad. Estos factores afectan principalmente la detección de los puntos clave de la mano y, en consecuencia, la calidad de la clasificación. Se reconoce que la traducción es unidireccional, ya que se enfoca exclusivamente en el reconocimiento de señas hacia texto, sin contemplar mecanismos de comunicación bidireccional \cite{cuevas2025lsm_app}.
+	
+	\subsubsection{Reconocimiento de la Lengua de Señas Mexicana mediante Deep Learning en entornos móviles}
+	
+	Este trabajo presenta una solución móvil para el reconocimiento de la Lengua de Señas Mexicana (LSM), abordando tanto el alfabeto dactilológico (señas estáticas) como un conjunto de señas dinámicas. La propuesta integra la detección de manos y la extracción de puntos clave (\textit{landmarks}) con modelos de \textit{deep learning} ligeros y optimizados para su ejecución local en dispositivos Android. Desde el punto de vista metodológico, el enfoque se diferencia de aquellos centrados únicamente en señas estáticas al considerar explícitamente la naturaleza temporal de las señas dinámicas, incorporando arquitecturas con memoria para su modelado \cite{salgado2024lsm_app_dl}.
+	
+	El diseño se basa en la construcción de un dataset propio mediante la captura de video de múltiples participantes. A partir de estas secuencias, se extraen fotogramas y series de puntos clave de la mano, generando dos rutas de entrenamiento diferenciadas: una basada en coordenadas para las señas estáticas y otra basada en secuencias para las señas dinámicas. En el caso de las señas estáticas, se entrena un perceptrón multicapa (MLP) utilizando \textit{landmarks} normalizados, lo que permite reducir la variabilidad asociada al fondo y la iluminación. Para las señas dinámicas, se exploran combinaciones de redes convolucionales (CNN) con capas recurrentes (LSTM/GRU), así como variantes con mecanismos de atención tipo \textit{Transformer}, con el objetivo de capturar la dependencia temporal del gesto. Posteriormente, los modelos son convertidos a TensorFlow Lite para permitir la inferencia en tiempo real y sin conexión \cite{salgado2024lsm_app_dl}.
+	
+	Los resultados reportados muestran un desempeño competitivo en ambos escenarios. En señas estáticas, el uso de MLP sobre \textit{landmarks} alcanza altas tasas de precisión con latencias muy bajas y un consumo reducido de memoria. En señas dinámicas, los modelos con memoria, particularmente aquellos basados en mecanismos de atención, logran niveles de exactitud cercanos a los obtenidos en escenarios estáticos, manteniendo tiempos de respuesta adecuados para su uso en dispositivos móviles. El trabajo incorpora referencias a otras lenguas de señas, como ASL y LSB, lo que permite contextualizar los resultados obtenidos en LSM y resalta la importancia de factores como la diversidad del dataset, las condiciones de captura y el tamaño del vocabulario en el desempeño del sistema \cite{salgado2024lsm_app_dl}.
+	
+	Entre las principales aportaciones técnicas destaca el uso de \textit{landmarks} como representación compacta, lo cual reduce la dimensionalidad de los datos y minimiza el ruido visual, permitiendo el uso de modelos más pequeños y robustos frente a variaciones de fondo. De igual forma, la separación del problema en dos canales (estático y dinámico) facilita la asignación de arquitecturas especializadas sin incrementar innecesariamente la complejidad del sistema. No obstante, el estudio identifica limitaciones relacionadas con la sensibilidad a condiciones de iluminación, oclusiones parciales y variabilidad entre usuarios, así como la necesidad de ampliar el repertorio de señas dinámicas para aproximarse a escenarios de comunicación más naturales \cite{salgado2024lsm_app_dl}.
+	
+	Como líneas de trabajo futuro, se propone incrementar la diversidad del dataset mediante la inclusión de más usuarios, dispositivos y entornos de captura, así como fortalecer las técnicas de \textit{data augmentation} tanto fotométrico como temporal. Además, se sugiere profundizar en el uso de arquitecturas basadas en atención para el modelado de secuencias complejas. Desde la perspectiva de despliegue, el estudio enfatiza la importancia de mantener modelos ligeros y cuantizados, junto con la evaluación del rendimiento en distintos dispositivos, con el fin de garantizar una experiencia fluida incluso en teléfonos de gama media \cite{salgado2024lsm_app_dl}.
+	
+	\subsubsection{Clasificación de la Lengua de Señas Mexicana utilizando técnicas de Machine Learning}
+	
+	Este trabajo presenta una propuesta enfocada en el reconocimiento del alfabeto de la Lengua de Señas Mexicana (LSM) mediante el uso de técnicas de \textit{Machine Learning}, con el propósito de identificar el tipo de modelo más adecuado para este problema de clasificación. A diferencia de enfoques basados exclusivamente en \textit{deep learning}, esta investigación compara distintos métodos de aprendizaje automático con el fin de evaluar su desempeño y capacidad de generalización ante variaciones reales en la ejecución de las señas. Su principal aportación radica en evidenciar que modelos ligeros basados en características específicas de la mano pueden superar a arquitecturas más complejas cuando se busca una clasificación eficiente en contextos prácticos \cite{salgado2024lsm_ml}.
+	
+	Desde el punto de vista metodológico, el estudio se organiza en cuatro fases: captura de datos, preprocesamiento, entrenamiento de modelos y evaluación comparativa. Para la construcción del dataset, se grabaron videos de señas estáticas del alfabeto LSM, a partir de los cuales se extrajeron imágenes representativas de cada letra. Posteriormente, se aplicó un proceso de preprocesamiento orientado a obtener una representación más estable para el entrenamiento. En esta etapa, se incorporó el uso de coordenadas de puntos clave de la mano (\textit{landmarks}), lo que permitió generar un conjunto de características reducido y relevante, evitando la dependencia directa del contenido visual completo de la imagen \cite{salgado2024lsm_ml}.
+	
+	El trabajo compara cuatro enfoques distintos para resolver el problema: una red neuronal convolucional entrenada sobre imágenes completas, un modelo basado en aprendizaje transferido utilizando YOLOv5, un modelo desarrollado con Teachable Machine y un perceptrón multicapa (MLP) entrenado sobre características derivadas de \textit{landmarks}. Este diseño permite contrastar modelos con diferentes niveles de complejidad, desde arquitecturas profundas hasta modelos ligeros, con el objetivo de identificar cuál ofrece mejores resultados en términos de exactitud, generalización y costo computacional \cite{salgado2024lsm_ml}.
+	
+	Los resultados obtenidos muestran que la red convolucional entrenada con imágenes completas alcanza una alta precisión durante la fase de validación; sin embargo, su desempeño disminuye al evaluarse con datos no vistos, evidenciando problemas de sobreajuste. Los modelos basados en YOLOv5 y Teachable Machine presentan mejoras parciales, aunque con inconsistencias en la clasificación de diversas letras. En contraste, el modelo basado en MLP sobre \textit{landmarks} demuestra el mejor desempeño general, manteniendo alta precisión tanto en validación como en pruebas con nuevos datos. Esto sugiere que una representación estructurada y normalizada de la mano permite un aprendizaje más robusto y generalizable que el análisis directo de imágenes completas \cite{salgado2024lsm_ml}.
+	
+	Entre las limitaciones del estudio se identifica que el dataset utilizado se compone únicamente de señas estáticas y un número reducido de participantes, lo que restringe la capacidad de generalización del modelo frente a una mayor diversidad de usuarios, condiciones y dispositivos. El sistema no contempla el reconocimiento de señas dinámicas, lo que limita su aplicabilidad en escenarios de comunicación más amplios. No obstante, el trabajo demuestra de manera clara que, para el reconocimiento del alfabeto, los modelos ligeros basados en características específicas pueden ofrecer mayor estabilidad y eficiencia que modelos más complejos \cite{salgado2024lsm_ml}.
+	
+	Por último el estudio sugiere como líneas de trabajo futuro la ampliación del dataset para incluir mayor variabilidad en iluminación, fondos y usuarios, así como la exploración de técnicas orientadas al reconocimiento de señas dinámicas. Además, plantea la posibilidad de extender el enfoque basado en \textit{landmarks} hacia arquitecturas híbridas que integren modelado temporal, con el objetivo de abarcar escenarios más complejos de comunicación. Este trabajo aporta evidencia relevante para la selección de modelos en aplicaciones móviles, donde la eficiencia computacional y la capacidad de generalización son factores clave \cite{salgado2024lsm_ml}.
+	
+	\subsubsection{Sistema automático de reconocimiento de la Lengua de Señas Mexicana en dispositivos móviles}
+	
+	Este artículo presenta el desarrollo de un sistema automático de reconocimiento de la Lengua de Señas Mexicana (LSM) implementado en dispositivos móviles, cuyo objetivo principal es facilitar la comunicación entre personas sordas y oyentes mediante el uso de técnicas de \textit{machine learning} y visión por computadora. La propuesta combina métodos tradicionales de procesamiento de imágenes con modelos modernos de aprendizaje profundo, priorizando la compatibilidad y eficiencia en entornos de recursos limitados como los teléfonos inteligentes \cite{mendoza2025lsm_mobile}.
+	
+	El trabajo adopta una metodología estructurada en cinco etapas: adquisición de datos, preprocesamiento, segmentación, reconocimiento y visualización. En la fase de adquisición, se capturan imágenes representativas de distintas señas de la LSM utilizando cámaras convencionales de dispositivos móviles. Posteriormente, se realiza un proceso de preprocesamiento orientado a la normalización del color y la reducción de ruido, con el fin de mejorar la calidad de las imágenes. La segmentación de la mano se lleva a cabo mediante filtros de color y detección de contornos, lo que permite aislar la región de interés sin requerir hardware especializado \cite{mendoza2025lsm_mobile}.
+	
+	Para la etapa de reconocimiento, los autores implementan un modelo de aprendizaje profundo basado en redes neuronales convolucionales (CNN), optimizado mediante técnicas de \textit{transfer learning}. Se emplean arquitecturas ligeras adaptadas a TensorFlow Lite, lo que permite ejecutar el sistema en dispositivos móviles sin necesidad de conexión a internet. El modelo se entrena con un conjunto de datos balanceado que incluye diversas señas del alfabeto dactiloscopia, asegurando una representación uniforme por clase. Se incorporan técnicas de \textit{data augmentation}, tales como rotaciones, variaciones de brillo y recortes aleatorios, con el objetivo de mejorar la capacidad de generalización del modelo ante diferentes condiciones de captura \cite{mendoza2025lsm_mobile}.
+	
+	En los resultados experimentales, el sistema alcanza una precisión promedio del 94.8\,\% en pruebas controladas, demostrando su capacidad para reconocer correctamente señas del alfabeto LSM. El desempeño se mantiene estable en distintos dispositivos Android, con tiempos de respuesta aproximados de 0.2\,s por predicción. Los autores destacan que la eficiencia del sistema se debe tanto al preprocesamiento optimizado como a la selección de modelos ligeros, evitando el uso de arquitecturas complejas que comprometan la velocidad de inferencia \cite{mendoza2025lsm_mobile}.
+	
+	Entre las principales limitaciones del estudio se encuentra la sensibilidad del sistema a condiciones de iluminación, así como la necesidad de mantener una distancia y orientación adecuadas frente a la cámara. Además, la limitada diversidad de usuarios en el dataset reduce la capacidad del modelo para generalizar ante distintas morfologías de manos y tonalidades de piel. El sistema se enfoca únicamente en señas estáticas del alfabeto, sin considerar componentes dinámicos o expresiones faciales, los cuales son esenciales para una comunicación más completa en lengua de señas \cite{mendoza2025lsm_mobile}.
+	
+	Como trabajo futuro, se propone ampliar el dataset incluyendo mayor variedad de usuarios, escenarios y condiciones de iluminación, así como integrar módulos para el reconocimiento de movimiento y expresiones faciales. También se sugiere explorar el uso de sensores adicionales y arquitecturas híbridas CNN-LSTM para extender el reconocimiento hacia señas dinámicas. En el ámbito educativo y social, este trabajo establece una base relevante al demostrar la viabilidad de implementar sistemas de reconocimiento de LSM con precisión y bajo costo en dispositivos móviles convencionales \cite{mendoza2025lsm_mobile}.
+	\rowcolors{2}{rowblue}{white}
+	
+	\small
+	\renewcommand{\arraystretch}{1.15}
+	
+	\begin{longtable}{|p{2.0cm}|p{1.6cm}|p{2.1cm}|p{1.4cm}|p{1.8cm}|p{1.6cm}|p{2.8cm}|}
+		\caption{Cuadro comparativo de proyectos similares desarrollados} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Tipo de modelo / técnica} &
+		\headercell{Tipo de seña} &
+		\headercell{Dataset empleado} &
+		\headercell{Idioma de señas} &
+		\headercell{Dispositivo / entorno} &
+		\headercell{Precisión reportada} &
+		\headercell{Observaciones / aportes principales} \\
+		\hline
+		\endfirsthead
+		
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Tipo de modelo / técnica} &
+		\headercell{Tipo de seña} &
+		\headercell{Dataset empleado} &
+		\headercell{Idioma de señas} &
+		\headercell{Dispositivo / entorno} &
+		\headercell{Precisión reportada} &
+		\headercell{Observaciones / aportes principales} \\
+		\hline
+		\endhead
+		
+		\rowcolors{1}{rowblue}{white}
+		
+		CNN + LSTM (Deep Learning híbrido) &
+		Estáticas y dinámicas &
+		Dataset propio capturado por video (voluntarios) &
+		LSM &
+		Android (TensorFlow Lite) &
+		$\approx$ 95\% (estáticas) / $\approx$ 90\% (dinámicas) &
+		App educativa completa, reconocimiento en tiempo real y sin conexión; alta usabilidad pero sensible a iluminación \\
+		\hline
+		
+		MLP (estáticas), CNN + LSTM / Transformer (dinámicas) &
+		Estáticas y dinámicas &
+		Dataset propio, estructurado por \textit{landmarks} extraídos con MediaPipe &
+		LSM (comparativa con ASL y LSB) &
+		Android, ejecución local &
+		96.2\% (MLP) / 94.16\% (Transformer) &
+		Doble enfoque: separación de modelos según tipo de seña; eficiencia móvil y comparaciones con otros idiomas de señas \\
+		\hline
+		
+		SVM, KNN, Random Forest, MLP (Machine Learning clásico) &
+		Estáticas (alfabeto dactilológico) &
+		Dataset propio de imágenes capturadas por cámara frontal &
+		LSM &
+		PC y móvil (prueba simulada) &
+		SVM $\approx$ mejor desempeño ($>$90\%) &
+		Comparativa de algoritmos clásicos; MLP con \textit{landmarks} más robusto; propone ampliar dataset y variabilidad \\
+		\hline
+		
+		CNN (Transfer Learning, modelo ligero optimizado con TFLite) &
+		Estáticas (alfabeto) &
+		Dataset balanceado, aumentado por transformaciones &
+		LSM &
+		Android (ejecución offline) &
+		94.8\% &
+		Sistema modular eficiente y rápido (0.2 s por inferencia); óptimo para hardware de bajo costo; futuras mejoras hacia dinámicas \\
+		\hline
+		
+	\end{longtable}
+	
+	\subsection{Aportación y originalidad del presente trabajo}
+	
+	El presente trabajo se distingue por el desarrollo de un prototipo de reconocimiento de la LSM orientado al uso por parte de personas oyentes, quienes pueden fungir como intermediarios en el proceso de comunicación con personas sordas. A diferencia de los desarrollos previamente revisados, que se limitan a entornos controlados o pruebas experimentales sin interacción real, la propuesta planteada busca su aplicación en escenarios cotidianos.
+	
+	La originalidad del trabajo radica en la integración de técnicas de visión por computadora basadas en la extracción de puntos clave de la mano (\textit{landmarks}) mediante MediaPipe, junto con modelos de clasificación ligeros adecuados para su implementación en dispositivos móviles. Este enfoque permite reducir la complejidad computacional en comparación con modelos basados en imágenes completas, favoreciendo la eficiencia y la capacidad de generalización.
+	
+	El trabajo incorpora un diseño de interfaz enfocado en la simplicidad operativa y la interpretación intuitiva de los resultados por parte de usuarios oyentes. Este aspecto amplía el alcance de los sistemas existentes, los cuales suelen centrarse únicamente en métricas de desempeño técnico, sin considerar la experiencia de uso en contextos reales.
+	
+	Se plantea una evaluación integral del prototipo que no solo considera métricas de clasificación, sino también aspectos de usabilidad, tales como la claridad visual, el tiempo de respuesta y la compatibilidad con distintos dispositivos.
+	
+	% ==================================================

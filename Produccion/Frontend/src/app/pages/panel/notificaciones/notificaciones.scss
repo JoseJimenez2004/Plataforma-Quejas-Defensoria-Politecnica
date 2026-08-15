@@ -1,35 +1,110 @@
-.aviso-pendiente {
-  background: #fff8e1;
-  border: 1px solid #ffe082;
-  border-radius: 6px;
-  padding: 10px 14px;
-  font-size: 0.85rem;
+.encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
   margin-bottom: 20px;
+
+  h2 {
+    margin-bottom: 4px;
+  }
+
+  .btn-secondary {
+    white-space: nowrap;
+    font-size: 0.8rem;
+    padding: 8px 14px;
+  }
+}
+
+.subtitulo {
+  color: var(--texto-suave);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.cargando-estado {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--texto-suave);
+}
+
+.lista-notificaciones {
+  padding: 8px;
 }
 
 .aviso-item {
-  padding: 14px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
   border-bottom: 1px solid var(--borde);
+  padding: 14px 12px;
+  border-radius: 6px;
+  position: relative;
+  transition: background 0.12s ease;
 
   &:last-child {
     border-bottom: none;
   }
 
-  p {
-    margin: 0 0 8px 0;
-    font-size: 0.9rem;
+  &:hover {
+    background: var(--gris-fondo);
+  }
+
+  &.no-leido {
+    background: var(--guinda-suave);
+
+    &:hover {
+      background: #f0dde5;
+    }
   }
 }
 
-.aviso-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.aviso-icono {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.aviso-cuerpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.aviso-titulo {
+  margin: 0 0 3px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--negro-inst);
+}
+
+.aviso-texto {
+  margin: 0 0 6px;
+  font-size: 0.85rem;
+  color: var(--texto);
+  line-height: 1.4;
+}
+
+.aviso-fecha {
   font-size: 0.75rem;
   color: var(--texto-suave);
+}
 
-  button {
-    font-size: 0.75rem;
-    padding: 6px 12px;
-  }
+.punto-no-leido {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--guinda-vivo);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.vacio-estado {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--texto-suave);
 }

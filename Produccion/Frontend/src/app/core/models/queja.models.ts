@@ -70,6 +70,16 @@ export interface RegistroQuejaPublicaRequest {
   tutor?: QuejaTutor;
 }
 
+/** Body de PUT /api/quejoso/quejas/mias/{folio} — solo se puede editar mientras la queja
+ * sigue en estatus "RECIBIDA" (el backend lo valida también). */
+export interface EditarQuejaRequest {
+  descripcion: string;
+  unidadAcademicaClave?: string;
+  fechaHechos?: string;
+  nombreDenunciado?: string;
+  apellidoDenunciado?: string;
+}
+
 /** Estatus visual de una queja. */
 export type EstatusQueja = 'Recibida' | 'En Revisión' | 'Finalizada';
 

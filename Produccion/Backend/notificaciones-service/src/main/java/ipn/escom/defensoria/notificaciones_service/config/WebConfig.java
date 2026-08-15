@@ -2,6 +2,7 @@ package ipn.escom.defensoria.notificaciones_service.config;
 
 import java.util.List;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,22 +10,29 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
- * Este servicio no tenía ninguna configuración de seguridad explícita: con
- * spring-boot-starter-security en el classpath y sin un SecurityFilterChain propio,
- * Spring Security aplica su configuración por defecto (todo requiere autenticación con un
- * usuario/password generado en cada arranque). Este bean deja ese mismo comportamiento
- * (todo autenticado) EXCEPTO por las rutas de Swagger, que se dejan públicas para poder
- * documentar/probar la API. No se toca /api/notificaciones/** a propósito — ver nota en
- * docs/HALLAZGOS.md sobre revisar cómo se está llamando este endpoint hoy.
+ * HALLAZGO CORREGIDO: este servicio no tenía ningún SecurityFilterChain propio, así que con
+ * spring-boot-starter-security en el classpath, Spring Security aplicaba su configuración por
+ * defecto (todo autenticado con usuario/password aleatorios generados en cada arranque). Eso
+ * significa que POST /enviar probablemente rechazaba TODAS las llamadas de otros
+ * microservicios (ej. revision-service pidiendo el correo de rechazo) con 401 -- el error se
+ * tragaba silenciosamente porque esa llamada está en un try/catch que solo loguea (ver
+ * revision-service/service/NotificacionQuejaService). Ahora que este servicio sí tiene JWT
+ * propio, se deja: /enviar y /registrar públicos (llamadas internas entre microservicios,
+ * igual que el catálogo público de dependencias), y /mias + /{id}/leida protegidos (los
+ * consume directamente el panel del quejoso).
  */
 @Configuration
 @EnableWebSecurity
 public class WebConfig {
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     @SneakyThrows
@@ -34,13 +42,15 @@ public class WebConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/notificaciones/enviar", "/api/notificaciones/registrar").permitAll()
                 .requestMatchers(
                     "/v3/api-docs/**",
                     "/swagger-ui.html",
                     "/swagger-ui/**"
                 ).permitAll()
                 .anyRequest().authenticated()
-            );
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

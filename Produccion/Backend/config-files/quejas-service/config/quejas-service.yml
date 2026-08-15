@@ -22,6 +22,10 @@ spring:
 jwt:
   secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
 
+notificaciones:
+  service:
+    url: http://2.25.78.22:8085
+
 # NOTA: ya no se usa almacenamiento en disco para evidencias — se guardan completas como
 # BYTEA en la tabla queja_evidencias (ver entity/QuejaEvidencia.java y docs/CAMBIOS.md).
 

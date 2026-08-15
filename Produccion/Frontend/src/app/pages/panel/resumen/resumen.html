@@ -1,4 +1,7 @@
-<h2>Gestión de Trámites</h2>
+<div class="bienvenida">
+  <h2>Hola, {{ primerNombre }}</h2>
+  <p>Este es el resumen de tu actividad ante la Defensoría de los Derechos Politécnicos.</p>
+</div>
 
 @if (cargando) {
   <div class="tarjetas">
@@ -9,63 +12,95 @@
 } @else {
   <div class="tarjetas">
     <div class="card tarjeta" style="--retraso: 0">
-      <span class="numero">{{ totales }}</span>
-      <span class="etiqueta">Totales</span>
+      <span class="icono icono-total">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>
+      </span>
+      <div>
+        <span class="numero">{{ totales }}</span>
+        <span class="etiqueta">Quejas Totales</span>
+      </div>
     </div>
     <div class="card tarjeta" style="--retraso: 1">
-      <span class="numero">{{ enProceso }}</span>
-      <span class="etiqueta">En Proceso</span>
+      <span class="icono icono-proceso">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      </span>
+      <div>
+        <span class="numero">{{ enProceso }}</span>
+        <span class="etiqueta">En Proceso</span>
+      </div>
     </div>
     <div class="card tarjeta" style="--retraso: 2">
-      <span class="numero">{{ finalizadas }}</span>
-      <span class="etiqueta">Finalizadas</span>
+      <span class="icono icono-finalizada">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>
+      </span>
+      <div>
+        <span class="numero">{{ finalizadas }}</span>
+        <span class="etiqueta">Finalizadas</span>
+      </div>
     </div>
     <div class="card tarjeta" style="--retraso: 3">
-      <span class="numero">0</span>
-      <span class="etiqueta">Acciones Pendientes</span>
+      <span class="icono icono-conciliacion">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h3a1 1 0 0 1 1 1v7l-3-2H10a1 1 0 0 1-1-1v-1"/><path d="M3 12V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H7l-3 2Z"/></svg>
+      </span>
+      <div>
+        <span class="numero">{{ acuerdosPendientes }}</span>
+        <span class="etiqueta">Acuerdos por Responder</span>
+      </div>
     </div>
   </div>
 
-  <div class="card tabla-contenedor">
-    @if (quejas.length) {
-      <table>
-        <thead>
-          <tr>
-            <th>Folio</th>
-            <th>Fecha de Ingreso</th>
-            <th>Asunto</th>
-            <th>Estatus actual</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (q of quejas; track q.numeroFolio; let i = $index) {
-            <tr [style.--retraso]="i">
-              <td>{{ q.numeroFolio }}</td>
-              <td>{{ q.fechaCreacion | slice: 0 : 10 }}</td>
-              <td>{{ q.motivo }}</td>
-              <td>
-                <span
-                  class="badge"
-                  [class.recibida]="etiqueta(q.estatus) === 'Recibida'"
-                  [class.en-revision]="etiqueta(q.estatus) === 'En Revisión'"
-                  [class.finalizada]="etiqueta(q.estatus) === 'Finalizada'"
-                >
-                  {{ etiqueta(q.estatus) }}
-                </span>
-              </td>
-              <td>
-                <a [routerLink]="['/panel/mis-quejas', q.numeroFolio]">Ver</a>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    } @else {
-      <div class="vacio-estado">
-        <p>Todavía no tienes quejas registradas.</p>
-        <a routerLink="/panel/nueva-queja" class="btn-primary">Levantar una queja</a>
+  <div class="fila-inferior">
+    <div class="card tabla-contenedor">
+      <div class="encabezado-tarjeta">
+        <h3>Actividad Reciente</h3>
+        <a routerLink="/panel/mis-quejas">Ver todas →</a>
       </div>
-    }
+      @if (quejasRecientes.length) {
+        <table>
+          <thead>
+            <tr>
+              <th>Folio</th>
+              <th>Fecha</th>
+              <th>Asunto</th>
+              <th>Estatus</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (q of quejasRecientes; track q.numeroFolio; let i = $index) {
+              <tr [style.--retraso]="i">
+                <td>{{ q.numeroFolio }}</td>
+                <td>{{ q.fechaCreacion | slice: 0 : 10 }}</td>
+                <td>{{ q.motivo }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.recibida]="etiqueta(q.estatus) === 'Recibida'"
+                    [class.en-revision]="etiqueta(q.estatus) === 'En Revisión'"
+                    [class.finalizada]="etiqueta(q.estatus) === 'Finalizada'"
+                  >
+                    {{ etiqueta(q.estatus) }}
+                  </span>
+                </td>
+                <td>
+                  <a [routerLink]="['/panel/mis-quejas', q.numeroFolio]">Ver</a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="vacio-estado">
+          <p>Todavía no tienes quejas registradas.</p>
+          <a routerLink="/panel/nueva-queja" class="btn-primary">Levantar una queja</a>
+        </div>
+      }
+    </div>
+
+    <div class="card accion-rapida">
+      <h3>¿Necesitas presentar una queja?</h3>
+      <p>Registra un nuevo trámite ante la Defensoría en unos minutos.</p>
+      <a routerLink="/panel/nueva-queja" class="btn-primary">+ Nueva Queja</a>
+    </div>
   </div>
 }

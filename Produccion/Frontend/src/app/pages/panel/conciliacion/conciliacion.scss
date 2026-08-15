@@ -1,14 +1,28 @@
-.aviso-pendiente {
-  background: #fff8e1;
-  border: 1px solid #ffe082;
-  border-radius: 6px;
-  padding: 10px 14px;
-  font-size: 0.85rem;
-  margin-bottom: 20px;
+.subtitulo {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  margin: -8px 0 20px;
+}
+
+.cargando-estado {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--texto-suave);
 }
 
 .tabla-contenedor {
   overflow-x: auto;
+  margin-bottom: 20px;
+
+  h3 {
+    margin-bottom: 12px;
+  }
+}
+
+.vacio-texto {
+  color: var(--texto-suave);
+  font-size: 0.88rem;
+  padding: 10px 0;
 }
 
 table {
@@ -27,8 +41,99 @@ table {
     color: var(--texto-suave);
   }
 
-  a {
-    text-decoration: none;
-    font-weight: 600;
+  button {
+    font-size: 0.78rem;
+    padding: 6px 12px;
   }
+}
+
+.fondo-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+  animation: fondo-entrada 0.15s ease both;
+}
+
+@keyframes fondo-entrada {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  max-width: 520px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: modal-entrada 0.2s ease both;
+}
+
+@keyframes modal-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+
+  h3 {
+    margin: 0;
+  }
+
+  .cerrar {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: var(--texto-suave);
+    padding: 4px 8px;
+
+    &:hover {
+      color: var(--peligro);
+    }
+  }
+}
+
+.descripcion-box {
+  background: #fafafa;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  padding: 12px;
+  min-height: 60px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.acciones-modal {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+
+  button {
+    flex: 1;
+  }
+}
+
+.respuesta-previa {
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+  background: var(--gris-fondo);
+  border-radius: 6px;
+  padding: 10px 12px;
 }

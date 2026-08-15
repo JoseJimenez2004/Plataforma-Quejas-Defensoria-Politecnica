@@ -1,31 +1,105 @@
 <h2>Acuerdos de Conciliación</h2>
+<p class="subtitulo">Aquí se listan los acuerdos de conciliación que la Defensoría te ha asignado según tus quejas.</p>
 
-<div class="aviso-pendiente">
-  ⚠️ Todavía no existe backend para conciliación (propuestas, aceptar/rechazar). Esta vista es
-  solo el diseño de la UI, con datos de ejemplo.
-</div>
+@if (cargando) {
+  <div class="cargando-estado">Cargando tus acuerdos…</div>
+} @else {
+  <div class="card tabla-contenedor">
+    <h3>Pendientes de Respuesta</h3>
+    @if (pendientes.length) {
+      <table>
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>Fecha de Emisión</th>
+            <th>Asunto</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of pendientes; track a.id) {
+            <tr>
+              <td>{{ a.numeroFolio }}</td>
+              <td>{{ a.fechaEmision | slice: 0 : 10 }}</td>
+              <td>{{ a.asunto }}</td>
+              <td><span class="badge en-revision">Pendiente</span></td>
+              <td><button class="btn-secondary" (click)="verPropuesta(a)">Ver propuesta</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p class="vacio-texto">No tienes acuerdos pendientes de respuesta.</p>
+    }
+  </div>
 
-<div class="card tabla-contenedor">
-  <table>
-    <thead>
-      <tr>
-        <th>Folio</th>
-        <th>Fecha de Registro</th>
-        <th>Asunto</th>
-        <th>Unidad Académica</th>
-        <th>Acuerdo a revisar</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (a of acuerdos; track a.folio) {
-        <tr>
-          <td>{{ a.folio }}</td>
-          <td>{{ a.fecha }}</td>
-          <td>{{ a.asunto }}</td>
-          <td>{{ a.unidadAcademica }}</td>
-          <td><a href="javascript:void(0)">Ver propuesta</a></td>
-        </tr>
+  @if (resueltos.length) {
+    <div class="card tabla-contenedor">
+      <h3>Historial</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>Fecha de Emisión</th>
+            <th>Asunto</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of resueltos; track a.id) {
+            <tr>
+              <td>{{ a.numeroFolio }}</td>
+              <td>{{ a.fechaEmision | slice: 0 : 10 }}</td>
+              <td>{{ a.asunto }}</td>
+              <td>
+                <span class="badge" [class.finalizada]="a.estado === 'ACEPTADO'" [class.recibida]="a.estado === 'RECHAZADO'">
+                  {{ a.estado === 'ACEPTADO' ? 'Aceptado' : 'Rechazado' }}
+                </span>
+              </td>
+              <td><button class="btn-secondary" (click)="verPropuesta(a)">Ver detalle</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}
+
+@if (acuerdoSeleccionado) {
+  <div class="fondo-modal" (click)="cerrarPropuesta()">
+    <div class="card modal" (click)="$event.stopPropagation()">
+      <div class="modal-encabezado">
+        <h3>Acuerdo de Conciliación — {{ acuerdoSeleccionado.numeroFolio }}</h3>
+        <button class="cerrar" (click)="cerrarPropuesta()" aria-label="Cerrar">✕</button>
+      </div>
+
+      <p><strong>Asunto:</strong> {{ acuerdoSeleccionado.asunto }}</p>
+      <p><strong>Fecha de emisión:</strong> {{ acuerdoSeleccionado.fechaEmision | slice: 0 : 10 }}</p>
+      <p><strong>Términos propuestos:</strong></p>
+      <div class="descripcion-box">{{ acuerdoSeleccionado.terminos }}</div>
+
+      @if (acuerdoSeleccionado.estado === 'PENDIENTE') {
+        <div class="input-group">
+          <label>Comentario (opcional)</label>
+          <textarea rows="3" [(ngModel)]="comentario" placeholder="Agrega algún comentario sobre tu decisión…"></textarea>
+        </div>
+        <div class="acciones-modal">
+          <button class="btn-secondary" [disabled]="enviando" (click)="responder('RECHAZADO')">Rechazar</button>
+          <button class="btn-primary" [disabled]="enviando" (click)="responder('ACEPTADO')">
+            {{ enviando ? 'Enviando…' : 'Aceptar Acuerdo' }}
+          </button>
+        </div>
+      } @else {
+        <p class="respuesta-previa">
+          Respondiste "{{ acuerdoSeleccionado.estado === 'ACEPTADO' ? 'Aceptado' : 'Rechazado' }}"
+          el {{ acuerdoSeleccionado.fechaRespuesta | slice: 0 : 10 }}.
+          @if (acuerdoSeleccionado.comentarioQuejoso) {
+            <br />Comentario: {{ acuerdoSeleccionado.comentarioQuejoso }}
+          }
+        </p>
       }
-    </tbody>
-  </table>
-</div>
+    </div>
+  </div>
+}

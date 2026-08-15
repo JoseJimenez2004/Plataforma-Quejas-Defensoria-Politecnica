@@ -1,3 +1,107 @@
+.encabezado-nueva {
+  margin-bottom: 20px;
+
+  h2 {
+    margin-bottom: 4px;
+  }
+
+  p {
+    color: var(--texto-suave);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}
+
+.disposicion {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel-lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 90px;
+
+  @media (max-width: 900px) {
+    position: static;
+  }
+}
+
+.guia {
+  h3 {
+    margin-bottom: 10px;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.85rem;
+    color: var(--texto-suave);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* ---- Dropzones (mismo patrón que registro-queja-publico) ---- */
+.dropzone {
+  border: 2px dashed var(--borde);
+  border-radius: 8px;
+  padding: 26px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--gris-fondo);
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: var(--guinda-vivo);
+  }
+
+  &--activo {
+    border-color: var(--advertencia);
+    background: #fdf6e3;
+  }
+
+  &--pequeno {
+    padding: 16px 20px;
+  }
+
+  &__icono {
+    display: block;
+    font-size: 1.7rem;
+    margin-bottom: 6px;
+  }
+
+  &__texto {
+    margin: 0 0 4px;
+    font-size: 0.9rem;
+    color: var(--texto);
+
+    strong {
+      color: var(--guinda-vivo);
+    }
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--texto-suave);
+  }
+}
+
+.archivo-peso {
+  color: var(--texto-suave);
+  font-size: 0.78rem;
+}
+
 .formulario-queja {
   counter-reset: paso;
 

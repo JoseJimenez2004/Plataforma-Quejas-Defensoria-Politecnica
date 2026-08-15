@@ -111,7 +111,11 @@
         <div class="banner-tutor">
           <span class="banner-tutor__icono">✓</span>
           <span class="banner-tutor__texto">
-            Datos del tutor/adulto responsable capturados: <strong>{{ tutor.nombre }} {{ tutor.apellidoPaterno }}</strong>
+            @if (esMenorDe14) {
+              Estás presentando esta queja como tutor(a) de {{ nombre }} {{ apellidoPaterno }}. Datos de tutor: <strong>{{ tutor.nombre }} {{ tutor.apellidoPaterno }}</strong>
+            } @else {
+              Datos del tutor/adulto responsable capturados: <strong>{{ tutor.nombre }} {{ tutor.apellidoPaterno }}</strong>
+            }
           </span>
           <button type="button" class="banner-tutor__editar" (click)="editarTutor()">Editar</button>
         </div>
@@ -133,13 +137,47 @@
             name="numeroBoletaEmpleado"
             #numeroBoletaEmpleadoModel="ngModel"
             [placeholder]="etiquetaNumeroIdentificacion"
-            maxlength="255"
+            maxlength="12"
+            pattern="[0-9]+"
+            inputmode="numeric"
             required
           />
           @if (numeroBoletaEmpleadoModel.invalid && (numeroBoletaEmpleadoModel.touched || intentoEnviar)) {
-            <span class="mensaje-campo">Este campo es obligatorio.</span>
+            <span class="mensaje-campo">
+              {{ numeroBoletaEmpleadoModel.errors?.['required'] ? 'Este campo es obligatorio.' : 'Solo se permiten números, sin letras ni espacios.' }}
+            </span>
           }
         </div>
+      </div>
+
+      <div class="input-group" [class.input-invalid]="!identificacionArchivo && intentoEnviar">
+        <label>Identificación oficial (credencial de la comunidad politécnica):</label>
+        <div class="dropzone" (click)="inputIdentificacion.click()">
+          <input
+            #inputIdentificacion
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="onIdentificacionSeleccionada($event)"
+            hidden
+          />
+          @if (identificacionArchivo) {
+            <span class="dropzone__icono">🪪</span>
+            <p class="dropzone__texto">
+              {{ identificacionArchivo.name }}
+              <span class="archivo-peso">({{ formatearTamanio(identificacionArchivo.size) }})</span>
+            </p>
+            <button type="button" class="quitar" (click)="$event.stopPropagation(); quitarIdentificacion()" aria-label="Quitar identificación">
+              ✕ Quitar
+            </button>
+          } @else {
+            <span class="dropzone__icono">🪪</span>
+            <p class="dropzone__texto">Sube una foto o escaneo de tu credencial — <strong>haz clic para elegir</strong></p>
+            <p class="dropzone__hint">PDF, JPG o PNG — máximo 30MB</p>
+          }
+        </div>
+        @if (!identificacionArchivo && intentoEnviar) {
+          <span class="mensaje-campo">Adjunta tu identificación oficial.</span>
+        }
       </div>
 
       <h3 class="paso">Datos de la Queja</h3>
@@ -265,7 +303,15 @@
         <h3>Información del Tutor / Adulto Responsable</h3>
         <button type="button" class="modal-cerrar" (click)="cancelarTutor()" aria-label="Cerrar">✕</button>
       </div>
-      <p class="aviso-inline">Se requiere un responsable legal para solicitantes menores de edad.</p>
+      @if (esMenorDe14) {
+        <p class="aviso-inline">
+          Por tratarse de una persona menor de 14 años, este trámite debe completarlo su padre,
+          madre o tutor legal. Los datos capturados arriba (nombre, correo, etc.) corresponden al
+          menor; aquí abajo captura tus propios datos como responsable.
+        </p>
+      } @else {
+        <p class="aviso-inline">Se requiere un responsable legal para solicitantes menores de edad.</p>
+      }
 
       <div class="input-group">
         <label>Nombre(s):</label>

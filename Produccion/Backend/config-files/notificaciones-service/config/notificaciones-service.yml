@@ -2,18 +2,27 @@ server:
   port: 8085
 
 spring:
-  # Desactivamos por completo el motor automático de base de datos
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+  # Antes este servicio no tenía base de datos (era "fire-and-forget" de correo saliente) y
+  # desactivaba por completo el motor automático de JPA/datasource. Ahora persiste un centro
+  # de notificaciones por usuario (entidad Notificacion), así que necesita conexión real.
+  datasource:
+    url: jdbc:postgresql://2.25.78.22:5432/defensoria_db
+    username: postgres
+    password: Temporal2026@
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
 
   mail:
     host: smtp.gmail.com
     port: 587
     username: jair100flo@gmail.com
-    password: rozzvatswkacxvqf
+    password: kstwxawsnsqkzhnk
     properties:
       mail:
         smtp:
@@ -21,6 +30,10 @@ spring:
           starttls:
             enable: true
             required: true
+
+jwt:
+  secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
+  expiration: 3600000
 
 springdoc:
   swagger-ui:

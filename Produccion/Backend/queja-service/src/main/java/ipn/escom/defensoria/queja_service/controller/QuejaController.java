@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import ipn.escom.defensoria.queja_service.dto.EditarQuejaRequest;
 import ipn.escom.defensoria.queja_service.dto.RegistroQuejaPublicaRequest;
 import ipn.escom.defensoria.queja_service.entity.Queja;
 import ipn.escom.defensoria.queja_service.service.QuejaService;
@@ -82,6 +84,14 @@ public class QuejaController {
     public ResponseEntity<Queja> obtenerMiQueja(@PathVariable String folio) {
         String correoUsuario = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(quejaService.obtenerMiQueja(folio, correoUsuario));
+    }
+
+    // Endpoint protegido: edita una queja propia MIENTRAS siga en estatus "RECIBIDA".
+    @PutMapping("/mias/{folio}")
+    @Operation(summary = "Edita una queja propia mientras siga en estatus RECIBIDA (requiere JWT)")
+    public ResponseEntity<Queja> editarMiQueja(@PathVariable String folio, @RequestBody EditarQuejaRequest datos) {
+        String correoUsuario = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(quejaService.editarMiQueja(folio, correoUsuario, datos));
     }
 
     // Endpoint protegido: evidencias (solo metadatos, sin el contenido) de una queja propia.

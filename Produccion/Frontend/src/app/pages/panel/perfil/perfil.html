@@ -1,41 +1,59 @@
 <h2>Mi Perfil</h2>
 
-<div class="card seccion">
-  <h3>Identidad Institucional</h3>
-  <div class="aviso-pendiente">
-    ⚠️ El login solo devuelve nombre y correo — boleta/unidad académica no están disponibles
-    hasta que exista un endpoint "/api/auth/me". Ver docs/HALLAZGOS.md.
+@if (cargando) {
+  <div class="card cargando-estado">Cargando tu perfil…</div>
+} @else {
+  <div class="card seccion">
+    <h3>Identidad Institucional</h3>
+    <div class="fila">
+      <div class="input-group">
+        <label>Nombre Completo</label>
+        <input type="text" [value]="perfil?.nombre ?? authService.usuarioActual()?.nombre" disabled />
+      </div>
+      <div class="input-group">
+        <label>Correo Institucional</label>
+        <input type="text" [value]="perfil?.correoInstitucional ?? authService.usuarioActual()?.correo" disabled />
+      </div>
+    </div>
+    <div class="fila">
+      <div class="input-group">
+        <label>Boleta / Número de Empleado</label>
+        <input type="text" [value]="perfil?.boleta || '—'" disabled />
+      </div>
+      <div class="input-group">
+        <label>Unidad Académica</label>
+        <select [(ngModel)]="unidadAcademica">
+          <option value="">Sin especificar</option>
+          @for (dep of dependencias; track dep.clave) {
+            <option [value]="dep.clave">{{ dep.nombre }}</option>
+          }
+        </select>
+      </div>
+    </div>
   </div>
 
-  <div class="fila">
-    <div class="input-group">
-      <label>Nombre Completo</label>
-      <input type="text" [value]="authService.usuarioActual()?.nombre" disabled />
+  <div class="card seccion">
+    <h3>Información de Contacto</h3>
+    <div class="fila">
+      <div class="input-group">
+        <label>Correo Personal / Alternativo</label>
+        <input type="email" [(ngModel)]="correoPersonal" placeholder="tu.correo@ejemplo.com" />
+      </div>
+      <div class="input-group">
+        <label>Teléfono Celular</label>
+        <input type="tel" [(ngModel)]="telefonoCelular" maxlength="10" inputmode="numeric" placeholder="10 dígitos" />
+      </div>
     </div>
     <div class="input-group">
-      <label>Correo Institucional</label>
-      <input type="text" [value]="authService.usuarioActual()?.correo" disabled />
-    </div>
-  </div>
-</div>
-
-<div class="card seccion">
-  <h3>Información de Contacto Adicional</h3>
-  <div class="fila">
-    <div class="input-group">
-      <label>Correo Personal / Alternativo</label>
-      <input type="email" [(ngModel)]="correoPersonal" />
-    </div>
-    <div class="input-group">
-      <label>Teléfono Celular</label>
-      <input type="tel" [(ngModel)]="telefonoCelular" />
+      <label>Domicilio</label>
+      <textarea rows="3" [(ngModel)]="domicilio" placeholder="Calle, número, colonia, alcaldía/municipio, C.P."></textarea>
     </div>
   </div>
 
-  @if (guardado) {
-    <p class="ok">✅ Cambios guardados (solo localmente por ahora).</p>
-  }
-
-  <button class="btn-primary" (click)="guardarCambios()">Guardar Cambios</button>
-  <a routerLink="/portal/recuperar" class="cambiar-password">Cambiar Contraseña</a>
-</div>
+  <div class="card seccion acciones-perfil">
+    <button class="btn-primary" [disabled]="guardando" (click)="guardarCambios()">
+      {{ guardando ? 'Guardando…' : 'Guardar Cambios' }}
+    </button>
+    <a routerLink="/portal/recuperar" class="cambiar-password">Cambiar Contraseña</a>
+  </div>
+}

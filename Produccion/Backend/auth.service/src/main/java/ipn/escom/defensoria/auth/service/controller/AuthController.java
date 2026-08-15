@@ -1,10 +1,13 @@
 package ipn.escom.defensoria.auth.service.controller;
 
+import ipn.escom.defensoria.auth.service.client.NotificacionesClient;
 import ipn.escom.defensoria.auth.service.config.JwtUtil;
 import ipn.escom.defensoria.auth.service.entity.Usuario;
 import ipn.escom.defensoria.auth.service.model.LoginModel;
 import ipn.escom.defensoria.auth.service.model.AuthResponseModel;
 import ipn.escom.defensoria.auth.service.service.UsuarioService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +19,15 @@ import ipn.escom.defensoria.auth.service.model.ResetPasswordModel;
 import org.springframework.web.bind.annotation.RequestParam;
 import ipn.escom.defensoria.auth.service.model.ActivacionCuentaModel;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private UsuarioService usuarioService;
@@ -28,18 +35,37 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private NotificacionesClient notificacionesClient;
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginModel model) {
         try {
             // 1. Validamos credenciales en la base de datos
             Usuario usuario = usuarioService.validarLogin(model);
-            
+
             // 2. Generamos el JWT usando el correo institucional
             String token = jwtUtil.generarToken(usuario.getCorreoInstitucional());
-            
-            // 3. Entregamos el token al cliente
+
+            // 3. Dejamos un aviso persistido en el centro de notificaciones del quejoso
+            // ("inicios de sesión" que pidió el usuario) -- si falla, no debe tumbar el
+            // login, solo queda en el log para diagnosticar (mismo patrón de resiliencia que
+            // ya usa revision-service al mandar el correo de rechazo).
+            try {
+                String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+                notificacionesClient.registrar(Map.of(
+                        "correoDestino", usuario.getCorreoInstitucional(),
+                        "tipo", "LOGIN",
+                        "titulo", "Inicio de sesión",
+                        "mensaje", "Se inició sesión en tu cuenta el " + fecha + "."));
+            } catch (Exception ex) {
+                log.error("No se pudo registrar la notificación de inicio de sesión para {}: {}",
+                        usuario.getCorreoInstitucional(), ex.getMessage());
+            }
+
+            // 4. Entregamos el token al cliente
             return ResponseEntity.ok(new AuthResponseModel(token, usuario.getNombre()));
-            
+
         } catch (RuntimeException e) {
             // Si el servicio lanza la excepción de credenciales incorrectas
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());

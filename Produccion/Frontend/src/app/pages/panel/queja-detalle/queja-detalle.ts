@@ -4,13 +4,16 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { QuejaService } from '../../../core/services/queja.service';
+import { CatalogoService } from '../../../core/services/catalogo.service';
 import { EvidenciaResumen, Queja, etiquetaEstatus } from '../../../core/models/queja.models';
+import { Dependencia } from '../../../core/models/catalogo.models';
 import { ToastService } from '../../../core/services/toast.service';
+import { Datepicker } from '../../../shared/datepicker/datepicker';
 
 @Component({
   selector: 'app-queja-detalle',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, Datepicker],
   templateUrl: './queja-detalle.html',
   styleUrl: './queja-detalle.scss',
 })
@@ -20,10 +23,23 @@ export class QuejaDetalle implements OnInit {
   error = '';
   queja: Queja | null = null;
   evidencias: EvidenciaResumen[] = [];
+  dependencias: Dependencia[] = [];
+
+  editando = false;
+  guardando = false;
+  readonly fechaMaxima = new Date().toISOString().split('T')[0];
+
+  // Campos del formulario de edición (copia de trabajo, no se toca "queja" hasta guardar).
+  formDescripcion = '';
+  formUnidadAcademica = '';
+  formFechaHechos = '';
+  formNombreDenunciado = '';
+  formApellidoDenunciado = '';
 
   constructor(
     private route: ActivatedRoute,
     private quejaService: QuejaService,
+    private catalogoService: CatalogoService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
   ) {}
@@ -55,6 +71,14 @@ export class QuejaDetalle implements OnInit {
         // No es crítico para ver el detalle si esto falla — simplemente no se muestran.
       },
     });
+
+    this.catalogoService.listarDependencias().subscribe({
+      next: (dependencias) => {
+        this.dependencias = dependencias;
+        this.cdr.detectChanges();
+      },
+      error: () => {},
+    });
   }
 
   get estatus(): string {
@@ -65,6 +89,11 @@ export class QuejaDetalle implements OnInit {
     return this.estatus === 'Recibida';
   }
 
+  nombreUnidad(clave?: string): string {
+    if (!clave) return '—';
+    return this.dependencias.find((d) => d.clave === clave)?.nombre ?? clave;
+  }
+
   formatearTamanio(bytes?: number): string {
     if (!bytes) return '';
     if (bytes < 1024) return `${bytes} B`;
@@ -72,9 +101,49 @@ export class QuejaDetalle implements OnInit {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
-  avisarEdicionPendiente(): void {
-    this.toast.advertencia(
-      'La edición de quejas está en desarrollo. Por ahora solo puedes consultar el detalle.',
-    );
+  iniciarEdicion(): void {
+    if (!this.queja) return;
+    this.formDescripcion = this.queja.descripcion ?? '';
+    this.formUnidadAcademica = this.queja.unidadAcademicaClave ?? '';
+    this.formFechaHechos = this.queja.fechaHechos ?? '';
+    this.formNombreDenunciado = this.queja.nombreDenunciado ?? '';
+    this.formApellidoDenunciado = this.queja.apellidoDenunciado ?? '';
+    this.editando = true;
+  }
+
+  cancelarEdicion(): void {
+    this.editando = false;
+  }
+
+  guardarEdicion(): void {
+    if (!this.folio || !this.formDescripcion.trim()) {
+      this.toast.advertencia('La descripción de los hechos no puede quedar vacía.');
+      return;
+    }
+
+    this.guardando = true;
+    this.quejaService
+      .editarMiQueja(this.folio, {
+        descripcion: this.formDescripcion,
+        unidadAcademicaClave: this.formUnidadAcademica || undefined,
+        fechaHechos: this.formFechaHechos || undefined,
+        nombreDenunciado: this.formNombreDenunciado || undefined,
+        apellidoDenunciado: this.formApellidoDenunciado || undefined,
+      })
+      .subscribe({
+        next: (quejaActualizada) => {
+          this.guardando = false;
+          this.queja = quejaActualizada;
+          this.editando = false;
+          this.toast.exito('Los cambios de tu queja se guardaron correctamente.');
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.guardando = false;
+          const mensaje = err?.error?.mensaje ?? 'No se pudo guardar la edición. Intenta de nuevo.';
+          this.toast.error(mensaje);
+          this.cdr.detectChanges();
+        },
+      });
   }
 }

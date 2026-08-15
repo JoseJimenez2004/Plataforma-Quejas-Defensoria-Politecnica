@@ -20,34 +20,90 @@
 
   <div class="columnas">
     <div class="card">
-      <h3>Resumen de la Queja</h3>
-      <p><strong>Fecha de Registro:</strong> {{ queja.fechaCreacion | slice: 0 : 10 }}</p>
-      <p><strong>Asunto:</strong> {{ queja.motivo }}</p>
-      @if (queja.unidadAcademicaClave) {
-        <p><strong>Lugar de los hechos:</strong> {{ queja.unidadAcademicaClave }}</p>
-      }
-      @if (queja.nombreDenunciado) {
-        <p>
-          <strong>Denunciado:</strong> {{ queja.nombreDenunciado }} {{ queja.apellidoDenunciado }}
-        </p>
-      }
-      <p><strong>Descripción de hechos:</strong></p>
-      <div class="descripcion-box">{{ queja.descripcion }}</div>
+      @if (!editando) {
+        <div class="encabezado-seccion">
+          <h3>Resumen de la Queja</h3>
+          @if (puedeEditar) {
+            <button class="btn-secondary" (click)="iniciarEdicion()">✎ Editar queja</button>
+          }
+        </div>
 
-      <h3>Evidencias Presentadas</h3>
-      @if (evidencias.length) {
-        @for (ev of evidencias; track ev.id) {
-          <p class="evidencia">
-            📎 {{ ev.nombreArchivo }}
-            <span class="evidencia-peso">({{ formatearTamanio(ev.tamanioBytes) }})</span>
+        <p><strong>Fecha de Registro:</strong> {{ queja.fechaCreacion | slice: 0 : 10 }}</p>
+        <p><strong>Asunto:</strong> {{ queja.motivo }}</p>
+        @if (queja.unidadAcademicaClave) {
+          <p><strong>Lugar de los hechos:</strong> {{ nombreUnidad(queja.unidadAcademicaClave) }}</p>
+        }
+        @if (queja.fechaHechos) {
+          <p><strong>Fecha de los hechos:</strong> {{ queja.fechaHechos | slice: 0 : 10 }}</p>
+        }
+        @if (queja.nombreDenunciado) {
+          <p>
+            <strong>Denunciado:</strong> {{ queja.nombreDenunciado }} {{ queja.apellidoDenunciado }}
+          </p>
+        }
+        <p><strong>Descripción de hechos:</strong></p>
+        <div class="descripcion-box">{{ queja.descripcion }}</div>
+
+        <h3>Evidencias Presentadas</h3>
+        @if (evidencias.length) {
+          @for (ev of evidencias; track ev.id) {
+            <p class="evidencia">
+              📎 {{ ev.nombreArchivo }}
+              <span class="evidencia-peso">({{ formatearTamanio(ev.tamanioBytes) }})</span>
+            </p>
+          }
+        } @else {
+          <p class="sin-evidencias">No se adjuntaron archivos a esta queja.</p>
+        }
+
+        @if (!puedeEditar) {
+          <p class="aviso-inline">
+            Esta queja ya está {{ estatus === 'En Revisión' ? 'en revisión' : 'finalizada' }} y ya
+            no se puede editar.
           </p>
         }
       } @else {
-        <p class="sin-evidencias">No se adjuntaron archivos a esta queja.</p>
-      }
+        <div class="encabezado-seccion">
+          <h3>Editar Queja</h3>
+        </div>
 
-      @if (puedeEditar) {
-        <button class="btn-secondary" (click)="avisarEdicionPendiente()">Editar queja</button>
+        <div class="input-group">
+          <label>Lugar donde sucedieron los hechos</label>
+          <select [(ngModel)]="formUnidadAcademica" name="formUnidadAcademica">
+            <option value="">Sin especificar</option>
+            @for (dep of dependencias; track dep.clave) {
+              <option [value]="dep.clave">{{ dep.nombre }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="input-group input-fecha">
+          <label>Fecha de los hechos</label>
+          <app-datepicker [(ngModel)]="formFechaHechos" name="formFechaHechos" [max]="fechaMaxima"></app-datepicker>
+        </div>
+
+        <div class="fila-form">
+          <div class="input-group">
+            <label>Nombre del denunciado</label>
+            <input type="text" [(ngModel)]="formNombreDenunciado" name="formNombreDenunciado" />
+          </div>
+          <div class="input-group">
+            <label>Apellidos del denunciado</label>
+            <input type="text" [(ngModel)]="formApellidoDenunciado" name="formApellidoDenunciado" />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Descripción de hechos</label>
+          <textarea rows="6" [(ngModel)]="formDescripcion" name="formDescripcion" required></textarea>
+        </div>
+
+        <div class="acciones-edicion">
+          <button class="btn-secondary" (click)="cancelarEdicion()" [disabled]="guardando">Cancelar</button>
+          <button class="btn-primary" (click)="guardarEdicion()" [disabled]="guardando">
+            {{ guardando ? 'Guardando…' : 'Guardar Cambios' }}
+          </button>
+        </div>
       }
     </div>
 
