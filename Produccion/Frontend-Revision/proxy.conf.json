@@ -1,0 +1,14 @@
+{
+  "/api/admin": {
+    "target": "http://2.25.78.22:8087",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/api/revision": {
+    "target": "http://2.25.78.22:8088",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

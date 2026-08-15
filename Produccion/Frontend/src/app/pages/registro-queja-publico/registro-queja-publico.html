@@ -1,60 +1,127 @@
 <div class="contenedor">
-  <h2>Formulario de Registro de Quejas</h2>
-
-  <div class="aviso">
-    <strong>Nota importante:</strong>
-    <ul>
-      <li>Las quejas sobre incidentes ocurridos hace más de 90 días no serán procesadas.</li>
-      <li>
-        Podrás editar o eliminar esta queja mientras su estatus sea "Recibida". Una vez pase a
-        "En Revisión", la información será definitiva.
-      </li>
-    </ul>
-  </div>
-
-  @if (mensajeBackendPendiente) {
-    <div class="aviso-pendiente">
-      <p>
-        Esta función todavía no está disponible: el registro público de quejas requiere un
-        endpoint nuevo en el backend (hoy solo se puede registrar una queja estando ya
-        autenticado). Si ya tienes cuenta,
-        <a routerLink="/portal/login">inicia sesión</a> y usa "Nueva Queja" en tu panel.
+  @if (quejaCreada) {
+    <div class="card exito">
+      <div class="icono-exito">✅</div>
+      <h2>¡Queja enviada con éxito!</h2>
+      <p>Tu número de folio para seguimiento es:</p>
+      <div class="folio">{{ quejaCreada.numeroFolio }}</div>
+      <p class="nota">
+        Guarda este folio y el correo que usaste ({{ quejaCreada.correoInstitucional }}). Con
+        esos dos datos puedes consultar el estatus de tu queja en cualquier momento.
       </p>
+
+      <button type="button" class="btn-secondary btn-acuse" (click)="descargarAcuse()">
+        🖨️ Descargar Acuse de Recibo
+      </button>
+
+      <div class="seguimiento">
+        <h3>¿Deseas dar seguimiento detallado?</h3>
+        <p>
+          Al crear una cuenta institucional podrás editar tu queja mientras esté en estatus
+          "Recibida", adjuntar más evidencias y recibir notificaciones.
+        </p>
+        <a
+          [routerLink]="['/cuenta/activar']"
+          [queryParams]="{ correo: quejaCreada.correoInstitucional, folio: quejaCreada.numeroFolio }"
+          class="btn-primary"
+        >
+          Crear cuenta de seguimiento
+        </a>
+        <a routerLink="/queja/consultar" class="link-invitado">
+          Continuar como invitado (solo consulta con folio)
+        </a>
+      </div>
     </div>
   } @else {
-    <form (submit)="$event.preventDefault(); enviarQueja()">
-      <h3>Datos del Quejoso</h3>
+
+  <h2>Formulario de Registro de Quejas</h2>
+
+    <form (submit)="$event.preventDefault(); enviarQueja()" class="card formulario-queja">
+      <h3 class="paso">Datos del Quejoso</h3>
       <div class="fila">
-        <div class="input-group">
+        <div class="input-group" [class.input-invalid]="nombreModel.invalid && (nombreModel.touched || intentoEnviar)">
           <label>Nombre:</label>
-          <input type="text" [(ngModel)]="nombre" name="nombre" required />
+          <input
+            type="text"
+            [(ngModel)]="nombre"
+            name="nombre"
+            #nombreModel="ngModel"
+            maxlength="255"
+            required
+          />
+          @if (nombreModel.invalid && (nombreModel.touched || intentoEnviar)) {
+            <span class="mensaje-campo">Este campo es obligatorio.</span>
+          }
         </div>
-        <div class="input-group">
+        <div class="input-group" [class.input-invalid]="apellidoPaternoModel.invalid && (apellidoPaternoModel.touched || intentoEnviar)">
           <label>Primer Apellido:</label>
-          <input type="text" [(ngModel)]="apellidoPaterno" name="apellidoPaterno" required />
+          <input
+            type="text"
+            [(ngModel)]="apellidoPaterno"
+            name="apellidoPaterno"
+            #apellidoPaternoModel="ngModel"
+            maxlength="255"
+            required
+          />
+          @if (apellidoPaternoModel.invalid && (apellidoPaternoModel.touched || intentoEnviar)) {
+            <span class="mensaje-campo">Este campo es obligatorio.</span>
+          }
         </div>
       </div>
       <div class="fila">
         <div class="input-group">
           <label>Segundo Apellido:</label>
-          <input type="text" [(ngModel)]="apellidoMaterno" name="apellidoMaterno" />
+          <input type="text" [(ngModel)]="apellidoMaterno" name="apellidoMaterno" maxlength="255" />
         </div>
-        <div class="input-group">
+        <div class="input-group" [class.input-invalid]="correoModel.invalid && (correoModel.touched || intentoEnviar)">
           <label>Correo:</label>
-          <input type="email" [(ngModel)]="correo" name="correo" required />
+          <input
+            type="email"
+            email
+            [(ngModel)]="correo"
+            name="correo"
+            #correoModel="ngModel"
+            maxlength="255"
+            required
+          />
+          @if (correoModel.invalid && (correoModel.touched || intentoEnviar)) {
+            <span class="mensaje-campo">
+              {{ correoModel.errors?.['required'] ? 'Este campo es obligatorio.' : 'Escribe un correo válido.' }}
+            </span>
+          }
         </div>
       </div>
       <div class="fila">
-        <div class="input-group">
+        <div class="input-group input-fecha" [class.input-invalid]="!fechaNacimiento && intentoEnviar">
           <label>Fecha de nacimiento:</label>
-          <input
-            type="date"
+          <app-datepicker
             [(ngModel)]="fechaNacimiento"
             name="fechaNacimiento"
-            (change)="onFechaNacimientoChange()"
-            required
-          />
+            min="1900-01-01"
+            [max]="fechaMaxima"
+            (cambio)="onFechaNacimientoChange()"
+          ></app-datepicker>
+          @if (!fechaNacimiento && intentoEnviar) {
+            <span class="mensaje-campo">Selecciona tu fecha de nacimiento.</span>
+          }
         </div>
+      </div>
+
+      @if (tutorConfirmado) {
+        <div class="banner-tutor">
+          <span class="banner-tutor__icono">✓</span>
+          <span class="banner-tutor__texto">
+            @if (esMenorDe14) {
+              Estás presentando esta queja como tutor(a) de {{ nombre }} {{ apellidoPaterno }}. Datos de tutor: <strong>{{ tutor.nombre }} {{ tutor.apellidoPaterno }}</strong>
+            } @else {
+              Datos del tutor/adulto responsable capturados: <strong>{{ tutor.nombre }} {{ tutor.apellidoPaterno }}</strong>
+            }
+          </span>
+          <button type="button" class="banner-tutor__editar" (click)="editarTutor()">Editar</button>
+        </div>
+      }
+
+      <div class="fila">
         <div class="input-group">
           <label>Identificación institucional:</label>
           <div class="radios">
@@ -62,79 +129,207 @@
             <label><input type="radio" name="identificacion" value="empleado" [(ngModel)]="identificacion" /> Empleado</label>
           </div>
         </div>
-      </div>
-
-      <h3>Datos de la Queja</h3>
-      <div class="fila">
-        <div class="input-group">
-          <label>Lugar donde sucedieron los hechos:</label>
-          <select [(ngModel)]="unidadAcademica" name="unidadAcademica" required>
-            <option value="">Seleccione una UA</option>
-            <option value="ESCOM">ESCOM</option>
-            <option value="ESIA">ESIA</option>
-            <option value="ESCA">ESCA</option>
-            <option value="ENCB">ENCB</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label>Fecha de los hechos:</label>
-          <input type="date" [(ngModel)]="fechaHechos" name="fechaHechos" required />
-        </div>
-      </div>
-
-      <h3>Datos del Denunciado</h3>
-      <div class="fila">
-        <div class="input-group">
-          <label>Nombre del denunciado:</label>
-          <input type="text" [(ngModel)]="nombreDenunciado" name="nombreDenunciado" />
-        </div>
-        <div class="input-group">
-          <label>Primer Apellido del denunciado:</label>
-          <input type="text" [(ngModel)]="apellidoDenunciado" name="apellidoDenunciado" />
+        <div class="input-group" [class.input-invalid]="numeroBoletaEmpleadoModel.invalid && (numeroBoletaEmpleadoModel.touched || intentoEnviar)">
+          <label>{{ etiquetaNumeroIdentificacion }}:</label>
+          <input
+            type="text"
+            [(ngModel)]="numeroBoletaEmpleado"
+            name="numeroBoletaEmpleado"
+            #numeroBoletaEmpleadoModel="ngModel"
+            [placeholder]="etiquetaNumeroIdentificacion"
+            maxlength="12"
+            pattern="[0-9]+"
+            inputmode="numeric"
+            required
+          />
+          @if (numeroBoletaEmpleadoModel.invalid && (numeroBoletaEmpleadoModel.touched || intentoEnviar)) {
+            <span class="mensaje-campo">
+              {{ numeroBoletaEmpleadoModel.errors?.['required'] ? 'Este campo es obligatorio.' : 'Solo se permiten números, sin letras ni espacios.' }}
+            </span>
+          }
         </div>
       </div>
 
-      <div class="input-group">
-        <label>Descripción de los hechos:</label>
-        <textarea rows="5" [(ngModel)]="descripcion" name="descripcion" required></textarea>
-      </div>
-
-      <div class="input-group">
-        <label>Adjunta archivos que sustenten tu queja (PDF, JPG, PNG, MP4, MP3):</label>
-        <input type="file" (change)="onArchivoSeleccionado($event)" />
-        @if (archivo) {
-          <p class="archivo-nombre">{{ archivo.name }}</p>
+      <div class="input-group" [class.input-invalid]="!identificacionArchivo && intentoEnviar">
+        <label>Identificación oficial (credencial de la comunidad politécnica):</label>
+        <div class="dropzone" (click)="inputIdentificacion.click()">
+          <input
+            #inputIdentificacion
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="onIdentificacionSeleccionada($event)"
+            hidden
+          />
+          @if (identificacionArchivo) {
+            <span class="dropzone__icono">🪪</span>
+            <p class="dropzone__texto">
+              {{ identificacionArchivo.name }}
+              <span class="archivo-peso">({{ formatearTamanio(identificacionArchivo.size) }})</span>
+            </p>
+            <button type="button" class="quitar" (click)="$event.stopPropagation(); quitarIdentificacion()" aria-label="Quitar identificación">
+              ✕ Quitar
+            </button>
+          } @else {
+            <span class="dropzone__icono">🪪</span>
+            <p class="dropzone__texto">Sube una foto o escaneo de tu credencial — <strong>haz clic para elegir</strong></p>
+            <p class="dropzone__hint">PDF, JPG o PNG — máximo 30MB</p>
+          }
+        </div>
+        @if (!identificacionArchivo && intentoEnviar) {
+          <span class="mensaje-campo">Adjunta tu identificación oficial.</span>
         }
       </div>
 
-      <button type="submit" class="btn-primary">Enviar Queja</button>
+      <h3 class="paso">Datos de la Queja</h3>
+      <div class="fila">
+        <div class="input-group" [class.input-invalid]="unidadAcademicaModel.invalid && (unidadAcademicaModel.touched || intentoEnviar)">
+          <label>Lugar donde sucedieron los hechos:</label>
+          <select
+            [(ngModel)]="unidadAcademica"
+            name="unidadAcademica"
+            #unidadAcademicaModel="ngModel"
+            required
+          >
+            <option value="">
+              {{ cargandoDependencias ? 'Cargando dependencias…' : 'Seleccione una dependencia' }}
+            </option>
+            @for (dep of dependencias; track dep.clave) {
+              <option [value]="dep.clave">{{ dep.nombre }}</option>
+            }
+          </select>
+          @if (errorDependencias) {
+            <p class="error">{{ errorDependencias }}</p>
+          }
+          @if (unidadAcademicaModel.invalid && (unidadAcademicaModel.touched || intentoEnviar) && !errorDependencias) {
+            <span class="mensaje-campo">Selecciona el lugar de los hechos.</span>
+          }
+        </div>
+        <div class="input-group input-fecha" [class.input-invalid]="!fechaHechos && intentoEnviar">
+          <label>Fecha de los hechos:</label>
+          <app-datepicker
+            [(ngModel)]="fechaHechos"
+            name="fechaHechos"
+            [max]="fechaMaxima"
+          ></app-datepicker>
+          @if (!fechaHechos && intentoEnviar) {
+            <span class="mensaje-campo">Selecciona la fecha de los hechos.</span>
+          }
+        </div>
+      </div>
+
+      <h3 class="paso">Datos del Denunciado</h3>
+      <div class="fila">
+        <div class="input-group">
+          <label>Nombre del denunciado:</label>
+          <input type="text" [(ngModel)]="nombreDenunciado" name="nombreDenunciado" maxlength="255" />
+        </div>
+        <div class="input-group">
+          <label>Primer Apellido del denunciado:</label>
+          <input type="text" [(ngModel)]="apellidoDenunciado" name="apellidoDenunciado" maxlength="255" />
+        </div>
+      </div>
+
+      <div class="input-group" [class.input-invalid]="descripcionModel.invalid && (descripcionModel.touched || intentoEnviar)">
+        <label>Descripción de los hechos:</label>
+        <textarea
+          rows="5"
+          [(ngModel)]="descripcion"
+          name="descripcion"
+          #descripcionModel="ngModel"
+          required
+        ></textarea>
+        @if (descripcionModel.invalid && (descripcionModel.touched || intentoEnviar)) {
+          <span class="mensaje-campo">Describe brevemente los hechos.</span>
+        }
+      </div>
+
+      <div class="input-group">
+        <label>Adjunta archivos que sustenten tu queja (PDF, JPG, PNG, MP4, MP3) — puedes elegir varios:</label>
+
+        <div
+          class="dropzone"
+          [class.dropzone--activo]="arrastrandoArchivo"
+          (click)="inputArchivos.click()"
+          (dragover)="onArrastreSobre($event)"
+          (dragleave)="onArrastreSale()"
+          (drop)="onArchivosSoltados($event)"
+        >
+          <input
+            #inputArchivos
+            type="file"
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png,.mp4,.mp3"
+            (change)="onArchivosSeleccionados($event)"
+            hidden
+          />
+          <span class="dropzone__icono">📎</span>
+          <p class="dropzone__texto">Arrastra tus archivos aquí o <strong>haz clic para elegir</strong></p>
+          <p class="dropzone__hint">PDF, JPG, PNG, MP4, MP3 — máximo 30MB por archivo, 100MB en total</p>
+        </div>
+
+        @if (archivos.length) {
+          <ul class="lista-archivos">
+            @for (archivo of archivos; track archivo.name; let i = $index) {
+              <li>
+                <span>{{ archivo.name }} <span class="archivo-peso">({{ formatearTamanio(archivo.size) }})</span></span>
+                <button type="button" class="quitar" (click)="quitarArchivo(i)" aria-label="Quitar archivo">✕</button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <button type="submit" class="btn-primary" [disabled]="cargando">
+        {{ cargando ? 'Enviando…' : 'Enviar Queja' }}
+      </button>
     </form>
   }
 </div>
 
+<app-nota-flotante titulo="Nota importante">
+  <ul>
+    <li>Las quejas sobre incidentes ocurridos hace más de 90 días no serán procesadas.</li>
+    <li>
+      Podrás editar o eliminar esta queja mientras su estatus sea "Recibida". Una vez pase a
+      "En Revisión", la información será definitiva.
+    </li>
+  </ul>
+</app-nota-flotante>
+
 @if (mostrarModalTutor) {
   <div class="modal-overlay">
     <div class="modal card">
-      <h3>Información del Tutor / Adulto Responsable</h3>
-      <p class="aviso-inline">Se requiere un responsable legal para solicitantes menores de edad.</p>
+      <div class="modal-header">
+        <h3>Información del Tutor / Adulto Responsable</h3>
+        <button type="button" class="modal-cerrar" (click)="cancelarTutor()" aria-label="Cerrar">✕</button>
+      </div>
+      @if (esMenorDe14) {
+        <p class="aviso-inline">
+          Por tratarse de una persona menor de 14 años, este trámite debe completarlo su padre,
+          madre o tutor legal. Los datos capturados arriba (nombre, correo, etc.) corresponden al
+          menor; aquí abajo captura tus propios datos como responsable.
+        </p>
+      } @else {
+        <p class="aviso-inline">Se requiere un responsable legal para solicitantes menores de edad.</p>
+      }
 
       <div class="input-group">
         <label>Nombre(s):</label>
-        <input type="text" [(ngModel)]="tutor.nombre" name="tutorNombre" />
+        <input type="text" [(ngModel)]="tutor.nombre" name="tutorNombre" maxlength="255" required />
       </div>
       <div class="fila">
         <div class="input-group">
           <label>Primer Apellido:</label>
-          <input type="text" [(ngModel)]="tutor.apellidoPaterno" name="tutorApellidoPaterno" />
+          <input type="text" [(ngModel)]="tutor.apellidoPaterno" name="tutorApellidoPaterno" maxlength="255" required />
         </div>
         <div class="input-group">
           <label>Segundo Apellido:</label>
-          <input type="text" [(ngModel)]="tutor.apellidoMaterno" name="tutorApellidoMaterno" />
+          <input type="text" [(ngModel)]="tutor.apellidoMaterno" name="tutorApellidoMaterno" maxlength="255" />
         </div>
       </div>
       <div class="input-group">
         <label>Parentesco:</label>
-        <select [(ngModel)]="tutor.parentesco" name="tutorParentesco">
+        <select [(ngModel)]="tutor.parentesco" name="tutorParentesco" required>
           <option>Padre</option>
           <option>Madre</option>
           <option>Tutor legal</option>
@@ -143,17 +338,24 @@
       <div class="fila">
         <div class="input-group">
           <label>Correo Electrónico:</label>
-          <input type="email" [(ngModel)]="tutor.correo" name="tutorCorreo" />
+          <input type="email" email [(ngModel)]="tutor.correo" name="tutorCorreo" maxlength="255" />
         </div>
         <div class="input-group">
           <label>Teléfono de Contacto (10 dígitos):</label>
-          <input type="tel" [(ngModel)]="tutor.telefono" name="tutorTelefono" />
+          <input
+            type="tel"
+            [(ngModel)]="tutor.telefono"
+            name="tutorTelefono"
+            pattern="[0-9]{10}"
+            maxlength="10"
+            inputmode="numeric"
+          />
         </div>
       </div>
 
       <div class="modal-acciones">
-        <button class="btn-primary" (click)="confirmarTutor()">Confirmar Datos</button>
-        <button class="btn-secondary" (click)="cancelarTutor()">Cancelar</button>
+        <button type="button" class="btn-primary" (click)="confirmarTutor()">Confirmar Datos</button>
+        <button type="button" class="btn-secondary" (click)="cancelarTutor()">Cancelar</button>
       </div>
     </div>
   </div>

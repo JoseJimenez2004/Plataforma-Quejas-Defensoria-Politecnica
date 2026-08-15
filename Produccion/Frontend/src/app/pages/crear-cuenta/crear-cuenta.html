@@ -6,17 +6,23 @@
   </p>
 
   <div class="opciones">
-    <div class="card opcion">
-      <div class="icono">📄</div>
-      <p>Aún no he presentado mi queja.</p>
-      <a routerLink="/queja/registro" class="btn-primary">Iniciar nueva queja</a>
-    </div>
+    <a routerLink="/queja/registro" class="opcion">
+      <span class="opcion__numero">1</span>
+      <div class="opcion__cuerpo">
+        <h3>Aún no he presentado mi queja</h3>
+        <p>Llena el formulario de registro; al finalizar recibirás un folio y podrás activar tu cuenta.</p>
+      </div>
+      <span class="opcion__flecha">→</span>
+    </a>
 
-    <div class="card opcion">
-      <div class="icono">🔑</div>
-      <p>Ya presenté mi queja pero no activé mi cuenta.</p>
-      <a routerLink="/cuenta/activar" class="btn-primary">Activar cuenta con folio</a>
-    </div>
+    <a routerLink="/cuenta/activar" class="opcion">
+      <span class="opcion__numero">2</span>
+      <div class="opcion__cuerpo">
+        <h3>Ya presenté mi queja, falta activar mi cuenta</h3>
+        <p>Usa el folio y correo con los que registraste tu queja para definir tu contraseña.</p>
+      </div>
+      <span class="opcion__flecha">→</span>
+    </a>
   </div>
 
   <p class="nota-final">

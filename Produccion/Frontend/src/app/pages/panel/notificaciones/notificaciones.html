@@ -1,21 +1,33 @@
-<h2>Centro de Notificaciones y Requerimientos</h2>
-
-<div class="aviso-pendiente">
-  ⚠️ notificaciones-service hoy solo envía correos — no hay un endpoint para listar avisos por
-  usuario. Datos de ejemplo.
+<div class="encabezado">
+  <div>
+    <h2>Centro de Notificaciones</h2>
+    <p class="subtitulo">Avisos de inicio de sesión, cambios de estatus de tus quejas y acuerdos de conciliación.</p>
+  </div>
+  @if (hayNoLeidas) {
+    <button class="btn-secondary" (click)="marcarTodasLeidas()">Marcar todas como leídas</button>
+  }
 </div>
 
-<div class="card">
-  <h3>Historial de avisos</h3>
-  @for (a of avisos; track a.texto) {
-    <div class="aviso-item">
-      <p>{{ a.texto }}</p>
-      <div class="aviso-meta">
-        <span>{{ a.hace }}</span>
-        @if (a.accion) {
-          <button class="btn-secondary">{{ a.accion }}</button>
+<div class="card lista-notificaciones">
+  @if (cargando) {
+    <div class="cargando-estado">Cargando tus notificaciones…</div>
+  } @else if (notificaciones.length) {
+    @for (n of notificaciones; track n.id) {
+      <button type="button" class="aviso-item" [class.no-leido]="!n.leida" (click)="abrir(n)">
+        <span class="aviso-icono">{{ icono(n.tipo) }}</span>
+        <div class="aviso-cuerpo">
+          <p class="aviso-titulo">{{ n.titulo }}</p>
+          <p class="aviso-texto">{{ n.mensaje }}</p>
+          <span class="aviso-fecha">{{ tiempoRelativo(n.fechaCreacion) }}</span>
+        </div>
+        @if (!n.leida) {
+          <span class="punto-no-leido" aria-hidden="true"></span>
         }
-      </div>
+      </button>
+    }
+  } @else {
+    <div class="vacio-estado">
+      <p>No tienes notificaciones todavía.</p>
     </div>
   }
 </div>

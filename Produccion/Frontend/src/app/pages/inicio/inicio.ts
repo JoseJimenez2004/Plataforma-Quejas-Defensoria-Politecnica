@@ -3,8 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
-import { AuthService } from '../../core/services/auth.service';
-
 interface TabContenido {
   id: string;
   titulo: string;
@@ -19,20 +17,9 @@ interface TabContenido {
   styleUrl: './inicio.scss',
 })
 export class Inicio {
-  /** Pestaña activa dentro del card "Consultar / Acceder": consulta puntual por folio
-   * (sin cuenta) o login real (con cuenta). */
-  readonly accesoTab = signal<'folio' | 'cuenta'>('folio');
-
-  // -- Tab "Sin cuenta": consulta de folio --
   correo = '';
   folio = '';
   errorConsulta = '';
-
-  // -- Tab "Tengo cuenta": login real --
-  loginCorreo = '';
-  loginPassword = '';
-  loginCargando = false;
-  loginError = '';
 
   readonly tabs = ['Difusión', 'Institucional', 'Publicaciones', 'Investigación', 'Servicios'];
   readonly tabActiva = signal(this.tabs[0]);
@@ -64,10 +51,7 @@ export class Inicio {
     ],
   };
 
-  constructor(
-    private router: Router,
-    private authService: AuthService,
-  ) {}
+  constructor(private router: Router) {}
 
   get contenidoActivo(): TabContenido[] {
     return this.contenidoPorTab[this.tabActiva()] ?? [];
@@ -75,12 +59,6 @@ export class Inicio {
 
   seleccionarTab(tab: string): void {
     this.tabActiva.set(tab);
-  }
-
-  seleccionarAccesoTab(tab: 'folio' | 'cuenta'): void {
-    this.accesoTab.set(tab);
-    this.errorConsulta = '';
-    this.loginError = '';
   }
 
   consultar(): void {
@@ -100,29 +78,5 @@ export class Inicio {
     this.router.navigate(['/queja/consultar'], {
       queryParams: { folio: this.folio.trim(), correo: this.correo.trim() },
     });
-  }
-
-  ingresar(): void {
-    this.loginError = '';
-
-    if (!this.loginCorreo.trim() || !this.loginPassword.trim()) {
-      this.loginError = 'Ingresa tu correo y tu contraseña para iniciar sesión.';
-      return;
-    }
-
-    this.loginCargando = true;
-    this.authService
-      .login({ correo: this.loginCorreo.trim(), password: this.loginPassword })
-      .subscribe({
-        next: () => {
-          this.loginCargando = false;
-          this.router.navigate(['/panel']);
-        },
-        error: (err) => {
-          this.loginCargando = false;
-          this.loginError =
-            err?.error?.mensaje ?? err?.error ?? 'Correo o contraseña incorrectos. Verifica tus datos e intenta de nuevo.';
-        },
-      });
   }
 }

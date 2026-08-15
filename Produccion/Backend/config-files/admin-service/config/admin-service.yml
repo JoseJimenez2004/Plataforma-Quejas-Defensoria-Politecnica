@@ -1,0 +1,42 @@
+server:
+  port: 8087
+
+spring:
+  datasource:
+    url: jdbc:postgresql://2.25.78.22:5432/defensoria_db
+    username: postgres
+    password: Temporal2026@
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+# Mismo secreto que auth.service/queja-service/catalogo-service -- un JWT emitido por
+# cualquiera de los servicios es valido para todos (ver JwtUtil de cada uno).
+jwt:
+  secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
+  expiration: 3600000
+
+catalogo:
+  service:
+    url: http://2.25.78.22:8086
+
+respaldos:
+  directorio: /app/respaldos
+
+db:
+  host: 2.25.78.22
+  puerto: 5432
+  nombre: defensoria_db
+  usuario: postgres
+  password: Temporal2026@
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

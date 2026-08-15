@@ -19,13 +19,47 @@
       <p class="error">{{ error }}</p>
     }
 
-    @if (resultado === 'encontrada') {
+    @if (resultado === 'encontrada' && queja) {
       <div class="resultado ok">
-        <p>✅ El folio existe y coincide con el correo proporcionado.</p>
+        <div class="resultado-encabezado">
+          <span>✅ Queja encontrada</span>
+          <span
+            class="badge"
+            [class.recibida]="estatus === 'Recibida'"
+            [class.en-revision]="estatus === 'En Revisión'"
+            [class.finalizada]="estatus === 'Finalizada'"
+          >
+            {{ estatus }}
+          </span>
+        </div>
+
+        <dl class="datos-queja">
+          <dt>Folio</dt>
+          <dd>{{ queja.numeroFolio }}</dd>
+
+          <dt>Fecha de registro</dt>
+          <dd>{{ queja.fechaCreacion | slice: 0 : 10 }}</dd>
+
+          <dt>Motivo</dt>
+          <dd>{{ queja.motivo }}</dd>
+
+          @if (queja.unidadAcademicaClave) {
+            <dt>Lugar de los hechos</dt>
+            <dd>{{ queja.unidadAcademicaClave }}</dd>
+          }
+        </dl>
+
         <p class="nota">
-          Para ver el detalle completo del trámite necesitas una cuenta de seguimiento.
+          Para ver el detalle completo, editar tu queja o adjuntar más evidencias necesitas una
+          cuenta de seguimiento.
         </p>
-        <a routerLink="/cuenta/activar" class="btn-secondary">Activar mi cuenta con este folio</a>
+        <a
+          [routerLink]="['/cuenta/activar']"
+          [queryParams]="{ correo: queja.correoInstitucional, folio: queja.numeroFolio }"
+          class="btn-secondary"
+        >
+          Activar mi cuenta con este folio
+        </a>
       </div>
     }
 

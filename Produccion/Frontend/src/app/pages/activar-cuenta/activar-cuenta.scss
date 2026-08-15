@@ -16,6 +16,41 @@
   margin-bottom: 24px;
 }
 
+/* ---- Indicador de pasos (solo cuando se llega desde el registro recién hecho) ---- */
+.pasos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  font-size: 0.78rem;
+  flex-wrap: wrap;
+
+  .paso {
+    color: var(--texto-suave);
+
+    &--hecho {
+      color: var(--exito);
+      font-weight: 600;
+    }
+
+    &--actual {
+      color: var(--guinda-vivo);
+      font-weight: 700;
+    }
+  }
+
+  .separador {
+    color: var(--borde);
+  }
+}
+
+.campo-fijo {
+  background: var(--gris-fondo) !important;
+  color: var(--texto-suave);
+  cursor: not-allowed;
+}
+
 .ayuda {
   font-size: 0.75rem;
   color: var(--texto-suave);

@@ -8,68 +8,143 @@
     <button class="btn-secondary" (click)="volverAlTablero()">Volver al Tablero</button>
   </div>
 } @else {
-  <h2>Levantar Nueva Queja</h2>
-  <div class="aviso-pendiente">
-    Las quejas sobre incidentes ocurridos hace más de 90 días no serán procesadas.
+  <div class="encabezado-nueva">
+    <h2>Levantar Nueva Queja</h2>
+    <p>Completa los siguientes datos con la mayor precisión posible; esto agiliza la revisión de tu caso.</p>
   </div>
 
-  <form (submit)="$event.preventDefault(); enviar()" class="card">
-    <h3>Detalles del Hecho</h3>
-    <div class="fila">
-      <div class="input-group">
-        <label>Lugar donde sucedieron los hechos</label>
-        <select [(ngModel)]="unidadAcademica" name="unidadAcademica" required>
-          <option value="">Seleccione una UA</option>
-          <option value="ESCOM">ESCOM</option>
-          <option value="ESIA">ESIA</option>
-          <option value="ESCA">ESCA</option>
-          <option value="ENCB">ENCB</option>
-        </select>
+  <div class="disposicion">
+    <form (submit)="$event.preventDefault(); enviar()" class="card formulario-queja">
+      <h3 class="paso">Detalles del Hecho</h3>
+      <div class="fila">
+        <div class="input-group">
+          <label>Lugar donde sucedieron los hechos</label>
+          <select [(ngModel)]="unidadAcademica" name="unidadAcademica" required>
+            <option value="">
+              {{ cargandoDependencias ? 'Cargando dependencias…' : 'Seleccione una dependencia' }}
+            </option>
+            @for (dep of dependencias; track dep.clave) {
+              <option [value]="dep.clave">{{ dep.nombre }}</option>
+            }
+          </select>
+        </div>
+        <div class="input-group input-fecha">
+          <label>Fecha de los hechos</label>
+          <app-datepicker [(ngModel)]="fechaHechos" name="fechaHechos" [max]="fechaMaxima"></app-datepicker>
+        </div>
       </div>
-      <div class="input-group">
-        <label>Fecha de los hechos</label>
-        <input type="date" [(ngModel)]="fechaHechos" name="fechaHechos" />
-      </div>
-    </div>
 
-    <div class="fila">
-      <div class="input-group">
-        <label>Nombre del denunciado</label>
-        <input type="text" [(ngModel)]="nombreDenunciado" name="nombreDenunciado" />
+      <h3 class="paso">Datos del Denunciado</h3>
+      <div class="fila">
+        <div class="input-group">
+          <label>Nombre del denunciado</label>
+          <input type="text" [(ngModel)]="nombreDenunciado" name="nombreDenunciado" />
+        </div>
+        <div class="input-group">
+          <label>Apellidos del denunciado</label>
+          <input type="text" [(ngModel)]="apellidoDenunciado" name="apellidoDenunciado" />
+        </div>
       </div>
+
+      <h3 class="paso">Relato de los Hechos</h3>
       <div class="input-group">
-        <label>Apellidos del denunciado</label>
-        <input type="text" [(ngModel)]="apellidoDenunciado" name="apellidoDenunciado" />
+        <label>Describe cronológicamente lo sucedido</label>
+        <textarea
+          rows="6"
+          [(ngModel)]="relato"
+          name="relato"
+          placeholder="¿Qué pasó? ¿Cuándo? ¿Quiénes estuvieron involucrados?"
+          required
+        ></textarea>
       </div>
-    </div>
 
-    <div class="input-group">
-      <label>Relato de los Hechos</label>
-      <textarea
-        rows="6"
-        [(ngModel)]="relato"
-        name="relato"
-        placeholder="Describe cronológicamente lo sucedido…"
-        required
-      ></textarea>
-    </div>
+      <h3 class="paso">Documentación</h3>
+      <div class="input-group">
+        <label>Identificación oficial (credencial de la comunidad politécnica)</label>
+        <div class="dropzone dropzone--pequeno" (click)="inputIdentificacion.click()">
+          <input
+            #inputIdentificacion
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="onIdentificacionSeleccionada($event)"
+            hidden
+          />
+          @if (identificacionArchivo) {
+            <span class="dropzone__icono">🪪</span>
+            <p class="dropzone__texto">
+              {{ identificacionArchivo.name }}
+              <span class="archivo-peso">({{ formatearTamanio(identificacionArchivo.size) }})</span>
+            </p>
+            <button type="button" class="quitar" (click)="$event.stopPropagation(); quitarIdentificacion()" aria-label="Quitar identificación">
+              ✕ Quitar
+            </button>
+          } @else {
+            <span class="dropzone__icono">🪪</span>
+            <p class="dropzone__texto">Sube una foto o escaneo de tu credencial — <strong>haz clic para elegir</strong></p>
+            <p class="dropzone__hint">PDF, JPG o PNG</p>
+          }
+        </div>
+      </div>
 
-    <div class="input-group">
-      <label>Adjunta un archivo (PDF, JPG, PNG)</label>
-      <input type="file" (change)="onArchivoSeleccionado($event)" />
-      @if (archivo) {
-        <p class="archivo-nombre">{{ archivo.name }}</p>
+      <div class="input-group">
+        <label>Evidencias (opcional)</label>
+        <div
+          class="dropzone"
+          [class.dropzone--activo]="arrastrandoArchivo"
+          (click)="inputArchivos.click()"
+          (dragover)="onArrastreSobre($event)"
+          (dragleave)="onArrastreSale()"
+          (drop)="onArchivosSoltados($event)"
+        >
+          <input
+            #inputArchivos
+            type="file"
+            multiple
+            (change)="onArchivosSeleccionados($event)"
+            hidden
+          />
+          <span class="dropzone__icono">📎</span>
+          <p class="dropzone__texto">Arrastra tus archivos aquí o <strong>haz clic para elegir</strong></p>
+          <p class="dropzone__hint">PDF, JPG, PNG, MP4, MP3 — puedes elegir varios</p>
+        </div>
+        @if (archivos.length) {
+          <ul class="lista-archivos">
+            @for (archivo of archivos; track archivo.name; let i = $index) {
+              <li>
+                <span>{{ archivo.name }} <span class="archivo-peso">({{ formatearTamanio(archivo.size) }})</span></span>
+                <button type="button" class="quitar" (click)="quitarArchivo(i)" aria-label="Quitar archivo">✕</button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      @if (error) {
+        <p class="error">{{ error }}</p>
       }
-    </div>
 
-    @if (error) {
-      <p class="error">{{ error }}</p>
-    }
+      <div class="acciones">
+        <button type="submit" class="btn-primary" [disabled]="cargando">
+          {{ cargando ? 'Enviando…' : 'Enviar Queja' }}
+        </button>
+      </div>
+    </form>
 
-    <div class="acciones">
-      <button type="submit" class="btn-primary" [disabled]="cargando">
-        {{ cargando ? 'Enviando…' : 'Enviar Queja' }}
-      </button>
-    </div>
-  </form>
+    <aside class="panel-lateral">
+      <div class="card guia">
+        <h3>Antes de enviar</h3>
+        <ul>
+          <li>Sé lo más específico posible: fechas, lugares y personas involucradas.</li>
+          <li>Adjunta evidencia que respalde tu relato (capturas, documentos, audios).</li>
+          <li>Tu identificación oficial es obligatoria para validar tu queja.</li>
+        </ul>
+      </div>
+
+      <app-nota-flotante titulo="Nota importante">
+        <ul>
+          <li>Las quejas sobre incidentes ocurridos hace más de 90 días no serán procesadas.</li>
+        </ul>
+      </app-nota-flotante>
+    </aside>
+  </div>
 }

@@ -1,0 +1,66 @@
+.cargando {
+  color: var(--texto-suave);
+}
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tarjeta {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    box-shadow: var(--sombra-media);
+    transform: translateY(-2px);
+  }
+
+  &-encabezado {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+
+    h3 {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+  }
+
+  .dato-numero {
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: var(--negro-inst);
+    margin: 0 0 2px;
+    line-height: 1.1;
+  }
+
+  .dato-texto {
+    font-size: 0.85rem;
+    color: var(--texto-suave);
+    margin: 0;
+  }
+
+  .dato-etiqueta {
+    color: var(--texto-suave);
+    font-size: 0.85rem;
+    margin: 0 0 18px;
+
+    &-fuerte {
+      color: var(--negro-inst);
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+  }
+
+  .btn-primary {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 0.85rem;
+  }
+}

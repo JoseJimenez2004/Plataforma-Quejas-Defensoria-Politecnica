@@ -2,6 +2,18 @@
   margin-bottom: 20px;
 }
 
+.cargando-estado {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--texto-suave);
+}
+
+.acciones-perfil {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .aviso-pendiente {
   background: #fff8e1;
   border: 1px solid #ffe082;

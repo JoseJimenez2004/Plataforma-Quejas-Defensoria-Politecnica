@@ -1,0 +1,79 @@
+.nota-flotante-btn {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: var(--guinda);
+  color: #fff;
+  font-size: 1.3rem;
+  font-style: italic;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  z-index: 200;
+  transition: background 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    background: var(--guinda-oscuro);
+    transform: scale(1.06);
+  }
+
+  &.activo {
+    background: var(--guinda-oscuro);
+  }
+}
+
+.nota-flotante-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 84px;
+  width: min(320px, calc(100vw - 48px));
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  padding: 16px 18px;
+  z-index: 200;
+  font-size: 0.85rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+
+    strong {
+      color: var(--guinda);
+    }
+
+    .cerrar {
+      background: none;
+      border: none;
+      color: var(--texto-suave);
+      cursor: pointer;
+      font-size: 0.9rem;
+
+      &:hover {
+        color: var(--peligro);
+      }
+    }
+  }
+
+  &__contenido {
+    ::ng-deep ul {
+      margin: 0;
+      padding-left: 18px;
+
+      li {
+        margin-bottom: 6px;
+      }
+    }
+
+    ::ng-deep p {
+      margin: 0 0 6px;
+    }
+  }
+}

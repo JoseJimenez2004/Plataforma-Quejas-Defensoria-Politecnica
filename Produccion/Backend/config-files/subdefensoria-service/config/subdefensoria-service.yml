@@ -1,0 +1,30 @@
+# Config de producción de subdefensoria-service (módulo local "Backend/subdefensoria").
+# Se monta como volumen en /app/config (ver podman-compose.sh -> start_service), y Spring Boot
+# la carga por encima de src/main/resources/application.properties del jar (que sigue siendo
+# el default de desarrollo -- no se tocó). Mismo patrón que el resto de los microservicios.
+#
+# A propósito NO se sobreescribe aquí ninguna clave de datasource/JPA (sigue en H2 en memoria)
+# ni los plazos de negocio (plazos.primera-solicitud-dias / plazos.recordatorio-dias, ya vienen
+# bien en application.properties) -- eso es lógica/decisión propia del servicio, no una
+# preocupación de despliegue, y no se debía tocar en esta tarea.
+#
+# ÚNICO cambio real de comportamiento: el puerto. El módulo trae 8083 como default en su
+# application.properties, pero 8083 ya lo usa auth-service en esta misma VPS backend -- se
+# reasigna aquí a 8091 (8090 también se descartó: ya está asignado a defensoria-web en la VPS
+# frontend; aunque es una máquina distinta y no habría choque real, se evita para no confundir
+# puertos entre VPS al leer `podman ps`). Ver get_port() en podman-compose.sh.
+
+server:
+  port: 8091
+
+# Dominio público real (router-nginx). Hoy no existe todavía una ruta de nginx ni un frontend
+# desplegado para Subdefensoría (ver docs/REQUERIMIENTOS.md, sección "Microservicios en
+# desarrollo"), así que este valor es un default seguro para cuando exista -- ya no localhost.
+# Revisar cuando se defina la ruta pública real de este servicio.
+cors:
+  allowed-origins: https://defensoria-escom.ddns.net
+
+# Primer Contacto en producción corre en el puerto 8082 (no chocó con nada, se conservó tal
+# cual), en la misma VPS backend.
+primer-contacto:
+  base-url: http://2.25.78.22:8082

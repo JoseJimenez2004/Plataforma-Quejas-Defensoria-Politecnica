@@ -1,0 +1,79 @@
+.cargando {
+  color: var(--texto-suave);
+}
+
+.resumen-linea {
+  font-size: 0.9rem;
+  margin: 0 0 8px;
+  color: var(--texto);
+
+  &.descripcion {
+    color: var(--texto-suave);
+    background: var(--gris-fondo);
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-top: 10px;
+  }
+}
+
+h4 {
+  margin-top: 20px;
+  font-size: 0.92rem;
+}
+
+.sin-documentos {
+  color: var(--texto-suave);
+  font-size: 0.88rem;
+}
+
+.lista-documentos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--borde);
+    font-size: 0.88rem;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.boton-ver {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+
+.requisitos-card {
+  margin-top: 20px;
+}
+
+.check-linea {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.acciones-validacion {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+
+  .boton-rechazar {
+    color: var(--peligro);
+    border-color: var(--peligro);
+
+    &:hover {
+      background: #fdecea;
+    }
+  }
+}

@@ -73,16 +73,14 @@ solo el scaffold con login roto). Al conectar cada vista con los endpoints reale
 se encontraron varias funciones del diseño (`vistasquejoso.pdf`) que **el backend actual no
 soporta todavía**:
 
-1. **Registro público/anónimo de quejas**: el diseño permite presentar una queja sin tener
-   cuenta (recolectando datos del quejoso en el mismo formulario) y luego crear la cuenta con
-   el folio recibido. Pero `queja-service` solo expone `POST /api/quejoso/quejas/registrar`
-   **protegido por JWT**, que además obtiene el correo del token de sesión (no de un campo del
-   formulario) y solo acepta `motivo` + `descripcion` + `archivo` (no nombre/apellidos/fecha de
-   nacimiento/datos del denunciado como pide el wireframe). Esto es una contradicción de
-   arquitectura: no se puede registrar la primera queja sin iniciar sesión, pero tampoco se
-   puede iniciar sesión sin una cuenta, y las cuentas solo se activan con un folio que ya debía
-   existir. **Se necesita un endpoint público nuevo** (o hacer `/registrar` público y aceptar
-   correo/nombre directamente en el body cuando no hay JWT).
+1. ~~**Registro público/anónimo de quejas**~~ — **RESUELTO (2026-07-13)**: se agregó
+   `POST /api/quejoso/quejas/registro-publico` (`permitAll`, sin JWT) que recibe la identidad
+   completa del quejoso (nombre, apellidos, correo, fecha de nacimiento, identificación,
+   unidad académica, fecha de hechos, denunciado, tutor opcional) y archivos de evidencia en la
+   misma petición multipart. `Queja` ahora tiene columnas propias para todos esos datos (antes
+   se habría necesitado concatenarlos como texto libre). El frontend (`registro-queja-publico`)
+   ya llama a este endpoint real en vez de mostrar el aviso de "función no disponible". Ver
+   `docs/CAMBIOS.md` para el detalle completo.
 2. **Listar "Mis Quejas" y ver detalle/editar una queja**: no existe ningún `GET` en
    `queja-service` para esto — solo `validar-folio` (devuelve `true/false`, no el detalle) y
    `registrar`. Faltan como mínimo: `GET /api/quejoso/quejas?correo=...` (listado) y
@@ -106,3 +104,30 @@ pantalla afectada. Ver `Frontend/README.md` para el detalle de qué es real y qu
 **Además**: no se pudo correr `npm install` ni `ng build` en el entorno donde se escribió este
 frontend (sin acceso a los registros de npm) — falta que alguien lo compile por primera vez y
 reporte cualquier error de TypeScript/Angular que aparezca.
+
+## 🟡 Hallazgo nuevo: `notificaciones-service` no tenía ninguna configuración de seguridad
+
+Al agregar Swagger a los 4 microservicios se notó que `notificaciones-service` es el único que
+no tiene ningún `WebConfig`/`SecurityFilterChain` propio, a pesar de traer
+`spring-boot-starter-security` en el `pom.xml`. Sin una configuración explícita, Spring
+Security aplica su comportamiento por defecto: **todo el servicio requiere autenticación HTTP
+Basic con un usuario/contraseña generados aleatoriamente en cada arranque** (se imprime en el
+log). Esto potencialmente incluye `POST /api/notificaciones/enviar`, el único endpoint del
+servicio.
+
+No se corrigió el comportamiento de `/api/notificaciones/enviar` (fuera de alcance de la tarea
+de Swagger — solo se agregó un `WebConfig` nuevo que deja público lo de Swagger y mantiene todo
+lo demás autenticado, igual que estaba). **Pendiente confirmar**: si alguien llama hoy a este
+endpoint en producción y cómo (¿con qué credenciales?, ¿nadie lo llama todavía?), y decidir si
+debe quedar público (como `validar-folio` en queja-service) o con un mecanismo de auth real
+entre servicios.
+
+## 🟢 Catálogo de dependencias del IPN y microservicio nuevo (`catalogo-service`)
+
+Se creó un 4to microservicio, `catalogo-service` (puerto 8086), con el catálogo completo de
+dependencias del IPN (208 registros, ver `docs/CAMBIOS.md`) en vez de agregarlo dentro de
+`queja-service` — decisión tomada deliberadamente pensando en escalabilidad futura (el usuario
+lo pidió explícitamente: "mejor pensemos a futuro"). Expone `GET /api/catalogos/dependencias`
+y `GET /api/catalogos/dependencias/{clave}`, ambos públicos. Pendiente: correr el seed en la
+VPS (ver checklist en `docs/CAMBIOS.md`) y, más adelante, que el frontend consuma este catálogo
+en el formulario de "Presentar una queja" en vez del campo de texto libre actual.

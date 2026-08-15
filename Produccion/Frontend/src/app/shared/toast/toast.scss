@@ -1,0 +1,103 @@
+.toast-contenedor {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(380px, calc(100vw - 40px));
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 14px 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  border-left: 4px solid var(--guinda);
+  animation: toast-entrada 0.2s ease;
+
+  &__icono {
+    flex-shrink: 0;
+    font-weight: 700;
+    color: var(--guinda-vivo);
+  }
+
+  &__texto {
+    flex: 1;
+    color: var(--texto);
+  }
+
+  &__cerrar {
+    background: none;
+    border: none;
+    color: var(--texto-suave);
+    cursor: pointer;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    padding: 0;
+    line-height: 1;
+
+    &:hover {
+      color: var(--negro-inst);
+    }
+  }
+
+  /* Éxito: verde institucional ya usado en el resto del sitio para estatus "Finalizada". */
+  &--exito {
+    border-left-color: var(--exito);
+
+    .toast__icono {
+      color: var(--exito);
+    }
+  }
+
+  /* Error: rojo, misma semántica que el resto de mensajes .error del sitio. */
+  &--error {
+    border-left-color: var(--peligro);
+
+    .toast__icono {
+      color: var(--peligro);
+    }
+  }
+
+  /* Advertencia: usa el dorado institucional (--advertencia), reservado a propósito solo
+   * para este tipo de aviso — no se usa como borde decorativo en el resto del formulario,
+   * para que mantenga su significado de "atención" cuando aparece. */
+  &--advertencia {
+    border-left-color: var(--advertencia);
+
+    .toast__icono {
+      color: var(--advertencia);
+    }
+  }
+
+  &--info {
+    border-left-color: var(--guinda-vivo);
+  }
+}
+
+@keyframes toast-entrada {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .toast-contenedor {
+    left: 20px;
+    right: 20px;
+    top: 12px;
+    max-width: none;
+  }
+}

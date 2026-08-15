@@ -3,11 +3,19 @@ server:
 spring:
   application:
     name: notificaciones-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/defensoria_db
+    username: postgres
+    password: Temporal2026@
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
   mail:
     host: smtp.gmail.com
     port: 587
     username: jair100flo@gmail.com
-    password: rozzvatswkacxvqf
+    password: kstwxawsnsqkzhnk
     properties:
       mail:
         smtp:
@@ -15,3 +23,12 @@ spring:
           starttls:
             enable: true
             required: true
+
+jwt:
+  secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

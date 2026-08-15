@@ -1,21 +1,32 @@
-.aviso-pendiente {
-  background: #fff8e1;
-  border: 1px solid #ffe082;
-  border-radius: 6px;
-  padding: 10px 14px;
-  font-size: 0.8rem;
-  margin-bottom: 20px;
+.cargando-estado {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
 }
 
 .filtros {
   display: grid;
-  grid-template-columns: 1fr 200px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 16px;
+  align-items: end;
   margin-bottom: 20px;
 
   .input-group {
     margin-bottom: 0;
   }
+
+  .btn-limpiar {
+    height: fit-content;
+    padding: 11px 16px;
+    white-space: nowrap;
+  }
+}
+
+.conteo-resultados {
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  margin: 0 0 10px;
 }
 
 .tabla-contenedor {
@@ -38,6 +49,16 @@ table {
     color: var(--texto-suave);
   }
 
+  tbody tr {
+    animation: fila-entrada 0.3s ease both;
+    animation-delay: calc(var(--retraso, 0) * 40ms);
+    transition: background 0.12s ease;
+
+    &:hover {
+      background: var(--gris-fondo);
+    }
+  }
+
   a {
     text-decoration: none;
     font-weight: 600;
@@ -46,5 +67,16 @@ table {
   .vacio {
     text-align: center;
     color: var(--texto-suave);
+  }
+}
+
+@keyframes fila-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

@@ -1,0 +1,74 @@
+	\section{Planteamiento del Problema}
+	Este capítulo establece las bases fundamentales del proyecto de reconocimiento de señas. Aquí se analizará el contexto actual de la comunicación para la comunidad sorda que se comunica a través de la LSM. 
+	 
+	A partir de ese contexto, el capítulo presentará la justificación de por qué es importante desarrollar una solución tecnológica, y luego se definirán el objetivo general y los objetivos específicos que guiarán el proyecto. 
+	
+	Finalmente se delimitará el trabajo estableciendo los alcances y limitaciones del mismo. 
+	
+	
+	\subsection{Contexto y situación problemática}
+	
+	El desarrollo de una sociedad justa y equitativa se fundamenta en el principio de la inclusión, entendida como el compromiso activo de garantizar que todas las personas, sin importar sus condiciones, tengan acceso a los mismos derechos, oportunidades y recursos para participar plenamente en la vida social \cite{unadm2024}. Este principio busca eliminar los obstáculos que limitan el potencial de los individuos y los colectivos, promoviendo un entorno donde la diversidad es valorada.
+	
+	En México, uno de los desafíos más significativos en materia de inclusión se presenta en la comunidad sorda. Este grupo cultural y lingüístico, cuya lengua principal es la Lengua de Señas Mexicana (LSM), reconocida oficialmente como lengua nacional, enfrenta barreras de comunicación de manera cotidiana. A pesar de este reconocimiento, el uso de la LSM no está generalizado entre la población oyente, lo que limita de manera significativa la interacción en entornos educativos, laborales y sociales.
+	
+	Esta situación se refleja en datos del Instituto Nacional de Estadística y Geografía (INEGI), que en 2024 reportó que más de 8.8 millones de personas en el país viven con alguna discapacidad. De esta población, el 19.5\% presenta dificultades auditivas, mientras que el 9.2\% enfrenta retos para hablar o comunicarse \cite{inegi2024}.
+	
+	La problemática se agrava debido a la escasez de intérpretes certificados en LSM, así como a la falta de herramientas tecnológicas accesibles que faciliten la comunicación autónoma. Esta carencia genera una dependencia constante de intermediarios humanos, lo que limita la inclusión plena de las personas sordas en distintos ámbitos de la vida cotidiana.
+	
+	
+	\subsection{Problema a resolver}
+	
+	Actualmente, la comunicación entre personas sordas y oyentes depende en gran medida de intérpretes humanos, un recurso escaso, no siempre disponible y, en algunos casos, costoso, lo que limita las interacciones cotidianas en distintos contextos sociales, educativos y laborales. La falta de herramientas tecnológicas accesibles contribuye a mantener barreras en la comunicación y a reforzar condiciones de exclusión.
+	
+	El problema a resolver consiste en la necesidad de contar con una herramienta tecnológica de uso cotidiano que permita reconocer señas de la LSM y representarlas en texto.
+	
+	\subsection{Justificación}
+	
+	La creación de este proyecto se justifica principalmente por su relevancia social. La barrera de comunicación que enfrenta la comunidad sorda tiene consecuencias directas y significativas, siendo una de las más críticas el rezago educativo \cite{vazquez2023}. Diversos estudios han evidenciado que los estudiantes sordos enfrentan retos importantes en su acceso, permanencia y egreso en la educación superior, lo cual ha sido descrito como una ``deuda del sistema'' educativo que limita su desarrollo profesional y social \cite{delabarra2021, cruz2020}. En este sentido, el desarrollo de herramientas que faciliten la comunicación representa un paso fundamental para promover la equidad educativa y la inclusión social.
+	
+	Desde una perspectiva tecnológica y de innovación, el proyecto se justifica ante la insuficiencia de las soluciones actuales. La dependencia de intérpretes humanos que si bien es valiosa, no es una solución escalable, accesible ni disponible en todo momento. Por ello, existe una necesidad clara de desarrollar alternativas tecnológicas que permitan a las personas sordas comunicarse de manera más autónoma en distintos contextos cotidianos.
+	
+	El proyecto posee relevancia institucional y científica, ya que se alinea con las prioridades nacionales en materia de inclusión y desarrollo tecnológico. El interés de organismos como el Consejo Nacional de Humanidades, Ciencias y Tecnologías (CONAHCYT) en atender problemáticas relacionadas con la población sorda evidencia que esta línea de investigación es pertinente y estratégica para el país \cite{conahcyt2024}.
+	
+	El presente Trabajo Terminal resulta pertinente, ya que atiende una problemática social relevante y documentada, explorando el uso de soluciones tecnológicas orientadas a mejorar las condiciones de comunicación de la comunidad sorda.
+
+	\subsection{Objetivos}
+	\subsubsection{Objetivo general}
+	
+	El objetivo de este trabajo terminal es desarrollar una aplicación móvil para el sistema operativo Android que permita el reconocimiento de señas estáticas de la LSM, a partir de imágenes capturadas por la cámara del dispositivo. 
+	
+	\subsubsection{Objetivos específicos}
+	\begin{enumerate}
+		\item \textbf{Analizar los requerimientos funcionales y técnicos} necesarios para el desarrollo del prototipo, considerando las necesidades del usuario oyente y los procesos de reconocimiento de señas estáticas del alfabeto LSM.
+		 
+		\item \textbf{Diseñar la arquitectura del sistema} que integre los módulos de captura, preprocesamiento, clasificación e interfaz de usuario. 
+		
+		\item  \textbf{Adaptar y evaluar un modelo de clasificación } para el reconocimiento de señas estáticas del alfabeto LSM, verificando su desempeño con un dataset representativo. 
+		
+		\item \textbf{Desarrollar la aplicación móvil Android }que incorpore el modelo entrenado y permita la interacción del usuario mediante cámara, mostrando el resultado traducido en texto. 
+		
+		\item \textbf{Evaluar el desempeño y la funcionalidad del prototipo}, midiendo precisión, latencia y usabilidad, para validar su eficacia como herramienta de apoyo a la comunicación entre personas sordas y oyentes. 
+		
+	\end{enumerate}
+	
+	\subsection{Alcances y limitaciones}
+	
+	El producto principal de este Trabajo Terminal será una aplicación móvil para dispositivos Android capaz de reconocer señas estáticas de la LSM. El prototipo procesará dichas imágenes utilizando un modelo de clasificación y generará como salida la clase correspondiente a la seña predicha. 
+	
+	\subsubsection{Limitaciones}
+	
+	\begin{itemize}
+		\item \textbf{Reconocimiento de Señas Estáticas:} El prototipo se enfocará únicamente en el reconocimiento de señas estáticas (posiciones fijas de la mano). No interpretará señas que requieran movimiento o secuencias gestuales (señas dinámicas). 
+		
+		\item \textbf{Vocabulario Definido:} El vocabulario de señas que el modelo podrá reconocer estará limitado al conjunto de datos utilizado para su entrenamiento, no abarcará la totalidad de la 
+		LSM. 
+		
+		\item \textbf{Exclusión de Componentes no Manuales:} El modelo se centrará exclusivamente en la forma y posición de la mano. No analizará componentes no manuales de la LSM, como las expresiones faciales o la postura corporal, que son cruciales para el contexto gramatical completo. 
+		
+	\end{itemize}
+	
+	\newpage
+
+
+	% ==================================================

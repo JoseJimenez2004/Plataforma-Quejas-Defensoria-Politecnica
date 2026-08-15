@@ -1,0 +1,478 @@
+	\section{Implementación y evaluación del prototipo}
+	\label{cap:implementacion}
+	Este capítulo documenta cómo se construyó, se desplegó y se verificó la plataforma diseñada en
+	el Capítulo~\ref{sec:descripcion_solucion}. Se organiza siguiendo las capas del sistema: primero
+	el entorno y las herramientas, después la implementación del lado del servidor, en seguida las
+	aplicaciones web, luego el empaquetado en contenedores y la publicación en los servidores, y
+	finalmente la evaluación del clasificador y las pruebas realizadas. Cierra con un balance
+	explícito de lo que quedó implementado y lo que no, porque un documento técnico que solo enumera
+	logros no permite a nadie retomar el trabajo.
+	
+	\subsection{Entorno de desarrollo y herramientas}
+	\label{sec:entorno_herramientas}
+	La plataforma se construyó con el conjunto de tecnologías cuyos fundamentos se expusieron en la
+	Sección~\ref{sec:tecnologias}. La Tabla~\ref{tab:herramientas} resume la asignación concreta de
+	cada herramienta a su función dentro del proyecto.
+	
+	\rowcolors{2}{rowblue}{white}
+	
+	\small
+	\renewcommand{\arraystretch}{1.25}
+	\setlength{\tabcolsep}{4pt}
+	
+	\begin{longtable}{|p{3.4cm}|p{3.2cm}|p{7.5cm}|}
+		\caption{Herramientas empleadas y su función en el proyecto}
+		\label{tab:herramientas} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Capa} & \headercell{Herramienta} & \headercell{Función} \\
+		\hline
+		\endfirsthead
+	
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Capa} & \headercell{Herramienta} & \headercell{Función} \\
+		\hline
+		\endhead
+	
+		Lenguaje del servidor & Java 21 & Lenguaje de los siete microservicios \\ \hline
+		Marco del servidor & Spring Boot & Autoconfiguración, servidor embebido, seguridad y
+		persistencia \\ \hline
+		Construcción & Maven & Gestión de dependencias y empaquetado en archivo ejecutable \\ \hline
+		Persistencia & Spring Data JPA & Mapeo objeto-relacional y derivación de consultas \\ \hline
+		Base de datos & PostgreSQL 16 & Almacén relacional único compartido \\ \hline
+		Autenticación & JSON Web Token & Tokens firmados con algoritmo simétrico \\ \hline
+		Documentación de la API & OpenAPI 3 & Especificación e interfaz de exploración por servicio
+		\\ \hline
+		Hojas de cálculo & Apache POI & Generación del historial exportable y lectura de la
+		importación masiva del catálogo \\ \hline
+		Cliente web & Angular 21 & Las tres aplicaciones de página única \\ \hline
+		Contenedores & Podman & Empaquetado y ejecución de los doce contenedores \\ \hline
+		Servidor web & Nginx & Proxy inverso público y entrega de archivos estáticos \\ \hline
+		Certificados & Certbot & Emisión y renovación automática del certificado de transporte
+		\\ \hline
+		Control de versiones & Git & Historial del proyecto \\ \hline
+		Clasificador & Python, scikit-learn, spaCy, Sentence-BERT & Vectorización, entrenamiento y
+		evaluación del componente de clasificación \\ \hline
+	\end{longtable}
+	
+	\normalsize
+	\setlength{\tabcolsep}{6pt}
+	\renewcommand{\arraystretch}{1}
+	
+	Una característica del proyecto que conviene señalar desde el principio: cada microservicio es un
+	proyecto de construcción independiente, sin un descriptor padre que los agrupe. La decisión
+	simplifica la evolución de cada servicio por separado, pero tiene una consecuencia operativa
+	concreta: no existe un comando único que compile todo el sistema, y cada servicio debe compilarse
+	desde su propio directorio.
+	
+	\subsection{Implementación del lado del servidor}
+	\label{sec:impl_backend}
+	Los siete microservicios comparten deliberadamente la misma estructura interna. Esta uniformidad
+	fue una decisión de implementación, no una consecuencia: cuando se construyó cada servicio nuevo
+	se replicó la organización de carpetas, los filtros y el manejo de errores del anterior, en lugar
+	de introducir un estilo distinto. El beneficio es que quien conoce un servicio conoce los siete, y
+	un defecto corregido en uno se localiza sin dificultad en los demás.
+	
+	\subsubsection{Estructura común de un microservicio}
+	Cada servicio organiza su código en cinco paquetes que corresponden a las capas descritas en la
+	Sección~\ref{sec:arquitectura_software}:
+	
+	\begin{itemize}
+		\item \texttt{controller}. Puntos de acceso HTTP. Reciben y devuelven objetos de
+		transferencia, nunca entidades de persistencia, y declaran el rol requerido para invocarlos.
+	
+		\item \texttt{service}. Lógica de negocio y validación de las reglas. Es la única capa que
+		conoce las reglas del dominio; los controladores no validan reglas y los repositorios no las
+		conocen.
+	
+		\item \texttt{repository}. Acceso a datos mediante interfaces de persistencia que derivan las
+		consultas a partir del nombre de sus métodos, sin escribir sentencias SQL.
+	
+		\item \texttt{entity}. Entidades de persistencia con su correspondencia a tablas y columnas.
+	
+		\item \texttt{model}. Objetos de transferencia de datos para las peticiones y las respuestas.
+	\end{itemize}
+	
+	La separación entre \texttt{entity} y \texttt{model} merece una justificación explícita, porque
+	implica escribir clases que a primera vista parecen redundantes. Exponer directamente la entidad
+	de persistencia en una respuesta HTTP acopla el contrato público del servicio a la estructura de
+	la base de datos: cualquier columna nueva aparece automáticamente en la respuesta, incluidas las
+	que no deberían ser públicas ---la credencial cifrada de un usuario, por ejemplo---. Mantener
+	objetos de transferencia separados obliga a decidir de forma consciente qué se expone.
+	
+	\subsubsection{Verificación de tokens y control de acceso}
+	El mecanismo de autenticación se implementó como un filtro que se ejecuta antes de que la
+	petición llegue al controlador. Su lógica es la misma en los siete servicios: extrae el token del
+	encabezado de autorización, verifica su firma con la clave compartida, extrae de él la identidad
+	y el rol, y establece el contexto de seguridad de la petición. Si el token falta, está vencido o
+	su firma no coincide, el filtro rechaza la petición sin llegar a la lógica de negocio.
+	
+	Sobre ese contexto se aplica la autorización, declarada en cada controlador mediante anotaciones
+	que exigen un rol determinado. Un detalle de configuración que resultó relevante durante la
+	implementación: cuando un mismo prefijo de ruta tiene una parte pública y una parte
+	administrativa, el orden de declaración de las reglas importa, porque el marco de seguridad
+	aplica la primera coincidencia. Declarar la regla pública antes de la administrativa hace que la
+	menos restrictiva prevalezca por ser más genérica, y el resultado es un punto de acceso
+	administrativo efectivamente abierto. Esta situación se atendió declarando siempre la regla más
+	específica primero, y quedó registrada como regla de negocio RN-A05 justamente para que no se
+	reintroduzca al agregar servicios nuevos.
+	
+	\subsubsection{Manejo centralizado de errores}
+	Cada servicio implementa un manejador global de excepciones que traduce cualquier error de la
+	capa de negocio a una respuesta con estructura uniforme: mensaje, marca de tiempo y código. La
+	alternativa ---capturar excepciones en cada controlador--- se descartó porque produce respuestas
+	de error con formatos distintos según el punto de acceso, y obliga al cliente a implementar
+	tantas variantes de manejo de error como puntos de acceso consuma. Con el manejador centralizado,
+	las tres aplicaciones web leen el mensaje de error siempre del mismo lugar.
+	
+	\subsubsection{Documentación de la interfaz de programación}
+	Los siete servicios exponen su especificación en formato OpenAPI y una interfaz de exploración
+	interactiva. Esta decisión resolvió un problema concreto de coordinación: durante el desarrollo
+	del cliente, la única forma de conocer la forma exacta de una petición era leer el código del
+	controlador correspondiente. Con la especificación publicada, el contrato de cada servicio es
+	consultable sin abrir el código.
+	
+	\subsubsection{Puntos de acceso implementados}
+	La Tabla~\ref{tab:endpoints} presenta los puntos de acceso principales agrupados por servicio,
+	con su condición de acceso. La especificación completa de cada uno, con sus parámetros y
+	respuestas, se consulta en la interfaz de exploración de cada servicio y se reproduce en el anexo
+	correspondiente.
+	
+	\rowcolors{2}{rowblue}{white}
+	
+	\footnotesize
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	
+	\begin{longtable}{|p{2.6cm}|p{8.6cm}|p{3.0cm}|}
+		\caption{Puntos de acceso principales por microservicio}
+		\label{tab:endpoints} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Servicio} & \headercell{Punto de acceso} & \headercell{Acceso} \\
+		\hline
+		\endfirsthead
+	
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Servicio} & \headercell{Punto de acceso} & \headercell{Acceso} \\
+		\hline
+		\endhead
+	
+		\texttt{auth-service} & \texttt{POST /api/auth/login} & Público \\ \hline
+		& \texttt{POST /api/auth/activar-cuenta} & Público \\ \hline
+		& \texttt{POST /api/auth/solicitar-codigo} & Público \\ \hline
+		& \texttt{POST /api/auth/reset-password} & Público \\ \hline
+		& \texttt{GET} y \texttt{PUT /api/auth/me}, \texttt{/api/auth/perfil} & Sesión de quejoso
+		\\ \hline
+	
+		\texttt{queja-service} & \texttt{POST /api/quejoso/\allowbreak quejas/registro-publico} & Público
+		\\ \hline
+		& \texttt{GET /api/quejoso/quejas/folio/\{folio\}} & Público \\ \hline
+		& \texttt{POST /api/quejoso/quejas/registrar} & Sesión de quejoso \\ \hline
+		& \texttt{GET /api/quejoso/quejas/mias} & Sesión de quejoso \\ \hline
+		& \texttt{GET} y \texttt{PUT /api/quejoso/\allowbreak quejas/mias/\{folio\}} & Sesión de quejoso \\ \hline
+		& \texttt{GET} y \texttt{PUT /api/quejoso/conciliaciones/**} & Sesión de quejoso \\ \hline
+	
+		\texttt{notificaciones-\allowbreak service} & \texttt{GET /api/notificaciones/mias} y
+		\texttt{/mias/no-leidas} & Sesión de quejoso \\ \hline
+		& \texttt{PUT /api/notificaciones/\{id\}/leida} & Sesión de quejoso \\ \hline
+		& \texttt{POST /api/notificaciones/enviar} y \texttt{/registrar} & Uso interno entre
+		servicios \\ \hline
+	
+		\texttt{catalogo-\allowbreak service} & \texttt{GET /api/catalogos/dependencias} y
+		\texttt{/dependencias/\{clave\}} & Público \\ \hline
+		& \texttt{GET}, \texttt{POST}, \texttt{PUT /api/catalogos/\allowbreak dependencias/admin/**} &
+		Administración \\ \hline
+		& \texttt{POST /api/catalogos/\allowbreak dependencias/admin/\allowbreak importar-excel} & Administración \\ \hline
+	
+		\texttt{admin-service} & \texttt{POST /api/admin/auth/login} & Público \\ \hline
+		& \texttt{GET}, \texttt{POST}, \texttt{PUT}, \texttt{DELETE /api/admin/personal/**} &
+		Administración \\ \hline
+		& \texttt{GET} y \texttt{PUT /api/admin/plantillas/**} & Administración \\ \hline
+		& \texttt{GET} y \texttt{POST /api/admin/\allowbreak seguridad/respaldos/**} & Administración \\ \hline
+		& \texttt{POST /api/admin/seguridad/restaurar} & Administración \\ \hline
+		& \texttt{GET /api/admin/seguridad/bitacora} & Administración \\ \hline
+		& \texttt{GET /api/admin/dashboard/resumen} & Administración \\ \hline
+		& \texttt{PUT /api/admin/perfil/password} & Cualquier cuenta de personal \\ \hline
+	
+		\texttt{revision-\allowbreak service} & \texttt{GET /api/revision/bandeja} & Recepción \\ \hline
+		& \texttt{GET /api/revision/quejas/\{folio\}} y \texttt{/antecedentes} & Recepción \\ \hline
+		& \texttt{GET /api/revision/\allowbreak quejas/evidencias/\{id\}} & Recepción \\ \hline
+		& \texttt{POST /api/revision/\allowbreak quejas/\{folio\}/rechazar} y \texttt{/turnar} & Recepción
+		\\ \hline
+		& \texttt{POST /api/revision/registro-manual} & Recepción \\ \hline
+		& \texttt{GET /api/revision/historial} y \texttt{/historial/exportar} & Recepción \\ \hline
+		& \texttt{GET /api/revision/catalogos/areas} y \texttt{/defensores} & Recepción \\ \hline
+		& \texttt{POST} y \texttt{GET /api/revision/conciliaciones} & Recepción \\ \hline
+	
+		\texttt{chatbot-\allowbreak service} & \texttt{GET /api/chatbot/menu} & Público \\ \hline
+		& \texttt{GET}, \texttt{POST}, \texttt{PUT}, \texttt{DELETE /api/chatbot/\allowbreak admin/preguntas/**} &
+		Administración \\ \hline
+	\end{longtable}
+	
+	\normalsize
+	\setlength{\tabcolsep}{6pt}
+	\renewcommand{\arraystretch}{1}
+	
+	\subsection{Implementación de las aplicaciones web}
+	\label{sec:impl_frontend}
+	Las tres aplicaciones se desarrollaron como aplicaciones de página única con componentes
+	autónomos, sin el sistema de módulos de versiones anteriores del marco de trabajo. Cada
+	aplicación es un proyecto independiente con su propio árbol de rutas, su guarda de
+	autenticación y sus interceptores.
+	
+	\subsubsection{Estructura común}
+	Las tres comparten la misma organización: una capa \texttt{core} con los servicios de
+	comunicación con el servidor, los modelos de datos y la configuración de seguridad del cliente;
+	una capa \texttt{shared} con los componentes reutilizables ---encabezado, pie, avisos, ayuda
+	flotante---; y una capa \texttt{pages} con un componente por pantalla, cargado de forma diferida
+	para que el navegador no descargue el código de pantallas que el usuario no ha visitado.
+	
+	\subsubsection{Interceptores y guardas}
+	Dos piezas transversales resuelven problemas que de otro modo habría que repetir en cada
+	pantalla.
+	
+	El \textbf{interceptor de autorización} agrega el token de sesión al encabezado de cada petición
+	saliente, de modo que ningún servicio de la aplicación tiene que recordar hacerlo. El mismo
+	interceptor detecta las respuestas de sesión inválida o insuficiente y, en ese caso, cierra la
+	sesión local y redirige al inicio de sesión. Esto implementa el requerimiento RNF-Q06 en un solo
+	punto del código.
+	
+	La \textbf{guarda de rutas} impide el acceso a las secciones autenticadas cuando no existe una
+	sesión válida en el cliente. Es importante entender su alcance: la guarda es una medida de
+	usabilidad, no de seguridad, porque se ejecuta en el navegador y puede eludirse. La seguridad
+	real la aplica el servidor, que rechaza cualquier petición sin token válido con independencia de
+	lo que haga el cliente. Confundir ambas cosas es un error frecuente y por eso se hace explícito.
+	
+	\subsubsection{Detección de cambios sin zonas}
+	La versión del marco de trabajo empleada permite ejecutar la aplicación sin la biblioteca que
+	tradicionalmente intercepta las operaciones asíncronas para disparar la actualización de la
+	vista. Ese modo reduce el trabajo del navegador, pero tiene una consecuencia que apareció durante
+	la implementación: la vista no se actualizaba de forma automática al recibir la respuesta de una
+	petición, de modo que los datos llegaban pero la pantalla seguía mostrando el estado anterior.
+	
+	La solución adoptada fue un interceptor adicional que solicita de forma explícita una
+	actualización de la vista tras cada respuesta del servidor. Se documenta aquí porque es una
+	particularidad no evidente del entorno y porque cualquier pantalla nueva que se agregue al
+	proyecto depende de que ese interceptor siga registrado.
+	
+	\subsection{Empaquetado en contenedores y despliegue}
+	\label{sec:impl_despliegue}
+	El sistema se ejecuta en doce contenedores distribuidos en los dos servidores descritos en la
+	Sección~\ref{sec:diseno_arquitectura}. La Tabla~\ref{tab:contenedores} presenta la matriz de
+	despliegue.
+	
+	\rowcolors{2}{rowblue}{white}
+	
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	
+	\begin{longtable}{|p{3.4cm}|p{3.0cm}|p{7.6cm}|}
+		\caption{Matriz de despliegue en contenedores}
+		\label{tab:contenedores} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Contenedor} & \headercell{Servidor} & \headercell{Contenido} \\
+		\hline
+		\endfirsthead
+	
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Contenedor} & \headercell{Servidor} & \headercell{Contenido} \\
+		\hline
+		\endhead
+	
+		Base de datos & Aplicación & PostgreSQL 16 con almacenamiento persistente \\ \hline
+		\texttt{auth-service} & Aplicación & Imagen dedicada del servicio de autenticación \\ \hline
+		\texttt{quejas-service} & Aplicación & Imagen dedicada del servicio de quejas \\ \hline
+		\texttt{notificaciones-\allowbreak service} & Aplicación & Imagen dedicada del servicio de
+		notificaciones \\ \hline
+		\texttt{catalogo-\allowbreak service} & Aplicación & Imagen dedicada del servicio de catálogo \\ \hline
+		\texttt{admin-service} & Aplicación & Imagen propia que incluye el cliente de la base de
+		datos, necesario para generar y restaurar respaldos \\ \hline
+		\texttt{revision-\allowbreak service} & Aplicación & Imagen dedicada del servicio de revisión \\ \hline
+		\texttt{chatbot-\allowbreak service} & Aplicación & Imagen dedicada del servicio de preguntas frecuentes
+		\\ \hline
+		Portal del quejoso & Acceso público & Servidor de estáticos con la aplicación compilada
+		\\ \hline
+		Consola de administración & Acceso público & Servidor de estáticos con la aplicación compilada
+		\\ \hline
+		Panel de revisión & Acceso público & Servidor de estáticos con la aplicación compilada
+		\\ \hline
+		Proxy inverso & Acceso público & Nginx con la configuración de enrutamiento y el certificado
+		de transporte \\ \hline
+	\end{longtable}
+	
+	\normalsize
+	\setlength{\tabcolsep}{6pt}
+	\renewcommand{\arraystretch}{1}
+	
+	\subsubsection{Configuración externalizada}
+	Cada microservicio monta su configuración de producción como un volumen del contenedor, en lugar
+	de incluirla en la imagen. La consecuencia práctica es una distinción importante en el
+	procedimiento de operación: un cambio de configuración ---una dirección, un tiempo de
+	expiración--- se aplica editando el archivo montado y reiniciando el contenedor, mientras que un
+	cambio de lógica exige recompilar el servicio, generar un artefacto nuevo y reconstruir la
+	imagen. Esta separación es la que permite que la misma imagen sirva en cualquier ambiente sin
+	reconstruirse, tal como se expuso en la Sección~\ref{sec:tecnologias}.
+	
+	Durante la operación apareció una consecuencia no evidente de este esquema: editar el archivo de
+	configuración en el servidor anfitrión no basta para que el contenedor lo tome, porque el punto de
+	montaje conserva la referencia al archivo original. Es necesario reiniciar el contenedor, no solo
+	recargar el servicio. Se documenta porque es una fuente de diagnósticos erróneos: el archivo se ve
+	correcto en el servidor y el servicio sigue comportándose como antes.
+	
+	\subsubsection{Publicación segura y cifrado del canal}
+	La publicación al exterior se resolvió en tres pasos. Primero se restringió el cortafuegos del
+	servidor de aplicación para que los puertos de los microservicios y de la base de datos aceptaran
+	conexiones únicamente desde la dirección del servidor de acceso público, dejando fuera cualquier
+	otro origen de Internet. Después se configuró el proxy inverso del servidor de acceso público con
+	las reglas de enrutamiento de la Tabla~\ref{tab:enrutamiento}. Por último se emitió el certificado
+	de transporte mediante el método de validación por directorio web, se reconfiguró el proxy para
+	atender el puerto cifrado y se dejó el puerto sin cifrar únicamente para redirigir el tráfico y
+	atender la renovación automática del certificado.
+	
+	Durante este proceso se documentaron dos incidentes que conviene registrar por su valor
+	diagnóstico. El primero fue una aparente imposibilidad de alcanzar los puertos web del servidor
+	de acceso público desde el exterior, mientras que el puerto de administración remota respondía
+	con normalidad. Tras descartar de forma sistemática la configuración del servicio, la publicación
+	del contenedor y el cortafuegos local, se identificó que la causa era una regla de cortafuegos
+	del proveedor que estaba guardada pero no sincronizada con la máquina virtual: existía en el panel
+	de control pero no se había aplicado. El segundo fue un aviso recurrente del motor de contenedores
+	sobre una red virtual mal configurada, que provenía de un intento previo de crear una red propia
+	que finalmente no se utilizó; su eliminación resolvió el aviso. Ambos casos ilustran un principio
+	de diagnóstico útil: cuando un componente responde de forma local y no desde el exterior, el
+	problema no está en el componente sino en el camino.
+	
+	\subsection{Evaluación del clasificador de competencia}
+	\label{sec:eval_clasificador}
+	El clasificador se evaluó de forma independiente, conforme al protocolo definido en la
+	Sección~\ref{sec:validacion_robusta}. Se construyeron ocho configuraciones que combinan las dos
+	representaciones semánticas del texto con los cuatro clasificadores descritos en el marco
+	teórico, y se evaluaron todas bajo el mismo procedimiento para que la comparación fuera válida.
+	
+	El protocolo aplicado tiene tres características que conviene explicitar, porque son las que
+	impiden que las métricas resulten optimistas. La primera es la partición en tres subconjuntos:
+	entrenamiento, validación cruzada dentro del entrenamiento, y un subconjunto de prueba aislado
+	por completo durante el ajuste de hiperparámetros. La segunda es la estratificación de los
+	pliegues, que preserva la proporción de clases en cada uno y evita que un pliegue quede sin
+	ejemplos de la clase minoritaria. La tercera, y la más determinante, es que el criterio de
+	selección del modelo final es su desempeño en modo autónomo ---sin los atributos jurídicos
+	anotados--- porque ese es el escenario real de producción, en el que el quejoso redacta
+	libremente sin conocer la normativa.
+	
+	% PENDIENTE: insertar aquí la tabla de resultados de las 8 configuraciones
+	% (F1 en validación cruzada, desviación estándar entre pliegues, F1 en el subconjunto
+	% de prueba con y sin atributos jurídicos) y las matrices de confusión del modelo
+	% seleccionado. Falta que el autor proporcione las métricas.
+	
+	Los resultados numéricos de las ocho configuraciones, las matrices de confusión del modelo
+	seleccionado y el análisis de los casos mal clasificados se presentan más adelante en esta misma
+	sección.
+	
+	Una advertencia metodológica debe acompañar a cualquier lectura de estas métricas. Conforme a lo
+	declarado en la Sección~\ref{sec:limitaciones}, el corpus con el que se entrenó y validó el
+	clasificador es un conjunto sintético construido por el equipo de desarrollo, porque a la fecha
+	de elaboración de este documento la Defensoría no ha entregado los expedientes históricos reales
+	y anonimizados solicitados. En consecuencia, los valores reportados caracterizan el
+	comportamiento del modelo sobre la distribución de ese corpus, no sobre la distribución real de
+	las quejas que recibe la institución, y deben considerarse preliminares y sujetos a recalibración.
+	
+	\subsection{Pruebas y verificación}
+	\label{sec:pruebas}
+	La verificación del sistema se realizó en cuatro niveles, cada uno atendiendo un tipo distinto de
+	defecto.
+	
+	\textbf{Verificación de compilación.} Cada microservicio se compila y empaqueta antes de
+	desplegarse, y cada aplicación web se compila en modo de producción. Este nivel detecta errores
+	de tipo y de plantilla, que en un lenguaje de tipado estático constituyen una fracción
+	significativa de los defectos posibles.
+	
+	\textbf{Verificación de puntos de acceso.} Cada punto de acceso se probó de forma individual
+	contra el servicio en ejecución, verificando el código de respuesta y la estructura del cuerpo.
+	Este nivel detecta errores de configuración de seguridad ---un punto de acceso que debía ser
+	público y exige token, o al contrario--- que la compilación no puede detectar.
+	
+	\textbf{Verificación de integración a través del proxy.} Cada ruta pública se probó desde el
+	exterior, atravesando la cadena completa: proxy inverso, cortafuegos, microservicio y base de
+	datos. Este nivel es el que detecta los problemas de enrutamiento y de cortafuegos, y fue el que
+	permitió aislar los incidentes descritos en la Sección~\ref{sec:impl_despliegue}. El criterio de
+	verificación aquí es específico: una respuesta de error generada por el servicio de destino
+	constituye una prueba exitosa de conectividad, mientras que una expiración del tiempo de espera
+	indica un problema en el camino.
+	
+	\textbf{Verificación funcional de los flujos.} Los flujos completos de cada actor se ejecutaron
+	manualmente desde el navegador, siguiendo los casos de uso de la Sección~\ref{sec:casos_uso}:
+	presentar una queja sin cuenta, activarla, iniciar sesión, editar, validar desde recepción,
+	rechazar, turnar y consultar el historial exportado.
+	
+	Un límite de este esquema de verificación debe declararse con claridad: el proyecto no cuenta con
+	pruebas automatizadas ---unitarias, de integración o de extremo a extremo--- ni con un flujo de
+	integración continua que las ejecute. Toda la verificación descrita se realizó de forma manual.
+	Esto significa que una modificación futura puede reintroducir un defecto ya corregido sin que
+	nada lo detecte de forma automática, y constituye la deuda técnica más relevante del proyecto en
+	materia de calidad.
+	
+	\subsection{Estado de avance por componente}
+	\label{sec:estado_avance}
+	La Tabla~\ref{tab:estado_avance} presenta el balance de lo implementado al cierre de esta etapa.
+	Se incluye de forma deliberada la columna de lo no implementado, porque el valor de este balance
+	para quien retome el proyecto está en lo que falta, no en lo que ya está.
+	
+	\rowcolors{2}{rowblue}{white}
+	
+	\small
+	\renewcommand{\arraystretch}{1.25}
+	\setlength{\tabcolsep}{4pt}
+	
+	\begin{longtable}{|p{3.7cm}|p{2.1cm}|p{8.2cm}|}
+		\caption{Estado de avance por componente al cierre de la etapa}
+		\label{tab:estado_avance} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Componente} & \headercell{Estado} & \headercell{Observaciones} \\
+		\hline
+		\endfirsthead
+	
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Componente} & \headercell{Estado} & \headercell{Observaciones} \\
+		\hline
+		\endhead
+	
+		Portal del quejoso & Operativo & Los diecisiete requerimientos funcionales del actor están
+		implementados y desplegados \\ \hline
+	
+		Panel de revisión & Operativo & Los trece requerimientos del actor de recepción están
+		implementados \\ \hline
+	
+		Consola de administración & Operativo & Los nueve requerimientos de administración están
+		implementados \\ \hline
+	
+		Servicios de análisis, subdefensoría y resolución & No iniciado & Los tres roles existen como
+		cuentas y como catálogo de turnado, pero no cuentan con interfaz ni permisos propios \\ \hline
+	
+		Integración del clasificador & Pendiente & El componente se desarrolló y evaluó de forma
+		independiente; su exposición como servicio de la plataforma queda para la etapa siguiente
+		\\ \hline
+	
+		Cierre de sesión por inactividad & Pendiente & La expiración del token limita la ventana de
+		exposición, pero no equivale a un cierre por inactividad \\ \hline
+	
+		Pruebas automatizadas & No iniciado & Toda la verificación es manual; no existe integración
+		continua \\ \hline
+	
+		Corrección de hallazgos de análisis estático & Pendiente & Las vulnerabilidades de
+		neutralización de entradas y de generación pseudoaleatoria identificadas requieren remediación
+		prioritaria \\ \hline
+	
+		Separación de los cortafuegos por servidor & Pendiente & Ambos servidores comparten el mismo
+		grupo de reglas; no hay exposición real hoy, pero conviene separarlos \\ \hline
+	\end{longtable}
+	
+	\normalsize
+	\setlength{\tabcolsep}{6pt}
+	\renewcommand{\arraystretch}{1}

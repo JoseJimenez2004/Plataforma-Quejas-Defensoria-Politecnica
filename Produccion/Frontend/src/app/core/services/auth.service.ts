@@ -6,6 +6,8 @@ import {
   ActivacionCuentaRequest,
   AuthResponse,
   LoginRequest,
+  PerfilUpdateRequest,
+  PerfilUsuario,
   ResetPasswordRequest,
   UsuarioActual,
 } from '../models/auth.models';
@@ -30,19 +32,35 @@ export class AuthService {
     );
   }
 
-  solicitarCodigo(correo: string): Observable<string> {
+  // Antes se pedían con { responseType: 'text' }, pero los errores del backend siempre
+  // llegan como JSON ({mensaje,...}) vía GlobalExceptionHandler. Con responseType:'text',
+  // Angular también interpreta el cuerpo de un error como texto plano, así que
+  // err.error.mensaje quedaba undefined y solo se veía el mensaje genérico de respaldo. Ahora
+  // el backend responde JSON tanto en éxito como en error, así que se pide JSON siempre.
+  solicitarCodigo(correo: string): Observable<{ mensaje: string }> {
     const params = new URLSearchParams({ correo });
-    return this.http.post(`${this.apiUrl}/solicitar-codigo?${params.toString()}`, null, {
-      responseType: 'text',
-    });
+    return this.http.post<{ mensaje: string }>(
+      `${this.apiUrl}/solicitar-codigo?${params.toString()}`,
+      null,
+    );
   }
 
-  resetPassword(datos: ResetPasswordRequest): Observable<string> {
-    return this.http.post(`${this.apiUrl}/reset-password`, datos, { responseType: 'text' });
+  resetPassword(datos: ResetPasswordRequest): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/reset-password`, datos);
   }
 
-  activarCuenta(datos: ActivacionCuentaRequest): Observable<string> {
-    return this.http.post(`${this.apiUrl}/activar-cuenta`, datos, { responseType: 'text' });
+  activarCuenta(datos: ActivacionCuentaRequest): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/activar-cuenta`, datos);
+  }
+
+  /** Perfil completo del usuario logueado (boleta, unidad académica, domicilio, etc.) —
+   * el login solo trae nombre/correo, esto completa el resto para "Configuración de Perfil". */
+  obtenerPerfil(): Observable<PerfilUsuario> {
+    return this.http.get<PerfilUsuario>(`${this.apiUrl}/me`);
+  }
+
+  actualizarPerfil(datos: PerfilUpdateRequest): Observable<PerfilUsuario> {
+    return this.http.put<PerfilUsuario>(`${this.apiUrl}/perfil`, datos);
   }
 
   logout(): void {

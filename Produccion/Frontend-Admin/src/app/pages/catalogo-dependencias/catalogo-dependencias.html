@@ -1,0 +1,100 @@
+<div class="page-header">
+  <div>
+    <h2>Catálogo de Unidades Académicas y Dependencias</h2>
+    <p class="page-header-subtitulo">{{ lista.length }} dependencias registradas.</p>
+  </div>
+</div>
+
+@if (cargando) {
+  <p class="cargando">Cargando catálogo…</p>
+} @else {
+  <div class="card">
+    <div class="buscador">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" [(ngModel)]="busqueda" name="busqueda" placeholder="Buscar por clave, nombre o correo…" />
+    </div>
+
+    @if (listaFiltrada.length === 0) {
+      <div class="estado-vacio">
+        <svg class="estado-vacio-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V7l7-4 7 4v14"></path><path d="M3 21h18"></path></svg>
+        <p>{{ busqueda ? 'Ninguna dependencia coincide con tu búsqueda.' : 'Aún no hay dependencias registradas.' }}</p>
+      </div>
+    } @else {
+      <table class="tabla-admin">
+        <thead>
+          <tr>
+            <th>Abreviatura</th>
+            <th>Nombre Oficial de la Dependencia</th>
+            <th>Correo de Contacto Oficial</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (dep of listaFiltrada; track dep.clave) {
+            <tr>
+              <td>{{ dep.abreviatura || dep.clave }}</td>
+              <td>{{ dep.nombre }}</td>
+              <td>{{ dep.correoContacto || '—' }}</td>
+              <td><button class="btn-texto" (click)="abrirEditar(dep)">Editar</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+
+    <div class="pie-tabla">
+      <button class="btn-primary" (click)="abrirCrear()">Agregar Academia o Dependencia</button>
+
+      <label class="btn-secondary boton-archivo">
+        {{ importando ? 'Importando…' : 'Importar Directorio desde Excel (SIA/IPN)' }}
+        <input type="file" accept=".xlsx,.xls" (change)="onArchivoSeleccionado($event)" [disabled]="importando" hidden />
+      </label>
+    </div>
+  </div>
+}
+
+@if (mostrarModal) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editandoClave ? 'Editar Dependencia' : 'Registro de Unidad Académica / Dependencia' }}</h3>
+        <button class="modal-cerrar" (click)="cerrarModal()" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="input-group">
+        <label>Clave:</label>
+        <input type="text" [(ngModel)]="formulario.clave" name="clave" [readOnly]="!!editandoClave" />
+      </div>
+      <div class="input-group">
+        <label>Nombre Oficial:</label>
+        <input type="text" [(ngModel)]="formulario.nombre" name="nombre" />
+      </div>
+      <div class="input-group">
+        <label>Abreviatura:</label>
+        <input type="text" [(ngModel)]="formulario.abreviatura" name="abreviatura" />
+      </div>
+      <div class="input-group">
+        <label>Tipo:</label>
+        <select [(ngModel)]="formulario.tipo" name="tipo">
+          <option value="UNIDAD_ACADEMICA">Unidad Académica</option>
+          <option value="AREA_CENTRAL">Área Central</option>
+          <option value="SECRETARIA">Secretaría</option>
+          <option value="DIRECCION">Dirección</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Correo Electrónico de Contacto (Oficial):</label>
+        <input type="email" [(ngModel)]="formulario.correoContacto" name="correoContacto" />
+      </div>
+      <div class="input-group">
+        <label>Nombre del Titular o Director actual:</label>
+        <input type="text" [(ngModel)]="formulario.nombreTitular" name="nombreTitular" />
+      </div>
+
+      <div class="modal-acciones">
+        <button class="btn-primary" (click)="guardar()">Guardar Dependencia</button>
+        <button class="btn-secondary" (click)="cerrarModal()">Cancelar y Volver</button>
+      </div>
+    </div>
+  </div>
+}

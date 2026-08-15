@@ -1,0 +1,615 @@
+% =====================================================================
+% TT 2026-B009 -- Plataforma Web para la Denuncia Segura
+%                 y Prevencion de Riesgos Digitales
+% Defensoria de los Derechos Politecnicos (DDP) -- IPN
+% =====================================================================
+
+% ---------------------------------------------------------------------
+% Marco normativo institucional (IPN / DDP)
+% ---------------------------------------------------------------------
+
+@online{ipn_ley_organica,
+  author       = {{Instituto Politécnico Nacional}},
+  title        = {Ley Orgánica del Instituto Politécnico Nacional},
+  publisher    = {Diario Oficial de la Federación},
+  location     = {Ciudad de México, México},
+  url          = {https://www.ipn.mx/assets/files/defensoria/docs/manuales/ley-org%C3%A1nica-ipn.pdf},
+  urldate      = {2026-04-10}
+}
+
+@online{ipn_reglamento_interno,
+  author       = {{Instituto Politécnico Nacional}},
+  title        = {Reglamento Interno del Instituto Politécnico Nacional},
+  publisher    = {Gaceta Politécnica},
+  location     = {Ciudad de México, México},
+  url          = {https://www.ipn.mx/assets/files/defensoria/docs/manuales/reglamento-interno.pdf},
+  urldate      = {2026-04-10}
+}
+
+@article{ipn_acuerdo622,
+  author       = {{Instituto Politécnico Nacional}},
+  title        = {Acuerdo de creación de la Defensoría de los Derechos Politécnicos},
+  journal      = {Gaceta Politécnica},
+  number       = {622 (Extraordinaria)},
+  pages        = {3--7},
+  year         = {2006},
+  month        = jan,
+  url          = {https://www.ipn.mx/assets/files/imageninstitucional/docs/gaceta-extraordinaria/2006/01/622-31-enero-gaceta-extra-.pdf},
+  urldate      = {2026-04-10}
+}
+
+@report{ipn_manual_organizacion_ddp,
+  author       = {{Instituto Politécnico Nacional}},
+  title        = {Manual de Organización de la Defensoría de los Derechos Politécnicos},
+  institution  = {Dirección de Planeación y Organización},
+  location     = {Ciudad de México, México},
+  year         = {2022},
+  month        = oct,
+  url          = {https://www.ipn.mx/assets/files/defensoria/docs/manuales/moddp2022.pdf},
+  urldate      = {2026-04-10}
+}
+
+@report{ipn_manual_procedimientos_ddp,
+  author       = {{Instituto Politécnico Nacional}},
+  title        = {Manual de Procedimientos de la Defensoría de los Derechos Politécnicos},
+  institution  = {Dirección de Planeación y Organización},
+  location     = {Ciudad de México, México},
+  year         = {2024},
+  month        = oct,
+  url          = {https://www.ipn.mx/assets/files/defensoria/docs/manuales/mp-ddp.pdf},
+  urldate      = {2026-04-10}
+}
+
+% ---------------------------------------------------------------------
+% Estado del arte: plataformas gubernamentales de denuncia (México)
+% ---------------------------------------------------------------------
+
+@online{sfp_sidec,
+  author       = {{Secretaría de la Función Pública}},
+  title        = {Sistema Integral de Denuncias Ciudadanas (SIDEC)},
+  organization = {Gobierno de México},
+  url          = {https://sidec.buengobierno.gob.mx/},
+  urldate      = {2026-04-10}
+}
+
+@online{amexcid_sidec,
+  author       = {{Agencia Mexicana de Cooperación Internacional para el Desarrollo}},
+  title        = {Catálogo de Capacidades Mexicanas: Sistema Integral de Quejas y Denuncias Ciudadanas (SIDEC)},
+  organization = {Secretaría de Relaciones Exteriores},
+  url          = {https://de.sre.gob.mx/capacidades/instituciones-mexicanas/sfp/sistema-integral-de-quejas-y-denuncias-ciudadanas-sidec},
+  urldate      = {2026-04-10}
+}
+
+@online{sfp_bid_govlab_sidec,
+  author       = {{Secretaría Anticorrupción y Buen Gobierno}},
+  title        = {Implementan SFP, BID y GovLab proyecto de mejora al Sistema Integral de Denuncias Ciudadanas (SIDEC)},
+  organization = {Gob.mx},
+  year         = {2018},
+  month        = jul,
+  url          = {https://www.gob.mx/buengobierno/prensa/implementan-sfp-bid-y-govlab-proyecto-de-mejora-al-sistema-integral-de-denuncias-ciudadanas-sidec},
+  urldate      = {2026-04-10}
+}
+
+@online{cdmx_denuncia_digital,
+  author       = {{Gobierno de la Ciudad de México}},
+  title        = {Denuncia Digital},
+  organization = {Fiscalía General de Justicia de la Ciudad de México},
+  url          = {https://denunciadigital.cdmx.gob.mx/},
+  urldate      = {2026-04-10}
+}
+
+@online{impunidadcero_denuncia_digital,
+  author       = {{Denuncia.org}},
+  title        = {Denuncia en línea: Consulta si en tu estado la Fiscalía cuenta con la opción de denuncia digital},
+  organization = {Impunidad Cero},
+  year         = {2026},
+  url          = {https://denuncia.org/denuncia-digital/},
+  urldate      = {2026-04-10}
+}
+
+@online{fgjcdmx_servicios_linea,
+  author       = {{Fiscalía General de Justicia de la Ciudad de México}},
+  title        = {Servicios en Línea: Denuncia Digital, Denuncia Anónima y MP Transparente},
+  year         = {2026},
+  url          = {https://www.fgjcdmx.gob.mx/servicios/en-linea},
+  urldate      = {2026-04-10}
+}
+
+@online{fgjcdmx_mp_virtual,
+  author       = {{Gobierno de la Ciudad de México}},
+  title        = {MP Virtual: Ratificación de Querellas y Actas Especiales},
+  organization = {Fiscalía General de Justicia de la Ciudad de México},
+  url          = {https://mpvirtual.fgjcdmx.gob.mx/CiberDenuncia/TerminosCondiciones.aspx},
+  urldate      = {2026-04-10}
+}
+
+@online{nacion321_apps_corrupcion,
+  author       = {{Nación321}},
+  title        = {5 apps que nos ayudan a combatir la corrupción},
+  organization = {Grupo Multimedia Lauman, SAPI de CV},
+  year         = {2024},
+  month        = feb,
+  url          = {https://www.nacion321.com/ciudadanos/5-apps-que-nos-ayudan-a-combatir-la-corrupcion},
+  urldate      = {2026-04-10}
+}
+
+@online{secogem_sam,
+  author       = {{Secretaría de la Contraloría del Gobierno del Estado de México}},
+  title        = {Sistema de Atención Mexiquense (SAM)},
+  year         = {2026},
+  url          = {https://www.secogem.gob.mx/sam/tramite.asp},
+  urldate      = {2026-04-10}
+}
+
+% ---------------------------------------------------------------------
+% Estado del arte: canales de denuncia corporativos e internacionales
+% ---------------------------------------------------------------------
+
+@online{whistlelink,
+  author       = {{Whistlelink}},
+  title        = {The All-in-One Whistleblowing Solution},
+  year         = {2026},
+  url          = {https://www.whistlelink.com/},
+  urldate      = {2026-04-10}
+}
+
+@online{eqs_integrity_line,
+  author       = {{EQS Group}},
+  title        = {EQS Integrity Line: The leading whistleblowing system in Europe},
+  year         = {2026},
+  url          = {https://www.eqs.com/es/soluciones-gobierno-corporativo/integrity-line/},
+  urldate      = {2026-04-10}
+}
+
+@online{navex_whistleb,
+  author       = {{NAVEX Global}},
+  title        = {WhistleB: Whistleblowing Solutions for a Modern Workplace},
+  year         = {2026},
+  url          = {https://www.navex.com/en-us/products/whistleb/},
+  urldate      = {2026-04-10}
+}
+
+@online{whistleblower_software,
+  author       = {{Whistleblowing Solutions ApS}},
+  title        = {The simple, secure, and compliant whistleblowing system},
+  organization = {Whistleblower Software},
+  year         = {2026},
+  url          = {https://whistleblowersoftware.com/es},
+  urldate      = {2026-04-10}
+}
+
+@online{lefebvre_centinela,
+  author       = {{Lefebvre}},
+  title        = {Centinela: Canal de denuncias para el cumplimiento normativo},
+  year         = {2026},
+  url          = {https://lefebvre.es/soluciones/centinela/canal-denuncias/},
+  urldate      = {2026-04-10}
+}
+
+@online{coloriuris_canal_denuncias,
+  author       = {{Coloriuris}},
+  title        = {Canal de Denuncias: Cumplimiento de la Ley 2/2023 y Directiva (UE) 2019/1937},
+  year         = {2026},
+  url          = {https://www.coloriuris.net/canal-de-denuncias/},
+  urldate      = {2026-04-10}
+}
+
+@online{bully_button,
+  author       = {{Bully Button}},
+  title        = {The Bully Button: Reporting and Prevention System},
+  year         = {2026},
+  url          = {http://bullybutton.com/},
+  urldate      = {2026-04-10}
+}
+
+% ---------------------------------------------------------------------
+% Estado del arte: contexto educativo y sector público mexicano
+% ---------------------------------------------------------------------
+
+@online{sep_ventanilla_escolar,
+  author       = {{Secretaría de Educación Pública}},
+  title        = {Ventanilla Escolar: Orientación y Quejas},
+  organization = {Gobierno de México},
+  url          = {https://www.gob.mx/sep/acciones-y-programas/ventanilla-escolar},
+  urldate      = {2026-04-10}
+}
+
+@online{ipn_alerta,
+  author       = {{Instituto Politécnico Nacional}},
+  title        = {Protocolo Alerta IPN: Seguridad Institucional},
+  organization = {Secretaría General del IPN},
+  url          = {https://www.ipn.mx/seguridad/},
+  urldate      = {2026-04-10}
+}
+
+@online{unam_ddu_denuncia,
+  author       = {{Universidad Nacional Autónoma de México}},
+  title        = {Sistema de Denuncia en Línea de la Defensoría de los Derechos Universitarios},
+  url          = {https://www.defensoria.unam.mx/denuncia/},
+  urldate      = {2026-04-10}
+}
+
+@online{profedet_digital,
+  author       = {{Procuraduría Federal de la Defensa del Trabajo}},
+  title        = {PROFEDET Digital: Servicios de orientación y seguimiento},
+  organization = {Gobierno de México},
+  url          = {https://www.gob.mx/profedet},
+  urldate      = {2026-04-10}
+}
+
+@article{ipn_protocolo_violencia_genero,
+  author       = {{Instituto Politécnico Nacional}},
+  title        = {Protocolo para la Prevención, Detección, Atención y Sanción de la Violencia de Género en el Instituto Politécnico Nacional},
+  journal      = {Gaceta Politécnica},
+  number       = {1726},
+  location     = {Ciudad de México, México},
+  year         = {2023},
+  month        = may
+}
+
+% ---------------------------------------------------------------------
+% Arquitectura de software y atributos de calidad
+% ---------------------------------------------------------------------
+
+@online{bbva_arquitectura_software,
+  author       = {{BBVA}},
+  title        = {Arquitectura de software o sistemas: ¿qué es y ejemplos?},
+  year         = {2021},
+  url          = {https://www.bbva.com/es/innovacion/arquitectura-de-software-o-sistemas-que-es-y-ejemplos/},
+  urldate      = {2026-04-10}
+}
+
+@online{utel_atributos_calidad,
+  author       = {{UTEL}},
+  title        = {Atributos de calidad del software},
+  organization = {SCALA},
+  url          = {https://gc.scalahed.com/recursos/files/r161r/w26023w/L1IDS118_l2_s3.pdf},
+  urldate      = {2026-04-10}
+}
+
+@online{microsoft_escalabilidad,
+  author       = {{Microsoft}},
+  title        = {¿Qué es la escalabilidad?},
+  organization = {Microsoft Learn},
+  year         = {2023},
+  url          = {https://learn.microsoft.com/es-es/biztalk/core/what-is-scalability},
+  urldate      = {2026-04-10}
+}
+
+@online{ibm_monolitica,
+  author       = {{IBM}},
+  title        = {¿Qué es una arquitectura monolítica?},
+  url          = {https://www.ibm.com/think/topics/monolithic-architecture},
+  urldate      = {2026-04-10}
+}
+
+@online{aws_arquitectura_distribuida,
+  author       = {{Amazon Web Services}},
+  title        = {Construcción de una arquitectura distribuida y escalable},
+  url          = {https://aws.amazon.com/startups/learn/building-scalable-distributed-architecture?lang=es},
+  urldate      = {2026-04-10}
+}
+
+@online{aws_microservicios,
+  author       = {{Amazon Web Services}},
+  title        = {¿Qué son los microservicios?},
+  url          = {https://aws.amazon.com/es/microservices/},
+  urldate      = {2026-04-10}
+}
+
+@online{ibm_tres_capas,
+  author       = {{IBM}},
+  title        = {¿Qué es la arquitectura de tres capas?},
+  url          = {https://www.ibm.com/mx-es/think/topics/three-tier-architecture},
+  urldate      = {2026-04-10}
+}
+
+% ---------------------------------------------------------------------
+% Tecnologías de implementación
+% ---------------------------------------------------------------------
+
+@online{nginx_org,
+  author       = {{NGINX}},
+  title        = {nginx},
+  url          = {https://nginx.org/en/},
+  urldate      = {2026-04-10}
+}
+
+@online{khanal2023nginx,
+  author       = {B. Khanal},
+  title        = {Nginx: The Lightweight Powerhouse for Modern Web Serving},
+  organization = {Medium},
+  year         = {2023},
+  url          = {https://medium.com/@bishal.khanal.2057/nginx-the-lightweight-powerhouse-for-modern-web-serving-717f7cc628da},
+  urldate      = {2026-04-10}
+}
+
+@online{oracle_java,
+  author       = {{Oracle}},
+  title        = {¿Qué es la tecnología Java y para qué la necesito?},
+  url          = {https://www.java.com/es/download/help/whatis_java.html},
+  urldate      = {2026-04-10}
+}
+
+@online{ibm_java,
+  author       = {{IBM}},
+  title        = {¿Qué es Java?},
+  url          = {https://www.ibm.com/mx-es/think/topics/java},
+  urldate      = {2026-04-10}
+}
+
+@online{ibm_spring_boot,
+  author       = {{IBM}},
+  title        = {¿Qué es Spring Boot?},
+  url          = {https://www.ibm.com/mx-es/think/topics/java-spring-boot},
+  urldate      = {2026-04-10}
+}
+
+@online{aws_python,
+  author       = {{Amazon Web Services}},
+  title        = {¿Qué es Python?},
+  url          = {https://aws.amazon.com/es/what-is/python/},
+  urldate      = {2026-04-10}
+}
+
+@online{angular_overview,
+  author       = {{Angular}},
+  title        = {What is Angular?},
+  url          = {https://angular.dev/overview},
+  urldate      = {2026-04-10}
+}
+
+@online{imagina_angular,
+  author       = {{Imagina Formación}},
+  title        = {Conoce las ventajas de utilizar Angular},
+  url          = {https://imaginaformacion.com/tutoriales/conoce-las-ventajas-de-utilizar-angular},
+  urldate      = {2026-04-10}
+}
+
+@online{ibm_postgresql,
+  author       = {{IBM}},
+  title        = {¿Qué es PostgreSQL?},
+  url          = {https://www.ibm.com/mx-es/think/topics/postgresql},
+  urldate      = {2026-04-10}
+}
+
+@online{redhat_docker,
+  author       = {{Red Hat}},
+  title        = {¿Qué es Docker?},
+  url          = {https://www.redhat.com/es/topics/containers/what-is-docker},
+  urldate      = {2026-04-10}
+}
+
+@online{github_about_git,
+  author       = {{GitHub}},
+  title        = {Acerca de GitHub y Git},
+  url          = {https://docs.github.com/es/get-started/start-your-journey/about-github-and-git},
+  urldate      = {2026-04-10}
+}
+
+@online{linis_git_basics,
+  author       = {E. Linis},
+  title        = {Conceptos Básicos de Git},
+  organization = {GitHub Gist},
+  url          = {https://gist.github.com/erlinis/57a55dfb0337f5cd15cd},
+  urldate      = {2026-04-10}
+}
+
+% ---------------------------------------------------------------------
+% Fundamentos de arquitectura: monolitos, microservicios y capas
+% ---------------------------------------------------------------------
+
+@inproceedings{villamizar_microservices,
+  author       = {Villamizar, M. and others},
+  title        = {Evaluating the Monolithic and the Microservice Architecture Pattern to Deploy Web Applications in the Cloud},
+  organization = {Universidad de los Andes},
+  location     = {Colombia}
+}
+
+@book{tanenbaum_distribuidos,
+  author       = {Tanenbaum, A. S. and others},
+  title        = {Arquitectura de Sistemas Distribuidos}
+}
+
+@book{microsoft_ncapas,
+  author       = {{Microsoft Ibérica}},
+  title        = {Guía de Arquitectura N-Capas orientada al Dominio con .NET 4.0}
+}
+
+@thesis{pozalujan_arquitectura,
+  author       = {Poza Luján, J. L.},
+  title        = {Propuesta de arquitectura distribuida de control inteligente basada en políticas de calidad de servicio},
+  type         = {phdthesis},
+  institution  = {Universitat Politècnica de València}
+}
+
+@thesis{coticolop_tres_capas,
+  author       = {Coti Colop, B. M.},
+  title        = {Reglas del Negocio en Arquitectura Tres Capas},
+  type         = {mathesis},
+  institution  = {Universidad de San Carlos de Guatemala}
+}
+
+@online{alvarezcaules_actuator,
+  author       = {Álvarez Caules, C.},
+  title        = {Spring Boot Actuator},
+  organization = {Arquitectura Java},
+  url          = {https://www.arquitecturajava.com/spring-boot-actuator/},
+  urldate      = {2026-04-10}
+}
+
+@online{spring_security_jwt,
+  author       = {{Spring Security}},
+  title        = {OAuth 2.0 Resource Server JWT},
+  organization = {VMware, Inc.},
+  url          = {https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html},
+  urldate      = {2026-04-10}
+}
+
+@online{spring_cloud,
+  author       = {{Spring Cloud}},
+  title        = {Spring Cloud Config \& Netflix Eureka},
+  organization = {VMware, Inc.},
+  url          = {https://spring.io/projects/spring-cloud},
+  urldate      = {2026-04-10}
+}
+
+@thesis{fielding_rest,
+  author       = {Fielding, R. T.},
+  title        = {Architectural Styles and the Design of Network-based Software Architectures},
+  type         = {phdthesis},
+  institution  = {University of California, Irvine}
+}
+
+@book{kleppmann_ddia,
+  author       = {Kleppmann, M.},
+  title        = {Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems},
+  publisher    = {O'Reilly Media}
+}
+
+@report{rescorla_tls13,
+  author       = {Rescorla, E.},
+  title        = {The Transport Layer Security (TLS) Protocol Version 1.3},
+  type         = {RFC},
+  number       = {8446},
+  institution  = {Internet Engineering Task Force (IETF)}
+}
+
+@book{stopford_event_driven,
+  author       = {Stopford, B.},
+  title        = {Designing Event-Driven Systems: Concepts and Patterns for Streaming Services with Apache Kafka},
+  publisher    = {O'Reilly Media}
+}
+
+@book{nygard_release_it,
+  author       = {Nygard, M. T.},
+  title        = {Release It!: Design and Deploy Production-Ready Software},
+  publisher    = {Pragmatic Bookshelf}
+}
+
+@book{burns_kubernetes,
+  author       = {Burns, B. and Beda, J. and Hightower, K.},
+  title        = {Kubernetes: Up and Running: Dive into the Future of Infrastructure},
+  publisher    = {O'Reilly Media}
+}
+
+@book{schonig_postgresql15,
+  author       = {Schönig, H. J.},
+  title        = {Mastering PostgreSQL 15: Advanced techniques to build and manage scalable, reliable, and fault-tolerant database applications},
+  publisher    = {Packt Publishing}
+}
+
+% ---------------------------------------------------------------------
+% Aprendizaje automático y Procesamiento de Lenguaje Natural
+% ---------------------------------------------------------------------
+
+@article{cortes1995svm,
+  author       = {C. Cortes and V. Vapnik},
+  title        = {Support-Vector Networks},
+  journal      = {Machine Learning},
+  volume       = {20},
+  number       = {3},
+  pages        = {273--297},
+  year         = {1995},
+  month        = sep,
+  doi          = {10.1007/BF00994018}
+}
+
+@article{breiman2001rf,
+  author       = {L. Breiman},
+  title        = {Random Forests},
+  journal      = {Machine Learning},
+  volume       = {45},
+  number       = {1},
+  pages        = {5--32},
+  year         = {2001},
+  month        = oct,
+  doi          = {10.1023/A:1010933404324}
+}
+
+@inproceedings{vaswani2017attention,
+  author       = {A. Vaswani and N. Shazeer and N. Parmar and J. Uszkoreit and L. Jones and A. N. Gomez and {\L}. Kaiser and I. Polosukhin},
+  title        = {Attention is All You Need},
+  booktitle    = {Advances in Neural Information Processing Systems 30 (NIPS 2017)},
+  pages        = {5998--6008},
+  year         = {2017},
+  url          = {https://arxiv.org/abs/1706.03762}
+}
+
+@inproceedings{reimers2019sbert,
+  author       = {N. Reimers and I. Gurevych},
+  title        = {Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks},
+  booktitle    = {Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP-IJCNLP)},
+  pages        = {3982--3992},
+  location     = {Hong Kong, China},
+  year         = {2019},
+  month        = nov,
+  url          = {https://arxiv.org/abs/1908.10084}
+}
+
+@inproceedings{mikolov2013word2vec,
+  author       = {T. Mikolov and I. Sutskever and K. Chen and G. S. Corrado and J. Dean},
+  title        = {Distributed Representations of Words and Phrases and their Compositionality},
+  booktitle    = {Advances in Neural Information Processing Systems 26 (NIPS 2013)},
+  pages        = {3111--3119},
+  year         = {2013},
+  url          = {https://arxiv.org/abs/1310.4546}
+}
+
+@misc{honnibal2020spacy,
+  author       = {M. Honnibal and I. Montani and S. Van Landeghem and A. Boyd},
+  title        = {spaCy: Industrial-strength Natural Language Processing in Python},
+  publisher    = {Zenodo},
+  year         = {2020},
+  doi          = {10.5281/zenodo.1212303}
+}
+
+@article{pedregosa2011sklearn,
+  author       = {F. Pedregosa and others},
+  title        = {Scikit-learn: Machine Learning in Python},
+  journal      = {Journal of Machine Learning Research},
+  volume       = {12},
+  pages        = {2825--2830},
+  year         = {2011},
+  url          = {http://www.jmlr.org/papers/volume12/pedregosa11a/pedregosa11a.pdf}
+}
+
+@inproceedings{dietterich2000ensemble,
+  author       = {T. G. Dietterich},
+  title        = {Ensemble Methods in Machine Learning},
+  booktitle    = {Multiple Classifier Systems. MCS 2000. Lecture Notes in Computer Science},
+  volume       = {1857},
+  pages        = {1--15},
+  location     = {Berlín, Alemania},
+  publisher    = {Springer},
+  year         = {2000},
+  doi          = {10.1007/3-540-45014-9_1}
+}
+
+@book{manning2008ir,
+  author       = {C. D. Manning and P. Raghavan and H. Schütze},
+  title        = {Introduction to Information Retrieval},
+  publisher    = {Cambridge University Press},
+  location     = {Cambridge, Reino Unido},
+  year         = {2008},
+  url          = {https://nlp.stanford.edu/IR-book/}
+}
+
+@online{hf_mpnet_multilingual,
+  author       = {{HuggingFace}},
+  title        = {paraphrase-multilingual-mpnet-base-v2},
+  organization = {HuggingFace Model Hub},
+  year         = {2023},
+  url          = {https://huggingface.co/sentence-transformers/paraphrase-multilingual-mpnet-base-v2},
+  urldate      = {2026-04-10}
+}
+
+@book{jurafsky2023slp,
+  author       = {D. Jurafsky and J. H. Martin},
+  title        = {Speech and Language Processing},
+  edition      = {3},
+  note         = {Borrador},
+  publisher    = {Stanford University},
+  year         = {2023},
+  url          = {https://web.stanford.edu/~jurafsky/slp3/}
+}

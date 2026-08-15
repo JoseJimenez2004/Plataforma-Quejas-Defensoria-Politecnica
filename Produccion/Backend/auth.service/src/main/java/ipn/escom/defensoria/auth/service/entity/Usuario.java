@@ -31,12 +31,17 @@ public class Usuario {
     private String password; 
     
     private String unidadAcademica;
-    
+
     private boolean activo = false;
 
     private String correoPersonal;
-    
+
     private String telefonoCelular;
+
+    /** Domicilio para notificaciones -- se agrega para la sección "Configuración de Perfil"
+     * del panel (dirección postal, no el domicilio del formulario público de queja). */
+    @Column(columnDefinition = "TEXT")
+    private String domicilio;
 
     private String nombreTutor;
     

@@ -1,13 +1,26 @@
 <h2>Historial y Seguimiento de Quejas</h2>
 
-<div class="aviso-pendiente">
-  ⚠️ Datos de ejemplo — falta un endpoint de listado en queja-service. Ver docs/HALLAZGOS.md.
-</div>
-
 <div class="filtros card">
   <div class="input-group">
-    <label>Búsqueda por Folio</label>
-    <input type="text" [(ngModel)]="filtroFolio" placeholder="DDP-2026-001" />
+    <label>Folio</label>
+    <input type="text" [(ngModel)]="filtroFolio" placeholder="FOL-XXXXXXXX" />
+  </div>
+  <div class="input-group">
+    <label>Asunto</label>
+    <input type="text" [(ngModel)]="filtroAsunto" placeholder="Buscar por asunto…" />
+  </div>
+  <div class="input-group">
+    <label>Unidad Académica</label>
+    <select [(ngModel)]="filtroUnidadAcademica">
+      <option value="">Todas</option>
+      @for (dep of dependencias; track dep.clave) {
+        <option [value]="dep.clave">{{ dep.nombre }}</option>
+      }
+    </select>
+  </div>
+  <div class="input-group input-fecha">
+    <label>Fecha de registro</label>
+    <app-datepicker [(ngModel)]="filtroFecha"></app-datepicker>
   </div>
   <div class="input-group">
     <label>Estatus</label>
@@ -18,47 +31,58 @@
       <option>Finalizada</option>
     </select>
   </div>
+
+  @if (hayFiltrosActivos) {
+    <button type="button" class="btn-secondary btn-limpiar" (click)="limpiarFiltros()">
+      Limpiar filtros
+    </button>
+  }
 </div>
 
 <div class="card tabla-contenedor">
-  <table>
-    <thead>
-      <tr>
-        <th>Folio</th>
-        <th>Fecha de Registro</th>
-        <th>Asunto</th>
-        <th>Unidad Académica</th>
-        <th>Estatus</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (q of quejasFiltradas; track q.folio) {
+  @if (cargando) {
+    <div class="cargando-estado">Cargando tus quejas…</div>
+  } @else {
+    <p class="conteo-resultados">{{ quejasFiltradas.length }} de {{ quejas.length }} quejas</p>
+    <table>
+      <thead>
         <tr>
-          <td>{{ q.folio }}</td>
-          <td>{{ q.fecha }}</td>
-          <td>{{ q.asunto }}</td>
-          <td>{{ q.unidadAcademica }}</td>
-          <td>
-            <span
-              class="badge"
-              [class.recibida]="q.estatus === 'Recibida'"
-              [class.en-revision]="q.estatus === 'En Revisión'"
-              [class.finalizada]="q.estatus === 'Finalizada'"
-            >
-              {{ q.estatus }}
-            </span>
-          </td>
-          <td>
-            <a [routerLink]="['/panel/mis-quejas', q.folio]">Ver / Editar</a>
-          </td>
+          <th>Folio</th>
+          <th>Fecha de Registro</th>
+          <th>Asunto</th>
+          <th>Unidad Académica</th>
+          <th>Estatus</th>
+          <th>Acciones</th>
         </tr>
-      }
-      @empty {
-        <tr>
-          <td colspan="6" class="vacio">No hay resultados con ese filtro.</td>
-        </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (q of quejasFiltradas; track q.numeroFolio; let i = $index) {
+          <tr [style.--retraso]="i">
+            <td>{{ q.numeroFolio }}</td>
+            <td>{{ q.fechaCreacion | slice: 0 : 10 }}</td>
+            <td>{{ q.motivo }}</td>
+            <td>{{ nombreUnidad(q.unidadAcademicaClave) }}</td>
+            <td>
+              <span
+                class="badge"
+                [class.recibida]="etiqueta(q.estatus) === 'Recibida'"
+                [class.en-revision]="etiqueta(q.estatus) === 'En Revisión'"
+                [class.finalizada]="etiqueta(q.estatus) === 'Finalizada'"
+              >
+                {{ etiqueta(q.estatus) }}
+              </span>
+            </td>
+            <td>
+              <a [routerLink]="['/panel/mis-quejas', q.numeroFolio]">Ver / Editar</a>
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr>
+            <td colspan="6" class="vacio">No hay resultados con esos filtros.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
 </div>

@@ -1,0 +1,47 @@
+.cargando {
+  color: var(--texto-suave);
+}
+
+.selector {
+  max-width: 420px;
+}
+
+textarea {
+  font-family: 'Courier New', monospace;
+  font-size: 0.88rem;
+  min-height: 220px;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  margin: 14px 0 4px;
+}
+
+.lista-placeholders {
+  margin: 0 0 16px;
+  padding-left: 18px;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+
+  li {
+    margin-bottom: 2px;
+  }
+}
+
+.acciones {
+  display: flex;
+  gap: 12px;
+}
+
+.hoja-previsualizacion {
+  background: var(--gris-fondo);
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 16px;
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  max-height: 50vh;
+  overflow-y: auto;
+}

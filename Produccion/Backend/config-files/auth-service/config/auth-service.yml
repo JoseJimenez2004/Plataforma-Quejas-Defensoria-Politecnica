@@ -14,7 +14,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: jair100flo@gmail.com
-    password: rozzvatswkacxvqf
+    password: kstwxawsnsqkzhnk
     properties:
       mail:
         smtp:
@@ -35,3 +35,13 @@ jwt:
 quejas:
   service:
     url: http://2.25.78.22:8084
+
+notificaciones:
+  service:
+    url: http://2.25.78.22:8085
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

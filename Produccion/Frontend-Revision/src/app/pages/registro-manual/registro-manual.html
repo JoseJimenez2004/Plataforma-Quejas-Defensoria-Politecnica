@@ -1,0 +1,89 @@
+<div class="page-header">
+  <div>
+    <h2>Registro Manual de Nueva Queja</h2>
+    <p class="page-header-subtitulo">Ingresa los datos del documento físico para generar un folio de seguimiento.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Datos del Emisor</h3>
+  <div class="grid-2">
+    <div class="input-group">
+      <label>Nombre del Denunciante:</label>
+      <input type="text" [(ngModel)]="formulario.nombre" name="nombre" />
+    </div>
+    <div class="input-group">
+      <label>Número de Oficio (Si aplica):</label>
+      <input type="text" [(ngModel)]="formulario.numeroOficio" name="numeroOficio" />
+    </div>
+    <div class="input-group">
+      <label>Primer Apellido:</label>
+      <input type="text" [(ngModel)]="formulario.apellidoPaterno" name="apellidoPaterno" />
+    </div>
+    <div class="input-group">
+      <label>Fecha de Recepción Física:</label>
+      <input type="date" [(ngModel)]="formulario.fechaRecepcionFisica" name="fechaRecepcionFisica" />
+    </div>
+    <div class="input-group">
+      <label>Segundo Apellido:</label>
+      <input type="text" [(ngModel)]="formulario.apellidoMaterno" name="apellidoMaterno" />
+    </div>
+    <div class="input-group">
+      <label>Tipo de Documento:</label>
+      <select [(ngModel)]="formulario.tipoDocumento" name="tipoDocumento">
+        <option value="" disabled selected>Seleccione</option>
+        <option value="IDENTIFICACION">Identificación</option>
+        <option value="OFICIO">Oficio</option>
+        <option value="ESCRITO_LIBRE">Escrito libre</option>
+        <option value="OTRO">Otro</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>Tipo de Usuario:</label>
+      <select [(ngModel)]="formulario.tipoUsuario" name="tipoUsuario">
+        <option value="" disabled selected>Seleccione</option>
+        <option value="alumno">Alumno</option>
+        <option value="empleado">Empleado</option>
+        <option value="externo">Externo</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>Dependencia / Escuela:</label>
+      <select [(ngModel)]="formulario.dependenciaClave" name="dependenciaClave">
+        <option value="" selected>Seleccione Unidad Académica</option>
+        @for (area of areas; track area.clave) {
+          <option [value]="area.clave">{{ area.nombre }}</option>
+        }
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="card seccion-descripcion">
+  <div class="input-group">
+    <label>Descripción Breve del Asunto:</label>
+    <textarea rows="4" [(ngModel)]="formulario.descripcion" name="descripcion"></textarea>
+  </div>
+  <div class="input-group sin-margen">
+    <label>Ubicación Física del Expediente:</label>
+    <input type="text" [(ngModel)]="formulario.ubicacionFisica" name="ubicacionFisica" placeholder="Ej. Archivero 3, carpeta 12" />
+  </div>
+</div>
+
+<div class="card seccion-archivo">
+  <label class="etiqueta-archivo">Digitalización de Evidencia</label>
+  <div class="zona-archivo">
+    <span>{{ nombreArchivo || 'Escanee y adjunte el documento original (PDF/JPG)' }}</span>
+    <label class="btn-secondary boton-archivo">
+      Seleccionar Archivos
+      <input type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onArchivoSeleccionado($event)" hidden />
+    </label>
+  </div>
+</div>
+
+<div class="pie-formulario">
+  <button class="btn-texto" (click)="limpiarFormulario()">Limpiar Formulario</button>
+  <button class="btn-primary" (click)="guardar()" [disabled]="guardando">
+    {{ guardando ? 'Guardando…' : 'GUARDAR Y GENERAR ENTRADA' }}
+  </button>
+</div>

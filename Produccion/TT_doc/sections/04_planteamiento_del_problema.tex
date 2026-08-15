@@ -1,0 +1,142 @@
+	\section{Planteamiento del Problema}
+	Este capítulo presenta el análisis de las principales problemáticas identificadas en los procesos
+	actuales de atención y gestión de quejas dentro de la DDP. Se describen las causas que originan
+	dichas limitaciones operativas y tecnológicas, así como la propuesta de solución planteada para
+	optimizar la administración de expedientes, mejorar la trazabilidad de la información y fortalecer
+	la eficiencia institucional mediante una plataforma digital integral.
+	
+	\subsection{Problema general}
+	La DDP enfrenta diversos retos operativos derivados de la gestión manual y parcialmente digitalizada
+	de las quejas que presenta la comunidad politécnica. Hoy en día, buena parte del registro, la
+	validación, el seguimiento y la resolución de expedientes descansa en mecanismos administrativos
+	fragmentados, lo que se traduce en retrasos en la atención, dificultades de seguimiento y una
+	capacidad limitada de supervisión institucional \cite{ipn_manual_procedimientos_ddp}.
+	
+	A ello se suma que la ausencia de una plataforma centralizada entorpece la comunicación entre las
+	áreas que intervienen en el procedimiento y provoca inconsistencias en el flujo operativo, duplicidad
+	de información y complicaciones para dar seguimiento oportuno a cada expediente. Esta situación
+	repercute de forma directa en la eficiencia institucional, en la experiencia del usuario y en la
+	capacidad de respuesta de la DDP ante situaciones que exigen atención inmediata.
+	
+	La administración de expedientes y evidencias digitales presenta además limitaciones importantes de
+	organización, consulta y resguardo seguro de la información, lo cual eleva el riesgo de pérdida
+	documental y de errores administrativos, y dificulta garantizar la integridad de los datos durante
+	todo el ciclo de vida de la queja.
+	
+	Por último, la determinación preliminar de competencia y procedencia depende en gran medida de la
+	revisión manual de las narrativas que redactan los usuarios, lo que incrementa la carga operativa del
+	personal y puede generar inconsistencias en la clasificación inicial de los casos
+	\cite{ipn_acuerdo622}. En consecuencia, la DDP encuentra dificultades para reducir sus tiempos de
+	respuesta, abatir el rezago administrativo y sostener un flujo de atención eficiente y transparente.
+	
+	\subsection{Problemas específicos}
+	Del análisis del flujo operativo institucional y de los procesos actuales de atención de quejas se
+	desprenden los siguientes problemas específicos:
+	
+	\begin{itemize}
+		\item \textbf{Ausencia de una plataforma centralizada:} no existe un punto único para la gestión
+		integral de expedientes, evidencias y seguimiento de casos.
+	
+		\item \textbf{Dependencia de procesos manuales:} el registro, la validación y la canalización de
+		las quejas se realizan sin apoyo de herramientas automatizadas.
+	
+		\item \textbf{Determinación de competencia lenta e inconsistente:} resulta difícil establecer con
+		rapidez y bajo un criterio uniforme la competencia institucional de cada caso.
+	
+		\item \textbf{Trazabilidad escasa:} el ciclo de vida de las quejas deja poco rastro documental y el
+		estado actual de los expedientes tiene visibilidad limitada.
+	
+		\item \textbf{Retrasos administrativos:} la revisión manual de documentos y evidencias digitales
+		alarga los tiempos de atención.
+	
+		\item \textbf{Comunicación deficiente entre áreas:} las distintas áreas que participan en el
+		proceso de atención carecen de canales integrados de coordinación.
+	
+		\item \textbf{Riesgos en el manejo de información sensible:} las evidencias digitales se
+		administran sin mecanismos robustos de control de acceso y auditoría.
+	
+		\item \textbf{Falta de validación automatizada:} no existen mecanismos que detecten información
+		incompleta, inconsistente o capturada de forma incorrecta por los usuarios.
+	
+		\item \textbf{Historial poco estructurado:} resulta complicado mantener el registro ordenado de
+		actuaciones, acuerdos, notificaciones y resoluciones de cada expediente.
+	
+		\item \textbf{Limitaciones para la explotación de datos:} la infraestructura actual no permite
+		generar estadísticas, indicadores ni reportes institucionales.
+	\end{itemize}
+	
+	\subsection{Causas}
+	Las problemáticas identificadas se originan en factores tecnológicos, operativos y organizacionales
+	que inciden de manera directa en el desempeño de los procesos internos de la DDP.
+	
+	En primer lugar, una parte importante del procedimiento administrativo recae en actividades manuales
+	del personal institucional: validación de información, clasificación de quejas, revisión documental
+	y seguimiento de expedientes. Esa dependencia eleva la probabilidad de errores humanos,
+	inconsistencias operativas y retrasos en la atención.
+	
+	En segundo lugar, la inexistencia de una arquitectura tecnológica centralizada fragmenta la
+	información entre las distintas áreas y dificulta integrar los procesos institucionales de forma
+	eficiente. Como resultado, los datos de una misma queja pueden encontrarse dispersos, duplicados o
+	desactualizados, lo que afecta la continuidad operativa y la trazabilidad del expediente.
+	
+	Un tercer factor es la ausencia de mecanismos automatizados para analizar y clasificar las narrativas
+	que presentan los usuarios. La determinación preliminar de competencia descansa hoy en la
+	interpretación humana de los hechos descritos en cada queja, situación que incrementa la carga
+	operativa y abre espacio a diferencias de criterio entre operadores.
+	
+	A lo anterior se añade la falta de herramientas especializadas para el control de accesos, la
+	administración de evidencias digitales y el monitoreo de actividades, lo que limita la capacidad
+	institucional de garantizar seguridad, privacidad e integridad documental.
+	
+	Por último, el crecimiento del volumen de información y la complejidad de los procesos
+	administrativos evidencian las limitaciones de la infraestructura tecnológica tradicional, que
+	dificulta la escalabilidad, la mantenibilidad y la modernización de los servicios digitales
+	institucionales.
+	
+	\subsection{Alcances}
+	El proyecto delimita su alcance a la Defensoría de los Derechos Politécnicos del Instituto
+	Politécnico Nacional y abarca únicamente los procesos internos de gestión de quejas de dicha
+	instancia. La plataforma será accesible desde navegador web en equipos de escritorio y portátiles;
+	no se contempla el desarrollo de una aplicación móvil nativa.
+	
+	El sistema cubre el ciclo operativo completo de una queja, desde su recepción hasta su resolución, e
+	incluye módulos diferenciados para cada rol institucional: Quejoso, Recepcionista, Área de Primer
+	Contacto, Defensor, Subdefensor y Titular. Se integra además un módulo de clasificación automática
+	asistida, basado en Procesamiento de Lenguaje Natural, cuya función es sugerir la competencia
+	preliminar de cada queja \cite{reimers2019sbert}. En la etapa que documenta este trabajo dicho
+	módulo opera sobre un corpus sintético construido por el equipo de desarrollo, por lo que sus
+	resultados tienen carácter preliminar y quedan sujetos a la recalibración señalada en la
+	Sección~\ref{sec:limitaciones}. El quejoso podrá consultar el estado de su caso en cualquier
+	momento mediante un folio digital único, generado de forma automática al momento del registro.
+	
+	Quedan excluidos de forma explícita la integración con sistemas externos al IPN, la gestión de
+	procesos distintos al flujo de quejas de la DDP y la emisión automatizada de resoluciones o
+	dictámenes legales.
+	
+	\subsection{Limitaciones}
+	\label{sec:limitaciones}
+	La ejecución del proyecto está condicionada por los siguientes factores:
+	
+	\begin{itemize}
+		\item \textbf{Tiempo:} al tratarse de un proyecto académico con entregas parciales, no todos los
+		módulos institucionales se encuentran operativos en esta etapa. Los componentes desarrollados hasta
+		el momento son el microservicio de gestión de quejas y el módulo clasificador de competencia; los
+		restantes quedan para una entrega posterior.
+	
+		\item \textbf{Datos:} el entrenamiento y la validación del clasificador se realizaron con un
+		corpus sintético de quejas, construido por el equipo de desarrollo. A la fecha de elaboración de
+		este documento, la DDP aún no ha entregado los casos históricos reales y anonimizados
+		solicitados, cuya gestión continúa en trámite. Dado que la calidad y el volumen de los datos de
+		entrenamiento inciden directamente en la precisión del modelo, las métricas reportadas en este
+		trabajo deben considerarse preliminares y quedan sujetas a recalibración una vez que se disponga
+		de los expedientes reales.
+	
+		\item \textbf{Adopción institucional:} la efectividad del sistema depende de la disposición del
+		personal de la DDP para incorporar la plataforma a sus procesos cotidianos y validar las
+		clasificaciones que sugiere el modelo de inteligencia artificial.
+	
+		\item \textbf{Restricción ética y normativa:} el sistema no sustituye en ningún caso el criterio
+		jurídico humano. Las resoluciones finales son responsabilidad exclusiva del personal de la
+		Defensoría, conforme a las reglas de negocio establecidas y a la normativa aplicable en materia de
+		protección de datos personales.
+	\end{itemize}

@@ -1,0 +1,48 @@
+<div class="page-header">
+  <div>
+    <h2>Emisión de Notificación de Rechazo</h2>
+    @if (queja) {
+      <p class="page-header-subtitulo">Folio: {{ folio }} | Quejoso: {{ queja.nombreCompletoQuejoso }}</p>
+    }
+  </div>
+</div>
+
+@if (cargando) {
+  <p class="cargando">Cargando…</p>
+} @else if (queja) {
+  <div class="card">
+    <h3>Seleccione los motivos detectados en la validación:</h3>
+    <ul class="checklist">
+      @for (motivo of motivos; track motivo.texto) {
+        <li>
+          <label class="check-linea">
+            <input type="checkbox" [(ngModel)]="motivo.marcado" [name]="motivo.texto" />
+            {{ motivo.texto }}
+          </label>
+        </li>
+      }
+    </ul>
+
+    <div class="input-group">
+      <label>Observaciones adicionales y sugerencias para el quejoso:</label>
+      <textarea
+        rows="5"
+        [(ngModel)]="observaciones"
+        name="observaciones"
+        placeholder="Escriba aquí detalladamente qué debe corregir el usuario para poder reingresar su queja…"
+      ></textarea>
+    </div>
+
+    <p class="aviso-inline">
+      Se enviará un correo automático a <strong>{{ queja.correoInstitucional }}</strong> con el texto
+      legal de rechazo y tus observaciones.
+    </p>
+
+    <div class="modal-acciones acciones-rechazo">
+      <button class="btn-secondary" (click)="regresar()">Regresar a Validación</button>
+      <button class="btn-peligro" (click)="confirmarRechazo()" [disabled]="enviando">
+        {{ enviando ? 'Enviando…' : 'Confirmar y Enviar Rechazo' }}
+      </button>
+    </div>
+  </div>
+}

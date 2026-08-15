@@ -1,0 +1,44 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: admin-service
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000 # 1 hora
+
+catalogo:
+  service:
+    url: ${CATALOGO_SERVICE_URL:http://localhost:8086}
+
+# Directorio donde se guardan los respaldos manuales/automaticos de la base de datos.
+respaldos:
+  directorio: ${RESPALDOS_DIR:/app/respaldos}
+
+# Credenciales para pg_dump/psql -- deben apuntar a la MISMA base que usan los demas
+# microservicios (defensoria_db), no a la base propia de admin-service (comparten instancia).
+db:
+  host: ${DB_HOST:localhost}
+  puerto: ${DB_PORT:5432}
+  nombre: ${DB_NAME:defensoria_db}
+  usuario: ${DB_USER}
+  password: ${DB_PASSWORD}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

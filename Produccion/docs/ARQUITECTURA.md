@@ -1,6 +1,26 @@
 # Arquitectura
 
-## Diagrama lógico (estado actual — 1 VPS)
+> ⚠️ **Nota de actualización**: el diagrama de abajo describe el estado original de 1 sola
+> VPS. Desde entonces el proyecto migró a **2 VPS** (backend+BD en `2.25.78.22`, frontend en
+> `2.25.64.47` con HTTPS vía Certbot) y se agregó un **4to microservicio, `catalogo-service`
+> (puerto 8086)** — ver el detalle real y actualizado en `docs/CAMBIOS.md` (es la bitácora
+> que sí se mantiene al día). Este archivo se deja como referencia histórica del diseño
+> original de los 3 microservicios + Nginx de 1 sola VPS.
+
+## catalogo-service (puerto 8086) — agregado después de la migración a 2 VPS
+
+- Catálogo de dependencias del IPN (`GET /api/catalogos/dependencias`, `GET
+  /api/catalogos/dependencias/{clave}`) — ambos públicos, sin JWT, porque el formulario de
+  "Presentar una queja" los necesita incluso antes de que el quejoso tenga cuenta.
+- Se decidió como microservicio propio (en vez de vivir dentro de queja-service) pensando en
+  que el catálogo pueda crecer y ser consumido por más de un servicio a futuro — ver el
+  razonamiento completo en `docs/CAMBIOS.md`.
+- Comparte `defensoria_db` (misma instancia de Postgres que los otros 3 servicios) y el mismo
+  `jwt.secret`, siguiendo el patrón ya establecido.
+- Los 4 microservicios (auth, quejas, notificaciones, catálogo) ahora exponen Swagger/OpenAPI 3
+  en `/swagger-ui.html` y `/v3/api-docs` (rutas públicas, sin JWT).
+
+## Diagrama lógico (estado original — 1 VPS, ya no vigente)
 
 ```
                         Internet

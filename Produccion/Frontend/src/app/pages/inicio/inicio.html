@@ -19,77 +19,41 @@
       <a routerLink="/queja/registro" class="btn-primary">Iniciar aquí</a>
     </div>
 
-    <div class="card servicio servicio--acceso">
+    <div class="card servicio">
       <div class="icono">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="7" />
           <path d="M21 21l-4.3-4.3" />
         </svg>
       </div>
-      <h3>Consultar / Acceder</h3>
+      <h3>Seguimiento de queja</h3>
 
-      <div class="acceso-tabs">
-        <button
-          type="button"
-          class="acceso-tab-btn"
-          [class.active]="accesoTab() === 'folio'"
-          (click)="seleccionarAccesoTab('folio')"
-        >
-          Sin cuenta
-        </button>
-        <button
-          type="button"
-          class="acceso-tab-btn"
-          [class.active]="accesoTab() === 'cuenta'"
-          (click)="seleccionarAccesoTab('cuenta')"
-        >
-          Tengo cuenta
-        </button>
+      <div class="input-group">
+        <input type="email" [(ngModel)]="correo" placeholder="Ingresar correo" />
+      </div>
+      <div class="input-group">
+        <input type="text" [(ngModel)]="folio" placeholder="Ingresar folio" />
       </div>
 
-      @if (accesoTab() === 'folio') {
-        <p class="info-banner">
-          Consulta el estado de tu queja con el folio que recibiste al presentarla. No
-          necesitas crear una cuenta para esto.
-        </p>
-
-        <div class="input-group">
-          <input type="email" [(ngModel)]="correo" placeholder="Ingresar correo" />
-        </div>
-        <div class="input-group">
-          <input type="text" [(ngModel)]="folio" placeholder="Ingresar folio" />
-        </div>
-
-        @if (errorConsulta) {
-          <p class="error">{{ errorConsulta }}</p>
-        }
-
-        <button class="btn-primary" (click)="consultar()">Consultar</button>
-      } @else {
-        <p class="info-banner">
-          Si ya tienes una cuenta de seguimiento, inicia sesión para ver el detalle completo
-          de tus quejas, notificaciones y acuerdos de conciliación en tu panel.
-        </p>
-
-        <div class="input-group">
-          <input type="email" [(ngModel)]="loginCorreo" placeholder="Ingresar correo" />
-        </div>
-        <div class="input-group">
-          <input type="password" [(ngModel)]="loginPassword" placeholder="Ingresar contraseña" />
-        </div>
-
-        @if (loginError) {
-          <p class="error">{{ loginError }}</p>
-        }
-
-        <button class="btn-primary" [disabled]="loginCargando" (click)="ingresar()">
-          {{ loginCargando ? 'Ingresando…' : 'Iniciar sesión' }}
-        </button>
-
-        <p class="acceso-link">
-          ¿Olvidaste tu contraseña? <a routerLink="/portal/recuperar">Recupérala aquí</a>
-        </p>
+      @if (errorConsulta) {
+        <p class="error">{{ errorConsulta }}</p>
       }
+
+      <button class="btn-primary" (click)="consultar()">Consultar</button>
+    </div>
+
+    <div class="card servicio">
+      <div class="icono">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      </div>
+      <h3>Iniciar sesión</h3>
+      <p>Consulta tus quejas, notificaciones y acuerdos en tu panel.</p>
+      <a routerLink="/portal/login" class="btn-primary">Continuar</a>
     </div>
   </div>
 </section>
