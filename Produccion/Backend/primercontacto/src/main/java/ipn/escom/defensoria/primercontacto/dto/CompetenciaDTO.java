@@ -3,7 +3,6 @@ package ipn.escom.defensoria.primercontacto.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import jakarta.persistence.Column;
 
 @Getter
 @Setter
@@ -12,9 +11,10 @@ import jakarta.persistence.Column;
 @Builder
 public class CompetenciaDTO {
 
-    @NotNull
-    private Long quejaId;
-
+    /*
+     * Folio propio de Primer Contacto.
+     * Ejemplo: PC-A1B2C3D4
+     */
     @NotBlank
     private String folio;
 
@@ -33,6 +33,5 @@ public class CompetenciaDTO {
     @NotBlank
     private String responsableTurno;
 
-    @Column(name = "observaciones", columnDefinition = "TEXT")
     private String observaciones;
 }

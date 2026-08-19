@@ -86,6 +86,8 @@ public class QuejaRevisionController {
         return ResponseEntity.ok(Map.of(
                 "mensaje", "Queja turnada correctamente.",
                 "estatus", queja.getEstatus(),
-                "numeroFolio", queja.getNumeroFolio()));
+                "folioOrigen", queja.getNumeroFolio(),
+                "folioPrimerContacto", queja.getFolioPrimerContacto()
+        ));
     }
 }

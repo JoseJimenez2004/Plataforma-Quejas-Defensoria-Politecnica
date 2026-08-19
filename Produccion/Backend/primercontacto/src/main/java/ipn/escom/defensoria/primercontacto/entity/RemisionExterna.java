@@ -17,10 +17,10 @@ public class RemisionExterna {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "queja_id", nullable = false)
-    private Long quejaId;
+    @Column(name = "expediente_id", nullable = false)
+    private Long expedienteId;
 
-    @Column(name = "folio", nullable = false, length = 50)
+    @Column(name = "folio", nullable = false, unique = true,length = 50)
     private String folio;
 
     @Column(name = "analista_id", nullable = false)

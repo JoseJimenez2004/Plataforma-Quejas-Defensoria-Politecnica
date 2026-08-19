@@ -10,8 +10,8 @@ import lombok.*;
 public class ExpedienteInvestigacionDTO {
 
     private Long id;
-    private Long quejaId;
     private String folio;
+    private String folioOrigen;
     private String quejosoNombre;
     private String unidadAcademica;
     private String asunto;

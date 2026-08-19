@@ -39,17 +39,23 @@ public class ExpedienteInvestigacionController {
 
         return ExpedienteInvestigacionDTO.builder()
                 .id(e.getId())
-                .quejaId(e.getQuejaId())
                 .folio(e.getFolio())
+                .folioOrigen(e.getFolioOrigen())
                 .quejosoNombre(e.getQuejosoNombre())
                 .unidadAcademica(e.getUnidadAcademica())
                 .asunto(e.getAsunto())
                 .descripcionHechos(e.getDescripcionHechos())
-                .fechaAdmision(e.getFechaAdmision() != null ? e.getFechaAdmision().toString() : null)
+                .fechaAdmision(
+                        e.getFechaAdmision() != null
+                                ? e.getFechaAdmision().toString()
+                                : null
+                )
                 .abogadoAsesorId(e.getAbogadoAsesorId())
                 .abogadoAsesorNombre(e.getAbogadoAsesorNombre())
                 .estatus(e.getEstatus())
-                .observacionesAnalista(e.getObservacionesAnalista())
+                .observacionesAnalista(
+                        e.getObservacionesAnalista()
+                )
                 .build();
     }
 }

@@ -25,11 +25,12 @@ public class CitaPrimerContactoController {
         return citaPrimerContactoService.crearCita(dto);
     }
 
-    @GetMapping("/queja/{quejaId}")
-    public List<CitaDTO> listarPorQueja(
-            @PathVariable Long quejaId
+    @GetMapping("/expediente/{expedienteId}")
+    public List<CitaDTO> listarPorExpediente(
+            @PathVariable Long expedienteId
     ) {
-        return citaPrimerContactoService.listarPorQueja(quejaId);
+        return citaPrimerContactoService
+                .listarPorExpediente(expedienteId);
     }
 
     @GetMapping("/folio/{folio}")

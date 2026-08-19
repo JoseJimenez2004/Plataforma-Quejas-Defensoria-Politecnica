@@ -32,6 +32,9 @@ notificaciones:
   service:
     url: ${NOTIFICACIONES_SERVICE_URL:http://localhost:8085}
 
+primer-contacto:
+  base-url: ${PRIMER_CONTACTO_BASE_URL:http://localhost:8082}
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

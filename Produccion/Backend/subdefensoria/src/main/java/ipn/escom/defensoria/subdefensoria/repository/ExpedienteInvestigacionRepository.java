@@ -6,17 +6,39 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface ExpedienteInvestigacionRepository extends JpaRepository<ExpedienteInvestigacion, Long> {
+public interface ExpedienteInvestigacionRepository
+        extends JpaRepository<ExpedienteInvestigacion, Long> {
 
-    Optional<ExpedienteInvestigacion> findByFolio(String folio);
+    /*
+     * Folio propio de Subdefensoría.
+     */
+    Optional<ExpedienteInvestigacion> findByFolio(
+            String folio
+    );
 
-    Optional<ExpedienteInvestigacion> findByQuejaId(Long quejaId);
+    /*
+     * Folio recibido desde Primer Contacto.
+     */
+    Optional<ExpedienteInvestigacion> findByFolioOrigen(
+            String folioOrigen
+    );
 
-    boolean existsByQuejaId(Long quejaId);
+    boolean existsByFolioOrigen(
+            String folioOrigen
+    );
 
-    List<ExpedienteInvestigacion> findByEstatusOrderByFechaAdmisionAsc(String estatus);
+    List<ExpedienteInvestigacion>
+    findByEstatusOrderByFechaAdmisionAsc(
+            String estatus
+    );
 
-    List<ExpedienteInvestigacion> findByEstatusInOrderByFechaAdmisionAsc(List<String> estatus);
+    List<ExpedienteInvestigacion>
+    findByEstatusInOrderByFechaAdmisionAsc(
+            List<String> estatus
+    );
 
-    List<ExpedienteInvestigacion> findByUnidadAcademicaOrderByFechaAdmisionAsc(String unidadAcademica);
+    List<ExpedienteInvestigacion>
+    findByUnidadAcademicaOrderByFechaAdmisionAsc(
+            String unidadAcademica
+    );
 }
