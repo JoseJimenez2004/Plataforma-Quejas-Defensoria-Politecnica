@@ -1,0 +1,41 @@
+// Mismo patrón que activar-cuenta.scss / recuperar-password.scss (pantallas de acceso: tarjeta
+// blanca centrada, ancho máximo 420px) -- este archivo no existía en el checkout.
+.contenedor {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.subtitulo {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+form {
+  text-align: left;
+}
+
+button {
+  width: 100%;
+}
+
+.footer-links {
+  margin-top: 20px;
+  font-size: 0.85rem;
+
+  a {
+    text-decoration: none;
+  }
+
+  p {
+    margin: 10px 0 0;
+    color: var(--texto-suave);
+  }
+}

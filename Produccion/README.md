@@ -16,14 +16,13 @@ Produccion/
 │   ├── catalogo-service/     # Catálogos institucionales (dependencias del IPN, puerto 8086)
 │   ├── config-files/         # application.yml "de producción" por servicio (montados como volumen en el VPS)
 │   └── podman-compose.sh     # Build + despliegue de los 4 microservicios en Podman
-├── Frontend/                  # Proyecto Angular (código fuente) — reconstruido de cero
-│   └── src/app/...            # ver Frontend/README.md para instalar/compilar/desplegar
-├── front/                    # Destino del BUILD estático (lo que sirve Nginx), aún vacío
-│   ├── artifact/
-│   └── config-files/
-├── nginx/                    # Proxy inverso: sirve el front estático y enruta /api/* al backend
-│   ├── config/defensoria.conf
-│   └── podman-ngnix.sh
+├── Frontend/                  # Proyecto Angular del quejoso (código fuente + despliegue)
+│   ├── src/app/...            # ng build --configuration production -> dist/defensoria-front/browser
+│   ├── Dockerfile             # nginx:alpine sirviendo dist/browser/ en el puerto 8090
+│   ├── config/static.conf     # config de nginx interna del contenedor "defensoria-web"
+│   └── podman-compose-front.sh # build + despliegue del contenedor "defensoria-web" (mismo patrón que Frontend-Admin/Frontend-Revision)
+├── nginx/                    # Config de referencia de "router-nginx" (proxy público 80/443 con HTTPS/Certbot,
+│   └── config/defensoria.conf # enruta "/" hacia defensoria-web:8090 y /api/* hacia el backend -- ver docs/CAMBIOS.md)
 ├── cONTEXTOQUEJOSO/          # Material de referencia original (wireframes, specs, accesos)
 └── docs/                     # Documentación de arquitectura, despliegue, hallazgos y migración
     ├── ARQUITECTURA.md
