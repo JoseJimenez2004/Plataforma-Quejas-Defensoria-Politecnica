@@ -1,15 +1,86 @@
 <section class="hero">
-  <div class="hero-text">
-    <h1>Defensoría de los Derechos Politécnicos</h1>
-    <p class="subtitulo">
-      Orientación, acompañamiento y seguimiento de quejas para la comunidad del Instituto
-      Politécnico Nacional.
-    </p>
-  </div>
+  <div class="hero-inner">
+    <div class="hero-text">
+      <span class="hero-sello">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l8 3.5v5.2c0 5-3.4 8.9-8 10.3-4.6-1.4-8-5.3-8-10.3V5.5L12 2z" />
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+        Instancia oficial del IPN
+      </span>
 
+      <h1>Defensoría de los Derechos Politécnicos</h1>
+      <p class="subtitulo">
+        Orientación, acompañamiento y seguimiento de quejas para la comunidad del Instituto
+        Politécnico Nacional.
+      </p>
+
+      <div class="hero-cta">
+        <a routerLink="/queja/registro" class="btn-hero-primario">Presentar una queja</a>
+        <a routerLink="/queja/consultar" class="btn-hero-secundario">Consultar mi queja</a>
+      </div>
+
+      <ul class="hero-chips">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="10" width="16" height="10" rx="2" />
+            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+          </svg>
+          Información confidencial
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v18" />
+            <path d="M5 7l-3 6a3 3 0 0 0 6 0l-3-6z" />
+            <path d="M19 7l-3 6a3 3 0 0 0 6 0l-3-6z" />
+            <path d="M5 7h14" />
+          </svg>
+          Con respaldo normativo
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3.5 2" />
+          </svg>
+          Seguimiento en línea
+        </li>
+      </ul>
+    </div>
+
+    <div class="hero-figura" aria-hidden="true">
+      <svg viewBox="0 0 320 320" fill="none">
+        <defs>
+          <linearGradient id="escudoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#f2e2ea" />
+          </linearGradient>
+          <linearGradient id="escudoBorde" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ffd76a" />
+            <stop offset="100%" stop-color="#f0b93d" />
+          </linearGradient>
+        </defs>
+        <circle cx="160" cy="160" r="150" fill="rgba(255,255,255,0.08)" />
+        <circle cx="160" cy="160" r="112" fill="rgba(255,255,255,0.10)" />
+        <path
+          d="M160 55l78 30v46c0 52-33 87-78 99-45-12-78-47-78-99V85l78-30z"
+          fill="url(#escudoGrad)"
+          stroke="url(#escudoBorde)"
+          stroke-width="4"
+        />
+        <path d="M160 90a34 34 0 1 0 0 68 34 34 0 0 0 0-68z" fill="none" stroke="#9d2449" stroke-width="4" />
+        <path d="M160 96v14M160 158v14M138 124h-12M182 124h12M144 106l-8-8M176 142l8 8M176 106l8-8M144 142l-8 8" stroke="#9d2449" stroke-width="4" stroke-linecap="round" />
+        <path d="M120 198h80" stroke="#9d2449" stroke-width="5" stroke-linecap="round" />
+        <path d="M132 198v-6a10 10 0 0 1 20 0v6M168 198v-6a10 10 0 0 1 20 0v6" stroke="#9d2449" stroke-width="4" stroke-linecap="round" />
+        <path d="M160 198v22" stroke="#9d2449" stroke-width="5" stroke-linecap="round" />
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="servicios-section">
   <div class="servicios">
     <div class="card servicio">
-      <div class="icono">
+      <div class="icono icono--guinda">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 11l18-7-7 18-2-8-8-3z" />
         </svg>
@@ -20,7 +91,7 @@
     </div>
 
     <div class="card servicio">
-      <div class="icono">
+      <div class="icono icono--dorado">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="7" />
           <path d="M21 21l-4.3-4.3" />
@@ -32,7 +103,7 @@
     </div>
 
     <div class="card servicio">
-      <div class="icono">
+      <div class="icono icono--negro">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
@@ -47,59 +118,115 @@
   </div>
 </section>
 
+<section class="pasos-section">
+  <h2 class="section-title">¿Cómo funciona?</h2>
+  <p class="pasos-subtitulo">Un proceso claro, con seguimiento visible en cada etapa.</p>
+
+  <div class="pasos">
+    <div class="paso">
+      <span class="paso__num">1</span>
+      <div class="paso__icono">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          <path d="M12 8v4" />
+          <path d="M12 15h.01" />
+        </svg>
+      </div>
+      <h3>Registra tu queja</h3>
+      <p>Completa el formulario con tus datos y la descripción de los hechos.</p>
+    </div>
+
+    <div class="paso">
+      <span class="paso__num">2</span>
+      <div class="paso__icono">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7v5l3.5 2" />
+        </svg>
+      </div>
+      <h3>Damos seguimiento</h3>
+      <p>Un responsable revisa tu caso; consulta el avance con tu folio cuando quieras.</p>
+    </div>
+
+    <div class="paso">
+      <span class="paso__num">3</span>
+      <div class="paso__icono">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 12l2 2 4-4" />
+          <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
+        </svg>
+      </div>
+      <h3>Resolución y notificación</h3>
+      <p>Recibes notificación de los acuerdos y la resolución de tu caso.</p>
+    </div>
+  </div>
+</section>
+
 <section class="accesos-section">
   <h2 class="section-title">Servicios en línea</h2>
 
   <div class="icon-grid">
     <button type="button" class="icon-grid-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5" />
-        <path d="M12 17h.01" />
-      </svg>
+      <span class="icon-grid-item__circulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5" />
+          <path d="M12 17h.01" />
+        </svg>
+      </span>
       <span>¿Cómo solicitar orientación?</span>
     </button>
 
     <button type="button" class="icon-grid-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3v18" />
-        <path d="M5 7l-3 6a3 3 0 0 0 6 0l-3-6z" />
-        <path d="M19 7l-3 6a3 3 0 0 0 6 0l-3-6z" />
-        <path d="M5 7h14" />
-        <path d="M9 21h6" />
-      </svg>
+      <span class="icon-grid-item__circulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v18" />
+          <path d="M5 7l-3 6a3 3 0 0 0 6 0l-3-6z" />
+          <path d="M19 7l-3 6a3 3 0 0 0 6 0l-3-6z" />
+          <path d="M5 7h14" />
+          <path d="M9 21h6" />
+        </svg>
+      </span>
       <span>Marco Normativo</span>
     </button>
 
     <button type="button" class="icon-grid-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3l9 4-9 4-9-4 9-4z" />
-        <path d="M5 10.5V16c0 1.5 3 3 7 3s7-1.5 7-3v-5.5" />
-      </svg>
+      <span class="icon-grid-item__circulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l9 4-9 4-9-4 9-4z" />
+          <path d="M5 10.5V16c0 1.5 3 3 7 3s7-1.5 7-3v-5.5" />
+        </svg>
+      </span>
       <span>Promoción y Formación en DDHH</span>
     </button>
 
     <a routerLink="/queja/registro" class="icon-grid-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        <path d="M12 8v4" />
-        <path d="M12 15h.01" />
-      </svg>
+      <span class="icon-grid-item__circulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          <path d="M12 8v4" />
+          <path d="M12 15h.01" />
+        </svg>
+      </span>
       <span>¿Cómo presentar una queja?</span>
     </a>
 
     <button type="button" class="icon-grid-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 12l2 2 4-4" />
-        <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
-      </svg>
+      <span class="icon-grid-item__circulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 12l2 2 4-4" />
+          <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
+        </svg>
+      </span>
       <span>Acuerdo de Creación de la DDP</span>
     </button>
 
     <button type="button" class="icon-grid-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M13 2L4 14h6l-1 8 9-12h-6z" />
-      </svg>
+      <span class="icon-grid-item__circulo">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 2L4 14h6l-1 8 9-12h-6z" />
+        </svg>
+      </span>
       <span>Atención a casos de Violencia de Género</span>
     </button>
   </div>

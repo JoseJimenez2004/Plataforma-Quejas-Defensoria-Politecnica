@@ -1,48 +1,221 @@
+// Hero: antes era un degradado plano de un solo tono con las 3 tarjetas metidas adentro
+// (todo "aplanado" contra el mismo fondo). Ahora: textura de puntos + 2 manchas de luz para
+// dar profundidad, sello de "instancia oficial" para credibilidad inmediata, chips de
+// confianza, botones de CTA con más peso visual, y una figura (escudo + balanza) en SVG que
+// funciona como elemento gráfico institucional ya que no hay generación de imágenes/3D
+// disponible en este entorno.
 .hero {
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(135deg, var(--guinda-vivo) 0%, var(--guinda-oscuro) 100%);
-  padding: 48px 20px 60px;
-  text-align: center;
+  padding: 52px 20px 96px;
   color: #fff;
+
+  // Textura de puntos sutil + un par de manchas de luz difusas -- rompe la sensación de
+  // "color plano" sin distraer del contenido.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px);
+    background-size: 22px 22px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -120px;
+    right: -80px;
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 215, 106, 0.22) 0%, transparent 70%);
+    pointer-events: none;
+  }
+}
+
+.hero-inner {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 40px;
 }
 
 .hero-text {
-  max-width: 700px;
-  margin: 0 auto 32px;
+  flex: 1 1 480px;
+  min-width: 0;
 
   h1 {
     color: #fff;
-    font-size: 1.9rem;
-    margin-bottom: 10px;
+    font-size: 2rem;
+    margin-bottom: 12px;
   }
 
   .subtitulo {
     color: rgba(255, 255, 255, 0.9);
     font-size: 1rem;
-    margin: 0;
+    max-width: 520px;
+    margin: 0 0 26px;
   }
 }
 
-.servicios {
-  max-width: 1000px;
+.hero-sello {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 6px 14px 6px 10px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke: #ffd76a;
+    flex-shrink: 0;
+  }
+}
+
+.hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.btn-hero-primario,
+.btn-hero-secundario {
+  display: inline-block;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 13px 24px;
+  border-radius: 6px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn-hero-primario {
+  background: #ffd76a;
+  color: var(--guinda-oscuro);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+
+  &:hover {
+    transform: translateY(-2px);
+    background: #ffe08a;
+  }
+}
+
+.btn-hero-secundario {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+
+  &:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.18);
+  }
+}
+
+.hero-chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  svg {
+    width: 17px;
+    height: 17px;
+    stroke: #ffd76a;
+    flex-shrink: 0;
+  }
+}
+
+.hero-figura {
+  flex: 0 0 auto;
+  width: 240px;
+
+  svg {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.25));
+  }
+}
+
+// Las tarjetas de servicios "flotan" sobre el borde inferior del hero (margen negativo) en
+// vez de quedar incrustadas en el degradado -- efecto de profundidad muy usado en portales
+// institucionales para separar la llamada a la acción del resto de la página.
+.servicios-section {
+  max-width: 1100px;
   margin: 0 auto;
+  padding: 0 20px;
+}
+
+.servicios {
+  margin: -64px auto 0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 20px;
+  gap: 22px;
+  position: relative;
+  z-index: 1;
 }
 
 .servicio {
   text-align: center;
   color: var(--texto);
+  border-top: 4px solid transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+  }
 
   .icono {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 12px;
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     svg {
-      width: 100%;
-      height: 100%;
-      stroke: var(--guinda-vivo);
+      width: 26px;
+      height: 26px;
+    }
+
+    &--guinda {
+      background: var(--guinda-suave);
+      svg { stroke: var(--guinda-vivo); }
+    }
+
+    &--dorado {
+      background: #fff6e0;
+      svg { stroke: #c98a1c; }
+    }
+
+    &--negro {
+      background: #eee;
+      svg { stroke: var(--negro-inst); }
     }
   }
 
@@ -63,6 +236,86 @@
     text-decoration: none;
     width: 100%;
     text-align: center;
+  }
+}
+
+// "¿Cómo funciona?" -- proceso en 3 pasos con línea conectora; ayuda a que el usuario sepa
+// qué esperar antes de empezar, lo que refuerza la confianza en la plataforma.
+.pasos-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 64px 20px 8px;
+}
+
+.pasos-subtitulo {
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  margin: -18px 0 36px;
+}
+
+.pasos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 32px;
+  position: relative;
+}
+
+.paso {
+  text-align: center;
+  position: relative;
+  padding: 0 12px;
+
+  // Línea conectora entre pasos (solo en pantallas anchas, donde el grid queda en una fila).
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 22px;
+    left: calc(50% + 46px);
+    width: calc(100% - 92px);
+    height: 2px;
+    background: repeating-linear-gradient(90deg, var(--borde) 0 6px, transparent 6px 12px);
+
+    @media (max-width: 720px) {
+      display: none;
+    }
+  }
+
+  &__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--guinda);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+  }
+
+  &__icono {
+    width: 34px;
+    height: 34px;
+    margin: 0 auto 10px;
+
+    svg {
+      width: 100%;
+      height: 100%;
+      stroke: var(--guinda-vivo);
+    }
+  }
+
+  h3 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+
+  p {
+    color: var(--texto-suave);
+    font-size: 0.85rem;
+    margin: 0;
   }
 }
 
@@ -181,5 +434,36 @@
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--guinda-vivo);
+  }
+}
+
+@media (max-width: 860px) {
+  .hero-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero-text .subtitulo {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-cta,
+  .hero-chips {
+    justify-content: center;
+  }
+
+  .hero-figura {
+    width: 170px;
+  }
+
+  .servicios {
+    margin-top: -48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-figura {
+    display: none;
   }
 }

@@ -53,7 +53,17 @@ uno emitido por `admin-service` (para personal) sea válido en `revision-service
 `admin-service` tiene lógica de login propia — todos los demás solo **verifican** el token
 (`JwtAuthenticationFilter` + `JwtUtil`, idéntico patrón replicado en cada uno).
 
-Todos los 7 exponen Swagger/OpenAPI en `/swagger-ui.html` y `/v3/api-docs` (rutas públicas).
+Todos los 7 exponen Swagger/OpenAPI en `/swagger-ui.html` y `/v3/api-docs` (rutas públicas) —
+ver §9.0 para las URLs completas por servicio.
+
+El "Puerto" de la tabla de arriba es siempre el **externo/host** (el real, con el que se arma
+cualquier URL hacia el servicio). Desde 2026-08-20 el puerto **interno** del contenedor de los
+9 microservicios es uniformemente **8080** (antes era igual al externo) — cambio hecho para
+igualar el patrón que usa la empresa donde trabaja el responsable del proyecto (imagen base
+compartida + puerto interno fijo, solo variando el externo; aquí se adoptó únicamente la parte
+del puerto, sin pasar a una imagen base compartida). No afecta ninguna URL de esta tabla ni de
+§9: nginx, las variables `*_URL`/`*.base-url` entre microservicios y el firewall siguen
+apuntando al puerto externo de siempre. Ver `docs/CAMBIOS.md` (2026-08-20) para el detalle.
 
 ### 1.2 Frontends (Angular 21, standalone, zoneless)
 
@@ -775,6 +785,37 @@ Extraído directamente de las clases `@RestController` de cada servicio (no de S
 indica qué exige cada endpoint: **Público** (sin token), **JWT** (cualquier token válido del
 emisor correspondiente), o **JWT + rol** (token válido y el/los rol(es) exacto(s) vía
 `@PreAuthorize`).
+
+### 9.0 URLs de Swagger por microservicio
+
+Los 7 microservicios maduros usan `springdoc-openapi` con el path por default
+(`springdoc.swagger-ui.path: /swagger-ui.html`, `springdoc.api-docs.path: /v3/api-docs`,
+ambos configurados explícitamente en su `application.yaml` y permitidos como ruta pública en su
+`WebConfig`/`SecurityConfig`). `primer-contacto-service` y `subdefensoria-service` **no**
+tienen la dependencia `springdoc-openapi` en su `pom.xml` — no exponen Swagger, no importa qué
+ruta se intente.
+
+| Microservicio | Swagger UI | OpenAPI JSON |
+|---|---|---|
+| `auth-service` | `http://2.25.78.22:8083/swagger-ui.html` | `http://2.25.78.22:8083/v3/api-docs` |
+| `queja-service` | `http://2.25.78.22:8084/swagger-ui.html` | `http://2.25.78.22:8084/v3/api-docs` |
+| `notificaciones-service` | `http://2.25.78.22:8085/swagger-ui.html` | `http://2.25.78.22:8085/v3/api-docs` |
+| `catalogo-service` | `http://2.25.78.22:8086/swagger-ui.html` | `http://2.25.78.22:8086/v3/api-docs` |
+| `admin-service` | `http://2.25.78.22:8087/swagger-ui.html` | `http://2.25.78.22:8087/v3/api-docs` |
+| `revision-service` | `http://2.25.78.22:8088/swagger-ui.html` | `http://2.25.78.22:8088/v3/api-docs` |
+| `chatbot-service` | `http://2.25.78.22:8089/swagger-ui.html` | `http://2.25.78.22:8089/v3/api-docs` |
+| `primer-contacto-service` 🚧 | — (sin springdoc) | — (sin springdoc) |
+| `subdefensoria-service` 🚧 | — (sin springdoc) | — (sin springdoc) |
+
+**Importante**: estas URLs usan el puerto **externo/host** (el mismo de la tabla de §1.1 y de
+los prefijos de abajo) — el firewall de la VPS backend solo acepta conexiones a esos puertos
+desde la IP de la VPS frontend (`2.25.64.47`), así que **no son alcanzables desde Internet ni
+desde tu propia máquina**. Para abrirlas hay que hacerlo desde dentro de la VPS frontend (por
+ejemplo con un túnel SSH: `ssh -L 8083:2.25.78.22:8083 usuario@2.25.64.47` y luego abrir
+`http://localhost:8083/swagger-ui.html` en tu navegador), o temporalmente desde tu máquina si
+corres el jar en local (ahí sí usa el puerto que trae `application.yaml`, no el de esta tabla).
+El puerto **interno** del contenedor (8080 en los 9, ver §1.1) no aplica aquí — es un detalle
+de Podman, no cambia por qué puerto se llega desde afuera.
 
 ### 9.1 `auth-service` (8083) — prefijo `/api/auth`
 

@@ -52,7 +52,7 @@ mostrar_ayuda() {
 build_service() {
     SERVICE=$1
     PORT=$(get_port "$SERVICE")
-    echo "Construyendo/Actualizando imagen defensoria-${SERVICE} (puerto ${PORT})..."
+    echo "Construyendo/Actualizando imagen defensoria-${SERVICE} (externo ${PORT} -> interno 8080)..."
     cd $BASE_DIR
 
     if [ ! -f "artifact/${SERVICE}.jar" ]; then
@@ -68,10 +68,13 @@ build_service() {
         DOCKERFILE="${SERVICE}/Dockerfile"
     fi
 
+    # SERVICE_PORT solo documenta el EXPOSE de la imagen -- el puerto real en el que escucha
+    # Spring Boot lo define server.port en config-files/$SERVICE/config/*.yml (8080 en los 9
+    # microservicios, ver esos yml). Se deja fijo en 8080 para que EXPOSE refleje la realidad.
     podman build \
       -f "$DOCKERFILE" \
       --build-arg JAR_FILE=artifact/${SERVICE}.jar \
-      --build-arg SERVICE_PORT=${PORT} \
+      --build-arg SERVICE_PORT=8080 \
       -t "defensoria-${SERVICE}" .
     echo "Imagen defensoria-${SERVICE} actualizada exitosamente."
 }
@@ -86,7 +89,7 @@ start_service() {
         exit 1
     fi
 
-    echo "Levantando contenedor para $SERVICE en el puerto $PORT..."
+    echo "Levantando contenedor para $SERVICE ($PORT -> 8080 interno)..."
 
     # admin-service necesita un volumen para que los .sql de respaldo sobrevivan a que se
     # reconstruya el contenedor (si no, "up-container admin-service" los borraría cada vez).
@@ -96,9 +99,13 @@ start_service() {
         VOLUMEN_EXTRA="-v $BASE_DIR/respaldos:/app/respaldos:Z"
     fi
 
+    # Puerto interno del contenedor unificado a 8080 en los 9 microservicios (mismo patrón que
+    # el "template_gio" del trabajo) -- cada contenedor tiene su propio namespace de red, así
+    # que no chocan entre sí aunque todos escuchen "por dentro" en el mismo puerto. El puerto
+    # real de acceso externo/host ($PORT) no cambia.
     podman run -d \
       --name "$SERVICE" \
-      -p $PORT:$PORT \
+      -p $PORT:8080 \
       -v $BASE_DIR/config-files/$SERVICE/config:/app/config:Z \
       $VOLUMEN_EXTRA \
       -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \

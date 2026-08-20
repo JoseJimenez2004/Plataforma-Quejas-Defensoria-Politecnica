@@ -1,5 +1,9 @@
 server:
-  port: 8083
+  # Puerto interno del contenedor unificado a 8080 (igual en los 9 microservicios) -- el
+  # puerto real por el que se accede a este servicio sigue siendo 8083, solo que ahora es
+  # el mapeo externo de Podman (ver -p en podman-compose.sh), no el puerto en el que escucha
+  # Spring Boot dentro del contenedor. Mismo patrón que se usa en el trabajo con template_gio.
+  port: 8080
 
 spring:
   application:

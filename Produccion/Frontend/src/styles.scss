@@ -27,10 +27,14 @@
 
 .icon-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 28px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 20px;
   text-align: center;
 
+  // Antes eran íconos sueltos flotando sobre el fondo gris de la página -- sin borde, sin
+  // sombra, sin tarjeta -- lo que los hacía ver "planos" y poco fiables. Ahora cada uno es una
+  // tarjeta propia (blanco, sombra, borde superior de acento) con el ícono dentro de un
+  // círculo de color, igual que las tarjetas de servicios del hero.
   .icon-grid-item {
     display: flex;
     flex-direction: column;
@@ -38,15 +42,29 @@
     gap: 12px;
     text-decoration: none;
     color: var(--texto);
-    background: none;
+    background: #fff;
     border: none;
+    border-top: 3px solid var(--guinda-suave);
+    border-radius: 10px;
     font-family: inherit;
     cursor: pointer;
-    padding: 4px;
+    padding: 22px 16px 20px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+
+    .icon-grid-item__circulo {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--guinda-suave);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
     svg {
-      width: 46px;
-      height: 46px;
+      width: 26px;
+      height: 26px;
       stroke: var(--guinda-vivo);
     }
 
@@ -62,6 +80,12 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+    }
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+      border-top-color: var(--guinda-vivo);
     }
 
     &:hover span {

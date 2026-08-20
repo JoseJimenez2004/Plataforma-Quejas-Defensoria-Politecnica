@@ -1,5 +1,7 @@
 server:
-  port: 8087
+  # Puerto interno unificado a 8080 en los 9 microservicios -- el acceso real sigue siendo
+  # por 8087, ahora vía el mapeo externo de Podman (ver -p en podman-compose.sh).
+  port: 8080
 
 spring:
   application:

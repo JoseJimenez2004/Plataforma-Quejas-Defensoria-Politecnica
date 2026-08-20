@@ -9,7 +9,9 @@
 # despliegue, y no se debía tocar en esta tarea.
 
 server:
-  port: 8082
+  # Puerto interno unificado a 8080 en los 9 microservicios -- el acceso real sigue siendo
+  # por 8082, ahora vía el mapeo externo de Podman (ver -p en podman-compose.sh).
+  port: 8080
 
 # Dominio público real (router-nginx). Hoy no existe todavía una ruta de nginx ni un frontend
 # desplegado para Primer Contacto (ver docs/REQUERIMIENTOS.md, sección "Microservicios en

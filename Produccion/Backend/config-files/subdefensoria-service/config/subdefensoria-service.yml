@@ -8,14 +8,17 @@
 # bien en application.properties) -- eso es lógica/decisión propia del servicio, no una
 # preocupación de despliegue, y no se debía tocar en esta tarea.
 #
-# ÚNICO cambio real de comportamiento: el puerto. El módulo trae 8083 como default en su
-# application.properties, pero 8083 ya lo usa auth-service en esta misma VPS backend -- se
-# reasigna aquí a 8091 (8090 también se descartó: ya está asignado a defensoria-web en la VPS
-# frontend; aunque es una máquina distinta y no habría choque real, se evita para no confundir
-# puertos entre VPS al leer `podman ps`). Ver get_port() en podman-compose.sh.
+# El puerto EXTERNO/host de este servicio sigue siendo 8091 (el módulo trae 8083 como default,
+# pero 8083 ya lo usa auth-service en esta misma VPS backend; 8090 también se descartó por ser
+# el de defensoria-web en la VPS frontend). Ver get_port() en podman-compose.sh.
+#
+# El puerto INTERNO del contenedor, en cambio, ya no es 8091 sino 8080 -- unificado igual que
+# en los otros 8 microservicios (cada contenedor tiene su propio namespace de red, así que
+# varios pueden escuchar en 8080 "por dentro" sin chocar; solo el mapeo -p host:8080 tiene que
+# ser único). El puerto real por el que se accede al servicio no cambia.
 
 server:
-  port: 8091
+  port: 8080
 
 # Dominio público real (router-nginx). Hoy no existe todavía una ruta de nginx ni un frontend
 # desplegado para Subdefensoría (ver docs/REQUERIMIENTOS.md, sección "Microservicios en

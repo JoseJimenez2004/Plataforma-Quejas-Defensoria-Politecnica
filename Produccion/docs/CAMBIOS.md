@@ -743,3 +743,145 @@ libre como hasta ahora; eligió **estructurar bien** (columnas propias), pensand
 estaba corriendo) y el frontend con estos cambios; validar en la base de datos que Hibernate
 creó las columnas nuevas y la tabla `queja_tutores`, y probar un registro público real de punta
 a punta.
+
+## 2026-08-20 — Rename auth.service→auth-service, 2 bugs de arranque, logging por servicio, reconstrucción y rediseño del Frontend, unificación de puerto interno
+
+Sesión larga que cubre varias rondas de trabajo sin documentar entre la entrada anterior
+(2026-07-13) y hoy. Se agrupa todo aquí por tema en vez de por orden cronológico exacto.
+
+### Backend: `auth.service` → `auth-service`
+- Se corrigió la inconsistencia de nombres: carpeta `Backend/auth.service/` renombrada a
+  `Backend/auth-service/`, `pom.xml` (`<artifactId>`), `application.yaml`
+  (`spring.application.name`) y todas las referencias cruzadas en comentarios de otros
+  servicios (`admin-service/entity/PersonalAdministrativo.java`,
+  `admin-service/config/JwtUtil.java`, `catalogo-service/config/JwtUtil.java`,
+  `config-files/admin-service/config/admin-service.yml`, `README.md`,
+  `docs/ARQUITECTURA.md`) actualizadas al nuevo nombre. `podman-compose.sh` y `config-files/`
+  ya usaban `auth-service` (no necesitaron cambio).
+
+### Backend: 2 bugs de arranque corregidos
+- **`auth-service` no levantaba** (`UnsatisfiedDependencyException` por falta de un bean
+  `PasswordEncoder`) — se creó `auth-service/.../config/AppConfig.java` con un
+  `BCryptPasswordEncoder`, replicando el patrón que `admin-service` ya tenía. No relacionado
+  con el rename ni con el refactor previo de inyección por constructor.
+- **`revision-service` no levantaba** (`PlaceholderResolutionException` en
+  `primer-contacto.base-url`) — la causa real: `SPRING_CONFIG_NAME` hace que Spring ignore el
+  `application.yaml` empacado en el jar (que sí traía un default) y solo lea el yml externo
+  montado, que no tenía esa clave. Se agregó `primer-contacto.base-url:
+  http://2.25.78.22:8082` directamente a `config-files/revision-service/config/revision-service.yml`.
+
+### Backend: nombre del microservicio visible en los logs
+- Se agregó `spring.application.name` (donde faltaba) y
+  `logging.pattern.level: "%5p [${spring.application.name}]"` a los `application.yaml` locales
+  y a los yml de producción (`config-files/*/config/*.yml`) de `admin-service`, `auth-service`,
+  `catalogo-service`, `chatbot-service`, `notificaciones-service`, `queja-service` y
+  `revision-service` — a petición explícita del usuario, **excluyendo**
+  `primer-contacto-service` y `subdefensoria-service`. Patrón oficial de Spring Boot, sin
+  dependencias nuevas.
+- Se creó `Backend/rebuild-jars.sh`: recompila los 7 jars (`mvn clean package -DskipTests`) y
+  los copia a `Backend/_jars-listos/`, con resumen de éxito/fallo por servicio.
+
+### Frontend: reconstrucción de scaffolding faltante
+- El build (`ng build`) fallaba por completo: faltaban `package.json`, `tsconfig.json`,
+  `tsconfig.app.json`, `src/main.ts`, `src/index.html`, `src/app/app.scss`, `public/.gitkeep`,
+  `src/app/app.routes.ts`, `src/app/core/interceptors/jwt.interceptor.ts`,
+  `src/app/pages/crear-cuenta/crear-cuenta.ts`, `src/app/pages/portal-login/portal-login.scss`
+  y `src/app/pages/recuperar-password/recuperar-password.scss`. `git status` confirmó que
+  ninguno de estos archivos estuvo nunca versionado (no eran "eliminados", simplemente nunca se
+  agregaron) — no eran recuperables con `git restore`.
+- Se reconstruyeron todos desde cero, cruzando cada `routerLink`/`router.navigate()` e import
+  real del proyecto para que `app.routes.ts` y el resto reflejaran exactamente la navegación
+  existente (no una estructura inventada).
+- También se reconstruyó `src/app/shared/public-layout/public-layout.scss` (topbar, franja de
+  marca, nav, footer) — confirmado ausente incluso en un build de `dist/` histórico del 14 de
+  julio, es decir, llevaba faltando desde antes de esta sesión.
+- **Verificación**: `ng build --configuration development` compiló sin errores (48s). La
+  build de producción excede el límite de tiempo del sandbox de esta herramienta (~178s); debe
+  correrse en la máquina del usuario.
+
+### Frontend: rediseño de la pantalla de Inicio
+- **Primera ronda** (jerarquía y limpieza): la tarjeta "Seguimiento de queja" ya no tiene
+  inputs propios (antes duplicaba el formulario de consulta), pasó a un botón `btn-secondary`
+  que enlaza a `/queja/consultar`; "Iniciar sesión" también bajó a `btn-secondary` para que
+  "Presentar una queja" sea la única llamada a la acción primaria. El banner de aviso de
+  contenido de ejemplo (`.tabs-note`) y las tarjetas de difusión (`.tab-card`) se rediseñaron
+  con más jerarquía visual (ícono, "Leer más →", sombra con hover). Los textos del grid de
+  íconos institucionales se uniformaron a 2 líneas (`-webkit-line-clamp`).
+- **Segunda ronda** (a petición del usuario: "se ve muy plano, yo desconfiaría"): se rediseñó
+  el hero completo para transmitir más confianza —
+  - Sello "Instancia oficial del IPN" con ícono de escudo, sobre el título.
+  - 3 chips de confianza (confidencial, respaldo normativo, seguimiento en línea).
+  - Botones de CTA más grandes con sombra ("Presentar una queja" / "Consultar mi queja").
+  - Textura de puntos + mancha de luz dorada de fondo (antes era un degradado plano).
+  - Figura ilustrativa de escudo + balanza construida en SVG con gradientes (no hay
+    herramienta de generación de imágenes/3D disponible en este entorno).
+  - Las 3 tarjetas de servicio pasaron a "flotar" sobre el borde inferior del hero (margen
+    negativo) con el ícono dentro de un círculo de color, en vez de quedar incrustadas en el
+    degradado.
+  - Nueva sección "¿Cómo funciona?" (3 pasos numerados con línea conectora: Registra →
+    Seguimiento → Resolución).
+  - El grid de "Servicios en línea" pasó de íconos sueltos sobre fondo gris a tarjetas blancas
+    con sombra, borde de acento e ícono en círculo.
+  - **Verificación**: `ng build --configuration development` compiló sin errores; balance de
+    llaves/etiquetas revisado a mano.
+
+### Frontend: rediseño visual de `chatbot-widget`
+- A petición del usuario (avatar más profesional, más llamativo, toques de UI): el ícono plano
+  se sustituyó por un robot construido con SVG + gradientes (mismo motivo: sin herramienta de
+  render 3D/imágenes); halo dorado (`box-shadow` + gradiente radial `botHalo`) y 3 anillos
+  "de sonido" con `animation-delay` escalonado simulando actividad; panel con glassmorphism
+  (`backdrop-filter: blur(16px)` + fondo blanco translúcido); indicador "En línea" con punto
+  verde pulsante junto al nombre del asistente.
+- **Verificación**: SVGs balanceados (2 `<svg>`/`<defs>` sin colisión de IDs de gradiente entre
+  el ícono mini del panel y el del botón flotante), llaves de SCSS balanceadas (39/39), build
+  de desarrollo sin errores.
+
+### Frontend: consolidación de archivos de despliegue + incidente de puerto
+- Existían dos carpetas (`Frontend/` y `front/`) con partes del código de despliegue —
+  confusión reportada por el usuario con una captura de Finder. Se preguntó explícitamente y el
+  usuario eligió consolidar todo en `Frontend/` (mismo patrón que `Frontend-Admin`/
+  `Frontend-Revision`: código fuente y archivos de despliegue en la misma carpeta). `front/` se
+  eliminó.
+- `Dockerfile`, `config/static.conf` y `podman-compose-front.sh` se copiaron **verbatim** del
+  servidor real (contenido pegado por el usuario), corrigiendo un solo bug real encontrado en
+  el script del servidor: `PORT=22345` + `-p ${PORT}:80` no coincidía con el contenedor real
+  (nginx interno escucha en 8090) — corregido a `PORT=8090` + `-p ${PORT}:${PORT}`.
+- **Incidente**: el usuario corrió en el servidor el script **viejo** (el fix aún no se había
+  subido), lo que dejó el contenedor mapeado `22345->80` mientras nginx adentro escucha 8090 →
+  sitio caído (`curl` devolvía "Connection refused"). Se dio una recuperación de emergencia
+  (recrear el contenedor con `-p 8090:8090` reutilizando la imagen ya construida) más un
+  `sed` para parchar el script en el servidor. Confirmado resuelto por el usuario.
+
+### Backend: puerto interno de los 9 microservicios unificado a 8080
+- El usuario mostró capturas de cómo se maneja el despliegue en su trabajo: los backends ahí
+  comparten una imagen base genérica y todos escuchan internamente en **8080**, variando solo
+  el puerto externo/host publicado por Podman (el puerto interno no necesita ser único porque
+  cada contenedor tiene su propio namespace de red). Se decidió, tras consultarlo, adoptar
+  **solo** esa parte del patrón (puerto interno uniforme) — **no** migrar a una imagen base
+  compartida, ya que con 9 servicios (vs. las decenas del trabajo) seguir con una imagen propia
+  por microservicio se mantiene más simple de entender/depurar.
+- Cambio: `server.port: 8080` en los 9 `config-files/*/config/*.yml` de producción (sin tocar
+  los `application.yaml` locales de cada servicio, que deben seguir con su puerto propio para
+  poder correr varios en la misma máquina sin contenedores). `podman-compose.sh`:
+  `-p $PORT:$PORT` → `-p $PORT:8080`, y `--build-arg SERVICE_PORT` fijo en 8080 (documentación
+  del `EXPOSE` en el Dockerfile). Los puertos externos (8082-8089, 8091) y todas las URLs entre
+  microservicios (`http://2.25.78.22:<puerto>`) no cambiaron.
+- **Incidente de despliegue parcial**: el primer intento del usuario solo subió la carpeta
+  `config-files/` al servidor sin el `podman-compose.sh` actualizado — el script viejo seguía
+  mapeando `-p $PORT:$PORT` mientras la app ya escuchaba en 8080 adentro, lo que habría dejado
+  los 9 servicios inalcanzables por su puerto externo (mismo patrón que el incidente del
+  frontend). Se corrigió subiendo también el script y volviendo a correr `up`;
+  `podman ps -a` confirmó el mapeo correcto (`X->8080/tcp`) en 8 de 9 servicios
+  (`subdefensoria-service` quedó en `Exited (1)`, pendiente, fuera de alcance por instrucción
+  explícita del usuario).
+- Tras el redeploy, un `curl` a `https://defensoria-escom.ddns.net/api/chatbot/menu` devolvió
+  `504 Gateway Timeout`. Diagnóstico: `curl` directo a `localhost:8089` en el servidor backend
+  y a `2.25.78.22:8089` desde el servidor frontend (misma ruta que usa `router-nginx`)
+  respondieron `200` con el JSON completo — el backend y la red entre las 2 VPS estaban sanos,
+  así que el 504 era transitorio (contenedores aún reiniciando) o de `router-nginx`. El usuario
+  confirmó que, al reintentar, ya funcionaba — resuelto sin cambios adicionales.
+
+**Pendiente**: `subdefensoria-service` sigue en `Exited (1)` en producción (no investigado,
+pospuesto a propósito). Falta desplegar en producción todo lo del Frontend acumulado en esta
+entrada (Inicio rediseñado, chatbot-widget rediseñado) — sigue solo en el árbol de trabajo
+hasta el próximo `ng build --configuration production` + subida + `podman-compose-front.sh up`.

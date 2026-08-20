@@ -4,16 +4,29 @@
       <div class="chatbot-panel__marca">
         <span class="chatbot-mascota-mini" aria-hidden="true">
           <svg viewBox="0 0 64 64" fill="none">
-            <circle cx="32" cy="30" r="20" fill="#fff" />
-            <circle cx="24" cy="28" r="3.5" fill="var(--guinda)" />
-            <circle cx="40" cy="28" r="3.5" fill="var(--guinda)" />
-            <path d="M22 37c3 3 17 3 20 0" stroke="var(--guinda)" stroke-width="2.5" stroke-linecap="round" />
-            <rect x="29" y="6" width="6" height="8" rx="3" fill="#fff" />
+            <defs>
+              <linearGradient id="botHeadMini" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#a8305c" />
+                <stop offset="100%" stop-color="#501533" />
+              </linearGradient>
+              <radialGradient id="botEyeMini" cx="35%" cy="35%" r="65%">
+                <stop offset="0%" stop-color="#eafcff" />
+                <stop offset="55%" stop-color="#5be2ff" />
+                <stop offset="100%" stop-color="#1aa9d6" />
+              </radialGradient>
+            </defs>
+            <circle cx="32" cy="32" r="27" fill="url(#botHeadMini)" />
+            <line x1="32" y1="8" x2="32" y2="14" stroke="#ffd76a" stroke-width="2" stroke-linecap="round" />
+            <circle cx="32" cy="7" r="2.6" fill="#ffd76a" />
+            <rect x="17" y="20" width="30" height="22" rx="11" fill="#fff" opacity="0.96" />
+            <circle cx="25.5" cy="31" r="3.8" fill="url(#botEyeMini)" />
+            <circle cx="38.5" cy="31" r="3.8" fill="url(#botEyeMini)" />
+            <path d="M26 38h12" stroke="var(--guinda)" stroke-width="2" stroke-linecap="round" />
           </svg>
         </span>
         <div>
           <strong>Asistente DDP</strong>
-          <span>Preguntas frecuentes</span>
+          <span class="chatbot-estado"><span class="chatbot-estado__punto" aria-hidden="true"></span>En línea</span>
         </div>
       </div>
       <button class="chatbot-panel__cerrar" type="button" (click)="cerrar()" aria-label="Cerrar asistente">
@@ -53,14 +66,33 @@
   aria-label="Abrir asistente de la Defensoría"
 >
   @if (!abierto) {
-    <span class="chatbot-fab__pulso" aria-hidden="true"></span>
+    <span class="chatbot-fab__onda chatbot-fab__onda--1" aria-hidden="true"></span>
+    <span class="chatbot-fab__onda chatbot-fab__onda--2" aria-hidden="true"></span>
+    <span class="chatbot-fab__onda chatbot-fab__onda--3" aria-hidden="true"></span>
   }
   <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
-    <circle cx="32" cy="32" r="30" fill="var(--guinda)" />
-    <circle cx="32" cy="30" r="17" fill="#fff" />
-    <circle cx="25" cy="28" r="3.2" fill="var(--guinda)" />
-    <circle cx="39" cy="28" r="3.2" fill="var(--guinda)" />
-    <path d="M23 36c3.5 3 14.5 3 18 0" stroke="var(--guinda)" stroke-width="2.4" stroke-linecap="round" />
-    <rect x="29" y="9" width="6" height="7" rx="3" fill="#fff" />
+    <defs>
+      <radialGradient id="botHalo" cx="50%" cy="50%" r="50%">
+        <stop offset="55%" stop-color="#ffd76a" stop-opacity="0.55" />
+        <stop offset="100%" stop-color="#ffd76a" stop-opacity="0" />
+      </radialGradient>
+      <linearGradient id="botHead" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#a8305c" />
+        <stop offset="100%" stop-color="#501533" />
+      </linearGradient>
+      <radialGradient id="botEye" cx="35%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="#eafcff" />
+        <stop offset="55%" stop-color="#5be2ff" />
+        <stop offset="100%" stop-color="#1aa9d6" />
+      </radialGradient>
+    </defs>
+    <circle cx="32" cy="32" r="32" fill="url(#botHalo)" />
+    <circle cx="32" cy="32" r="26" fill="url(#botHead)" />
+    <line x1="32" y1="8" x2="32" y2="15" stroke="#ffd76a" stroke-width="2.2" stroke-linecap="round" />
+    <circle cx="32" cy="7" r="3" fill="#ffd76a" />
+    <rect x="16" y="20" width="32" height="24" rx="12" fill="#fff" opacity="0.96" />
+    <circle cx="25" cy="32" r="4.2" fill="url(#botEye)" />
+    <circle cx="39" cy="32" r="4.2" fill="url(#botEye)" />
+    <path d="M25 40h14" stroke="var(--guinda)" stroke-width="2" stroke-linecap="round" />
   </svg>
 </button>
