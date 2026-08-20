@@ -2,7 +2,6 @@ package ipn.escom.defensoria.chatbot_service.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -32,8 +31,11 @@ import ipn.escom.defensoria.chatbot_service.service.PreguntaChatbotService;
 @Tag(name = "Chatbot (Admin)", description = "Alta, edición y baja de las preguntas del chatbot")
 public class ChatbotAdminController {
 
-    @Autowired
-    private PreguntaChatbotService preguntaChatbotService;
+    private final PreguntaChatbotService preguntaChatbotService;
+
+    public ChatbotAdminController(PreguntaChatbotService preguntaChatbotService) {
+        this.preguntaChatbotService = preguntaChatbotService;
+    }
 
     @GetMapping("/preguntas")
     @Operation(summary = "Lista TODAS las preguntas (activas e inactivas) para el panel de administración")

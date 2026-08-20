@@ -593,7 +593,68 @@ Puertos de producción resultantes: `primer-contacto-service` **8082**, `subdefe
 **8091** (no 8083, tampoco 8090). Ambos siguen sin exponerse por Nginx ni tener un firewall específico
 abierto hacia la VPS frontend — eso queda pendiente para cuando tengan frontend real.
 
-### 5.4 Checklist para desplegar estos dos por primera vez en el servidor
+### 5.4 Cómo se genera el folio, y cómo se "pasa" una queja entre áreas
+
+Pregunta frecuente para quien vaya a tocar estos dos servicios — documentado directamente del
+código, no es una decisión de esta tarea.
+
+**Folio**: se genera igual en los dos únicos lugares que hoy crean una queja nueva
+(`QuejaService` en `queja-service`, y `RevisionQuejaService.registrarManual` en
+`revision-service`, para el registro en papel) — cada uno tiene su propia copia idéntica de
+esta lógica, no está compartida en una librería común:
+
+```java
+"FOL-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase()
+// ej. FOL-A1B2C3D4
+```
+
+No es secuencial ni por fecha, es un fragmento de UUID aleatorio. `numero_folio` tiene
+`UNIQUE` en Postgres, pero el código no reintenta si llegara a chocar (colisión
+prácticamente imposible con 8 caracteres hexadecimales, pero técnicamente no está cubierta).
+
+**La "relación" NO es igual entre todos los servicios** — hay dos mecanismos distintos
+conviviendo en el sistema, y es la parte que más confunde:
+
+1. **`queja-service` ↔ `revision-service`**: comparten la misma fila física en Postgres (tabla
+   `quejas`, ver §6). No hay ninguna llamada HTTP entre ellos para esto — ambos leen/escriben
+   directo la misma tabla, y se "encuentran" porque los dos usan `numero_folio` como criterio
+   de búsqueda (`findByNumeroFolio`). Es el patrón que ya se explicó en el respaldo de
+   estructura (`docs/ESQUEMA-BD-*.md`).
+2. **`primer-contacto-service` ↔ `subdefensoria-service`**: **no** comparten base de datos
+   (cada uno tiene su propio H2 en memoria, ver §5.2) — la única forma en que uno se entera de
+   algo del otro es que alguien le haga un **POST explícito** con los datos completos en el
+   cuerpo. No hay tabla en común que consultar.
+
+**Cómo se pasa hoy una queja entre estas dos áreas nuevas, en la práctica**:
+
+- **Hacia Primer Contacto**: `POST /api/primer-contacto/subdefensoria/quejas`
+  (`IngestaSubdefensoriaController`, body `QuejaEntranteDTO`: `quejaId`, `folio`, `tema`,
+  `descripcionHechos`, `fechaRecepcion`, `prioridad`, `quejoso`, `evidencias`). Primer Contacto
+  la guarda en memoria (`QuejaEnMemoriaStore`, indexada por `folio` y por `quejaId`) — **no la
+  persiste en su BD**, porque según el propio comentario del código "la fuente de verdad de la
+  queja es Subdefensoría". ⚠️ **Hallazgo**: en todo el código revisado, **nada llama todavía a
+  este endpoint** — ni `queja-service` ni `revision-service` tienen un cliente HTTP hacia
+  `primer-contacto-service`. Es una puerta de entrada lista, pero sin quién toque la puerta
+  todavía. Habrá que decidir con tu compañero quién la va a llamar (¿`revision-service` al
+  turnar? ¿un nuevo cliente en otro servicio?) y con qué `quejaId` (todo apunta a que debería
+  ser el mismo `id` — el bigint autogenerado, no el folio — de la fila real en
+  `quejas` de Postgres, para que folio y quejaId sigan siendo el mismo par en todos lados).
+- **Hacia Subdefensoría**: esta sí está conectada de punta a punta. Cuando el analista dictamina
+  `POST /api/primer-contacto/dictamenes/competente` (admite la queja), `DictamenPrimerContactoService`
+  automáticamente arma un `ExpedienteEntranteRequest` (mismos campos + `abogadoAsesorNombre`,
+  `fechaAdmision`, `observacionesAnalista`) y hace
+  `POST http://<host-subdefensoria>:8091/api/subdefensoria/ingesta/expedientes` — llamada
+  "best-effort" (si Subdefensoría no responde, el dictamen ya guardado en Primer Contacto no se
+  revierte, solo se registra en el log del servidor, ver `SubdefensoriaClientService`).
+- ⚠️ **Segundo hallazgo**: cuando el analista cambia el estatus de una queja dentro de Primer
+  Contacto (`actualizarEstatusQueja`), ese cambio **solo se refleja en el `QuejaEnMemoriaStore`
+  en memoria de ese servicio** — no hay ninguna llamada de vuelta hacia `queja-service`/
+  `revision-service` para actualizar la columna real `quejas.estatus` en Postgres. Hoy, un
+  cambio de estatus dentro de Primer Contacto o Subdefensoría **no lo ve ni Recepción ni el
+  quejoso en su panel** — viven todavía como universos separados del resto del sistema. Es
+  probablemente el hueco más importante a cerrar antes de considerar esta integración completa.
+
+### 5.5 Checklist para desplegar estos dos por primera vez en el servidor
 
 1. `mvn clean package -DskipTests` dentro de `Backend/primercontacto/` y de
    `Backend/subdefensoria/` (genera `target/primer-contacto-service.jar` y

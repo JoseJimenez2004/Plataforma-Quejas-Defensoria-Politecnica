@@ -10,23 +10,38 @@ public class ExpedienteAnalisisController {
 
     private final ExpedienteAnalisisService expedienteAnalisisService;
 
-    public ExpedienteAnalisisController(ExpedienteAnalisisService expedienteAnalisisService) {
-        this.expedienteAnalisisService = expedienteAnalisisService;
-    }
-
-    @GetMapping("/{quejaId}")
-    public ExpedienteAnalisisDTO obtenerExpediente(
-            @PathVariable Long quejaId,
-            @RequestHeader(value = "Authorization", required = false) String token
+    public ExpedienteAnalisisController(
+            ExpedienteAnalisisService expedienteAnalisisService
     ) {
-        return expedienteAnalisisService.obtenerExpediente(quejaId, token);
+        this.expedienteAnalisisService =
+                expedienteAnalisisService;
     }
 
+    /*
+     * Consulta por ID interno de Primer Contacto.
+     *
+     * Ejemplo:
+     * GET /api/primer-contacto/expedientes/1
+     */
+    @GetMapping("/{expedienteId}")
+    public ExpedienteAnalisisDTO obtenerExpediente(
+            @PathVariable Long expedienteId
+    ) {
+        return expedienteAnalisisService
+                .obtenerExpediente(expedienteId);
+    }
+
+    /*
+     * Consulta por folio propio de Primer Contacto.
+     *
+     * Ejemplo:
+     * GET /api/primer-contacto/expedientes/folio/PC-A1B2C3D4
+     */
     @GetMapping("/folio/{folio}")
     public ExpedienteAnalisisDTO obtenerPorFolio(
-            @PathVariable String folio,
-            @RequestHeader(value = "Authorization", required = false) String token
+            @PathVariable String folio
     ) {
-        return expedienteAnalisisService.obtenerPorFolio(folio, token);
+        return expedienteAnalisisService
+                .obtenerPorFolio(folio);
     }
 }

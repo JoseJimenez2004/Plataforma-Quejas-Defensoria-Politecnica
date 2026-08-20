@@ -2,7 +2,6 @@ package ipn.escom.defensoria.catalogo_service.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,8 +32,11 @@ import ipn.escom.defensoria.catalogo_service.service.DependenciaService;
 @Tag(name = "Dependencias (Admin)", description = "Alta, edición e importación masiva del catálogo")
 public class DependenciaAdminController {
 
-    @Autowired
-    private DependenciaService dependenciaService;
+    private final DependenciaService dependenciaService;
+
+    public DependenciaAdminController(DependenciaService dependenciaService) {
+        this.dependenciaService = dependenciaService;
+    }
 
     @GetMapping
     @Operation(summary = "Lista TODAS las dependencias (activas e inactivas) para el panel de administración")

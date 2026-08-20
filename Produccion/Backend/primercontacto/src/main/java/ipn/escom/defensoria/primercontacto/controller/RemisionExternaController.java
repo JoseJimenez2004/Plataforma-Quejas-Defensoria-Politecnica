@@ -12,37 +12,42 @@ public class RemisionExternaController {
 
     private final RemisionExternaService remisionExternaService;
 
-    public RemisionExternaController(RemisionExternaService remisionExternaService) {
-        this.remisionExternaService = remisionExternaService;
+    public RemisionExternaController(
+            RemisionExternaService remisionExternaService
+    ) {
+        this.remisionExternaService =
+                remisionExternaService;
     }
 
     @PostMapping
     public RemisionDTO crearRemision(
-            @Valid @RequestBody CrearRemisionDTO dto,
-            @RequestHeader(value = "Authorization", required = false) String token
+            @Valid @RequestBody CrearRemisionDTO dto
     ) {
-        return remisionExternaService.crearRemision(dto, token);
+        return remisionExternaService
+                .crearRemision(dto);
     }
 
-    @GetMapping("/queja/{quejaId}")
-    public RemisionDTO obtenerPorQueja(
-            @PathVariable Long quejaId
+    @GetMapping("/expediente/{expedienteId}")
+    public RemisionDTO obtenerPorExpediente(
+            @PathVariable Long expedienteId
     ) {
-        return remisionExternaService.obtenerPorQueja(quejaId);
+        return remisionExternaService
+                .obtenerPorExpediente(expedienteId);
     }
 
     @GetMapping("/folio/{folio}")
     public RemisionDTO obtenerPorFolio(
             @PathVariable String folio
     ) {
-        return remisionExternaService.obtenerPorFolio(folio);
+        return remisionExternaService
+                .obtenerPorFolio(folio);
     }
 
-    @PutMapping("/queja/{quejaId}/enviar")
+    @PutMapping("/folio/{folio}/enviar")
     public RemisionDTO enviarRemision(
-            @PathVariable Long quejaId,
-            @RequestHeader(value = "Authorization", required = false) String token
+            @PathVariable String folio
     ) {
-        return remisionExternaService.enviarRemision(quejaId, token);
+        return remisionExternaService
+                .enviarRemision(folio);
     }
 }

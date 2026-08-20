@@ -21,6 +21,7 @@ import ipn.escom.defensoria.revision_service.model.QuejaDetalleModel;
 import ipn.escom.defensoria.revision_service.model.QuejaResumenBandejaModel;
 import ipn.escom.defensoria.revision_service.repository.QuejaEvidenciaRepository;
 import ipn.escom.defensoria.revision_service.repository.QuejaRepository;
+import ipn.escom.defensoria.revision_service.model.PrimerContactoIngresoResponse;
 
 @Service
 public class RevisionQuejaService {
@@ -41,6 +42,9 @@ public class RevisionQuejaService {
 
     @Autowired
     private NotificacionQuejaService notificacionService;
+
+    @Autowired
+    private PrimerContactoClientService primerContactoClientService;
 
     // ---------------- Bandeja de Entrada ----------------
 
@@ -132,27 +136,85 @@ public class RevisionQuejaService {
 
     // ---------------- Turnado ----------------
 
-    public Queja turnar(String folio, String areaTurnada, String defensorAsignado, String comentarios,
-            String correoRecepcionista) {
+    public Queja turnar(
+            String folio,
+            String areaTurnada,
+            String defensorAsignado,
+            String comentarios,
+            String correoRecepcionista
+    ) {
+
         if (esVacio(areaTurnada) || esVacio(defensorAsignado)) {
-            throw new RuntimeException("Selecciona el área y el defensor responsable antes de turnar.");
+            throw new RuntimeException(
+                    "Selecciona el área y el defensor responsable antes de turnar."
+            );
         }
 
         Queja queja = obtenerPorFolio(folio);
+
+        /*
+         * Si ya fue turnada correctamente anteriormente,
+         * no volvemos a crear ni enviar el expediente.
+         */
+        if (TURNADA.equals(queja.getEstatus())
+                && !esVacio(queja.getFolioPrimerContacto())) {
+            return queja;
+        }
+
+        /*
+         * Una queja rechazada ya no puede continuar
+         * al flujo de Primer Contacto.
+         */
+        if (RECHAZADA.equals(queja.getEstatus())) {
+            throw new RuntimeException(
+                    "Una queja rechazada no puede ser turnada."
+            );
+        }
+
+        /*
+         * Primero pedimos a Primer Contacto que cree
+         * su expediente.
+         *
+         * Se manda el FOLIO de la queja, NO quejas.id.
+         */
+        PrimerContactoIngresoResponse expedientePC =
+                primerContactoClientService
+                        .enviarAPrimerContacto(queja);
+
+        /*
+         * Primer Contacto devuelve su propio folio.
+         *
+         * Ejemplo:
+         * FOL-12345678 -> PC-A1B2C3D4
+         */
+        queja.setFolioPrimerContacto(
+                expedientePC.getFolio()
+        );
+
         queja.setEstatus(TURNADA);
         queja.setAreaTurnada(areaTurnada);
         queja.setDefensorAsignado(defensorAsignado);
         queja.setComentariosRecepcion(comentarios);
         queja.setValidadoPor(correoRecepcionista);
-        queja.setFechaValidacion(LocalDateTime.now());
-        queja.setFechaTurnado(LocalDateTime.now());
-        Queja guardada = quejaRepository.save(queja);
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        queja.setFechaValidacion(ahora);
+        queja.setFechaTurnado(ahora);
+
+        Queja guardada =
+                quejaRepository.save(queja);
 
         notificacionService.registrarCambioEstatus(
-                guardada.getCorreoInstitucional(), guardada.getNumeroFolio(),
+                guardada.getCorreoInstitucional(),
+                guardada.getNumeroFolio(),
                 "Tu queja fue turnada",
-                "Tu queja " + guardada.getNumeroFolio() + " fue admitida y turnada a " + areaTurnada
-                        + " para su atención.");
+                "Tu queja "
+                        + guardada.getNumeroFolio()
+                        + " fue admitida y turnada a "
+                        + areaTurnada
+                        + " para su atención."
+        );
 
         return guardada;
     }

@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +32,11 @@ import ipn.escom.defensoria.queja_service.service.QuejaService;
 @Tag(name = "Quejas", description = "Registro y consulta de quejas")
 public class QuejaController {
 
-    @Autowired
-    private QuejaService quejaService;
+    private final QuejaService quejaService;
+
+    public QuejaController(QuejaService quejaService) {
+        this.quejaService = quejaService;
+    }
 
     @PostMapping("/validar-folio")
     @Operation(summary = "Valida que un folio + correo correspondan a una queja real (público, lo usa auth-service)")

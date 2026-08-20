@@ -20,8 +20,8 @@ public class CitaPrimerContacto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "queja_id", nullable = false)
-    private Long quejaId;
+    @Column(name = "expediente_id", nullable = false)
+    private Long expedienteId;
 
     @Column(name = "folio", nullable = false, length = 50)
     private String folio;

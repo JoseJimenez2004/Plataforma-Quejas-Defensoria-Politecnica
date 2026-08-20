@@ -11,9 +11,6 @@ import lombok.*;
 @Builder
 public class ImprocedenciaDTO {
 
-    @NotNull
-    private Long quejaId;
-
     @NotBlank
     private String folio;
 

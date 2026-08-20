@@ -2,7 +2,6 @@ package ipn.escom.defensoria.queja_service.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,8 +27,11 @@ import ipn.escom.defensoria.queja_service.service.ConciliacionService;
 @Tag(name = "Conciliación", description = "Acuerdos de conciliación propuestos al quejoso")
 public class ConciliacionController {
 
-    @Autowired
-    private ConciliacionService conciliacionService;
+    private final ConciliacionService conciliacionService;
+
+    public ConciliacionController(ConciliacionService conciliacionService) {
+        this.conciliacionService = conciliacionService;
+    }
 
     @GetMapping("/mias")
     @Operation(summary = "Lista los acuerdos de conciliación dirigidos al usuario autenticado")

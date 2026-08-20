@@ -3,7 +3,6 @@ package ipn.escom.defensoria.admin_service.controller;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,11 +28,13 @@ import jakarta.servlet.http.HttpServletRequest;
 @Tag(name = "Plantillas Oficiales", description = "Edición de plantillas de oficios y formatos legales")
 public class PlantillaController {
 
-    @Autowired
-    private PlantillaService plantillaService;
+    private final PlantillaService plantillaService;
+    private final BitacoraService bitacoraService;
 
-    @Autowired
-    private BitacoraService bitacoraService;
+    public PlantillaController(PlantillaService plantillaService, BitacoraService bitacoraService) {
+        this.plantillaService = plantillaService;
+        this.bitacoraService = bitacoraService;
+    }
 
     @GetMapping
     @Operation(summary = "Lista todas las plantillas disponibles")

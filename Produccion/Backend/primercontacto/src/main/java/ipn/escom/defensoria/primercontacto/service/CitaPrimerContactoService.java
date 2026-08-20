@@ -5,6 +5,8 @@ import ipn.escom.defensoria.primercontacto.dto.CrearCitaDTO;
 import ipn.escom.defensoria.primercontacto.entity.CitaPrimerContacto;
 import ipn.escom.defensoria.primercontacto.repository.CitaPrimerContactoRepository;
 import org.springframework.stereotype.Service;
+import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
+import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,42 +17,70 @@ import java.util.List;
 public class CitaPrimerContactoService {
 
     private final CitaPrimerContactoRepository citaPrimerContactoRepository;
+    private final ExpedientePrimerContactoRepository expedienteRepository;
 
-    public CitaPrimerContactoService(CitaPrimerContactoRepository citaPrimerContactoRepository) {
+    public CitaPrimerContactoService(
+            CitaPrimerContactoRepository citaPrimerContactoRepository,
+            ExpedientePrimerContactoRepository expedienteRepository
+    ) {
         this.citaPrimerContactoRepository = citaPrimerContactoRepository;
+        this.expedienteRepository = expedienteRepository;
     }
 
     public CitaDTO crearCita(CrearCitaDTO dto) {
 
+        /*
+         * El cliente manda el folio propio de Primer Contacto.
+         * Con ese folio obtenemos el expediente interno.
+         */
+        ExpedientePrimerContacto expediente =
+                expedienteRepository.findByFolio(dto.getFolio())
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "No existe un expediente de Primer Contacto con folio "
+                                                + dto.getFolio()
+                                )
+                        );
+
         boolean yaTieneCita = citaPrimerContactoRepository
-                .existsByFolioAndEstatusNot(dto.getFolio(), "CANCELADA");
+                .existsByExpedienteIdAndEstatusNot(
+                        expediente.getId(),
+                        "CANCELADA"
+                );
 
         if (yaTieneCita) {
-            throw new RuntimeException("El expediente ya tiene una cita programada");
+            throw new RuntimeException(
+                    "El expediente ya tiene una cita programada"
+            );
         }
 
-        CitaPrimerContacto cita = CitaPrimerContacto.builder()
-                .quejaId(dto.getQuejaId())
-                .folio(dto.getFolio())
-                .quejosoId(dto.getQuejosoId())
-                .quejosoNombre(dto.getQuejosoNombre())
-                .analistaId(dto.getAnalistaId())
-                .analistaNombre(dto.getAnalistaNombre())
-                .fechaCita(LocalDate.parse(dto.getFechaCita()))
-                .horaCita(LocalTime.parse(dto.getHoraCita()))
-                .tipoCita(dto.getTipoCita())
-                .motivo(dto.getMotivo())
-                .estatus("PROGRAMADA")
-                .fechaCreacion(LocalDateTime.now())
-                .build();
+        CitaPrimerContacto cita =
+                CitaPrimerContacto.builder()
+                        .expedienteId(expediente.getId())
+                        .folio(expediente.getFolio())
+                        .quejosoId(dto.getQuejosoId())
+                        .quejosoNombre(dto.getQuejosoNombre())
+                        .analistaId(dto.getAnalistaId())
+                        .analistaNombre(dto.getAnalistaNombre())
+                        .fechaCita(LocalDate.parse(dto.getFechaCita()))
+                        .horaCita(LocalTime.parse(dto.getHoraCita()))
+                        .tipoCita(dto.getTipoCita())
+                        .motivo(dto.getMotivo())
+                        .estatus("PROGRAMADA")
+                        .fechaCreacion(LocalDateTime.now())
+                        .build();
 
-        CitaPrimerContacto guardada = citaPrimerContactoRepository.save(cita);
+        CitaPrimerContacto guardada =
+                citaPrimerContactoRepository.save(cita);
 
         return convertirADTO(guardada);
     }
-    public List<CitaDTO> listarPorQueja(Long quejaId) {
+
+    public List<CitaDTO> listarPorExpediente(Long expedienteId) {
         return citaPrimerContactoRepository
-                .findByQuejaIdOrderByFechaCitaDescHoraCitaDesc(quejaId)
+                .findByExpedienteIdOrderByFechaCitaDescHoraCitaDesc(
+                        expedienteId
+                )
                 .stream()
                 .map(this::convertirADTO)
                 .toList();
@@ -102,7 +132,7 @@ public class CitaPrimerContactoService {
 
         return CitaDTO.builder()
                 .id(cita.getId())
-                .quejaId(cita.getQuejaId())
+                .expedienteId(cita.getExpedienteId())
                 .folio(cita.getFolio())
                 .quejosoId(cita.getQuejosoId())
                 .quejosoNombre(cita.getQuejosoNombre())

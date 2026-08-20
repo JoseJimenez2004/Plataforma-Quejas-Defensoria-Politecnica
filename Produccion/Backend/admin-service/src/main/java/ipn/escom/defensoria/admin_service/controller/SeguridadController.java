@@ -3,7 +3,6 @@ package ipn.escom.defensoria.admin_service.controller;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,11 +31,13 @@ import jakarta.servlet.http.HttpServletRequest;
 @Tag(name = "Seguridad y Respaldos", description = "Respaldos manuales/automáticos y bitácora de acciones")
 public class SeguridadController {
 
-    @Autowired
-    private RespaldoService respaldoService;
+    private final RespaldoService respaldoService;
+    private final BitacoraService bitacoraService;
 
-    @Autowired
-    private BitacoraService bitacoraService;
+    public SeguridadController(RespaldoService respaldoService, BitacoraService bitacoraService) {
+        this.respaldoService = respaldoService;
+        this.bitacoraService = bitacoraService;
+    }
 
     @GetMapping("/respaldos")
     @Operation(summary = "Lista los respaldos disponibles, más reciente primero")

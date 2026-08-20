@@ -4,7 +4,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -18,19 +17,27 @@ public class NotificacionClienteService {
 
     private static final Logger log = LoggerFactory.getLogger(NotificacionClienteService.class);
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private static final String ENDPOINT_REGISTRAR = "/api/notificaciones/registrar";
+    private static final String ENDPOINT_ENVIAR = "/api/notificaciones/enviar";
+    private static final String TIPO_QUEJA_CREADA = "QUEJA_CREADA";
 
-    @Value("${notificaciones.service.url}")
-    private String notificacionesServiceUrl;
+    private final RestTemplate restTemplate;
+    private final String notificacionesServiceUrl;
+
+    public NotificacionClienteService(
+            RestTemplate restTemplate,
+            @Value("${notificaciones.service.url}") String notificacionesServiceUrl) {
+        this.restTemplate = restTemplate;
+        this.notificacionesServiceUrl = notificacionesServiceUrl;
+    }
 
     public void notificarQuejaCreada(String correoDestino, String folio) {
         try {
             restTemplate.postForObject(
-                    notificacionesServiceUrl + "/api/notificaciones/registrar",
+                    notificacionesServiceUrl + ENDPOINT_REGISTRAR,
                     Map.of(
                             "correoDestino", correoDestino,
-                            "tipo", "QUEJA_CREADA",
+                            "tipo", TIPO_QUEJA_CREADA,
                             "titulo", "Queja registrada",
                             "mensaje", "Tu queja con folio " + folio + " fue registrada correctamente. "
                                     + "Te avisaremos aquí cuando cambie de estatus.",
@@ -61,7 +68,7 @@ public class NotificacionClienteService {
                     + "en la sección \"Consultar folio\" de la plataforma.\n\n"
                     + "Defensoría de los Derechos Politécnicos.";
             restTemplate.postForObject(
-                    notificacionesServiceUrl + "/api/notificaciones/enviar",
+                    notificacionesServiceUrl + ENDPOINT_ENVIAR,
                     Map.of("destinatario", correoTutor, "asunto", asunto, "cuerpo", cuerpo),
                     String.class);
         } catch (Exception ex) {

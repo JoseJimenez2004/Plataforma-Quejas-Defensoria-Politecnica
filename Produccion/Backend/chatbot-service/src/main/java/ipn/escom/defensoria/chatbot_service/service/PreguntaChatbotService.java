@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ipn.escom.defensoria.chatbot_service.dto.PreguntaChatbotRequest;
@@ -18,8 +17,11 @@ import ipn.escom.defensoria.chatbot_service.repository.PreguntaChatbotRepository
 @Service
 public class PreguntaChatbotService {
 
-    @Autowired
-    private PreguntaChatbotRepository preguntaChatbotRepository;
+    private final PreguntaChatbotRepository preguntaChatbotRepository;
+
+    public PreguntaChatbotService(PreguntaChatbotRepository preguntaChatbotRepository) {
+        this.preguntaChatbotRepository = preguntaChatbotRepository;
+    }
 
     /**
      * Menú completo del mini-chat para el portal del quejoso: categorías en el orden en que

@@ -9,6 +9,8 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/** Este servicio nunca emite tokens, solo verifica los que ya emitieron auth-service (quejoso)
+ * o admin-service (personal) -- mismo jwt.secret compartido entre todos los microservicios. */
 @Component
 public class JwtUtil {
 

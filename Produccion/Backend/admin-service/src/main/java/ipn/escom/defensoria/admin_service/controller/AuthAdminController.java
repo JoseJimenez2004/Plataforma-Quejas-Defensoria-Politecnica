@@ -1,6 +1,5 @@
 package ipn.escom.defensoria.admin_service.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,14 +21,15 @@ import jakarta.servlet.http.HttpServletRequest;
 @Tag(name = "Auth Admin", description = "Login del personal administrativo")
 public class AuthAdminController {
 
-    @Autowired
-    private PersonalAdministrativoService personalService;
+    private final PersonalAdministrativoService personalService;
+    private final JwtUtil jwtUtil;
+    private final BitacoraService bitacoraService;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private BitacoraService bitacoraService;
+    public AuthAdminController(PersonalAdministrativoService personalService, JwtUtil jwtUtil, BitacoraService bitacoraService) {
+        this.personalService = personalService;
+        this.jwtUtil = jwtUtil;
+        this.bitacoraService = bitacoraService;
+    }
 
     @PostMapping("/login")
     @Operation(summary = "Login de personal administrativo (cualquier rol)")

@@ -3,7 +3,6 @@ package ipn.escom.defensoria.queja_service.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ipn.escom.defensoria.queja_service.dto.RespuestaConciliacionRequest;
@@ -13,8 +12,15 @@ import ipn.escom.defensoria.queja_service.repository.AcuerdoConciliacionReposito
 @Service
 public class ConciliacionService {
 
-    @Autowired
-    private AcuerdoConciliacionRepository acuerdoConciliacionRepository;
+    private static final String ESTADO_PENDIENTE = "PENDIENTE";
+    private static final String ESTADO_ACEPTADO = "ACEPTADO";
+    private static final String ESTADO_RECHAZADO = "RECHAZADO";
+
+    private final AcuerdoConciliacionRepository acuerdoConciliacionRepository;
+
+    public ConciliacionService(AcuerdoConciliacionRepository acuerdoConciliacionRepository) {
+        this.acuerdoConciliacionRepository = acuerdoConciliacionRepository;
+    }
 
     /** Todos los acuerdos de conciliación dirigidos al usuario autenticado (a través de
      * cualquiera de sus quejas), más reciente primero. */
@@ -31,10 +37,10 @@ public class ConciliacionService {
         if (!acuerdo.getCorreoInstitucional().equalsIgnoreCase(correo)) {
             throw new RuntimeException("Ese acuerdo no corresponde a tu cuenta.");
         }
-        if (!"PENDIENTE".equalsIgnoreCase(acuerdo.getEstado())) {
+        if (!ESTADO_PENDIENTE.equalsIgnoreCase(acuerdo.getEstado())) {
             throw new RuntimeException("Este acuerdo ya fue respondido anteriormente.");
         }
-        if (!"ACEPTADO".equalsIgnoreCase(datos.getEstado()) && !"RECHAZADO".equalsIgnoreCase(datos.getEstado())) {
+        if (!ESTADO_ACEPTADO.equalsIgnoreCase(datos.getEstado()) && !ESTADO_RECHAZADO.equalsIgnoreCase(datos.getEstado())) {
             throw new RuntimeException("La respuesta debe ser ACEPTADO o RECHAZADO.");
         }
 

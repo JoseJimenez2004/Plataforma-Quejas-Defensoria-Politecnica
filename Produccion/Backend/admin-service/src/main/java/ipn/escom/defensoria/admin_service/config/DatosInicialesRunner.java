@@ -2,7 +2,6 @@ package ipn.escom.defensoria.admin_service.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -21,11 +20,13 @@ public class DatosInicialesRunner implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DatosInicialesRunner.class);
     private static final String PASSWORD_INICIAL = "Defensoria2026!";
 
-    @Autowired
-    private PersonalAdministrativoRepository repository;
+    private final PersonalAdministrativoRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public DatosInicialesRunner(PersonalAdministrativoRepository repository, PasswordEncoder passwordEncoder) {
+        this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public void run(String... args) {

@@ -6,11 +6,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface NotaAnalisisRepository extends JpaRepository<NotaAnalisis, Long> {
+public interface NotaAnalisisRepository
+        extends JpaRepository<NotaAnalisis, Long> {
 
-    List<NotaAnalisis> findByQuejaIdOrderByFechaCreacionDesc(Long quejaId);
+    List<NotaAnalisis> findByExpedienteIdOrderByFechaCreacionDesc(
+            Long expedienteId
+    );
 
-    List<NotaAnalisis> findByFolioOrderByFechaCreacionDesc(String folio);
+    List<NotaAnalisis> findByFolioOrderByFechaCreacionDesc(
+            String folio
+    );
 
-    Optional<NotaAnalisis> findTopByQuejaIdOrderByFechaCreacionDesc(Long quejaId);
+    Optional<NotaAnalisis> findTopByExpedienteIdOrderByFechaCreacionDesc(
+            Long expedienteId
+    );
 }

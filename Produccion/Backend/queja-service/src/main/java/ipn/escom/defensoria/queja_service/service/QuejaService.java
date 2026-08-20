@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,12 +21,18 @@ public class QuejaService {
 
     private static final String ORIGEN_AUTENTICADO = "AUTENTICADO";
     private static final String ORIGEN_PUBLICO = "PUBLICO";
+    private static final String ESTATUS_RECIBIDA = "RECIBIDA";
+    private static final String PREFIJO_FOLIO = "FOL-";
+    private static final int LONGITUD_UUID_FOLIO = 8;
+    private static final int LONGITUD_MAXIMA_IDENTIFICACION = 12;
 
-    @Autowired
-    private QuejaRepository quejaRepository;
+    private final QuejaRepository quejaRepository;
+    private final NotificacionClienteService notificacionClienteService;
 
-    @Autowired
-    private NotificacionClienteService notificacionClienteService;
+    public QuejaService(QuejaRepository quejaRepository, NotificacionClienteService notificacionClienteService) {
+        this.quejaRepository = quejaRepository;
+        this.notificacionClienteService = notificacionClienteService;
+    }
 
     public boolean validarFolioYCorreo(String folio, String correo) {
         return quejaRepository.findByNumeroFolioAndCorreoInstitucional(folio, correo).isPresent();
@@ -66,8 +71,8 @@ public class QuejaService {
     public Queja editarMiQueja(String folio, String correo, EditarQuejaRequest datos) {
         Queja queja = obtenerMiQueja(folio, correo);
 
-        String estatusActual = queja.getEstatus() == null ? "RECIBIDA" : queja.getEstatus();
-        if (!"RECIBIDA".equalsIgnoreCase(estatusActual)) {
+        String estatusActual = queja.getEstatus() == null ? ESTATUS_RECIBIDA : queja.getEstatus();
+        if (!ESTATUS_RECIBIDA.equalsIgnoreCase(estatusActual)) {
             throw new RuntimeException(
                     "Esta queja ya está en revisión y no se puede editar. Su información es definitiva.");
         }
@@ -207,7 +212,7 @@ public class QuejaService {
         if (!datos.getNumeroIdentificacion().matches("\\d+")) {
             throw new RuntimeException("El número de boleta o de empleado solo puede contener números.");
         }
-        if (datos.getNumeroIdentificacion().length() > 12) {
+        if (datos.getNumeroIdentificacion().length() > LONGITUD_MAXIMA_IDENTIFICACION) {
             throw new RuntimeException("El número de boleta o de empleado no puede tener más de 12 caracteres.");
         }
         if (esVacio(datos.getUnidadAcademicaClave())) {
@@ -226,7 +231,7 @@ public class QuejaService {
     }
 
     private String generarFolio() {
-        return "FOL-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        return PREFIJO_FOLIO + UUID.randomUUID().toString().substring(0, LONGITUD_UUID_FOLIO).toUpperCase();
     }
 
     private void agregarEvidencias(Queja queja, List<MultipartFile> archivos) {

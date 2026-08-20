@@ -2,7 +2,6 @@ package ipn.escom.defensoria.admin_service.controller;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -28,11 +27,13 @@ import jakarta.servlet.http.HttpServletRequest;
 @Tag(name = "Perfil", description = "Autogestión de la propia cuenta de personal administrativo")
 public class PerfilController {
 
-    @Autowired
-    private PersonalAdministrativoService personalService;
+    private final PersonalAdministrativoService personalService;
+    private final BitacoraService bitacoraService;
 
-    @Autowired
-    private BitacoraService bitacoraService;
+    public PerfilController(PersonalAdministrativoService personalService, BitacoraService bitacoraService) {
+        this.personalService = personalService;
+        this.bitacoraService = bitacoraService;
+    }
 
     @PutMapping("/password")
     @Operation(summary = "Cambia la contraseña de la cuenta actualmente autenticada")

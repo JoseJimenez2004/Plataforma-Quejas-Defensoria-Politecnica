@@ -4,7 +4,6 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,13 +18,20 @@ public class PersonalAdministrativoService {
 
     private static final String CARACTERES_PASSWORD =
             "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%";
+    /** Mínimo 8 caracteres, al menos una mayúscula y un número (símbolos opcionales). */
+    private static final String PASSWORD_REGEX = "^(?=.*[A-Z])(?=.*\\d).{8,}$";
+    private static final int LONGITUD_PASSWORD_TEMPORAL = 8;
+    private static final String PREFIJO_PASSWORD_TEMPORAL = "Tmp-";
+
     private final SecureRandom random = new SecureRandom();
 
-    @Autowired
-    private PersonalAdministrativoRepository repository;
+    private final PersonalAdministrativoRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public PersonalAdministrativoService(PersonalAdministrativoRepository repository, PasswordEncoder passwordEncoder) {
+        this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public PersonalAdministrativo validarLogin(String correo, String password) {
         PersonalAdministrativo personal = repository.findByCorreoInstitucional(correo)
@@ -150,7 +156,7 @@ public class PersonalAdministrativoService {
         if (esVacio(password)) {
             throw new RuntimeException("La nueva contraseña no puede estar vacía.");
         }
-        if (!password.matches("^(?=.*[A-Z])(?=.*\\d).{8,}$")) {
+        if (!password.matches(PASSWORD_REGEX)) {
             throw new RuntimeException(
                     "La nueva contraseña debe tener al menos 8 caracteres, una mayúscula y un número. "
                             + "Puedes usar también símbolos y caracteres especiales.");
@@ -169,8 +175,8 @@ public class PersonalAdministrativoService {
     }
 
     private String generarPasswordTemporal() {
-        StringBuilder sb = new StringBuilder("Tmp-");
-        for (int i = 0; i < 8; i++) {
+        StringBuilder sb = new StringBuilder(PREFIJO_PASSWORD_TEMPORAL);
+        for (int i = 0; i < LONGITUD_PASSWORD_TEMPORAL; i++) {
             sb.append(CARACTERES_PASSWORD.charAt(random.nextInt(CARACTERES_PASSWORD.length())));
         }
         return sb.toString();

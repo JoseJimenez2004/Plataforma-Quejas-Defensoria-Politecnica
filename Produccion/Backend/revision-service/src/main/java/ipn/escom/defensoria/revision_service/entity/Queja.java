@@ -31,7 +31,7 @@ import lombok.ToString;
 @Data
 @Entity
 @Table(name = "quejas")
-public class Queja {
+public class  Queja {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -122,6 +122,16 @@ public class Queja {
 
     @Column(name = "fecha_turnado")
     private LocalDateTime fechaTurnado;
+
+    /**
+     * Folio generado por Primer Contacto cuando esta queja
+     * es aceptada en esa etapa.
+     * Ejemplo: PC-A1B2C3D4
+     * No es un ID ni una llave foránea.
+     * Es la referencia administrativa entre áreas.
+     */
+    @Column(name = "folio_primer_contacto", unique = true)
+    private String folioPrimerContacto;
 
     // ---- Datos exclusivos del Registro Manual (documento físico) ----
 
