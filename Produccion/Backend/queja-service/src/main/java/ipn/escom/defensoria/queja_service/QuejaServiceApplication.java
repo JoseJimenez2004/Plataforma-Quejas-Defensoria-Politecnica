@@ -4,8 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class QuejasServiceApplication {
+public class QuejaServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(QuejasServiceApplication.class, args);
+        SpringApplication.run(QuejaServiceApplication.class, args);
     }
 }

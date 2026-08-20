@@ -2,7 +2,6 @@ package ipn.escom.defensoria.notificaciones_service.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ipn.escom.defensoria.notificaciones_service.entity.Notificacion;
@@ -12,8 +11,13 @@ import ipn.escom.defensoria.notificaciones_service.repository.NotificacionReposi
 @Service
 public class NotificacionService {
 
-    @Autowired
-    private NotificacionRepository notificacionRepository;
+    private static final String TIPO_POR_DEFECTO = "GENERAL";
+
+    private final NotificacionRepository notificacionRepository;
+
+    public NotificacionService(NotificacionRepository notificacionRepository) {
+        this.notificacionRepository = notificacionRepository;
+    }
 
     public Notificacion registrar(RegistrarNotificacionRequest datos) {
         if (esVacio(datos.getCorreoDestino()) || esVacio(datos.getTitulo())) {
@@ -21,7 +25,7 @@ public class NotificacionService {
         }
         Notificacion notificacion = new Notificacion();
         notificacion.setCorreoDestino(datos.getCorreoDestino());
-        notificacion.setTipo(esVacio(datos.getTipo()) ? "GENERAL" : datos.getTipo());
+        notificacion.setTipo(esVacio(datos.getTipo()) ? TIPO_POR_DEFECTO : datos.getTipo());
         notificacion.setTitulo(datos.getTitulo());
         notificacion.setMensaje(datos.getMensaje());
         notificacion.setEnlace(datos.getEnlace());

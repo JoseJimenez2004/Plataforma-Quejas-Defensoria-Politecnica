@@ -3,7 +3,6 @@ package ipn.escom.defensoria.notificaciones_service.controller;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,8 +24,11 @@ import ipn.escom.defensoria.notificaciones_service.service.NotificacionService;
 @Tag(name = "Notificaciones", description = "Centro de notificaciones persistido por usuario")
 public class NotificacionController {
 
-    @Autowired
-    private NotificacionService notificacionService;
+    private final NotificacionService notificacionService;
+
+    public NotificacionController(NotificacionService notificacionService) {
+        this.notificacionService = notificacionService;
+    }
 
     // Público (ver WebConfig): lo llaman otros microservicios (auth-service, queja-service,
     // revision-service) para dejar un aviso -- no manda correo, solo persiste.

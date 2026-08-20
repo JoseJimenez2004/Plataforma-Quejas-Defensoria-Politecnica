@@ -11,7 +11,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,8 +22,24 @@ import ipn.escom.defensoria.catalogo_service.repository.DependenciaRepository;
 @Service
 public class DependenciaService {
 
-    @Autowired
-    private DependenciaRepository dependenciaRepository;
+    /** Tipo asignado por defecto cuando la columna "Tipo" viene vacía en la importación. */
+    private static final String TIPO_POR_DEFECTO = "UNIDAD_ACADEMICA";
+    /** Nivel jerárquico asignado por defecto cuando no se especifica uno. */
+    private static final int NIVEL_POR_DEFECTO = 1;
+
+    // Columnas esperadas en el Excel de importación (encabezado en la fila 1).
+    private static final int COL_CLAVE = 0;
+    private static final int COL_NOMBRE = 1;
+    private static final int COL_ABREVIATURA = 2;
+    private static final int COL_TIPO = 3;
+    private static final int COL_CORREO_CONTACTO = 4;
+    private static final int COL_NOMBRE_TITULAR = 5;
+
+    private final DependenciaRepository dependenciaRepository;
+
+    public DependenciaService(DependenciaRepository dependenciaRepository) {
+        this.dependenciaRepository = dependenciaRepository;
+    }
 
     public List<Dependencia> listarActivas() {
         return dependenciaRepository.findByActivoTrueOrderByNombreAsc();
@@ -78,7 +93,7 @@ public class DependenciaService {
         dependencia.setClavePadre(datos.getClavePadre());
         dependencia.setAbreviatura(datos.getAbreviatura());
         dependencia.setCategoria(datos.getCategoria());
-        dependencia.setNivel(datos.getNivel() != null ? datos.getNivel() : 1);
+        dependencia.setNivel(datos.getNivel() != null ? datos.getNivel() : NIVEL_POR_DEFECTO);
         dependencia.setCorreoContacto(datos.getCorreoContacto());
         dependencia.setNombreTitular(datos.getNombreTitular());
     }
@@ -102,7 +117,7 @@ public class DependenciaService {
                     continue;
                 }
                 try {
-                    String clave = textoCelda(fila, 0);
+                    String clave = textoCelda(fila, COL_CLAVE);
                     if (esVacio(clave)) {
                         errores.add("Fila " + (i + 1) + ": falta la clave, se omitió.");
                         continue;
@@ -110,12 +125,12 @@ public class DependenciaService {
 
                     DependenciaRequest datos = new DependenciaRequest();
                     datos.setClave(clave);
-                    datos.setNombre(textoCelda(fila, 1));
-                    datos.setAbreviatura(textoCelda(fila, 2));
-                    datos.setTipo(esVacio(textoCelda(fila, 3)) ? "UNIDAD_ACADEMICA" : textoCelda(fila, 3));
-                    datos.setCorreoContacto(textoCelda(fila, 4));
-                    datos.setNombreTitular(textoCelda(fila, 5));
-                    datos.setNivel(1);
+                    datos.setNombre(textoCelda(fila, COL_NOMBRE));
+                    datos.setAbreviatura(textoCelda(fila, COL_ABREVIATURA));
+                    datos.setTipo(esVacio(textoCelda(fila, COL_TIPO)) ? TIPO_POR_DEFECTO : textoCelda(fila, COL_TIPO));
+                    datos.setCorreoContacto(textoCelda(fila, COL_CORREO_CONTACTO));
+                    datos.setNombreTitular(textoCelda(fila, COL_NOMBRE_TITULAR));
+                    datos.setNivel(NIVEL_POR_DEFECTO);
 
                     if (dependenciaRepository.findByClave(clave).isPresent()) {
                         editar(clave, datos);
@@ -136,7 +151,7 @@ public class DependenciaService {
     }
 
     private boolean esFilaVacia(Row fila) {
-        return esVacio(textoCelda(fila, 0)) && esVacio(textoCelda(fila, 1));
+        return esVacio(textoCelda(fila, COL_CLAVE)) && esVacio(textoCelda(fila, COL_NOMBRE));
     }
 
     private static final DataFormatter FORMATEADOR = new DataFormatter();

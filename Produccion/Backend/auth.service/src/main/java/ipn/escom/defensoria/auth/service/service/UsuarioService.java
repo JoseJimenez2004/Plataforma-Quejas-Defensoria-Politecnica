@@ -6,8 +6,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import ipn.escom.defensoria.auth.service.entity.Usuario;
 import ipn.escom.defensoria.auth.service.repository.UsuarioRepository;
-import ipn.escom.defensoria.auth.service.model.LoginModel; 
-import org.springframework.beans.factory.annotation.Autowired;
+import ipn.escom.defensoria.auth.service.model.LoginModel;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ipn.escom.defensoria.auth.service.client.QuejasClient;
@@ -19,11 +18,27 @@ import ipn.escom.defensoria.auth.service.model.QuejaResumenModel;
 @Service
 public class UsuarioService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    /** Remitente usado en todos los correos que manda este servicio (código de recuperación,
+     * confirmación de cambio de contraseña, bienvenida). */
+    private static final String REMITENTE_CORREO = "jair100flo@gmail.com";
+    /** Mínimo 8 caracteres, al menos una mayúscula y un número (símbolos opcionales). */
+    private static final String PASSWORD_REGEX = "^(?=.*[A-Z])(?=.*\\d).{8,}$";
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JavaMailSender mailSender;
+    private final QuejasClient quejasClient;
+
+    public UsuarioService(
+            UsuarioRepository usuarioRepository,
+            PasswordEncoder passwordEncoder,
+            JavaMailSender mailSender,
+            QuejasClient quejasClient) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.mailSender = mailSender;
+        this.quejasClient = quejasClient;
+    }
 
     public Usuario validarLogin(LoginModel model) {
         // 1. Buscar al usuario por correo institucional
@@ -44,9 +59,6 @@ public class UsuarioService {
         return usuario;
     }
 
-    @Autowired
-    private JavaMailSender mailSender;
-
     public void generarCodigoRecuperacion(String correo) {
         Usuario usuario = usuarioRepository.findByCorreoInstitucional(correo)
                 .orElseThrow(() -> new RuntimeException("Correo no registrado"));
@@ -64,7 +76,7 @@ public class UsuarioService {
 
     private void enviarCorreoCodigo(String destinatario, String codigo) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("jair100flo@gmail.com");
+        message.setFrom(REMITENTE_CORREO);
         message.setTo(destinatario);
         message.setSubject("Código de Recuperación - Defensoría");
         message.setText("Hola,\n\nTu código de verificación para restablecer tu contraseña es: "
@@ -105,7 +117,7 @@ public class UsuarioService {
 
     private void enviarCorreoConfirmacionCambio(String destinatario) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("jair100flo@gmail.com");
+        message.setFrom(REMITENTE_CORREO);
         message.setTo(destinatario);
         message.setSubject("Tu contraseña fue restablecida - Defensoría");
         message.setText("Hola,\n\n"
@@ -126,15 +138,11 @@ public class UsuarioService {
         if (p1 == null || p1.isBlank()) {
             throw new RuntimeException("La contraseña no puede estar vacía.");
         }
-        String regex = "^(?=.*[A-Z])(?=.*\\d).{8,}$";
-        if (!p1.matches(regex)) {
+        if (!p1.matches(PASSWORD_REGEX)) {
             throw new RuntimeException(
                     "La contraseña no cumple con los requisitos mínimos: 8 caracteres, una mayúscula y un número. Puedes usar también símbolos y caracteres especiales.");
         }
     }
-
-    @Autowired
-    private QuejasClient quejasClient;
 
     public void activarCuenta(ActivacionCuentaModel model) {
         // 1. Validar contraseñas
@@ -203,7 +211,7 @@ public class UsuarioService {
 
     private void enviarCorreoBienvenida(String destinatario, String nombre) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("jair100flo@gmail.com");
+        message.setFrom(REMITENTE_CORREO);
         message.setTo(destinatario);
         message.setSubject("Bienvenido a la Defensoría de los Derechos Politécnicos");
         message.setText("Hola " + nombre + ",\n\n"

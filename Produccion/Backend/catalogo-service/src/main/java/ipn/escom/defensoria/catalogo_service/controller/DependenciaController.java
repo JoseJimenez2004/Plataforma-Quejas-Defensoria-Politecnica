@@ -1,7 +1,6 @@
 package ipn.escom.defensoria.catalogo_service.controller;
 
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,8 +24,11 @@ import ipn.escom.defensoria.catalogo_service.service.DependenciaService;
 @Tag(name = "Dependencias", description = "Catálogo de dependencias del IPN (secretarías, direcciones, unidades académicas, etc.)")
 public class DependenciaController {
 
-    @Autowired
-    private DependenciaService dependenciaService;
+    private final DependenciaService dependenciaService;
+
+    public DependenciaController(DependenciaService dependenciaService) {
+        this.dependenciaService = dependenciaService;
+    }
 
     @GetMapping
     @Operation(summary = "Lista todas las dependencias activas, opcionalmente filtradas por tipo")

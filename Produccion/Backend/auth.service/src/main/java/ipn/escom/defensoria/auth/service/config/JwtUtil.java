@@ -1,28 +1,32 @@
 package ipn.escom.defensoria.auth.service.config;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+
+/**
+ * Mismo jwt.secret compartido con admin-service/catalogo-service/chatbot-service/
+ * notificaciones-service/queja-service -- un token emitido aquí es válido en cualquier otro
+ * microservicio (y viceversa). A diferencia de los tokens de personal administrativo (emitidos
+ * por admin-service), los tokens de quejoso NO llevan claim "rol": quedan autenticados pero
+ * sin ningún rol, tal como ya asumen los JwtAuthenticationFilter del resto de servicios.
+ */
 @Component
 public class JwtUtil {
 
-    // La llave se inyecta desde application.yml, que a su vez toma el valor de la variable de entorno JWT_SECRET
     private final Key key;
-    
-    // Tiempo de expiración: 1 hora
     private final long tiempoExpiracion = 3600000;
 
     public JwtUtil(@Value("${jwt.secret}") String secret) {
-        // La llave debe tener al menos 32 caracteres para HS256
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ipn.escom.defensoria.admin_service.entity.PlantillaDocumento;
@@ -15,8 +14,11 @@ import jakarta.annotation.PostConstruct;
 @Service
 public class PlantillaService {
 
-    @Autowired
-    private PlantillaDocumentoRepository repository;
+    private final PlantillaDocumentoRepository repository;
+
+    public PlantillaService(PlantillaDocumentoRepository repository) {
+        this.repository = repository;
+    }
 
     /** Datos de ejemplo usados solo para la previsualización -- nunca se guardan. */
     private static final Map<String, String> DATOS_EJEMPLO = Map.of(

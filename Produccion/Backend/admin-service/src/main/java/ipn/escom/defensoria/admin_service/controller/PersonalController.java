@@ -2,7 +2,6 @@ package ipn.escom.defensoria.admin_service.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,11 +32,13 @@ import jakarta.servlet.http.HttpServletRequest;
 @Tag(name = "Personal Administrativo", description = "Gestión de usuarios y roles del personal")
 public class PersonalController {
 
-    @Autowired
-    private PersonalAdministrativoService personalService;
+    private final PersonalAdministrativoService personalService;
+    private final BitacoraService bitacoraService;
 
-    @Autowired
-    private BitacoraService bitacoraService;
+    public PersonalController(PersonalAdministrativoService personalService, BitacoraService bitacoraService) {
+        this.personalService = personalService;
+        this.bitacoraService = bitacoraService;
+    }
 
     @GetMapping
     @Operation(summary = "Lista todo el personal administrativo")

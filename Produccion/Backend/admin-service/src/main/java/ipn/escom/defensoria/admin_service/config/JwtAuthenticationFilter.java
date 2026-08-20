@@ -3,7 +3,8 @@ package ipn.escom.defensoria.admin_service.config;
 import java.io.IOException;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,17 +26,26 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
+    private static final String AUTH_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String ROLE_PREFIX = "ROLE_";
+
+    private final JwtUtil jwtUtil;
+
+    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
+        String authHeader = request.getHeader(AUTH_HEADER);
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+        if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
+            String token = authHeader.substring(BEARER_PREFIX.length());
             try {
                 String correo = jwtUtil.extraerCorreo(token);
 
@@ -43,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     if (jwtUtil.validarToken(token, correo)) {
                         String rol = jwtUtil.extraerRol(token);
                         List<SimpleGrantedAuthority> authorities = (rol != null)
-                                ? List.of(new SimpleGrantedAuthority("ROLE_" + rol))
+                                ? List.of(new SimpleGrantedAuthority(ROLE_PREFIX + rol))
                                 : List.of();
 
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -54,6 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } catch (Exception ex) {
                 // Token corrupto/expirado/mal firmado -- lo dejamos sin autenticar, la cadena
                 // de seguridad se encarga de responder 401/403 más adelante.
+                log.debug("Token JWT inválido o expirado: {}", ex.getMessage());
             }
         }
         filterChain.doFilter(request, response);

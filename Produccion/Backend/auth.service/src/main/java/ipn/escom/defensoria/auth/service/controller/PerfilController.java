@@ -1,6 +1,5 @@
 package ipn.escom.defensoria.auth.service.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,8 +24,11 @@ import ipn.escom.defensoria.auth.service.service.UsuarioService;
 @Tag(name = "Perfil", description = "Datos de contacto y generales del quejoso autenticado")
 public class PerfilController {
 
-    @Autowired
-    private UsuarioService usuarioService;
+    private final UsuarioService usuarioService;
+
+    public PerfilController(UsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
+    }
 
     @GetMapping("/me")
     @Operation(summary = "Obtiene el perfil completo del usuario autenticado")

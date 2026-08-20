@@ -8,7 +8,6 @@ import ipn.escom.defensoria.auth.service.model.AuthResponseModel;
 import ipn.escom.defensoria.auth.service.service.UsuarioService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,15 +27,17 @@ import java.util.Map;
 public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+    private static final String TIPO_NOTIFICACION_LOGIN = "LOGIN";
 
-    @Autowired
-    private UsuarioService usuarioService;
+    private final UsuarioService usuarioService;
+    private final JwtUtil jwtUtil;
+    private final NotificacionesClient notificacionesClient;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private NotificacionesClient notificacionesClient;
+    public AuthController(UsuarioService usuarioService, JwtUtil jwtUtil, NotificacionesClient notificacionesClient) {
+        this.usuarioService = usuarioService;
+        this.jwtUtil = jwtUtil;
+        this.notificacionesClient = notificacionesClient;
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginModel model) {
@@ -55,7 +56,7 @@ public class AuthController {
                 String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
                 notificacionesClient.registrar(Map.of(
                         "correoDestino", usuario.getCorreoInstitucional(),
-                        "tipo", "LOGIN",
+                        "tipo", TIPO_NOTIFICACION_LOGIN,
                         "titulo", "Inicio de sesión",
                         "mensaje", "Se inició sesión en tu cuenta el " + fecha + "."));
             } catch (Exception ex) {

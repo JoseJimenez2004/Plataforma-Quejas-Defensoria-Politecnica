@@ -1,6 +1,5 @@
 package ipn.escom.defensoria.admin_service.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +18,11 @@ import ipn.escom.defensoria.admin_service.service.DashboardService;
 @Tag(name = "Dashboard", description = "Resumen general del sistema")
 public class DashboardController {
 
-    @Autowired
-    private DashboardService dashboardService;
+    private final DashboardService dashboardService;
+
+    public DashboardController(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
+    }
 
     @GetMapping("/resumen")
     @Operation(summary = "Resumen para las 4 tarjetas de Configuración General")
