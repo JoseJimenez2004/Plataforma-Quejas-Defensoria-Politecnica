@@ -2,7 +2,6 @@ package ipn.escom.defensoria.revision_service.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,11 +22,13 @@ import ipn.escom.defensoria.revision_service.service.PersonalRefService;
 @Tag(name = "Catálogos (Revisión)", description = "Opciones de área y defensor para canalizar una queja")
 public class CatalogosRevisionController {
 
-    @Autowired
-    private CatalogoRefService catalogoRefService;
+    private final CatalogoRefService catalogoRefService;
+    private final PersonalRefService personalRefService;
 
-    @Autowired
-    private PersonalRefService personalRefService;
+    public CatalogosRevisionController(CatalogoRefService catalogoRefService, PersonalRefService personalRefService) {
+        this.catalogoRefService = catalogoRefService;
+        this.personalRefService = personalRefService;
+    }
 
     @GetMapping("/areas")
     @Operation(summary = "Lista de dependencias/unidades académicas (catalogo-service) para el combo de área")

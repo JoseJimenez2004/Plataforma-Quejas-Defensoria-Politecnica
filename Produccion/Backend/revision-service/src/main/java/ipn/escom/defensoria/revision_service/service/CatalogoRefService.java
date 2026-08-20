@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -20,17 +19,22 @@ public class CatalogoRefService {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogoRefService.class);
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private static final String ENDPOINT_DEPENDENCIAS = "/api/catalogos/dependencias";
+
+    private final RestTemplate restTemplate;
 
     @Value("${catalogo.service.url}")
     private String catalogoServiceUrl;
+
+    public CatalogoRefService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     @SuppressWarnings("unchecked")
     public List<AreaOpcionModel> listarAreas() {
         try {
             Map<String, Object>[] dependencias = restTemplate.getForObject(
-                    catalogoServiceUrl + "/api/catalogos/dependencias", Map[].class);
+                    catalogoServiceUrl + ENDPOINT_DEPENDENCIAS, Map[].class);
             if (dependencias == null) {
                 return List.of();
             }

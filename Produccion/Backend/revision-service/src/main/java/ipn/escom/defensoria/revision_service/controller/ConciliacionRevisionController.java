@@ -2,7 +2,6 @@ package ipn.escom.defensoria.revision_service.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -27,8 +26,11 @@ import ipn.escom.defensoria.revision_service.service.ConciliacionRevisionService
 @Tag(name = "Conciliación (Revisión)", description = "Emisión de acuerdos de conciliación al quejoso")
 public class ConciliacionRevisionController {
 
-    @Autowired
-    private ConciliacionRevisionService conciliacionService;
+    private final ConciliacionRevisionService conciliacionService;
+
+    public ConciliacionRevisionController(ConciliacionRevisionService conciliacionService) {
+        this.conciliacionService = conciliacionService;
+    }
 
     @PostMapping
     @Operation(summary = "Emite un nuevo acuerdo de conciliación para una queja por folio")

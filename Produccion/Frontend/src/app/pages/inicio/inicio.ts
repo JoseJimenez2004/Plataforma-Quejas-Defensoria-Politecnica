@@ -1,7 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 interface TabContenido {
   id: string;
@@ -12,15 +11,11 @@ interface TabContenido {
 @Component({
   selector: 'app-inicio',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, RouterLink],
   templateUrl: './inicio.html',
   styleUrl: './inicio.scss',
 })
 export class Inicio {
-  correo = '';
-  folio = '';
-  errorConsulta = '';
-
   readonly tabs = ['Difusión', 'Institucional', 'Publicaciones', 'Investigación', 'Servicios'];
   readonly tabActiva = signal(this.tabs[0]);
 
@@ -51,32 +46,11 @@ export class Inicio {
     ],
   };
 
-  constructor(private router: Router) {}
-
   get contenidoActivo(): TabContenido[] {
     return this.contenidoPorTab[this.tabActiva()] ?? [];
   }
 
   seleccionarTab(tab: string): void {
     this.tabActiva.set(tab);
-  }
-
-  consultar(): void {
-    this.errorConsulta = '';
-
-    if (!this.correo.trim() || !this.folio.trim()) {
-      this.errorConsulta = 'Ingresa tu correo y tu número de folio para poder consultar tu queja.';
-      return;
-    }
-
-    const correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.correo.trim());
-    if (!correoValido) {
-      this.errorConsulta = 'El correo no tiene un formato válido (ejemplo: nombre@dominio.com).';
-      return;
-    }
-
-    this.router.navigate(['/queja/consultar'], {
-      queryParams: { folio: this.folio.trim(), correo: this.correo.trim() },
-    });
   }
 }

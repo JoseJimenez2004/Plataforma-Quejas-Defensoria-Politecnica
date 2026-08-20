@@ -2,7 +2,6 @@ package ipn.escom.defensoria.revision_service.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ipn.escom.defensoria.revision_service.entity.AcuerdoConciliacion;
@@ -16,14 +15,18 @@ import ipn.escom.defensoria.revision_service.repository.QuejaRepository;
 @Service
 public class ConciliacionRevisionService {
 
-    @Autowired
-    private AcuerdoConciliacionRepository acuerdoConciliacionRepository;
+    private final AcuerdoConciliacionRepository acuerdoConciliacionRepository;
+    private final QuejaRepository quejaRepository;
+    private final NotificacionQuejaService notificacionService;
 
-    @Autowired
-    private QuejaRepository quejaRepository;
-
-    @Autowired
-    private NotificacionQuejaService notificacionService;
+    public ConciliacionRevisionService(
+            AcuerdoConciliacionRepository acuerdoConciliacionRepository,
+            QuejaRepository quejaRepository,
+            NotificacionQuejaService notificacionService) {
+        this.acuerdoConciliacionRepository = acuerdoConciliacionRepository;
+        this.quejaRepository = quejaRepository;
+        this.notificacionService = notificacionService;
+    }
 
     public AcuerdoConciliacion crear(CrearConciliacionRequest datos, String correoStaff) {
         Queja queja = quejaRepository.findByNumeroFolio(datos.getNumeroFolio())

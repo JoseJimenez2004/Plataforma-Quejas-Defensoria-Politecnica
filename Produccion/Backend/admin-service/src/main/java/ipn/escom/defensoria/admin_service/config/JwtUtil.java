@@ -16,7 +16,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
 /**
- * Mismo jwt.secret compartido con auth.service/queja-service/catalogo-service — un token
+ * Mismo jwt.secret compartido con auth-service/queja-service/catalogo-service — un token
  * emitido aquí es válido en cualquier otro microservicio (y viceversa). A diferencia de los
  * tokens de quejosos, estos SÍ llevan un claim "rol" para poder restringir qué puede hacer
  * cada tipo de cuenta de personal (@PreAuthorize en los controllers).
@@ -48,7 +48,7 @@ public class JwtUtil {
     }
 
     /** Puede ser null si el token no trae el claim "rol" (ej. tokens de quejosos emitidos por
-     * auth.service) — quien llame esto debe tratar null como "sin permisos de este panel". */
+     * auth-service) — quien llame esto debe tratar null como "sin permisos de este panel". */
     public String extraerRol(String token) {
         return extraerClaim(token, claims -> claims.get("rol", String.class));
     }

@@ -2,6 +2,8 @@ server:
   port: 8088
 
 spring:
+  application:
+    name: revision-service
   datasource:
     url: jdbc:postgresql://2.25.78.22:5432/defensoria_db
     username: postgres
@@ -29,8 +31,18 @@ notificaciones:
   service:
     url: http://2.25.78.22:8085
 
+# Mismo host/puerto que ya usa subdefensoria-service.yml para llegar a primer-contacto-service
+# (puerto 8082, ver get_port() en podman-compose.sh). Faltaba aquí -- PrimerContactoClientService
+# la necesita para poder turnar una queja.
+primer-contacto:
+  base-url: http://2.25.78.22:8082
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name}]"

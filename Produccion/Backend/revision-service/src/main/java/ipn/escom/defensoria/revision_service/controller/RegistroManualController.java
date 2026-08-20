@@ -2,7 +2,6 @@ package ipn.escom.defensoria.revision_service.controller;
 
 import java.time.LocalDate;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,8 +25,11 @@ import ipn.escom.defensoria.revision_service.service.RevisionQuejaService;
 @Tag(name = "Registro Manual", description = "Alta de quejas recibidas en documento físico")
 public class RegistroManualController {
 
-    @Autowired
-    private RevisionQuejaService revisionService;
+    private final RevisionQuejaService revisionService;
+
+    public RegistroManualController(RevisionQuejaService revisionService) {
+        this.revisionService = revisionService;
+    }
 
     @PostMapping(consumes = "multipart/form-data")
     @Operation(summary = "Registra una queja recibida en papel y genera su folio de seguimiento")

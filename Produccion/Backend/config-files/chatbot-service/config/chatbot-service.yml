@@ -2,6 +2,8 @@ server:
   port: 8089
 
 spring:
+  application:
+    name: chatbot-service
   datasource:
     url: jdbc:postgresql://2.25.78.22:5432/defensoria_db
     username: postgres
@@ -26,3 +28,7 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name}]"

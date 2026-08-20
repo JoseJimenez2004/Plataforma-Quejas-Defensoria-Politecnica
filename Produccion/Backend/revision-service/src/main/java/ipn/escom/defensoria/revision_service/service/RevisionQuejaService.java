@@ -7,7 +7,6 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,18 +32,24 @@ public class RevisionQuejaService {
     public static final String TURNADA = "TURNADA";
 
     private static final String ORIGEN_MANUAL = "MANUAL";
+    private static final String PREFIJO_FOLIO = "FOL-";
+    private static final int LONGITUD_UUID_FOLIO = 8;
 
-    @Autowired
-    private QuejaRepository quejaRepository;
+    private final QuejaRepository quejaRepository;
+    private final QuejaEvidenciaRepository evidenciaRepository;
+    private final NotificacionQuejaService notificacionService;
+    private final PrimerContactoClientService primerContactoClientService;
 
-    @Autowired
-    private QuejaEvidenciaRepository evidenciaRepository;
-
-    @Autowired
-    private NotificacionQuejaService notificacionService;
-
-    @Autowired
-    private PrimerContactoClientService primerContactoClientService;
+    public RevisionQuejaService(
+            QuejaRepository quejaRepository,
+            QuejaEvidenciaRepository evidenciaRepository,
+            NotificacionQuejaService notificacionService,
+            PrimerContactoClientService primerContactoClientService) {
+        this.quejaRepository = quejaRepository;
+        this.evidenciaRepository = evidenciaRepository;
+        this.notificacionService = notificacionService;
+        this.primerContactoClientService = primerContactoClientService;
+    }
 
     // ---------------- Bandeja de Entrada ----------------
 
@@ -352,7 +357,7 @@ public class RevisionQuejaService {
     }
 
     private String generarFolio() {
-        return "FOL-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        return PREFIJO_FOLIO + UUID.randomUUID().toString().substring(0, LONGITUD_UUID_FOLIO).toUpperCase();
     }
 
     private QuejaEvidencia convertirAEvidencia(MultipartFile archivo, Queja queja) {

@@ -54,6 +54,14 @@
       font-size: 0.9rem;
       font-weight: 600;
       line-height: 1.3;
+      // Antes el texto de cada ícono variaba entre 2 y 4 líneas según el label, dejando una
+      // línea base en zigzag. Se limita el ancho y el número de líneas para que el salto sea
+      // uniforme (2 líneas máximo, con "…" si algún label es más largo de lo previsto).
+      max-width: 165px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     &:hover span {

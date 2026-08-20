@@ -3,7 +3,6 @@ package ipn.escom.defensoria.revision_service.controller;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -28,11 +27,13 @@ import ipn.escom.defensoria.revision_service.service.RevisionQuejaService;
 @Tag(name = "Historial", description = "Trámites ya procesados (turnados o rechazados)")
 public class HistorialController {
 
-    @Autowired
-    private RevisionQuejaService revisionService;
+    private final RevisionQuejaService revisionService;
+    private final HistorialExportService exportService;
 
-    @Autowired
-    private HistorialExportService exportService;
+    public HistorialController(RevisionQuejaService revisionService, HistorialExportService exportService) {
+        this.revisionService = revisionService;
+        this.exportService = exportService;
+    }
 
     @GetMapping
     @Operation(summary = "Lista el historial, opcionalmente filtrado por texto libre, estatus y fecha")

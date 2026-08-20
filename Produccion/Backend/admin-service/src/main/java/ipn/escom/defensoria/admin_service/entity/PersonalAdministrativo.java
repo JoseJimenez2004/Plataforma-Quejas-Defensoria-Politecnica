@@ -15,7 +15,7 @@ import lombok.Data;
 /**
  * Cuenta de personal administrativo/staff (recepcionista, analista de primer contacto,
  * subdefensor, defensor, admin de sistemas) — NO es la misma tabla que "usuarios" de
- * auth.service (esa es para quejosos: tiene boleta, datos de tutor, etc. que no aplican aquí).
+ * auth-service (esa es para quejosos: tiene boleta, datos de tutor, etc. que no aplican aquí).
  * La crea/gestiona un Admin_Sistemas desde este panel.
  */
 @Data

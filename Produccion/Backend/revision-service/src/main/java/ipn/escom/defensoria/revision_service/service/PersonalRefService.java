@@ -2,7 +2,6 @@ package ipn.escom.defensoria.revision_service.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ipn.escom.defensoria.revision_service.entity.PersonalAdministrativo;
@@ -16,8 +15,11 @@ import ipn.escom.defensoria.revision_service.repository.PersonalAdministrativoRe
 @Service
 public class PersonalRefService {
 
-    @Autowired
-    private PersonalAdministrativoRepository repository;
+    private final PersonalAdministrativoRepository repository;
+
+    public PersonalRefService(PersonalAdministrativoRepository repository) {
+        this.repository = repository;
+    }
 
     public List<DefensorOpcionModel> listarDefensoresDisponibles() {
         List<PersonalAdministrativo> personal = repository.findByRolInAndActivoTrueOrderByNombreCompletoAsc(

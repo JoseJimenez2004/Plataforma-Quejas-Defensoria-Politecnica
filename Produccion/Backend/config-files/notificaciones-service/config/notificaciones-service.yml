@@ -2,6 +2,8 @@ server:
   port: 8085
 
 spring:
+  application:
+    name: notificaciones-service
   # Antes este servicio no tenía base de datos (era "fire-and-forget" de correo saliente) y
   # desactivaba por completo el motor automático de JPA/datasource. Ahora persiste un centro
   # de notificaciones por usuario (entidad Notificacion), así que necesita conexión real.
@@ -40,3 +42,7 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name}]"

@@ -1,6 +1,5 @@
 package ipn.escom.defensoria.revision_service.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +18,11 @@ import ipn.escom.defensoria.revision_service.service.RevisionQuejaService;
 @Tag(name = "Bandeja", description = "Panel de gestión de recepción")
 public class BandejaController {
 
-    @Autowired
-    private RevisionQuejaService revisionService;
+    private final RevisionQuejaService revisionService;
+
+    public BandejaController(RevisionQuejaService revisionService) {
+        this.revisionService = revisionService;
+    }
 
     @GetMapping
     @Operation(summary = "Contadores (pendientes/en proceso/turnadas hoy) y lista de quejas por trabajar")

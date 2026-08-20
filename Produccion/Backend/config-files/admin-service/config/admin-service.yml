@@ -2,6 +2,8 @@ server:
   port: 8087
 
 spring:
+  application:
+    name: admin-service
   datasource:
     url: jdbc:postgresql://2.25.78.22:5432/defensoria_db
     username: postgres
@@ -15,7 +17,14 @@ spring:
     compatibility-verifier:
       enabled: false
 
-# Mismo secreto que auth.service/queja-service/catalogo-service -- un JWT emitido por
+# Incluye el nombre del microservicio junto al nivel de log -- antes todos los contenedores
+# se veían idénticos en los logs (solo mostraban el hilo "main"). No aplica a
+# primer-contacto-service ni subdefensoria-service (fuera de este cambio).
+logging:
+  pattern:
+    level: "%5p [${spring.application.name}]"
+
+# Mismo secreto que auth-service/queja-service/catalogo-service -- un JWT emitido por
 # cualquiera de los servicios es valido para todos (ver JwtUtil de cada uno).
 jwt:
   secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026

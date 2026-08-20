@@ -3,7 +3,6 @@ package ipn.escom.defensoria.revision_service.controller;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,8 +33,11 @@ import ipn.escom.defensoria.revision_service.service.RevisionQuejaService;
 @Tag(name = "Quejas (Revisión)", description = "Validación, rechazo y canalización de una queja")
 public class QuejaRevisionController {
 
-    @Autowired
-    private RevisionQuejaService revisionService;
+    private final RevisionQuejaService revisionService;
+
+    public QuejaRevisionController(RevisionQuejaService revisionService) {
+        this.revisionService = revisionService;
+    }
 
     @GetMapping("/{folio}")
     @Operation(summary = "Detalle de una queja para validarla (resumen + documentos adjuntos)")

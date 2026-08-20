@@ -55,8 +55,11 @@
   position: absolute;
   right: 0;
   bottom: 74px;
-  width: min(360px, 88vw);
-  max-height: min(520px, 75vh);
+  // Antes ocupaba hasta 360px / 88vw de ancho y 75vh de alto -- en pantallas medianas tapaba
+  // íconos, pestañas y el footer. Se compacta el ancho y se deja algo más de margen vertical
+  // (65vh en vez de 75vh) para que quede claramente por encima del footer.
+  width: min(320px, 90vw);
+  max-height: min(460px, 65vh);
   display: flex;
   flex-direction: column;
   background: #fff;

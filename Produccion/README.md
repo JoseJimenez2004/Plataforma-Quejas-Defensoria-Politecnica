@@ -10,7 +10,7 @@ Este README es el punto de entrada. El detalle está en `docs/`.
 ```
 Produccion/
 ├── Backend/                  # Los 4 microservicios (Spring Boot / Maven) + su config de producción
-│   ├── auth.service/         # Login, JWT, activación de cuenta, recuperación de contraseña
+│   ├── auth-service/         # Login, JWT, activación de cuenta, recuperación de contraseña
 │   ├── queja-service/        # Registro y consulta de quejas, folios, evidencias
 │   ├── notificaciones-service/ # Envío de correos (activación, códigos, avisos)
 │   ├── catalogo-service/     # Catálogos institucionales (dependencias del IPN, puerto 8086)

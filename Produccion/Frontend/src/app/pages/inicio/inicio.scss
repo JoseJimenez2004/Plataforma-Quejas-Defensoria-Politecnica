@@ -57,10 +57,12 @@
     margin-bottom: 16px;
   }
 
-  .btn-primary {
+  .btn-primary,
+  .btn-secondary {
     display: inline-block;
     text-decoration: none;
     width: 100%;
+    text-align: center;
   }
 }
 
@@ -104,9 +106,18 @@
 }
 
 .tabs-note {
-  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
   color: var(--advertencia);
-  margin: 10px 0 20px;
+  background: #fff8e1;
+  border-left: 3px solid var(--advertencia);
+  border-radius: 4px;
+  padding: 12px 16px;
+  // Más separación de las pestañas de arriba y de las tarjetas de abajo -- antes quedaba
+  // pegado a ambas.
+  margin: 24px 0 32px;
 }
 
 .tabs-grid {
@@ -119,15 +130,44 @@
   background: #fff;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  // Sombra un poco más marcada para separarlas del fondo gris de la página (antes se veían
+  // "pegadas" y sin terminar) + efecto hover para reforzar que son elementos interactivos.
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+  }
 
   &__thumb {
-    height: 90px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: linear-gradient(135deg, var(--guinda-suave), var(--crema));
+
+    svg {
+      width: 34px;
+      height: 34px;
+      stroke: var(--guinda-vivo);
+      opacity: 0.55;
+    }
+  }
+
+  &__date {
+    display: block;
+    padding: 12px 14px 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    // Antes usaba --texto-suave (#666), muy claro y sin jerarquía frente al título.
+    color: var(--negro-inst);
   }
 
   &__title {
-    padding: 12px 14px 4px;
+    padding: 4px 14px 2px;
     margin: 0;
     font-size: 0.9rem;
     font-weight: 600;
@@ -135,10 +175,11 @@
     line-height: 1.35;
   }
 
-  &__date {
+  &__leer-mas {
     display: block;
-    padding: 0 14px 14px;
+    padding: 8px 14px 14px;
     font-size: 0.78rem;
-    color: var(--texto-suave);
+    font-weight: 600;
+    color: var(--guinda-vivo);
   }
 }

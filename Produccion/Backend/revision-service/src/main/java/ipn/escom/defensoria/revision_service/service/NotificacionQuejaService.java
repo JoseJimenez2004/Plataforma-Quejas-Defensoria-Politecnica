@@ -4,7 +4,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -17,11 +16,21 @@ public class NotificacionQuejaService {
 
     private static final Logger log = LoggerFactory.getLogger(NotificacionQuejaService.class);
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private static final String ENDPOINT_ENVIAR = "/api/notificaciones/enviar";
+    private static final String ENDPOINT_REGISTRAR = "/api/notificaciones/registrar";
+    private static final String TIPO_CAMBIO_ESTATUS = "CAMBIO_ESTATUS";
+    private static final String TIPO_CONCILIACION = "CONCILIACION";
+    private static final String ENLACE_MIS_QUEJAS = "/panel/mis-quejas/";
+    private static final String ENLACE_CONCILIACION = "/panel/conciliacion";
+
+    private final RestTemplate restTemplate;
 
     @Value("${notificaciones.service.url}")
     private String notificacionesServiceUrl;
+
+    public NotificacionQuejaService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     public void enviarCorreoRechazo(String destinatario, String nombreQuejoso, String folio, String motivoTexto) {
         String asunto = "Defensoría de los Derechos Politécnicos — Observaciones a tu queja " + folio;
@@ -35,7 +44,7 @@ public class NotificacionQuejaService {
 
         try {
             restTemplate.postForObject(
-                    notificacionesServiceUrl + "/api/notificaciones/enviar",
+                    notificacionesServiceUrl + ENDPOINT_ENVIAR,
                     Map.of("destinatario", destinatario, "asunto", asunto, "cuerpo", cuerpo),
                     String.class);
         } catch (Exception ex) {
@@ -49,21 +58,21 @@ public class NotificacionQuejaService {
      * NO manda correo) cada vez que cambia el estatus de su queja -- lo que pidió el usuario
      * ("cambios de estatus de mi quejas"). Nunca debe tumbar la operación si falla. */
     public void registrarCambioEstatus(String correoDestino, String folio, String tituloEvento, String mensaje) {
-        registrarNotificacion(correoDestino, "CAMBIO_ESTATUS", tituloEvento, mensaje, "/panel/mis-quejas/" + folio);
+        registrarNotificacion(correoDestino, TIPO_CAMBIO_ESTATUS, tituloEvento, mensaje, ENLACE_MIS_QUEJAS + folio);
     }
 
     /** Igual que arriba, pero para cuando se emite un nuevo acuerdo de conciliación. */
     public void registrarConciliacion(String correoDestino, String folio, String asunto) {
-        registrarNotificacion(correoDestino, "CONCILIACION",
+        registrarNotificacion(correoDestino, TIPO_CONCILIACION,
                 "Nuevo acuerdo de conciliación",
                 "Se te propuso un acuerdo de conciliación relacionado con tu queja " + folio + ": " + asunto,
-                "/panel/conciliacion");
+                ENLACE_CONCILIACION);
     }
 
     private void registrarNotificacion(String correoDestino, String tipo, String titulo, String mensaje, String enlace) {
         try {
             restTemplate.postForObject(
-                    notificacionesServiceUrl + "/api/notificaciones/registrar",
+                    notificacionesServiceUrl + ENDPOINT_REGISTRAR,
                     Map.of(
                             "correoDestino", correoDestino,
                             "tipo", tipo,
