@@ -11,9 +11,6 @@ import lombok.*;
 @Builder
 public class CrearNotaAnalisisDTO {
 
-    @NotNull
-    private Long quejaId;
-
     @NotBlank
     private String folio;
 

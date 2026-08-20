@@ -25,11 +25,12 @@ public class NotaAnalisisController {
         return notaAnalisisService.crearNota(dto);
     }
 
-    @GetMapping("/queja/{quejaId}")
-    public List<NotaAnalisisDTO> listarPorQueja(
-            @PathVariable Long quejaId
+    @GetMapping("/expediente/{expedienteId}")
+    public List<NotaAnalisisDTO> listarPorExpediente(
+            @PathVariable Long expedienteId
     ) {
-        return notaAnalisisService.listarPorQueja(quejaId);
+        return notaAnalisisService
+                .listarPorExpediente(expedienteId);
     }
 
     @GetMapping("/folio/{folio}")

@@ -10,7 +10,7 @@ import lombok.*;
 public class CitaDTO {
 
     private Long id;
-    private Long quejaId;
+    private Long expedienteId;
     private String folio;
     private Long quejosoId;
     private String quejosoNombre;

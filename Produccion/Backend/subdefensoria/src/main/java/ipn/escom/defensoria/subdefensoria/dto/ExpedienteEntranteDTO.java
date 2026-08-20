@@ -8,11 +8,10 @@ import lombok.*;
 import java.time.LocalDate;
 
 /**
- * Contrato de entrada del endpoint de ingesta
- * (POST /api/subdefensoria/ingesta/expedientes). Primer Contacto
- * llama aqui una sola vez por expediente, en el momento en que emite
- * el acuerdo de admision (act. 10 del DDP-PO-02) y lo turna a la
- * Subdefensoria (Abogado Asesor) que corresponda.
+ * Expediente recibido desde Primer Contacto.
+ *
+ * La relación entre áreas se realiza mediante el folio
+ * de Primer Contacto, nunca mediante IDs internos.
  */
 @Getter
 @Setter
@@ -21,11 +20,14 @@ import java.time.LocalDate;
 @Builder
 public class ExpedienteEntranteDTO {
 
-    @NotNull
-    private Long quejaId;
-
+    /*
+     * Folio del expediente en Primer Contacto.
+     *
+     * Ejemplo:
+     * PC-A1B2C3D4
+     */
     @NotBlank
-    private String folio;
+    private String folioOrigen;
 
     @NotBlank
     private String asunto;
@@ -40,7 +42,6 @@ public class ExpedienteEntranteDTO {
     private String abogadoAsesorNombre;
 
     @Valid
-    @NotNull
     private QuejosoResumenDTO quejoso;
 
     private String observacionesAnalista;

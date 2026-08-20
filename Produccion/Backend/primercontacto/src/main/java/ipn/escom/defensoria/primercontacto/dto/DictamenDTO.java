@@ -10,7 +10,7 @@ import lombok.*;
 public class DictamenDTO {
 
     private Long id;
-    private Long quejaId;
+    private Long expedienteId;
     private String folio;
     private Long analistaId;
     private String analistaNombre;

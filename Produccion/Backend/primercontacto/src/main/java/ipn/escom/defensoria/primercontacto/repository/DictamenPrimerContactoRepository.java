@@ -5,13 +5,22 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface DictamenPrimerContactoRepository extends JpaRepository<DictamenPrimerContacto, Long> {
+public interface DictamenPrimerContactoRepository
+        extends JpaRepository<DictamenPrimerContacto, Long> {
 
-    Optional<DictamenPrimerContacto> findByQuejaId(Long quejaId);
+    Optional<DictamenPrimerContacto> findByExpedienteId(
+            Long expedienteId
+    );
 
-    Optional<DictamenPrimerContacto> findByFolio(String folio);
+    Optional<DictamenPrimerContacto> findByFolio(
+            String folio
+    );
 
-    boolean existsByQuejaId(Long quejaId);
+    boolean existsByExpedienteId(
+            Long expedienteId
+    );
 
-    boolean existsByFolio(String folio);
+    boolean existsByFolio(
+            String folio
+    );
 }

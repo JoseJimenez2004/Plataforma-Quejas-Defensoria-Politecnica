@@ -30,11 +30,23 @@ public class ExpedienteInvestigacion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "queja_id", nullable = false, unique = true)
-    private Long quejaId;
-
+    /*
+     * Folio propio generado por Subdefensoría.
+     *
+     * Ejemplo:
+     * SD-A1B2C3D4
+     */
     @Column(name = "folio", nullable = false, unique = true, length = 50)
     private String folio;
+
+    /*
+     * Folio con el que el expediente llegó desde Primer Contacto.
+     *
+     * Ejemplo:
+     * PC-E5F6G7H8
+     */
+    @Column(name = "folio_origen", nullable = false, unique = true, length = 50)
+    private String folioOrigen;
 
     @Column(name = "quejoso_nombre", length = 150)
     private String quejosoNombre;

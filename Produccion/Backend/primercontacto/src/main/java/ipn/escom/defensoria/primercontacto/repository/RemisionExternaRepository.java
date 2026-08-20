@@ -5,13 +5,22 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface RemisionExternaRepository extends JpaRepository<RemisionExterna, Long> {
+public interface RemisionExternaRepository
+        extends JpaRepository<RemisionExterna, Long> {
 
-    Optional<RemisionExterna> findByQuejaId(Long quejaId);
+    Optional<RemisionExterna> findByExpedienteId(
+            Long expedienteId
+    );
 
-    Optional<RemisionExterna> findByFolio(String folio);
+    Optional<RemisionExterna> findByFolio(
+            String folio
+    );
 
-    boolean existsByQuejaId(Long quejaId);
+    boolean existsByExpedienteId(
+            Long expedienteId
+    );
 
-    boolean existsByFolio(String folio);
+    boolean existsByFolio(
+            String folio
+    );
 }

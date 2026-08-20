@@ -13,37 +13,42 @@ public class DictamenPrimerContactoController {
 
     private final DictamenPrimerContactoService dictamenPrimerContactoService;
 
-    public DictamenPrimerContactoController(DictamenPrimerContactoService dictamenPrimerContactoService) {
-        this.dictamenPrimerContactoService = dictamenPrimerContactoService;
+    public DictamenPrimerContactoController(
+            DictamenPrimerContactoService dictamenPrimerContactoService
+    ) {
+        this.dictamenPrimerContactoService =
+                dictamenPrimerContactoService;
     }
 
     @PostMapping("/competente")
     public DictamenDTO registrarCompetencia(
-            @Valid @RequestBody CompetenciaDTO dto,
-            @RequestHeader(value = "Authorization", required = false) String token
+            @Valid @RequestBody CompetenciaDTO dto
     ) {
-        return dictamenPrimerContactoService.registrarCompetencia(dto, token);
+        return dictamenPrimerContactoService
+                .registrarCompetencia(dto);
     }
 
     @PostMapping("/improcedente")
     public DictamenDTO registrarImprocedencia(
-            @Valid @RequestBody ImprocedenciaDTO dto,
-            @RequestHeader(value = "Authorization", required = false) String token
+            @Valid @RequestBody ImprocedenciaDTO dto
     ) {
-        return dictamenPrimerContactoService.registrarImprocedencia(dto, token);
+        return dictamenPrimerContactoService
+                .registrarImprocedencia(dto);
     }
 
-    @GetMapping("/queja/{quejaId}")
-    public DictamenDTO obtenerPorQueja(
-            @PathVariable Long quejaId
+    @GetMapping("/expediente/{expedienteId}")
+    public DictamenDTO obtenerPorExpediente(
+            @PathVariable Long expedienteId
     ) {
-        return dictamenPrimerContactoService.obtenerPorQueja(quejaId);
+        return dictamenPrimerContactoService
+                .obtenerPorExpediente(expedienteId);
     }
 
     @GetMapping("/folio/{folio}")
     public DictamenDTO obtenerPorFolio(
             @PathVariable String folio
     ) {
-        return dictamenPrimerContactoService.obtenerPorFolio(folio);
+        return dictamenPrimerContactoService
+                .obtenerPorFolio(folio);
     }
 }
