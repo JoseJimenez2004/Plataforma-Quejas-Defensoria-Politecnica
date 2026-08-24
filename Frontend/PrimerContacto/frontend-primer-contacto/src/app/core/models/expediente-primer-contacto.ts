@@ -1,18 +1,24 @@
 export interface ExpedientePrimerContacto {
-  quejaId: number;
+  expedienteId: number;
   folio: string;
+  folioOrigen?: string;
+  folioSubdefensoria?: string;
+
+  tema: string;
   descripcionHechos: string;
   fechaRecepcion: string;
   estatus: string;
   prioridad: string;
+
   quejoso: {
-    id: number;
+    id?: number;
     nombreCompleto: string;
     correo: string;
     telefono: string;
     unidadAcademica: string;
     tipoUsuario: string;
   };
+
   evidencias?: {
     id: number;
     nombreArchivo: string;
@@ -20,14 +26,15 @@ export interface ExpedientePrimerContacto {
     urlArchivo: string;
     fechaCarga: string;
   }[];
+
   notas?: {
     id: number;
-    quejaId: number;
+    expedienteId: number;
     folio: string;
     analistaId: number;
     analistaNombre: string;
     contenido: string;
     fechaCreacion: string;
-    fechaActualizacion: string;
+    fechaActualizacion?: string;
   }[];
 }

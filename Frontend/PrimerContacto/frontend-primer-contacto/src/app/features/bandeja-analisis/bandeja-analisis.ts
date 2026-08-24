@@ -223,13 +223,9 @@ export class BandejaAnalisis implements OnInit {
   }
 
   analizar(expediente: ExpedienteBandeja): void {
-    this.router.navigate(
-      ['/expediente', expediente.folio],
-      {
-        state: {
-          quejaId: expediente.quejaId
-        }
-      }
-    );
+    this.router.navigate([
+      '/expediente',
+      expediente.folio
+    ]);
   }
 }

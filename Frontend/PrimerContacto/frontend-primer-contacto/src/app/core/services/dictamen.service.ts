@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+
 import { ApiService } from './api.service';
 import {
   Dictamen,
@@ -14,19 +15,32 @@ export class DictamenService {
 
   constructor(private api: ApiService) {}
 
-  registrarCompetencia(dto: CompetenciaPayload): Observable<Dictamen> {
-    return this.api.post<Dictamen>('/dictamenes/competente', dto);
+  registrarCompetencia(
+    dto: CompetenciaPayload
+  ): Observable<Dictamen> {
+
+    return this.api.post<Dictamen>(
+      '/dictamenes/competente',
+      dto
+    );
   }
 
-  registrarImprocedencia(dto: ImprocedenciaPayload): Observable<Dictamen> {
-    return this.api.post<Dictamen>('/dictamenes/improcedente', dto);
+  registrarImprocedencia(
+    dto: ImprocedenciaPayload
+  ): Observable<Dictamen> {
+
+    return this.api.post<Dictamen>(
+      '/dictamenes/improcedente',
+      dto
+    );
   }
 
-  obtenerPorQueja(quejaId: number): Observable<Dictamen> {
-    return this.api.get<Dictamen>(`/dictamenes/queja/${quejaId}`);
-  }
+  obtenerPorFolio(
+    folio: string
+  ): Observable<Dictamen> {
 
-  obtenerPorFolio(folio: string): Observable<Dictamen> {
-    return this.api.get<Dictamen>(`/dictamenes/folio/${folio}`);
+    return this.api.get<Dictamen>(
+      `/dictamenes/folio/${encodeURIComponent(folio)}`
+    );
   }
 }

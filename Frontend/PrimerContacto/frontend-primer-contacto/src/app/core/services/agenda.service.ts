@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
+
 import { ApiService } from './api.service';
 import {
   CitaPrimerContacto,
@@ -8,17 +9,23 @@ import {
 
 interface CitaBackendDTO {
   id: number;
-  quejaId: number;
+  expedienteId: number;
   folio: string;
-  quejosoId: number;
-  quejosoNombre: string;
+
+  quejosoId?: number;
+  quejosoNombre?: string;
+
   analistaId: number;
   analistaNombre: string;
+
   fechaCita: string;
   horaCita: string;
+
   tipoCita: string;
   motivo: string;
   estatus: string;
+
+  fechaCreacion?: string;
 }
 
 @Injectable({
@@ -28,62 +35,125 @@ export class AgendaService {
 
   constructor(private api: ApiService) {}
 
-  crearCita(dto: CrearCitaPrimerContacto): Observable<CitaPrimerContacto> {
+  crearCita(
+    dto: CrearCitaPrimerContacto
+  ): Observable<CitaPrimerContacto> {
+
     return this.api
       .post<CitaBackendDTO>('/citas', dto)
-      .pipe(map(cita => this.mapearCita(cita)));
+      .pipe(
+        map(cita => this.mapearCita(cita))
+      );
   }
 
-  obtenerAgendaDia(fecha: string): Observable<CitaPrimerContacto[]> {
+  obtenerAgendaDia(
+    fecha: string
+  ): Observable<CitaPrimerContacto[]> {
+
     return this.api
-      .get<CitaBackendDTO[]>(`/citas/agenda?fecha=${fecha}`)
-      .pipe(map(citas => citas.map(cita => this.mapearCita(cita))));
+      .get<CitaBackendDTO[]>(
+        `/citas/agenda?fecha=${encodeURIComponent(fecha)}`
+      )
+      .pipe(
+        map(citas =>
+          citas.map(cita => this.mapearCita(cita))
+        )
+      );
   }
 
-  listarPorFolio(folio: string): Observable<CitaPrimerContacto[]> {
+  listarPorFolio(
+    folio: string
+  ): Observable<CitaPrimerContacto[]> {
+
     return this.api
-      .get<CitaBackendDTO[]>(`/citas/folio/${folio}`)
-      .pipe(map(citas => citas.map(cita => this.mapearCita(cita))));
+      .get<CitaBackendDTO[]>(
+        `/citas/folio/${encodeURIComponent(folio)}`
+      )
+      .pipe(
+        map(citas =>
+          citas.map(cita => this.mapearCita(cita))
+        )
+      );
   }
 
-  cancelarCita(id: number): Observable<CitaPrimerContacto> {
+  cancelarCita(
+    id: number
+  ): Observable<CitaPrimerContacto> {
+
     return this.api
-      .put<CitaBackendDTO>(`/citas/${id}/cancelar`, {})
-      .pipe(map(cita => this.mapearCita(cita)));
+      .put<CitaBackendDTO>(
+        `/citas/${id}/cancelar`,
+        {}
+      )
+      .pipe(
+        map(cita => this.mapearCita(cita))
+      );
   }
 
-  private mapearCita(cita: CitaBackendDTO): CitaPrimerContacto {
+  private mapearCita(
+    cita: CitaBackendDTO
+  ): CitaPrimerContacto {
+
     return {
       id: cita.id,
-      quejaId: cita.quejaId,
+      expedienteId: cita.expedienteId,
       folio: cita.folio,
+
       quejosoId: cita.quejosoId,
-      quejoso: cita.quejosoNombre,
+      quejoso: cita.quejosoNombre ?? '',
+
       analistaId: cita.analistaId,
       analistaNombre: cita.analistaNombre,
-      fecha: this.formatearFechaVista(cita.fechaCita),
+
+      fecha: this.formatearFechaVista(
+        cita.fechaCita
+      ),
+
       hora: cita.horaCita?.slice(0, 5),
-      tipo: cita.tipoCita === 'VIRTUAL' ? 'Virtual' : 'Presencial',
+
+      tipo:
+        cita.tipoCita === 'VIRTUAL'
+          ? 'Virtual'
+          : 'Presencial',
+
       motivo: cita.motivo,
-      estatus: this.formatearEstatus(cita.estatus)
+
+      estatus: this.formatearEstatus(
+        cita.estatus
+      ),
+
+      fechaCreacion: cita.fechaCreacion
     };
   }
 
-private formatearFechaVista(fecha: string): string {
-  if (!fecha) return '';
+  private formatearFechaVista(
+    fecha: string
+  ): string {
 
-  const [year, month, day] = fecha.split('-');
-  return `${day}/${month}/${year}`;
-}
+    if (!fecha) {
+      return '';
+    }
 
-  private formatearEstatus(estatus: string): string {
-    switch (estatus) {
+    const [year, month, day] = fecha.split('-');
+
+    return `${day}/${month}/${year}`;
+  }
+
+  private formatearEstatus(
+    estatus: string
+  ): string {
+
+    switch (estatus?.toUpperCase()) {
+
       case 'PROGRAMADA':
         return 'Programada';
+
       case 'CONFIRMADA':
         return 'Confirmada';
+
       case 'CANCELADA':
         return 'Cancelada';
+
       default:
         return estatus;
     }

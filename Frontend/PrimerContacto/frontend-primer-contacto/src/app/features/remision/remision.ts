@@ -80,28 +80,31 @@ export class Remision implements OnInit {
     });
   }
 
-  guardarBorrador(): void {
-    this.snackBar.open('Remisión guardada como borrador.', 'Cerrar', {
-      duration: 3000
-    });
-  }
-
   enviarRemision(): void {
-    if (!this.expediente?.quejaId) {
-      this.snackBar.open('No fue posible identificar el expediente.', 'Cerrar', {
-        duration: 3000
-      });
+    if (!this.expediente?.folio) {
+      this.snackBar.open(
+        'No fue posible identificar el expediente.',
+        'Cerrar',
+        {
+          duration: 3000
+        }
+      );
       return;
     }
 
-    const institucionDestino = this.institucion === 'Otra'
-      ? this.institucionOtra.trim()
-      : this.institucion;
+    const institucionDestino =
+      this.institucion === 'Otra'
+        ? this.institucionOtra.trim()
+        : this.institucion;
 
     if (!institucionDestino || !this.fundamento.trim()) {
-      this.snackBar.open('Completa la institución destino y el fundamento de la remisión.', 'Cerrar', {
-        duration: 3500
-      });
+      this.snackBar.open(
+        'Completa la institución destino y el fundamento de la remisión.',
+        'Cerrar',
+        {
+          duration: 3500
+        }
+      );
       return;
     }
 
@@ -111,30 +114,44 @@ export class Remision implements OnInit {
 
     if (!confirmar) return;
 
-    const quejaId = this.expediente.quejaId;
+    const folio = this.expediente.folio;
 
     this.remisionService.crearRemision({
-      quejaId,
-      folio: this.folio,
+      folio,
       analistaId: this.analistaId,
       analistaNombre: this.analistaNombre,
       autoridadRemision: institucionDestino,
-      justificacionLegal: this.fundamento,
-      sugerenciaQuejoso: this.motivo.trim() || this.observaciones.trim() || undefined,
+      justificacionLegal: this.fundamento.trim(),
+      sugerenciaQuejoso:
+        this.motivo.trim() ||
+        this.observaciones.trim() ||
+        undefined,
       adjuntarExpediente: true
     }).pipe(
-      switchMap(() => this.remisionService.enviarRemision(quejaId))
+      switchMap(() =>
+        this.remisionService.enviarRemision(folio)
+      )
     ).subscribe({
       next: () => {
-        this.snackBar.open('Expediente remitido correctamente.', 'Cerrar', {
-          duration: 3000
-        });
+        this.snackBar.open(
+          'Expediente remitido correctamente.',
+          'Cerrar',
+          {
+            duration: 3000
+          }
+        );
+
         this.router.navigate(['/bandeja']);
       },
+
       error: () => {
-        this.snackBar.open('No fue posible registrar la remisión.', 'Cerrar', {
-          duration: 3000
-        });
+        this.snackBar.open(
+          'No fue posible registrar la remisión.',
+          'Cerrar',
+          {
+            duration: 3000
+          }
+        );
       }
     });
   }

@@ -305,7 +305,6 @@ cargarAgendaPorFecha(fechaVista: string): void {
     const fechaSeleccionada = this.fechaAgendaSeleccionada;
 
     const dto: CrearCitaPrimerContacto = {
-      quejaId: this.expedienteActual.quejaId,
       folio: this.expedienteActual.folio,
       quejosoId: this.expedienteActual.quejoso.id,
       quejosoNombre: this.expedienteActual.quejoso.nombreCompleto,

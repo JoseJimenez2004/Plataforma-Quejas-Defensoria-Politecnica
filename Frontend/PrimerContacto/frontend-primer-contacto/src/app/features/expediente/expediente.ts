@@ -93,7 +93,7 @@ cargarExpediente(): void {
         this.sinDatos = true;
         this.cdr.detectChanges();
         this.snackBar.open(
-          `No se ha recibido de Subdefensoría ninguna queja con folio ${this.folio}.`,
+          `No se ha recibido de Revisión ningún expediente con folio ${this.folio}.`,
           'Cerrar',
           { duration: 4000 }
         );
@@ -102,7 +102,7 @@ cargarExpediente(): void {
 
       this.cdr.detectChanges();
       this.snackBar.open(
-        'No fue posible cargar el expediente. Verifica que el backend esté corriendo en el puerto 8082.',
+        'No fue posible cargar el expediente. Intenta nuevamente o contacta al administrador del sistema.',
         'Cerrar',
         { duration: 4000 }
       );
@@ -115,7 +115,7 @@ cargarExpediente(): void {
 
     if (!nota) return;
 
-    if (!this.expediente.quejaId) {
+    if (!this.expediente.folio) {
       this.snackBar.open('No fue posible identificar el expediente.', 'Cerrar', {
         duration: 3000
       });
@@ -123,7 +123,6 @@ cargarExpediente(): void {
     }
 
     this.notaAnalisisService.crearNota({
-      quejaId: this.expediente.quejaId,
       folio: this.expediente.folio,
       analistaId: this.analistaId,
       analistaNombre: this.analistaNombre,
@@ -148,7 +147,14 @@ cargarExpediente(): void {
   }
 
   marcarImprocedente(): void {
-    this.router.navigate(['/remision', this.expediente.folio]);
+    this.router.navigate(
+      ['/dictamen', this.expediente.folio],
+      {
+        queryParams: {
+          tipo: 'improcedente'
+        }
+      }
+    );
   }
 
   agendarCita(): void {

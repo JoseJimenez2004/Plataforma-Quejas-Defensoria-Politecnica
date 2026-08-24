@@ -89,7 +89,7 @@
           <mat-select
             [(ngModel)]="citaNueva.folio"
             (selectionChange)="seleccionarExpedientePendiente($event.value)">
-            @for (expediente of expedientesPendientesCita; track expediente.quejaId) {
+            @for (expediente of expedientesPendientesCita; track expediente.folio) {
               <mat-option [value]="expediente.folio">
                 {{ expediente.folio }} · {{ expediente.nombreQuejoso }}
               </mat-option>

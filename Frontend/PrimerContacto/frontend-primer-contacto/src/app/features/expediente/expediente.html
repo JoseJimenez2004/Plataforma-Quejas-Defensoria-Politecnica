@@ -6,8 +6,8 @@
   } @else if (sinDatos) {
     <mat-card class="card">
       <p style="color: #6b7280; padding: var(--space-4);">
-        Aún no se ha recibido de Subdefensoría ninguna queja con folio
-        <strong>{{ folio }}</strong>. En cuanto Subdefensoría la envíe, aparecerá aquí.
+        Aún no se ha recibido de Revisión ningún expediente con folio
+        <strong>{{ folio }}</strong>. En cuanto Revisión lo turne a Primer Contacto, aparecerá aquí.
       </p>
     </mat-card>
   } @else {
@@ -77,15 +77,6 @@
                 <span>{{ evidencia.tipo }}</span>
               </div>
             </div>
-
-            <div class="evidence-actions">
-              <button mat-button class="link-btn">
-                <mat-icon>visibility</mat-icon> Ver
-              </button>
-              <button mat-button class="link-btn">
-                <mat-icon>download</mat-icon> Descargar
-              </button>
-            </div>
           </div>
         }
         <p class="evidence-count">{{ expediente.evidencias.length }} evidencias adjuntas</p>
@@ -127,14 +118,12 @@
     </div>
 
     <div class="actions">
-      <button mat-flat-button class="primary-btn" (click)="agendarCita()">
-        <mat-icon>event</mat-icon> Agendar cita
-      </button>
-      <button mat-stroked-button class="outline-btn">
-        <mat-icon>mail</mat-icon> Solicitar aclaración
-      </button>
-      <button mat-stroked-button class="outline-btn">
-        <mat-icon>download</mat-icon> Descargar expediente
+      <button
+        mat-flat-button
+        class="primary-btn"
+        (click)="agendarCita()">
+        <mat-icon>event</mat-icon>
+        Agendar cita
       </button>
     </div>
   </mat-card>

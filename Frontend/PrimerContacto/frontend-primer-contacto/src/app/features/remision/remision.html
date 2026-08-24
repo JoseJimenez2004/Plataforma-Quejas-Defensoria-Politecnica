@@ -2,10 +2,17 @@
   <div class="page-header">
     <div>
       <h2>Remisión Externa</h2>
-      <p>Expediente {{ folio }} · Determinación de improcedencia o incompetencia.</p>
+
+      <p>
+        Expediente {{ folio }}
+        · {{ expediente?.asunto || 'Sin asunto' }}
+        · Canalización a una autoridad externa.
+      </p>
     </div>
 
-    <mat-chip class="danger-chip">Improcedente</mat-chip>
+    <mat-chip class="warning-chip">
+      Remisión externa
+    </mat-chip>
   </div>
 
   <div class="flow-card">
@@ -94,8 +101,14 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Motivo de remisión</mat-label>
-        <textarea matInput rows="4" [(ngModel)]="motivo"></textarea>
+        <mat-label>Motivo de la remisión</mat-label>
+
+        <textarea
+          matInput
+          rows="4"
+          [(ngModel)]="motivo"
+          placeholder="Describa brevemente el motivo de la remisión externa.">
+        </textarea>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
@@ -104,11 +117,6 @@
       </mat-form-field>
 
       <div class="actions">
-        <button mat-stroked-button class="outline-btn" (click)="guardarBorrador()">
-          <mat-icon>save</mat-icon>
-          Guardar borrador
-        </button>
-
         <button mat-flat-button class="danger-btn" (click)="enviarRemision()">
           <mat-icon>send</mat-icon>
           Enviar remisión

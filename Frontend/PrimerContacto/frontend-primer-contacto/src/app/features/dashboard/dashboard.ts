@@ -24,9 +24,9 @@ import {
   styleUrl: './dashboard.css'
 })
 export class Dashboard implements OnInit {
-  fechaActual = 'Lunes 29 de junio de 2026';
-
+fechaActual = this.obtenerFechaActual();
 resumen: DashboardResumen[] = [];
+
 actividad: DashboardActividad[] = [];
 citasHoy: DashboardCitaHoy[] = [];
 lista: DashboardItemLista[] = [];
@@ -105,4 +105,16 @@ get tituloLista(): string {
       return 'Expedientes';
   }
 }
+
+private obtenerFechaActual(): string {
+  const fecha = new Date().toLocaleDateString('es-MX', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  return fecha.charAt(0).toUpperCase() + fecha.slice(1);
+}
+
 }

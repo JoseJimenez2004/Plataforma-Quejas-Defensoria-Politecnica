@@ -5,8 +5,10 @@ import { ApiService } from './api.service';
 import { ExpedienteBandeja } from '../models/expediente-bandeja';
 
 interface BandejaBackendDTO {
-  quejaId: number;
+  expedienteId: number;
   folio: string;
+  folioOrigen?: string;
+
   nombreQuejoso: string;
   unidadAcademica: string;
   tema: string;
@@ -19,6 +21,7 @@ interface BandejaBackendDTO {
   providedIn: 'root'
 })
 export class BandejaService {
+
   constructor(private api: ApiService) {}
 
   obtenerBandeja(): Observable<ExpedienteBandeja[]> {
@@ -30,16 +33,24 @@ export class BandejaService {
   buscarPorFolio(folio: string): Observable<ExpedienteBandeja> {
     return this.api
       .get<BandejaBackendDTO>(`/bandeja/folio/${folio}`)
-      .pipe(map(item => this.mapearExpediente(item)));
+      .pipe(
+        map(item => this.mapearExpediente(item))
+      );
   }
 
-  private mapearExpediente(item: BandejaBackendDTO): ExpedienteBandeja {
+  private mapearExpediente(
+    item: BandejaBackendDTO
+  ): ExpedienteBandeja {
+
     return {
-      quejaId: item.quejaId,
+      expedienteId: item.expedienteId,
       folio: item.folio,
+      folioOrigen: item.folioOrigen,
+
       nombreQuejoso: item.nombreQuejoso,
       unidadAcademica: item.unidadAcademica,
       tema: item.tema,
+
       prioridad: this.formatearPrioridad(item.prioridad),
       estatus: this.formatearEstatus(item.estatus),
       fechaRecepcion: this.formatearFecha(item.fechaRecepcion)
@@ -49,7 +60,9 @@ export class BandejaService {
   private formatearPrioridad(
     prioridad: string
   ): 'Alta' | 'Media' | 'Baja' {
+
     switch (prioridad?.toUpperCase()) {
+
       case 'ALTA':
         return 'Alta';
 
@@ -62,8 +75,12 @@ export class BandejaService {
     }
   }
 
-  private formatearEstatus(estatus: string): string {
+  private formatearEstatus(
+    estatus: string
+  ): string {
+
     switch (estatus?.toUpperCase()) {
+
       case 'PENDIENTE':
       case 'PENDIENTE_ANALISIS':
         return 'Pendiente';
@@ -78,15 +95,24 @@ export class BandejaService {
         return 'Improcedente';
 
       case 'REMITIDA':
+      case 'REMISION_ENVIADA':
         return 'Remitida';
+
+      case 'TURNADO_SUBDEFENSORIA':
+        return 'Turnado a Subdefensoría';
 
       default:
         return estatus;
     }
   }
 
-  private formatearFecha(fecha: string): string {
-    if (!fecha) return '';
+  private formatearFecha(
+    fecha: string
+  ): string {
+
+    if (!fecha) {
+      return '';
+    }
 
     const [year, month, day] = fecha.split('-');
 

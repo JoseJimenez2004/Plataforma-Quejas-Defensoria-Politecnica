@@ -31,6 +31,8 @@ export class Dictamen implements OnInit {
   folio = '';
   justificacion = '';
   observaciones = '';
+  responsableTurno = '';
+  tipoDictamen: 'competente' | 'improcedente' = 'competente';
 
   expediente?: ExpedienteDetalle;
 
@@ -47,6 +49,11 @@ export class Dictamen implements OnInit {
     private cdr: ChangeDetectorRef
   ) {
     this.folio = this.route.snapshot.paramMap.get('id') ?? '';
+
+    this.tipoDictamen =
+      this.route.snapshot.queryParamMap.get('tipo') === 'improcedente'
+        ? 'improcedente'
+        : 'competente';
   }
 
   ngOnInit(): void {
@@ -66,51 +73,124 @@ export class Dictamen implements OnInit {
     });
   }
 
-  guardarBorrador(): void {
-    this.snackBar.open('Dictamen preliminar guardado.', 'Cerrar', {
-      duration: 3000
-    });
+  enviarTitular(): void {
+  if (!this.expediente?.folio) {
+    this.snackBar.open(
+      'No fue posible identificar el expediente.',
+      'Cerrar',
+      {
+        duration: 3000
+      }
+    );
+    return;
   }
 
-  enviarTitular(): void {
-    if (!this.expediente?.quejaId) {
-      this.snackBar.open('No fue posible identificar el expediente.', 'Cerrar', {
+  if (!this.justificacion.trim()) {
+    this.snackBar.open(
+      'Ingresa la justificación del dictamen.',
+      'Cerrar',
+      {
         duration: 3000
-      });
-      return;
-    }
+      }
+    );
+    return;
+  }
 
-    if (!this.justificacion.trim()) {
-      this.snackBar.open('Ingresa la justificación del dictamen.', 'Cerrar', {
-        duration: 3000
-      });
-      return;
-    }
+  // =========================================================
+  // IMPROCEDENCIA
+  // =========================================================
 
-    const confirmar = confirm('¿Está seguro de enviar este expediente al Titular?');
+  if (this.tipoDictamen === 'improcedente') {
+
+    const confirmar = confirm(
+      '¿Está seguro de declarar improcedente este expediente?'
+    );
 
     if (!confirmar) return;
 
-    this.dictamenService.registrarCompetencia({
-      quejaId: this.expediente.quejaId,
-      folio: this.folio,
+    this.dictamenService.registrarImprocedencia({
+      folio: this.expediente.folio,
       analistaId: this.analistaId,
       analistaNombre: this.analistaNombre,
-      justificacion: this.justificacion,
-      areaTurno: 'Titular de la Defensoría',
-      responsableTurno: 'Titular de la Defensoría',
-      observaciones: this.observaciones.trim() || undefined    }).subscribe({
+      justificacion: this.justificacion.trim()
+    }).subscribe({
       next: () => {
-        this.snackBar.open('Expediente enviado al Titular correctamente.', 'Cerrar', {
-          duration: 3000
-        });
+        this.snackBar.open(
+          'El expediente fue declarado improcedente correctamente.',
+          'Cerrar',
+          {
+            duration: 3000
+          }
+        );
+
         this.router.navigate(['/bandeja']);
       },
+
       error: () => {
-        this.snackBar.open('No fue posible registrar el dictamen.', 'Cerrar', {
-          duration: 3000
-        });
+        this.snackBar.open(
+          'No fue posible registrar la improcedencia.',
+          'Cerrar',
+          {
+            duration: 3000
+          }
+        );
       }
     });
+
+    return;
   }
+
+  // =========================================================
+  // COMPETENCIA → SUBDEFENSORÍA
+  // =========================================================
+
+  if (!this.responsableTurno.trim()) {
+    this.snackBar.open(
+      'Ingresa el responsable de Subdefensoría.',
+      'Cerrar',
+      {
+        duration: 3000
+      }
+    );
+    return;
+  }
+
+  const confirmar = confirm(
+    '¿Está seguro de turnar este expediente a Subdefensoría?'
+  );
+
+  if (!confirmar) return;
+
+  this.dictamenService.registrarCompetencia({
+    folio: this.expediente.folio,
+    analistaId: this.analistaId,
+    analistaNombre: this.analistaNombre,
+    justificacion: this.justificacion.trim(),
+    areaTurno: 'Subdefensoría',
+    responsableTurno: this.responsableTurno.trim(),
+    observaciones: this.observaciones.trim() || undefined
+  }).subscribe({
+    next: () => {
+      this.snackBar.open(
+        'Expediente turnado a Subdefensoría correctamente.',
+        'Cerrar',
+        {
+          duration: 3000
+        }
+      );
+
+      this.router.navigate(['/bandeja']);
+    },
+
+    error: () => {
+      this.snackBar.open(
+        'No fue posible registrar el dictamen.',
+        'Cerrar',
+        {
+          duration: 3000
+        }
+      );
+    }
+  });
+}
 }

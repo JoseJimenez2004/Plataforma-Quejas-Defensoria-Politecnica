@@ -1,5 +1,4 @@
 export interface CrearNotaAnalisis {
-  quejaId: number;
   folio: string;
   analistaId: number;
   analistaNombre: string;
@@ -8,11 +7,14 @@ export interface CrearNotaAnalisis {
 
 export interface NotaAnalisis {
   id: number;
-  quejaId: number;
+  expedienteId: number;
   folio: string;
+
   analistaId: number;
   analistaNombre: string;
+
   contenido: string;
+
   fechaCreacion: string;
   fechaActualizacion?: string;
 }
