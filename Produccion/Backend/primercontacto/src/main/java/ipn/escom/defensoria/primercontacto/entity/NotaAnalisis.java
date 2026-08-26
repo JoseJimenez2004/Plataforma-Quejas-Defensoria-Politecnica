@@ -2,6 +2,7 @@ package ipn.escom.defensoria.primercontacto.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
 
 import java.time.LocalDateTime;
 

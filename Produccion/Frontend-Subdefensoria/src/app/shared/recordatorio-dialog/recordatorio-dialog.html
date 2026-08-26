@@ -1,0 +1,35 @@
+<h2 mat-dialog-title>Generar Recordatorio de Urgencia</h2>
+
+<mat-dialog-content>
+  <p class="folio-line">Oficio <strong>{{ data.numeroOficio }}</strong></p>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Mensaje de apercibimiento / recordatorio</mat-label>
+    <textarea
+      matInput
+      rows="5"
+      [(ngModel)]="mensaje"
+      placeholder="Se hace de su conocimiento que el plazo otorgado ha vencido...">
+    </textarea>
+  </mat-form-field>
+
+  @if (mostrarMedidas) {
+    <mat-form-field appearance="outline">
+      <mat-label>Medidas ofrecidas</mat-label>
+      <textarea
+        matInput
+        rows="3"
+        [(ngModel)]="medidasOfrecidas"
+        placeholder="Describa las medidas ofrecidas (catálogo institucional pendiente de integrar).">
+      </textarea>
+    </mat-form-field>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button (click)="cancelar()">Cancelar</button>
+  <button mat-flat-button class="primary-btn" [disabled]="enviando" (click)="enviar()">
+    <mat-icon>notifications_active</mat-icon>
+    Registrar Recordatorio 
+  </button>
+</mat-dialog-actions>

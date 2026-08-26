@@ -1,0 +1,38 @@
+<h2 mat-dialog-title>{{ tituloAccion }}</h2>
+
+<mat-dialog-content>
+  <p class="folio-line">Expediente <strong>{{ data.folio }}</strong></p>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Autoridad a la que se dirige</mat-label>
+    <input matInput [(ngModel)]="destinatarioNombre" placeholder="Ej. Director de ESCOM">
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Correo del destinatario</mat-label>
+    <input matInput type="email" [(ngModel)]="destinatarioCorreo" placeholder="director.escom@ipn.mx">
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Unidad académica</mat-label>
+    <input matInput [(ngModel)]="unidadAcademica">
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Contenido del oficio</mat-label>
+    <textarea
+      matInput
+      rows="6"
+      [(ngModel)]="contenidoRedactado"
+      placeholder="Redacte el contenido que se enviará en el oficio.">
+    </textarea>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button (click)="cancelar()">Cancelar</button>
+  <button mat-flat-button class="primary-btn" [disabled]="enviando" (click)="enviar()">
+    <mat-icon>description</mat-icon>
+    Generar Oficio
+  </button>
+</mat-dialog-actions>

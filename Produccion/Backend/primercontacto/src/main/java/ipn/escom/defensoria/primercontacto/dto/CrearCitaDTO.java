@@ -18,12 +18,6 @@ public class CrearCitaDTO {
 
     private String quejosoNombre;
 
-    @NotNull
-    private Long analistaId;
-
-    @NotBlank
-    private String analistaNombre;
-
     @NotBlank
     private String fechaCita;
 

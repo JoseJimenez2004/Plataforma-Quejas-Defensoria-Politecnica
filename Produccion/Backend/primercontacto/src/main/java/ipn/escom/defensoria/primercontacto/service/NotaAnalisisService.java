@@ -7,7 +7,7 @@ import ipn.escom.defensoria.primercontacto.repository.NotaAnalisisRepository;
 import org.springframework.stereotype.Service;
 import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
 import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
-
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,8 +25,10 @@ public class NotaAnalisisService {
         this.expedienteRepository = expedienteRepository;
     }
 
-    public NotaAnalisisDTO crearNota(CrearNotaAnalisisDTO dto) {
-
+    public NotaAnalisisDTO crearNota(
+            CrearNotaAnalisisDTO dto,
+            PersonalAdministrativo analista
+    ) {
         /*
          * El frontend manda el folio de Primer Contacto.
          * A partir del folio obtenemos el expediente interno.
@@ -43,8 +45,8 @@ public class NotaAnalisisService {
         NotaAnalisis nota = NotaAnalisis.builder()
                 .expedienteId(expediente.getId())
                 .folio(expediente.getFolio())
-                .analistaId(dto.getAnalistaId())
-                .analistaNombre(dto.getAnalistaNombre())
+                .analistaId(analista.getId())
+                .analistaNombre(analista.getNombreCompleto())
                 .contenido(dto.getContenido())
                 .fechaCreacion(LocalDateTime.now())
                 .build();

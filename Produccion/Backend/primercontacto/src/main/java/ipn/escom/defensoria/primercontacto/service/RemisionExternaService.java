@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
 
 @Service
 public class RemisionExternaService {
@@ -30,7 +31,8 @@ public class RemisionExternaService {
 
     @Transactional
     public RemisionDTO crearRemision(
-            CrearRemisionDTO dto
+            CrearRemisionDTO dto,
+            PersonalAdministrativo analista
     ) {
 
         /*
@@ -68,10 +70,10 @@ public class RemisionExternaService {
                                 expediente.getFolio()
                         )
                         .analistaId(
-                                dto.getAnalistaId()
+                                analista.getId()
                         )
                         .analistaNombre(
-                                dto.getAnalistaNombre()
+                                analista.getNombreCompleto()
                         )
                         .autoridadRemision(
                                 dto.getAutoridadRemision()

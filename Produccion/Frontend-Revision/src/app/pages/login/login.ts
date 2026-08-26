@@ -34,12 +34,44 @@ export class Login {
     this.authService.login({ correo: this.correo, password: this.password }).subscribe({
       next: (resp) => {
         this.cargando = false;
-        if (resp.rol === 'ADMIN_SISTEMAS') {
-          this.toast.advertencia('Tu cuenta es de Admin. de Sistemas -- usa la consola de administración, no este panel.');
-        } else if (resp.rol !== 'RECEPCIONISTA') {
-          this.toast.advertencia('Las vistas para tu rol todavía no están disponibles en este panel.');
+
+        switch (resp.rol) {
+
+          case 'RECEPCIONISTA':
+            // Se queda dentro del frontend de Revisión.
+            this.router.navigate(['/']);
+            break;
+
+          case 'ANALISTA_PRIMER_CONTACTO':
+            // Salta al frontend independiente de Primer Contacto.
+            window.location.assign('/primer-contacto/');
+            break;
+
+          case 'SUBDEFENSOR':
+            // Salta al frontend independiente de Subdefensoría.
+            window.location.assign('/subdefensoria/');
+            break;
+
+          case 'ADMIN_SISTEMAS':
+            this.toast.advertencia(
+              'Tu cuenta corresponde a Administración. Utiliza la consola administrativa.'
+            );
+            break;
+
+          case 'DEFENSOR':
+            this.toast.advertencia(
+              'La vista correspondiente al rol Defensor todavía no está disponible.'
+            );
+            break;
+
+          default:
+            this.toast.advertencia(
+              'No existe una pantalla configurada para este rol.'
+            );
+            break;
         }
-        this.router.navigate(['/']);
+
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.cargando = false;

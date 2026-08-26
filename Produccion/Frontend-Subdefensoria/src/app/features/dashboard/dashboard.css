@@ -1,0 +1,159 @@
+.page {
+  max-width: 1400px;
+}
+
+.fecha-hoy {
+  color: #6b7280;
+  margin: 0 0 var(--space-4);
+  text-transform: capitalize;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.stat-card.selected {
+  border-color: #6a1238;
+}
+
+.stat-card mat-icon {
+  font-size: 30px;
+  width: 30px;
+  height: 30px;
+  color: #6a1238;
+}
+
+.stat-card.alert mat-icon {
+  color: #b91c1c;
+}
+
+.stat-card div {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card span {
+  color: #6b7280;
+  font-size: var(--font-size-sm);
+}
+
+.stat-card strong {
+  font-size: 26px;
+  color: #111827;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.list-card, .urgentes-card {
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  padding: var(--space-4);
+}
+
+.list-card h3, .urgentes-card h3 {
+  margin: 0;
+  color: #111827;
+  font-size: var(--font-size-lg);
+}
+
+.subtitle {
+  color: #6b7280;
+  margin: 4px 0 var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+.expediente-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid #f1f1f3;
+  cursor: pointer;
+}
+
+.expediente-row:hover {
+  background: #f9fafb;
+}
+
+.expediente-row:last-child {
+  border-bottom: none;
+}
+
+.expediente-row div {
+  display: flex;
+  flex-direction: column;
+}
+
+.expediente-row span {
+  color: #6b7280;
+  font-size: var(--font-size-sm);
+}
+
+.tema {
+  flex: 1;
+  text-align: center;
+}
+
+.chip-btn {
+  font-size: var(--font-size-xs) !important;
+  font-weight: 700;
+  border-radius: var(--radius-pill) !important;
+}
+
+.urgente-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid #f1f1f3;
+}
+
+.urgente-row:last-child {
+  border-bottom: none;
+}
+
+.urgente-row div {
+  display: flex;
+  flex-direction: column;
+}
+
+.urgente-row span {
+  color: #b91c1c;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.empty-state {
+  color: #9ca3af;
+  text-align: center;
+  padding: var(--space-4) 0;
+}
+
+@media (max-width: 1100px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

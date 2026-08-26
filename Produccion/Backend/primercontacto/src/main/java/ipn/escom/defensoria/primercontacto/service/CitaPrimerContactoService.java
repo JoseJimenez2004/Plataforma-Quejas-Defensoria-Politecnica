@@ -7,6 +7,7 @@ import ipn.escom.defensoria.primercontacto.repository.CitaPrimerContactoReposito
 import org.springframework.stereotype.Service;
 import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
 import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,7 +28,10 @@ public class CitaPrimerContactoService {
         this.expedienteRepository = expedienteRepository;
     }
 
-    public CitaDTO crearCita(CrearCitaDTO dto) {
+    public CitaDTO crearCita(
+            CrearCitaDTO dto,
+            PersonalAdministrativo analista
+    ) {
 
         /*
          * El cliente manda el folio propio de Primer Contacto.
@@ -60,8 +64,8 @@ public class CitaPrimerContactoService {
                         .folio(expediente.getFolio())
                         .quejosoId(dto.getQuejosoId())
                         .quejosoNombre(dto.getQuejosoNombre())
-                        .analistaId(dto.getAnalistaId())
-                        .analistaNombre(dto.getAnalistaNombre())
+                        .analistaId(analista.getId())
+                        .analistaNombre(analista.getNombreCompleto())
                         .fechaCita(LocalDate.parse(dto.getFechaCita()))
                         .horaCita(LocalTime.parse(dto.getHoraCita()))
                         .tipoCita(dto.getTipoCita())

@@ -2,8 +2,14 @@ package ipn.escom.defensoria.primercontacto.controller;
 
 import ipn.escom.defensoria.primercontacto.dto.CrearNotaAnalisisDTO;
 import ipn.escom.defensoria.primercontacto.dto.NotaAnalisisDTO;
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.primercontacto.service.AnalistaAutenticadoService;
 import ipn.escom.defensoria.primercontacto.service.NotaAnalisisService;
+
 import jakarta.validation.Valid;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,16 +19,31 @@ import java.util.List;
 public class NotaAnalisisController {
 
     private final NotaAnalisisService notaAnalisisService;
+    private final AnalistaAutenticadoService analistaAutenticadoService;
 
-    public NotaAnalisisController(NotaAnalisisService notaAnalisisService) {
+    public NotaAnalisisController(
+            NotaAnalisisService notaAnalisisService,
+            AnalistaAutenticadoService analistaAutenticadoService
+    ) {
         this.notaAnalisisService = notaAnalisisService;
+        this.analistaAutenticadoService = analistaAutenticadoService;
     }
 
     @PostMapping
-    public NotaAnalisisDTO crearNota(
-            @Valid @RequestBody CrearNotaAnalisisDTO dto
+    public ResponseEntity<NotaAnalisisDTO> crearNota(
+            @Valid @RequestBody CrearNotaAnalisisDTO dto,
+            Authentication authentication
     ) {
-        return notaAnalisisService.crearNota(dto);
+
+        PersonalAdministrativo analista =
+                analistaAutenticadoService.obtenerAnalista(authentication);
+
+        return ResponseEntity.ok(
+                notaAnalisisService.crearNota(
+                        dto,
+                        analista
+                )
+        );
     }
 
     @GetMapping("/expediente/{expedienteId}")

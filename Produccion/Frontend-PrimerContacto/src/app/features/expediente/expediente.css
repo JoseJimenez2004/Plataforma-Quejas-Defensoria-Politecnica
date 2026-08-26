@@ -1,0 +1,318 @@
+.page {
+  max-width: 1280px; /* Homologado con todo el módulo */
+}
+
+/* ---- Encabezado Unificado ---- */
+.page-header {
+  margin-bottom: var(--space-5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.page-header h2 {
+  margin: 0;
+  color: #6a1238; /* Guinda Institucional */
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.page-header p {
+  margin: var(--space-1) 0 0;
+  color: #6b7280;
+}
+
+.hero-chips {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ---- Layout de Rejilla Asimétrica ---- */
+.expediente-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px; /* Equilibrio perfecto de dos columnas */
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+/* ---- Tarjetas Universales del Módulo ---- */
+.card,
+.actions-card,
+.decision-card {
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  padding: var(--space-4);
+  background: white;
+}
+
+.card mat-card-title {
+  color: #111827;
+  font-size: var(--font-size-lg);
+  font-weight: 900;
+}
+
+/* Contenedor de la Narrativa Principal */
+.document-box {
+  background: #f9fafb;
+  border: 1px solid #f1f1f3;
+  border-radius: 12px;
+  padding: var(--space-4);
+  min-height: 160px;
+}
+
+.document-box p {
+  margin: 0;
+  color: #374151;
+  font-size: var(--font-size-base);
+}
+
+/* ---- Listas de Datos Interiores ---- */
+.info-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.info-list div {
+  display: grid;
+  gap: var(--space-1);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid #f1f1f3;
+}
+
+.info-list div:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.info-list span {
+  font-size: var(--font-size-xs);
+  color: #6b7280;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.info-list strong {
+  color: #111827;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+/* ---- Sección de Evidencias (Hileras Completas) ---- */
+.evidence-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.evidence-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border: 1px solid #f1f1f3;
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+}
+
+.evidence-file {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.evidence-file mat-icon {
+  color: #6a1238;
+}
+
+.evidence-file div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.evidence-file strong {
+  color: #111827;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.evidence-file span {
+  color: #6b7280;
+  font-size: var(--font-size-xs);
+}
+
+.evidence-actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.link-btn {
+  color: #b91c1c !important; /* Rojo de acciones unificado */
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+}
+
+.evidence-count {
+  margin: var(--space-2) 0 0;
+  color: #6b7280;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+/* ---- Sección de Notas (Muro Tipo Bitácora) ---- */
+.timeline-notes {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.timeline-note {
+  border-left: 4px solid #6a1238; /* Indicador Guinda */
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+}
+
+.note-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.note-meta strong {
+  color: #111827;
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+}
+
+.note-meta span {
+  color: #9ca3af;
+  font-size: var(--font-size-xs);
+}
+
+.timeline-note p {
+  margin: 0;
+  color: #374151;
+  font-size: var(--font-size-sm);
+}
+
+.note-input {
+  width: 100%;
+}
+
+/* Remoción del padding extra inferior en Material Inputs */
+.notes-card ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+.notes-card mat-form-field {
+  margin-bottom: var(--space-3);
+}
+
+/* ---- Bloques Inferiores de Acciones y Decisiones ---- */
+.actions-card,
+.decision-card {
+  margin-bottom: var(--space-4);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.actions-card h3,
+.decision-card h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 900;
+  color: #111827;
+}
+
+.actions-card p,
+.decision-card p {
+  margin: var(--space-1) 0 0;
+  color: #6b7280;
+  font-size: var(--font-size-sm);
+}
+
+.eyebrow-small {
+  display: block;
+  color: #6a1238;
+  text-transform: uppercase;
+  font-size: var(--font-size-xs);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-1);
+}
+
+.actions,
+.decision-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ---- Botonera Homologada (Radio Estándar 8px) ---- */
+button {
+  border-radius: 8px !important; /* Eliminada la forma de píldora */
+  font-weight: 700 !important;
+}
+
+.primary-btn {
+  background: #b91c1c !important; /* Rojo unificado */
+  color: white !important;
+}
+
+.outline-btn {
+  border-color: #6b7280 !important;
+  color: #374151 !important;
+}
+
+.success-btn {
+  background: #166534 !important; /* Verde institucional */
+  color: white !important;
+}
+
+.danger-btn {
+  background: #b91c1c !important; /* Rojo de alerta unificado */
+  color: white !important;
+}
+
+/* ---- Chips de Estatus ---- */
+mat-chip {
+  font-weight: 700 !important;
+}
+
+.priority-chip {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.status-chip {
+  background: #e0f2fe !important;
+  color: #075985 !important;
+}
+
+@media (max-width: 1000px) {
+  .expediente-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header,
+  .actions-card,
+  .decision-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .actions,
+  .decision-actions {
+    width: 100%;
+  }
+
+  .actions button,
+  .decision-actions button {
+    width: 100%;
+  }
+}

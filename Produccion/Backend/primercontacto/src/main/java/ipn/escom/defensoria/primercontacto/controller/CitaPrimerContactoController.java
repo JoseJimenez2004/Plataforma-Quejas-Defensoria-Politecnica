@@ -4,7 +4,12 @@ import ipn.escom.defensoria.primercontacto.dto.CitaDTO;
 import ipn.escom.defensoria.primercontacto.dto.CrearCitaDTO;
 import ipn.escom.defensoria.primercontacto.service.CitaPrimerContactoService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.primercontacto.service.AnalistaAutenticadoService;
 
 import java.util.List;
 
@@ -13,16 +18,32 @@ import java.util.List;
 public class CitaPrimerContactoController {
 
     private final CitaPrimerContactoService citaPrimerContactoService;
+    private final AnalistaAutenticadoService analistaAutenticadoService;
 
-    public CitaPrimerContactoController(CitaPrimerContactoService citaPrimerContactoService) {
+    public CitaPrimerContactoController(
+            CitaPrimerContactoService citaPrimerContactoService,
+            AnalistaAutenticadoService analistaAutenticadoService
+    ) {
         this.citaPrimerContactoService = citaPrimerContactoService;
+        this.analistaAutenticadoService = analistaAutenticadoService;
     }
 
+
     @PostMapping
-    public CitaDTO crearCita(
-            @Valid @RequestBody CrearCitaDTO dto
+    public ResponseEntity<CitaDTO> crearCita(
+            @Valid @RequestBody CrearCitaDTO dto,
+            Authentication authentication
     ) {
-        return citaPrimerContactoService.crearCita(dto);
+
+        PersonalAdministrativo analista =
+                analistaAutenticadoService.obtenerAnalista(authentication);
+
+        return ResponseEntity.ok(
+                citaPrimerContactoService.crearCita(
+                        dto,
+                        analista
+                )
+        );
     }
 
     @GetMapping("/expediente/{expedienteId}")

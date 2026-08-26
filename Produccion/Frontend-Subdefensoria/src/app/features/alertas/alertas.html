@@ -1,0 +1,51 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Panel de Control de Plazos Vencidos</h2>
+      <p>Oficios cuyo plazo ya se cumplió y siguen sin respuesta.</p>
+    </div>
+  </div>
+
+  <div class="total-banner">Total Vencidos: {{ vencidos.length }}</div>
+
+  <mat-card class="table-card">
+    <table mat-table [dataSource]="vencidos" class="mat-elevation-z0">
+
+      <ng-container matColumnDef="folio">
+        <th mat-header-cell *matHeaderCellDef>Folio</th>
+        <td mat-cell *matCellDef="let a">{{ a.folio }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="unidadAcademica">
+        <th mat-header-cell *matHeaderCellDef>Unidad Académica</th>
+        <td mat-cell *matCellDef="let a">{{ a.unidadAcademica }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="fechaLimite">
+        <th mat-header-cell *matHeaderCellDef>Fecha Límite</th>
+        <td mat-cell *matCellDef="let a">{{ a.fechaLimite }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="diasRetraso">
+        <th mat-header-cell *matHeaderCellDef>Días de Retraso</th>
+        <td mat-cell *matCellDef="let a"><span class="retraso">+{{ a.diasRetraso }} Días</span></td>
+      </ng-container>
+
+      <ng-container matColumnDef="accion">
+        <th mat-header-cell *matHeaderCellDef>Acción de Urgencia</th>
+        <td mat-cell *matCellDef="let a">
+          <button mat-icon-button class="bell-btn" (click)="atender(a)" matTooltip="Enviar recordatorio">
+            <mat-icon>notifications_active</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    @if (vencidos.length === 0) {
+      <p class="empty-state">No hay oficios vencidos en este momento.</p>
+    }
+  </mat-card>
+</section>

@@ -12,8 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import ipn.escom.defensoria.primercontacto.dto.ExpedienteEntranteRequest;
 import ipn.escom.defensoria.primercontacto.dto.QuejosoResumenRequest;
 import ipn.escom.defensoria.primercontacto.dto.SubdefensoriaIngresoResponse;
-
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
 import java.time.LocalDate;
+
 
 import java.time.LocalDateTime;
 
@@ -36,7 +37,8 @@ public class DictamenPrimerContactoService {
 
     @Transactional
     public DictamenDTO registrarCompetencia(
-            CompetenciaDTO dto
+            CompetenciaDTO dto,
+            PersonalAdministrativo analista
     ) {
 
         /*
@@ -69,8 +71,8 @@ public class DictamenPrimerContactoService {
                 DictamenPrimerContacto.builder()
                         .expedienteId(expediente.getId())
                         .folio(expediente.getFolio())
-                        .analistaId(dto.getAnalistaId())
-                        .analistaNombre(dto.getAnalistaNombre())
+                        .analistaId(analista.getId())
+                        .analistaNombre(analista.getNombreCompleto())
                         .resultado("COMPETENTE")
                         .justificacion(dto.getJustificacion())
                         .areaTurno(dto.getAreaTurno())
@@ -171,7 +173,8 @@ public class DictamenPrimerContactoService {
 
     @Transactional
     public DictamenDTO registrarImprocedencia(
-            ImprocedenciaDTO dto
+            ImprocedenciaDTO dto,
+            PersonalAdministrativo analista
     ) {
 
         ExpedientePrimerContacto expediente =
@@ -195,8 +198,8 @@ public class DictamenPrimerContactoService {
                 DictamenPrimerContacto.builder()
                         .expedienteId(expediente.getId())
                         .folio(expediente.getFolio())
-                        .analistaId(dto.getAnalistaId())
-                        .analistaNombre(dto.getAnalistaNombre())
+                        .analistaId(analista.getId())
+                        .analistaNombre(analista.getNombreCompleto())
                         .resultado("IMPROCEDENTE")
                         .justificacion(dto.getJustificacion())
                         .areaTurno(null)

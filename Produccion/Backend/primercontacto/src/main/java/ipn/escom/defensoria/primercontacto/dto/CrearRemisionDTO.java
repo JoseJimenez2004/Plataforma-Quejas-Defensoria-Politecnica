@@ -14,12 +14,6 @@ public class CrearRemisionDTO {
     @NotBlank
     private String folio;
 
-    @NotNull
-    private Long analistaId;
-
-    @NotBlank
-    private String analistaNombre;
-
     @NotBlank
     private String autoridadRemision;
 
