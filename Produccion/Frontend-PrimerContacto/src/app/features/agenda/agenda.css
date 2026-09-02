@@ -8,14 +8,14 @@
 
 .page-header h2 {
   margin: 0;
-  color: #6a1238; /* Guinda Institucional */
+  color: var(--guinda);
   font-size: 28px;
   font-weight: 800;
 }
 
 .page-header p {
   margin: var(--space-1) 0 0;
-  color: #6b7280;
+  color: var(--texto-suave);
 }
 
 /* ---- Layout de dos columnas ---- */
@@ -33,6 +33,7 @@
   border-radius: 14px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   padding: var(--space-4);
+  background: white;
 }
 
 .table-card {
@@ -44,7 +45,7 @@
   margin: 0 0 var(--space-4);
   font-size: var(--font-size-lg);
   font-weight: 900;
-  color: #111827;
+  color: var(--negro-inst);
 }
 
 /* ---- Calendario ---- */
@@ -59,7 +60,7 @@
   margin: 0;
   font-size: var(--font-size-lg);
   font-weight: 900;
-  color: #111827;
+  color: var(--negro-inst);
 }
 
 .calendar-nav {
@@ -73,12 +74,12 @@
   text-align: center;
   font-size: var(--font-size-base);
   font-weight: 800;
-  color: #111827;
+  color: var(--negro-inst);
 }
 
 .today-btn {
-  border-color: #6a1238 !important;
-  color: #6a1238 !important;
+  border-color: var(--guinda) !important;
+  color: var(--guinda) !important;
   font-weight: 700;
   border-radius: 8px !important;
 }
@@ -92,7 +93,7 @@
 }
 
 .weekday {
-  background: #111827; /* Mismo color oscuro que los th de tu tabla anterior */
+  background: var(--negro-inst); /* Mismo color oscuro que los th de tu tabla anterior */
   color: white;
   padding: var(--space-2) var(--space-1);
   text-align: center;
@@ -115,7 +116,7 @@
 .calendar-day {
   cursor: pointer;
   font-weight: 700;
-  color: #374151;
+  color: var(--texto);
   transition: background 0.2s ease;
 }
 
@@ -124,19 +125,19 @@
 }
 
 .calendar-day.selected {
-  background: #fee2e2; /* Tono sutil rojo/guinda para selección */
-  color: #991b1b;
+  background: var(--guinda-suave);
+  color: var(--guinda);
 }
 
 .calendar-day.today {
-  outline: 2px solid #6a1238;
+  outline: 2px solid var(--guinda);
   outline-offset: -2px;
 }
 
 .day-dot {
   width: 6px;
   height: 6px;
-  background: #b91c1c;
+  background: var(--guinda-vivo);
   border-radius: 50%;
   margin-top: var(--space-1);
 }
@@ -150,7 +151,7 @@
 
 .empty-state-text {
   margin: 0;
-  color: #6b7280;
+  color: var(--texto-suave);
   padding: var(--space-3);
   text-align: center;
   font-size: var(--font-size-sm);
@@ -168,12 +169,12 @@
 }
 
 .day-appointment strong {
-  color: #111827;
+  color: var(--negro-inst);
   font-weight: 800;
 }
 
 .day-appointment span {
-  color: #374151;
+  color: var(--texto);
   font-size: var(--font-size-sm);
 }
 
@@ -192,7 +193,7 @@
 }
 
 .primary-btn {
-  background: #b91c1c !important; /* Rojo de acción unificado */
+  background: var(--guinda) !important;
   color: white !important;
   font-weight: 700;
   border-radius: 8px !important;
@@ -200,14 +201,14 @@
 }
 
 .outline-btn {
-  border-color: #6b7280 !important;
-  color: #374151 !important;
+  border-color: var(--texto-suave) !important;
+  color: var(--texto) !important;
   font-weight: 700;
   border-radius: 8px !important;
 }
 
 .error-hint {
-  color: #b91c1c;
+  color: var(--peligro);
   font-weight: 700;
   font-size: var(--font-size-xs);
   margin-top: calc(-1 * var(--space-2));
@@ -221,7 +222,7 @@
 
 .available-hours h4 {
   margin: 0 0 var(--space-2);
-  color: #111827;
+  color: var(--negro-inst);
   font-size: var(--font-size-sm);
   font-weight: 800;
 }
@@ -233,9 +234,9 @@
 }
 
 .hour-pill {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--borde);
   background: #ffffff;
-  color: #374151;
+  color: var(--texto);
   border-radius: 8px;
   padding: var(--space-1) var(--space-2);
   font-size: var(--font-size-xs);
@@ -249,9 +250,9 @@
 }
 
 .hour-pill.selected-hour {
-  background: #111827;
+  background: var(--guinda);
   color: #ffffff;
-  border-color: #111827;
+  border-color: var(--guinda);
 }
 
 /* ---- Lista e hileras de Próximas Citas ---- */
@@ -280,12 +281,12 @@
 }
 
 .appointment-row strong {
-  color: #111827;
+  color: var(--negro-inst);
   font-weight: 800;
 }
 
 .appointment-row span {
-  color: #6b7280;
+  color: var(--texto-suave);
   font-size: var(--font-size-sm);
 }
 
@@ -295,23 +296,23 @@ mat-chip {
 }
 
 .confirmed {
-  background: #dcfce7 !important;
-  color: #166534 !important;
+  background: #e8f5e9 !important;
+  color: var(--exito) !important;
 }
 
 .scheduled {
-  background: #fef3c7 !important;
-  color: #92400e !important;
+  background: #fdf6e3 !important;
+  color: var(--advertencia) !important;
 }
 
 .cancelled {
-  background: #fee2e2 !important;
-  color: #991b1b !important;
+  background: #ffebee !important;
+  color: var(--peligro) !important;
 }
 
 .type-presencial {
   background: #f3f4f6 !important;
-  color: #374151 !important;
+  color: var(--texto) !important;
   width: fit-content;
 }
 
