@@ -8,14 +8,14 @@
 
 .page-header h2 {
   margin: 0;
-  color: #6a1238;
+  color: var(--guinda);
   font-size: 28px;
   font-weight: 800;
 }
 
 .page-header p {
   margin: var(--space-1) 0 0;
-  color: #6b7280;
+  color: var(--texto-suave);
 }
 
 .layout {
@@ -34,7 +34,7 @@
 
 .filters-panel h3 {
   margin: 0 0 var(--space-3);
-  color: #111827;
+  color: var(--negro-inst);
   font-size: var(--font-size-md);
 }
 
@@ -76,7 +76,7 @@
 }
 
 .resultados-count {
-  color: #6b7280;
+  color: var(--texto-suave);
   font-size: var(--font-size-sm);
   margin: 0 0 var(--space-3);
 }
@@ -86,6 +86,7 @@
   border-radius: 14px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   padding: 0;
+  background: white;
 }
 
 table {
@@ -94,7 +95,7 @@ table {
 }
 
 th {
-  background: #111827 !important;
+  background: var(--negro-inst) !important;
   color: white;
   font-weight: 800;
 }
@@ -117,12 +118,12 @@ tr:hover td {
 
 .status-recibido { background: #e0e7ff; color: #3730a3; }
 .status-en_investigacion,
-.status-en_gestion_director { background: #fef3c7; color: #92400e; }
+.status-en_gestion_director { background: #fdf6e3; color: var(--advertencia); }
 .status-listo_a_dictaminar { background: #dbeafe; color: #1e40af; }
-.status-concluido { background: #dcfce7; color: #166534; }
+.status-concluido { background: #e8f5e9; color: var(--exito); }
 
 .progreso-vencido {
-  color: #b91c1c;
+  color: var(--peligro);
   font-weight: 700;
 }
 
@@ -131,7 +132,7 @@ tr:hover td {
 }
 
 .action-btn {
-  background: #b91c1c !important;
+  background: var(--guinda) !important;
   color: white !important;
   font-weight: 700;
   border-radius: 8px;
@@ -141,7 +142,7 @@ tr:hover td {
 
 .empty-state {
   text-align: center;
-  color: #6b7280;
+  color: var(--texto-suave);
   padding: var(--space-6);
   margin: 0;
 }

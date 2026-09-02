@@ -8,14 +8,14 @@
 
 .page-header h2 {
   margin: 0;
-  color: #6a1238;
+  color: var(--guinda);
   font-size: 28px;
   font-weight: 800;
 }
 
 .page-header p {
   margin: var(--space-1) 0 0;
-  color: #6b7280;
+  color: var(--texto-suave);
 }
 
 .flow-card {
@@ -39,17 +39,17 @@
   font-weight: 700;
   font-size: var(--font-size-sm);
   background: #f3f4f6;
-  color: #6b7280;
+  color: var(--texto-suave);
   white-space: nowrap;
 }
 
 .step.done {
-  background: #dcfce7;
-  color: #166534;
+  background: #e8f5e9;
+  color: var(--exito);
 }
 
 .step.active {
-  background: #6a1238;
+  background: var(--guinda);
   color: white;
 }
 
@@ -80,7 +80,7 @@
 
 .card h3 {
   margin: 0 0 var(--space-4);
-  color: #111827;
+  color: var(--negro-inst);
   font-size: var(--font-size-lg);
   font-weight: 900;
 }
@@ -103,20 +103,20 @@
 }
 
 .info-list span {
-  color: #6b7280;
+  color: var(--texto-suave);
   font-size: var(--font-size-xs);
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .info-list strong {
-  color: #111827;
+  color: var(--negro-inst);
   font-weight: 700;
   font-size: var(--font-size-sm);
 }
 
 .contenido {
-  color: #374151;
+  color: var(--texto);
   white-space: pre-wrap;
 }
 
@@ -129,7 +129,7 @@
 }
 
 .meta {
-  color: #6b7280;
+  color: var(--texto-suave);
   font-size: var(--font-size-sm);
 }
 
@@ -139,18 +139,18 @@ mat-chip {
 }
 
 .chip-espera {
-  background: #fef3c7 !important;
-  color: #92400e !important;
+  background: #fdf6e3 !important;
+  color: var(--advertencia) !important;
 }
 
 .chip-vencido {
-  background: #fee2e2 !important;
-  color: #991b1b !important;
+  background: #ffebee !important;
+  color: var(--peligro) !important;
 }
 
 .chip-respondido {
-  background: #dcfce7 !important;
-  color: #166534 !important;
+  background: #e8f5e9 !important;
+  color: var(--exito) !important;
 }
 
 .form-card mat-form-field {
@@ -169,7 +169,7 @@ mat-chip {
 }
 
 .primary-btn {
-  background: #b91c1c !important;
+  background: var(--guinda) !important;
   color: white !important;
   font-weight: 700;
   border-radius: 8px !important;
@@ -177,15 +177,15 @@ mat-chip {
 }
 
 .outline-btn {
-  border-color: #6b7280 !important;
-  color: #374151 !important;
+  border-color: var(--texto-suave) !important;
+  color: var(--texto) !important;
   font-weight: 700;
   border-radius: 8px !important;
   height: 42px;
 }
 
 .empty-state {
-  color: #6b7280;
+  color: var(--texto-suave);
   text-align: center;
   padding: var(--space-4);
   margin: 0;

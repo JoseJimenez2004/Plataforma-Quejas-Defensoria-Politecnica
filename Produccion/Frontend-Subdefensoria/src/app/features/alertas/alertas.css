@@ -8,18 +8,18 @@
 
 .page-header h2 {
   margin: 0;
-  color: #6a1238;
+  color: var(--guinda);
   font-size: 28px;
   font-weight: 800;
 }
 
 .page-header p {
   margin: var(--space-1) 0 0;
-  color: #6b7280;
+  color: var(--texto-suave);
 }
 
 .total-banner {
-  background: #b91c1c;
+  background: var(--peligro);
   color: white;
   font-weight: 800;
   padding: var(--space-4);
@@ -32,6 +32,7 @@
   border-radius: 14px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   padding: 0;
+  background: white;
 }
 
 table {
@@ -40,7 +41,7 @@ table {
 }
 
 th {
-  background: #111827 !important;
+  background: var(--negro-inst) !important;
   color: white;
   font-weight: 800;
 }
@@ -54,17 +55,17 @@ tr:hover td {
 }
 
 .retraso {
-  color: #b91c1c;
+  color: var(--peligro);
   font-weight: 800;
 }
 
 .bell-btn mat-icon {
-  color: #b91c1c;
+  color: var(--peligro);
 }
 
 .empty-state {
   text-align: center;
-  color: #6b7280;
+  color: var(--texto-suave);
   padding: var(--space-6);
   margin: 0;
 }
