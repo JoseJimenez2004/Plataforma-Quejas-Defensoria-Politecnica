@@ -10,9 +10,9 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "baseHref": "/subdefensoria/",
           "builder": "@angular/build:application",
           "options": {
+            "baseHref": "/subdefensoria/",
             "outputPath": "dist/frontend-subdefensoria",
             "index": "src/index.html",
             "browser": "src/main.ts",
@@ -23,6 +23,12 @@
           },
           "configurations": {
             "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.production.ts"
+                }
+              ],
               "budgets": [{ "type": "initial", "maximumWarning": "2MB", "maximumError": "5MB" }]
             },
             "development": { "optimization": false, "sourceMap": true }
