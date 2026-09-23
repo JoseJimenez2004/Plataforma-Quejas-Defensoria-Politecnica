@@ -16,7 +16,14 @@
       <option value="TURNADO">Turnado</option>
       <option value="RECHAZADO">Rechazado</option>
     </select>
-    <input type="date" [(ngModel)]="filtroFecha" name="filtroFecha" />
+    <div class="filtro-rango-fechas">
+      <label class="etiqueta-rango">Desde
+        <input type="date" [(ngModel)]="filtroFechaDesde" name="filtroFechaDesde" />
+      </label>
+      <label class="etiqueta-rango">Hasta
+        <input type="date" [(ngModel)]="filtroFechaHasta" name="filtroFechaHasta" />
+      </label>
+    </div>
     <button class="btn-primary" (click)="aplicarFiltros()">Aplicar Filtros</button>
     <button class="btn-secondary" (click)="exportar()" [disabled]="exportando">
       {{ exportando ? 'Exportando…' : 'Exportar Reporte (Excel)' }}

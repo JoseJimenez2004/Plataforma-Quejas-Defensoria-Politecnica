@@ -21,7 +21,10 @@ import { AcuerdoConclusion } from '../../core/models/acuerdo-conclusion';
 import { RecordatorioDialog, RecordatorioDialogData } from '../../shared/recordatorio-dialog/recordatorio-dialog';
 import { RespuestaExternaDialog, RespuestaExternaDialogData } from '../../shared/respuesta-externa-dialog/respuesta-externa-dialog';
 
-const PASOS = ['RECIBIDO', 'EN_INVESTIGACION', 'EN_GESTION_DIRECTOR', 'LISTO_A_DICTAMINAR', 'CONCLUIDO'];
+// El acuerdo ya no cierra el expediente: pasa por PENDIENTE_CONCLUSION mientras el quejoso
+// decide si lo acepta. Si lo rechaza, el expediente regresa a EN_INVESTIGACION.
+const PASOS = ['RECIBIDO', 'EN_INVESTIGACION', 'EN_ESPERA_OFICIO', 'ELABORO_ACUERDO',
+               'PENDIENTE_CONCLUSION', 'CONCLUIDO'];
 
 @Component({
   selector: 'app-expediente-detalle',
@@ -75,7 +78,7 @@ export class ExpedienteDetalle implements OnInit {
         this.expediente = expediente;
         this.cargarHistorial();
 
-        if (expediente.estatus === 'LISTO_A_DICTAMINAR' || expediente.estatus === 'CONCLUIDO') {
+        if (expediente.estatus === 'ELABORO_ACUERDO' || expediente.estatus === 'CONCLUIDO') {
           this.cargarAcuerdo(expediente.id);
         } else {
           this.cdr.detectChanges();
@@ -123,7 +126,7 @@ export class ExpedienteDetalle implements OnInit {
   }
 
   concluirExpediente(): void {
-    if (!confirm('¿Confirmas que deseas concluir este expediente? Esta acción cierra la investigación y lo envía al área secretarial.')) {
+    if (!confirm('¿Confirmas que deseas enviar el acuerdo al quejoso? El expediente quedará pendiente de su respuesta: si lo acepta se concluye, si lo rechaza regresa a investigación.')) {
       return;
     }
     this.guardarOConcluir(true);
@@ -181,7 +184,7 @@ export class ExpedienteDetalle implements OnInit {
       next: (acuerdo) => {
         this.guardando = false;
         this.acuerdo = acuerdo;
-        this.snackBar.open(concluir ? 'Expediente concluido correctamente.' : 'Borrador guardado.', 'Cerrar', { duration: 3000 });
+        this.snackBar.open(concluir ? 'Acuerdo enviado al quejoso. El expediente queda pendiente de su respuesta.' : 'Borrador guardado.', 'Cerrar', { duration: 3000 });
         this.cargarExpediente();
       },
       error: (err) => {

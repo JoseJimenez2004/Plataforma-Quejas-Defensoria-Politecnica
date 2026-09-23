@@ -12,5 +12,7 @@ public class EditarQuejaRequest {
     private String unidadAcademicaClave;
     private LocalDate fechaHechos;
     private String nombreDenunciado;
-    private String apellidoDenunciado;
+    private String apellido1Denunciado;
+    /** Segundo apellido del denunciado -- opcional, el quejoso puede no conocerlo. */
+    private String apellido2Denunciado;
 }

@@ -1,7 +1,16 @@
+@if (mostrarAvisoPrivacidad) {
+  <app-aviso-privacidad (aceptado)="onAvisoAceptado($event)"></app-aviso-privacidad>
+}
+
 <div class="contenedor">
   @if (quejaCreada) {
     <div class="card exito">
-      <div class="icono-exito">✅</div>
+      <div class="icono-exito">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 12l2 2 4-4" />
+          <circle cx="12" cy="12" r="9" />
+        </svg>
+      </div>
       <h2>¡Queja enviada con éxito!</h2>
       <p>Tu número de folio para seguimiento es:</p>
       <div class="folio">{{ quejaCreada.numeroFolio }}</div>
@@ -11,10 +20,22 @@
       </p>
 
       <button type="button" class="btn-secondary btn-acuse" (click)="descargarAcuse()">
-        🖨️ Descargar Acuse de Recibo
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9V3h12v6" />
+          <rect x="4" y="9" width="16" height="8" rx="1.5" />
+          <path d="M6 17v4h12v-4" />
+        </svg>
+        Descargar Acuse de Recibo
       </button>
 
       <div class="seguimiento">
+        <span class="seguimiento__icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M19 8v6M22 11h-6" />
+          </svg>
+        </span>
         <h3>¿Deseas dar seguimiento detallado?</h3>
         <p>
           Al crear una cuenta institucional podrás editar tu queja mientras esté en estatus
@@ -34,75 +55,104 @@
     </div>
   } @else {
 
-  <h2>Formulario de Registro de Quejas</h2>
+  <div class="encabezado-formulario">
+    <h2>Formulario de Registro de Quejas</h2>
+    <p class="encabezado-formulario__subtitulo">
+      Completa los siguientes pasos con tus datos y la descripción de los hechos. Tu información
+      se maneja de forma confidencial y solo la revisa personal autorizado de la Defensoría.
+    </p>
+  </div>
 
     <form (submit)="$event.preventDefault(); enviarQueja()" class="card formulario-queja">
       <h3 class="paso">Datos del Quejoso</h3>
       <div class="fila">
-        <div class="input-group" [class.input-invalid]="nombreModel.invalid && (nombreModel.touched || intentoEnviar)">
+        <div class="input-group" [class.input-invalid]="errorNombre && (nombreModel.touched || intentoEnviar)">
           <label>Nombre:</label>
           <input
             type="text"
             [(ngModel)]="nombre"
             name="nombre"
             #nombreModel="ngModel"
-            maxlength="255"
+            (keypress)="soloLetras($event)"
+            [maxlength]="nombreLongitudMaxima"
+            autocomplete="given-name"
             required
           />
-          @if (nombreModel.invalid && (nombreModel.touched || intentoEnviar)) {
-            <span class="mensaje-campo">Este campo es obligatorio.</span>
+          @if (errorNombre && (nombreModel.touched || intentoEnviar)) {
+            <span class="mensaje-campo">{{ errorNombre }}</span>
           }
         </div>
-        <div class="input-group" [class.input-invalid]="apellidoPaternoModel.invalid && (apellidoPaternoModel.touched || intentoEnviar)">
+        <div class="input-group" [class.input-invalid]="errorApellido1 && (apellido1Model.touched || intentoEnviar)">
           <label>Primer Apellido:</label>
           <input
             type="text"
-            [(ngModel)]="apellidoPaterno"
-            name="apellidoPaterno"
-            #apellidoPaternoModel="ngModel"
-            maxlength="255"
+            [(ngModel)]="apellido1"
+            name="apellido1"
+            #apellido1Model="ngModel"
+            (keypress)="soloLetras($event)"
+            [maxlength]="nombreLongitudMaxima"
+            autocomplete="family-name"
             required
           />
-          @if (apellidoPaternoModel.invalid && (apellidoPaternoModel.touched || intentoEnviar)) {
-            <span class="mensaje-campo">Este campo es obligatorio.</span>
+          @if (errorApellido1 && (apellido1Model.touched || intentoEnviar)) {
+            <span class="mensaje-campo">{{ errorApellido1 }}</span>
           }
         </div>
       </div>
       <div class="fila">
-        <div class="input-group">
+        <div class="input-group" [class.input-invalid]="errorApellido2 && (apellido2Model.touched || intentoEnviar)">
           <label>Segundo Apellido:</label>
-          <input type="text" [(ngModel)]="apellidoMaterno" name="apellidoMaterno" maxlength="255" />
+          <input
+            type="text"
+            [(ngModel)]="apellido2"
+            name="apellido2"
+            #apellido2Model="ngModel"
+            (keypress)="soloLetras($event)"
+            [maxlength]="nombreLongitudMaxima"
+          />
+          @if (errorApellido2 && (apellido2Model.touched || intentoEnviar)) {
+            <span class="mensaje-campo">{{ errorApellido2 }}</span>
+          }
         </div>
-        <div class="input-group" [class.input-invalid]="correoModel.invalid && (correoModel.touched || intentoEnviar)">
+        <div class="input-group" [class.input-invalid]="errorCorreo && (correoModel.touched || intentoEnviar)">
           <label>Correo:</label>
           <input
             type="email"
-            email
             [(ngModel)]="correo"
             name="correo"
             #correoModel="ngModel"
-            maxlength="255"
+            maxlength="254"
+            autocomplete="email"
             required
+            (blur)="verificarCorreoRegistrado()"
           />
-          @if (correoModel.invalid && (correoModel.touched || intentoEnviar)) {
-            <span class="mensaje-campo">
-              {{ correoModel.errors?.['required'] ? 'Este campo es obligatorio.' : 'Escribe un correo válido.' }}
-            </span>
+          @if (errorCorreo && (correoModel.touched || intentoEnviar)) {
+            <span class="mensaje-campo">{{ errorCorreo }}</span>
+          }
+          @if (correoYaRegistrado) {
+            <div class="aviso-correo-registrado">
+              <strong>Este correo ya tiene una cuenta.</strong>
+              Inicia sesion para presentar tu queja desde tu panel y que quede ligada a tu
+              historial.
+              <a routerLink="/portal/login" [queryParams]="{ correo: correo }">Iniciar sesion</a>
+            </div>
           }
         </div>
       </div>
       <div class="fila">
-        <div class="input-group input-fecha" [class.input-invalid]="!fechaNacimiento && intentoEnviar">
+        <div class="input-group input-fecha" [class.input-invalid]="errorFechaNacimiento && intentoEnviar">
           <label>Fecha de nacimiento:</label>
           <app-datepicker
             [(ngModel)]="fechaNacimiento"
             name="fechaNacimiento"
-            min="1900-01-01"
-            [max]="fechaMaxima"
+            [min]="fechaNacimientoMinima"
+            [max]="fechaNacimientoMaxima"
             (cambio)="onFechaNacimientoChange()"
           ></app-datepicker>
-          @if (!fechaNacimiento && intentoEnviar) {
-            <span class="mensaje-campo">Selecciona tu fecha de nacimiento.</span>
+          @if (errorFechaNacimiento && intentoEnviar) {
+            <span class="mensaje-campo">{{ errorFechaNacimiento }}</span>
+          } @else {
+            <span class="mensaje-ayuda">Entre 1920 y {{ fechaNacimientoMaxima.slice(0, 4) }}.</span>
           }
         </div>
       </div>
@@ -112,9 +162,9 @@
           <span class="banner-tutor__icono">✓</span>
           <span class="banner-tutor__texto">
             @if (esMenorDe14) {
-              Estás presentando esta queja como tutor(a) de {{ nombre }} {{ apellidoPaterno }}. Datos de tutor: <strong>{{ tutor.nombre }} {{ tutor.apellidoPaterno }}</strong>
+              Estás presentando esta queja como tutor(a) de {{ nombre }} {{ apellido1 }}. Datos de tutor: <strong>{{ tutor.nombre }} {{ tutor.apellido1 }}</strong>
             } @else {
-              Datos del tutor/adulto responsable capturados: <strong>{{ tutor.nombre }} {{ tutor.apellidoPaterno }}</strong>
+              Datos del tutor/adulto responsable capturados: <strong>{{ tutor.nombre }} {{ tutor.apellido1 }}</strong>
             }
           </span>
           <button type="button" class="banner-tutor__editar" (click)="editarTutor()">Editar</button>
@@ -129,7 +179,7 @@
             <label><input type="radio" name="identificacion" value="empleado" [(ngModel)]="identificacion" /> Empleado</label>
           </div>
         </div>
-        <div class="input-group" [class.input-invalid]="numeroBoletaEmpleadoModel.invalid && (numeroBoletaEmpleadoModel.touched || intentoEnviar)">
+        <div class="input-group" [class.input-invalid]="errorBoleta && (numeroBoletaEmpleadoModel.touched || intentoEnviar)">
           <label>{{ etiquetaNumeroIdentificacion }}:</label>
           <input
             type="text"
@@ -137,109 +187,184 @@
             name="numeroBoletaEmpleado"
             #numeroBoletaEmpleadoModel="ngModel"
             [placeholder]="etiquetaNumeroIdentificacion"
-            maxlength="12"
-            pattern="[0-9]+"
+            (keypress)="soloDigitos($event)"
+            [maxlength]="boletaLongitudMaxima"
             inputmode="numeric"
             required
           />
-          @if (numeroBoletaEmpleadoModel.invalid && (numeroBoletaEmpleadoModel.touched || intentoEnviar)) {
-            <span class="mensaje-campo">
-              {{ numeroBoletaEmpleadoModel.errors?.['required'] ? 'Este campo es obligatorio.' : 'Solo se permiten números, sin letras ni espacios.' }}
-            </span>
+          @if (errorBoleta && (numeroBoletaEmpleadoModel.touched || intentoEnviar)) {
+            <span class="mensaje-campo">{{ errorBoleta }}</span>
+          } @else {
+            <span class="mensaje-ayuda">Solo números, máximo {{ boletaLongitudMaxima }} dígitos.</span>
           }
         </div>
       </div>
 
-      <div class="input-group" [class.input-invalid]="!identificacionArchivo && intentoEnviar">
-        <label>Identificación oficial (credencial de la comunidad politécnica):</label>
-        <div class="dropzone" (click)="inputIdentificacion.click()">
-          <input
-            #inputIdentificacion
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            (change)="onIdentificacionSeleccionada($event)"
-            hidden
-          />
-          @if (identificacionArchivo) {
-            <span class="dropzone__icono">🪪</span>
+      <div class="input-group" [class.input-invalid]="errorIdentificacion && intentoEnviar">
+        <label>
+          Identificación oficial (credencial de la comunidad politécnica):
+        </label>
+
+        @if (identificaciones.length < identificacionCantidadMaxima) {
+          <div class="dropzone" (click)="inputIdentificacion.click()">
+            <input
+              #inputIdentificacion
+              type="file"
+              multiple
+              accept="image/jpeg,image/png"
+              (change)="onIdentificacionSeleccionada($event)"
+              hidden
+            />
+            <span class="dropzone__icono">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+                <circle cx="8.5" cy="11.5" r="2.2" />
+                <path d="M5 16c.6-1.7 2-2.6 3.5-2.6s2.9.9 3.5 2.6" />
+                <path d="M14.5 9.5h4" />
+                <path d="M14.5 13h4" />
+              </svg>
+            </span>
             <p class="dropzone__texto">
-              {{ identificacionArchivo.name }}
-              <span class="archivo-peso">({{ formatearTamanio(identificacionArchivo.size) }})</span>
+              Sube una foto o escaneo de tu credencial — <strong>haz clic para elegir</strong>
             </p>
-            <button type="button" class="quitar" (click)="$event.stopPropagation(); quitarIdentificacion()" aria-label="Quitar identificación">
-              ✕ Quitar
-            </button>
-          } @else {
-            <span class="dropzone__icono">🪪</span>
-            <p class="dropzone__texto">Sube una foto o escaneo de tu credencial — <strong>haz clic para elegir</strong></p>
-            <p class="dropzone__hint">PDF, JPG o PNG — máximo 30MB</p>
-          }
-        </div>
-        @if (!identificacionArchivo && intentoEnviar) {
-          <span class="mensaje-campo">Adjunta tu identificación oficial.</span>
+            <p class="dropzone__hint">
+              Solo JPG o PNG — máximo 3MB por imagen — hasta {{ identificacionCantidadMaxima }} imágenes (frente y reverso)
+            </p>
+          </div>
+        }
+
+        @if (identificaciones.length) {
+          <div class="galeria-archivos">
+            @for (item of identificaciones; track item.archivo.name; let i = $index) {
+              <figure class="miniatura">
+                @if (item.url) {
+                  <img [src]="item.url" [alt]="'Vista previa de ' + item.archivo.name" />
+                } @else {
+                  <span class="miniatura__extension">{{ tipoArchivo(item.archivo) }}</span>
+                }
+                <figcaption>
+                  <span class="miniatura__nombre" [title]="item.archivo.name">{{ item.archivo.name }}</span>
+                  <span class="archivo-peso">{{ formatearTamanio(item.archivo.size) }}</span>
+                </figcaption>
+                <button
+                  type="button"
+                  class="miniatura__quitar"
+                  (click)="quitarIdentificacion(i)"
+                  [attr.aria-label]="'Quitar ' + item.archivo.name"
+                >✕</button>
+              </figure>
+            }
+          </div>
+        }
+
+        @if (errorIdentificacion && intentoEnviar) {
+          <span class="mensaje-campo">{{ errorIdentificacion }}</span>
         }
       </div>
 
-      <h3 class="paso">Datos de la Queja</h3>
+      <h3 class="paso">Lugar de los hechos</h3>
       <div class="fila">
-        <div class="input-group" [class.input-invalid]="unidadAcademicaModel.invalid && (unidadAcademicaModel.touched || intentoEnviar)">
+        <div class="input-group" [class.input-invalid]="errorUnidadAcademica && (unidadAcademicaModel.touched || intentoEnviar)">
           <label>Lugar donde sucedieron los hechos:</label>
-          <select
+          <app-autocompletar-dependencia
             [(ngModel)]="unidadAcademica"
             name="unidadAcademica"
             #unidadAcademicaModel="ngModel"
+            [dependencias]="dependencias"
+            [cargando]="cargandoDependencias"
             required
-          >
-            <option value="">
-              {{ cargandoDependencias ? 'Cargando dependencias…' : 'Seleccione una dependencia' }}
-            </option>
-            @for (dep of dependencias; track dep.clave) {
-              <option [value]="dep.clave">{{ dep.nombre }}</option>
-            }
-          </select>
+          ></app-autocompletar-dependencia>
           @if (errorDependencias) {
             <p class="error">{{ errorDependencias }}</p>
           }
-          @if (unidadAcademicaModel.invalid && (unidadAcademicaModel.touched || intentoEnviar) && !errorDependencias) {
-            <span class="mensaje-campo">Selecciona el lugar de los hechos.</span>
+          @if (errorUnidadAcademica && (unidadAcademicaModel.touched || intentoEnviar) && !errorDependencias) {
+            <span class="mensaje-campo">{{ errorUnidadAcademica }}</span>
+          } @else if (!errorDependencias) {
+            <span class="mensaje-ayuda">
+              Escribe las siglas o el nombre de tu escuela — por ejemplo <strong>ESCOM</strong> o
+              <strong>Escuela Superior de Cómputo</strong>.
+            </span>
           }
         </div>
-        <div class="input-group input-fecha" [class.input-invalid]="!fechaHechos && intentoEnviar">
+        <div class="input-group input-fecha" [class.input-invalid]="errorFechaHechos && intentoEnviar">
           <label>Fecha de los hechos:</label>
           <app-datepicker
             [(ngModel)]="fechaHechos"
             name="fechaHechos"
             [max]="fechaMaxima"
           ></app-datepicker>
-          @if (!fechaHechos && intentoEnviar) {
-            <span class="mensaje-campo">Selecciona la fecha de los hechos.</span>
+          @if (errorFechaHechos && intentoEnviar) {
+            <span class="mensaje-campo">{{ errorFechaHechos }}</span>
           }
         </div>
       </div>
 
       <h3 class="paso">Datos del Denunciado</h3>
       <div class="fila">
-        <div class="input-group">
+        <div class="input-group" [class.input-invalid]="errorNombreDenunciado && (nombreDenunciadoModel.touched || intentoEnviar)">
           <label>Nombre del denunciado:</label>
-          <input type="text" [(ngModel)]="nombreDenunciado" name="nombreDenunciado" maxlength="255" />
+          <input
+            type="text"
+            [(ngModel)]="nombreDenunciado"
+            name="nombreDenunciado"
+            #nombreDenunciadoModel="ngModel"
+            (keypress)="soloLetras($event)"
+            [maxlength]="nombreLongitudMaxima"
+          />
+          @if (errorNombreDenunciado && (nombreDenunciadoModel.touched || intentoEnviar)) {
+            <span class="mensaje-campo">{{ errorNombreDenunciado }}</span>
+          }
         </div>
-        <div class="input-group">
+        <div class="input-group" [class.input-invalid]="errorApellido1Denunciado && (apellido1DenunciadoModel.touched || intentoEnviar)">
           <label>Primer Apellido del denunciado:</label>
-          <input type="text" [(ngModel)]="apellidoDenunciado" name="apellidoDenunciado" maxlength="255" />
+          <input
+            type="text"
+            [(ngModel)]="apellido1Denunciado"
+            name="apellido1Denunciado"
+            #apellido1DenunciadoModel="ngModel"
+            (keypress)="soloLetras($event)"
+            [maxlength]="nombreLongitudMaxima"
+          />
+          @if (errorApellido1Denunciado && (apellido1DenunciadoModel.touched || intentoEnviar)) {
+            <span class="mensaje-campo">{{ errorApellido1Denunciado }}</span>
+          }
         </div>
       </div>
+      <div class="fila">
+        <div class="input-group" [class.input-invalid]="errorApellido2Denunciado && (apellido2DenunciadoModel.touched || intentoEnviar)">
+          <label>Segundo Apellido del denunciado:</label>
+          <input
+            type="text"
+            [(ngModel)]="apellido2Denunciado"
+            name="apellido2Denunciado"
+            #apellido2DenunciadoModel="ngModel"
+            (keypress)="soloLetras($event)"
+            [maxlength]="nombreLongitudMaxima"
+          />
+          @if (errorApellido2Denunciado && (apellido2DenunciadoModel.touched || intentoEnviar)) {
+            <span class="mensaje-campo">{{ errorApellido2Denunciado }}</span>
+          } @else {
+            <span class="mensaje-ayuda">Opcional, si lo conoces.</span>
+          }
+        </div>
+        <div class="input-group"></div>
+      </div>
 
-      <div class="input-group" [class.input-invalid]="descripcionModel.invalid && (descripcionModel.touched || intentoEnviar)">
+      <div class="input-group" [class.input-invalid]="errorDescripcion && (descripcionModel.touched || intentoEnviar)">
         <label>Descripción de los hechos:</label>
         <textarea
           rows="5"
           [(ngModel)]="descripcion"
           name="descripcion"
           #descripcionModel="ngModel"
+          [maxlength]="descripcionLongitudMaxima"
           required
         ></textarea>
-        @if (descripcionModel.invalid && (descripcionModel.touched || intentoEnviar)) {
-          <span class="mensaje-campo">Describe brevemente los hechos.</span>
+        <div class="contador-caracteres">
+          {{ descripcion.length }} / {{ descripcionLongitudMaxima }}
+        </div>
+        @if (errorDescripcion && (descripcionModel.touched || intentoEnviar)) {
+          <span class="mensaje-campo">{{ errorDescripcion }}</span>
         }
       </div>
 
@@ -262,26 +387,60 @@
             (change)="onArchivosSeleccionados($event)"
             hidden
           />
-          <span class="dropzone__icono">📎</span>
+          <span class="dropzone__icono">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16.5 6.5l-8 8a3 3 0 0 0 4.24 4.24l8.5-8.5a5 5 0 0 0-7.07-7.07l-8.5 8.5a7 7 0 0 0 9.9 9.9" />
+            </svg>
+          </span>
           <p class="dropzone__texto">Arrastra tus archivos aquí o <strong>haz clic para elegir</strong></p>
           <p class="dropzone__hint">PDF, JPG, PNG, MP4, MP3 — máximo 30MB por archivo, 100MB en total</p>
         </div>
 
-        @if (archivos.length) {
-          <ul class="lista-archivos">
-            @for (archivo of archivos; track archivo.name; let i = $index) {
-              <li>
-                <span>{{ archivo.name }} <span class="archivo-peso">({{ formatearTamanio(archivo.size) }})</span></span>
-                <button type="button" class="quitar" (click)="quitarArchivo(i)" aria-label="Quitar archivo">✕</button>
-              </li>
+        @if (evidencias.length) {
+          <p class="galeria-titulo">
+            {{ evidencias.length }} archivo(s) adjunto(s) — revisa que sean los correctos:
+          </p>
+          <div class="galeria-archivos">
+            @for (item of evidencias; track item.archivo.name; let i = $index) {
+              <figure class="miniatura">
+                @if (item.url) {
+                  <img [src]="item.url" [alt]="'Vista previa de ' + item.archivo.name" />
+                } @else {
+                  <span class="miniatura__extension">{{ tipoArchivo(item.archivo) }}</span>
+                }
+                <figcaption>
+                  <span class="miniatura__nombre" [title]="item.archivo.name">{{ item.archivo.name }}</span>
+                  <span class="archivo-peso">{{ formatearTamanio(item.archivo.size) }}</span>
+                </figcaption>
+                <button
+                  type="button"
+                  class="miniatura__quitar"
+                  (click)="quitarArchivo(i)"
+                  [attr.aria-label]="'Quitar ' + item.archivo.name"
+                >✕</button>
+              </figure>
             }
-          </ul>
+          </div>
         }
       </div>
 
-      <button type="submit" class="btn-primary" [disabled]="cargando">
-        {{ cargando ? 'Enviando…' : 'Enviar Queja' }}
-      </button>
+      <div class="envio-formulario">
+        <button type="submit" class="btn-primary btn-enviar-queja" [disabled]="cargando">
+          {{ cargando ? 'Enviando…' : 'Enviar Queja' }}
+        </button>
+        <p class="envio-formulario__nota">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="10" width="16" height="10" rx="2" />
+            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+          </svg>
+          Tus datos se manejan de forma confidencial.
+          @if (avisoAceptado) {
+            <span class="envio-formulario__aviso">
+              Aviso de privacidad aceptado (v{{ avisoPrivacidadVersion }}).
+            </span>
+          }
+        </p>
+      </div>
     </form>
   }
 </div>
@@ -300,9 +459,19 @@
   <div class="modal-overlay">
     <div class="modal card">
       <div class="modal-header">
+        <span class="modal-header__icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        </span>
         <h3>Información del Tutor / Adulto Responsable</h3>
         <button type="button" class="modal-cerrar" (click)="cancelarTutor()" aria-label="Cerrar">✕</button>
       </div>
+
+      <div class="modal-body">
       @if (esMenorDe14) {
         <p class="aviso-inline">
           Por tratarse de una persona menor de 14 años, este trámite debe completarlo su padre,
@@ -315,16 +484,16 @@
 
       <div class="input-group">
         <label>Nombre(s):</label>
-        <input type="text" [(ngModel)]="tutor.nombre" name="tutorNombre" maxlength="255" required />
+        <input type="text" [(ngModel)]="tutor.nombre" name="tutorNombre" (keypress)="soloLetras($event)" [maxlength]="nombreLongitudMaxima" required />
       </div>
       <div class="fila">
         <div class="input-group">
           <label>Primer Apellido:</label>
-          <input type="text" [(ngModel)]="tutor.apellidoPaterno" name="tutorApellidoPaterno" maxlength="255" required />
+          <input type="text" [(ngModel)]="tutor.apellido1" name="tutorApellido1" (keypress)="soloLetras($event)" [maxlength]="nombreLongitudMaxima" required />
         </div>
         <div class="input-group">
           <label>Segundo Apellido:</label>
-          <input type="text" [(ngModel)]="tutor.apellidoMaterno" name="tutorApellidoMaterno" maxlength="255" />
+          <input type="text" [(ngModel)]="tutor.apellido2" name="tutorApellido2" (keypress)="soloLetras($event)" [maxlength]="nombreLongitudMaxima" />
         </div>
       </div>
       <div class="input-group">
@@ -338,7 +507,7 @@
       <div class="fila">
         <div class="input-group">
           <label>Correo Electrónico:</label>
-          <input type="email" email [(ngModel)]="tutor.correo" name="tutorCorreo" maxlength="255" />
+          <input type="email" [(ngModel)]="tutor.correo" name="tutorCorreo" maxlength="254" />
         </div>
         <div class="input-group">
           <label>Teléfono de Contacto (10 dígitos):</label>
@@ -346,7 +515,7 @@
             type="tel"
             [(ngModel)]="tutor.telefono"
             name="tutorTelefono"
-            pattern="[0-9]{10}"
+            (keypress)="soloDigitos($event)"
             maxlength="10"
             inputmode="numeric"
           />
@@ -356,6 +525,7 @@
       <div class="modal-acciones">
         <button type="button" class="btn-primary" (click)="confirmarTutor()">Confirmar Datos</button>
         <button type="button" class="btn-secondary" (click)="cancelarTutor()">Cancelar</button>
+      </div>
       </div>
     </div>
   </div>

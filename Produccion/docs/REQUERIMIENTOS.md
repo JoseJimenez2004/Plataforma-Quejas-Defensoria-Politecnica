@@ -578,7 +578,10 @@ levantarse igual que el resto de los microservicios.
 - **Base de datos propia y en memoria**: cada uno usa H2 (`jdbc:h2:mem:...`), no la
   `defensoria_db` de Postgres compartida por el resto del sistema. Los datos se pierden en cada
   reinicio del contenedor — aceptable mientras están en desarrollo, no para producción real.
-  Sus propios `application.properties` ya lo señalan como "H2 temporal".
+  Sus propios `application.properties` ya lo señalan como "H2 temporal". **Actualización
+  2026-08-22**: pese a esto, las 11 tablas de estos dos servicios existen físicamente en
+  `defensoria_db` (confirmado por `\dt` en producción) — hallazgo sin explicación confirmada
+  todavía, ver §6.2.
 - **Sin ruta pública ni frontend**: no existe todavía un `Frontend-PrimerContacto` ni
   `Frontend-Subdefensoria`, ni una entrada en `router.conf`/`nginx/config/defensoria.conf` para
   ellos (a diferencia de `/admin/` y `/revision/`). Sus `cors.allowed-origins` de desarrollo
@@ -683,9 +686,115 @@ conviviendo en el sistema, y es la parte que más confunde:
 6. Verificar con `podman ps -a` y `podman logs primer-contacto-service` /
    `podman logs subdefensoria-service`.
 
-## 6. Anexo — Esquema de base de datos (Postgres, `defensoria_db`)
+## 6. Anexo — Base de datos (Postgres, `defensoria_db`, contenedor `defensoria-db`)
 
-Base única compartida por los 7 microservicios; cada tabla es gestionada por Hibernate
+### 6.0 Cómo conectarte tú mismo a explorar las tablas
+
+`defensoria_db` corre dentro de un contenedor Podman (`defensoria-db`, imagen `postgres:16`) en
+la VPS backend (`2.25.78.22` / `srv1804187`) — **no** directo sobre el sistema operativo del
+host. Por eso `psql -U postgres -d defensoria_db` ejecutado tal cual en la terminal de la VPS
+falla con `connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: No such
+file or directory`: ese socket vive dentro del contenedor, no en el host. Dos formas de entrar
+que sí funcionan:
+
+```bash
+# Opción A (recomendada) -- ejecuta psql directamente dentro del contenedor
+podman exec -it defensoria-db psql -U postgres -d defensoria_db
+
+# Opción B -- desde el host, forzando conexión TCP al puerto publicado (5432 está expuesto
+# como 0.0.0.0:5432->5432/tcp en "podman ps -a")
+psql -h 127.0.0.1 -p 5432 -U postgres -d defensoria_db
+```
+
+Si no recuerdas la contraseña del usuario `postgres` del contenedor:
+
+```bash
+podman inspect defensoria-db --format '{{range .Config.Env}}{{println .}}{{end}}' | grep POSTGRES_PASSWORD
+```
+
+Ya dentro de `psql`, los comandos básicos para "empezar a ver las tablas":
+
+| Comando | Qué hace |
+|---|---|
+| `\dt` | Lista todas las tablas del schema `public` |
+| `\d nombre_tabla` | Columnas, tipos y restricciones de una tabla |
+| `\d+ nombre_tabla` | Igual, con tamaño en disco y comentarios |
+| `SELECT * FROM nombre_tabla LIMIT 20;` | Ver filas de muestra |
+| `\q` | Salir |
+
+### 6.1 Inventario real — 22 tablas confirmadas (`\dt`, verificado en producción el 2026-08-22)
+
+```
+acuerdos_conciliacion        bitacora_acciones            citas_primer_contacto
+acuerdos_conclusion          dependencias                 dictamenes_primer_contacto
+evidencias_primer_contacto   expedientes_investigacion    expedientes_primer_contacto
+notas_analisis                notificaciones               oficios_informacion
+personal_administrativo      plantillas_documentos        preguntas_chatbot
+queja_evidencias              queja_tutores                 quejas
+recordatorios_urgencia        remisiones_externas           respuestas_externas
+usuarios
+```
+
+Se dividen en dos grupos con historia distinta — ver 6.3 y 6.4.
+
+### 6.2 ⚠️ Hallazgo — las 11 tablas de Primer Contacto/Subdefensoría existen en Postgres aunque su configuración dice que corren en H2 en memoria
+
+Esto vale la pena que lo tengas presente antes de seguir explorando: el código de
+`primer-contacto-service` y `subdefensoria-service` (`application.properties` de ambos módulos,
+y `docs/REQUERIMIENTOS.md` §5.2, escrito cuando se les dio despliegue) documenta explícitamente
+que usan **H2 en memoria**, no `defensoria_db` — con un comentario deliberado en
+`config-files/primer-contacto-service.yml` y `config-files/subdefensoria-service.yml` que dice
+literalmente "a propósito NO se sobreescribe aquí ninguna clave de datasource/JPA: el servicio
+sigue corriendo con su base H2". No hay ninguna variable `DB_URL`/`DB_USER`/`DB_PASSWORD`
+inyectada para estos dos servicios en `podman-compose.sh`.
+
+Sin embargo, el `pg_dump --schema-only` real contra `defensoria_db`
+(`docs/defensoria_db_estructura_2026-08-22.sql`, generado por ti el 2026-08-22) confirma que sus
+11 tablas existen físicamente ahí (`citas_primer_contacto`, `dictamenes_primer_contacto`,
+`evidencias_primer_contacto`, `expedientes_primer_contacto`, `notas_analisis`,
+`remisiones_externas`, `acuerdos_conclusion`, `expedientes_investigacion`,
+`oficios_informacion`, `recordatorios_urgencia`, `respuestas_externas`), con columnas, tipos y
+llaves únicas que coinciden exactamente con las clases `@Entity` de esos dos módulos (ver §6.4).
+Es decir: en algún momento algo sí las creó ahí (Hibernate con `ddl-auto: update` las genera
+solas apenas algo se conecta apuntando a esa base), y nunca se borraron — lo más probable es que
+en algún punto, antes o durante pruebas, alguno de los dos servicios se haya corrido apuntando
+directamente a `defensoria_db` (por ejemplo en una máquina local con `DB_URL` distinto al del
+repositorio) y luego se volvió a H2 sin limpiar lo ya creado.
+
+Una pista que **investigué y descarté** como explicación: `quejas` tiene ahora una columna
+nueva, `folio_primer_contacto` (`character varying(255)`, con restricción `UNIQUE`,
+`ukp1ajrjo9em1239n7c7ywdt8da`), que no estaba en el snapshot de `ESQUEMA-BD-2026-08-17.md`. Se
+podría pensar que prueba que Primer Contacto sí escribe en Postgres, pero no es así: la columna
+la mapea únicamente la entidad `Queja` de **`revision-service`**
+(`revision-service/.../entity/Queja.java:133-134`, `queja-service` ni siquiera la conoce en su
+propia clase `Queja` — mismo patrón de "dos entidades JPA distintas sobre la misma tabla" que ya
+señalaba §3 del esquema anterior). Es decir, `revision-service` simplemente guarda ahí, como
+texto, el folio que le devuelve la llamada HTTP a Primer Contacto — no requiere que Primer
+Contacto toque Postgres para nada. No resuelve el hallazgo de esta sección, pero es en sí mismo
+un hallazgo nuevo que vale la pena tener documentado (columna real, en uso, no reflejada
+todavía en la tabla del §6.3 original ni en `queja-service`).
+
+`pg_dump --schema-only` no trae conteo de filas (solo estructura), así que **seguimos sin saber
+si esas 11 tablas tienen datos reales o están vacías**. Para saberlo, corre esto (rápido, no
+escanea las tablas completas):
+
+```sql
+SELECT relname AS tabla, n_live_tup AS filas_aprox
+FROM pg_stat_user_tables
+WHERE relname IN (
+  'citas_primer_contacto','dictamenes_primer_contacto','evidencias_primer_contacto',
+  'expedientes_primer_contacto','notas_analisis','remisiones_externas','acuerdos_conclusion',
+  'expedientes_investigacion','oficios_informacion','recordatorios_urgencia','respuestas_externas'
+)
+ORDER BY relname;
+```
+
+Si salen todas en 0, son residuos seguros de borrar (con `DROP TABLE`, previa confirmación).
+Si alguna tiene filas, hay que investigar de dónde vinieron antes de tocar nada.
+
+### 6.3 Las 11 tablas núcleo (los 7 microservicios originales) — dueño y columnas
+
+Base compartida por los 7 microservicios "maduros"; cada tabla es gestionada por Hibernate
 (`ddl-auto: update`, sin Flyway/Liquibase) desde el microservicio que la "posee"; dos tablas
 (`quejas`, `acuerdos_conciliacion`) son escritas por dos microservicios distintos, cada uno con
 su propia clase `@Entity` mapeando la misma tabla física.
@@ -693,16 +802,90 @@ su propia clase `@Entity` mapeando la misma tabla física.
 | Tabla | Propietario(s) | Columnas relevantes |
 |---|---|---|
 | `usuarios` | `auth-service` | id, nombre, correo_institucional (único), boleta (único), password (BCrypt), unidad_academica, activo, correo_personal, telefono_celular, domicilio, nombre_tutor, parentesco_tutor, telefono_tutor, codigo_recuperacion, fecha_expiracion_codigo |
-| `quejas` | `queja-service` **y** `revision-service` (entidades JPA independientes sobre la misma tabla) | id, numero_folio (único), correo_institucional, motivo, descripcion, fecha_creacion, nombre/apellidos/fecha_nacimiento/tipo y número de identificación del quejoso, unidad_academica_clave, fecha_hechos, nombre/apellido_denunciado, origen_registro, **estatus** (RECIBIDA/EN_VALIDACION/RECHAZADA/TURNADA), motivo_rechazo, area_turnada, defensor_asignado, comentarios_recepcion, validado_por, fecha_validacion, fecha_turnado, numero_oficio, fecha_recepcion_fisica, tipo_documento_fisico, ubicacion_fisica_expediente, tipo_usuario_manual |
-| `queja_tutores` | `queja-service` | id, queja_id (FK, único — relación 1 a 1), nombre, apellido_paterno, apellido_materno, parentesco, correo, telefono |
-| `queja_evidencias` | `queja-service` (escritura); `revision-service` (lectura/descarga) | id, queja_id (FK), nombre_archivo, tipo_mime, tamanio_bytes, contenido (`bytea`, archivo completo), fecha_subida |
+| `quejas` | `queja-service` **y** `revision-service` (entidades JPA independientes sobre la misma tabla) | id, numero_folio (único), correo_institucional, motivo, descripcion, fecha_creacion, nombre/apellidos/fecha_nacimiento/tipo y número de identificación del quejoso, unidad_academica_clave, fecha_hechos, nombre/apellido_denunciado, origen_registro, **estatus** (RECIBIDA/EN_VALIDACION/RECHAZADA/TURNADA), motivo_rechazo, area_turnada, defensor_asignado, comentarios_recepcion, validado_por, fecha_validacion, fecha_turnado, numero_oficio, fecha_recepcion_fisica, tipo_documento_fisico, ubicacion_fisica_expediente, tipo_usuario_manual, **folio_primer_contacto** (único — columna nueva, no estaba en el snapshot del 17-ago, ver hallazgo §6.2, solo la mapea `revision-service`) |
+| `queja_tutores` | `queja-service` | id, queja_id (FK real, único — relación 1 a 1), nombre, apellido_paterno, apellido_materno, parentesco, correo, telefono |
+| `queja_evidencias` | `queja-service` (escritura); `revision-service` (lectura/descarga) | id, queja_id (FK real), nombre_archivo, tipo_mime, tamanio_bytes, contenido (`bytea`, archivo completo), fecha_subida |
 | `acuerdos_conciliacion` | `queja-service` (lectura/respuesta) **y** `revision-service` (creación) | id, numero_folio, correo_institucional, asunto, terminos, estado (PENDIENTE/ACEPTADO/RECHAZADO), fecha_emision, fecha_respuesta, comentario_quejoso, creado_por |
 | `notificaciones` | `notificaciones-service` | id, correo_destino, tipo (LOGIN/QUEJA_CREADA/CAMBIO_ESTATUS/CONCILIACION/GENERAL), titulo, mensaje, leida, fecha_creacion, enlace |
 | `dependencias` | `catalogo-service` | id, clave (único), clave_padre, nombre, abreviatura, tipo, categoria, nivel, pagina_manual, activo, notas, correo_contacto, nombre_titular, creado_en |
-| `personal_administrativo` | `admin-service` | id, nombre_completo, numero_empleado (único), correo_institucional (único), rol (RolStaff), password (BCrypt), cuenta_temporal, forzar_cambio_password, activo, fecha_creacion, ultimo_login |
+| `personal_administrativo` | `admin-service` | id, nombre_completo, numero_empleado (único), correo_institucional (único), rol — con **CHECK** a nivel de base de datos que solo permite ADMIN_SISTEMAS/RECEPCIONISTA/ANALISTA_PRIMER_CONTACTO/SUBDEFENSOR/DEFENSOR, password (BCrypt), cuenta_temporal, forzar_cambio_password, activo, fecha_creacion, ultimo_login |
 | `plantillas_documentos` | `admin-service` | id, tipo (único, clave de negocio), nombre, contenido, activa, actualizado_en, actualizado_por |
 | `bitacora_acciones` | `admin-service` | id, usuario, accion_realizada, ip, fecha |
 | `preguntas_chatbot` | `chatbot-service` | id, categoria, pregunta, respuesta, orden (global, no por categoría), activo, creado_en, actualizado_en |
+
+Detalle columna-por-columna con tipo de dato y restricciones exactas de estas 11: ver
+`docs/ESQUEMA-BD-2026-08-17.md` §4 (sigue vigente para las columnas que ya tenía; le falta
+`quejas.folio_primer_contacto`, agregada después). Confirmado además contra
+`docs/defensoria_db_estructura_2026-08-22.sql` (el `pg_dump --schema-only` real que generaste),
+que coincide columna por columna salvo esa única adición — `personal_administrativo` es la única
+tabla con un `CHECK` de base de datos (no solo validación en Java) sobre sus valores permitidos.
+
+### 6.4 Las 11 tablas de Primer Contacto / Subdefensoría — columnas y tipos, confirmadas
+
+**Confirmado el 2026-08-22** contra `docs/defensoria_db_estructura_2026-08-22.sql` (el
+`pg_dump --schema-only` real de tu base) — coincide columna por columna con lo que ya se había
+reconstruido leyendo las clases `@Entity`, así que se listan aquí con el tipo de dato exacto y
+sus restricciones reales (no solo las del código Java).
+
+| Tabla | Propietario | Columnas (tipo, restricción) |
+|---|---|---|
+| `expedientes_primer_contacto` | `primer-contacto-service` | id bigint PK · folio varchar(50) NOT NULL **UNIQUE** · folio_origen varchar(50) NOT NULL **UNIQUE** · tema varchar(200) · descripcion_hechos text · fecha_recepcion_origen varchar(50) · prioridad varchar(30) · quejoso_nombre varchar(200) · quejoso_correo varchar(150) · quejoso_telefono varchar(30) · quejoso_tipo_usuario varchar(50) · quejoso_id bigint · unidad_academica varchar(200) · estatus varchar(40) NOT NULL · fecha_creacion timestamp NOT NULL · fecha_actualizacion timestamp · folio_subdefensoria varchar(50) **UNIQUE** (no es FK) |
+| `citas_primer_contacto` | `primer-contacto-service` | id bigint PK · expediente_id bigint NOT NULL · folio varchar(50) NOT NULL · quejoso_id bigint · quejoso_nombre varchar(150) · analista_id bigint NOT NULL · analista_nombre varchar(150) · fecha_cita date NOT NULL · hora_cita time NOT NULL · tipo_cita varchar(50) NOT NULL · motivo text NOT NULL · estatus varchar(50) NOT NULL · fecha_creacion timestamp NOT NULL |
+| `dictamenes_primer_contacto` | `primer-contacto-service` | id bigint PK · expediente_id bigint NOT NULL · folio varchar(50) NOT NULL · analista_id bigint NOT NULL · analista_nombre varchar(150) · resultado varchar(50) NOT NULL · justificacion text NOT NULL · area_turno varchar(150) · responsable_turno varchar(150) · fecha_dictamen timestamp NOT NULL · observaciones text |
+| `evidencias_primer_contacto` | `primer-contacto-service` | id bigint PK · expediente_id bigint NOT NULL · evidencia_origen_id bigint · nombre_archivo varchar(255) · tipo_archivo varchar(100) · url_archivo varchar(1000) · fecha_carga varchar(50) |
+| `notas_analisis` | `primer-contacto-service` | id bigint PK · expediente_id bigint NOT NULL · folio varchar(50) NOT NULL · analista_id bigint NOT NULL · analista_nombre varchar(150) · contenido text NOT NULL · fecha_creacion timestamp NOT NULL · fecha_actualizacion timestamp |
+| `remisiones_externas` | `primer-contacto-service` | id bigint PK · expediente_id bigint NOT NULL · folio varchar(50) NOT NULL **UNIQUE** · analista_id bigint NOT NULL · analista_nombre varchar(150) · autoridad_remision varchar(200) NOT NULL · justificacion_legal text NOT NULL · sugerencia_quejoso text · adjuntar_expediente boolean NOT NULL · fecha_remision timestamp NOT NULL |
+| `expedientes_investigacion` | `subdefensoria-service` | id bigint PK · folio varchar(50) NOT NULL **UNIQUE** · folio_origen varchar(50) NOT NULL **UNIQUE** · quejoso_nombre varchar(150) · unidad_academica varchar(100) · asunto varchar(200) · descripcion_hechos text · fecha_admision date NOT NULL · abogado_asesor_id bigint · abogado_asesor_nombre varchar(150) · estatus varchar(30) NOT NULL · observaciones_analista text · fecha_creacion timestamp NOT NULL · fecha_actualizacion timestamp |
+| `oficios_informacion` | `subdefensoria-service` | id bigint PK · expediente_id bigint NOT NULL · folio varchar(50) NOT NULL · numero_oficio varchar(50) NOT NULL · fase varchar(30) NOT NULL (SOLICITUD_INFORMACION/GESTION_DIRECTOR) · destinatario_nombre varchar(200) NOT NULL · destinatario_correo varchar(150) NOT NULL · unidad_academica varchar(100) · contenido_redactado text NOT NULL · ruta_pdf_generado varchar(300) · correo_enviado boolean NOT NULL · tipo_plazo varchar(20) NOT NULL · fecha_envio date NOT NULL · fecha_limite date NOT NULL · estatus varchar(20) NOT NULL (EN_ESPERA/VENCIDO/RESPONDIDO) · fecha_creacion timestamp NOT NULL |
+| `recordatorios_urgencia` | `subdefensoria-service` | id bigint PK · oficio_id bigint NOT NULL · mensaje text NOT NULL · medidas_ofrecidas text · dias_retraso integer NOT NULL · fecha_envio timestamp NOT NULL |
+| `respuestas_externas` | `subdefensoria-service` | id bigint PK · expediente_id bigint NOT NULL · oficio_id bigint NOT NULL · canal_recepcion varchar(100) NOT NULL · numero_oficio_respuesta_ua varchar(100) · archivo_pdf_path varchar(300) · resumen text NOT NULL · fecha_recepcion timestamp NOT NULL |
+| `acuerdos_conclusion` | `subdefensoria-service` | id bigint PK · expediente_id bigint NOT NULL **UNIQUE** · folio varchar(50) NOT NULL · texto_acuerdo text NOT NULL · ruta_pdf_generado varchar(300) · concluido boolean NOT NULL · fecha_creacion timestamp NOT NULL · fecha_envio_secretarial timestamp |
+
+Ninguna de estas 11 declara relación JPA (`@ManyToOne`/`@JoinColumn`) ni FK real en Postgres
+hacia otra tabla propia — todas las referencias (`expediente_id`, `oficio_id`, `analista_id`,
+`quejoso_id`, `abogado_asesor_id`) son columnas `bigint` simples, sin restricción `FOREIGN KEY`
+en el dump. Mismo patrón que el resto del sistema: en las 22 tablas, las únicas dos FK reales
+declaradas en Postgres siguen siendo `queja_tutores.queja_id` y `queja_evidencias.queja_id` →
+`quejas.id` (confirmado también en el dump: son las 2 únicas líneas `FK CONSTRAINT`). Todas las
+PK usan `GENERATED BY DEFAULT AS IDENTITY` (el mecanismo moderno de Postgres, no `SERIAL`).
+
+### 6.5 Forma normal — diagnóstico de las 22 tablas
+
+**1FN y 2FN**: se cumplen en las 22 sin excepción. Todas usan una PK simple autoincremental
+(`id bigint`), columnas atómicas (sin arreglos ni grupos repetidos), y al no existir ninguna
+PK compuesta, la 2FN es automática (solo aplica cuando hay dependencia parcial de una PK de
+varias columnas).
+
+**3FN — las 11 núcleo**: se cumple en casi todas, con una única excepción ya conocida:
+`acuerdos_conciliacion` guarda `numero_folio` **y** `correo_institucional`, aunque el segundo
+se podría derivar del primero vía `quejas.numero_folio → quejas.correo_institucional` — es la
+"doble llave" que ya señalaba `docs/ESQUEMA-BD-2026-08-17.md`, deliberada porque no existe FK
+real entre `revision-service` y `queja-service`.
+
+**3FN — las 11 de Primer Contacto/Subdefensoría**: aquí se rompe la 3FN a propósito y en varias
+tablas — guardan una copia local del nombre/correo/unidad junto al id de referencia
+(`quejoso_nombre` + `quejoso_id`, `analista_nombre` + `analista_id`,
+`abogado_asesor_nombre` + `abogado_asesor_id`, etc.), en vez de solo el id. Los comentarios en
+el código lo confirman ("se guardan aquí para no depender de información en memoria/otro
+servicio"). **No es un error de modelado** — es el patrón normal en una arquitectura de
+microservicios donde cada servicio necesita poder mostrar sus datos sin depender de una llamada
+en vivo (ni de un JOIN, imposible entre bases de datos distintas) a otro servicio. Es una
+decisión consciente de autonomía de datos por encima de la pureza relacional, y conviene que
+quede así documentada para tu tesis: normalización estricta vs. independencia entre
+microservicios es un trade-off real, no un descuido.
+
+### 6.6 Próximos pasos pendientes (para ir desglosando el resto contigo)
+
+1. **Único punto que sigue abierto**: correr el query de conteo de filas de §6.2 y decirme el
+   resultado — determina si las 11 tablas de Primer Contacto/Subdefensoría tienen datos reales o
+   están vacías (residuo seguro de borrar). La estructura (columnas/tipos/restricciones) de las
+   22 tablas ya quedó confirmada en §6.3/§6.4 contra `docs/defensoria_db_estructura_2026-08-22.sql`.
+2. Con el resultado del conteo, decidimos si conviene generar un `ESQUEMA-BD-2026-08-22.md`
+   nuevo (mismo formato que el del 17-ago, pero con las 22 tablas) o si basta con lo ya agregado
+   aquí en REQUERIMIENTOS.md.
+3. El archivo `docs/defensoria_db_estructura_2026-08-22.sql` que generaste ya quedó guardado en
+   el repositorio como respaldo de estructura — mismo mecanismo que sugería §0 del esquema
+   anterior, ahora con datos reales en vez de inferidos del código.
 
 ---
 

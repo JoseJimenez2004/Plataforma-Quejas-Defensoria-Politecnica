@@ -1,0 +1,193 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Bandeja de Análisis</h2>
+      <p>Expedientes recibidos para revisión de Primer Contacto.</p>
+    </div>
+  </div>
+
+  <div class="bandeja-layout">
+
+    <!-- Panel de filtros por faceta, estilo buscador de tienda departamental -->
+    <mat-card class="filters-panel">
+      <div class="filters-panel-header">
+        <h3>Filtros</h3>
+        @if (totalFiltrosActivos > 0) {
+          <button mat-button class="clear-link" (click)="limpiarFiltros()">
+            Limpiar ({{ totalFiltrosActivos }})
+          </button>
+        }
+      </div>
+
+      <mat-accordion class="filters-accordion" multi>
+
+        <mat-expansion-panel expanded>
+          <mat-expansion-panel-header>
+            <mat-panel-title>Prioridad</mat-panel-title>
+          </mat-expansion-panel-header>
+
+          @for (prioridad of prioridades; track prioridad) {
+            <div class="facet-option">
+              <mat-checkbox
+                [checked]="estaSeleccionado('prioridades', prioridad)"
+                (change)="toggleValor('prioridades', prioridad)">
+                {{ prioridad }}
+              </mat-checkbox>
+              <span class="facet-count">{{ contarCoincidencias('prioridad', prioridad) }}</span>
+            </div>
+          }
+        </mat-expansion-panel>
+
+        <mat-expansion-panel expanded>
+          <mat-expansion-panel-header>
+            <mat-panel-title>Tema de violación</mat-panel-title>
+          </mat-expansion-panel-header>
+
+          @for (tema of temas; track tema) {
+            <div class="facet-option">
+              <mat-checkbox
+                [checked]="estaSeleccionado('temas', tema)"
+                (change)="toggleValor('temas', tema)">
+                {{ tema }}
+              </mat-checkbox>
+              <span class="facet-count">{{ contarCoincidencias('tema', tema) }}</span>
+            </div>
+          }
+        </mat-expansion-panel>
+
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>Escuela</mat-panel-title>
+          </mat-expansion-panel-header>
+
+          <div class="facet-scroll">
+            @for (escuela of escuelas; track escuela) {
+              <div class="facet-option">
+                <mat-checkbox
+                  [checked]="estaSeleccionado('escuelas', escuela)"
+                  (change)="toggleValor('escuelas', escuela)">
+                  {{ escuela }}
+                </mat-checkbox>
+                <span class="facet-count">{{ contarCoincidencias('unidadAcademica', escuela) }}</span>
+              </div>
+            }
+          </div>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>Estatus</mat-panel-title>
+          </mat-expansion-panel-header>
+
+          @for (estatus of estatusDisponibles; track estatus) {
+            <div class="facet-option">
+              <mat-checkbox
+                [checked]="estaSeleccionado('estatus', estatus)"
+                (change)="toggleValor('estatus', estatus)">
+                {{ estatus }}
+              </mat-checkbox>
+              <span class="facet-count">{{ contarCoincidencias('estatus', estatus) }}</span>
+            </div>
+          }
+        </mat-expansion-panel>
+
+      </mat-accordion>
+    </mat-card>
+
+    <!-- Resultados -->
+    <div class="results-column">
+      <mat-card class="search-card">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Buscar por folio o nombre</mat-label>
+          <input
+            matInput
+            placeholder="Ej. DDP-2026-001 o Juan Paco"
+            [(ngModel)]="filtros.texto"
+            (ngModelChange)="aplicarFiltros()">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="order-field">
+          <mat-label>Ordenar por</mat-label>
+          <mat-select [(ngModel)]="filtros.orden" (selectionChange)="aplicarFiltros()">
+            <mat-option value="recientes">Más recientes</mat-option>
+            <mat-option value="antiguos">Más antiguos</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-card>
+
+      <p class="results-count">
+        {{ expedientes.data.length }} expediente{{ expedientes.data.length === 1 ? '' : 's' }} encontrado{{ expedientes.data.length === 1 ? '' : 's' }}
+      </p>
+
+      <mat-card class="table-card">
+        <table mat-table [dataSource]="expedientes" class="mat-elevation-z0">
+
+          <ng-container matColumnDef="folio">
+            <th mat-header-cell *matHeaderCellDef>Folio</th>
+            <td mat-cell *matCellDef="let expediente">{{ expediente.folio }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="fechaRecepcion">
+            <th mat-header-cell *matHeaderCellDef>Fecha ingreso</th>
+            <td mat-cell *matCellDef="let expediente">{{ expediente.fechaRecepcion }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="nombreQuejoso">
+            <th mat-header-cell *matHeaderCellDef>Quejoso</th>
+            <td mat-cell *matCellDef="let expediente">{{ expediente.nombreQuejoso }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="unidadAcademica">
+            <th mat-header-cell *matHeaderCellDef>Escuela</th>
+            <td mat-cell *matCellDef="let expediente">{{ expediente.unidadAcademica }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="tema">
+            <th mat-header-cell *matHeaderCellDef>Tema</th>
+            <td mat-cell *matCellDef="let expediente">{{ expediente.tema }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="prioridad">
+            <th mat-header-cell *matHeaderCellDef>Prioridad</th>
+            <td mat-cell *matCellDef="let expediente">
+              <mat-chip
+                [class.chip-high]="expediente.prioridad === 'Alta'"
+                [class.chip-medium]="expediente.prioridad === 'Media'"
+                [class.chip-low]="expediente.prioridad === 'Baja'">
+                {{ expediente.prioridad }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="estatus">
+            <th mat-header-cell *matHeaderCellDef>Estatus</th>
+            <td mat-cell *matCellDef="let expediente">
+              <span class="status">{{ expediente.estatus }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let expediente">
+              <button
+                mat-flat-button
+                class="action-btn"
+                (click)="analizar(expediente)">
+                <mat-icon>visibility</mat-icon>
+                Analizar
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        @if (expedientes.data.length === 0) {
+          <p class="empty-state">No hay expedientes que coincidan con los filtros aplicados.</p>
+        }
+      </mat-card>
+    </div>
+  </div>
+</section>

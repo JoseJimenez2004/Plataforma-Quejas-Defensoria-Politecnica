@@ -2,30 +2,172 @@
   color: var(--texto-suave);
 }
 
-.resumen-linea {
-  font-size: 0.9rem;
-  margin: 0 0 8px;
-  color: var(--texto);
+/* Datos a la izquierda, identificación en grande a la derecha. */
+.rejilla-validacion {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
 
-  &.descripcion {
-    color: var(--texto-suave);
-    background: var(--gris-fondo);
-    padding: 10px 12px;
-    border-radius: 6px;
-    margin-top: 10px;
+@media (max-width: 1000px) {
+  .rejilla-validacion {
+    grid-template-columns: 1fr;
   }
 }
 
-h4 {
-  margin-top: 20px;
-  font-size: 0.92rem;
+.pista-checks {
+  margin: 0 0 14px;
+  font-size: 0.84rem;
+  color: var(--texto-suave);
 }
 
-.sin-documentos {
+/* ---------- lista de datos con su check ---------- */
+.lista-datos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  > li {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+    padding: 14px 12px;
+    margin: 0 -12px;
+    border-radius: 8px;
+    border-bottom: 1px solid var(--borde);
+    transition: background 0.15s ease;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  /* El recepcionista ya revisó este dato: la fila lo confirma de un vistazo, sin tener que
+   * fijarse en el checkbox. */
+  > li.dato-cumplido {
+    background: var(--acento-verde-suave);
+    border-bottom-color: transparent;
+
+    .etiqueta-dato {
+      color: var(--acento-verde);
+    }
+  }
+}
+
+@media (max-width: 620px) {
+  .lista-datos > li {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+.check-dato {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+
+  input[type='checkbox'] {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: var(--exito, #2e7d32);
+  }
+}
+
+.etiqueta-dato {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.valor-dato {
+  font-size: 0.9rem;
+  color: var(--texto);
+  min-width: 0;
+
+  strong {
+    display: block;
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  .meta {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--texto-suave);
+  }
+}
+
+.sin-dato {
+  color: var(--texto-suave);
+  font-style: italic;
+}
+
+/* ---------- relato difuminado ---------- */
+.bloque-redaccion {
+  position: relative;
+}
+
+.descripcion {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--gris-fondo);
   color: var(--texto-suave);
   font-size: 0.88rem;
+  line-height: 1.5;
+  transition: filter 0.18s ease;
+
+  &.difuminada {
+    filter: blur(4.5px);
+    user-select: none;
+    pointer-events: none;
+  }
 }
 
+.btn-revelar {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: max-content;
+  height: max-content;
+  padding: 7px 16px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--texto);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 14%);
+
+  &:hover {
+    background: var(--gris-fondo);
+  }
+}
+
+.link-ocultar {
+  margin-top: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--texto-suave);
+  font-size: 0.78rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.nota-privacidad {
+  font-style: italic;
+}
+
+/* ---------- evidencias ---------- */
 .lista-documentos {
   list-style: none;
   margin: 0;
@@ -34,38 +176,206 @@ h4 {
   li {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--borde);
-    font-size: 0.88rem;
+    gap: 12px;
+    padding: 9px 10px;
+    margin: 0 -10px;
+    border-radius: 8px;
+    font-size: 0.86rem;
+    transition: background 0.15s ease;
 
-    &:last-child {
-      border-bottom: none;
+    &:hover {
+      background: var(--gris-fondo);
+    }
+
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--borde);
     }
   }
 }
 
+.icono-documento {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  &.imagen {
+    background: var(--acento-azul-suave);
+    color: var(--acento-azul);
+  }
+
+  &.pdf {
+    background: #fdecea;
+    color: var(--peligro);
+  }
+
+  &.archivo {
+    background: var(--gris-fondo);
+    color: var(--texto-suave);
+  }
+}
+
+.datos-documento {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.nombre-documento {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.datos-documento .meta {
+  font-size: 0.76rem;
+  color: var(--texto-suave);
+}
+
 .boton-ver {
-  padding: 6px 14px;
-  font-size: 0.8rem;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  flex-shrink: 0;
 }
 
-.requisitos-card {
-  margin-top: 20px;
+/* ---------- credencial en grande ---------- */
+.card-credencial {
+  position: sticky;
+  top: 16px;
 }
 
-.check-linea {
+.marco-credencial {
+  position: relative;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: var(--gris-fondo);
+  padding: 8px;
+  overflow: hidden;
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 62vh;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+}
+
+.marco-credencial-cargando {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  width: 100%;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--texto-suave);
+  font-size: 0.8rem;
+  z-index: 1;
 }
 
+.miniaturas-credencial {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+.miniatura-boton {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1.5px solid var(--borde);
+  background: #fff;
+  color: var(--texto-suave);
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &:hover {
+    border-color: var(--guinda-vivo);
+    color: var(--guinda-vivo);
+  }
+
+  &.activa {
+    border-color: var(--guinda);
+    background: var(--guinda);
+    color: #fff;
+  }
+}
+
+.pie-credencial {
+  margin: 10px 0 12px;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  word-break: break-word;
+}
+
+.credencial-vacia {
+  padding: 26px 16px;
+  border: 1px dashed var(--borde);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: 0.88rem;
+
+  p {
+    margin: 0 0 6px;
+  }
+
+  .meta {
+    font-size: 0.78rem;
+  }
+}
+
+/* ---------- progreso de requisitos ---------- */
+.progreso-requisitos {
+  margin-top: 22px;
+}
+
+.progreso-barra {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--gris-fondo);
+  overflow: hidden;
+}
+
+.progreso-relleno {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--acento-ambar);
+  transition: width 0.25s ease, background 0.25s ease;
+
+  &.completo {
+    background: var(--exito);
+  }
+}
+
+.contador-checks {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+
+  &.completo {
+    color: var(--exito);
+    font-weight: 600;
+  }
+}
+
+/* ---------- acciones ---------- */
 .acciones-validacion {
   display: flex;
   gap: 12px;
-  margin-top: 18px;
+  margin-top: 14px;
   flex-wrap: wrap;
 
   .boton-rechazar {

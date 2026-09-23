@@ -119,6 +119,7 @@
 </section>
 
 <section class="pasos-section">
+ <div class="pasos-section__inner">
   <h2 class="section-title">¿Cómo funciona?</h2>
   <p class="pasos-subtitulo">Un proceso claro, con seguimiento visible en cada etapa.</p>
 
@@ -160,6 +161,7 @@
       <p>Recibes notificación de los acuerdos y la resolución de tu caso.</p>
     </div>
   </div>
+ </div>
 </section>
 
 <section class="accesos-section">
@@ -233,6 +235,7 @@
 </section>
 
 <section class="tabs-section">
+ <div class="tabs-section__inner">
   <div class="tabs-nav">
     @for (tab of tabs; track tab) {
       <button
@@ -252,11 +255,45 @@
     @for (item of contenidoActivo; track item.id) {
       <div class="tab-card">
         <div class="tab-card__thumb">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="14" rx="2" />
-            <path d="M3 15l5-5 4 4 3-3 6 6" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-          </svg>
+          <span class="tab-card__thumb-circulo">
+            @switch (tabActiva()) {
+              @case ('Difusión') {
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 10v4a1 1 0 0 0 1 1h2l7 4V5L6 9H4a1 1 0 0 0-1 1z" />
+                  <path d="M17 9a3 3 0 0 1 0 6" />
+                  <path d="M9 15v3a2 2 0 0 0 2 2h1" />
+                </svg>
+              }
+              @case ('Institucional') {
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 21h16" />
+                  <path d="M5 21V10l7-5 7 5v11" />
+                  <path d="M9 21v-6h6v6" />
+                </svg>
+              }
+              @case ('Publicaciones') {
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 4h9l3 3v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z" />
+                  <path d="M9 9h6" />
+                  <path d="M9 13h6" />
+                  <path d="M9 17h4" />
+                </svg>
+              }
+              @case ('Investigación') {
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="10.5" cy="10.5" r="6.5" />
+                  <path d="M20 20l-5-5" />
+                </svg>
+              }
+              @default {
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="7" width="16" height="12" rx="2" />
+                  <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+                  <path d="M4 12h16" />
+                </svg>
+              }
+            }
+          </span>
         </div>
         <span class="tab-card__date">{{ item.fecha }}</span>
         <p class="tab-card__title">{{ item.titulo }}</p>
@@ -264,4 +301,5 @@
       </div>
     }
   </div>
+ </div>
 </section>

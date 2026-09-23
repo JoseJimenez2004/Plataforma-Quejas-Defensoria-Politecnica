@@ -15,14 +15,17 @@
       <div class="datepicker__cabecera">
         <button type="button" class="datepicker__nav" (click)="cambiarMesVista(-1)" aria-label="Mes anterior">‹</button>
 
-        <select class="datepicker__select" [(ngModel)]="vistaMes">
+        <!-- ngValue, NO value: con [value] el <option> guarda el indice como TEXTO, y
+             entonces vistaMes + 1 concatena en vez de sumar ("2" + 1 = "21"), lo que producia
+             fechas invalidas como 2004-21-19. [ngValue] conserva el tipo numerico. -->
+        <select class="datepicker__select" [(ngModel)]="vistaMes" aria-label="Mes">
           @for (nombre of nombresMes; track nombre; let i = $index) {
-            <option [value]="i">{{ nombre }}</option>
+            <option [ngValue]="i">{{ nombre }}</option>
           }
         </select>
-        <select class="datepicker__select" [(ngModel)]="vistaAno">
+        <select class="datepicker__select" [(ngModel)]="vistaAno" aria-label="Año">
           @for (ano of listaAnos; track ano) {
-            <option [value]="ano">{{ ano }}</option>
+            <option [ngValue]="ano">{{ ano }}</option>
           }
         </select>
 

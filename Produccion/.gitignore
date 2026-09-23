@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Credenciales — NUNCA se versionan
+# ─────────────────────────────────────────────────────────────────────────────
+docs/ACCESO-BASES-DATOS.md
+.env
+*.pem
+*.key
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Volcados de base de datos. El de agosto pesaba 198 MB (GitHub rechaza >100 MB)
+# y, más importante, llevaba datos personales reales de los quejosos.
+# ─────────────────────────────────────────────────────────────────────────────
+*_completo_*.sql
+defensoria_db_completo_*.sql
+respaldo_*.sql
+Backend/_jars-listos/
+*.jar
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Artefactos de compilación y respaldos locales
+# ─────────────────────────────────────────────────────────────────────────────
+node_modules/
+dist/
+target/
+.angular/
+_backups/
+*.tgz
+*.tar.gz

@@ -1,0 +1,37 @@
+server:
+  # Puerto interno unificado a 8080 como en el resto -- el acceso real es por 8092,
+  # vía el mapeo externo de Podman (ver -p en podman-compose.sh).
+  port: 8080
+
+spring:
+  application:
+    name: historico-service
+  datasource:
+    url: jdbc:postgresql://2.25.78.22:5432/defensoria_historico_db
+    username: postgres
+    password: Temporal2026@
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 25MB
+
+jwt:
+  secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name}]"

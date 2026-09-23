@@ -5,7 +5,7 @@ export interface ExpedienteResumen {
   asunto: string;
   unidadAcademica: string;
   fechaAdmision: string;
-  estatus: 'RECIBIDO' | 'EN_INVESTIGACION' | 'EN_GESTION_DIRECTOR' | 'LISTO_A_DICTAMINAR' | 'CONCLUIDO';
+  estatus: 'RECIBIDO' | 'EN_INVESTIGACION' | 'EN_ESPERA_OFICIO' | 'ELABORO_ACUERDO' | 'PENDIENTE_CONCLUSION' | 'CONCLUIDO';
   oficioIdVigente: number | null;
   numeroOficioVigente: string | null;
   destinatarioNombreVigente: string | null;

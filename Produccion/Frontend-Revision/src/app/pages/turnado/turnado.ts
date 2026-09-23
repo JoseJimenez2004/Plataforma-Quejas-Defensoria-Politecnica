@@ -6,7 +6,7 @@ import { forkJoin } from 'rxjs';
 
 import { RevisionService } from '../../core/services/revision.service';
 import { ToastService } from '../../core/services/toast.service';
-import { AntecedenteItem, AreaOpcion, DefensorOpcion, QuejaDetalle } from '../../core/models/revision.models';
+import { AntecedenteItem, DefensorOpcion, QuejaDetalle } from '../../core/models/revision.models';
 
 @Component({
   selector: 'app-turnado',
@@ -19,12 +19,10 @@ export class Turnado implements OnInit {
   folio = '';
   queja: QuejaDetalle | null = null;
   antecedentes: AntecedenteItem[] = [];
-  areas: AreaOpcion[] = [];
   defensores: DefensorOpcion[] = [];
   cargando = true;
   turnando = false;
 
-  areaTurnada = '';
   defensorAsignado = '';
   comentarios = '';
 
@@ -46,13 +44,11 @@ export class Turnado implements OnInit {
     forkJoin({
       queja: this.revisionService.detalle(this.folio),
       antecedentes: this.revisionService.antecedentes(this.folio),
-      areas: this.revisionService.areas(),
       defensores: this.revisionService.defensores(),
     }).subscribe({
-      next: ({ queja, antecedentes, areas, defensores }) => {
+      next: ({ queja, antecedentes, defensores }) => {
         this.queja = queja;
         this.antecedentes = antecedentes;
-        this.areas = areas;
         this.defensores = defensores;
         this.cargando = false;
         this.cdr.detectChanges();
@@ -71,14 +67,13 @@ export class Turnado implements OnInit {
   }
 
   turnar(): void {
-    if (!this.areaTurnada || !this.defensorAsignado) {
-      this.toast.advertencia('Selecciona el área y el defensor responsable.');
+    if (!this.defensorAsignado) {
+      this.toast.advertencia('Selecciona el defensor responsable.');
       return;
     }
 
     this.turnando = true;
     this.revisionService.turnar(this.folio, {
-      areaTurnada: this.areaTurnada,
       defensorAsignado: this.defensorAsignado,
       comentarios: this.comentarios,
     }).subscribe({

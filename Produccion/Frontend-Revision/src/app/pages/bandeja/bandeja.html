@@ -11,7 +11,7 @@
   <div class="tarjetas">
     <div class="card tarjeta">
       <div class="tarjeta-encabezado">
-        <span class="icono-acento rojo">
+        <span class="icono-acento ambar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="22 6 12 13 2 6"></polyline></svg>
         </span>
         <h3>Pendientes</h3>
@@ -21,7 +21,7 @@
 
     <div class="card tarjeta">
       <div class="tarjeta-encabezado">
-        <span class="icono-acento ambar">
+        <span class="icono-acento azul">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
         </span>
         <h3>En Proceso</h3>
@@ -56,12 +56,13 @@
             <th>Fecha</th>
             <th>Quejoso</th>
             <th>Documentación</th>
+            <th>Estatus</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           @for (item of resumen.lista; track item.numeroFolio) {
-            <tr>
+            <tr [class.fila-bloqueada]="bloqueadaPorOtro(item)">
               <td>{{ item.numeroFolio }}</td>
               <td>{{ item.fechaCreacion | date: 'dd/MM/yy' }}</td>
               <td>{{ item.nombreQuejoso }}</td>
@@ -73,7 +74,29 @@
                 }
               </td>
               <td>
-                <a [routerLink]="['/validacion', item.numeroFolio]" class="btn-primary boton-validar">Validar</a>
+                @if (item.estatus === 'EN_VALIDACION' && item.revisandoPorNombre) {
+                  <span class="badge-estatus en-revision" [title]="'En revisión por ' + item.revisandoPorNombre">
+                    En revisión · {{ item.revisandoPorNombre }}
+                  </span>
+                } @else {
+                  <span class="badge-estatus pendiente">Pendiente</span>
+                }
+              </td>
+              <td>
+                @if (bloqueadaPorOtro(item)) {
+                  <button
+                    type="button"
+                    class="btn-primary boton-validar"
+                    disabled
+                    [title]="'La está revisando ' + item.revisandoPorNombre + '. Se libera sola si la deja inactiva.'"
+                  >
+                    En revisión
+                  </button>
+                } @else {
+                  <a [routerLink]="['/validacion', item.numeroFolio]" class="btn-primary boton-validar">
+                    {{ esMiRevision(item) ? 'Continuar' : 'Validar' }}
+                  </a>
+                }
               </td>
             </tr>
           }

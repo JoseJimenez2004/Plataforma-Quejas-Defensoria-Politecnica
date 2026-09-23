@@ -27,9 +27,20 @@
 
 .icon-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  // Antes usaba auto-fit con minmax(170px,1fr): con 6 tarjetas y el ancho real del contenedor
+  // (1100px), eso partía el grid en 5+1 -- una tarjeta quedaba sola en la segunda fila con
+  // mucho espacio vacío a su derecha, muy desbalanceado. 3 columnas fijas da 3+3 siempre.
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
   text-align: center;
+
+  @media (max-width: 720px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 
   // Antes eran íconos sueltos flotando sobre el fondo gris de la página -- sin borde, sin
   // sombra, sin tarjeta -- lo que los hacía ver "planos" y poco fiables. Ahora cada uno es una
@@ -338,3 +349,16 @@ button {
     color: var(--exito);
   }
 }
+
+// =============================================================================================
+// Colores de la insignia de estatus — compartidos por Mis Quejas, Resumen, Consultar folio y
+// el detalle de la queja. Viven aquí y no en cada pantalla para que un estatus se vea igual
+// en todas; antes cada archivo tenía su propia copia y ya estaban desincronizadas.
+// Los códigos los produce claseEstatus() en core/models/queja.models.ts.
+// =============================================================================================
+
+.badge--recibida   { color: #1565c0; background: #e3f2fd; }
+.badge--validacion { color: #8a6100; background: #fff4d9; }
+.badge--turnada    { color: #1b6b4a; background: #e2f4ec; }
+.badge--rechazada  { color: #b3261e; background: #fdeceb; }
+.badge--cancelada  { color: #6b6b6b; background: #eeeeee; }

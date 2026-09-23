@@ -57,11 +57,11 @@ export class Dashboard implements OnInit {
   }
 
   get totalPorRedactar(): number {
-    return this.todos.filter(e => e.estatus === 'RECIBIDO' || (e.estatus === 'EN_GESTION_DIRECTOR' && !e.oficioIdVigente)).length;
+    return this.todos.filter(e => e.estatus === 'RECIBIDO' || (e.estatus === 'EN_ESPERA_OFICIO' && !e.oficioIdVigente)).length;
   }
 
   get totalEnCurso(): number {
-    return this.todos.filter(e => e.estatus === 'EN_INVESTIGACION' || e.estatus === 'EN_GESTION_DIRECTOR').length;
+    return this.todos.filter(e => e.estatus === 'EN_INVESTIGACION' || e.estatus === 'EN_ESPERA_OFICIO').length;
   }
 
   get totalConcluidos(): number {
@@ -80,10 +80,10 @@ export class Dashboard implements OnInit {
   aplicarFiltro(): void {
     switch (this.indicadorSeleccionado) {
       case 'POR_REDACTAR':
-        this.listaFiltrada = this.todos.filter(e => e.estatus === 'RECIBIDO' || (e.estatus === 'EN_GESTION_DIRECTOR' && !e.oficioIdVigente));
+        this.listaFiltrada = this.todos.filter(e => e.estatus === 'RECIBIDO' || (e.estatus === 'EN_ESPERA_OFICIO' && !e.oficioIdVigente));
         break;
       case 'EN_CURSO':
-        this.listaFiltrada = this.todos.filter(e => e.estatus === 'EN_INVESTIGACION' || e.estatus === 'EN_GESTION_DIRECTOR');
+        this.listaFiltrada = this.todos.filter(e => e.estatus === 'EN_INVESTIGACION' || e.estatus === 'EN_ESPERA_OFICIO');
         break;
       case 'CONCLUIDOS':
         this.listaFiltrada = this.todos.filter(e => e.estatus === 'CONCLUIDO');

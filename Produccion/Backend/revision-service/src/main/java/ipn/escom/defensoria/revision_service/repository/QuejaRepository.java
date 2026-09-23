@@ -32,4 +32,9 @@ public interface QuejaRepository extends JpaRepository<Queja, Long> {
 
     /** Historial: quejas ya procesadas (rechazadas o turnadas), más recientes primero. */
     List<Queja> findByEstatusInOrderByFechaCreacionDesc(List<String> estatus);
+
+    /** Quejas que llevan EN_VALIDACION más tiempo del permitido sin que nadie las cierre
+     * (rechazo/turnado) -- se liberan solas de vuelta a la bandeja. Ver
+     * RevisionQuejaService.liberarRevisionesVencidas(). */
+    List<Queja> findByEstatusAndFechaInicioRevisionBefore(String estatus, LocalDateTime limite);
 }

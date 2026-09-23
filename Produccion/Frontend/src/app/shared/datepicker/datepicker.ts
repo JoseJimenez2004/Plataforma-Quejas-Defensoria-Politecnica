@@ -126,8 +126,11 @@ export class Datepicker implements ControlValueAccessor {
   }
 
   cambiarMesVista(delta: number): void {
-    let mes = this.vistaMes + delta;
-    let ano = this.vistaAno;
+    // Number() defensivo: si algo vuelve a dejar estos valores como texto, "2" + 1 daria
+    // "21" en vez de 3 y el calendario generaria fechas inexistentes (ver el comentario del
+    // <select> en la plantilla).
+    let mes = Number(this.vistaMes) + delta;
+    let ano = Number(this.vistaAno);
     if (mes < 0) {
       mes = 11;
       ano--;
@@ -173,9 +176,11 @@ export class Datepicker implements ControlValueAccessor {
   }
 
   get semanas(): CeldaDia[][] {
-    const primerDiaMes = new Date(this.vistaAno, this.vistaMes, 1);
-    const diasEnMes = new Date(this.vistaAno, this.vistaMes + 1, 0).getDate();
-    const diasEnMesAnterior = new Date(this.vistaAno, this.vistaMes, 0).getDate();
+    const vistaAno = Number(this.vistaAno);
+    const vistaMes = Number(this.vistaMes);
+    const primerDiaMes = new Date(vistaAno, vistaMes, 1);
+    const diasEnMes = new Date(vistaAno, vistaMes + 1, 0).getDate();
+    const diasEnMesAnterior = new Date(vistaAno, vistaMes, 0).getDate();
     const inicioSemana = primerDiaMes.getDay(); // 0=domingo
 
     const celdas: CeldaDia[] = [];
@@ -183,16 +188,16 @@ export class Datepicker implements ControlValueAccessor {
     // Relleno con días del mes anterior
     for (let i = inicioSemana - 1; i >= 0; i--) {
       const dia = diasEnMesAnterior - i;
-      celdas.push(this.crearCelda(dia, this.vistaMes - 1, this.vistaAno, true));
+      celdas.push(this.crearCelda(dia, vistaMes - 1, vistaAno, true));
     }
     // Días del mes actual
     for (let dia = 1; dia <= diasEnMes; dia++) {
-      celdas.push(this.crearCelda(dia, this.vistaMes, this.vistaAno, false));
+      celdas.push(this.crearCelda(dia, vistaMes, vistaAno, false));
     }
     // Relleno con días del mes siguiente hasta completar semanas de 7
     let siguiente = 1;
     while (celdas.length % 7 !== 0) {
-      celdas.push(this.crearCelda(siguiente++, this.vistaMes + 1, this.vistaAno, true));
+      celdas.push(this.crearCelda(siguiente++, vistaMes + 1, vistaAno, true));
     }
 
     const semanas: CeldaDia[][] = [];
@@ -203,8 +208,8 @@ export class Datepicker implements ControlValueAccessor {
   }
 
   private crearCelda(dia: number, mes: number, ano: number, fueraDeMes: boolean): CeldaDia {
-    let m = mes;
-    let a = ano;
+    let m = Number(mes);
+    let a = Number(ano);
     if (m < 0) {
       m = 11;
       a--;

@@ -21,7 +21,8 @@ export class Historial implements OnInit {
 
   filtroTexto = '';
   filtroEstatus = '';
-  filtroFecha = '';
+  filtroFechaDesde = '';
+  filtroFechaHasta = '';
 
   mostrarModalDetalle = false;
   detalleSeleccionado: QuejaDetalle | null = null;
@@ -38,8 +39,15 @@ export class Historial implements OnInit {
   }
 
   aplicarFiltros(): void {
+    if (this.filtroFechaDesde && this.filtroFechaHasta && this.filtroFechaDesde > this.filtroFechaHasta) {
+      this.toast.advertencia('La fecha "Desde" no puede ser posterior a la fecha "Hasta".');
+      return;
+    }
+
     this.cargando = true;
-    this.historialService.listar(this.filtroTexto, this.filtroEstatus, this.filtroFecha).subscribe({
+    this.historialService
+      .listar(this.filtroTexto, this.filtroEstatus, this.filtroFechaDesde, this.filtroFechaHasta)
+      .subscribe({
       next: (items) => {
         this.items = items;
         this.cargando = false;
@@ -71,7 +79,9 @@ export class Historial implements OnInit {
 
   exportar(): void {
     this.exportando = true;
-    this.historialService.exportar(this.filtroTexto, this.filtroEstatus, this.filtroFecha).subscribe({
+    this.historialService
+      .exportar(this.filtroTexto, this.filtroEstatus, this.filtroFechaDesde, this.filtroFechaHasta)
+      .subscribe({
       next: (blob) => {
         this.exportando = false;
         const url = URL.createObjectURL(blob);

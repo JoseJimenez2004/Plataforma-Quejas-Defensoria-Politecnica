@@ -55,11 +55,11 @@ public class  Queja {
     @Column(name = "nombre_quejoso")
     private String nombreQuejoso;
 
-    @Column(name = "apellido_paterno_quejoso")
-    private String apellidoPaternoQuejoso;
+    @Column(name = "apellido1_quejoso")
+    private String apellido1Quejoso;
 
-    @Column(name = "apellido_materno_quejoso")
-    private String apellidoMaternoQuejoso;
+    @Column(name = "apellido2_quejoso")
+    private String apellido2Quejoso;
 
     @Column(name = "fecha_nacimiento_quejoso")
     private LocalDate fechaNacimientoQuejoso;
@@ -80,8 +80,8 @@ public class  Queja {
     @Column(name = "nombre_denunciado")
     private String nombreDenunciado;
 
-    @Column(name = "apellido_denunciado")
-    private String apellidoDenunciado;
+    @Column(name = "apellido1_denunciado")
+    private String apellido1Denunciado;
 
     /** "AUTENTICADO" | "PUBLICO" | "MANUAL" (este último lo agrega revision-service cuando el
      * recepcionista da de alta un documento físico recibido en papel). */
@@ -124,6 +124,27 @@ public class  Queja {
     private LocalDateTime fechaTurnado;
 
     /**
+     * Quién tiene la queja abierta AHORA MISMO (EN_VALIDACION) -- distinto de validadoPor,
+     * que solo se llena al terminar (rechazar/turnar). Null si nadie la está viendo. Sirve
+     * para que la bandeja muestre "En revisión por <nombre>" a los demás recepcionistas y
+     * les deshabilite el botón Validar, evitando que dos personas procesen la misma queja.
+     */
+    @Column(name = "revisando_por")
+    private String revisandoPor;
+
+    @Column(name = "revisando_por_nombre")
+    private String revisandoPorNombre;
+
+    @Column(name = "fecha_inicio_revision")
+    private LocalDateTime fechaInicioRevision;
+
+    /** Estatus que tenía la queja antes de entrar a revisión (RECIBIDA o CORREGIDA), para
+     * poder regresarla ahí si se libera sola por inactividad -- ver
+     * RevisionQuejaService.liberarRevisionesVencidas(). */
+    @Column(name = "estatus_previo_revision")
+    private String estatusPrevioRevision;
+
+    /**
      * Folio generado por Primer Contacto cuando esta queja
      * es aceptada en esa etapa.
      * Ejemplo: PC-A1B2C3D4
@@ -152,4 +173,9 @@ public class  Queja {
      * de antemano, a diferencia del registro público del propio quejoso. */
     @Column(name = "tipo_usuario_manual")
     private String tipoUsuarioManual;
+
+    /** Teléfono de contacto capturado en el registro manual (opcional). El correo de
+     * contacto real, cuando se captura, se guarda directamente en correoInstitucional. */
+    @Column(name = "telefono_contacto")
+    private String telefonoContacto;
 }

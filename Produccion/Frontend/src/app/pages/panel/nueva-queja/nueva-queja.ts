@@ -22,7 +22,7 @@ export class NuevaQueja implements OnInit {
   fechaHechos = '';
   readonly fechaMaxima = new Date().toISOString().split('T')[0];
   nombreDenunciado = '';
-  apellidoDenunciado = '';
+  apellido1Denunciado = '';
   relato = '';
   archivos: File[] = [];
   /** Igual que en el registro público: se manda como evidencia renombrada con el prefijo
@@ -145,7 +145,7 @@ export class NuevaQueja implements OnInit {
         unidadAcademicaClave: this.unidadAcademica,
         fechaHechos: this.fechaHechos || undefined,
         nombreDenunciado: this.nombreDenunciado || undefined,
-        apellidoDenunciado: this.apellidoDenunciado || undefined,
+        apellido1Denunciado: this.apellido1Denunciado || undefined,
         archivos: [archivoIdentificacion, ...this.archivos],
       })
       .subscribe({

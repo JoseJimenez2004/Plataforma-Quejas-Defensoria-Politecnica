@@ -23,8 +23,9 @@ import { RespuestaExternaDialog, RespuestaExternaDialogData } from '../../shared
 const ETIQUETAS_ESTATUS: Record<string, string> = {
   RECIBIDO: 'Recibido',
   EN_INVESTIGACION: 'En Investigación',
-  EN_GESTION_DIRECTOR: 'Gestión con Director',
-  LISTO_A_DICTAMINAR: 'Listo a Dictaminar',
+  EN_ESPERA_OFICIO: 'En espera de oficio',
+  ELABORO_ACUERDO: 'Elaboró acuerdo',
+  PENDIENTE_CONCLUSION: 'Pendiente de conclusión',
   CONCLUIDO: 'Concluido'
 };
 
@@ -162,7 +163,7 @@ export class Bandeja implements OnInit {
 
   etiquetaAccionPrincipal(e: ExpedienteResumen): string | null {
     if (e.estatus === 'RECIBIDO') return 'Solicitar Oficio';
-    if (e.estatus === 'EN_GESTION_DIRECTOR' && !e.numeroOficioVigente) return 'Redactar Oficio al Director';
+    if (e.estatus === 'EN_ESPERA_OFICIO' && !e.numeroOficioVigente) return 'Redactar Oficio al Director';
     return null;
   }
 

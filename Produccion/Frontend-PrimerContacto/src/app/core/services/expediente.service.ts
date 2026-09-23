@@ -97,9 +97,6 @@ export class ExpedienteService {
     switch (estatus?.toUpperCase()) {
 
       case 'PENDIENTE':
-      case 'PENDIENTE_ANALISIS':
-        return 'Pendiente';
-
       case 'EN_ANALISIS':
         return 'En análisis';
 
@@ -109,11 +106,13 @@ export class ExpedienteService {
       case 'IMPROCEDENTE':
         return 'Improcedente';
 
+      case 'PENDIENTE_REMISION':
+        return 'Pendiente de remisión';
+
       case 'REMITIDA':
-      case 'REMISION_ENVIADA':
         return 'Remitida';
 
-      case 'TURNADO_SUBDEFENSORIA':
+      case 'PROCEDENTE':
         return 'Turnado a Subdefensoría';
 
       default:

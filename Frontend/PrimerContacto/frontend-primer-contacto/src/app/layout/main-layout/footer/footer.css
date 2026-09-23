@@ -1,0 +1,13 @@
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 40px;
+  background: #3b0a22;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}

@@ -40,7 +40,7 @@
         </tbody>
       </table>
 
-      <p class="aviso-advertencia">
+      <p class="aviso-peligro">
         Se encontraron {{ antecedentes.length }} antecedente(s) relacionado(s). Verifica si existe
         duplicidad antes de turnar.
       </p>
@@ -50,15 +50,7 @@
   <div class="card canalizacion-card">
     <h3>Canalización del Expediente</h3>
 
-    <div class="input-group">
-      <label>Área a la que se turna:</label>
-      <select [(ngModel)]="areaTurnada" name="areaTurnada">
-        <option value="" disabled selected>Seleccione un área</option>
-        @for (area of areas; track area.clave) {
-          <option [value]="area.nombre">{{ area.nombre }}</option>
-        }
-      </select>
-    </div>
+    <p class="aviso-inline">Esta queja se canalizará a <strong>Primer Contacto</strong> para su análisis.</p>
 
     <div class="input-group">
       <label>Defensor / Abogado Responsable:</label>

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import ipn.escom.defensoria.revision_service.dto.EvidenciaResumen;
+import ipn.escom.defensoria.revision_service.entity.PersonalAdministrativo;
 import ipn.escom.defensoria.revision_service.entity.Queja;
 import ipn.escom.defensoria.revision_service.entity.QuejaEvidencia;
 import ipn.escom.defensoria.revision_service.model.AntecedenteModel;
@@ -18,6 +19,7 @@ import ipn.escom.defensoria.revision_service.model.BandejaResumenModel;
 import ipn.escom.defensoria.revision_service.model.HistorialItemModel;
 import ipn.escom.defensoria.revision_service.model.QuejaDetalleModel;
 import ipn.escom.defensoria.revision_service.model.QuejaResumenBandejaModel;
+import ipn.escom.defensoria.revision_service.repository.PersonalAdministrativoRepository;
 import ipn.escom.defensoria.revision_service.repository.QuejaEvidenciaRepository;
 import ipn.escom.defensoria.revision_service.repository.QuejaRepository;
 import ipn.escom.defensoria.revision_service.model.PrimerContactoIngresoResponse;
@@ -30,31 +32,51 @@ public class RevisionQuejaService {
     public static final String EN_VALIDACION = "EN_VALIDACION";
     public static final String RECHAZADA = "RECHAZADA";
     public static final String TURNADA = "TURNADA";
+    /**
+     * El quejoso ya atendió las observaciones de un rechazo y reenvió su queja. Vuelve a la
+     * bandeja para una segunda validación. Sin este estado, una queja rechazada quedaba
+     * muerta: no se podía editar ni turnar.
+     */
+    public static final String CORREGIDA = "CORREGIDA";
 
     private static final String ORIGEN_MANUAL = "MANUAL";
     private static final String PREFIJO_FOLIO = "FOL-";
     private static final int LONGITUD_UUID_FOLIO = 8;
 
+    /** Si una queja lleva más de esto EN_VALIDACION sin que su recepcionista la rechace o
+     * turne, se libera sola de vuelta a la bandeja -- ver liberarRevisionesVencidas(). */
+    private static final long MINUTOS_LIMITE_REVISION = 20;
+
     private final QuejaRepository quejaRepository;
     private final QuejaEvidenciaRepository evidenciaRepository;
     private final NotificacionQuejaService notificacionService;
     private final PrimerContactoClientService primerContactoClientService;
+    private final PersonalAdministrativoRepository personalRepository;
 
     public RevisionQuejaService(
             QuejaRepository quejaRepository,
             QuejaEvidenciaRepository evidenciaRepository,
             NotificacionQuejaService notificacionService,
-            PrimerContactoClientService primerContactoClientService) {
+            PrimerContactoClientService primerContactoClientService,
+            PersonalAdministrativoRepository personalRepository) {
         this.quejaRepository = quejaRepository;
         this.evidenciaRepository = evidenciaRepository;
         this.notificacionService = notificacionService;
         this.primerContactoClientService = primerContactoClientService;
+        this.personalRepository = personalRepository;
     }
 
     // ---------------- Bandeja de Entrada ----------------
 
     public BandejaResumenModel bandeja() {
-        long pendientes = quejaRepository.countByEstatus(RECIBIDA);
+        // Antes de contar/listar, se liberan las que quedaron abandonadas EN_VALIDACION --
+        // así la bandeja nunca muestra "en revisión" a alguien que ya no está ahí.
+        liberarRevisionesVencidas();
+
+        // Las corregidas cuentan como pendientes: son trabajo por atender, igual que una
+        // queja nueva, solo que ya trae una vuelta encima.
+        long pendientes = quejaRepository.countByEstatus(RECIBIDA)
+                + quejaRepository.countByEstatus(CORREGIDA);
         long enProceso = quejaRepository.countByEstatus(EN_VALIDACION);
 
         LocalDateTime inicioHoy = LocalDate.now().atStartOfDay();
@@ -62,14 +84,15 @@ public class RevisionQuejaService {
         long turnadasHoy = quejaRepository.countByEstatusAndFechaTurnadoBetween(TURNADA, inicioHoy, finHoy);
 
         List<QuejaResumenBandejaModel> lista = quejaRepository
-                .findByEstatusInOrderByFechaCreacionAsc(List.of(RECIBIDA, EN_VALIDACION))
+                .findByEstatusInOrderByFechaCreacionAsc(List.of(RECIBIDA, CORREGIDA, EN_VALIDACION))
                 .stream()
                 .map(q -> new QuejaResumenBandejaModel(
                         q.getNumeroFolio(),
                         q.getFechaCreacion(),
                         nombreMostrar(q),
                         documentacionAparenteCompleta(q),
-                        q.getEstatus()))
+                        q.getEstatus(),
+                        q.getRevisandoPorNombre()))
                 .toList();
 
         return new BandejaResumenModel(pendientes, enProceso, turnadasHoy, lista);
@@ -77,15 +100,77 @@ public class RevisionQuejaService {
 
     // ---------------- Validación de Requisitos ----------------
 
-    /** Al abrir el detalle, si la queja seguía "RECIBIDA" pasa a "EN_VALIDACION" -- así la
-     * bandeja refleja que alguien ya la está trabajando (contador "En Proceso"). */
-    public QuejaDetalleModel detalle(String folio) {
+    /**
+     * Al abrir el detalle, una queja RECIBIDA o CORREGIDA pasa a EN_VALIDACION -- así la
+     * bandeja refleja que alguien ya la está trabajando (contador "En Proceso") y les muestra
+     * a los demás recepcionistas quién la tiene abierta, para que no la dupliquen.
+     *
+     * Si YA está EN_VALIDACION porque otro recepcionista la abrió antes (y no ha pasado el
+     * límite de inactividad), se rechaza con un mensaje claro -- es el respaldo del backend a
+     * lo que la bandeja ya oculta/deshabilita en la interfaz. Si el que vuelve a abrirla es la
+     * misma persona que ya la tenía (por ejemplo, recargó la página), simplemente continúa.
+     */
+    public QuejaDetalleModel detalle(String folio, String correoRecepcionista) {
+        liberarRevisionesVencidas();
         Queja queja = obtenerPorFolio(folio);
-        if (RECIBIDA.equals(queja.getEstatus())) {
+
+        boolean otraPersonaLaTiene = EN_VALIDACION.equals(queja.getEstatus())
+                && queja.getRevisandoPor() != null
+                && !queja.getRevisandoPor().equalsIgnoreCase(correoRecepcionista);
+        if (otraPersonaLaTiene) {
+            String quien = queja.getRevisandoPorNombre() != null
+                    ? queja.getRevisandoPorNombre()
+                    : queja.getRevisandoPor();
+            throw new RuntimeException(
+                    "Esta queja la está revisando en este momento " + quien + ". "
+                            + "Elige otra de la bandeja; esta se libera sola si " + quien
+                            + " la deja inactiva más de " + MINUTOS_LIMITE_REVISION + " minutos.");
+        }
+
+        if (RECIBIDA.equals(queja.getEstatus()) || CORREGIDA.equals(queja.getEstatus())) {
+            queja.setEstatusPrevioRevision(queja.getEstatus());
             queja.setEstatus(EN_VALIDACION);
+            queja.setRevisandoPor(correoRecepcionista);
+            queja.setRevisandoPorNombre(resolverNombre(correoRecepcionista));
+            queja.setFechaInicioRevision(LocalDateTime.now());
             quejaRepository.save(queja);
         }
         return aDetalle(queja);
+    }
+
+    /** Quejas EN_VALIDACION cuyo recepcionista las dejó abiertas más del límite de inactividad
+     * sin rechazarlas ni turnarlas -- se regresan solas a su estatus anterior para que otro
+     * recepcionista las pueda tomar. Se corre al inicio de bandeja() y detalle(), no como
+     * tarea programada aparte. */
+    private void liberarRevisionesVencidas() {
+        LocalDateTime limite = LocalDateTime.now().minusMinutes(MINUTOS_LIMITE_REVISION);
+        List<Queja> vencidas = quejaRepository.findByEstatusAndFechaInicioRevisionBefore(EN_VALIDACION, limite);
+        if (vencidas.isEmpty()) {
+            return;
+        }
+        for (Queja q : vencidas) {
+            q.setEstatus(q.getEstatusPrevioRevision() != null ? q.getEstatusPrevioRevision() : RECIBIDA);
+            q.setRevisandoPor(null);
+            q.setRevisandoPorNombre(null);
+            q.setFechaInicioRevision(null);
+            q.setEstatusPrevioRevision(null);
+        }
+        quejaRepository.saveAll(vencidas);
+    }
+
+    private String resolverNombre(String correo) {
+        return personalRepository.findByCorreoInstitucional(correo)
+                .map(PersonalAdministrativo::getNombreCompleto)
+                .orElse(correo);
+    }
+
+    /** Limpia las marcas de "en revisión" al cerrar el caso (rechazo o turnado) -- ya no hace
+     * falta bloquearla para nadie más. */
+    private void limpiarRevision(Queja queja) {
+        queja.setRevisandoPor(null);
+        queja.setRevisandoPorNombre(null);
+        queja.setFechaInicioRevision(null);
+        queja.setEstatusPrevioRevision(null);
     }
 
     public List<AntecedenteModel> antecedentes(String folio) {
@@ -126,6 +211,7 @@ public class RevisionQuejaService {
         queja.setMotivoRechazo(textoCompleto);
         queja.setValidadoPor(correoRecepcionista);
         queja.setFechaValidacion(LocalDateTime.now());
+        limpiarRevision(queja);
         Queja guardada = quejaRepository.save(queja);
 
         notificacionService.enviarCorreoRechazo(
@@ -141,17 +227,22 @@ public class RevisionQuejaService {
 
     // ---------------- Turnado ----------------
 
+    /** Todas las quejas turnadas van a Primer Contacto -- no existe otro destino posible hoy,
+     * así que el área ya no se le pregunta al recepcionista (antes ofrecía un combo de
+     * dependencias del IPN que no aplicaba aquí). Se deja fijo solo para que Historial siga
+     * mostrando algo coherente en la columna "Área". */
+    private static final String AREA_DESTINO = "Primer Contacto";
+
     public Queja turnar(
             String folio,
-            String areaTurnada,
             String defensorAsignado,
             String comentarios,
             String correoRecepcionista
     ) {
 
-        if (esVacio(areaTurnada) || esVacio(defensorAsignado)) {
+        if (esVacio(defensorAsignado)) {
             throw new RuntimeException(
-                    "Selecciona el área y el defensor responsable antes de turnar."
+                    "Selecciona el defensor responsable antes de turnar."
             );
         }
 
@@ -197,7 +288,7 @@ public class RevisionQuejaService {
         );
 
         queja.setEstatus(TURNADA);
-        queja.setAreaTurnada(areaTurnada);
+        queja.setAreaTurnada(AREA_DESTINO);
         queja.setDefensorAsignado(defensorAsignado);
         queja.setComentariosRecepcion(comentarios);
         queja.setValidadoPor(correoRecepcionista);
@@ -206,6 +297,7 @@ public class RevisionQuejaService {
 
         queja.setFechaValidacion(ahora);
         queja.setFechaTurnado(ahora);
+        limpiarRevision(queja);
 
         Queja guardada =
                 quejaRepository.save(queja);
@@ -217,7 +309,7 @@ public class RevisionQuejaService {
                 "Tu queja "
                         + guardada.getNumeroFolio()
                         + " fue admitida y turnada a "
-                        + areaTurnada
+                        + AREA_DESTINO
                         + " para su atención."
         );
 
@@ -227,27 +319,35 @@ public class RevisionQuejaService {
     // ---------------- Registro Manual ----------------
 
     public Queja registrarManual(
-            String nombre, String apellidoPaterno, String apellidoMaterno,
+            String nombre, String apellido1, String apellido2,
             String tipoUsuario, String dependenciaClave, String numeroOficio,
             LocalDate fechaRecepcionFisica, String tipoDocumento,
             String descripcion, String ubicacionFisica,
-            MultipartFile archivo, String correoRecepcionista) {
+            MultipartFile archivo, String correoRecepcionista,
+            String correoContacto, String telefonoContacto) {
 
-        if (esVacio(nombre) || esVacio(apellidoPaterno) || esVacio(descripcion)) {
+        if (esVacio(nombre) || esVacio(apellido1) || esVacio(descripcion)) {
             throw new RuntimeException("Completa al menos nombre, primer apellido y descripción del asunto.");
         }
 
         Queja queja = new Queja();
         queja.setNumeroFolio(generarFolio());
-        // Un documento físico no siempre trae un correo institucional capturable de inmediato;
-        // se usa un valor de referencia interno para no romper el NOT NULL de la columna
-        // compartida con queja-service. El recepcionista puede editarlo después si lo obtiene.
-        queja.setCorreoInstitucional("registro-manual+" + queja.getNumeroFolio().toLowerCase() + "@defensoria.ipn.mx");
+        // Si el recepcionista captura un correo de contacto real, se usa como correo
+        // institucional para que el quejoso reciba las notificaciones automáticas
+        // (rechazo/turnado) igual que un registro digital. Cuando no se tiene un correo
+        // capturable de inmediato, se usa un valor de referencia interno para no romper
+        // el NOT NULL de la columna compartida con queja-service.
+        if (!esVacio(correoContacto)) {
+            queja.setCorreoInstitucional(correoContacto.trim());
+        } else {
+            queja.setCorreoInstitucional("registro-manual+" + queja.getNumeroFolio().toLowerCase() + "@defensoria.ipn.mx");
+        }
+        queja.setTelefonoContacto(telefonoContacto);
         queja.setMotivo("Registro manual: " + tipoDocumento);
         queja.setDescripcion(descripcion);
         queja.setNombreQuejoso(nombre);
-        queja.setApellidoPaternoQuejoso(apellidoPaterno);
-        queja.setApellidoMaternoQuejoso(apellidoMaterno);
+        queja.setApellido1Quejoso(apellido1);
+        queja.setApellido2Quejoso(apellido2);
         queja.setTipoUsuarioManual(tipoUsuario);
         queja.setUnidadAcademicaClave(dependenciaClave);
         queja.setNumeroOficio(numeroOficio);
@@ -266,12 +366,16 @@ public class RevisionQuejaService {
 
     // ---------------- Historial ----------------
 
-    public List<HistorialItemModel> historial(String texto, String estatus, LocalDate fecha) {
+    /** fechaDesde/fechaHasta acotan un RANGO (ambos límites incluidos); cualquiera de los dos
+     * puede venir vacío para dejar ese extremo abierto (ej. solo "hasta" = todo lo procesado
+     * hasta esa fecha). Antes solo se podía filtrar un día exacto. */
+    public List<HistorialItemModel> historial(String texto, String estatus, LocalDate fechaDesde, LocalDate fechaHasta) {
         List<Queja> procesadas = quejaRepository.findByEstatusInOrderByFechaCreacionDesc(List.of(RECHAZADA, TURNADA));
 
         return procesadas.stream()
                 .filter(q -> estatus == null || estatus.isBlank() || etiquetaEstatusFinal(q.getEstatus()).equalsIgnoreCase(estatus))
-                .filter(q -> fecha == null || q.getFechaCreacion().toLocalDate().equals(fecha))
+                .filter(q -> fechaDesde == null || !q.getFechaCreacion().toLocalDate().isBefore(fechaDesde))
+                .filter(q -> fechaHasta == null || !q.getFechaCreacion().toLocalDate().isAfter(fechaHasta))
                 .filter(q -> texto == null || texto.isBlank() || coincideTexto(q, texto))
                 .map(q -> new HistorialItemModel(
                         q.getNumeroFolio(), q.getFechaCreacion(), nombreMostrar(q),
@@ -300,6 +404,7 @@ public class RevisionQuejaService {
 
         return new QuejaDetalleModel(
                 q.getNumeroFolio(), q.getFechaCreacion(), nombreMostrar(q), q.getCorreoInstitucional(),
+                q.getTelefonoContacto(),
                 q.getTipoIdentificacionQuejoso(), q.getNumeroIdentificacionQuejoso(),
                 q.getMotivo(), q.getDescripcion(), q.getUnidadAcademicaClave(), q.getFechaHechos(),
                 nombreDenunciadoCompleto(q), q.getOrigenRegistro(), q.getEstatus(), evidencias,
@@ -307,12 +412,12 @@ public class RevisionQuejaService {
     }
 
     private String nombreMostrar(Queja q) {
-        String nombre = concatenarNoVacios(q.getNombreQuejoso(), q.getApellidoPaternoQuejoso(), q.getApellidoMaternoQuejoso());
+        String nombre = concatenarNoVacios(q.getNombreQuejoso(), q.getApellido1Quejoso(), q.getApellido2Quejoso());
         return nombre.isBlank() ? q.getCorreoInstitucional() : nombre;
     }
 
     private String nombreDenunciadoCompleto(Queja q) {
-        String nombre = concatenarNoVacios(q.getNombreDenunciado(), q.getApellidoDenunciado());
+        String nombre = concatenarNoVacios(q.getNombreDenunciado(), q.getApellido1Denunciado());
         return nombre.isBlank() ? "No especificado" : nombre;
     }
 

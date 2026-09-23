@@ -15,10 +15,32 @@
     margin-top: 32px;
   }
 
+  // Sombra y acento de color más presentes -- antes esta tarjeta era la única del sitio con
+  // una sombra casi imperceptible (0.06), quedando "plana" frente al resto de tarjetas ya
+  // rediseñadas (servicios, tab-cards, etc.), que usan sombras más marcadas.
   .card {
     padding: 36px 48px;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    border-top: 4px solid var(--guinda);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09);
+  }
+}
+
+// Antes el título iba solo, sin contexto -- una tarjeta larga sin ninguna explicación previa
+// se siente más intimidante. El subtítulo anticipa qué va a pasar y refuerza confidencialidad.
+.encabezado-formulario {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 8px;
+
+  h2 {
+    margin-bottom: 8px;
+  }
+
+  &__subtitulo {
+    color: var(--texto-suave);
+    font-size: 0.92rem;
+    margin: 0 0 24px;
   }
 }
 
@@ -36,11 +58,28 @@
   margin: 40px auto;
   text-align: center;
   animation: exito-entrada 0.4s ease both;
+  // Acento verde (no guinda) -- refuerza "esto salió bien" con el mismo color semántico que
+  // ya usa --exito en el resto del sitio (badges de estatus, etc.).
+  border-top-color: var(--exito) !important;
 
+  // Antes era el emoji ✅ suelto -- ahora un ícono SVG dentro de un círculo verde, mismo
+  // lenguaje visual (ícono-en-círculo) que el resto del sitio ya usa.
   .icono-exito {
-    font-size: 2.5rem;
-    color: var(--exito);
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 8px;
+    border-radius: 50%;
+    background: #e8f5e9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     animation: icono-rebote 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+
+    svg {
+      width: 30px;
+      height: 30px;
+      stroke: var(--exito);
+    }
   }
 
   .folio {
@@ -69,6 +108,17 @@
   .btn-acuse {
     width: 100%;
     margin-bottom: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    svg {
+      width: 17px;
+      height: 17px;
+      stroke: currentColor;
+      flex-shrink: 0;
+    }
   }
 }
 
@@ -105,6 +155,23 @@
 
   &:hover {
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  }
+
+  &__icono {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    background: var(--guinda-suave);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--guinda-vivo);
+    }
   }
 
   h3 {
@@ -241,10 +308,32 @@
     background: #fdf6e3;
   }
 
+  // Antes eran emoji (🪪/📎) -- inconsistentes con el resto del sitio, que usa íconos SVG con
+  // el mismo trazo guinda en todos lados. Ahora el ícono vive dentro de un círculo, mismo
+  // lenguaje visual que las tarjetas de servicio y el grid de accesos de Inicio.
   &__icono {
-    display: block;
-    font-size: 1.7rem;
-    margin-bottom: 6px;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    background: var(--guinda-suave);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--guinda-vivo);
+    }
+
+    &--exito {
+      background: #e8f5e9;
+
+      svg {
+        stroke: var(--exito);
+      }
+    }
   }
 
   &__texto {
@@ -367,35 +456,68 @@
   max-height: 90vh;
   overflow-y: auto;
   border-radius: 10px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.32);
+  // El header va a todo lo ancho con su propia banda de color (ver .modal-header) -- el
+  // padding del ".card" global se anula aquí y se mueve a ".modal-body".
+  padding: 0;
 }
 
+// Antes era un header blanco plano con solo un borde inferior -- la única pieza del sitio sin
+// la banda de color que ya usan el panel del chatbot, el nav del header público, etc. Ahora
+// usa el mismo patrón: fondo guinda, ícono y texto en blanco.
 .modal-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--borde);
-  padding-bottom: 10px;
-  margin-bottom: 12px;
+  gap: 10px;
+  background: var(--guinda, #6c1d45);
+  color: #fff;
+  padding: 16px 20px;
+  border-radius: 10px 10px 0 0;
+
+  &__icono {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 18px;
+      height: 18px;
+      stroke: #fff;
+    }
+  }
 
   h3 {
+    flex: 1;
     margin: 0;
     border: none;
     padding: 0;
-    color: var(--guinda);
+    color: #fff;
+    font-size: 1rem;
   }
 
   .modal-cerrar {
-    background: none;
+    background: rgba(255, 255, 255, 0.15);
     border: none;
-    color: var(--texto-suave);
-    font-size: 1rem;
+    color: #fff;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 0.85rem;
     cursor: pointer;
 
     &:hover {
-      color: var(--peligro);
+      background: rgba(255, 255, 255, 0.28);
     }
   }
+}
+
+.modal-body {
+  padding: 20px 24px 24px;
 }
 
 .aviso-inline {
@@ -414,5 +536,178 @@
 
   button {
     flex: 1;
+  }
+}
+
+// Antes "Enviar Queja" era un botón chico alineado a la izquierda, poco protagonismo para la
+// acción más importante de un formulario largo. Ahora se centra, crece un poco y va acompañado
+// de un recordatorio de confidencialidad justo debajo -- refuerza confianza en el último paso.
+.envio-formulario {
+  text-align: center;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--borde);
+}
+
+.btn-enviar-queja {
+  min-width: 240px;
+  padding: 14px 32px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.envio-formulario__nota {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+
+  svg {
+    width: 15px;
+    height: 15px;
+    stroke: var(--texto-suave);
+    flex-shrink: 0;
+  }
+}
+
+// =============================================================================================
+// CU-Q01 — Validaciones: mensajes de ayuda, contador y previsualización de archivos
+// =============================================================================================
+
+/** Texto gris debajo de un campo, con la regla que aplica. No es un error. */
+.mensaje-ayuda {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.74rem;
+  color: #8a8a8a;
+}
+
+.contador-caracteres {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #999;
+  text-align: right;
+}
+
+.galeria-titulo {
+  margin: 12px 0 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #555;
+}
+
+/** Rejilla de miniaturas: se ven las imágenes cargadas antes de enviar la queja. */
+.galeria-archivos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.miniatura {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  overflow: hidden;
+  background: #fafafa;
+  border: 1px solid #e3e3e3;
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: #c9a2b4;
+    box-shadow: 0 2px 10px rgba(108, 29, 69, 0.12);
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: 104px;
+    object-fit: cover;
+    background: #efefef;
+  }
+}
+
+/** Placeholder para adjuntos que no son imagen (PDF, MP4, MP3). */
+.miniatura__extension {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 104px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #6c1d45;
+  letter-spacing: 0.06em;
+  background: #f3e7ec;
+}
+
+.miniatura figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 9px 9px;
+}
+
+.miniatura__nombre {
+  overflow: hidden;
+  font-size: 0.75rem;
+  color: #333;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.miniatura__quitar {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 0.72rem;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+  background: rgba(28, 10, 18, 0.68);
+  border: 0;
+  border-radius: 50%;
+
+  &:hover { background: #9d2449; }
+}
+
+.envio-formulario__aviso {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.72rem;
+  color: #7a7a7a;
+}
+
+/* Aviso cuando el correo tecleado ya tiene cuenta de seguimiento. */
+.aviso-correo-registrado {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #f0c36d;
+  background: #fff8e6;
+  color: #7a5b12;
+  font-size: 0.84rem;
+  line-height: 1.45;
+
+  strong {
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  a {
+    display: inline-block;
+    margin-top: 6px;
+    font-weight: 600;
+    color: #7a5b12;
+    text-decoration: underline;
   }
 }

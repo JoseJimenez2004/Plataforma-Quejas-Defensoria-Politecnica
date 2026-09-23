@@ -17,4 +17,7 @@ public class QuejaResumenBandejaModel {
      * mano en "Validación de Requisitos". */
     private boolean documentacionAparenteCompleta;
     private String estatus;
+    /** Nombre de quien tiene la queja abierta ahora mismo. Solo tiene valor cuando estatus es
+     * EN_VALIDACION; null si nadie la está viendo todavía. */
+    private String revisandoPorNombre;
 }

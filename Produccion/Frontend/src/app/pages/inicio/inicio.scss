@@ -241,10 +241,20 @@
 
 // "¿Cómo funciona?" -- proceso en 3 pasos con línea conectora; ayuda a que el usuario sepa
 // qué esperar antes de empezar, lo que refuerza la confianza en la plataforma.
+//
+// Banda blanca a todo el ancho (antes esta sección y las de alrededor compartían el mismo
+// fondo gris de la página sin ningún corte visual entre ellas -- todo se sentía como un solo
+// bloque largo). Alternar blanco/gris entre secciones da ritmo, patrón típico de portales
+// institucionales. El contenido sigue centrado a max-width 1100px vía "&__inner".
 .pasos-section {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 64px 20px 8px;
+  background: #fff;
+  padding: 64px 0 8px;
+
+  &__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
 }
 
 .pasos-subtitulo {
@@ -295,14 +305,22 @@
     margin-bottom: 14px;
   }
 
+  // Antes el ícono flotaba suelto (sin fondo) debajo del círculo numerado -- inconsistente con
+  // el resto de la página, donde todo ícono vive dentro de un círculo de color (tarjetas de
+  // servicio, grid de accesos). Se agrega el mismo tratamiento aquí.
   &__icono {
-    width: 34px;
-    height: 34px;
+    width: 52px;
+    height: 52px;
     margin: 0 auto 10px;
+    border-radius: 50%;
+    background: var(--guinda-suave);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     svg {
-      width: 100%;
-      height: 100%;
+      width: 24px;
+      height: 24px;
       stroke: var(--guinda-vivo);
     }
   }
@@ -325,10 +343,18 @@
   padding: 48px 20px;
 }
 
+// Banda blanca a todo el ancho, igual que "pasos-section" -- da la segunda alternancia
+// gris/blanco de la página (hero guinda -> servicios gris -> pasos blanco -> accesos gris ->
+// tabs blanco).
 .tabs-section {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 20px 56px;
+  background: #fff;
+  padding: 0 0 56px;
+
+  &__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
 }
 
 .tabs-nav {
@@ -393,18 +419,33 @@
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
   }
 
+  // Antes el thumb era un ícono de "foto" genérico flotando semitransparente sobre el
+  // degradado -- se leía como una imagen rota/faltante en vez de un placeholder a propósito.
+  // Ahora usa un ícono distinto por pestaña activa (megáfono en Difusión, edificio en
+  // Institucional, etc.) dentro de un círculo blanco opaco, mismo lenguaje visual que el resto
+  // de la página (íconos siempre dentro de un círculo, nunca sueltos).
   &__thumb {
     height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, var(--guinda-suave), var(--crema));
+  }
+
+  &__thumb-circulo {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 
     svg {
-      width: 34px;
-      height: 34px;
+      width: 26px;
+      height: 26px;
       stroke: var(--guinda-vivo);
-      opacity: 0.55;
     }
   }
 

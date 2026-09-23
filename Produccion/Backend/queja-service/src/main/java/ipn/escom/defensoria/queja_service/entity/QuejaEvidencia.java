@@ -44,6 +44,16 @@ public class QuejaEvidencia {
     @Column(name = "tipo_mime")
     private String tipoMime;
 
+    /**
+     * "IDENTIFICACION" (credencial oficial del quejoso) | "EVIDENCIA" (cualquier otro
+     * archivo que sustente la queja). Antes solo se distinguían por el prefijo
+     * "IDENTIFICACION_" en el nombre del archivo; con esta columna el panel de revisión
+     * puede filtrarlas sin depender de cómo se llame el archivo.
+     * NULL en las evidencias cargadas antes de este cambio.
+     */
+    @Column(name = "tipo", length = 20)
+    private String tipo;
+
     @Column(name = "tamanio_bytes")
     private Long tamanioBytes;
 

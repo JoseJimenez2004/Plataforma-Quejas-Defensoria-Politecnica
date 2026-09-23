@@ -160,7 +160,7 @@ public class DictamenPrimerContactoService {
                 respuestaSubdefensoria.getFolio()
         );
 
-        expediente.setEstatus("TURNADO_SUBDEFENSORIA");
+        expediente.setEstatus("PROCEDENTE");
 
         expediente.setFechaActualizacion(
                 LocalDateTime.now()

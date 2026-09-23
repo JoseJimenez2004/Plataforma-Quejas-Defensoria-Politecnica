@@ -14,7 +14,7 @@ public class QuejaResumenModel {
     private String numeroFolio;
     private String correoInstitucional;
     private String nombreQuejoso;
-    private String apellidoPaternoQuejoso;
-    private String apellidoMaternoQuejoso;
+    private String apellido1Quejoso;
+    private String apellido2Quejoso;
     private String numeroIdentificacionQuejoso;
 }

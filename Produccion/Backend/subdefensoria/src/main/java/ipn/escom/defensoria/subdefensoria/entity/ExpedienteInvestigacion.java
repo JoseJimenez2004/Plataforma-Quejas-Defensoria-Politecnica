@@ -70,8 +70,8 @@ public class ExpedienteInvestigacion {
     private String abogadoAsesorNombre;
 
     /**
-     * RECIBIDO -> EN_INVESTIGACION -> EN_GESTION_DIRECTOR ->
-     * LISTO_A_DICTAMINAR -> CONCLUIDO
+     * RECIBIDO -> EN_INVESTIGACION -> EN_ESPERA_OFICIO ->
+     * ELABORO_ACUERDO -> CONCLUIDO
      * Ver EstatusExpediente para el detalle de cada valor.
      */
     @Column(name = "estatus", nullable = false, length = 30)

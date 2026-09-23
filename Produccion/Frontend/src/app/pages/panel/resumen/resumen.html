@@ -1,6 +1,11 @@
 <div class="bienvenida">
-  <h2>Hola, {{ primerNombre }}</h2>
-  <p>Este es el resumen de tu actividad ante la Defensoría de los Derechos Politécnicos.</p>
+  <span class="bienvenida__icono" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+  </span>
+  <div>
+    <h2>Hola, {{ primerNombre }}</h2>
+    <p>Este es el resumen de tu actividad ante la Defensoría de los Derechos Politécnicos.</p>
+  </div>
 </div>
 
 @if (cargando) {
@@ -34,8 +39,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>
       </span>
       <div>
-        <span class="numero">{{ finalizadas }}</span>
-        <span class="etiqueta">Finalizadas</span>
+        <span class="numero">{{ cerradas }}</span>
+        <span class="etiqueta">Cerradas</span>
       </div>
     </div>
     <div class="card tarjeta" style="--retraso: 3">
@@ -73,14 +78,7 @@
                 <td>{{ q.fechaCreacion | slice: 0 : 10 }}</td>
                 <td>{{ q.motivo }}</td>
                 <td>
-                  <span
-                    class="badge"
-                    [class.recibida]="etiqueta(q.estatus) === 'Recibida'"
-                    [class.en-revision]="etiqueta(q.estatus) === 'En Revisión'"
-                    [class.finalizada]="etiqueta(q.estatus) === 'Finalizada'"
-                  >
-                    {{ etiqueta(q.estatus) }}
-                  </span>
+                  <span [class]="'badge ' + clase(q.estatus)">{{ etiqueta(q.estatus) }}</span>
                 </td>
                 <td>
                   <a [routerLink]="['/panel/mis-quejas', q.numeroFolio]">Ver</a>
@@ -98,9 +96,14 @@
     </div>
 
     <div class="card accion-rapida">
-      <h3>¿Necesitas presentar una queja?</h3>
-      <p>Registra un nuevo trámite ante la Defensoría en unos minutos.</p>
-      <a routerLink="/panel/nueva-queja" class="btn-primary">+ Nueva Queja</a>
+      <span class="accion-rapida__marca" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>
+      </span>
+      <div class="accion-rapida__contenido">
+        <h3>¿Necesitas presentar una queja?</h3>
+        <p>Registra un nuevo trámite ante la Defensoría en unos minutos.</p>
+        <a routerLink="/panel/nueva-queja" class="btn-primary">+ Nueva Queja</a>
+      </div>
     </div>
   </div>
 }

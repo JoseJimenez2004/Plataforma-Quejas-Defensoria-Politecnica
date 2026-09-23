@@ -1,0 +1,66 @@
+<h2 mat-dialog-title>Detalle de la cita</h2>
+
+<mat-dialog-content>
+  <div class="detail-grid">
+    <div>
+      <span>Folio</span>
+      <strong>{{ cita.folio }}</strong>
+    </div>
+
+    <div>
+      <span>Quejoso</span>
+      <strong>{{ cita.quejoso }}</strong>
+    </div>
+
+    <div>
+      <span>Fecha</span>
+      <strong>{{ cita.fecha }}</strong>
+    </div>
+
+    <div>
+      <span>Hora</span>
+      <strong>{{ cita.hora }}</strong>
+    </div>
+
+    <div>
+      <span>Tipo</span>
+      <strong>{{ cita.tipo }}</strong>
+    </div>
+
+    <div>
+      <span>Estatus</span>
+      <mat-chip>{{ cita.estatus }}</mat-chip>
+    </div>
+  </div>
+
+  <div class="section">
+    <span>Motivo</span>
+    <p>{{ cita.motivo }}</p>
+  </div>
+
+  <div class="section muted">
+    <span>Notificación</span>
+    <p>La notificación será enviada al correo registrado de la persona quejosa.</p>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button (click)="verExpediente()">
+    <mat-icon>description</mat-icon>
+    Ver expediente
+  </button>
+
+  <button mat-stroked-button (click)="reagendar()">
+    <mat-icon>event_repeat</mat-icon>
+    Reagendar
+  </button>
+
+  <button mat-stroked-button class="danger-outline" (click)="cancelar()">
+    <mat-icon>event_busy</mat-icon>
+    Cancelar cita
+  </button>
+
+  <button mat-flat-button class="primary-btn" (click)="cerrar()">
+    Cerrar
+  </button>
+</mat-dialog-actions>

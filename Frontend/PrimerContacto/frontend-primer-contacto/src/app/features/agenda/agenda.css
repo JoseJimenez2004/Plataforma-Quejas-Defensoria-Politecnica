@@ -1,0 +1,332 @@
+.page {
+  max-width: 1280px; /* Alineado a la Bandeja de Análisis */
+}
+
+.page-header {
+  margin-bottom: var(--space-5);
+}
+
+.page-header h2 {
+  margin: 0;
+  color: #6a1238; /* Guinda Institucional */
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.page-header p {
+  margin: var(--space-1) 0 0;
+  color: #6b7280;
+}
+
+/* ---- Layout de dos columnas ---- */
+.agenda-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px; /* Estilo asimétrico limpio */
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/* ---- Tarjetas Universales ---- */
+.calendar-card,
+.form-card,
+.table-card {
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  padding: var(--space-4);
+}
+
+.table-card {
+  margin-top: var(--space-5);
+  padding: 0; /* Para que la lista o cabeceras fluyan bien si se requiere */
+}
+
+.card-title-custom {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-lg);
+  font-weight: 900;
+  color: #111827;
+}
+
+/* ---- Calendario ---- */
+.calendar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.calendar-top h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 900;
+  color: #111827;
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.calendar-nav strong {
+  min-width: 140px;
+  text-align: center;
+  font-size: var(--font-size-base);
+  font-weight: 800;
+  color: #111827;
+}
+
+.today-btn {
+  border-color: #6a1238 !important;
+  color: #6a1238 !important;
+  font-weight: 700;
+  border-radius: 8px !important;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid #f1f1f3;
+}
+
+.weekday {
+  background: #111827; /* Mismo color oscuro que los th de tu tabla anterior */
+  color: white;
+  padding: var(--space-2) var(--space-1);
+  text-align: center;
+  font-weight: 800;
+  font-size: var(--font-size-sm);
+}
+
+.calendar-empty,
+.calendar-day {
+  min-height: 70px;
+  border: 1px solid #f1f1f3;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.calendar-day {
+  cursor: pointer;
+  font-weight: 700;
+  color: #374151;
+  transition: background 0.2s ease;
+}
+
+.calendar-day:hover {
+  background: #f9fafb;
+}
+
+.calendar-day.selected {
+  background: #fee2e2; /* Tono sutil rojo/guinda para selección */
+  color: #991b1b;
+}
+
+.calendar-day.today {
+  outline: 2px solid #6a1238;
+  outline-offset: -2px;
+}
+
+.day-dot {
+  width: 6px;
+  height: 6px;
+  background: #b91c1c;
+  border-radius: 50%;
+  margin-top: var(--space-1);
+}
+
+/* ---- Panel de Citas del Día Seleccionado ---- */
+.selected-day-panel {
+  margin-top: var(--space-5);
+  border-top: 1px solid #f1f1f3;
+  padding-top: var(--space-4);
+}
+
+.empty-state-text {
+  margin: 0;
+  color: #6b7280;
+  padding: var(--space-3);
+  text-align: center;
+  font-size: var(--font-size-sm);
+}
+
+.day-appointment {
+  display: grid;
+  grid-template-columns: 70px 1fr auto;
+  gap: var(--space-3);
+  align-items: center;
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.day-appointment strong {
+  color: #111827;
+  font-weight: 800;
+}
+
+.day-appointment span {
+  color: #374151;
+  font-size: var(--font-size-sm);
+}
+
+/* ---- Formulario de Citas ---- */
+.form-grid {
+  display: grid;
+  gap: var(--space-1); /* Minimizado para evitar saltos gigantes con Material */
+}
+
+/* Remoción del subscript padding flotante idéntico al buscador anterior */
+.form-grid ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+.form-grid mat-form-field {
+  margin-bottom: var(--space-3);
+}
+
+.primary-btn {
+  background: #b91c1c !important; /* Rojo de acción unificado */
+  color: white !important;
+  font-weight: 700;
+  border-radius: 8px !important;
+  padding: var(--space-2) 0;
+}
+
+.outline-btn {
+  border-color: #6b7280 !important;
+  color: #374151 !important;
+  font-weight: 700;
+  border-radius: 8px !important;
+}
+
+.error-hint {
+  color: #b91c1c;
+  font-weight: 700;
+  font-size: var(--font-size-xs);
+  margin-top: calc(-1 * var(--space-2));
+  margin-bottom: var(--space-2);
+  display: block;
+}
+
+.available-hours {
+  margin-bottom: var(--space-3);
+}
+
+.available-hours h4 {
+  margin: 0 0 var(--space-2);
+  color: #111827;
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+}
+
+.hours-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.hour-pill {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+  border-radius: 8px;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hour-pill:hover {
+  background: #f3f4f6;
+}
+
+.hour-pill.selected-hour {
+  background: #111827;
+  color: #ffffff;
+  border-color: #111827;
+}
+
+/* ---- Lista e hileras de Próximas Citas ---- */
+.appointments-list {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+.appointment-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr 1.5fr auto auto;
+  gap: var(--space-4);
+  align-items: center;
+  border-bottom: 1px solid #f1f1f3;
+  padding: var(--space-3) 0;
+}
+
+.appointment-row:last-child {
+  border-bottom: none;
+}
+
+.appointment-row div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.appointment-row strong {
+  color: #111827;
+  font-weight: 800;
+}
+
+.appointment-row span {
+  color: #6b7280;
+  font-size: var(--font-size-sm);
+}
+
+/* ---- Chips de Estatus (Homologados con la paleta previa) ---- */
+mat-chip {
+  font-weight: 700 !important;
+}
+
+.confirmed {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.scheduled {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.cancelled {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.type-presencial {
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  width: fit-content;
+}
+
+.type-virtual {
+  background: #e0f2fe !important;
+  color: #075985 !important;
+  width: fit-content;
+}
+
+@media (max-width: 1000px) {
+  .agenda-layout {
+    grid-template-columns: 1fr;
+  }
+  .appointment-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+}

@@ -1,0 +1,37 @@
+server:
+  port: 8092
+
+spring:
+  application:
+    name: historico-service
+  datasource:
+    # Base SEPARADA de defensoria_db: las quejas históricas son de solo consulta y no
+    # comparten ciclo de vida con las del sistema.
+    url: jdbc:postgresql://localhost:5432/defensoria_historico_db
+    username: postgres
+    password: Temporal2026@
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 25MB
+
+jwt:
+  secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name}]"

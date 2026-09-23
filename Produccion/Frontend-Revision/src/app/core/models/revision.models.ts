@@ -58,6 +58,9 @@ export interface QuejaResumenBandeja {
   nombreQuejoso: string;
   documentacionAparenteCompleta: boolean;
   estatus: string;
+  /** Nombre de quien tiene la queja abierta ahora mismo. Solo viene cuando estatus es
+   * EN_VALIDACION; null/undefined si nadie la está viendo todavía. */
+  revisandoPorNombre?: string | null;
 }
 
 export interface BandejaResumen {
@@ -72,6 +75,7 @@ export interface QuejaDetalle {
   fechaCreacion: string;
   nombreCompletoQuejoso: string;
   correoInstitucional: string;
+  telefonoContacto: string | null;
   tipoIdentificacionQuejoso: string | null;
   numeroIdentificacionQuejoso: string | null;
   motivo: string;
@@ -101,7 +105,6 @@ export interface RechazarQuejaRequest {
 }
 
 export interface TurnarQuejaRequest {
-  areaTurnada: string;
   defensorAsignado: string;
   comentarios: string;
 }

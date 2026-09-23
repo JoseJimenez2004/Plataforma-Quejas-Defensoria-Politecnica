@@ -17,7 +17,7 @@ import java.util.Optional;
 
 /**
  * Pantalla P14 "El Semaforo": por cada expediente EN_INVESTIGACION o
- * EN_GESTION_DIRECTOR muestra el oficio vigente (el mas reciente sin
+ * EN_ESPERA_OFICIO muestra el oficio vigente (el mas reciente sin
  * responder) de cualquiera de las dos fases y sus dias transcurridos
  * contra el plazo (10 dias la primera vez, 5 en recordatorios).
  */
@@ -43,7 +43,7 @@ public class ControlPlazoService {
 
     public List<ControlPlazoDTO> obtenerSemaforo() {
         List<ExpedienteInvestigacion> activos = expedienteRepository.findByEstatusInOrderByFechaAdmisionAsc(
-                List.of(EstatusExpediente.EN_INVESTIGACION, EstatusExpediente.EN_GESTION_DIRECTOR));
+                List.of(EstatusExpediente.EN_INVESTIGACION, EstatusExpediente.EN_ESPERA_OFICIO));
 
         return activos.stream()
                 .map(this::filaDelSemaforo)

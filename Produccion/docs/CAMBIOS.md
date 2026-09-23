@@ -885,3 +885,403 @@ Sesión larga que cubre varias rondas de trabajo sin documentar entre la entrada
 pospuesto a propósito). Falta desplegar en producción todo lo del Frontend acumulado en esta
 entrada (Inicio rediseñado, chatbot-widget rediseñado) — sigue solo en el árbol de trabajo
 hasta el próximo `ng build --configuration production` + subida + `podman-compose-front.sh up`.
+
+---
+
+## 2026-09-08 — Primera validación de casos de uso: CU-Q01 (queja sin cuenta)
+
+Inicio de la ronda de validación del happy path caso por caso. El usuario prueba front y back
+en el ambiente desplegado y reporta lo que encuentra; cada caso se registra en
+`docs/cambios-primera-validacion.md`, que es la bitácora de esta ronda.
+
+### CU-Q01 — Presentar una queja sin cuenta (`/queja/registro`)
+
+12 hallazgos: 8 reportados por el usuario y 4 detectados al revisar la pantalla contra el
+caso de uso. 11 resueltos, 1 pospuesto por decisión explícita.
+
+**Validaciones de captura (H-01.1 a H-01.4, H-01.7)**
+- Nombres y apellidos (quejoso, denunciado y tutor): letras con acentos y ñ, permitiendo
+  espacio interno, apóstrofe y guion — `María José`, `D'Angelo`, `Pérez-Gómez`. **No** se
+  usó "solo A-Z" a propósito: rechazaría nombres reales. Los dígitos ya no se pueden teclear.
+- Correo: validación en **dos niveles**. Nivel 1 de formato general para cualquier dominio;
+  nivel 2 con las reglas de Google (solo letras, dígitos y punto, 6–30 caracteres) aplicadas
+  **únicamente** a `gmail.com`/`googlemail.com`. El usuario había pedido prohibir globalmente
+  `& = _ ' - + , < >`, pero esas son restricciones de Gmail al crear una cuenta, no del correo
+  electrónico: aplicadas a todos los dominios habrían rechazado direcciones válidas y en uso
+  (`juan-perez@outlook.com`, `maria_lopez@yahoo.com.mx`). Se le expuso el riesgo y aceptó el
+  esquema de dos niveles.
+- Fecha de nacimiento: entre 1920-01-01 y el 31 de diciembre del **año pasado**. El año se
+  calcula en runtime con el reloj del servidor en `America/Mexico_City`, no como constante,
+  para que la regla no caduque cada 1 de enero.
+- Fecha de los hechos (no reportada, también sin validar): no futura y no anterior al
+  nacimiento.
+- Boleta/empleado: solo dígitos, máximo 10 (antes permitía 12 y aceptaba letras). Se conserva
+  como `VARCHAR`, no numérico — los ceros a la izquierda de una boleta son significativos.
+
+**Identificación oficial (H-01.5)** — era el hallazgo bloqueante
+- De "PDF, JPG, PNG hasta 30MB (y en la práctica cualquier cosa)" a **solo JPG/PNG, 3MB, hasta
+  2 imágenes** (frente y reverso). El usuario pidió inicialmente 1MB y se le señaló que una
+  foto de credencial desde celular pesa 2–5MB; subió el tope a 3MB. También pidió quitar PDF.
+- El cambio de fondo: la validación ya **no es por extensión sino por firma binaria**. La
+  extensión y el `Content-Type` los controla el cliente, así que renombrar cualquier archivo a
+  `credencial.jpg` bastaba para subirlo a un endpoint público sin autenticación. Ahora el
+  backend lee los primeros bytes y compara contra las firmas reales de JPEG y PNG.
+- Se corrigió el texto de ayuda del uploader, que seguía anunciando las reglas viejas.
+
+**Estructura (H-01.6, H-01.8)**
+- Sección 2 renombrada de "Datos de la Queja" a "Lugar de los hechos".
+- Campo nuevo "Segundo Apellido del denunciado" en las tres capas
+  (`apellidoMaternoDenunciado` / `apellido_materno_denunciado`), nullable.
+
+**Previsualización de archivos (H-01.10)**
+- Miniatura de cada imagen cargada, con nombre, peso y botón de quitar, tanto para la
+  credencial como para las evidencias. Los adjuntos que no son imagen muestran su extensión.
+- Los object URL se revocan al quitar el archivo y en `ngOnDestroy` — si no, cada archivo
+  seleccionado y descartado deja memoria reservada en el navegador.
+
+**Aviso de privacidad (H-01.12)**
+- Componente nuevo `shared/aviso-privacidad`. Modal bloqueante al entrar a `/queja/registro`;
+  la casilla "He leído y acepto" se habilita solo tras deslizar el texto hasta el final, y al
+  marcarla se cierra. Botón "No acepto" que sale del formulario: el consentimiento tiene que
+  poder negarse.
+- Caso borde cubierto: si el texto cabe sin scroll (pantalla grande o zoom reducido) nunca
+  habría evento de scroll y la casilla quedaría deshabilitada para siempre; se detecta al
+  renderizar y se habilita sola.
+- La aceptación se persiste con la queja (`aviso_privacidad_aceptado`, `_fecha` puesta por el
+  servidor, `_version`) y el backend rechaza toda queja pública que no la traiga en `true`.
+- **Pendiente**: el texto del aviso es genérico y debe revisarlo alguien con criterio legal
+  antes de darlo por definitivo. No inventa correo de contacto (remite a la sección Contacto).
+
+**H-01.9 — tutor de menores**: no requirió cambios, el usuario confirmó que ya funciona bien.
+
+**H-01.11 — CAPTCHA y rate limiting: pospuesto por instrucción explícita del usuario.** Queda
+anotado que `/registro-publico` es anónimo y acepta hasta 100MB por petición, así que hoy nada
+impide llenar `queja_evidencias` con un script. Conviene retomarlo antes de difundir el portal.
+
+### Arquitectura de la solución
+- Paquete nuevo `queja-service/.../validacion/` con las reglas en un solo lugar
+  (`ReglasQueja`), validadores separados por responsabilidad (`ValidadorCorreo`,
+  `ValidadorFechas`, `ValidadorArchivos`, `DetectorTipoArchivo`) y un orquestador
+  (`ValidadorQuejaPublica`) que además **normaliza** el request (trim, espacios colapsados,
+  correo en minúsculas) antes de validar.
+- Espejo en el frontend: `core/validaciones/reglas-queja.ts`, con los mismos límites. El
+  servidor sigue siendo la fuente de verdad; el front solo existe para dar el error al
+  instante. Ambos archivos se referencian entre sí en comentarios para que no se desincronicen.
+- Columna `tipo` nueva en `queja_evidencias` (`IDENTIFICACION` | `EVIDENCIA`), con backfill
+  por el prefijo del nombre. Antes la credencial solo se distinguía por el prefijo
+  `IDENTIFICACION_` en el nombre del archivo.
+
+### Compatibilidad y orden de despliegue
+`BD → Frontend → Backend`, y el orden no es negociable: el frontend nuevo funciona contra el
+backend viejo (Spring ignora los campos multipart que no conoce), pero el backend nuevo exige
+`avisoPrivacidadAceptado` y tumbaría el formulario viejo. Con este orden no hay ventana de
+caída. Documentado en `docs/DESPLIEGUE-CU-Q01.md` con las 20 pruebas a repetir ya desplegado.
+
+### Verificación previa a la entrega
+- Frontend: `ng build` compila limpio (AOT, incluido el type-check de plantillas).
+- Backend: el paquete `validacion` compila con `javac` (Java 21) y pasa **60 de 60** pruebas
+  escritas para las reglas — correo en ambos niveles, límites exactos de fecha, un ejecutable
+  renombrado a `.jpg`, cantidades y tamaños de la credencial, y el formulario campo por campo.
+- El `mvn package` completo no se pudo correr en el entorno de trabajo (sin acceso a Maven
+  Central); queda a cargo del usuario antes de subir el jar.
+
+### Incidentes durante el despliegue
+- Los comandos de la BD se entregaron asumiendo ejecución desde la laptop; el usuario los
+  corrió dentro del servidor → `scp` falló por ruta inexistente. Además `psql` **no está
+  instalado en el host**: Postgres corre en el contenedor `defensoria-db`, así que la
+  migración va por `podman cp` + `podman exec ... psql`. Corregido en `DESPLIEGUE-CU-Q01.md`.
+- Se agregó `\encoding UTF8` / `SET client_encoding` al inicio del script de migración: los
+  regex de los `CHECK` llevan acentos y ñ, y una sesión de psql con otra codificación los
+  guardaría mal.
+
+### Reorganización: carpeta `basedatos/` en el servidor backend
+- **Decisión del usuario**: sacar los `.sql` sueltos de `/apps/aplicaciones/defensoria/back/`
+  y concentrarlos en `/apps/aplicaciones/defensoria/basedatos/`, para que la carpeta del
+  backend quede solo con lo que se despliega (`artifact/`, `config-files/`, `Dockerfile`,
+  `podman-compose.sh`) y los scripts de base de datos tengan su propio lugar.
+- Archivos que se mueven: `chatbot_seed.sql`, `dependencias_seed.sql`,
+  `defensoria_db_estructura.sql`, `defensoria_db_completo_20260817.sql` (~207MB).
+- Se verificó antes de mover que **ningún script ni microservicio los lee por ruta**: son
+  archivos de semilla y volcado que solo se usan a mano. `podman-compose.sh` no los toca.
+- A partir de aquí, los scripts de migración (`migracion_cu_q01_validaciones.sql` y los que
+  sigan) viven también en esa carpeta.
+
+### Reorganización: `respaldos/` y `backups/` a `/apps/utiles/`
+- **Decisión del usuario**: sacar también estas dos carpetas de la del backend y llevarlas a
+  `/apps/utiles/respaldos` y `/apps/utiles/backups`.
+- `respaldos/` **no es un directorio suelto**: está montado como volumen en `admin-service`
+  (`-v $BASE_DIR/respaldos:/app/respaldos:Z`), y ahí es donde `RespaldoService` deja los
+  `.sql` de los respaldos manuales y automáticos del panel de administración. Moverla sin
+  tocar el script habría dejado los respaldos escribiendo en una carpeta recreada vacía en la
+  ruta vieja (`podman-compose.sh` hace `mkdir -p` de esa ruta en cada `up-container`), y los
+  respaldos históricos habrían quedado huérfanos sin que nada avisara.
+- Cambio aplicado en `podman-compose.sh`: variable nueva `RESPALDOS_DIR="/apps/utiles/respaldos"`,
+  usada en el `mkdir -p` y en el `-v` del volumen, en lugar de `$BASE_DIR/respaldos`.
+- **`config-files/admin-service/config/admin-service.yml` NO se toca**: `respaldos.directorio`
+  apunta a `/app/respaldos`, que es la ruta DENTRO del contenedor y no cambia. Lo único que se
+  movió es el lado del host del bind mount.
+- `backups/` no está referenciada por ningún script ni servicio; se mueve sin efectos.
+- `uploads/` se queda donde está: es un remanente de cuando las evidencias se guardaban en
+  disco (hoy van como BYTEA en `queja_evidencias`), tampoco la referencia nadie.
+- **Para que surta efecto** hay que subir el `podman-compose.sh` actualizado al servidor y
+  recrear el contenedor: `bash podman-compose.sh up-container admin-service`. Mover la carpeta
+  sin recrear el contenedor deja al `admin-service` en ejecución con el bind mount viejo.
+
+### Mapa de dependencias de `defensoria_db` y limpieza de datos de prueba
+- El usuario pidió mapear todas las tablas antes de borrar los datos de prueba para arrancar
+  limpio con la estructura nueva de CU-Q01. Se levantó el mapa cruzando el esquema vivo de la
+  base con las entidades JPA de los nueve microservicios.
+- **Hallazgo principal: en toda la base existen solo DOS llaves foráneas declaradas** —
+  `queja_evidencias.queja_id` y `queja_tutores.queja_id` → `quejas.id`, ambas con
+  `ON DELETE NO ACTION`. Todo lo demás se enlaza **por texto**: `primer-contacto-service` y
+  `subdefensoria-service` guardan el folio de la queja en una columna suelta (`folio_origen`)
+  y sus tablas hijas cuelgan de un `expediente_id` que tampoco es FK.
+- Consecuencia práctica: borrar `quejas` no lanza error, no cascadea y no avisa. Los
+  expedientes, dictámenes, citas, notas y oficios quedan apuntando a folios inexistentes y los
+  paneles los siguen listando. Un `TRUNCATE ... CASCADE` tampoco los alcanza porque no hay
+  cascada que seguir — hay que nombrar las 17 tablas una por una.
+- Estado al 2026-09-08: 22 tablas, 425 filas. `quejas` 28 (2 con `origen_registro` nulo, de
+  antes de que existiera la columna), `queja_evidencias` 52, `queja_tutores` 6,
+  `notificaciones` 19, `bitacora_acciones` 64, `usuarios` 9 (cuentas de quejoso),
+  `personal_administrativo` 9 (el staff, con lo que se entra a los paneles),
+  `dependencias` 209, `preguntas_chatbot` 15, `plantillas_documentos` 3. Las cadenas de
+  primer contacto y subdefensoría tienen 1 expediente cada una con sus hijas.
+- **Ya había un huérfano antes de tocar nada**: el `expedientes_investigacion` existente tiene
+  un `folio_origen` que no corresponde a ningún `folio_subdefensoria` de primer contacto. Es
+  justo el modo de falla que el enlace por texto no puede prevenir.
+- Plan acordado: respaldo completo → migración CU-Q01 → `TRUNCATE` de 17 tablas con
+  `RESTART IDENTITY` (sin `CASCADE`, a propósito: las dos tablas con FK van nombradas en la
+  lista, y `CASCADE` arrastraría en silencio cualquier tabla que un servicio haya creado
+  después) → `VALIDATE CONSTRAINT` de las diez restricciones, que la migración creó como
+  `NOT VALID` y que con las tablas limpias ya se pueden aplicar sobre toda la tabla.
+- **No se tocan**: `dependencias` (sin ella el formulario se queda sin selector de lugar de los
+  hechos), `personal_administrativo` (borrarla deja al usuario fuera de todos los paneles),
+  `preguntas_chatbot` y `plantillas_documentos`.
+- El mapa quedó publicado como artefacto ("Mapa de defensoria_db") con el diagrama de
+  dependencias, la tabla de las 22 con su veredicto y los comandos en orden.
+- **Deuda anotada**: los enlaces por folio deberían ser llaves foráneas reales, o al menos
+  tener una verificación periódica de huérfanos. Mientras sigan siendo texto, cualquier
+  borrado o corrección de folios puede romper la trazabilidad sin que nada lo reporte.
+
+### Ejecutado: migración CU-Q01 + vaciado de datos de prueba (2026-09-08, 22:5x)
+- **Migración aplicada sin errores** en `defensoria_db`: 5 `ALTER TABLE`, `UPDATE 52` del
+  backfill de `tipo`, `COMMIT`. Quedaron las 4 columnas nuevas en `quejas`, la columna `tipo`
+  en `queja_evidencias` y las 10 restricciones `CHECK`.
+- El backfill confirmó que el prefijo `IDENTIFICACION_` sí distinguía bien: de 52 evidencias,
+  **43 quedaron como EVIDENCIA y 9 como IDENTIFICACION**. Que solo 9 de las 28 quejas tuvieran
+  credencial adjunta indica que el archivo no siempre fue obligatorio en el formulario viejo.
+- **Respaldo previo**: `/apps/utiles/backups/antes-cu-q01-2026-09-08.sql`, 273 MB, verificado
+  con `grep "PostgreSQL database dump complete"` antes de tocar nada. Ese peso es normal: las
+  evidencias van como BYTEA dentro de la base.
+- **Vaciado ejecutado**: `TRUNCATE` de las 17 tablas con `RESTART IDENTITY`, en una sola
+  transacción. Las 5 tablas de catálogo/configuración quedaron intactas — `dependencias` 209,
+  `bitacora_acciones` 64, `preguntas_chatbot` 15, `personal_administrativo` 9,
+  `plantillas_documentos` 3.
+- **Las 10 restricciones se promovieron a `VALIDATE`**: `convalidated = t` en las diez. Ya no
+  aplican solo a los registros nuevos, sino a toda la tabla — cualquier `INSERT` o `UPDATE` que
+  meta un nombre con números o una boleta con letras es rechazado por la propia base, no solo
+  por el backend.
+- `bitacora_acciones` se conservó por decisión implícita (borrar es irreversible, conservar no);
+  queda como historial de las pruebas previas.
+- **Estado**: capa de base de datos del CU-Q01 desplegada y verificada. Siguen Frontend y
+  Backend, en ese orden.
+
+### Efecto colateral detectado: `revision-service.registrarManual()` y los CHECK validados
+- Al promover las restricciones a `VALIDATE`, dejaron de aplicar solo a lo que escribe
+  `queja-service`: valen para **cualquier** escritor de la tabla `quejas`.
+- `RevisionQuejaService.registrarManual()` (panel del recepcionista, registro de documentos
+  físicos) escribe `nombre_quejoso`, `apellido_paterno_quejoso` y `apellido_materno_quejoso`
+  con una sola comprobación de "no vacío" — sin validar formato.
+- Consecuencia: si un recepcionista captura un nombre con dígitos, el `INSERT` ahora lo rechaza
+  **la base de datos**, y el usuario ve un error crudo de violación de restricción (500) en vez
+  de un mensaje útil. La integridad queda protegida, que es lo correcto, pero la experiencia es
+  mala.
+- **No bloquea el despliegue de CU-Q01** (es otro caso de uso, aún sin validar). Queda anotado
+  como lo primero a revisar cuando se valide el CU del registro manual: reutilizar
+  `ValidadorQuejaPublica`/`ReglasQueja` desde `revision-service`, o replicar el regex de nombre
+  ahí mismo.
+- Mismo razonamiento para el registro autenticado (`/registrar` en `queja-service`): tampoco
+  pasa por el validador nuevo, solo el público lo hace.
+
+### Jars a redesplegar
+- **Solo `quejas-service.jar`** (carpeta `queja-service`). Ningún otro microservicio se tocó:
+  los 14 archivos `.java` modificados están todos bajo `Backend/queja-service/`.
+- `revision-service` comparte la tabla `quejas` pero su entidad no mapea las columnas nuevas.
+  No necesita redesplegarse para que nada se rompa (Hibernate ignora columnas que no mapea),
+  pero **el panel del recepcionista no mostrará** `apellido_materno_denunciado` ni la
+  constancia del aviso de privacidad hasta que se le agreguen esos campos a su propia entidad.
+
+## 2026-09-09 — Autocompletado del catálogo de dependencias
+
+- **Problema reportado por el usuario** al revisar CU-Q01: el `<select>` de "Lugar donde
+  sucedieron los hechos" tiene 209 opciones y deslizarlo es impráctico, sobre todo en celular.
+  Además nadie piensa en el nombre oficial: piensa "soy de ESCOM", no "Escuela Superior de
+  Cómputo".
+- Componente nuevo `shared/autocompletar-dependencia/`, `ControlValueAccessor` como el
+  datepicker, que sigue exponiendo la **clave** al formulario. Backend y base de datos no se
+  tocan: para ellos no cambió nada.
+- **Filtrado en el cliente, no en el servidor**, y a propósito: el catálogo completo (~40 KB)
+  ya se descargaba de todos modos porque el `<select>` lo necesitaba entero, así que buscar en
+  memoria responde al instante, aguanta una red lenta y no le pega al backend una vez por
+  tecla. Con decenas de miles de registros la decisión se invertiría; el documento explica qué
+  cambiaría exactamente en ese caso.
+- Búsqueda por **clave, abreviatura y nombre**, con puntaje por calidad de la coincidencia
+  (siglas exactas > prefijo de siglas > inicio del nombre > todas las palabras escritas como
+  prefijo de alguna palabra del nombre > subcadena). Sin esa escala, `ESCOM` empataría con
+  cualquier dependencia que contenga "com" y la que el usuario quiere quedaría enterrada.
+- **Desempate por tipo**: a igual puntaje van primero las unidades académicas. Sin esto,
+  `computo` ponía "División de Cómputo" (área administrativa) arriba de "Escuela Superior de
+  Cómputo" solo porque el nombre es más corto. Son 45 escuelas de 209 dependencias, pero son el
+  destino de casi todas las quejas.
+- Normalización de acentos **carácter por carácter** en vez del `normalize('NFD').replace()`
+  habitual: descomponer la cadena completa la alarga (una `ó` pasa a ser dos caracteres) y las
+  posiciones dejarían de corresponder con el texto original, que es justo lo que hace falta
+  para resaltar el tramo coincidente.
+- El resaltado se arma partiendo el nombre en tres `<span>`, **sin `innerHTML`**: insertar HTML
+  con texto que viene de la base es el patrón que abre un XSS.
+- **No se puede escribir texto libre**: el componente guarda por separado lo escrito y la clave
+  elegida, y en cuanto se teclea algo la clave se borra. Escribir "mi escuela" y enviar manda
+  vacío, no un lugar inventado. Se optó por avisar en vez de borrarle el texto al usuario.
+- `Enter` con la lista abierta lleva `preventDefault()`: el campo vive dentro de un `<form>` y
+  sin eso elegir una escuela con Enter enviaría la queja a medio llenar.
+- Patrón *combobox* de ARIA completo (`aria-expanded`, `aria-activedescendant`, roles
+  listbox/option) — en un portal de gobierno la accesibilidad no es opcional.
+- Verificado contra el catálogo real: `ESCOM` → 1 resultado exacto; `escuela superior co` →
+  ESCOM primero; `computo` y `cómputo` → ESCOM primero; `esime zac` → ESIME Zacatenco (acierta
+  por la **abreviatura**, no por la clave, que lleva guion); `cecyt 9`, `upiicsa`, `medicina`,
+  `zacatenco` correctos.
+- **Solo se cambió `registro-queja-publico`.** Siguen con el `<select>` viejo:
+  `panel/nueva-queja`, `panel/perfil`, `panel/mis-quejas` y `panel/queja-detalle`. Son una
+  etiqueta cada una, pero en las dos de filtro hay que decidir antes qué pasa con la opción
+  "todas", que el autocompletado no contempla.
+- Documentado en `docs/AUTOCOMPLETADO-DEPENDENCIAS.md`.
+
+### 🔴 Bug encontrado al probar CU-Q01 desplegado: el datepicker generaba fechas inexistentes
+
+- **Síntoma**: al enviar la queja, toast "Ocurrió un error inesperado en el servidor" y en el
+  log del contenedor un `MethodArgumentNotValidException` con
+  `rejected value [2004-21-19]` → `POST /registro-publico -> 500`.
+- **Causa raíz**: en `shared/datepicker/datepicker.html`, los `<select>` de mes y año usaban
+  `[value]="i"` en el `<option>`. `value` es un atributo del DOM, así que `ngModel` guarda el
+  índice como **cadena**, no como número. En `crearCelda()` la fecha se arma con
+  `String(mes + 1)`, y con una cadena eso concatena en vez de sumar: seleccionar **Marzo**
+  (índice `"2"`) producía `"2" + 1 = "21"` y la fecha `2004-21-19`.
+- Por qué el calendario **se veía bien**: `new Date(anio, mes, dia)` convierte sus argumentos a
+  número, así que la rejilla de días se pintaba correcta. Solo la cadena ISO —la que se manda
+  al backend— salía mal. El error era invisible en pantalla.
+- **Es un bug anterior** (el archivo no se había tocado desde el 20 de agosto), no lo
+  introdujeron los cambios de CU-Q01. Salió a la luz ahora porque el usuario usó el desplegable
+  de mes para llegar a 2004 en vez de las flechas.
+- **Afecta a las 4 pantallas** que usan el datepicker: `registro-queja-publico`,
+  `panel/nueva-queja`, `panel/mis-quejas` y `panel/queja-detalle`. La corrección es en el
+  componente compartido, así que las cuatro quedan arregladas de una vez.
+
+**Corrección en tres capas** (una sola no bastaba):
+
+1. **Datepicker** — `[ngValue]` en vez de `[value]` en ambos `<select>`, que conserva el tipo
+   numérico. Más `Number()` defensivo en `cambiarMesVista()`, `crearCelda()` y `semanas()`, por
+   si algo vuelve a dejar esos valores como texto.
+2. **Validación del formulario** — nueva función `esFechaValida()` en `reglas-queja.ts`, usada
+   por `errorFechaNacimiento` y `errorFechaHechos`. Comparar cadenas no alcanzaba:
+   `"2004-21-19"` es mayor que `"1920-01-01"` y menor que `"2025-12-31"`, así que pasaba ambos
+   límites y llegaba al servidor. Ahora se reconstruye la fecha y se comprueba que año, mes y
+   día coincidan con lo escrito — eso descarta tanto meses inexistentes como los "31 de
+   febrero", que JavaScript convertiría silenciosamente en 3 de marzo.
+3. **Backend** — `GlobalExceptionHandler` ahora maneja `BindException` (de la que hereda
+   `MethodArgumentNotValidException`) y devuelve **400** nombrando el campo y el valor
+   rechazado, en vez de caer en el manejador genérico y salir como 500 "Ocurrió un error
+   inesperado en el servidor". Ese mensaje era engañoso por partida doble: no era un error del
+   servidor sino del dato enviado, y no le decía al usuario qué corregir. Se agregó también un
+   manejador de `MaxUploadSizeExceededException` (413) por el mismo motivo.
+
+**Lección anotada**: la validación del frontend comparaba cadenas de fecha con `<` y `>` sin
+verificar que la fecha existiera. Comparar fechas ISO como texto funciona para ordenar, pero no
+valida nada — cualquier cadena con el formato correcto pasa.
+
+## 2026-09-09 — CU-Q07: consultar, editar y retirar mis quejas
+
+Segundo caso de uso de la ronda de validación. Cambios en `panel/mis-quejas` y
+`panel/queja-detalle`, más endpoints nuevos en `queja-service`.
+
+### 🔴 Hallazgo previo: el panel le mentía al quejoso sobre su estatus
+- `etiquetaEstatus()` del frontend traducía `RECIBIDA`, `EN_REVISION` y `FINALIZADA`. De esos,
+  **el backend solo emite el primero**: `RevisionQuejaService` produce `EN_VALIDACION`,
+  `TURNADA` y `RECHAZADA`.
+- Como el traductor caía en `default: 'Recibida'`, una queja **rechazada o turnada se le
+  mostraba al quejoso como "Recibida"**. Alguien cuya queja fue rechazada seguía viendo que
+  estaba en trámite.
+- Corregido: los códigos del modelo ahora son los reales, más `CANCELADA`. Se agregaron
+  `claseEstatus()`, `esEditable()` y `estaCerrada()` para que ninguna pantalla vuelva a
+  comparar cadenas de estatus a mano — que es como se desincronizó.
+- Arrastró correcciones en `resumen` (contaba "Finalizadas", que nunca existieron; ahora cuenta
+  "Cerradas") y en `consultar-queja`. Los colores de la insignia se movieron a `styles.scss`:
+  cada pantalla tenía su copia y ya estaban distintas entre sí.
+
+### Eliminar queja = cancelar, no borrar
+- Decisión del usuario tras exponerle el trade-off: `DELETE /api/quejoso/quejas/mias/{folio}`
+  **no borra**, marca la queja como `CANCELADA`. En un sistema de quejas institucional,
+  destruir el registro elimina la constancia de que la queja existió — y si alguien la
+  presentó y luego la retiró bajo presión, no quedaría ningún rastro.
+- Solo se permite mientras la queja siga en `RECIBIDA`, igual que la edición: una vez que el
+  recepcionista empezó a validarla ya hay trabajo institucional invertido.
+- El diálogo de confirmación se lo dice al usuario con todas sus letras: el registro se
+  conserva y no podrá reactivarla por su cuenta.
+
+### Endpoints nuevos en queja-service
+| Método | Ruta | Qué hace |
+|---|---|---|
+| DELETE | `/mias/{folio}` | Retira (cancela) la queja. Solo en RECIBIDA |
+| POST | `/mias/{folio}/evidencias` | Agrega evidencias. Solo en RECIBIDA |
+| DELETE | `/mias/{folio}/evidencias/{id}` | Quita una evidencia. Solo en RECIBIDA |
+| GET | `/mias/{folio}/evidencias/{id}/contenido` | Sirve el archivo para previsualizarlo |
+
+- La evidencia se busca **dentro de la queja del usuario**, no por id suelto en la tabla: así
+  nadie puede borrar la evidencia de otra persona mandando un id ajeno.
+- **No se puede quitar la última identificación oficial**: la queja se quedaría sin con qué
+  acreditar quién la presentó y el recepcionista tendría que rechazarla.
+- El endpoint de contenido exige JWT, así que la miniatura **no** se puede poner como
+  `<img src="...">` — una etiqueta `<img>` no manda cabeceras. El frontend pide el archivo con
+  HttpClient (que sí pasa por el interceptor del token) y arma un object URL con el blob.
+
+### Mis Quejas: de cinco filtros a un buscador
+- Se quitaron los filtros de folio, asunto, unidad académica, fecha y estatus. Eran **cinco
+  campos para una lista que en la práctica tiene entre una y cinco quejas** — en la captura del
+  usuario había cinco filtros encima de un solo renglón.
+- En su lugar: un buscador que cubre folio, asunto y escuela a la vez (el usuario escribe lo
+  que recuerda sin decidir en qué campo va) y pestañas **Todas / En trámite / Cerradas** con su
+  conteo. Ninguna información se perdió: sigue toda en la tabla.
+- El filtro de unidad académica se fue porque un quejoso se queja de su propia escuela; el de
+  fecha exacta, porque con menos de diez renglones no ayuda a nadie.
+- Acciones como iconos: ojo, lápiz y bote. Editar y eliminar se **deshabilitan** cuando la
+  queja salió de RECIBIDA, con el motivo en el `title` en vez de desaparecer — un botón que se
+  esfuma no explica nada.
+
+### Detalle de queja
+- **Línea del tiempo arriba**, horizontal, con cuatro pasos: Recibida → En validación → Turnada
+  al área → En atención. `RECHAZADA` y `CANCELADA` no son un paso más sino finales
+  alternativos, y cortan la línea en rojo en vez de avanzarla.
+- Son cuatro y no los seis del ejemplo que mandó el usuario **porque son los cuatro que hoy se
+  pueden comprobar con un dato real**. Los seis se veían mejor, pero tres no tendrían de dónde
+  encenderse y la barra se quedaría clavada — peor que mostrar menos. Cuando primer contacto y
+  subdefensoría expongan su avance se amplían.
+- Cuando la queja fue rechazada se muestra el **motivo del rechazo**, que el backend ya
+  devolvía pero el modelo del frontend ni siquiera declaraba.
+- **Panel de evidencias** en la columna derecha, con miniatura de cada imagen, tamaño, etiqueta
+  de "Identificación" para la credencial, y botón para abrir el archivo completo. Agregar y
+  quitar habilitado solo mientras la queja siga en RECIBIDA.
+- **Campos que faltaban y ahora se muestran**: nombre completo del quejoso, correo, número de
+  boleta o empleado, fecha de nacimiento, **segundo apellido del denunciado**, datos del tutor
+  y constancia del aviso de privacidad. El backend ya los devolvía todos; la pantalla
+  simplemente no los pintaba.
+- El formulario de edición ahora usa el autocompletado de dependencias y aplica las mismas
+  validaciones de nombres y fechas que el formulario público.
+
+### Iconos: lucide-angular
+- Se instaló `lucide-angular@1.0.0` (compatible con Angular 13–21).
+- Catálogo único en `shared/iconos/iconos.ts` con nombres en español (`ICONOS.ojo`,
+  `ICONOS.lapiz`, `ICONOS.bote`) y registro selectivo con `pick()` en `app.config.ts`: Lucide
+  trae más de 1500 iconos y solo entran al bundle los 16 declarados.
+- Se documentó en `docs/ICONOS.md`, incluyendo cómo reutilizarlos en el login.
+- Se le propuso al usuario en vez de descargar archivos: los vectoriales heredan el color con
+  `currentColor` (un mismo icono sirve gris deshabilitado y guinda al pasar el mouse, sin un
+  archivo por color), se ven nítidos en retina y no agregan peticiones HTTP.

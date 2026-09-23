@@ -15,9 +15,10 @@
   background: transparent;
   cursor: pointer;
   padding: 0;
-  // Halo dorado ambiental detrás del ícono, además del halo que ya trae el propio SVG
-  // (radialGradient "botHalo") -- el de aquí se nota más porque se proyecta sobre la página.
-  box-shadow: 0 0 26px 6px rgba(255, 215, 106, 0.5), 0 6px 18px rgba(0, 0, 0, 0.25);
+  // Antes había DOS halos dorados encimados: este box-shadow + un radialGradient dentro del
+  // propio SVG -- se veían como un anillo grueso y sucio en vez de un brillo sutil. Ahora el
+  // halo vive solo aquí (más suave), el SVG ya no trae ninguno.
+  box-shadow: 0 0 14px 2px rgba(255, 215, 106, 0.45), 0 4px 14px rgba(0, 0, 0, 0.22);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 
   svg {
@@ -27,7 +28,7 @@
 
   &:hover {
     transform: scale(1.06);
-    box-shadow: 0 0 32px 8px rgba(255, 215, 106, 0.65), 0 6px 18px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 0 18px 3px rgba(255, 215, 106, 0.6), 0 4px 14px rgba(0, 0, 0, 0.22);
   }
 
   &--activo {
@@ -37,11 +38,18 @@
 
 // "Ondas de sonido" -- 3 anillos dorados que se expanden con un desfase entre ellos, dando la
 // sensación de que el asistente está "hablando"/activo en vez de un ícono estático.
+//
+// Bug corregido: como --2 y --3 tienen animation-delay, ANTES de que ese delay terminara el
+// navegador dibujaba el elemento con sus estilos "en reposo" (sin la opacidad/escala de la
+// animación) -- es decir, a opacidad 1 y sin escalar, MÁS sólido que en cualquier punto de la
+// animación real. Eso era el anillo grueso y feo del reporte del usuario. Con opacity:0 como
+// estado base, el anillo queda invisible hasta que su animación arranca de verdad.
 .chatbot-fab__onda {
   position: absolute;
   inset: -6px;
   border-radius: 50%;
   border: 2px solid #ffd76a;
+  opacity: 0;
   animation: chatbot-onda 2.4s ease-out infinite;
 }
 

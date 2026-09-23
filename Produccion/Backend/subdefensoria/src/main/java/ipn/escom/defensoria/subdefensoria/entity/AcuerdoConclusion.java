@@ -42,6 +42,21 @@ public class AcuerdoConclusion {
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
+    /** Cuando se le mando el acuerdo al quejoso (expediente -> PENDIENTE_CONCLUSION). */
     @Column(name = "fecha_envio_secretarial")
     private LocalDateTime fechaEnvioSecretarial;
+
+    /**
+     * Respuesta del quejoso al acuerdo: ACEPTADO o RECHAZADO. Null mientras no conteste.
+     * Si acepta, el expediente pasa a CONCLUIDO; si rechaza, regresa a EN_INVESTIGACION
+     * para una nueva ronda -- ese retorno es lo que exige el diagrama de estados.
+     */
+    @Column(name = "respuesta_quejoso", length = 20)
+    private String respuestaQuejoso;
+
+    @Column(name = "comentario_quejoso", columnDefinition = "TEXT")
+    private String comentarioQuejoso;
+
+    @Column(name = "fecha_respuesta_quejoso")
+    private LocalDateTime fechaRespuestaQuejoso;
 }

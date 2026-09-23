@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Pantalla P14.A "Quejas Nuevas": expedientes a los que hay que
  * redactarles un oficio ahora mismo. Cubre dos casos: RECIBIDO (toca
- * TS-01, primer oficio) y EN_GESTION_DIRECTOR sin oficio de esa fase
+ * TS-01, primer oficio) y EN_ESPERA_OFICIO sin oficio de esa fase
  * todavia activo (toca TS-04, oficio al director).
  */
 @Service
@@ -37,7 +37,7 @@ public class BandejaInvestigacionService {
         expedienteRepository.findByEstatusOrderByFechaAdmisionAsc(EstatusExpediente.RECIBIDO)
                 .forEach(e -> resultado.add(convertirADTO(e, FaseOficio.SOLICITUD_INFORMACION)));
 
-        expedienteRepository.findByEstatusOrderByFechaAdmisionAsc(EstatusExpediente.EN_GESTION_DIRECTOR).stream()
+        expedienteRepository.findByEstatusOrderByFechaAdmisionAsc(EstatusExpediente.EN_ESPERA_OFICIO).stream()
                 .filter(e -> !oficioRepository.existsByExpedienteIdAndEstatus(e.getId(), EstatusOficio.EN_ESPERA)
                         && !oficioRepository.existsByExpedienteIdAndEstatus(e.getId(), EstatusOficio.VENCIDO))
                 .forEach(e -> resultado.add(convertirADTO(e, FaseOficio.GESTION_DIRECTOR)));

@@ -51,7 +51,7 @@ public class IngresoPrimerContactoService {
                         .descripcionHechos(request.getDescripcionHechos())
                         .fechaRecepcionOrigen(request.getFechaRecepcion())
                         .prioridad(request.getPrioridad())
-                        .estatus("PENDIENTE_ANALISIS")
+                        .estatus("EN_ANALISIS")
                         .fechaCreacion(ahora)
                         .fechaActualizacion(ahora);
 

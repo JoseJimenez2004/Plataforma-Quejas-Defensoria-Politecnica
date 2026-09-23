@@ -1,0 +1,42 @@
+/* You can add global styles to this file, and also import other style files */
+
+:root {
+  /* ---- Escala de espaciado (norma del proyecto, base 4px) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 48px;
+
+  /* Separación estándar entre el menú/borde de pantalla y el contenido */
+  --content-gutter: var(--space-7);
+
+  /* ---- Tipografía ---- */
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 22px;
+  --font-size-2xl: 26px;
+
+  /* Antes el texto de párrafos/listas no tenía line-height explícito,
+     por eso se veía apretado. Esta es la norma para todo texto de cuerpo. */
+  --line-height-body: 1.6;
+  --line-height-tight: 1.35; /* solo para títulos grandes */
+
+  /* ---- Radios reutilizados ---- */
+  --radius-card: 16px;
+  --radius-pill: 999px;
+}
+
+p, span, li {
+  line-height: var(--line-height-body);
+}
+
+h1, h2, h3, h4 {
+  line-height: var(--line-height-tight);
+}

@@ -1,0 +1,255 @@
+<section class="page">
+
+  <div class="page-header">
+    <div>
+      <h2>
+        {{
+          tipoDictamen === 'improcedente'
+            ? 'Dictamen de Improcedencia'
+            : 'Dictamen de Competencia'
+        }}
+      </h2>
+
+      <p>
+        Expediente {{ folio }}
+        · {{ expediente?.asunto || 'Sin asunto' }}
+        · Etapa de resolución preliminar.
+      </p>
+    </div>
+
+    <mat-chip
+      [class]="
+        tipoDictamen === 'improcedente'
+          ? 'danger-chip'
+          : 'success-chip'
+      ">
+      {{
+        tipoDictamen === 'improcedente'
+          ? 'Improcedente'
+          : 'Competente'
+      }}
+    </mat-chip>
+  </div>
+
+
+  <div class="flow-card">
+
+    <div class="step done">
+      <mat-icon>check_circle</mat-icon>
+      <span>Recibido</span>
+    </div>
+
+    <div class="line"></div>
+
+    <div class="step done">
+      <mat-icon>check_circle</mat-icon>
+      <span>Analizado</span>
+    </div>
+
+    <div class="line"></div>
+
+    <div class="step active">
+      <mat-icon>edit_document</mat-icon>
+      <span>Dictamen</span>
+    </div>
+
+    <div class="line"></div>
+
+    <div class="step">
+      <mat-icon>
+        {{
+          tipoDictamen === 'improcedente'
+            ? 'task_alt'
+            : 'forward_to_inbox'
+        }}
+      </mat-icon>
+
+      <span>
+        {{
+          tipoDictamen === 'improcedente'
+            ? 'Cierre'
+            : 'Subdefensoría'
+        }}
+      </span>
+    </div>
+
+  </div>
+
+
+  <div class="summary-card">
+
+    <div>
+      <span>Narrativa recibida</span>
+      <strong>Completada</strong>
+    </div>
+
+    <div>
+      <span>Evidencias adjuntas</span>
+      <strong>
+        {{ expediente?.evidencias?.length ?? 0 }} archivos
+      </strong>
+    </div>
+
+    <div>
+      <span>Notas de análisis</span>
+      <strong>
+        {{ expediente?.notas?.length ?? 0 }} notas
+      </strong>
+    </div>
+
+    <div>
+      <span>Estado actual</span>
+      <strong>{{ expediente?.estatus }}</strong>
+    </div>
+
+  </div>
+
+
+  <div class="grid">
+
+    <!-- DATOS DEL EXPEDIENTE -->
+    <mat-card class="card">
+
+      <h3>Datos del expediente</h3>
+
+      <div class="info-list">
+
+        <div>
+          <span>Folio</span>
+          <strong>{{ folio }}</strong>
+        </div>
+
+        <div>
+          <span>Quejoso</span>
+          <strong>{{ expediente?.quejoso?.nombre }}</strong>
+        </div>
+
+        <div>
+          <span>Asunto</span>
+          <strong>{{ expediente?.asunto }}</strong>
+        </div>
+
+        <div>
+          <span>Unidad académica</span>
+          <strong>
+            {{ expediente?.quejoso?.unidadAcademica }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Fecha de ingreso</span>
+          <strong>{{ expediente?.fechaIngreso }}</strong>
+        </div>
+
+        <div>
+          <span>Prioridad</span>
+          <strong>{{ expediente?.prioridad }}</strong>
+        </div>
+
+        <div>
+          <span>Estado actual</span>
+          <strong>{{ expediente?.estatus }}</strong>
+        </div>
+
+      </div>
+
+    </mat-card>
+
+
+    <!-- FORMULARIO DEL DICTAMEN -->
+    <mat-card class="card form-card">
+
+      <h3>
+        {{
+          tipoDictamen === 'improcedente'
+            ? 'Dictamen de Improcedencia'
+            : 'Dictamen de Competencia'
+        }}
+      </h3>
+
+
+      <mat-form-field appearance="outline">
+
+        <mat-label>
+          Justificación del dictamen
+        </mat-label>
+
+        <textarea
+          matInput
+          rows="7"
+          [(ngModel)]="justificacion"
+          [placeholder]="
+            tipoDictamen === 'improcedente'
+              ? 'Describa los fundamentos por los cuales el expediente se determina improcedente.'
+              : 'Describa los elementos que permiten determinar la competencia del expediente.'
+          ">
+        </textarea>
+
+      </mat-form-field>
+
+
+      <!-- SOLO PARA EXPEDIENTES COMPETENTES -->
+      @if (tipoDictamen === 'competente') {
+
+        <mat-form-field appearance="outline">
+
+          <mat-label>
+            Observaciones para Subdefensoría
+          </mat-label>
+
+          <textarea
+            matInput
+            rows="3"
+            [(ngModel)]="observaciones"
+            placeholder="Escriba comentarios para Subdefensoría o información complementaria.">
+          </textarea>
+
+        </mat-form-field>
+
+
+        <mat-form-field appearance="outline">
+
+          <mat-label>
+            Responsable en Subdefensoría
+          </mat-label>
+
+          <input
+            matInput
+            [(ngModel)]="responsableTurno"
+            placeholder="Nombre del responsable que recibirá el expediente">
+
+        </mat-form-field>
+
+      }
+
+
+      <div class="actions">
+
+        <button
+          mat-flat-button
+          class="primary-btn"
+          (click)="enviarTitular()">
+
+          <mat-icon>
+            {{
+              tipoDictamen === 'improcedente'
+                ? 'gavel'
+                : 'send'
+            }}
+          </mat-icon>
+
+          {{
+            tipoDictamen === 'improcedente'
+              ? 'Declarar improcedente'
+              : 'Turnar a Subdefensoría'
+          }}
+
+        </button>
+
+      </div>
+
+    </mat-card>
+
+  </div>
+
+</section>

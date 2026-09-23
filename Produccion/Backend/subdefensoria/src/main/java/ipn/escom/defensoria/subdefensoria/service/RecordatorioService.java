@@ -76,8 +76,8 @@ public class RecordatorioService {
         oficio.setEstatus(EstatusOficio.EN_ESPERA);
         OficioInformacion actualizado = oficioRepository.save(oficio);
 
-        if (seReabrio && EstatusExpediente.LISTO_A_DICTAMINAR.equals(expediente.getEstatus())) {
-            expediente.setEstatus(EstatusExpediente.EN_GESTION_DIRECTOR);
+        if (seReabrio && EstatusExpediente.ELABORO_ACUERDO.equals(expediente.getEstatus())) {
+            expediente.setEstatus(EstatusExpediente.EN_ESPERA_OFICIO);
             expediente.setFechaActualizacion(LocalDateTime.now());
             expedienteRepository.save(expediente);
         }

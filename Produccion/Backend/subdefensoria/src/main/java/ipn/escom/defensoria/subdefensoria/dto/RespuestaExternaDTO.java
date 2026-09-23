@@ -18,6 +18,6 @@ public class RespuestaExternaDTO {
     private String archivoPdfPath;
     private String resumen;
     private String fechaRecepcion;
-    /** Estatus del expediente despues de registrar esta respuesta (normalmente LISTO_A_DICTAMINAR). */
+    /** Estatus del expediente despues de registrar esta respuesta (normalmente ELABORO_ACUERDO). */
     private String estatusExpediente;
 }

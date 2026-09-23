@@ -35,8 +35,8 @@ public class RegistroManualController {
     @Operation(summary = "Registra una queja recibida en papel y genera su folio de seguimiento")
     public ResponseEntity<RegistroManualResponse> registrar(
             @RequestParam String nombre,
-            @RequestParam String apellidoPaterno,
-            @RequestParam(required = false) String apellidoMaterno,
+            @RequestParam String apellido1,
+            @RequestParam(required = false) String apellido2,
             @RequestParam(required = false) String tipoUsuario,
             @RequestParam(required = false) String dependenciaClave,
             @RequestParam(required = false) String numeroOficio,
@@ -45,12 +45,14 @@ public class RegistroManualController {
             @RequestParam String descripcion,
             @RequestParam(required = false) String ubicacionFisica,
             @RequestParam(required = false) MultipartFile archivo,
+            @RequestParam(required = false) String correoContacto,
+            @RequestParam(required = false) String telefonoContacto,
             Authentication authentication) {
 
         Queja creada = revisionService.registrarManual(
-                nombre, apellidoPaterno, apellidoMaterno, tipoUsuario, dependenciaClave, numeroOficio,
+                nombre, apellido1, apellido2, tipoUsuario, dependenciaClave, numeroOficio,
                 fechaRecepcionFisica, tipoDocumento, descripcion, ubicacionFisica, archivo,
-                authentication.getName());
+                authentication.getName(), correoContacto, telefonoContacto);
 
         return ResponseEntity.ok(new RegistroManualResponse(
                 creada.getNumeroFolio(), "Entrada registrada. Folio de seguimiento: " + creada.getNumeroFolio()));

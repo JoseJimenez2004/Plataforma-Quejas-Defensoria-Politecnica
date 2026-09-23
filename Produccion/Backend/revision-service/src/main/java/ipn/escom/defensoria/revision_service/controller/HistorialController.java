@@ -36,21 +36,23 @@ public class HistorialController {
     }
 
     @GetMapping
-    @Operation(summary = "Lista el historial, opcionalmente filtrado por texto libre, estatus y fecha")
+    @Operation(summary = "Lista el historial, opcionalmente filtrado por texto libre, estatus y un rango de fechas")
     public ResponseEntity<List<HistorialItemModel>> historial(
             @RequestParam(required = false) String texto,
             @RequestParam(required = false) String estatus,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
-        return ResponseEntity.ok(revisionService.historial(texto, estatus, fecha));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta) {
+        return ResponseEntity.ok(revisionService.historial(texto, estatus, fechaDesde, fechaHasta));
     }
 
     @GetMapping("/exportar")
-    @Operation(summary = "Exporta el historial filtrado a un archivo Excel (.xlsx)")
+    @Operation(summary = "Exporta a Excel (.xlsx) el historial filtrado por el mismo rango de fechas")
     public ResponseEntity<byte[]> exportar(
             @RequestParam(required = false) String texto,
             @RequestParam(required = false) String estatus,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
-        List<HistorialItemModel> items = revisionService.historial(texto, estatus, fecha);
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta) {
+        List<HistorialItemModel> items = revisionService.historial(texto, estatus, fechaDesde, fechaHasta);
         byte[] archivo = exportService.exportar(items);
 
         return ResponseEntity.ok()

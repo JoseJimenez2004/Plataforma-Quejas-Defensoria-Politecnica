@@ -1,0 +1,110 @@
+<div class="aviso-overlay" role="dialog" aria-modal="true" aria-labelledby="aviso-titulo">
+  <div class="aviso card">
+    <div class="aviso__encabezado">
+      <span class="aviso__icono" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l7 3v5c0 4.4-2.9 8.3-7 9.5C7.9 19.3 5 15.4 5 11V6l7-3z" />
+          <path d="M12 9v4" />
+          <path d="M12 16h.01" />
+        </svg>
+      </span>
+      <div>
+        <h2 id="aviso-titulo">Aviso de Privacidad</h2>
+        <p class="aviso__subtitulo">
+          Léelo completo para poder continuar con el registro de tu queja.
+        </p>
+      </div>
+    </div>
+
+    <div class="aviso__cuerpo" #cuerpoAviso (scroll)="onScroll($event)" tabindex="0">
+      <h3>1. Responsable del tratamiento</h3>
+      <p>
+        La Defensoría de los Derechos Politécnicos (DDP) del Instituto Politécnico Nacional es
+        la responsable del tratamiento de los datos personales que proporciones a través de
+        este formulario.
+      </p>
+
+      <h3>2. Datos que se recaban</h3>
+      <p>Para atender tu queja se recaban los siguientes datos:</p>
+      <ul>
+        <li>De identificación: nombre, apellidos, fecha de nacimiento, número de boleta o de empleado e imagen de tu credencial de la comunidad politécnica.</li>
+        <li>De contacto: correo electrónico.</li>
+        <li>De la queja: lugar y fecha de los hechos, descripción, así como los datos de la persona señalada y los archivos que adjuntes como evidencia.</li>
+        <li>De tu padre, madre o tutor, únicamente cuando eres menor de edad.</li>
+      </ul>
+
+      <h3>3. Finalidad</h3>
+      <p>
+        Tus datos se utilizan exclusivamente para registrar, dar trámite y seguimiento a tu
+        queja; para comunicarte el folio y el estado de tu asunto; y para elaborar
+        estadísticas internas, en cuyo caso la información se maneja de forma agregada y sin
+        identificarte.
+      </p>
+      <p>
+        No se utilizan con fines de publicidad ni se comercializan, y no se transfieren a
+        terceros salvo cuando la propia atención del asunto lo exija o cuando exista un
+        requerimiento de una autoridad competente.
+      </p>
+
+      <h3>4. Datos de la persona señalada</h3>
+      <p>
+        Al capturar el nombre de la persona que señalas en tu queja estás proporcionando datos
+        de un tercero. Esa información se trata con la misma confidencialidad y se usa
+        únicamente para el trámite del asunto.
+      </p>
+
+      <h3>5. Confidencialidad y resguardo</h3>
+      <p>
+        La información se almacena en los sistemas institucionales y solo la consulta el
+        personal autorizado de la Defensoría que interviene en la atención de tu queja. Se
+        aplican medidas de seguridad administrativas, técnicas y físicas para evitar su
+        pérdida, uso indebido o acceso no autorizado.
+      </p>
+
+      <h3>6. Derechos ARCO</h3>
+      <p>
+        Puedes solicitar el acceso, rectificación, cancelación u oposición al tratamiento de
+        tus datos personales, así como revocar el consentimiento que otorgas con este aviso.
+        Para ello acude a la Defensoría o utiliza la sección <strong>Contacto</strong> de este
+        portal, indicando tu nombre y el folio de tu queja.
+      </p>
+
+      <h3>7. Conservación</h3>
+      <p>
+        Tus datos se conservan durante el tiempo necesario para la atención del asunto y por
+        el plazo que establezcan las disposiciones institucionales de archivo aplicables.
+      </p>
+
+      <h3>8. Cambios al aviso</h3>
+      <p>
+        Este aviso puede actualizarse. La versión vigente es la <strong>{{ version }}</strong> y
+        siempre estará disponible en este portal. Queda registrada la versión que aceptaste al
+        momento de presentar tu queja.
+      </p>
+
+      <p class="aviso__fin">— Fin del aviso —</p>
+    </div>
+
+    @if (!llegoAlFinal) {
+      <button type="button" class="aviso__ir-al-final" (click)="irAlFinal()">
+        Desliza hasta el final para continuar ↓
+      </button>
+    }
+
+    <div class="aviso__acciones">
+      <label class="aviso__casilla" [class.aviso__casilla--bloqueada]="!llegoAlFinal">
+        <input
+          type="checkbox"
+          [disabled]="!llegoAlFinal"
+          [checked]="aceptaCasilla"
+          (change)="onAceptar($any($event.target).checked)"
+        />
+        <span>He leído y acepto el Aviso de Privacidad</span>
+      </label>
+
+      <button type="button" class="aviso__rechazar" (click)="onNoAceptar()">
+        No acepto
+      </button>
+    </div>
+  </div>
+</div>

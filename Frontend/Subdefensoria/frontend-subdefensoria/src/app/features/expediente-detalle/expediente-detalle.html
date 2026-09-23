@@ -1,0 +1,121 @@
+<section class="page" *ngIf="expediente as e">
+  <div class="page-header">
+    <div>
+      <h2>Expediente {{ e.folio }}</h2>
+      <p>{{ e.asunto }} · {{ e.unidadAcademica }}</p>
+    </div>
+  </div>
+
+  <div class="flow-card">
+    <div class="step" [class.done]="pasoIndice('RECIBIDO') < pasoActualIndice" [class.active]="e.estatus === 'RECIBIDO'">
+      <mat-icon>check_circle</mat-icon><span>Recibido</span>
+    </div>
+    <div class="line"></div>
+    <div class="step" [class.done]="pasoIndice('EN_INVESTIGACION') < pasoActualIndice" [class.active]="e.estatus === 'EN_INVESTIGACION'">
+      <mat-icon>search</mat-icon><span>Investigación</span>
+    </div>
+    <div class="line"></div>
+    <div class="step" [class.done]="pasoIndice('EN_GESTION_DIRECTOR') < pasoActualIndice" [class.active]="e.estatus === 'EN_GESTION_DIRECTOR'">
+      <mat-icon>groups</mat-icon><span>Gestión con Director</span>
+    </div>
+    <div class="line"></div>
+    <div class="step" [class.done]="pasoIndice('LISTO_A_DICTAMINAR') < pasoActualIndice" [class.active]="e.estatus === 'LISTO_A_DICTAMINAR'">
+      <mat-icon>edit_document</mat-icon><span>Listo a Dictaminar</span>
+    </div>
+    <div class="line"></div>
+    <div class="step" [class.active]="e.estatus === 'CONCLUIDO'">
+      <mat-icon>task_alt</mat-icon><span>Concluido</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <mat-card class="card">
+      <h3>Datos del expediente</h3>
+      <div class="info-list">
+        <div><span>Folio</span><strong>{{ e.folio }}</strong></div>
+        <div><span>Quejoso</span><strong>{{ e.quejosoNombre }}</strong></div>
+        <div><span>Asunto</span><strong>{{ e.asunto }}</strong></div>
+        <div><span>Unidad académica</span><strong>{{ e.unidadAcademica }}</strong></div>
+        <div><span>Fecha de admisión</span><strong>{{ e.fechaAdmision }}</strong></div>
+        <div><span>Descripción de hechos</span><strong>{{ e.descripcionHechos }}</strong></div>
+        @if (e.observacionesAnalista) {
+          <div><span>Observaciones del analista</span><strong>{{ e.observacionesAnalista }}</strong></div>
+        }
+        <div><span>Estatus</span><strong>{{ e.estatus }}</strong></div>
+      </div>
+    </mat-card>
+
+    <div class="right-column">
+      <mat-card class="card">
+        <h3>Historial de Oficios Enviados</h3>
+
+        @if (oficios.length === 0) {
+          <p class="empty-state">Aún no se ha generado ningún oficio para este expediente.</p>
+        }
+
+        <mat-accordion multi>
+          @for (o of oficios; track o.id) {
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title>{{ o.numeroOficio }} · {{ o.destinatarioNombre }}</mat-panel-title>
+                <mat-panel-description>
+                  {{ o.fase === 'GESTION_DIRECTOR' ? 'Gestión con el Director' : 'Solicitud de Información' }}
+                  <mat-chip [class.chip-vencido]="o.estatus === 'VENCIDO'" [class.chip-espera]="o.estatus === 'EN_ESPERA'" [class.chip-respondido]="o.estatus === 'RESPONDIDO'">
+                    {{ o.estatus }}
+                  </mat-chip>
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <p><strong>Enviado:</strong> {{ o.fechaEnvio }} · <strong>Plazo:</strong> {{ o.fechaLimite }}</p>
+              <p><strong>Correo:</strong> {{ o.destinatarioCorreo }}</p>
+              <p class="contenido">{{ o.contenidoRedactado }}</p>
+
+              @if (esOficioActivo(o)) {
+                <div class="oficio-actions">
+                  <button mat-stroked-button class="outline-btn" (click)="abrirRecordatorio(o)">
+                    <mat-icon>notifications</mat-icon>
+                    Enviar Recordatorio
+                  </button>
+                  <button mat-flat-button class="primary-btn" (click)="abrirRespuestaExterna(o)">
+                    <mat-icon>upload_file</mat-icon>
+                    Registrar Respuesta
+                  </button>
+                </div>
+              }
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
+      </mat-card>
+
+      @if (e.estatus === 'LISTO_A_DICTAMINAR') {
+        <mat-card class="card form-card">
+          <h3>Elaboración de Proyecto de Resolución</h3>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Conclusión de la investigación e instrucción</mat-label>
+            <textarea matInput rows="7" [(ngModel)]="textoAcuerdo"></textarea>
+          </mat-form-field>
+
+          <div class="actions">
+            <button mat-stroked-button class="outline-btn" [disabled]="guardando" (click)="guardarBorrador()">
+              <mat-icon>save</mat-icon>
+              Guardar Borrador
+            </button>
+            <button mat-flat-button class="primary-btn" [disabled]="guardando" (click)="concluirExpediente()">
+              <mat-icon>check_circle</mat-icon>
+              Concluir y Enviar a Secretarial
+            </button>
+          </div>
+        </mat-card>
+      }
+
+      @if (e.estatus === 'CONCLUIDO' && acuerdo) {
+        <mat-card class="card">
+          <h3>Acuerdo de Conclusión</h3>
+          <p class="contenido">{{ acuerdo.textoAcuerdo }}</p>
+          <p class="meta">Enviado al área secretarial: {{ acuerdo.fechaEnvioSecretarial }}</p>
+        </mat-card>
+      }
+    </div>
+  </div>
+</section>

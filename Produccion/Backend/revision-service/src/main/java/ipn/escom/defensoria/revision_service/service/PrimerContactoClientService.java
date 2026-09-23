@@ -120,8 +120,8 @@ public class PrimerContactoClientService {
         StringBuilder nombre = new StringBuilder();
 
         agregarParteNombre(nombre, queja.getNombreQuejoso());
-        agregarParteNombre(nombre, queja.getApellidoPaternoQuejoso());
-        agregarParteNombre(nombre, queja.getApellidoMaternoQuejoso());
+        agregarParteNombre(nombre, queja.getApellido1Quejoso());
+        agregarParteNombre(nombre, queja.getApellido2Quejoso());
 
         String resultado = nombre.toString().trim();
 

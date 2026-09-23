@@ -5,23 +5,7 @@
   font-size: 0.9rem;
 }
 
-.filtros {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 16px;
-  align-items: end;
-  margin-bottom: 20px;
 
-  .input-group {
-    margin-bottom: 0;
-  }
-
-  .btn-limpiar {
-    height: fit-content;
-    padding: 11px 16px;
-    white-space: nowrap;
-  }
-}
 
 .conteo-resultados {
   font-size: 0.8rem;
@@ -79,4 +63,243 @@ table {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+// =============================================================================================
+// CU-Q07 — Barra de herramientas, acciones con iconos y confirmación de retiro
+// =============================================================================================
+
+.barra-herramientas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+/** Un solo buscador que cubre folio, asunto y escuela. */
+.buscador {
+  display: flex;
+  flex: 1 1 280px;
+  gap: 9px;
+  align-items: center;
+  min-width: 0;
+  padding: 0 10px 0 12px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus-within {
+    border-color: #9d2449;
+    box-shadow: 0 0 0 3px rgba(157, 36, 73, 0.12);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 0;
+    font: inherit;
+    background: transparent;
+    border: 0;
+    outline: none;
+
+    // Chrome dibuja su propia "x" en los input[type=search]; sobra, ya hay una.
+    &::-webkit-search-cancel-button { display: none; }
+  }
+}
+
+.buscador__icono {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  color: #9d2449;
+}
+
+.buscador__limpiar {
+  display: flex;
+  flex-shrink: 0;
+  padding: 3px;
+  color: #999;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+
+  lucide-icon { width: 15px; height: 15px; }
+  &:hover { color: #9d2449; background: #f7eef1; }
+}
+
+.pestanias {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+  padding: 4px;
+  background: #f1ecee;
+  border-radius: 9px;
+}
+
+.pestania {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b5a60;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover { color: #6c1d45; }
+}
+
+.pestania--activa {
+  color: #6c1d45;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.09);
+}
+
+.pestania__conteo {
+  padding: 1px 7px;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  background: rgba(108, 29, 69, 0.1);
+  border-radius: 999px;
+}
+
+.pestania--activa .pestania__conteo {
+  color: #fff;
+  background: #9d2449;
+}
+
+.tabla-scroll { overflow-x: auto; }
+
+.celda-folio {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.85rem;
+}
+
+.col-acciones { width: 1%; white-space: nowrap; }
+
+.acciones {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+/** Botones de icono. El color lo hereda el SVG con currentColor, así que basta cambiar el
+ *  color del botón para que el icono lo siga — esa es la ventaja de usar iconos vectoriales
+ *  en vez de imágenes. */
+.accion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: #6b5a60;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+
+  lucide-icon { width: 17px; height: 17px; }
+
+  &:disabled {
+    color: #c9c2c4;
+    cursor: not-allowed;
+  }
+}
+
+.accion--ver:not(:disabled):hover,
+.accion--editar:not(:disabled):hover {
+  color: #6c1d45;
+  background: #f7eef1;
+  border-color: #e4cdd6;
+}
+
+.accion--eliminar:not(:disabled):hover {
+  color: #b3261e;
+  background: #fdeceb;
+  border-color: #f5c9c5;
+}
+
+// ---- Confirmación de retiro ----
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(20, 8, 14, 0.58);
+}
+
+.modal-confirmar {
+  width: min(460px, 100%);
+  padding: 26px 28px 22px;
+  text-align: center;
+
+  h3 { margin: 0 0 10px; font-size: 1.08rem; color: #6c1d45; }
+  p { margin: 0 0 10px; font-size: 0.9rem; line-height: 1.55; color: #555; }
+}
+
+.modal-confirmar__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 14px;
+  color: #b3261e;
+  background: #fdeceb;
+  border-radius: 50%;
+
+  lucide-icon { width: 23px; height: 23px; }
+}
+
+.modal-confirmar__nota {
+  padding: 10px 12px;
+  font-size: 0.82rem !important;
+  text-align: left;
+  background: #fafafa;
+  border-left: 3px solid #d9cdd2;
+  border-radius: 4px;
+}
+
+.modal-confirmar__acciones {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 18px;
+
+  button { flex: 1; }
+}
+
+.btn-peligro {
+  padding: 10px 18px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  background: #b3261e;
+  border: 0;
+  border-radius: 8px;
+
+  &:hover:not(:disabled) { background: #97201a; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+@media (max-width: 620px) {
+  .barra-herramientas { flex-direction: column; align-items: stretch; }
+  .pestanias { justify-content: space-between; }
+  .pestania { flex: 1; justify-content: center; }
 }

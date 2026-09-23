@@ -5,7 +5,15 @@
 # ==============================================================================
 
 BASE_DIR="/apps/aplicaciones/defensoria/back"
-SERVICIOS=("auth-service" "quejas-service" "notificaciones-service" "catalogo-service" "admin-service" "revision-service" "chatbot-service" "primer-contacto-service" "subdefensoria-service")
+
+# Carpeta de respaldos de la BD en el HOST. Vive FUERA de BASE_DIR desde el 2026-09-08: la
+# carpeta del backend quedó solo con lo que se despliega (artifact/, config-files/, Dockerfile,
+# este script) y los .sql se concentraron aparte (ver CAMBIOS.md).
+# Ojo: esto es solo el lado del host. Dentro del contenedor la ruta sigue siendo
+# /app/respaldos, que es lo que lee "respaldos.directorio" en admin-service.yml — ese yml NO
+# se toca.
+RESPALDOS_DIR="/apps/utiles/respaldos"
+SERVICIOS=("auth-service" "quejas-service" "notificaciones-service" "catalogo-service" "admin-service" "revision-service" "chatbot-service" "primer-contacto-service" "subdefensoria-service" "historico-service")
 
 # Mapa de puertos por microservicio
 get_port() {
@@ -29,6 +37,10 @@ get_port() {
         # solo se sobreescribe server.port en el yml de despliegue, igual que ya se hace con el
         # resto de la config de producción).
         "subdefensoria-service") echo 8091 ;;
+        # historico-service: quejas de años anteriores al sistema, en su propia base
+        # defensoria_historico_db. 8092 es el siguiente libre (8090 lo usa defensoria-web
+        # en la VPS frontend y se evita para no confundir).
+        "historico-service") echo 8092 ;;
         *) echo 0 ;;
     esac
 }
@@ -43,7 +55,7 @@ mostrar_ayuda() {
     echo "  delete                  Detiene y elimina TODOS los microservicios."
     echo "  delete-container <srv>  Detiene y elimina UN microservicio especifico."
     echo ""
-    echo "Servicios validos: auth-service, quejas-service, notificaciones-service, catalogo-service, admin-service, revision-service, chatbot-service, primer-contacto-service, subdefensoria-service"
+    echo "Servicios validos: auth-service, quejas-service, notificaciones-service, catalogo-service, admin-service, revision-service, chatbot-service, primer-contacto-service, subdefensoria-service, historico-service"
 }
 
 # Construir una imagen dedicada por microservicio (cada uno con su propio tag,
@@ -95,8 +107,8 @@ start_service() {
     # reconstruya el contenedor (si no, "up-container admin-service" los borraría cada vez).
     VOLUMEN_EXTRA=""
     if [ "$SERVICE" = "admin-service" ]; then
-        mkdir -p "$BASE_DIR/respaldos"
-        VOLUMEN_EXTRA="-v $BASE_DIR/respaldos:/app/respaldos:Z"
+        mkdir -p "$RESPALDOS_DIR"
+        VOLUMEN_EXTRA="-v $RESPALDOS_DIR:/app/respaldos:Z"
     fi
 
     # Puerto interno del contenedor unificado a 8080 en los 9 microservicios (mismo patrón que

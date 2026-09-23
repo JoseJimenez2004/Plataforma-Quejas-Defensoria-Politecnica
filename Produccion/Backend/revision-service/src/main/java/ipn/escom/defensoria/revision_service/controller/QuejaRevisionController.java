@@ -41,8 +41,8 @@ public class QuejaRevisionController {
 
     @GetMapping("/{folio}")
     @Operation(summary = "Detalle de una queja para validarla (resumen + documentos adjuntos)")
-    public ResponseEntity<QuejaDetalleModel> detalle(@PathVariable String folio) {
-        return ResponseEntity.ok(revisionService.detalle(folio));
+    public ResponseEntity<QuejaDetalleModel> detalle(@PathVariable String folio, Authentication authentication) {
+        return ResponseEntity.ok(revisionService.detalle(folio, authentication.getName()));
     }
 
     @GetMapping("/{folio}/antecedentes")
@@ -83,7 +83,7 @@ public class QuejaRevisionController {
             @RequestBody TurnarQuejaRequest datos,
             Authentication authentication) {
         Queja queja = revisionService.turnar(
-                folio, datos.getAreaTurnada(), datos.getDefensorAsignado(), datos.getComentarios(),
+                folio, datos.getDefensorAsignado(), datos.getComentarios(),
                 authentication.getName());
         return ResponseEntity.ok(Map.of(
                 "mensaje", "Queja turnada correctamente.",

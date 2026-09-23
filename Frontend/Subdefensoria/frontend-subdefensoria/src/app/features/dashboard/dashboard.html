@@ -1,0 +1,80 @@
+<section class="page">
+  <p class="fecha-hoy">{{ fechaHoy }}</p>
+
+  <div class="cards-grid">
+    <mat-card class="stat-card" [class.selected]="indicadorSeleccionado === 'POR_REDACTAR'" (click)="seleccionarIndicador('POR_REDACTAR')">
+      <mat-icon>inbox</mat-icon>
+      <div>
+        <span>Por Redactar Oficio</span>
+        <strong>{{ totalPorRedactar }}</strong>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card" [class.selected]="indicadorSeleccionado === 'EN_CURSO'" (click)="seleccionarIndicador('EN_CURSO')">
+      <mat-icon>hourglass_top</mat-icon>
+      <div>
+        <span>En Curso</span>
+        <strong>{{ totalEnCurso }}</strong>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card" [class.selected]="indicadorSeleccionado === 'CONCLUIDOS'" (click)="seleccionarIndicador('CONCLUIDOS')">
+      <mat-icon>task_alt</mat-icon>
+      <div>
+        <span>Concluidos</span>
+        <strong>{{ totalConcluidos }}</strong>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card alert" [class.selected]="indicadorSeleccionado === 'VENCIDOS'" (click)="seleccionarIndicador('VENCIDOS')">
+      <mat-icon>notification_important</mat-icon>
+      <div>
+        <span>Vencidos</span>
+        <strong>{{ totalVencidos }}</strong>
+      </div>
+    </mat-card>
+  </div>
+
+  <div class="grid">
+    <mat-card class="list-card">
+      <h3>Expedientes</h3>
+      <p class="subtitle">Listado filtrado según el indicador seleccionado arriba.</p>
+
+      @for (e of listaFiltrada; track e.expedienteId) {
+        <div class="expediente-row" (click)="verDetalle(e)">
+          <div>
+            <strong>{{ e.folio }}</strong>
+            <span>{{ e.quejosoNombre }}</span>
+          </div>
+          <span class="tema">{{ e.asunto }}</span>
+          <button mat-stroked-button class="chip-btn">{{ e.estatus }}</button>
+        </div>
+      }
+
+      @if (listaFiltrada.length === 0) {
+        <p class="empty-state">No hay expedientes en este indicador.</p>
+      }
+    </mat-card>
+
+    <mat-card class="urgentes-card">
+      <h3>Atención Inmediata</h3>
+      <p class="subtitle">Oficios vencidos que requieren recordatorio.</p>
+
+      @for (a of urgentes; track a.oficioId) {
+        <div class="urgente-row">
+          <div>
+            <strong>{{ a.folio }}</strong>
+            <span>{{ a.unidadAcademica }} · +{{ a.diasRetraso }} días</span>
+          </div>
+          <button mat-icon-button (click)="atender(a)" matTooltip="Enviar recordatorio">
+            <mat-icon>notifications_active</mat-icon>
+          </button>
+        </div>
+      }
+
+      @if (urgentes.length === 0) {
+        <p class="empty-state">Sin pendientes urgentes.</p>
+      }
+    </mat-card>
+  </div>
+</section>

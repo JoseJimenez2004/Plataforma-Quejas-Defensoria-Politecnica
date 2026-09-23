@@ -1,0 +1,135 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Panel de inicio</h2>
+      <p class="date-label">{{ fechaActual }}</p>
+    </div>
+
+    <button mat-flat-button class="primary-btn" (click)="irABandeja()">
+      <mat-icon>assignment</mat-icon>
+      Ir a Bandeja
+    </button>
+  </div>
+
+  <div class="stats-grid">
+    @for (item of resumen; track item.titulo) {
+      <div 
+        class="stat-card clickable" 
+        (click)="seleccionarCategoria(item.tipo)">
+        <mat-icon>{{ item.icono }}</mat-icon>
+        <div>
+          <span>{{ item.titulo }}</span>
+          <strong>{{ item.valor }}</strong>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="dashboard-layout">
+    
+    <mat-card class="card">
+      <div class="card-header-custom">
+        <div>
+          <h3>{{ tituloLista }}</h3>
+          <p>Listado filtrado según el indicador seleccionado arriba.</p>
+        </div>
+      </div>
+
+      <div class="dashboard-list">
+        @if (obtenerListaSeleccionada().length === 0) {
+          <p style="color: #6b7280; padding: var(--space-3); text-align: center; font-size: var(--font-size-sm);">
+            No hay expedientes en esta categoría.
+          </p>
+        }
+
+        @for (item of obtenerListaSeleccionada(); track item.folio) {
+          <div class="dashboard-list-item clickable" (click)="abrirExpediente(item.folio)">
+            <div>
+              <strong>{{ item.folio }}</strong>
+              <span>{{ item.nombre }}</span>
+            </div>
+
+            <span>{{ item.detalle }}</span>
+
+            <mat-chip class="status-chip-default">{{ item.estado }}</mat-chip>
+          </div>
+        }
+      </div>
+    </mat-card>
+
+    <div style="display: grid; gap: var(--space-5);">
+      <mat-card class="card">
+        <div class="card-header-custom">
+          <div>
+            <h3>Citas de hoy</h3>
+            <p>Comparecencias programadas para el día actual.</p>
+          </div>
+
+          <button mat-stroked-button class="outline-btn" (click)="irAgenda()">
+            Ver agenda
+          </button>
+        </div>
+
+        <div class="appointments">
+          @if (citasHoy.length === 0) {
+            <p style="color: #6b7280; padding: var(--space-3); text-align: center; font-size: var(--font-size-sm);">
+              No hay citas programadas para hoy.
+            </p>
+          }
+
+          @for (cita of citasHoy; track cita.folio + cita.hora) {
+            <div class="appointment-item">
+              <div class="hour">{{ cita.hora }} hrs</div>
+
+              <div>
+                <strong>{{ cita.quejoso }}</strong>
+                <span>{{ cita.folio }}</span>
+              </div>
+
+              <mat-chip class="priority-high">Confirmada</mat-chip>
+            </div>
+          }
+        </div>
+      </mat-card>
+
+      <mat-card class="card">
+        <div class="card-header-custom">
+          <div>
+            <h3>Actividad reciente</h3>
+            <p>Últimas acciones realizadas en el módulo.</p>
+          </div>
+        </div>
+
+        <div class="activity-timeline">
+          @if (actividad.length === 0) {
+            <p style="color: #6b7280; padding: var(--space-3); text-align: center; font-size: var(--font-size-sm);">
+              No se registra actividad reciente.
+            </p>
+          }
+
+          @for (item of actividad; track item.folio + item.tiempo) {
+            <div class="activity-item clickable" (click)="abrirExpediente(item.folio)">
+              <mat-icon class="activity-icon">{{ item.icono }}</mat-icon>
+
+              <div>
+                <div class="activity-title">
+                  <strong>{{ item.folio }}</strong>
+
+                  @if (item.prioridad === 'Alta') {
+                    <mat-chip class="priority-high">Alta</mat-chip>
+                  } @else if (item.prioridad === 'Media') {
+                    <mat-chip class="priority-medium">Media</mat-chip>
+                  }
+                </div>
+
+                <span>{{ item.accion }}</span>
+                <small>Hace {{ item.tiempo }}</small>
+              </div>
+            </div>
+          }
+        </div>
+      </mat-card>
+    </div>
+
+  </div>
+</section>

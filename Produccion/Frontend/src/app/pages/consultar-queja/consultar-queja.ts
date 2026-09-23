@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { QuejaService } from '../../core/services/queja.service';
-import { Queja, etiquetaEstatus } from '../../core/models/queja.models';
+import { Queja, claseEstatus, etiquetaEstatus } from '../../core/models/queja.models';
 
 @Component({
   selector: 'app-consultar-queja',
@@ -38,6 +38,10 @@ export class ConsultarQueja implements OnInit {
 
   get estatus(): string {
     return etiquetaEstatus(this.queja?.estatus);
+  }
+
+  get claseEstatus(): string {
+    return claseEstatus(this.queja?.estatus);
   }
 
   consultar(): void {
