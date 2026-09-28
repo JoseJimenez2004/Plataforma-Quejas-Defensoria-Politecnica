@@ -52,4 +52,12 @@ public class Usuario {
     private String codigoRecuperacion;
     
     private LocalDateTime fechaExpiracionCodigo;
+
+    /**
+     * Intentos fallidos sobre el código de recuperación vigente. Al llegar al máximo el
+     * código se invalida, para que 6 dígitos con 10 minutos de vida no se puedan romper por
+     * fuerza bruta. Se reinicia cada vez que se emite un código nuevo.
+     */
+    @Column(name = "intentos_codigo")
+    private Integer intentosCodigo = 0;
 }

@@ -19,7 +19,7 @@ export interface DatosQuejaAutenticada {
   unidadAcademicaClave?: string;
   fechaHechos?: string;
   nombreDenunciado?: string;
-  apellidoDenunciado?: string;
+  apellido1Denunciado?: string;
   archivos?: File[];
 }
 
@@ -61,8 +61,8 @@ export class QuejaService {
     if (datos.nombreDenunciado) {
       formData.append('nombreDenunciado', datos.nombreDenunciado);
     }
-    if (datos.apellidoDenunciado) {
-      formData.append('apellidoDenunciado', datos.apellidoDenunciado);
+    if (datos.apellido1Denunciado) {
+      formData.append('apellido1Denunciado', datos.apellido1Denunciado);
     }
     for (const archivo of datos.archivos ?? []) {
       formData.append('archivos', archivo);
@@ -76,9 +76,9 @@ export class QuejaService {
   registrarQuejaPublica(datos: RegistroQuejaPublicaRequest): Observable<Queja> {
     const formData = new FormData();
     formData.append('nombre', datos.nombre);
-    formData.append('apellidoPaterno', datos.apellidoPaterno);
-    if (datos.apellidoMaterno) {
-      formData.append('apellidoMaterno', datos.apellidoMaterno);
+    formData.append('apellido1', datos.apellido1);
+    if (datos.apellido2) {
+      formData.append('apellido2', datos.apellido2);
     }
     formData.append('correo', datos.correo);
     formData.append('fechaNacimiento', datos.fechaNacimiento);
@@ -89,18 +89,24 @@ export class QuejaService {
     if (datos.nombreDenunciado) {
       formData.append('nombreDenunciado', datos.nombreDenunciado);
     }
-    if (datos.apellidoDenunciado) {
-      formData.append('apellidoDenunciado', datos.apellidoDenunciado);
+    if (datos.apellido1Denunciado) {
+      formData.append('apellido1Denunciado', datos.apellido1Denunciado);
+    }
+    if (datos.apellido2Denunciado) {
+      formData.append('apellido2Denunciado', datos.apellido2Denunciado);
     }
     formData.append('descripcion', datos.descripcion);
+    // Constancia del aviso de privacidad: el backend rechaza la queja si no llega en true.
+    formData.append('avisoPrivacidadAceptado', String(datos.avisoPrivacidadAceptado));
+    formData.append('avisoPrivacidadVersion', datos.avisoPrivacidadVersion);
     for (const archivo of datos.archivos ?? []) {
       formData.append('archivos', archivo);
     }
     if (datos.tutor) {
       formData.append('tutorNombre', datos.tutor.nombre);
-      formData.append('tutorApellidoPaterno', datos.tutor.apellidoPaterno);
-      if (datos.tutor.apellidoMaterno) {
-        formData.append('tutorApellidoMaterno', datos.tutor.apellidoMaterno);
+      formData.append('tutorApellido1', datos.tutor.apellido1);
+      if (datos.tutor.apellido2) {
+        formData.append('tutorApellido2', datos.tutor.apellido2);
       }
       formData.append('tutorParentesco', datos.tutor.parentesco);
       if (datos.tutor.correo) {
@@ -123,10 +129,62 @@ export class QuejaService {
     return this.http.get<Queja>(`${this.apiUrl}/mias/${encodeURIComponent(folio)}`);
   }
 
+  /**
+   * Reenvía a Recepción una queja que fue RECHAZADA, con las observaciones ya atendidas.
+   * La deja en CORREGIDA y vuelve a aparecer en la bandeja del recepcionista.
+   */
+  corregirMiQueja(folio: string, datos: EditarQuejaRequest): Observable<Queja> {
+    return this.http.put<Queja>(
+      `${this.apiUrl}/mias/${encodeURIComponent(folio)}/corregir`,
+      datos,
+    );
+  }
+
   /** Evidencias (solo metadatos) de una queja propia. */
   misEvidencias(folio: string): Observable<EvidenciaResumen[]> {
     return this.http.get<EvidenciaResumen[]>(
       `${this.apiUrl}/mias/${encodeURIComponent(folio)}/evidencias`,
+    );
+  }
+
+  /**
+   * Retira una queja propia del historial. El backend NO la borra: la marca como CANCELADA,
+   * conservando el registro y sus evidencias. Solo se permite mientras siga en "RECIBIDA".
+   */
+  cancelarMiQueja(folio: string): Observable<Queja> {
+    return this.http.delete<Queja>(`${this.apiUrl}/mias/${encodeURIComponent(folio)}`);
+  }
+
+  /** Agrega evidencias a una queja propia en estatus "RECIBIDA". */
+  agregarEvidencias(folio: string, archivos: File[]): Observable<EvidenciaResumen[]> {
+    const formData = new FormData();
+    for (const archivo of archivos) {
+      formData.append('archivos', archivo);
+    }
+    return this.http.post<EvidenciaResumen[]>(
+      `${this.apiUrl}/mias/${encodeURIComponent(folio)}/evidencias`,
+      formData,
+    );
+  }
+
+  /** Quita una evidencia de una queja propia en estatus "RECIBIDA". */
+  eliminarEvidencia(folio: string, evidenciaId: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.apiUrl}/mias/${encodeURIComponent(folio)}/evidencias/${evidenciaId}`,
+    );
+  }
+
+  /**
+   * Descarga el archivo de una evidencia para poder previsualizarlo.
+   *
+   * Se pide como Blob y no por URL directa en un <img src>: el endpoint exige el JWT en la
+   * cabecera Authorization, y una etiqueta <img> no manda cabeceras. Con el Blob se arma un
+   * object URL local que sí se puede pintar.
+   */
+  contenidoEvidencia(folio: string, evidenciaId: number): Observable<Blob> {
+    return this.http.get(
+      `${this.apiUrl}/mias/${encodeURIComponent(folio)}/evidencias/${evidenciaId}/contenido`,
+      { responseType: 'blob' },
     );
   }
 

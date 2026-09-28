@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
  * Registro manual de la respuesta recibida (TS-02 y TS-05 del BPMN;
  * no se asume ingesta automatica de correo). Segun la fase del
  * oficio respondido, el expediente avanza distinto:
- * - SOLICITUD_INFORMACION respondido -> EN_GESTION_DIRECTOR (toca redactar TS-04).
- * - GESTION_DIRECTOR respondido -> LISTO_A_DICTAMINAR (toca decidir TS-05).
+ * - SOLICITUD_INFORMACION respondido -> EN_ESPERA_OFICIO (toca redactar TS-04).
+ * - GESTION_DIRECTOR respondido -> ELABORO_ACUERDO (toca decidir TS-05).
  */
 @Service
 public class RespuestaExternaService {
@@ -65,8 +65,8 @@ public class RespuestaExternaService {
         oficioRepository.save(oficio);
 
         expediente.setEstatus(FaseOficio.SOLICITUD_INFORMACION.equals(oficio.getFase())
-                ? EstatusExpediente.EN_GESTION_DIRECTOR
-                : EstatusExpediente.LISTO_A_DICTAMINAR);
+                ? EstatusExpediente.EN_ESPERA_OFICIO
+                : EstatusExpediente.ELABORO_ACUERDO);
         expediente.setFechaActualizacion(LocalDateTime.now());
         expedienteRepository.save(expediente);
 

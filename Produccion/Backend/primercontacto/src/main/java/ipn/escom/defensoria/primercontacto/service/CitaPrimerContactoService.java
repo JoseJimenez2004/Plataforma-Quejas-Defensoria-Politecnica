@@ -33,6 +33,7 @@ public class CitaPrimerContactoService {
             PersonalAdministrativo analista
     ) {
 
+<<<<<<< HEAD:Produccion/Backend/primercontacto/src/main/java/ipn/escom/defensoria/primercontacto/service/CitaPrimerContactoService.java
         /*
          * El cliente manda el folio propio de Primer Contacto.
          * Con ese folio obtenemos el expediente interno.
@@ -45,6 +46,29 @@ public class CitaPrimerContactoService {
                                                 + dto.getFolio()
                                 )
                         );
+=======
+        boolean yaTieneCita = citaPrimerContactoRepository
+                .existsByFolioAndEstatusNot(dto.getFolio(), "CANCELADA");
+
+        if (yaTieneCita) {
+            throw new RuntimeException("El expediente ya tiene una cita programada");
+        }
+
+        CitaPrimerContacto cita = CitaPrimerContacto.builder()
+                .quejaId(dto.getQuejaId())
+                .folio(dto.getFolio())
+                .quejosoId(dto.getQuejosoId())
+                .quejosoNombre(dto.getQuejosoNombre())
+                .analistaId(dto.getAnalistaId())
+                .analistaNombre(dto.getAnalistaNombre())
+                .fechaCita(LocalDate.parse(dto.getFechaCita()))
+                .horaCita(LocalTime.parse(dto.getHoraCita()))
+                .tipoCita(dto.getTipoCita())
+                .motivo(dto.getMotivo())
+                .estatus("PROGRAMADA")
+                .fechaCreacion(LocalDateTime.now())
+                .build();
+>>>>>>> b41378653456fe3429bbc88f39e3f15062f0a782:Defensoria-back/Dev2/primercontacto/src/main/java/ipn/escom/defensoria/primercontacto/service/CitaPrimerContactoService.java
 
         boolean yaTieneCita = citaPrimerContactoRepository
                 .existsByExpedienteIdAndEstatusNot(
@@ -79,8 +103,12 @@ public class CitaPrimerContactoService {
 
         return convertirADTO(guardada);
     }
+<<<<<<< HEAD:Produccion/Backend/primercontacto/src/main/java/ipn/escom/defensoria/primercontacto/service/CitaPrimerContactoService.java
 
     public List<CitaDTO> listarPorExpediente(Long expedienteId) {
+=======
+    public List<CitaDTO> listarPorQueja(Long quejaId) {
+>>>>>>> b41378653456fe3429bbc88f39e3f15062f0a782:Defensoria-back/Dev2/primercontacto/src/main/java/ipn/escom/defensoria/primercontacto/service/CitaPrimerContactoService.java
         return citaPrimerContactoRepository
                 .findByExpedienteIdOrderByFechaCitaDescHoraCitaDesc(
                         expedienteId

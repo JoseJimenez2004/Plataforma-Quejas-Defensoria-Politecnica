@@ -18,4 +18,11 @@ public class EvidenciaResumen {
     private String tipoMime;
     private Long tamanioBytes;
     private LocalDateTime fechaSubida;
+    /** "IDENTIFICACION" | "EVIDENCIA" — null en las cargadas antes de que existiera la columna. */
+    private String tipo;
+
+    /** true si el archivo es una imagen y el frontend puede mostrar una miniatura de él. */
+    public boolean isEsImagen() {
+        return tipoMime != null && tipoMime.startsWith("image/");
+    }
 }

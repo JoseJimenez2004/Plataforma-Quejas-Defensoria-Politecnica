@@ -99,7 +99,7 @@ public class RemisionExternaService {
          * Este estado pertenece a Primer Contacto,
          * no a la tabla quejas.
          */
-        expediente.setEstatus("REMITIDA");
+        expediente.setEstatus("PENDIENTE_REMISION");
         expediente.setFechaActualizacion(
                 LocalDateTime.now()
         );
@@ -165,7 +165,7 @@ public class RemisionExternaService {
          * mediante su folio PC-...
          */
         expediente.setEstatus(
-                "REMISION_ENVIADA"
+                "REMITIDA"
         );
 
         expediente.setFechaActualizacion(

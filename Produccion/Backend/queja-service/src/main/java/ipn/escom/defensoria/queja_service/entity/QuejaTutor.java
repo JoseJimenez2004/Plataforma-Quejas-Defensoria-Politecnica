@@ -38,11 +38,11 @@ public class QuejaTutor {
 
     private String nombre;
 
-    @Column(name = "apellido_paterno")
-    private String apellidoPaterno;
+    @Column(name = "apellido1")
+    private String apellido1;
 
-    @Column(name = "apellido_materno")
-    private String apellidoMaterno;
+    @Column(name = "apellido2")
+    private String apellido2;
 
     private String parentesco;
 

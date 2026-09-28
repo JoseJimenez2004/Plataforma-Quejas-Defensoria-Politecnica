@@ -1,130 +1,292 @@
+<div class="encabezado-detalle">
+  <a routerLink="/panel/mis-quejas" class="volver">← Volver a mis quejas</a>
+</div>
+
 @if (cargando) {
-  <div class="cargando-estado">Cargando detalle de la queja…</div>
-} @else if (!queja) {
-  <div class="cargando-estado">
-    <p>{{ error || 'No se encontró esa queja.' }}</p>
-    <a routerLink="/panel/mis-quejas" class="volver">← Volver al Tablero</a>
-  </div>
-} @else {
-  <div class="encabezado">
-    <h2>Detalle de Queja - Folio {{ queja.numeroFolio }}</h2>
-    <span
-      class="badge"
-      [class.recibida]="estatus === 'Recibida'"
-      [class.en-revision]="estatus === 'En Revisión'"
-      [class.finalizada]="estatus === 'Finalizada'"
-    >
-      {{ estatus }}
-    </span>
+  <div class="card cargando-estado">Cargando el detalle de tu queja…</div>
+} @else if (error) {
+  <div class="card error-estado">{{ error }}</div>
+} @else if (queja) {
+
+  <div class="titulo-detalle">
+    <h2>Detalle de Queja — Folio {{ queja.numeroFolio }}</h2>
+    <span [class]="'badge ' + claseEstatus">{{ estatus }}</span>
   </div>
 
-  <div class="columnas">
-    <div class="card">
-      @if (!editando) {
-        <div class="encabezado-seccion">
-          <h3>Resumen de la Queja</h3>
-          @if (puedeEditar) {
-            <button class="btn-secondary" (click)="iniciarEdicion()">✎ Editar queja</button>
+  <!-- ===================== Línea del tiempo ===================== -->
+  <div class="card linea-tiempo">
+    <div class="linea-tiempo__encabezado">
+      <h3>Estado del trámite</h3>
+      @if (queja.fechaCreacion) {
+        <span class="linea-tiempo__fecha">
+          Presentada el {{ queja.fechaCreacion | slice: 0 : 10 }}
+        </span>
+      }
+    </div>
+
+    <ol class="pasos" [class.pasos--cancelada]="pasos.length === 2">
+      @for (paso of pasos; track paso.clave; let i = $index; let ultimo = $last) {
+        <li class="paso" [class]="'paso paso--' + paso.estado">
+          @if (!ultimo) {
+            <span class="paso__linea" aria-hidden="true"></span>
           }
-        </div>
-
-        <p><strong>Fecha de Registro:</strong> {{ queja.fechaCreacion | slice: 0 : 10 }}</p>
-        <p><strong>Asunto:</strong> {{ queja.motivo }}</p>
-        @if (queja.unidadAcademicaClave) {
-          <p><strong>Lugar de los hechos:</strong> {{ nombreUnidad(queja.unidadAcademicaClave) }}</p>
-        }
-        @if (queja.fechaHechos) {
-          <p><strong>Fecha de los hechos:</strong> {{ queja.fechaHechos | slice: 0 : 10 }}</p>
-        }
-        @if (queja.nombreDenunciado) {
-          <p>
-            <strong>Denunciado:</strong> {{ queja.nombreDenunciado }} {{ queja.apellidoDenunciado }}
-          </p>
-        }
-        <p><strong>Descripción de hechos:</strong></p>
-        <div class="descripcion-box">{{ queja.descripcion }}</div>
-
-        <h3>Evidencias Presentadas</h3>
-        @if (evidencias.length) {
-          @for (ev of evidencias; track ev.id) {
-            <p class="evidencia">
-              📎 {{ ev.nombreArchivo }}
-              <span class="evidencia-peso">({{ formatearTamanio(ev.tamanioBytes) }})</span>
-            </p>
-          }
-        } @else {
-          <p class="sin-evidencias">No se adjuntaron archivos a esta queja.</p>
-        }
-
-        @if (!puedeEditar) {
-          <p class="aviso-inline">
-            Esta queja ya está {{ estatus === 'En Revisión' ? 'en revisión' : 'finalizada' }} y ya
-            no se puede editar.
-          </p>
-        }
-      } @else {
-        <div class="encabezado-seccion">
-          <h3>Editar Queja</h3>
-        </div>
-
-        <div class="input-group">
-          <label>Lugar donde sucedieron los hechos</label>
-          <select [(ngModel)]="formUnidadAcademica" name="formUnidadAcademica">
-            <option value="">Sin especificar</option>
-            @for (dep of dependencias; track dep.clave) {
-              <option [value]="dep.clave">{{ dep.nombre }}</option>
+          <span class="paso__marca">
+            @if (paso.estado === 'completado') {
+              <lucide-icon [img]="ICONOS.palomita"></lucide-icon>
+            } @else if (paso.estado === 'cancelado') {
+              <lucide-icon [img]="ICONOS.prohibido"></lucide-icon>
+            } @else if (paso.estado === 'actual') {
+              <lucide-icon [img]="ICONOS.reloj"></lucide-icon>
+            } @else {
+              <span class="paso__numero">{{ i + 1 }}</span>
             }
-          </select>
-        </div>
+          </span>
+          <span class="paso__titulo">{{ paso.titulo }}</span>
+          <span class="paso__descripcion">{{ paso.descripcion }}</span>
+          @if (paso.estado === 'actual') {
+            <span class="paso__aqui">Estás aquí</span>
+          }
+        </li>
+      }
+    </ol>
 
-        <div class="input-group input-fecha">
-          <label>Fecha de los hechos</label>
-          <app-datepicker [(ngModel)]="formFechaHechos" name="formFechaHechos" [max]="fechaMaxima"></app-datepicker>
+    @if (fueRechazada && queja.motivoRechazo) {
+      <div class="motivo-rechazo">
+        <lucide-icon [img]="ICONOS.info"></lucide-icon>
+        <div>
+          <strong>Motivo del rechazo</strong>
+          <p>{{ queja.motivoRechazo }}</p>
+          @if (puedeCorregir) {
+            <p class="nota-corregir">
+              Puedes atender estas observaciones y reenviar tu queja para que la Defensoría
+              la revise de nuevo.
+            </p>
+            @if (!editando) {
+              <button type="button" class="btn-primary btn-corregir" (click)="iniciarEdicion()">
+                Corregir y reenviar
+              </button>
+            }
+          }
         </div>
+      </div>
+    }
+  </div>
 
-        <div class="fila-form">
-          <div class="input-group">
-            <label>Nombre del denunciado</label>
-            <input type="text" [(ngModel)]="formNombreDenunciado" name="formNombreDenunciado" />
-          </div>
-          <div class="input-group">
-            <label>Apellidos del denunciado</label>
-            <input type="text" [(ngModel)]="formApellidoDenunciado" name="formApellidoDenunciado" />
-          </div>
-        </div>
+  <div class="columnas-detalle">
 
-        <div class="input-group">
-          <label>Descripción de hechos</label>
-          <textarea rows="6" [(ngModel)]="formDescripcion" name="formDescripcion" required></textarea>
-        </div>
-
-        <div class="acciones-edicion">
-          <button class="btn-secondary" (click)="cancelarEdicion()" [disabled]="guardando">Cancelar</button>
-          <button class="btn-primary" (click)="guardarEdicion()" [disabled]="guardando">
-            {{ guardando ? 'Guardando…' : 'Guardar Cambios' }}
+    <!-- ===================== Resumen y edición ===================== -->
+    <div class="card bloque-resumen">
+      <div class="encabezado-bloque">
+        <h3>Resumen de la queja</h3>
+        @if (puedeEditar && !editando) {
+          <button type="button" class="btn-secondary btn-editar" (click)="iniciarEdicion()">
+            <lucide-icon [img]="ICONOS.lapiz"></lucide-icon> Editar queja
           </button>
+        }
+      </div>
+
+      @if (!editando) {
+        <dl class="datos">
+          <dt>Fecha de registro</dt>
+          <dd>{{ queja.fechaCreacion | slice: 0 : 10 }}</dd>
+
+          <dt>Presentada por</dt>
+          <dd>{{ nombreQuejoso }}</dd>
+
+          <dt>Correo de contacto</dt>
+          <dd>{{ queja.correoInstitucional }}</dd>
+
+          <dt>Identificación</dt>
+          <dd>{{ identificacionQuejoso }}</dd>
+
+          <dt>Fecha de nacimiento</dt>
+          <dd>{{ queja.fechaNacimientoQuejoso || '—' }}</dd>
+
+          <dt>Asunto</dt>
+          <dd>{{ queja.motivo }}</dd>
+
+          <dt>Lugar de los hechos</dt>
+          <dd>{{ nombreUnidad(queja.unidadAcademicaClave) }}</dd>
+
+          <dt>Fecha de los hechos</dt>
+          <dd>{{ queja.fechaHechos || '—' }}</dd>
+
+          <dt>Persona denunciada</dt>
+          <dd>{{ nombreDenunciado }}</dd>
+
+          @if (queja.tutor) {
+            <dt>Tutor responsable</dt>
+            <dd>
+              {{ queja.tutor.nombre }} {{ queja.tutor.apellido1 }}
+              {{ queja.tutor.apellido2 }}
+              <span class="dato-secundario">({{ queja.tutor.parentesco }})</span>
+            </dd>
+          }
+
+          @if (queja.avisoPrivacidadAceptado) {
+            <dt>Aviso de privacidad</dt>
+            <dd class="dato-secundario">
+              Aceptado (v{{ queja.avisoPrivacidadVersion }})
+            </dd>
+          }
+        </dl>
+
+        <h4>Descripción de los hechos</h4>
+        <p class="descripcion">{{ queja.descripcion }}</p>
+      } @else {
+        <div class="formulario-edicion">
+          <div class="input-group">
+            <label>Lugar de los hechos</label>
+            <app-autocompletar-dependencia
+              [(ngModel)]="formUnidadAcademica"
+              name="formUnidadAcademica"
+              [dependencias]="dependencias"
+            ></app-autocompletar-dependencia>
+          </div>
+
+          <div class="input-group input-fecha">
+            <label>Fecha de los hechos</label>
+            <app-datepicker [(ngModel)]="formFechaHechos" name="formFechaHechos" [max]="fechaMaxima"></app-datepicker>
+          </div>
+
+          <div class="fila">
+            <div class="input-group">
+              <label>Nombre del denunciado</label>
+              <input type="text" [(ngModel)]="formNombreDenunciado" (keypress)="soloLetras($event)" maxlength="50" />
+            </div>
+            <div class="input-group">
+              <label>Primer apellido</label>
+              <input type="text" [(ngModel)]="formApellido1Denunciado" (keypress)="soloLetras($event)" maxlength="50" />
+            </div>
+            <div class="input-group">
+              <label>Segundo apellido</label>
+              <input type="text" [(ngModel)]="formApellido2Denunciado" (keypress)="soloLetras($event)" maxlength="50" />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Descripción de los hechos</label>
+            <textarea rows="8" [(ngModel)]="formDescripcion" maxlength="4000"></textarea>
+            <div class="contador-caracteres">{{ formDescripcion.length }} / 4000</div>
+          </div>
+
+          <div class="acciones-edicion">
+            @if (puedeCorregir) {
+              <button type="button" class="btn-primary" (click)="corregirYReenviar()" [disabled]="guardando">
+                {{ guardando ? 'Reenviando…' : 'Reenviar a la Defensoría' }}
+              </button>
+            } @else {
+              <button type="button" class="btn-primary" (click)="guardarEdicion()" [disabled]="guardando">
+                {{ guardando ? 'Guardando…' : 'Guardar cambios' }}
+              </button>
+            }
+            <button type="button" class="btn-secondary" (click)="cancelarEdicion()" [disabled]="guardando">
+              Cancelar
+            </button>
+          </div>
         </div>
       }
     </div>
 
-    <div class="card">
-      <h3>Estado del Trámite</h3>
-      <ul class="linea-tiempo">
-        <li class="completado">
-          <span class="punto"></span>
-          Queja Recibida
-        </li>
-        <li [class.completado]="estatus !== 'Recibida'" [class.actual]="estatus === 'En Revisión'">
-          <span class="punto"></span>
-          En Revisión
-        </li>
-        <li [class.completado]="estatus === 'Finalizada'">
-          <span class="punto"></span>
-          Resolución Final
-        </li>
-      </ul>
+    <!-- ===================== Evidencias ===================== -->
+    <div class="card bloque-evidencias">
+      <div class="encabezado-bloque">
+        <h3>Evidencias</h3>
+        <span class="conteo-evidencias">{{ evidencias.length }}</span>
+      </div>
+
+      @if (puedeEditar) {
+        <label class="subir-evidencia" [class.subir-evidencia--ocupado]="subiendoEvidencias">
+          <input
+            type="file" multiple hidden
+            accept=".pdf,.jpg,.jpeg,.png,.mp4,.mp3"
+            [disabled]="subiendoEvidencias"
+            (change)="onArchivosSeleccionados($event)"
+          />
+          <lucide-icon [img]="ICONOS.mas"></lucide-icon>
+          {{ subiendoEvidencias ? 'Subiendo…' : 'Agregar evidencia' }}
+        </label>
+        <p class="nota-evidencias">
+          PDF, JPG, PNG, MP4 o MP3 — máximo 30MB por archivo. Puedes agregar o quitar
+          evidencias mientras tu queja siga en estatus <strong>Recibida</strong>.
+        </p>
+      } @else {
+        <p class="nota-evidencias nota-evidencias--bloqueada">
+          <lucide-icon [img]="ICONOS.info"></lucide-icon>
+          Tu queja ya salió de "Recibida": sus evidencias son definitivas.
+        </p>
+      }
+
+      @if (evidencias.length) {
+        <ul class="lista-evidencias">
+          @for (item of evidencias; track item.evidencia.id) {
+            <li class="evidencia">
+              <button
+                type="button" class="evidencia__vista"
+                (click)="abrirEvidencia(item)"
+                [attr.aria-label]="'Abrir ' + nombreVisible(item.evidencia.nombreArchivo)"
+              >
+                @if (item.url) {
+                  <img [src]="item.url" [alt]="nombreVisible(item.evidencia.nombreArchivo)" />
+                } @else if (item.cargando) {
+                  <span class="evidencia__cargando">…</span>
+                } @else {
+                  <span class="evidencia__extension">{{ extension(item.evidencia.nombreArchivo) }}</span>
+                }
+              </button>
+
+              <div class="evidencia__datos">
+                <span class="evidencia__nombre" [title]="nombreVisible(item.evidencia.nombreArchivo)">
+                  {{ nombreVisible(item.evidencia.nombreArchivo) }}
+                </span>
+                <span class="evidencia__meta">
+                  {{ formatearTamanio(item.evidencia.tamanioBytes) }}
+                  @if (esIdentificacion(item.evidencia)) {
+                    <span class="etiqueta-identificacion">Identificación</span>
+                  }
+                </span>
+              </div>
+
+              @if (puedeEditar) {
+                <button
+                  type="button" class="accion accion--eliminar"
+                  (click)="pedirConfirmacionEvidencia(item)"
+                  title="Quitar esta evidencia"
+                  [attr.aria-label]="'Quitar ' + nombreVisible(item.evidencia.nombreArchivo)"
+                >
+                  <lucide-icon [img]="ICONOS.bote"></lucide-icon>
+                </button>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="sin-evidencias">Esta queja no tiene evidencias adjuntas.</p>
+      }
     </div>
   </div>
+}
 
-  <a routerLink="/panel/mis-quejas" class="volver">← Volver al Tablero</a>
+@if (evidenciaPorEliminar) {
+  <div class="modal-overlay" (click)="cerrarConfirmacionEvidencia()">
+    <div class="modal-confirmar card" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true">
+      <div class="modal-confirmar__icono">
+        <lucide-icon [img]="ICONOS.advertencia"></lucide-icon>
+      </div>
+      <h3>¿Quitar esta evidencia?</h3>
+      <p>{{ nombreVisible(evidenciaPorEliminar.nombreArchivo) }}</p>
+      <p class="modal-confirmar__nota">
+        El archivo se elimina de tu queja y no se puede recuperar. Si lo necesitas después,
+        tendrás que volver a subirlo.
+      </p>
+      <div class="modal-confirmar__acciones">
+        <button type="button" class="btn-secondary" (click)="cerrarConfirmacionEvidencia()" [disabled]="eliminandoEvidencia">
+          Conservar
+        </button>
+        <button type="button" class="btn-peligro" (click)="confirmarEliminarEvidencia()" [disabled]="eliminandoEvidencia">
+          {{ eliminandoEvidencia ? 'Quitando…' : 'Sí, quitar' }}
+        </button>
+      </div>
+    </div>
+  </div>
 }

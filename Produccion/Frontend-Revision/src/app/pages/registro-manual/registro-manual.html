@@ -18,7 +18,7 @@
     </div>
     <div class="input-group">
       <label>Primer Apellido:</label>
-      <input type="text" [(ngModel)]="formulario.apellidoPaterno" name="apellidoPaterno" />
+      <input type="text" [(ngModel)]="formulario.apellido1" name="apellido1" />
     </div>
     <div class="input-group">
       <label>Fecha de Recepción Física:</label>
@@ -26,7 +26,7 @@
     </div>
     <div class="input-group">
       <label>Segundo Apellido:</label>
-      <input type="text" [(ngModel)]="formulario.apellidoMaterno" name="apellidoMaterno" />
+      <input type="text" [(ngModel)]="formulario.apellido2" name="apellido2" />
     </div>
     <div class="input-group">
       <label>Tipo de Documento:</label>
@@ -56,7 +56,16 @@
         }
       </select>
     </div>
+    <div class="input-group">
+      <label>Correo de Contacto:</label>
+      <input type="email" [(ngModel)]="formulario.correoContacto" name="correoContacto" placeholder="Si el quejoso lo proporciona" />
+    </div>
+    <div class="input-group">
+      <label>Teléfono de Contacto:</label>
+      <input type="tel" [(ngModel)]="formulario.telefonoContacto" name="telefonoContacto" placeholder="Si el quejoso lo proporciona" />
+    </div>
   </div>
+  <p class="aviso-inline">Si capturas un correo de contacto, el quejoso recibirá ahí las notificaciones automáticas de rechazo o turnado, igual que en un registro digital.</p>
 </div>
 
 <div class="card seccion-descripcion">

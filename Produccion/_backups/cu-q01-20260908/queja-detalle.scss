@@ -1,0 +1,158 @@
+.encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.encabezado-seccion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    margin: 0;
+  }
+
+  button {
+    font-size: 0.82rem;
+    padding: 8px 14px;
+  }
+}
+
+.fila-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cargando-estado {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--texto-suave);
+}
+
+.evidencia-peso {
+  color: var(--texto-suave);
+  font-size: 0.78rem;
+}
+
+.sin-evidencias {
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+}
+
+.columnas {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+  animation: detalle-entrada 0.35s ease both;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes detalle-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.linea-tiempo li .punto {
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.linea-tiempo li.completado .punto,
+.linea-tiempo li.actual .punto {
+  transform: scale(1.15);
+}
+
+.descripcion-box {
+  background: #fafafa;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  padding: 12px;
+  min-height: 80px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.evidencia {
+  font-size: 0.85rem;
+}
+
+.aviso-inline {
+  background: #fff8e1;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.acciones-edicion {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+
+  button {
+    flex: 1;
+  }
+}
+
+.linea-tiempo {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  li {
+    position: relative;
+    padding: 8px 0 8px 24px;
+    font-size: 0.85rem;
+    color: var(--texto-suave);
+
+    .punto {
+      position: absolute;
+      left: 0;
+      top: 12px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--borde);
+    }
+
+    &.completado {
+      color: var(--exito);
+      font-weight: 600;
+
+      .punto {
+        background: var(--exito);
+      }
+    }
+
+    &.actual {
+      color: var(--advertencia);
+      font-weight: 600;
+
+      .punto {
+        background: var(--advertencia);
+      }
+    }
+  }
+}
+
+.volver {
+  display: inline-block;
+  margin-top: 20px;
+  text-decoration: none;
+  font-size: 0.85rem;
+}

@@ -1,0 +1,82 @@
+.cargando-estado {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+}
+
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 20px;
+
+  .input-group {
+    margin-bottom: 0;
+  }
+
+  .btn-limpiar {
+    height: fit-content;
+    padding: 11px 16px;
+    white-space: nowrap;
+  }
+}
+
+.conteo-resultados {
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  margin: 0 0 10px;
+}
+
+.tabla-contenedor {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid var(--borde);
+    font-size: 0.85rem;
+  }
+
+  th {
+    color: var(--texto-suave);
+  }
+
+  tbody tr {
+    animation: fila-entrada 0.3s ease both;
+    animation-delay: calc(var(--retraso, 0) * 40ms);
+    transition: background 0.12s ease;
+
+    &:hover {
+      background: var(--gris-fondo);
+    }
+  }
+
+  a {
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .vacio {
+    text-align: center;
+    color: var(--texto-suave);
+  }
+}
+
+@keyframes fila-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

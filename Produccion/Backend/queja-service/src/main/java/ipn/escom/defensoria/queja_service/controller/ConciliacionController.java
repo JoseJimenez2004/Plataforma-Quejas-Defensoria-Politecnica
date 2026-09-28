@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import ipn.escom.defensoria.queja_service.dto.AcuerdoConciliacionModel;
 import ipn.escom.defensoria.queja_service.dto.RespuestaConciliacionRequest;
-import ipn.escom.defensoria.queja_service.entity.AcuerdoConciliacion;
 import ipn.escom.defensoria.queja_service.service.ConciliacionService;
 
 /**
@@ -35,16 +35,19 @@ public class ConciliacionController {
 
     @GetMapping("/mias")
     @Operation(summary = "Lista los acuerdos de conciliación dirigidos al usuario autenticado")
-    public ResponseEntity<List<AcuerdoConciliacion>> listarMisAcuerdos() {
+    public ResponseEntity<List<AcuerdoConciliacionModel>> listarMisAcuerdos() {
         String correo = SecurityContextHolder.getContext().getAuthentication().getName();
-        return ResponseEntity.ok(conciliacionService.listarMisAcuerdos(correo));
+        return ResponseEntity.ok(conciliacionService.listarMisAcuerdos(correo).stream()
+                .map(AcuerdoConciliacionModel::de)
+                .toList());
     }
 
     @PutMapping("/{id}/respuesta")
     @Operation(summary = "Acepta o rechaza un acuerdo de conciliación propio")
-    public ResponseEntity<AcuerdoConciliacion> responder(
+    public ResponseEntity<AcuerdoConciliacionModel> responder(
             @PathVariable Long id, @RequestBody RespuestaConciliacionRequest datos) {
         String correo = SecurityContextHolder.getContext().getAuthentication().getName();
-        return ResponseEntity.ok(conciliacionService.responder(id, correo, datos));
+        return ResponseEntity.ok(
+                AcuerdoConciliacionModel.de(conciliacionService.responder(id, correo, datos)));
     }
 }

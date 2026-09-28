@@ -1,0 +1,62 @@
+<div class="datepicker">
+  <button
+    type="button"
+    class="datepicker__disparador"
+    [class.datepicker__disparador--vacio]="!valor"
+    [disabled]="disabled"
+    (click)="alternar()"
+  >
+    <span>{{ textoMostrado || placeholder }}</span>
+    <span class="datepicker__icono">📅</span>
+  </button>
+
+  @if (abierto) {
+    <div class="datepicker__panel" (click)="$event.stopPropagation()">
+      <div class="datepicker__cabecera">
+        <button type="button" class="datepicker__nav" (click)="cambiarMesVista(-1)" aria-label="Mes anterior">‹</button>
+
+        <select class="datepicker__select" [(ngModel)]="vistaMes">
+          @for (nombre of nombresMes; track nombre; let i = $index) {
+            <option [value]="i">{{ nombre }}</option>
+          }
+        </select>
+        <select class="datepicker__select" [(ngModel)]="vistaAno">
+          @for (ano of listaAnos; track ano) {
+            <option [value]="ano">{{ ano }}</option>
+          }
+        </select>
+
+        <button type="button" class="datepicker__nav" (click)="cambiarMesVista(1)" aria-label="Mes siguiente">›</button>
+      </div>
+
+      <div class="datepicker__dias-semana">
+        @for (d of nombresDia; track $index) {
+          <span>{{ d }}</span>
+        }
+      </div>
+
+      @for (semana of semanas; track $index) {
+        <div class="datepicker__semana">
+          @for (celda of semana; track celda.iso) {
+            <button
+              type="button"
+              class="datepicker__dia"
+              [class.datepicker__dia--fuera]="celda.fueraDeMes"
+              [class.datepicker__dia--hoy]="celda.esHoy"
+              [class.datepicker__dia--seleccionado]="celda.esSeleccionado"
+              [disabled]="celda.deshabilitado"
+              (click)="seleccionarDia(celda)"
+            >
+              {{ celda.dia }}
+            </button>
+          }
+        </div>
+      }
+
+      <div class="datepicker__pie">
+        <button type="button" class="datepicker__accion" (click)="irAHoy()">Hoy</button>
+        <button type="button" class="datepicker__accion" (click)="limpiar()">Limpiar</button>
+      </div>
+    </div>
+  }
+</div>

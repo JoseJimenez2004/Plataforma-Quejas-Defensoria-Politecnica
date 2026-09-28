@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  * oficio dado (P15 "Gestion de Respuesta Externa - El Puente"). Al
  * registrarse, marca el/los oficio(s) del expediente como
  * RESPONDIDO y habilita el expediente para pasar a
- * LISTO_A_DICTAMINAR (act. 11 "hay respuesta" y 13 del DDP-PO-02).
+ * ELABORO_ACUERDO (act. 11 "hay respuesta" y 13 del DDP-PO-02).
  */
 @Entity
 @Table(name = "respuestas_externas")

@@ -140,7 +140,7 @@ public class BandejaAnalisisService {
          * la bandeja muestra CON_CITA.
          *
          * No sobrescribimos estados finales como IMPROCEDENTE,
-         * TURNADO_SUBDEFENSORIA o REMISION_ENVIADA.
+         * PROCEDENTE o REMITIDA.
          */
         boolean tieneCita =
                 citaRepository.existsByFolioAndEstatusNot(
@@ -150,7 +150,7 @@ public class BandejaAnalisisService {
 
         String estatusVisual =
                 tieneCita
-                        && "PENDIENTE_ANALISIS"
+                        && "EN_ANALISIS"
                         .equalsIgnoreCase(expediente.getEstatus())
                         ? "CON_CITA"
                         : expediente.getEstatus();

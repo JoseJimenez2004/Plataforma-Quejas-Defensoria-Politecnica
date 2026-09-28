@@ -57,11 +57,11 @@ public class Queja {
     @Column(name = "nombre_quejoso")
     private String nombreQuejoso;
 
-    @Column(name = "apellido_paterno_quejoso")
-    private String apellidoPaternoQuejoso;
+    @Column(name = "apellido1_quejoso")
+    private String apellido1Quejoso;
 
-    @Column(name = "apellido_materno_quejoso")
-    private String apellidoMaternoQuejoso;
+    @Column(name = "apellido2_quejoso")
+    private String apellido2Quejoso;
 
     @Column(name = "fecha_nacimiento_quejoso")
     private LocalDate fechaNacimientoQuejoso;
@@ -84,8 +84,25 @@ public class Queja {
     @Column(name = "nombre_denunciado")
     private String nombreDenunciado;
 
-    @Column(name = "apellido_denunciado")
-    private String apellidoDenunciado;
+    @Column(name = "apellido1_denunciado")
+    private String apellido1Denunciado;
+
+    /** Segundo apellido del denunciado. Opcional: el quejoso puede no conocerlo. */
+    @Column(name = "apellido2_denunciado")
+    private String apellido2Denunciado;
+
+    // ---- Aviso de privacidad ----
+    // Se recaban datos personales del quejoso y de un tercero (el denunciado), así que queda
+    // constancia de que se aceptó el aviso, cuándo y qué versión del texto se aceptó: si el
+    // aviso cambia, se sabe cuál firmó cada quejoso.
+    @Column(name = "aviso_privacidad_aceptado")
+    private Boolean avisoPrivacidadAceptado;
+
+    @Column(name = "aviso_privacidad_fecha")
+    private LocalDateTime avisoPrivacidadFecha;
+
+    @Column(name = "aviso_privacidad_version")
+    private String avisoPrivacidadVersion;
 
     /** "AUTENTICADO" (vino de /registrar, con JWT) | "PUBLICO" (vino de /registro-publico). */
     @Column(name = "origen_registro")

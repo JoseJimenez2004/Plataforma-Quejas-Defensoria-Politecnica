@@ -3,6 +3,7 @@ package ipn.escom.defensoria.primercontacto.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import jakarta.persistence.Column;
 
 @Getter
 @Setter
@@ -27,5 +28,9 @@ public class CompetenciaDTO {
     @NotBlank
     private String responsableTurno;
 
+<<<<<<< HEAD:Produccion/Backend/primercontacto/src/main/java/ipn/escom/defensoria/primercontacto/dto/CompetenciaDTO.java
+=======
+    @Column(name = "observaciones", columnDefinition = "TEXT")
+>>>>>>> b41378653456fe3429bbc88f39e3f15062f0a782:Defensoria-back/Dev2/primercontacto/src/main/java/ipn/escom/defensoria/primercontacto/dto/CompetenciaDTO.java
     private String observaciones;
 }

@@ -20,6 +20,7 @@ SERVICIOS=(
   "notificaciones-service:notificaciones-service"
   "queja-service:quejas-service"
   "revision-service:revision-service"
+  "historico-service:historico-service"
 )
 
 DESTINO="_jars-listos"

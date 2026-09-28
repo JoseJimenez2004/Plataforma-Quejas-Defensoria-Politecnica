@@ -1,158 +1,537 @@
-.encabezado {
+// Detalle de una queja del panel del quejoso (CU-Q07).
+// Colores institucionales: guinda IPN #6c1d45 / #9d2449.
+
+.encabezado-detalle { margin-bottom: 12px; }
+
+.volver {
+  font-size: 0.86rem;
+  color: #6c1d45;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+.titulo-detalle {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   align-items: center;
-  margin-bottom: 12px;
-}
-
-.encabezado-seccion {
-  display: flex;
   justify-content: space-between;
-  align-items: center;
+  margin-bottom: 18px;
 
-  h3 {
-    margin: 0;
-  }
-
-  button {
-    font-size: 0.82rem;
-    padding: 8px 14px;
-  }
+  h2 { margin: 0; }
 }
 
-.fila-form {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.cargando-estado {
+.cargando-estado,
+.error-estado {
+  padding: 40px 20px;
+  font-size: 0.9rem;
+  color: var(--texto-suave);
   text-align: center;
-  padding: 60px 20px;
-  color: var(--texto-suave);
 }
 
-.evidencia-peso {
-  color: var(--texto-suave);
-  font-size: 0.78rem;
+.error-estado { color: #b3261e; }
+
+// =============================================================================================
+// Línea del tiempo
+// =============================================================================================
+
+.linea-tiempo { margin-bottom: 20px; }
+
+.linea-tiempo__encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 22px;
+
+  h3 { margin: 0; font-size: 1rem; color: #6c1d45; }
 }
 
-.sin-evidencias {
-  font-size: 0.85rem;
-  color: var(--texto-suave);
-}
+.linea-tiempo__fecha { font-size: 0.8rem; color: #8a8a8a; }
 
-.columnas {
+/** Los pasos se reparten en columnas iguales; la línea que los une se dibuja dentro de cada
+ *  paso y no como un elemento aparte, así siempre queda alineada con las marcas aunque
+ *  cambie el número de pasos (4 en el flujo normal, 2 cuando se rechaza o se retira). */
+.pasos {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.pasos--cancelada { grid-template-columns: repeat(2, 1fr); }
+
+.paso {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+  padding: 0 8px;
+  text-align: center;
+}
+
+.paso__linea {
+  position: absolute;
+  top: 17px;
+  left: calc(50% + 22px);
+  width: calc(100% - 44px);
+  height: 2px;
+  background: #ddd3d6;
+}
+
+.paso--completado .paso__linea { background: #1b6b4a; }
+
+.paso__marca {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: #a9a0a3;
+  background: #f0ecee;
+  border: 2px solid transparent;
+  border-radius: 50%;
+
+  lucide-icon { width: 18px; height: 18px; }
+}
+
+.paso__numero { font-size: 0.85rem; font-weight: 600; }
+
+.paso--completado .paso__marca {
+  color: #fff;
+  background: #1b6b4a;
+}
+
+.paso--actual .paso__marca {
+  color: #fff;
+  background: #9d2449;
+  border-color: #f0d4de;
+  box-shadow: 0 0 0 4px rgba(157, 36, 73, 0.14);
+}
+
+.paso--cancelado .paso__marca {
+  color: #fff;
+  background: #b3261e;
+}
+
+.paso__titulo {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a3d41;
+  text-wrap: balance;
+}
+
+.paso--completado .paso__titulo { color: #1b6b4a; }
+.paso--actual .paso__titulo { color: #9d2449; }
+.paso--cancelado .paso__titulo { color: #b3261e; }
+.paso--pendiente .paso__titulo { color: #a9a0a3; }
+
+.paso__descripcion {
+  max-width: 22ch;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: #8a8a8a;
+}
+
+.paso__aqui {
+  padding: 2px 9px;
+  margin-top: 2px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #9d2449;
+  border-radius: 999px;
+}
+
+.motivo-rechazo {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-top: 22px;
+  background: #fdeceb;
+  border-left: 3px solid #b3261e;
+  border-radius: 4px;
+
+  lucide-icon { flex-shrink: 0; width: 18px; height: 18px; color: #b3261e; }
+  strong { display: block; margin-bottom: 3px; font-size: 0.85rem; color: #b3261e; }
+  p { margin: 0; font-size: 0.86rem; line-height: 1.5; color: #6a4340; }
+}
+
+// =============================================================================================
+// Columnas: resumen + evidencias
+// =============================================================================================
+
+.columnas-detalle {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
   gap: 20px;
   align-items: start;
-  animation: detalle-entrada 0.35s ease both;
-
-  @media (max-width: 700px) {
-    grid-template-columns: 1fr;
-  }
 }
 
-@keyframes detalle-entrada {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.linea-tiempo li .punto {
-  transition: background 0.25s ease, transform 0.25s ease;
-}
-
-.linea-tiempo li.completado .punto,
-.linea-tiempo li.actual .punto {
-  transform: scale(1.15);
-}
-
-.descripcion-box {
-  background: #fafafa;
-  border: 1px solid var(--borde);
-  border-radius: 4px;
-  padding: 12px;
-  min-height: 80px;
-  font-size: 0.9rem;
+.encabezado-bloque {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 16px;
+
+  h3 { margin: 0; font-size: 1rem; color: #6c1d45; }
+}
+
+.btn-editar {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+
+  lucide-icon { width: 15px; height: 15px; }
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: minmax(140px, auto) 1fr;
+  gap: 9px 18px;
+  margin: 0 0 22px;
+
+  dt { font-size: 0.82rem; font-weight: 600; color: #6b5a60; }
+  dd { margin: 0; font-size: 0.88rem; color: #1a1a1a; }
+}
+
+.dato-secundario { font-size: 0.8rem; color: #8a8a8a; }
+
+h4 {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  color: #9d2449;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.descripcion {
+  padding: 14px 16px;
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  white-space: pre-line;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+
+.formulario-edicion {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .fila { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+  .input-group { margin: 0; }
+}
+
+.contador-caracteres {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #999;
+  text-align: right;
+}
+
+.acciones-edicion { display: flex; gap: 10px; }
+
+// =============================================================================================
+// Evidencias
+// =============================================================================================
+
+.conteo-evidencias {
+  padding: 2px 9px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6c1d45;
+  background: #f0e2e8;
+  border-radius: 999px;
+}
+
+.subir-evidencia {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 11px;
+  font-size: 0.87rem;
+  font-weight: 500;
+  color: #6c1d45;
+  cursor: pointer;
+  background: #f9f2f5;
+  border: 1px dashed #d3b3c0;
+  border-radius: 8px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  lucide-icon { width: 16px; height: 16px; }
+  &:hover { background: #f3e5eb; border-color: #9d2449; }
+}
+
+.subir-evidencia--ocupado { pointer-events: none; opacity: 0.6; }
+
+.nota-evidencias {
+  margin: 9px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #8a8a8a;
+}
+
+.nota-evidencias--bloqueada {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  margin: 0;
+  color: #6b5a60;
+  background: #f6f4f4;
+  border-radius: 6px;
+
+  lucide-icon { flex-shrink: 0; width: 15px; height: 15px; margin-top: 1px; }
+}
+
+.lista-evidencias {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  margin: 16px 0 0;
+  list-style: none;
 }
 
 .evidencia {
-  font-size: 0.85rem;
-}
-
-.aviso-inline {
-  background: #fff8e1;
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-}
-
-.acciones-edicion {
   display: flex;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 11px;
+  align-items: center;
+  padding: 8px;
+  background: #fafafa;
+  border: 1px solid #ececec;
+  border-radius: 8px;
 
-  button {
-    flex: 1;
-  }
+  &:hover { border-color: #ddd; }
 }
 
-.linea-tiempo {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/** La miniatura es un botón: al pulsarla se abre el archivo completo en otra pestaña. */
+.evidencia__vista {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #f0e2e8;
+  border: 0;
+  border-radius: 6px;
 
-  li {
-    position: relative;
-    padding: 8px 0 8px 24px;
-    font-size: 0.85rem;
-    color: var(--texto-suave);
-
-    .punto {
-      position: absolute;
-      left: 0;
-      top: 12px;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--borde);
-    }
-
-    &.completado {
-      color: var(--exito);
-      font-weight: 600;
-
-      .punto {
-        background: var(--exito);
-      }
-    }
-
-    &.actual {
-      color: var(--advertencia);
-      font-weight: 600;
-
-      .punto {
-        background: var(--advertencia);
-      }
-    }
-  }
+  img { width: 100%; height: 100%; object-fit: cover; }
+  &:hover { outline: 2px solid #9d2449; outline-offset: 1px; }
 }
 
-.volver {
-  display: inline-block;
-  margin-top: 20px;
-  text-decoration: none;
+.evidencia__extension {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #6c1d45;
+  letter-spacing: 0.04em;
+}
+
+.evidencia__cargando { font-size: 1rem; color: #b39aa5; }
+
+.evidencia__datos {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.evidencia__nombre {
+  overflow: hidden;
+  font-size: 0.82rem;
+  color: #1a1a1a;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.evidencia__meta {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 0.72rem;
+  color: #8a8a8a;
+}
+
+.etiqueta-identificacion {
+  padding: 1px 6px;
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: #6c1d45;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: #f0e2e8;
+  border-radius: 3px;
+}
+
+.sin-evidencias {
+  margin: 16px 0 0;
   font-size: 0.85rem;
+  color: #999;
+  text-align: center;
+}
+
+.evidencia .accion {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  color: #a9a0a3;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+
+  lucide-icon { width: 15px; height: 15px; }
+
+  &:hover {
+    color: #b3261e;
+    background: #fdeceb;
+    border-color: #f5c9c5;
+  }
+}
+
+// =============================================================================================
+// Confirmación
+// =============================================================================================
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(20, 8, 14, 0.58);
+}
+
+.modal-confirmar {
+  width: min(440px, 100%);
+  padding: 26px 28px 22px;
+  text-align: center;
+
+  h3 { margin: 0 0 10px; font-size: 1.05rem; color: #6c1d45; }
+  p { margin: 0 0 10px; font-size: 0.88rem; line-height: 1.55; color: #555; }
+}
+
+.modal-confirmar__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 14px;
+  color: #b3261e;
+  background: #fdeceb;
+  border-radius: 50%;
+
+  lucide-icon { width: 23px; height: 23px; }
+}
+
+.modal-confirmar__nota {
+  padding: 10px 12px;
+  font-size: 0.8rem !important;
+  text-align: left;
+  background: #fafafa;
+  border-left: 3px solid #d9cdd2;
+  border-radius: 4px;
+}
+
+.modal-confirmar__acciones {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 18px;
+
+  button { flex: 1; }
+}
+
+.btn-peligro {
+  padding: 10px 18px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  background: #b3261e;
+  border: 0;
+  border-radius: 8px;
+
+  &:hover:not(:disabled) { background: #97201a; }
+  &:disabled { cursor: not-allowed; opacity: 0.6; }
+}
+
+// =============================================================================================
+// Adaptación a pantallas chicas
+// =============================================================================================
+
+@media (max-width: 900px) {
+  .columnas-detalle { grid-template-columns: 1fr; }
+}
+
+/** En celular la línea del tiempo se vuelve vertical: cuatro columnas de 90px no caben, y
+ *  apretarlas dejaría los títulos ilegibles. */
+@media (max-width: 640px) {
+  .pasos,
+  .pasos--cancelada {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .paso {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 2px 14px;
+    text-align: left;
+  }
+
+  .paso__marca { grid-row: span 3; }
+  .paso__descripcion { max-width: none; }
+
+  .paso__linea {
+    top: 40px;
+    left: 17px;
+    width: 2px;
+    height: calc(100% - 26px);
+  }
+
+  .paso__aqui { justify-self: start; }
+  .datos { grid-template-columns: 1fr; gap: 2px; }
+  .datos dd { margin-bottom: 10px; }
+}
+
+/* Aviso de rechazo con la opción de corregir y reenviar (diagrama de estados 2026-09-18). */
+.motivo-rechazo {
+  .nota-corregir {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  .btn-corregir {
+    margin-top: 10px;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+  }
 }

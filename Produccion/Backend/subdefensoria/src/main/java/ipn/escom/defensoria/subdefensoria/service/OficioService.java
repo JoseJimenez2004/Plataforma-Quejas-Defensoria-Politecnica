@@ -20,7 +20,7 @@ import java.util.List;
  * - TS-01 (fase SOLICITUD_INFORMACION), disparado cuando el
  *   expediente esta RECIBIDO.
  * - TS-04 (fase GESTION_DIRECTOR), disparado cuando el expediente
- *   esta EN_GESTION_DIRECTOR y aun no tiene un oficio de esa fase.
+ *   esta EN_ESPERA_OFICIO y aun no tiene un oficio de esa fase.
  * La generacion real de PDF y el envio de correo quedan como campos
  * preparados en la entidad (rutaPdfGenerado, correoEnviado) para
  * conectar despues; aqui solo se persiste el contenido redactado.
@@ -54,11 +54,11 @@ public class OficioService {
         if (EstatusExpediente.RECIBIDO.equals(expediente.getEstatus())) {
             fase = FaseOficio.SOLICITUD_INFORMACION;
             nuevoEstatusExpediente = EstatusExpediente.EN_INVESTIGACION;
-        } else if (EstatusExpediente.EN_GESTION_DIRECTOR.equals(expediente.getEstatus())
+        } else if (EstatusExpediente.EN_ESPERA_OFICIO.equals(expediente.getEstatus())
                 && !oficioRepository.existsByExpedienteIdAndEstatus(expediente.getId(), EstatusOficio.EN_ESPERA)
                 && !oficioRepository.existsByExpedienteIdAndEstatus(expediente.getId(), EstatusOficio.VENCIDO)) {
             fase = FaseOficio.GESTION_DIRECTOR;
-            nuevoEstatusExpediente = EstatusExpediente.EN_GESTION_DIRECTOR;
+            nuevoEstatusExpediente = EstatusExpediente.EN_ESPERA_OFICIO;
         } else {
             throw new OperacionInvalidaException(
                     "El expediente " + expediente.getFolio() + " no admite generar un nuevo oficio en su estatus actual ("

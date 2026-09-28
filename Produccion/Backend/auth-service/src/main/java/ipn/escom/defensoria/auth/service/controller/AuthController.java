@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ipn.escom.defensoria.auth.service.model.ResetPasswordModel;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ipn.escom.defensoria.auth.service.model.ActivacionCuentaModel;
 
@@ -99,5 +100,14 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> activar(@RequestBody ActivacionCuentaModel model) {
         usuarioService.activarCuenta(model);
         return ResponseEntity.ok(Map.of("mensaje", "Cuenta activada con éxito. Ya puedes iniciar sesión."));
+    }
+
+    /**
+     * Valida si el correo ya esta registrado, para que el formulario publico de queja le
+     * sugiera al quejoso iniciar sesion. Publico (cae en el permitAll de /api/auth/**).
+     */
+    @GetMapping("/existe-cuenta")
+    public ResponseEntity<Map<String, Boolean>> existeCuenta(@RequestParam String correo) {
+        return ResponseEntity.ok(Map.of("existe", usuarioService.existeCuenta(correo)));
     }
 }

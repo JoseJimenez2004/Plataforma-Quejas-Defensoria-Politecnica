@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { QuejaService } from '../../../core/services/queja.service';
 import { ConciliacionService } from '../../../core/services/conciliacion.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Queja, etiquetaEstatus } from '../../../core/models/queja.models';
+import { Queja, claseEstatus, estaCerrada, etiquetaEstatus } from '../../../core/models/queja.models';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
@@ -63,12 +63,18 @@ export class Resumen implements OnInit {
     return this.quejas.length;
   }
 
+  /** Quejas vivas: recibidas, en validación o turnadas. */
   get enProceso(): number {
-    return this.quejas.filter((q) => etiquetaEstatus(q.estatus) !== 'Finalizada').length;
+    return this.quejas.filter((q) => !estaCerrada(q.estatus)).length;
   }
 
-  get finalizadas(): number {
-    return this.quejas.filter((q) => etiquetaEstatus(q.estatus) === 'Finalizada').length;
+  /** Quejas que ya no avanzan: rechazadas por la Defensoría o retiradas por el quejoso. */
+  get cerradas(): number {
+    return this.quejas.filter((q) => estaCerrada(q.estatus)).length;
+  }
+
+  clase(estatus: string | null | undefined): string {
+    return claseEstatus(estatus);
   }
 
   /** Solo las 5 más recientes — el detalle completo con filtros vive en "Mis Quejas", el

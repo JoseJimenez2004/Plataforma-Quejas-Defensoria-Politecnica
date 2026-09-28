@@ -69,6 +69,15 @@ public class SecurityConfig {
                         ).permitAll()
 
                         /*
+                         * Respuesta del quejoso al acuerdo de conclusión. La invoca
+                         * queja-service en su nombre: el quejoso trae un JWT de quejoso,
+                         * que este servicio no reconoce. Mismo criterio que la ingesta.
+                         */
+                        .requestMatchers(
+                                "/api/subdefensoria/acuerdos-conclusion/interno/**"
+                        ).permitAll()
+
+                        /*
                          * Operaciones normales de Subdefensoría.
                          */
                         .requestMatchers(

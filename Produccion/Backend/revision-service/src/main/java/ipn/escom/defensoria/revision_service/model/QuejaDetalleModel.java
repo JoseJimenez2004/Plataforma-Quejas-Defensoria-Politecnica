@@ -17,6 +17,7 @@ public class QuejaDetalleModel {
     private LocalDateTime fechaCreacion;
     private String nombreCompletoQuejoso;
     private String correoInstitucional;
+    private String telefonoContacto;
     private String tipoIdentificacionQuejoso;
     private String numeroIdentificacionQuejoso;
     private String motivo;

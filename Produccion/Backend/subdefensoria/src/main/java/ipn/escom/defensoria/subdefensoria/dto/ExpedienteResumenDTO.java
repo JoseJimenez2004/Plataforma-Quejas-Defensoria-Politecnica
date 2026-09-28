@@ -4,8 +4,8 @@ import lombok.*;
 
 /**
  * Fila de la bandeja unificada de expedientes: cubre todos los
- * estatus (RECIBIDO, EN_INVESTIGACION, EN_GESTION_DIRECTOR,
- * LISTO_A_DICTAMINAR, CONCLUIDO) en un solo lugar, con filtros en el
+ * estatus (RECIBIDO, EN_INVESTIGACION, EN_ESPERA_OFICIO,
+ * ELABORO_ACUERDO, CONCLUIDO) en un solo lugar, con filtros en el
  * front en vez de bandejas separadas por fase.
  */
 @Getter
@@ -23,7 +23,7 @@ public class ExpedienteResumenDTO {
     private String fechaAdmision;
     private String estatus;
 
-    /** Info del oficio vigente cuando el expediente esta EN_INVESTIGACION o EN_GESTION_DIRECTOR; null en otro caso. */
+    /** Info del oficio vigente cuando el expediente esta EN_INVESTIGACION o EN_ESPERA_OFICIO; null en otro caso. */
     private Long oficioIdVigente;
     private String numeroOficioVigente;
     private String destinatarioNombreVigente;

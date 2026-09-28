@@ -15,11 +15,11 @@
       <mat-icon>search</mat-icon><span>Investigación</span>
     </div>
     <div class="line"></div>
-    <div class="step" [class.done]="pasoIndice('EN_GESTION_DIRECTOR') < pasoActualIndice" [class.active]="e.estatus === 'EN_GESTION_DIRECTOR'">
+    <div class="step" [class.done]="pasoIndice('EN_ESPERA_OFICIO') < pasoActualIndice" [class.active]="e.estatus === 'EN_ESPERA_OFICIO'">
       <mat-icon>groups</mat-icon><span>Gestión con Director</span>
     </div>
     <div class="line"></div>
-    <div class="step" [class.done]="pasoIndice('LISTO_A_DICTAMINAR') < pasoActualIndice" [class.active]="e.estatus === 'LISTO_A_DICTAMINAR'">
+    <div class="step" [class.done]="pasoIndice('ELABORO_ACUERDO') < pasoActualIndice" [class.active]="e.estatus === 'ELABORO_ACUERDO'">
       <mat-icon>edit_document</mat-icon><span>Listo a Dictaminar</span>
     </div>
     <div class="line"></div>
@@ -87,7 +87,7 @@
         </mat-accordion>
       </mat-card>
 
-      @if (e.estatus === 'LISTO_A_DICTAMINAR') {
+      @if (e.estatus === 'ELABORO_ACUERDO') {
         <mat-card class="card form-card">
           <h3>Elaboración de Proyecto de Resolución</h3>
 
@@ -103,7 +103,7 @@
             </button>
             <button mat-flat-button class="primary-btn" [disabled]="guardando" (click)="concluirExpediente()">
               <mat-icon>check_circle</mat-icon>
-              Concluir y Enviar a Secretarial
+              Enviar acuerdo al quejoso
             </button>
           </div>
         </mat-card>

@@ -17,4 +17,8 @@ public class AcuerdoConclusionDTO {
     private String fechaCreacion;
     private String fechaEnvioSecretarial;
     private String estatusExpediente;
+    /** ACEPTADO | RECHAZADO | null mientras el quejoso no responde. */
+    private String respuestaQuejoso;
+    private String comentarioQuejoso;
+    private String fechaRespuestaQuejoso;
 }

@@ -26,6 +26,15 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
+  /** Consulta publica: dice si el correo ya tiene cuenta de seguimiento, para que el
+   * formulario de queja sugiera iniciar sesion en lugar de recapturar los datos. */
+  existeCuenta(correo: string): Observable<{ existe: boolean }> {
+    return this.http.get<{ existe: boolean }>(
+      `${this.apiUrl}/existe-cuenta`,
+      { params: { correo } },
+    );
+  }
+
   login(datos: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, datos).pipe(
       tap((resp) => this.guardarSesion(resp, datos.correo)),

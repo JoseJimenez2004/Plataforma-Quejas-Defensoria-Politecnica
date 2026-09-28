@@ -27,7 +27,7 @@ import java.util.Set;
 public class ExpedienteResumenService {
 
     private static final Set<String> ESTATUS_CON_OFICIO_ACTIVO = Set.of(
-            EstatusExpediente.EN_INVESTIGACION, EstatusExpediente.EN_GESTION_DIRECTOR);
+            EstatusExpediente.EN_INVESTIGACION, EstatusExpediente.EN_ESPERA_OFICIO);
 
     private final ExpedienteInvestigacionRepository expedienteRepository;
     private final OficioInformacionRepository oficioRepository;

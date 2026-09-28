@@ -11,7 +11,6 @@ export interface AcuerdoConciliacion {
   fechaEmision: string;
   fechaRespuesta?: string;
   comentarioQuejoso?: string;
-  creadoPor?: string;
 }
 
 /** Body de PUT /api/quejoso/conciliaciones/{id}/respuesta. */

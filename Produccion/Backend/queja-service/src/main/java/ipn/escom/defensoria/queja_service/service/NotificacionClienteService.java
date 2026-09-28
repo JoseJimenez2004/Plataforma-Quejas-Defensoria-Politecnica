@@ -31,6 +31,28 @@ public class NotificacionClienteService {
         this.notificacionesServiceUrl = notificacionesServiceUrl;
     }
 
+    /**
+     * Aviso genérico de cambio de estatus en el centro de notificaciones del quejoso (NO
+     * manda correo). Mismo patrón de resiliencia que el resto: si notificaciones-service no
+     * responde, la operación de la queja no se revierte, solo queda en el log.
+     */
+    public void notificarCambioEstatus(String correoDestino, String folio, String titulo, String mensaje) {
+        try {
+            restTemplate.postForObject(
+                    notificacionesServiceUrl + ENDPOINT_REGISTRAR,
+                    Map.of(
+                            "correoDestino", correoDestino,
+                            "tipo", "CAMBIO_ESTATUS",
+                            "titulo", titulo,
+                            "mensaje", mensaje,
+                            "enlace", "/panel/mis-quejas/" + folio),
+                    String.class);
+        } catch (Exception ex) {
+            log.error("No se pudo registrar el aviso de cambio de estatus del folio {}: {}",
+                    folio, ex.getMessage());
+        }
+    }
+
     public void notificarQuejaCreada(String correoDestino, String folio) {
         try {
             restTemplate.postForObject(

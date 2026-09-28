@@ -24,6 +24,21 @@
   max-width: none;
 }
 
+.filtro-rango-fechas {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.etiqueta-rango {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+
 .cargando {
   color: var(--texto-suave);
 }

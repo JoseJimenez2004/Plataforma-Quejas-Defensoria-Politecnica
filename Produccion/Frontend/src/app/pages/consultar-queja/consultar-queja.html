@@ -23,14 +23,7 @@
       <div class="resultado ok">
         <div class="resultado-encabezado">
           <span>✅ Queja encontrada</span>
-          <span
-            class="badge"
-            [class.recibida]="estatus === 'Recibida'"
-            [class.en-revision]="estatus === 'En Revisión'"
-            [class.finalizada]="estatus === 'Finalizada'"
-          >
-            {{ estatus }}
-          </span>
+          <span [class]="'badge ' + claseEstatus">{{ estatus }}</span>
         </div>
 
         <dl class="datos-queja">

@@ -55,15 +55,15 @@ export class RegistroManual implements OnInit {
   }
 
   guardar(): void {
-    if (!this.formulario.nombre || !this.formulario.apellidoPaterno || !this.formulario.descripcion) {
+    if (!this.formulario.nombre || !this.formulario.apellido1 || !this.formulario.descripcion) {
       this.toast.advertencia('Completa al menos nombre, primer apellido y descripción del asunto.');
       return;
     }
 
     const datos = new FormData();
     datos.append('nombre', this.formulario.nombre);
-    datos.append('apellidoPaterno', this.formulario.apellidoPaterno);
-    if (this.formulario.apellidoMaterno) datos.append('apellidoMaterno', this.formulario.apellidoMaterno);
+    datos.append('apellido1', this.formulario.apellido1);
+    if (this.formulario.apellido2) datos.append('apellido2', this.formulario.apellido2);
     if (this.formulario.tipoUsuario) datos.append('tipoUsuario', this.formulario.tipoUsuario);
     if (this.formulario.dependenciaClave) datos.append('dependenciaClave', this.formulario.dependenciaClave);
     if (this.formulario.numeroOficio) datos.append('numeroOficio', this.formulario.numeroOficio);
@@ -71,6 +71,8 @@ export class RegistroManual implements OnInit {
     if (this.formulario.tipoDocumento) datos.append('tipoDocumento', this.formulario.tipoDocumento);
     datos.append('descripcion', this.formulario.descripcion);
     if (this.formulario.ubicacionFisica) datos.append('ubicacionFisica', this.formulario.ubicacionFisica);
+    if (this.formulario.correoContacto) datos.append('correoContacto', this.formulario.correoContacto);
+    if (this.formulario.telefonoContacto) datos.append('telefonoContacto', this.formulario.telefonoContacto);
     if (this.archivoSeleccionado) datos.append('archivo', this.archivoSeleccionado);
 
     this.guardando = true;
@@ -92,8 +94,8 @@ export class RegistroManual implements OnInit {
   private formularioVacio() {
     return {
       nombre: '',
-      apellidoPaterno: '',
-      apellidoMaterno: '',
+      apellido1: '',
+      apellido2: '',
       tipoUsuario: '',
       dependenciaClave: '',
       numeroOficio: '',
@@ -101,6 +103,8 @@ export class RegistroManual implements OnInit {
       tipoDocumento: '',
       descripcion: '',
       ubicacionFisica: '',
+      correoContacto: '',
+      telefonoContacto: '',
     };
   }
 }

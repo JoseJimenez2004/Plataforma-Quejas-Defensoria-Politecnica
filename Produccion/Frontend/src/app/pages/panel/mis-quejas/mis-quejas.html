@@ -1,88 +1,158 @@
 <h2>Historial y Seguimiento de Quejas</h2>
 
-<div class="filtros card">
-  <div class="input-group">
-    <label>Folio</label>
-    <input type="text" [(ngModel)]="filtroFolio" placeholder="FOL-XXXXXXXX" />
-  </div>
-  <div class="input-group">
-    <label>Asunto</label>
-    <input type="text" [(ngModel)]="filtroAsunto" placeholder="Buscar por asunto…" />
-  </div>
-  <div class="input-group">
-    <label>Unidad Académica</label>
-    <select [(ngModel)]="filtroUnidadAcademica">
-      <option value="">Todas</option>
-      @for (dep of dependencias; track dep.clave) {
-        <option [value]="dep.clave">{{ dep.nombre }}</option>
-      }
-    </select>
-  </div>
-  <div class="input-group input-fecha">
-    <label>Fecha de registro</label>
-    <app-datepicker [(ngModel)]="filtroFecha"></app-datepicker>
-  </div>
-  <div class="input-group">
-    <label>Estatus</label>
-    <select [(ngModel)]="filtroEstatus">
-      <option>Todos</option>
-      <option>Recibida</option>
-      <option>En Revisión</option>
-      <option>Finalizada</option>
-    </select>
+<div class="card barra-herramientas">
+  <div class="buscador">
+    <lucide-icon [img]="ICONOS.lupa" class="buscador__icono" aria-hidden="true"></lucide-icon>
+    <input
+      type="search"
+      [(ngModel)]="busqueda"
+      placeholder="Busca por folio, asunto o escuela…"
+      aria-label="Buscar en mis quejas"
+    />
+    @if (busqueda) {
+      <button type="button" class="buscador__limpiar" (click)="limpiarBusqueda()" aria-label="Limpiar búsqueda">
+        <lucide-icon [img]="ICONOS.equis"></lucide-icon>
+      </button>
+    }
   </div>
 
-  @if (hayFiltrosActivos) {
-    <button type="button" class="btn-secondary btn-limpiar" (click)="limpiarFiltros()">
-      Limpiar filtros
+  <div class="pestanias" role="tablist">
+    <button
+      type="button" role="tab" class="pestania"
+      [class.pestania--activa]="pestania === 'todas'"
+      [attr.aria-selected]="pestania === 'todas'"
+      (click)="pestania = 'todas'"
+    >
+      Todas <span class="pestania__conteo">{{ conteos.todas }}</span>
     </button>
-  }
+    <button
+      type="button" role="tab" class="pestania"
+      [class.pestania--activa]="pestania === 'tramite'"
+      [attr.aria-selected]="pestania === 'tramite'"
+      (click)="pestania = 'tramite'"
+    >
+      En trámite <span class="pestania__conteo">{{ conteos.tramite }}</span>
+    </button>
+    <button
+      type="button" role="tab" class="pestania"
+      [class.pestania--activa]="pestania === 'cerradas'"
+      [attr.aria-selected]="pestania === 'cerradas'"
+      (click)="pestania = 'cerradas'"
+    >
+      Cerradas <span class="pestania__conteo">{{ conteos.cerradas }}</span>
+    </button>
+  </div>
 </div>
 
 <div class="card tabla-contenedor">
   @if (cargando) {
     <div class="cargando-estado">Cargando tus quejas…</div>
   } @else {
-    <p class="conteo-resultados">{{ quejasFiltradas.length }} de {{ quejas.length }} quejas</p>
-    <table>
-      <thead>
-        <tr>
-          <th>Folio</th>
-          <th>Fecha de Registro</th>
-          <th>Asunto</th>
-          <th>Unidad Académica</th>
-          <th>Estatus</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (q of quejasFiltradas; track q.numeroFolio; let i = $index) {
-          <tr [style.--retraso]="i">
-            <td>{{ q.numeroFolio }}</td>
-            <td>{{ q.fechaCreacion | slice: 0 : 10 }}</td>
-            <td>{{ q.motivo }}</td>
-            <td>{{ nombreUnidad(q.unidadAcademicaClave) }}</td>
-            <td>
-              <span
-                class="badge"
-                [class.recibida]="etiqueta(q.estatus) === 'Recibida'"
-                [class.en-revision]="etiqueta(q.estatus) === 'En Revisión'"
-                [class.finalizada]="etiqueta(q.estatus) === 'Finalizada'"
-              >
-                {{ etiqueta(q.estatus) }}
-              </span>
-            </td>
-            <td>
-              <a [routerLink]="['/panel/mis-quejas', q.numeroFolio]">Ver / Editar</a>
-            </td>
-          </tr>
-        }
-        @empty {
+    @if (busqueda) {
+      <p class="conteo-resultados">
+        {{ quejasFiltradas.length }} de {{ quejas.length }} quejas
+      </p>
+    }
+
+    <div class="tabla-scroll">
+      <table>
+        <thead>
           <tr>
-            <td colspan="6" class="vacio">No hay resultados con esos filtros.</td>
+            <th>Folio</th>
+            <th>Fecha de Registro</th>
+            <th>Asunto</th>
+            <th>Unidad Académica</th>
+            <th>Estatus</th>
+            <th class="col-acciones">Acciones</th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (q of quejasFiltradas; track q.numeroFolio; let i = $index) {
+            <tr [style.--retraso]="i">
+              <td class="celda-folio">{{ q.numeroFolio }}</td>
+              <td>{{ q.fechaCreacion | slice: 0 : 10 }}</td>
+              <td>{{ q.motivo }}</td>
+              <td>{{ nombreUnidad(q.unidadAcademicaClave) }}</td>
+              <td>
+                <span class="badge" [class]="'badge ' + clase(q.estatus)">{{ etiqueta(q.estatus) }}</span>
+              </td>
+              <td class="col-acciones">
+                <div class="acciones">
+                  <button
+                    type="button" class="accion accion--ver"
+                    (click)="verQueja(q.numeroFolio)"
+                    title="Ver detalle" [attr.aria-label]="'Ver la queja ' + q.numeroFolio"
+                  >
+                    <lucide-icon [img]="ICONOS.ojo"></lucide-icon>
+                  </button>
+
+                  <button
+                    type="button" class="accion accion--editar"
+                    [disabled]="!puedeEditar(q)"
+                    (click)="editarQueja(q.numeroFolio)"
+                    [title]="puedeEditar(q) ? 'Editar queja' : 'Ya está en revisión: no se puede editar'"
+                    [attr.aria-label]="'Editar la queja ' + q.numeroFolio"
+                  >
+                    <lucide-icon [img]="ICONOS.lapiz"></lucide-icon>
+                  </button>
+
+                  <button
+                    type="button" class="accion accion--eliminar"
+                    [disabled]="!puedeEditar(q)"
+                    (click)="pedirConfirmacion(q)"
+                    [title]="puedeEditar(q) ? 'Retirar queja' : 'Ya está en revisión: no se puede eliminar'"
+                    [attr.aria-label]="'Retirar la queja ' + q.numeroFolio"
+                  >
+                    <lucide-icon [img]="ICONOS.bote"></lucide-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+          @empty {
+            <tr>
+              <td colspan="6" class="vacio">
+                @if (busqueda) {
+                  No hay quejas que coincidan con “{{ busqueda }}”.
+                } @else if (pestania === 'cerradas') {
+                  No tienes quejas cerradas.
+                } @else if (pestania === 'tramite') {
+                  No tienes quejas en trámite.
+                } @else {
+                  Todavía no has presentado ninguna queja.
+                  <a routerLink="/panel/nueva-queja">Presentar una queja</a>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </div>
+
+@if (folioPorCancelar) {
+  <div class="modal-overlay" (click)="cerrarConfirmacion()">
+    <div class="modal-confirmar card" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true">
+      <div class="modal-confirmar__icono">
+        <lucide-icon [img]="ICONOS.advertencia"></lucide-icon>
+      </div>
+      <h3>¿Retirar la queja {{ folioPorCancelar }}?</h3>
+      <p>
+        Dejará de aparecer entre tus quejas en trámite y la Defensoría no le dará seguimiento.
+      </p>
+      <p class="modal-confirmar__nota">
+        El registro y sus evidencias <strong>se conservan</strong> en la Defensoría: retirarla
+        no borra la constancia de que la presentaste. No podrás reactivarla por tu cuenta.
+      </p>
+      <div class="modal-confirmar__acciones">
+        <button type="button" class="btn-secondary" (click)="cerrarConfirmacion()" [disabled]="cancelando">
+          Conservar la queja
+        </button>
+        <button type="button" class="btn-peligro" (click)="confirmarCancelacion()" [disabled]="cancelando">
+          {{ cancelando ? 'Retirando…' : 'Sí, retirar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

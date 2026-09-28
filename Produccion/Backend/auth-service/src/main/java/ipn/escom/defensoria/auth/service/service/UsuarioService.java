@@ -1,12 +1,16 @@
 package ipn.escom.defensoria.auth.service.service;
 
 import java.time.LocalDateTime;
-import java.util.Random;
+import java.security.SecureRandom;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import ipn.escom.defensoria.auth.service.entity.Usuario;
 import ipn.escom.defensoria.auth.service.repository.UsuarioRepository;
 import ipn.escom.defensoria.auth.service.model.LoginModel;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ipn.escom.defensoria.auth.service.client.QuejasClient;
@@ -18,9 +22,36 @@ import ipn.escom.defensoria.auth.service.model.QuejaResumenModel;
 @Service
 public class UsuarioService {
 
-    /** Remitente usado en todos los correos que manda este servicio (código de recuperación,
-     * confirmación de cambio de contraseña, bienvenida). */
-    private static final String REMITENTE_CORREO = "jair100flo@gmail.com";
+    private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);
+
+    /**
+     * SecureRandom, no Random: el código de recuperación es una credencial temporal y un
+     * generador predecible permitiría adivinarlo conociendo otros códigos emitidos
+     * (OWASP A02). Antes se usaba new Random(), que además con nextInt(999999) nunca podía
+     * generar el código 999999.
+     */
+    private static final SecureRandom GENERADOR_CODIGO = new SecureRandom();
+
+    /** Intentos fallidos permitidos antes de invalidar el código. Sin esto, 6 dígitos y
+     *  10 minutos son suficientes para probar por fuerza bruta. */
+    private static final int MAX_INTENTOS_CODIGO = 5;
+
+    /** Mensaje único para "no existe el código" y "no existe el usuario": distinguirlos
+     *  revela qué correos están registrados. */
+    private static final String MENSAJE_CODIGO_INVALIDO =
+            "El código es incorrecto o ya no es válido. Solicita uno nuevo.";
+
+    /**
+     * Remitente de todos los correos de este servicio (código de recuperación, confirmación
+     * de cambio de contraseña, bienvenida).
+     *
+     * Se toma de spring.mail.username en vez de estar escrito aquí: Gmail exige que el "From"
+     * sea la misma cuenta que autentica, y tener el valor duplicado en el yml y en el código
+     * fue justo lo que provocó el "Authentication failed" -- el yml apuntaba a una cuenta y la
+     * App Password era de otra.
+     */
+    @Value("${spring.mail.username}")
+    private String remitenteCorreo;
     /** Mínimo 8 caracteres, al menos una mayúscula y un número (símbolos opcionales). */
     private static final String PASSWORD_REGEX = "^(?=.*[A-Z])(?=.*\\d).{8,}$";
 
@@ -59,24 +90,53 @@ public class UsuarioService {
         return usuario;
     }
 
+    /**
+     * Genera y envía el código de recuperación.
+     *
+     * Responde igual exista o no el correo: antes lanzaba "Correo no registrado", lo que
+     * convertía este endpoint público en un detector de cuentas válidas (enumeración de
+     * usuarios, OWASP A07). Quien pide el código y no tiene cuenta simplemente no recibe
+     * nada; el intento queda en el log para poder detectar barridos.
+     */
     public void generarCodigoRecuperacion(String correo) {
-        Usuario usuario = usuarioRepository.findByCorreoInstitucional(correo)
-                .orElseThrow(() -> new RuntimeException("Correo no registrado"));
+        Optional<Usuario> encontrado = usuarioRepository.findByCorreoInstitucional(correo);
 
-        // Generar código de 6 dígitos aleatorio
-        String codigo = String.format("%06d", new Random().nextInt(999999));
-        
-        // Guardar el código cifrado
+        if (encontrado.isEmpty()) {
+            log.info("Solicitud de código de recuperación para un correo sin cuenta.");
+            return;
+        }
+
+        Usuario usuario = encontrado.get();
+
+        String codigo = String.format("%06d", GENERADOR_CODIGO.nextInt(1_000_000));
+
         usuario.setCodigoRecuperacion(passwordEncoder.encode(codigo));
         usuario.setFechaExpiracionCodigo(LocalDateTime.now().plusMinutes(10));
-
+        usuario.setIntentosCodigo(0);
         usuarioRepository.save(usuario);
-        enviarCorreoCodigo(correo, codigo);
+
+        try {
+            enviarCorreoCodigo(correo, codigo);
+        } catch (Exception ex) {
+            // El código ya quedó guardado. No se propaga el fallo al cliente porque la
+            // respuesta debe ser idéntica en todos los casos, pero sí queda en el log:
+            // si el usuario reporta que nunca le llegó, aquí está la causa.
+            log.error("No se pudo enviar el correo con el código de recuperación: {}",
+                    ex.getMessage());
+        }
+    }
+
+    /** Deja la cuenta sin código activo: se usa al consumirlo, al expirar y al agotarse
+     *  los intentos, para que un código quemado no pueda reutilizarse. */
+    private void limpiarCodigoRecuperacion(Usuario usuario) {
+        usuario.setCodigoRecuperacion(null);
+        usuario.setFechaExpiracionCodigo(null);
+        usuario.setIntentosCodigo(0);
     }
 
     private void enviarCorreoCodigo(String destinatario, String codigo) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(REMITENTE_CORREO);
+        message.setFrom(remitenteCorreo);
         message.setTo(destinatario);
         message.setSubject("Código de Recuperación - Defensoría");
         message.setText("Hola,\n\nTu código de verificación para restablecer tu contraseña es: "
@@ -87,21 +147,42 @@ public class UsuarioService {
 
     public void validarCodigoYCambiarPassword(String correo, String codigoRecuperado, String nuevaPassword) {
         Usuario usuario = usuarioRepository.findByCorreoInstitucional(correo)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RuntimeException(MENSAJE_CODIGO_INVALIDO));
+
+        // Sin esta guarda, un usuario que nunca pidió código tenía fechaExpiracionCodigo en
+        // null y la línea siguiente lanzaba NullPointerException -> 500 en vez de un mensaje
+        // entendible.
+        if (usuario.getCodigoRecuperacion() == null || usuario.getFechaExpiracionCodigo() == null) {
+            throw new RuntimeException(
+                    "No hay una solicitud de recuperación activa para esta cuenta. Solicita un código nuevo.");
+        }
 
         if (usuario.getFechaExpiracionCodigo().isBefore(LocalDateTime.now())) {
+            limpiarCodigoRecuperacion(usuario);
+            usuarioRepository.save(usuario);
             throw new RuntimeException("El código ha expirado. Solicita uno nuevo.");
         }
 
+        int intentos = usuario.getIntentosCodigo() == null ? 0 : usuario.getIntentosCodigo();
+        if (intentos >= MAX_INTENTOS_CODIGO) {
+            limpiarCodigoRecuperacion(usuario);
+            usuarioRepository.save(usuario);
+            log.warn("Código de recuperación invalidado por exceso de intentos fallidos.");
+            throw new RuntimeException(
+                    "Demasiados intentos fallidos. El código quedó invalidado; solicita uno nuevo.");
+        }
+
         if (!passwordEncoder.matches(codigoRecuperado, usuario.getCodigoRecuperacion())) {
-            throw new RuntimeException("El código es incorrecto.");
+            usuario.setIntentosCodigo(intentos + 1);
+            usuarioRepository.save(usuario);
+            throw new RuntimeException("El código es incorrecto. Te quedan "
+                    + (MAX_INTENTOS_CODIGO - intentos - 1) + " intentos.");
         }
 
         // Cifrar la nueva contraseña según las reglas
         validarPassword(nuevaPassword);
         usuario.setPassword(passwordEncoder.encode(nuevaPassword));
-        usuario.setCodigoRecuperacion(null);
-        usuario.setFechaExpiracionCodigo(null);
+        limpiarCodigoRecuperacion(usuario);
 
         usuarioRepository.save(usuario);
 
@@ -117,7 +198,7 @@ public class UsuarioService {
 
     private void enviarCorreoConfirmacionCambio(String destinatario) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(REMITENTE_CORREO);
+        message.setFrom(remitenteCorreo);
         message.setTo(destinatario);
         message.setSubject("Tu contraseña fue restablecida - Defensoría");
         message.setText("Hola,\n\n"
@@ -211,7 +292,7 @@ public class UsuarioService {
 
     private void enviarCorreoBienvenida(String destinatario, String nombre) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(REMITENTE_CORREO);
+        message.setFrom(remitenteCorreo);
         message.setTo(destinatario);
         message.setSubject("Bienvenido a la Defensoría de los Derechos Politécnicos");
         message.setText("Hola " + nombre + ",\n\n"
@@ -271,12 +352,28 @@ public class UsuarioService {
             return null;
         }
         StringBuilder nombre = new StringBuilder(resumen.getNombreQuejoso());
-        if (resumen.getApellidoPaternoQuejoso() != null && !resumen.getApellidoPaternoQuejoso().isBlank()) {
-            nombre.append(' ').append(resumen.getApellidoPaternoQuejoso());
+        if (resumen.getApellido1Quejoso() != null && !resumen.getApellido1Quejoso().isBlank()) {
+            nombre.append(' ').append(resumen.getApellido1Quejoso());
         }
-        if (resumen.getApellidoMaternoQuejoso() != null && !resumen.getApellidoMaternoQuejoso().isBlank()) {
-            nombre.append(' ').append(resumen.getApellidoMaternoQuejoso());
+        if (resumen.getApellido2Quejoso() != null && !resumen.getApellido2Quejoso().isBlank()) {
+            nombre.append(' ').append(resumen.getApellido2Quejoso());
         }
         return nombre.toString();
+    }
+
+    /**
+     * Indica si el correo ya tiene una cuenta de seguimiento activa. Lo usa el formulario
+     * publico de queja para avisarle al quejoso que inicie sesion en vez de volver a
+     * capturar sus datos. Es una consulta de solo lectura y no revela ningun dato personal.
+     */
+    public boolean existeCuenta(String correo) {
+        if (correo == null || correo.isBlank()) {
+            return false;
+        }
+        String limpio = correo.trim();
+        if (usuarioRepository.findByCorreoInstitucional(limpio).isPresent()) {
+            return true;
+        }
+        return usuarioRepository.findByCorreoInstitucional(limpio.toLowerCase()).isPresent();
     }
 }
