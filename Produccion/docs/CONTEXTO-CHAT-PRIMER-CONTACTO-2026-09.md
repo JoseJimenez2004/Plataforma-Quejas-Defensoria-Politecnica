@@ -308,8 +308,79 @@ real, todas OK; capturas del front revisadas.
 
 **Config:**
 - `Produccion/Backend/config-files/primer-contacto-service/config/primer-contacto-service.yml`
-  — config de producción, deliberadamente en H2, **no tocada aún**.
+  — **desactualizado en el repo** (sigue diciendo H2). El real, en el servidor, ya estaba en
+  PostgreSQL antes de esta ronda y se le agregó a mano `notificaciones.service.url` el
+  2026-09-27 (ver sección 11). El repo nunca tuvo una copia fiel de este archivo; si hace
+  falta volver a verlo, hay que leerlo del servidor, no de git.
 - `Produccion/Backend/config-files/revision-service/config/revision-service.yml` — ejemplo
   de config ya en PostgreSQL, con `primer-contacto.base-url` apuntando a
   `http://2.25.78.22:8082`.
-- `Produccion/nginx/config/defensoria.conf` — sin ruta para Primer Contacto todavía.
+- `Produccion/nginx/config/defensoria.conf` — **desactualizado en el repo**: no tiene HTTPS/
+  certbot ni las rutas `/primer-contacto/`, `/revision/`, `/admin/`, `/subdefensoria/`. El real
+  (`/apps/aplicaciones/defensoria/router/config/router.conf` en 2.25.64.47) sí las tiene todas
+  desde antes de esta ronda. Mismo problema que el yml de arriba: no confiar en este archivo
+  del repo, leer del servidor.
+
+## 11. Desplegado en producción (2026-09-27/28)
+
+Las Fases 1–3 (sección 9b) y la búsqueda de antecedentes (9c) ya están en vivo, no solo
+committeadas. Rama `Pre-Produccion2` empujada a GitHub (3 commits: `c45eb30`, `9b67735`,
+`1c199fc`), todavía no mergeada a `Pre-Produccion` ni a `main`.
+
+**Cómo se desplegó** (el usuario no tenía experiencia previa con esto; se hizo como lección
+guiada, paso a paso, con el usuario ejecutando los comandos en su propia PowerShell):
+1. Respaldo antes de tocar nada: `pg_dump` completo de `defensoria_db`, `podman save` de la
+   imagen anterior de `primer-contacto-service` y copia del `.jar` viejo — los tres en
+   `/apps/utiles/respaldos/` en `2.25.78.22`. Mismo patrón para el frontend (imagen + `dist/`
+   viejos) en `/apps/utiles/respaldos/` de `2.25.64.47`.
+2. Backend: `mvn clean package` → subir `primer-contacto-service.jar` a
+   `/apps/aplicaciones/defensoria/back/artifact/` → correr
+   `docs/migracion-estados-primer-contacto-2026-09-27.sql` contra `defensoria_db` → agregar a
+   mano `notificaciones.service.url: http://2.25.78.22:8085` al yml de producción (sin tocar
+   el resto) → `bash podman-compose.sh up-container primer-contacto-service`.
+3. **Bug encontrado en el primer arranque en producción** (no aparecía en local): Hibernate
+   intentaba `ALTER TABLE quejas ALTER COLUMN descripcion TYPE varchar(255)` en cada arranque
+   y Postgres lo rechazaba (`value too long`) porque `QuejaReferencia.descripcion` no tenía
+   `columnDefinition = "TEXT"`. Inofensivo (Postgres nunca aplicó el ALTER, no se perdió nada),
+   pero ensuciaba el log. Corregido y redesplegado; commit `1c199fc`.
+4. Frontend: **ya existía un contenedor `primer-contacto-web` corriendo** en `2.25.64.47`
+   (puerto 22348) desde el 18 de septiembre — el compañero lo había armado directo en el
+   servidor, sin subir `Dockerfile`/`nginx.conf`/`podman-compose-front-primer-contacto.sh` al
+   repo. Se compiló la versión de hoy (`ng build --configuration production`; hubo que subir
+   el budget de `angular.json` de 1MB a 1.5MB, ya no cabía con las pantallas nuevas), se
+   reemplazó el `dist/browser/` viejo y se corrió el script que ya estaba en el servidor. La
+   ruta pública (`/primer-contacto/` y `/api/primer-contacto/`) **ya estaba en el router-nginx
+   real desde antes** (ver nota de la sección "Config" arriba) — no hubo que tocar nginx.
+5. Los tres archivos de despliegue del frontend que solo vivían en el servidor se agregaron al
+   repo en el commit `1c199fc` (mismo patrón que `Frontend-Revision`/`Frontend-Admin`).
+
+**Verificado en producción:** logs limpios, `Started PrimercontactoApplication`, la página
+pública carga el build de hoy, y un expediente real preexistente (`PC-8AF293B4`, del
+15-sep, antes de esta ronda) confirma que la llamada real Primer-Contacto→Subdefensoría
+funciona en producción (folio `SD-FEDCDCFC` recibido). A esa fecha, producción solo tenía ese
+expediente (sin citas/notas/remisiones) — las pantallas nuevas de hoy (CU-04, 05, 09, 10,
+antecedentes) siguen sin evidencia en vivo, solo local (48/48 en el suite de pruebas).
+
+**Pendiente para la próxima sesión:** el usuario quiere hacer una prueba completa en vivo
+(crear una queja de prueba claramente marcada, recorrer todo el flujo, borrarla al final) —
+quedó pactado para "mañana", no ejecutado todavía. Ver [[feedback-defensoria-deploy]] y
+[[reference-defensoria-servers]] en la memoria de Claude para el procedimiento y los datos
+de acceso.
+
+### Hallazgos nuevos, no relacionados con Primer Contacto pero relevantes para el proyecto
+
+- **`buscador-antecedentes-service`**: microservicio FastAPI ya construido por el compañero en
+  `2.25.78.22:/apps/aplicaciones/defensoria/ia/buscador-antecedentes-service/` (imagen creada,
+  container detenido tras una prueba exitosa). Es el modelo real para CU de antecedentes:
+  embeddings (`paraphrase-multilingual-MiniLM-L12-v2`) + TF-IDF sobre un índice de 4000 casos
+  **históricos reales** (`casos.json`, exportado de `defensoria_historico_db`). Contrato
+  documentado en su propio `README.md`/`app/schemas.py`
+  (`POST /buscar-antecedentes`, `POST /buscar-por-persona`, `POST /recargar-indice`). No
+  incluye quejas nuevas del sistema en vivo todavía (solo históricas). El
+  `MotorAntecedentes` que se dejó en `primercontacto` (sección 9c) está diseñado justo para
+  enchufar esto sin tocar el resto del código, pero **el usuario pidió NO conectarlo todavía**
+  hasta que el compañero confirme que está listo.
+- **`resumen-service`**: otro microservicio de IA del compañero (resumen extractivo de la
+  narrativa de una queja, con un modelo entrenado propio — `model.safetensors`). Fuera del
+  alcance de Primer Contacto, solo anotado para que el equipo lo tenga presente.
+- Ninguno de los dos vive en el repositorio de git — solo en `2.25.78.22`.
