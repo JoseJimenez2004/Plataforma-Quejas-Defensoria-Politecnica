@@ -47,7 +47,14 @@ public class QuejaReferencia {
     @Column(name = "motivo", insertable = false, updatable = false)
     private String motivo;
 
-    @Column(name = "descripcion", insertable = false, updatable = false)
+    /*
+     * columnDefinition = "TEXT" es obligatorio aquí: la columna real ya es TEXT (la narrativa
+     * de la queja no cabe en 255 caracteres). Sin esto, ddl-auto=update intenta angostarla a
+     * varchar(255) en cada arranque y Postgres rechaza el ALTER porque ya hay descripciones
+     * más largas -- error inofensivo (no se pierde nada, la columna se queda como TEXT) pero
+     * ensucia el log en cada reinicio.
+     */
+    @Column(name = "descripcion", insertable = false, updatable = false, columnDefinition = "TEXT")
     private String descripcion;
 
     @Column(name = "unidad_academica_clave", insertable = false, updatable = false)
