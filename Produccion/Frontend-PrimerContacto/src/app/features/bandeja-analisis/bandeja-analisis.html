@@ -84,9 +84,9 @@
               <mat-checkbox
                 [checked]="estaSeleccionado('estatus', estatus)"
                 (change)="toggleValor('estatus', estatus)">
-                {{ estatus }}
+                {{ etiquetaEstatus(estatus) }}
               </mat-checkbox>
-              <span class="facet-count">{{ contarCoincidencias('estatus', estatus) }}</span>
+              <span class="facet-count">{{ contarCoincidencias('estatusCodigo', estatus) }}</span>
             </div>
           }
         </mat-expansion-panel>
@@ -98,10 +98,10 @@
     <div class="results-column">
       <mat-card class="search-card">
         <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Buscar por folio o nombre</mat-label>
+          <mat-label>Buscar por folio, folio de la queja o nombre</mat-label>
           <input
             matInput
-            placeholder="Ej. DDP-2026-001 o Juan Paco"
+            placeholder="Ej. PC-A1B2C3D4, FOL-12345678 o Juan Paco"
             [(ngModel)]="filtros.texto"
             (ngModelChange)="aplicarFiltros()">
           <mat-icon matPrefix>search</mat-icon>
@@ -163,7 +163,12 @@
           <ng-container matColumnDef="estatus">
             <th mat-header-cell *matHeaderCellDef>Estatus</th>
             <td mat-cell *matCellDef="let expediente">
-              <span class="status">{{ expediente.estatus }}</span>
+              <span [class]="'estatus-chip ' + claseEstatus(expediente.estatusCodigo)">{{ expediente.estatus }}</span>
+              @if (expediente.tieneCitaActiva) {
+                <span class="cita-indicador" matTooltip="Tiene una cita programada o confirmada">
+                  <mat-icon>event</mat-icon>
+                </span>
+              }
             </td>
           </ng-container>
 

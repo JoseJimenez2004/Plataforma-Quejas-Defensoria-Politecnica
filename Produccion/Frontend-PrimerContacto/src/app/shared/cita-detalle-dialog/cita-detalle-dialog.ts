@@ -19,6 +19,14 @@ export class CitaDetalleDialog {
     private router: Router
   ) {}
 
+  get cancelada(): boolean {
+    return this.cita.estatus === 'Cancelada';
+  }
+
+  get confirmada(): boolean {
+    return this.cita.estatus === 'Confirmada';
+  }
+
   cerrar(): void {
     this.dialogRef.close();
   }
@@ -26,6 +34,10 @@ export class CitaDetalleDialog {
   verExpediente(): void {
     this.dialogRef.close();
     this.router.navigate(['/expediente', this.cita.folio]);
+  }
+
+  confirmar(): void {
+    this.dialogRef.close({ accion: 'confirmar', cita: this.cita });
   }
 
   reagendar(): void {

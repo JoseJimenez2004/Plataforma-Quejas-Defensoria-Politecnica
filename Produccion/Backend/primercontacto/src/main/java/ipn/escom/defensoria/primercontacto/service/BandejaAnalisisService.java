@@ -7,7 +7,10 @@ import ipn.escom.defensoria.primercontacto.repository.CitaPrimerContactoReposito
 import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class BandejaAnalisisService {
@@ -29,6 +32,7 @@ public class BandejaAnalisisService {
 
         return expedienteRepository.findAll()
                 .stream()
+                .sorted(masRecientesPrimero())
                 .map(this::convertirADTO)
                 .toList();
     }
@@ -49,49 +53,43 @@ public class BandejaAnalisisService {
             String token
     ) {
 
+        String texto = normalizar(
+                filtro.getTexto() != null ? filtro.getTexto() : filtro.getFolio()
+        );
+
+        LocalDate desde = parsearFecha(filtro.getFechaInicio());
+        LocalDate hasta = parsearFecha(filtro.getFechaFin());
+
+        Comparator<ExpedientePrimerContacto> orden =
+                "antiguos".equalsIgnoreCase(filtro.getOrden())
+                        ? masRecientesPrimero().reversed()
+                        : masRecientesPrimero();
+
         return expedienteRepository.findAll()
                 .stream()
 
                 .filter(e ->
-                        filtro.getFolio() == null
-                                || filtro.getFolio().isBlank()
-                                || contieneIgnoreCase(
-                                e.getFolio(),
-                                filtro.getFolio()
-                        )
-                                || contieneIgnoreCase(
-                                e.getFolioOrigen(),
-                                filtro.getFolio()
-                        )
+                        texto == null
+                                || contiene(e.getFolio(), texto)
+                                || contiene(e.getFolioOrigen(), texto)
+                                || contiene(e.getQuejosoNombre(), texto)
                 )
 
                 .filter(e ->
-                        filtro.getPrioridad() == null
-                                || filtro.getPrioridad().isBlank()
-                                || igualesIgnoreCase(
-                                e.getPrioridad(),
-                                filtro.getPrioridad()
-                        )
+                        filtro.getNombreQuejoso() == null
+                                || filtro.getNombreQuejoso().isBlank()
+                                || contiene(e.getQuejosoNombre(), normalizar(filtro.getNombreQuejoso()))
                 )
 
-                .filter(e ->
-                        filtro.getEstatus() == null
-                                || filtro.getEstatus().isBlank()
-                                || igualesIgnoreCase(
-                                e.getEstatus(),
-                                filtro.getEstatus()
-                        )
-                )
+                .filter(e -> coincide(e.getPrioridad(), filtro.getPrioridad(), filtro.getPrioridades()))
+                .filter(e -> coincide(e.getEstatus(), filtro.getEstatus(), filtro.getEstatusLista()))
+                .filter(e -> coincide(e.getUnidadAcademica(), filtro.getUnidadAcademica(), filtro.getUnidadesAcademicas()))
+                .filter(e -> coincide(e.getTema(), null, filtro.getTemas()))
 
-                .filter(e ->
-                        filtro.getUnidadAcademica() == null
-                                || filtro.getUnidadAcademica().isBlank()
-                                || igualesIgnoreCase(
-                                e.getUnidadAcademica(),
-                                filtro.getUnidadAcademica()
-                        )
-                )
+                .filter(e -> desde == null || fechaDe(e) == null || !fechaDe(e).isBefore(desde))
+                .filter(e -> hasta == null || fechaDe(e) == null || !fechaDe(e).isAfter(hasta))
 
+                .sorted(orden)
                 .map(this::convertirADTO)
                 .toList();
     }
@@ -103,12 +101,7 @@ public class BandejaAnalisisService {
 
         return expedienteRepository.findAll()
                 .stream()
-                .filter(e ->
-                        igualesIgnoreCase(
-                                e.getPrioridad(),
-                                prioridad
-                        )
-                )
+                .filter(e -> coincide(e.getPrioridad(), prioridad, null))
                 .map(this::convertirADTO)
                 .toList();
     }
@@ -120,12 +113,7 @@ public class BandejaAnalisisService {
 
         return expedienteRepository.findAll()
                 .stream()
-                .filter(e ->
-                        igualesIgnoreCase(
-                                e.getEstatus(),
-                                estatus
-                        )
-                )
+                .filter(e -> coincide(e.getEstatus(), estatus, null))
                 .map(this::convertirADTO)
                 .toList();
     }
@@ -134,62 +122,84 @@ public class BandejaAnalisisService {
             ExpedientePrimerContacto expediente
     ) {
 
-        /*
-         * Conservamos temporalmente el comportamiento anterior:
-         * si tiene una cita activa y todavía está en análisis,
-         * la bandeja muestra CON_CITA.
-         *
-         * No sobrescribimos estados finales como IMPROCEDENTE,
-         * PROCEDENTE o REMITIDA.
-         */
-        boolean tieneCita =
-                citaRepository.existsByFolioAndEstatusNot(
-                        expediente.getFolio(),
-                        "CANCELADA"
+        boolean tieneCitaActiva =
+                citaRepository.existsByExpedienteIdAndEstatusNot(
+                        expediente.getId(),
+                        CitaPrimerContactoService.CANCELADA
                 );
-
-        String estatusVisual =
-                tieneCita
-                        && "EN_ANALISIS"
-                        .equalsIgnoreCase(expediente.getEstatus())
-                        ? "CON_CITA"
-                        : expediente.getEstatus();
 
         return BandejaAnalisisDTO.builder()
                 .expedienteId(expediente.getId())
                 .folio(expediente.getFolio())
                 .folioOrigen(expediente.getFolioOrigen())
-                .nombreQuejoso(
-                        expediente.getQuejosoNombre()
-                )
-                .unidadAcademica(
-                        expediente.getUnidadAcademica()
-                )
+                .nombreQuejoso(expediente.getQuejosoNombre())
+                .unidadAcademica(expediente.getUnidadAcademica())
                 .tema(expediente.getTema())
                 .prioridad(expediente.getPrioridad())
-                .estatus(estatusVisual)
-                .fechaRecepcion(
-                        expediente.getFechaRecepcionOrigen()
-                )
+                .estatus(expediente.getEstatus())
+                .fechaRecepcion(expediente.getFechaRecepcionOrigen())
+                .tieneCitaActiva(tieneCitaActiva)
                 .build();
     }
 
-    private boolean igualesIgnoreCase(
+    /*
+     * Un valor simple y/o una lista: el campo coincide si es igual
+     * (sin distinguir mayúsculas) a cualquiera de ellos.
+     */
+    private boolean coincide(
             String valor,
-            String filtro
+            String unico,
+            List<String> varios
     ) {
-        return valor != null
-                && filtro != null
-                && valor.equalsIgnoreCase(filtro);
+
+        boolean sinUnico = unico == null || unico.isBlank();
+        boolean sinVarios = varios == null || varios.isEmpty();
+
+        if (sinUnico && sinVarios) {
+            return true;
+        }
+
+        if (valor == null) {
+            return false;
+        }
+
+        if (!sinUnico && valor.equalsIgnoreCase(unico)) {
+            return true;
+        }
+
+        return !sinVarios && varios.stream()
+                .filter(Objects::nonNull)
+                .anyMatch(valor::equalsIgnoreCase);
     }
 
-    private boolean contieneIgnoreCase(
-            String valor,
-            String filtro
-    ) {
-        return valor != null
-                && filtro != null
-                && valor.toLowerCase()
-                .contains(filtro.toLowerCase());
+    private boolean contiene(String valor, String textoNormalizado) {
+        return valor != null && valor.toLowerCase().contains(textoNormalizado);
+    }
+
+    private String normalizar(String texto) {
+        return texto == null || texto.isBlank() ? null : texto.trim().toLowerCase();
+    }
+
+    private Comparator<ExpedientePrimerContacto> masRecientesPrimero() {
+        return Comparator.comparing(
+                ExpedientePrimerContacto::getFechaCreacion,
+                Comparator.nullsLast(Comparator.reverseOrder())
+        );
+    }
+
+    /*
+     * fechaRecepcionOrigen llega como texto ISO (fecha o fecha-hora).
+     */
+    private LocalDate fechaDe(ExpedientePrimerContacto expediente) {
+        String fecha = expediente.getFechaRecepcionOrigen();
+        return fecha == null || fecha.length() < 10 ? null : parsearFecha(fecha.substring(0, 10));
+    }
+
+    private LocalDate parsearFecha(String fecha) {
+        try {
+            return fecha == null || fecha.isBlank() ? null : LocalDate.parse(fecha.trim());
+        } catch (RuntimeException ex) {
+            return null;
+        }
     }
 }

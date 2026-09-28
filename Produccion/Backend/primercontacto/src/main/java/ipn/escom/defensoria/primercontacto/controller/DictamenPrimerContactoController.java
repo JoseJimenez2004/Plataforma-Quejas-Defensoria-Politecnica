@@ -69,6 +69,20 @@ public class DictamenPrimerContactoController {
                 .obtenerPorExpediente(expedienteId);
     }
 
+    /*
+     * Expediente PROCEDENTE que Subdefensoría no alcanzó a recibir.
+     */
+    @PostMapping("/folio/{folio}/reenviar-subdefensoria")
+    public DictamenDTO reenviarASubdefensoria(
+            @PathVariable String folio,
+            Authentication authentication
+    ) {
+        analistaAutenticadoService.obtenerAnalista(authentication);
+
+        return dictamenPrimerContactoService
+                .reenviarASubdefensoria(folio);
+    }
+
     @GetMapping("/folio/{folio}")
     public DictamenDTO obtenerPorFolio(
             @PathVariable String folio

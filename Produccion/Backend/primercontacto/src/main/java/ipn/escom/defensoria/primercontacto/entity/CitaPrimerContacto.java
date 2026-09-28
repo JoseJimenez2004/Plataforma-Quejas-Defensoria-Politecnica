@@ -55,4 +55,17 @@ public class CitaPrimerContacto {
 
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
+
+    /*
+     * Último analista que confirmó, reagendó o canceló la cita (CU-PC-04):
+     * quien la agenda queda en analistaId/analistaNombre, quien la movió después, aquí.
+     */
+    @Column(name = "actualizado_por_id")
+    private Long actualizadoPorId;
+
+    @Column(name = "actualizado_por_nombre", length = 150)
+    private String actualizadoPorNombre;
+
+    @Column(name = "fecha_actualizacion")
+    private LocalDateTime fechaActualizacion;
 }

@@ -22,4 +22,8 @@ public class CitaDTO {
     private String motivo;
     private String estatus;
     private String fechaCreacion;
+
+    /* Último analista que confirmó, reagendó o canceló. */
+    private String actualizadoPorNombre;
+    private String fechaActualizacion;
 }

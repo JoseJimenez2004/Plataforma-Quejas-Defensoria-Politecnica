@@ -4,7 +4,8 @@ import { Observable, map } from 'rxjs';
 import { ApiService } from './api.service';
 import {
   CitaPrimerContacto,
-  CrearCitaPrimerContacto
+  CrearCitaPrimerContacto,
+  ReagendarCitaPrimerContacto
 } from '../models/cita-primer-contacto';
 
 interface CitaBackendDTO {
@@ -26,6 +27,7 @@ interface CitaBackendDTO {
   estatus: string;
 
   fechaCreacion?: string;
+  actualizadoPorNombre?: string;
 }
 
 @Injectable({
@@ -76,6 +78,33 @@ export class AgendaService {
       );
   }
 
+  confirmarCita(
+    id: number
+  ): Observable<CitaPrimerContacto> {
+
+    return this.api
+      .put<CitaBackendDTO>(`/citas/${id}/confirmar`, {})
+      .pipe(
+        map(cita => this.mapearCita(cita))
+      );
+  }
+
+  /**
+   * Mueve la MISMA cita a otra fecha/hora. Antes se simulaba cancelando y creando otra,
+   * y si el segundo paso fallaba el quejoso se quedaba sin cita.
+   */
+  reagendarCita(
+    id: number,
+    dto: ReagendarCitaPrimerContacto
+  ): Observable<CitaPrimerContacto> {
+
+    return this.api
+      .put<CitaBackendDTO>(`/citas/${id}/reagendar`, dto)
+      .pipe(
+        map(cita => this.mapearCita(cita))
+      );
+  }
+
   cancelarCita(
     id: number
   ): Observable<CitaPrimerContacto> {
@@ -122,7 +151,8 @@ export class AgendaService {
         cita.estatus
       ),
 
-      fechaCreacion: cita.fechaCreacion
+      fechaCreacion: cita.fechaCreacion,
+      actualizadoPorNombre: cita.actualizadoPorNombre
     };
   }
 

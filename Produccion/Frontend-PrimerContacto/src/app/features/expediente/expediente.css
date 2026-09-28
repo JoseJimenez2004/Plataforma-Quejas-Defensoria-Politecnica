@@ -316,3 +316,156 @@ mat-chip {
     width: 100%;
   }
 }
+/* ---- Agregados CU-PC-03/05/10 ---- */
+.card-title {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-lg);
+  font-weight: 900;
+  color: #111827;
+}
+
+.analisis-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+}
+
+.analisis-meta mat-icon,
+.inline-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  vertical-align: text-bottom;
+  color: var(--guinda);
+}
+
+.own-note {
+  background: var(--guinda-suave);
+}
+
+.note-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.note-actions mat-icon {
+  color: var(--texto-suave);
+}
+
+.empty-hint {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--font-size-sm);
+}
+
+.warning-text {
+  color: #9a5b00 !important;
+  font-weight: 600;
+}
+
+.outline-guinda {
+  border-color: var(--guinda) !important;
+  color: var(--guinda) !important;
+}
+
+.conciliacion-card {
+  margin-bottom: var(--space-5);
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.section-head h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 900;
+  color: var(--negro-inst);
+}
+
+.section-head p {
+  margin: var(--space-1) 0 0;
+  color: var(--texto-suave);
+  font-size: var(--font-size-sm);
+  max-width: 720px;
+}
+
+.conciliacion-form {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.acuerdos-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.acuerdo-row {
+  border: 1px solid #f1f1f3;
+  border-left: 4px solid var(--advertencia);
+  border-radius: 8px;
+  background: #f9fafb;
+  padding: var(--space-3);
+}
+
+.acuerdo-row[data-estado='ACEPTADO'] {
+  border-left-color: var(--exito);
+}
+
+.acuerdo-row[data-estado='RECHAZADO'] {
+  border-left-color: var(--peligro);
+}
+
+.acuerdo-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.acuerdo-head strong {
+  color: var(--negro-inst);
+}
+
+.acuerdo-estado {
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+  color: var(--advertencia);
+  white-space: nowrap;
+}
+
+.acuerdo-row[data-estado='ACEPTADO'] .acuerdo-estado {
+  color: var(--exito);
+}
+
+.acuerdo-row[data-estado='RECHAZADO'] .acuerdo-estado {
+  color: var(--peligro);
+}
+
+.acuerdo-row p {
+  margin: var(--space-1) 0;
+  font-size: var(--font-size-sm);
+  color: var(--texto);
+}
+
+.acuerdo-meta {
+  font-size: var(--font-size-xs);
+  color: var(--texto-suave);
+}
+
+.acuerdo-comentario {
+  font-style: italic;
+}
+
+@media (max-width: 1000px) {
+  .section-head {
+    flex-direction: column;
+  }
+}

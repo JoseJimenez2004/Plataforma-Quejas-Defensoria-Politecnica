@@ -11,4 +11,8 @@ public interface EvidenciaPrimerContactoRepository
     List<EvidenciaPrimerContacto> findByExpedienteId(
             Long expedienteId
     );
+
+    boolean existsByEvidenciaOrigenId(
+            Long evidenciaOrigenId
+    );
 }

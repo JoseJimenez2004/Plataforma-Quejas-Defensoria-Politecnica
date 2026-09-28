@@ -5,9 +5,11 @@ import ipn.escom.defensoria.primercontacto.dto.ExpedienteAnalisisDTO;
 import ipn.escom.defensoria.primercontacto.dto.NotaAnalisisDTO;
 import ipn.escom.defensoria.primercontacto.dto.QuejosoDTO;
 
+import ipn.escom.defensoria.primercontacto.entity.EstatusExpediente;
 import ipn.escom.defensoria.primercontacto.entity.EvidenciaPrimerContacto;
 import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
 import ipn.escom.defensoria.primercontacto.entity.NotaAnalisis;
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
 
 import ipn.escom.defensoria.primercontacto.exception.RecursoNoEncontradoException;
 
@@ -17,6 +19,7 @@ import ipn.escom.defensoria.primercontacto.repository.NotaAnalisisRepository;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -25,15 +28,18 @@ public class ExpedienteAnalisisService {
     private final ExpedientePrimerContactoRepository expedienteRepository;
     private final NotaAnalisisRepository notaAnalisisRepository;
     private final EvidenciaPrimerContactoRepository evidenciaRepository;
+    private final TransicionExpedienteService transicionService;
 
     public ExpedienteAnalisisService(
             ExpedientePrimerContactoRepository expedienteRepository,
             NotaAnalisisRepository notaAnalisisRepository,
-            EvidenciaPrimerContactoRepository evidenciaRepository
+            EvidenciaPrimerContactoRepository evidenciaRepository,
+            TransicionExpedienteService transicionService
     ) {
         this.expedienteRepository = expedienteRepository;
         this.notaAnalisisRepository = notaAnalisisRepository;
         this.evidenciaRepository = evidenciaRepository;
+        this.transicionService = transicionService;
     }
 
     /*
@@ -74,6 +80,39 @@ public class ExpedienteAnalisisService {
                                                 + folio
                                 )
                         );
+
+        return construirDTO(expediente);
+    }
+
+    /*
+     * CU-PC-03: al abrir el expediente para trabajarlo, un expediente
+     * TURNADA pasa a EN_ANALISIS y queda registrado quién lo abrió y
+     * cuándo -- mismo patrón que Revisión al abrir una queja.
+     *
+     * Es un endpoint explícito (lo llama la pantalla de detalle) y no
+     * un efecto de GET /folio/{folio}, porque Agenda, Dictamen y
+     * Remisión también consultan el expediente y eso no es "abrirlo".
+     * En cualquier otro estado no cambia nada.
+     */
+    public ExpedienteAnalisisDTO iniciarAnalisis(
+            String folio,
+            PersonalAdministrativo analista
+    ) {
+
+        ExpedientePrimerContacto expediente =
+                transicionService.obtenerPorFolio(folio);
+
+        if (EstatusExpediente.TURNADA.equals(expediente.getEstatus())) {
+
+            expediente.setFechaInicioAnalisis(LocalDateTime.now());
+            expediente.setAnalistaAnalisisId(analista.getId());
+            expediente.setAnalistaAnalisisNombre(analista.getNombreCompleto());
+
+            expediente = transicionService.cambiarEstatus(
+                    expediente,
+                    EstatusExpediente.EN_ANALISIS
+            );
+        }
 
         return construirDTO(expediente);
     }
@@ -156,6 +195,14 @@ public class ExpedienteAnalisisService {
                 )
                 .prioridad(
                         expediente.getPrioridad()
+                )
+                .fechaInicioAnalisis(
+                        expediente.getFechaInicioAnalisis() != null
+                                ? expediente.getFechaInicioAnalisis().toString()
+                                : null
+                )
+                .analistaAnalisisNombre(
+                        expediente.getAnalistaAnalisisNombre()
                 )
                 .quejoso(quejoso)
                 .evidencias(evidencias)

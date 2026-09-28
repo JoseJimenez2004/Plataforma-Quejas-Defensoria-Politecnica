@@ -11,42 +11,50 @@
       </p>
     </mat-card>
   } @else {
-  
+
   <div class="page-header">
     <div>
       <h2>{{ expediente.folio }}</h2>
-      <p>{{ expediente.asunto }} · Ingreso: {{ expediente.fechaIngreso }} · {{ expediente.quejoso.unidadAcademica }}</p>
+      <p>
+        {{ expediente.asunto }} · Queja {{ expediente.folioOrigen }} · Ingreso: {{ expediente.fechaIngreso }}
+        · {{ expediente.quejoso.unidadAcademica }}
+      </p>
+      @if (expediente.analistaAnalisisNombre) {
+        <p class="analisis-meta">
+          <mat-icon>person_search</mat-icon>
+          En análisis por {{ expediente.analistaAnalisisNombre }}
+          desde {{ formatearFechaHora(expediente.fechaInicioAnalisis) }}
+        </p>
+      }
     </div>
 
     <div class="hero-chips">
       <mat-chip class="priority-chip">{{ expediente.prioridad }} prioridad</mat-chip>
-      <mat-chip class="status-chip">{{ expediente.estatus }}</mat-chip>
+      <span class="estatus-chip" [class]="'estatus-chip ' + claseEstatus(expediente.estatusCodigo)">
+        {{ expediente.estatus }}
+      </span>
     </div>
   </div>
 
   <div class="expediente-grid">
-    
+
     <mat-card class="card">
-      <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-lg); font-weight: 900; color: #111827;">
-        Narrativa del Quejoso
-      </h3>
+      <h3 class="card-title">Narrativa del Quejoso</h3>
       <div class="document-box">
         <p>{{ expediente.narrativa }}</p>
       </div>
     </mat-card>
 
     <mat-card class="card">
-      <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-lg); font-weight: 900; color: #111827;">
-        Datos del Quejoso
-      </h3>
+      <h3 class="card-title">Datos del Quejoso</h3>
       <div class="info-list">
         <div>
           <span>Nombre</span>
           <strong>{{ expediente.quejoso.nombre }}</strong>
         </div>
         <div>
-          <span>Boleta</span>
-          <strong>{{ expediente.quejoso.boleta }}</strong>
+          <span>Tipo de usuario</span>
+          <strong>{{ expediente.quejoso.boleta || '—' }}</strong>
         </div>
         <div>
           <span>Correo electrónico</span>
@@ -54,7 +62,7 @@
         </div>
         <div>
           <span>Teléfono de contacto</span>
-          <strong>{{ expediente.quejoso.telefono }}</strong>
+          <strong>{{ expediente.quejoso.telefono || '—' }}</strong>
         </div>
         <div>
           <span>Unidad académica</span>
@@ -64,11 +72,9 @@
     </mat-card>
 
     <mat-card class="card">
-      <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-lg); font-weight: 900; color: #111827;">
-        Evidencias
-      </h3>
+      <h3 class="card-title">Evidencias</h3>
       <div class="evidence-list">
-        @for (evidencia of expediente.evidencias; track evidencia.nombre) {
+        @for (evidencia of expediente.evidencias; track evidencia.id) {
           <div class="evidence-row">
             <div class="evidence-file">
               <mat-icon>description</mat-icon>
@@ -77,6 +83,11 @@
                 <span>{{ evidencia.tipo }}</span>
               </div>
             </div>
+            <div class="evidence-actions">
+              <button mat-button class="link-btn" (click)="abrirEvidencia(evidencia)">
+                <mat-icon>open_in_new</mat-icon> Abrir
+              </button>
+            </div>
           </div>
         }
         <p class="evidence-count">{{ expediente.evidencias.length }} evidencias adjuntas</p>
@@ -84,19 +95,43 @@
     </mat-card>
 
     <mat-card class="card notes-card">
-      <h3 style="margin: 0 0 var(--space-4); font-size: var(--font-size-lg); font-weight: 900; color: #111827;">
-        Notas de Análisis
-      </h3>
-      
+      <h3 class="card-title">Notas de Análisis</h3>
+
       <div class="timeline-notes">
-        @for (nota of expediente.notas; track nota) {
-          <div class="timeline-note">
+        @for (nota of expediente.notas; track nota.id) {
+          <div class="timeline-note" [class.own-note]="esNotaPropia(nota)">
             <div class="note-meta">
-              <strong>Analista Jurídico 01</strong>
-              <span>Hace unos minutos</span>
+              <strong>{{ nota.analistaNombre }}</strong>
+              <span>
+                {{ formatearFechaHora(nota.fechaCreacion) }}
+                @if (nota.fechaActualizacion) { · editada }
+              </span>
             </div>
-            <p>{{ nota }}</p>
+
+            @if (notaEnEdicion === nota.id) {
+              <mat-form-field appearance="outline" class="note-input">
+                <textarea matInput rows="3" [(ngModel)]="textoEdicion"></textarea>
+              </mat-form-field>
+              <div class="note-actions">
+                <button mat-button (click)="cancelarEdicion()">Cancelar</button>
+                <button mat-flat-button class="primary-btn" (click)="guardarEdicion(nota)">Guardar</button>
+              </div>
+            } @else {
+              <p>{{ nota.contenido }}</p>
+              @if (esNotaPropia(nota)) {
+                <div class="note-actions">
+                  <button mat-icon-button matTooltip="Editar nota" (click)="editarNota(nota)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button matTooltip="Eliminar nota" (click)="eliminarNota(nota)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              }
+            }
           </div>
+        } @empty {
+          <p class="empty-hint">Todavía no hay notas de análisis.</p>
         }
       </div>
 
@@ -111,38 +146,179 @@
     </mat-card>
   </div>
 
-  <mat-card class="actions-card">
-    <div>
-      <h3>Acciones del expediente</h3>
-      <p>Seleccione la siguiente acción dentro del flujo de Primer Contacto.</p>
+  <!-- ============================ Conciliación (CU-PC-10) ============================ -->
+  <mat-card class="card conciliacion-card">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow-small">Solución por acuerdo</span>
+        <h3>Conciliación</h3>
+        <p>
+          Propón un acuerdo al quejoso. Si lo acepta desde su panel, el expediente pasa
+          automáticamente a Subdefensoría para elaborar el acuerdo de conclusión.
+        </p>
+      </div>
+
+      @if (abierto && !conciliacionPendiente && !mostrarFormConciliacion) {
+        <button mat-stroked-button class="outline-guinda" (click)="mostrarFormConciliacion = true">
+          <mat-icon>handshake</mat-icon> Proponer acuerdo
+        </button>
+      }
     </div>
 
-    <div class="actions">
-      <button
-        mat-flat-button
-        class="primary-btn"
-        (click)="agendarCita()">
-        <mat-icon>event</mat-icon>
-        Agendar cita
-      </button>
+    @if (mostrarFormConciliacion) {
+      <div class="conciliacion-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Asunto del acuerdo</mat-label>
+          <input matInput maxlength="255" [(ngModel)]="conciliacion.asunto"
+                 placeholder="Ej. Reembolso del cobro y disculpa por escrito">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Términos del acuerdo</mat-label>
+          <textarea matInput rows="4" [(ngModel)]="conciliacion.terminos"
+                    placeholder="Qué se compromete a hacer cada parte y en qué plazo."></textarea>
+        </mat-form-field>
+
+        <div class="note-actions">
+          <button mat-button (click)="mostrarFormConciliacion = false">Cancelar</button>
+          <button mat-flat-button class="primary-btn" [disabled]="procesando" (click)="proponerConciliacion()">
+            <mat-icon>send</mat-icon> Enviar al quejoso
+          </button>
+        </div>
+      </div>
+    }
+
+    <div class="acuerdos-list">
+      @for (acuerdo of acuerdos; track acuerdo.id) {
+        <div class="acuerdo-row" [attr.data-estado]="acuerdo.estado">
+          <div class="acuerdo-head">
+            <strong>{{ acuerdo.asunto }}</strong>
+            <span class="acuerdo-estado">{{ etiquetaAcuerdo(acuerdo.estado) }}</span>
+          </div>
+          <p>{{ acuerdo.terminos }}</p>
+          <span class="acuerdo-meta">
+            Propuesto por {{ acuerdo.creadoPorNombre || acuerdo.creadoPor }}
+            el {{ formatearFechaHora(acuerdo.fechaEmision) }}
+            @if (acuerdo.fechaRespuesta) {
+              · Respondido el {{ formatearFechaHora(acuerdo.fechaRespuesta) }}
+            }
+          </span>
+          @if (acuerdo.comentarioQuejoso) {
+            <p class="acuerdo-comentario">“{{ acuerdo.comentarioQuejoso }}”</p>
+          }
+        </div>
+      } @empty {
+        @if (!mostrarFormConciliacion) {
+          <p class="empty-hint">No se ha propuesto ningún acuerdo de conciliación.</p>
+        }
+      }
     </div>
   </mat-card>
 
-  <mat-card class="decision-card">
-    <div>
-      <span class="eyebrow-small">Resolución preliminar</span>
-      <h3>Determinación del análisis</h3>
-      <p>Seleccione si el asunto corresponde o no a la competencia de la Defensoría.</p>
-    </div>
+  <!-- ============================ Citas (CU-PC-04) ============================ -->
+  @if (abierto) {
+    <mat-card class="actions-card">
+      <div>
+        <h3>Cita con el quejoso</h3>
+        @if (citaActiva) {
+          <p>
+            <mat-icon class="inline-icon">event</mat-icon>
+            {{ citaActiva.estatus }} · {{ citaActiva.fecha }} a las {{ citaActiva.hora }}
+            · {{ citaActiva.tipo }}. Confírmala, reagéndala o cancélala desde la Agenda.
+          </p>
+        } @else {
+          <p>Sin cita activa. Agenda una si necesitas entrevistar al quejoso.</p>
+        }
+      </div>
 
-    <div class="decision-actions">
-      <button mat-flat-button class="success-btn" (click)="marcarCompetente()">
-        <mat-icon>check_circle</mat-icon> Competente
-      </button>
-      <button mat-flat-button class="danger-btn" (click)="marcarImprocedente()">
-        <mat-icon>cancel</mat-icon> Improcedente
-      </button>
-    </div>
+      <div class="actions">
+        <button mat-flat-button class="primary-btn" (click)="agendarCita()">
+          <mat-icon>event</mat-icon>
+          {{ citaActiva ? 'Ir a la agenda' : 'Agendar cita' }}
+        </button>
+      </div>
+    </mat-card>
+  }
+
+  <!-- ============================ Dictamen (CU-PC-06/07/08/09) ============================ -->
+  <mat-card class="decision-card">
+    @switch (expediente.estatusCodigo) {
+      @case ('PROCEDENTE') {
+        <div>
+          <span class="eyebrow-small">Dictamen registrado</span>
+          <h3>Procedente · turnado a Subdefensoría</h3>
+          @if (expediente.folioSubdefensoria) {
+            <p>Subdefensoría lo recibió con folio <strong>{{ expediente.folioSubdefensoria }}</strong>.</p>
+          } @else {
+            <p class="warning-text">
+              El dictamen quedó registrado, pero Subdefensoría no confirmó la recepción. Reintenta el envío.
+            </p>
+          }
+        </div>
+        <div class="decision-actions">
+          @if (!expediente.folioSubdefensoria) {
+            <button mat-flat-button class="primary-btn" [disabled]="procesando" (click)="reenviarASubdefensoria()">
+              <mat-icon>sync</mat-icon> Reintentar envío
+            </button>
+          }
+          <button mat-stroked-button (click)="verDictamen()">
+            <mat-icon>visibility</mat-icon> Ver dictamen
+          </button>
+        </div>
+      }
+      @case ('IMPROCEDENTE') {
+        <div>
+          <span class="eyebrow-small">Dictamen registrado</span>
+          <h3>Improcedente · pendiente de remisión</h3>
+          <p>Genera el oficio y registra su envío a la instancia competente para cerrar el expediente.</p>
+        </div>
+        <div class="decision-actions">
+          <button mat-stroked-button (click)="verDictamen()">
+            <mat-icon>visibility</mat-icon> Ver dictamen
+          </button>
+          <button mat-flat-button class="primary-btn" (click)="irARemision()">
+            <mat-icon>outgoing_mail</mat-icon> Continuar con la remisión
+          </button>
+        </div>
+      }
+      @case ('REMITIDA') {
+        <div>
+          <span class="eyebrow-small">Expediente cerrado</span>
+          <h3>Remitido a otra instancia</h3>
+          <p>El oficio de remisión ya se registró como enviado.</p>
+        </div>
+        <div class="decision-actions">
+          <button mat-stroked-button (click)="verDictamen()">
+            <mat-icon>visibility</mat-icon> Ver dictamen
+          </button>
+          <button mat-stroked-button (click)="irARemision()">
+            <mat-icon>description</mat-icon> Ver remisión
+          </button>
+        </div>
+      }
+      @default {
+        <div>
+          <span class="eyebrow-small">Resolución preliminar</span>
+          <h3>Determinación del análisis</h3>
+          @if (conciliacionPendiente) {
+            <p class="warning-text">
+              Hay un acuerdo de conciliación esperando la respuesta del quejoso; espera su respuesta para dictaminar.
+            </p>
+          } @else {
+            <p>Seleccione si el asunto corresponde o no a la competencia de la Defensoría.</p>
+          }
+        </div>
+
+        <div class="decision-actions">
+          <button mat-flat-button class="success-btn" [disabled]="conciliacionPendiente" (click)="marcarCompetente()">
+            <mat-icon>check_circle</mat-icon> Competente
+          </button>
+          <button mat-flat-button class="danger-btn" [disabled]="conciliacionPendiente" (click)="marcarImprocedente()">
+            <mat-icon>cancel</mat-icon> Improcedente
+          </button>
+        </div>
+      }
+    }
   </mat-card>
   }
 </section>

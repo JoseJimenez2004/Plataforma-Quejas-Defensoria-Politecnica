@@ -236,3 +236,44 @@ mat-chip {
     border-bottom: none;
   }
 }
+/* ---- Evidencias y aviso de bloqueo (CU-PC-06/07/08) ---- */
+.subtitulo {
+  margin: var(--space-5) 0 var(--space-3);
+  font-size: var(--font-size-md);
+}
+
+.evidencias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.evidencia-btn {
+  border-color: var(--borde) !important;
+  color: var(--negro-inst) !important;
+}
+
+.evidencia-btn mat-icon {
+  color: var(--guinda);
+}
+
+.evidencia-btn .abrir {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.sin-evidencias {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--font-size-sm);
+}
+
+.aviso-bloqueo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: #9a5b00;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}

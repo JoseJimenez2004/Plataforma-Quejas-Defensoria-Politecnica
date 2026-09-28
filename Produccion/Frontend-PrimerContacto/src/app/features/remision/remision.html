@@ -11,40 +11,44 @@
     </div>
 
     <mat-chip class="warning-chip">
-      Remisión externa
+      {{ paso === 2 ? 'Remisión enviada' : paso === 1 ? 'Oficio generado' : 'Remisión externa' }}
     </mat-chip>
   </div>
 
   <div class="flow-card">
     <div class="step done">
       <mat-icon>check_circle</mat-icon>
-      <span>Recibido</span>
+      <span>Improcedente</span>
     </div>
 
     <div class="line"></div>
 
-    <div class="step done">
-      <mat-icon>check_circle</mat-icon>
-      <span>Analizado</span>
+    <div class="step" [class.active]="paso === 0" [class.done]="paso > 0">
+      <mat-icon>{{ paso > 0 ? 'check_circle' : 'edit_document' }}</mat-icon>
+      <span>Datos de la remisión</span>
     </div>
 
     <div class="line"></div>
 
-    <div class="step active">
-      <mat-icon>outgoing_mail</mat-icon>
-      <span>Remisión</span>
+    <div class="step" [class.active]="paso === 1" [class.done]="paso > 1">
+      <mat-icon>{{ paso > 1 ? 'check_circle' : 'picture_as_pdf' }}</mat-icon>
+      <span>Oficio generado</span>
     </div>
 
     <div class="line"></div>
 
-    <div class="step">
-      <mat-icon>mark_email_read</mat-icon>
+    <div class="step" [class.active]="paso === 2" [class.done]="paso === 2">
+      <mat-icon>{{ paso === 2 ? 'check_circle' : 'mark_email_read' }}</mat-icon>
       <span>Enviado</span>
     </div>
   </div>
 
+  @if (cargando) {
+    <mat-card class="card"><p class="muted">Cargando…</p></mat-card>
+  } @else {
+
   <div class="grid">
-    
+
     <mat-card class="card">
       <h3>Datos del expediente</h3>
 
@@ -52,6 +56,11 @@
         <div>
           <span>Folio</span>
           <strong>{{ folio }}</strong>
+        </div>
+
+        <div>
+          <span>Folio de la queja</span>
+          <strong>{{ expediente?.folioOrigen }}</strong>
         </div>
 
         <div>
@@ -74,54 +83,122 @@
           <strong>{{ expediente?.estatus }}</strong>
         </div>
       </div>
+
+      <button mat-button class="back-link" (click)="volver()">
+        <mat-icon>arrow_back</mat-icon> Volver al expediente
+      </button>
     </mat-card>
 
-    <mat-card class="card form-card">
-      <h3>Datos de la remisión</h3>
+    @if (remision) {
+      <!-- ================= Oficio generado / enviado ================= -->
+      <mat-card class="card form-card">
+        <h3>Oficio {{ remision.numeroOficio }}</h3>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Institución o área destino</mat-label>
-        <mat-select [(ngModel)]="institucion">
-          @for (item of instituciones; track item) {
-            <mat-option [value]="item">{{ item }}</mat-option>
+        <div class="info-list">
+          <div>
+            <span>Instancia destino</span>
+            <strong>{{ remision.autoridadRemision }}</strong>
+          </div>
+          <div>
+            <span>Fundamento</span>
+            <strong>{{ remision.justificacionLegal }}</strong>
+          </div>
+          @if (remision.sugerenciaQuejoso) {
+            <div>
+              <span>Orientación al quejoso</span>
+              <strong>{{ remision.sugerenciaQuejoso }}</strong>
+            </div>
           }
-        </mat-select>
-      </mat-form-field>
+          <div>
+            <span>Generado</span>
+            <strong>{{ formatearFechaHora(remision.fechaRemision) }} por {{ remision.analistaNombre }}</strong>
+          </div>
+          <div>
+            <span>Envío</span>
+            @if (remision.estatus === 'ENVIADA') {
+              <strong class="ok">Enviado {{ formatearFechaHora(remision.fechaEnvio) }}</strong>
+            } @else {
+              <strong class="pendiente">Pendiente de registrar</strong>
+            }
+          </div>
+        </div>
 
-      @if (institucion === 'Otra') {
+        <div class="actions">
+          <button mat-stroked-button (click)="descargarOficio()">
+            <mat-icon>picture_as_pdf</mat-icon>
+            Descargar oficio (PDF)
+          </button>
+
+          @if (remision.estatus !== 'ENVIADA') {
+            <button mat-flat-button class="danger-btn" [disabled]="procesando" (click)="registrarEnvio()">
+              <mat-icon>mark_email_read</mat-icon>
+              Registrar envío
+            </button>
+          }
+        </div>
+      </mat-card>
+
+    } @else if (!esImprocedente) {
+      <mat-card class="card form-card">
+        <h3>Remisión no disponible</h3>
+        <p class="muted">
+          Solo se remite un expediente dictaminado como improcedente. Estado actual:
+          <strong>{{ expediente?.estatus }}</strong>.
+        </p>
+      </mat-card>
+
+    } @else {
+      <!-- ================= Captura ================= -->
+      <mat-card class="card form-card">
+        <h3>Datos de la remisión</h3>
+
         <mat-form-field appearance="outline">
-          <mat-label>Nombre de la institución</mat-label>
-          <input matInput [(ngModel)]="institucionOtra">
+          <mat-label>Institución o área destino</mat-label>
+          <mat-select [(ngModel)]="institucion">
+            @for (item of instituciones; track item) {
+              <mat-option [value]="item">{{ item }}</mat-option>
+            }
+          </mat-select>
         </mat-form-field>
-      }
 
-      <mat-form-field appearance="outline">
-        <mat-label>Fundamento de la remisión</mat-label>
-        <textarea matInput rows="3" [(ngModel)]="fundamento"></textarea>
-      </mat-form-field>
+        @if (institucion === 'Otra') {
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre de la institución</mat-label>
+            <input matInput [(ngModel)]="institucionOtra">
+          </mat-form-field>
+        }
 
-      <mat-form-field appearance="outline">
-        <mat-label>Motivo de la remisión</mat-label>
+        <mat-form-field appearance="outline">
+          <mat-label>Fundamento de la remisión</mat-label>
+          <textarea matInput rows="3" [(ngModel)]="fundamento"
+                    placeholder="Ej. el artículo 12 del Reglamento de la Defensoría de los Derechos Politécnicos"></textarea>
+        </mat-form-field>
+        <p class="campo-ayuda">Se cita en el oficio: “con fundamento en …”.</p>
 
-        <textarea
-          matInput
-          rows="4"
-          [(ngModel)]="motivo"
-          placeholder="Describa brevemente el motivo de la remisión externa.">
-        </textarea>
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Orientación para el quejoso</mat-label>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Observaciones internas</mat-label>
-        <textarea matInput rows="2" [(ngModel)]="observaciones"></textarea>
-      </mat-form-field>
+          <textarea
+            matInput
+            rows="3"
+            [(ngModel)]="orientacion"
+            placeholder="Qué debe hacer el quejoso ante la instancia competente.">
+          </textarea>
+        </mat-form-field>
+        <p class="campo-ayuda">Aparece en el oficio y en el aviso que recibe el quejoso.</p>
 
-      <div class="actions">
-        <button mat-flat-button class="danger-btn" (click)="enviarRemision()">
-          <mat-icon>send</mat-icon>
-          Enviar remisión
-        </button>
-      </div>
-    </mat-card>
+        <mat-checkbox [(ngModel)]="adjuntarExpediente">
+          Anexar copia del expediente y la lista de evidencias
+        </mat-checkbox>
+
+        <div class="actions">
+          <button mat-flat-button class="primary-btn" [disabled]="procesando" (click)="generarRemision()">
+            <mat-icon>picture_as_pdf</mat-icon>
+            Generar oficio
+          </button>
+        </div>
+      </mat-card>
+    }
   </div>
+  }
 </section>

@@ -17,6 +17,16 @@ export interface CitaPrimerContacto {
   estatus: string;
 
   fechaCreacion?: string;
+
+  /** Último analista que confirmó, reagendó o canceló. */
+  actualizadoPorNombre?: string;
+}
+
+export interface ReagendarCitaPrimerContacto {
+  fechaCita: string;
+  horaCita: string;
+  tipoCita?: string;
+  motivo?: string;
 }
 
 export interface CrearCitaPrimerContacto {

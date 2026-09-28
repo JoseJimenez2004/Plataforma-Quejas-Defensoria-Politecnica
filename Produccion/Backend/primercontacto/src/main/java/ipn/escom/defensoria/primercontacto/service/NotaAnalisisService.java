@@ -8,6 +8,10 @@ import org.springframework.stereotype.Service;
 import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
 import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
 import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.primercontacto.exception.RecursoNoEncontradoException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -36,7 +40,7 @@ public class NotaAnalisisService {
         ExpedientePrimerContacto expediente =
                 expedienteRepository.findByFolio(dto.getFolio())
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new RecursoNoEncontradoException(
                                         "No existe un expediente de Primer Contacto con folio "
                                                 + dto.getFolio()
                                 )
@@ -77,10 +81,13 @@ public class NotaAnalisisService {
                 .toList();
     }
 
-    public NotaAnalisisDTO actualizarNota(Long id, CrearNotaAnalisisDTO dto) {
+    public NotaAnalisisDTO actualizarNota(
+            Long id,
+            CrearNotaAnalisisDTO dto,
+            PersonalAdministrativo analista
+    ) {
 
-        NotaAnalisis nota = notaAnalisisRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Nota de análisis no encontrada"));
+        NotaAnalisis nota = obtenerPropia(id, analista, "editar");
 
         nota.setContenido(dto.getContenido());
         nota.setFechaActualizacion(LocalDateTime.now());
@@ -90,13 +97,34 @@ public class NotaAnalisisService {
         return convertirADTO(actualizada);
     }
 
-    public void eliminarNota(Long id) {
+    public void eliminarNota(Long id, PersonalAdministrativo analista) {
 
-        if (!notaAnalisisRepository.existsById(id)) {
-            throw new RuntimeException("Nota de análisis no encontrada");
+        NotaAnalisis nota = obtenerPropia(id, analista, "eliminar");
+
+        notaAnalisisRepository.delete(nota);
+    }
+
+    /*
+     * CU-PC-05: solo el autor de una nota puede editarla o borrarla.
+     * El autor es el analista del JWT que la creó (analistaId).
+     */
+    private NotaAnalisis obtenerPropia(
+            Long id,
+            PersonalAdministrativo analista,
+            String accion
+    ) {
+
+        NotaAnalisis nota = notaAnalisisRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Nota de análisis no encontrada"));
+
+        if (!nota.getAnalistaId().equals(analista.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Solo " + nota.getAnalistaNombre() + ", autor(a) de la nota, puede " + accion + "la."
+            );
         }
 
-        notaAnalisisRepository.deleteById(id);
+        return nota;
     }
 
     private NotaAnalisisDTO convertirADTO(NotaAnalisis nota) {

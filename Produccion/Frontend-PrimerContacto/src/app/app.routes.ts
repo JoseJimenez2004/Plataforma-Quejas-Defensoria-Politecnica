@@ -9,6 +9,7 @@ import { Agenda } from './features/agenda/agenda';
 import { Perfil } from './features/perfil/perfil';
 import { Remision } from './features/remision/remision';
 import { Dictamen } from './features/dictamen/dictamen';
+import { DictamenConsulta } from './features/dictamen-consulta/dictamen-consulta';
 
 import { authPrimerContactoGuard } from './core/guards/auth-primer-contacto.guard';
 
@@ -53,6 +54,12 @@ export const routes: Routes = [
       {
         path: 'dictamen/:id',
         component: Dictamen
+      },
+
+      // CU-PC-08: consulta del dictamen ya registrado.
+      {
+        path: 'dictamen/:id/consulta',
+        component: DictamenConsulta
       },
 
       {

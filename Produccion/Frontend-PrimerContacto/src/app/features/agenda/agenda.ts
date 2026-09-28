@@ -19,6 +19,8 @@ import { ExpedienteService } from '../../core/services/expediente.service';
 import { ExpedientePrimerContacto } from '../../core/models/expediente-primer-contacto';
 import { AgendaService } from '../../core/services/agenda.service';
 import { CitaDetalleDialog } from '../../shared/cita-detalle-dialog/cita-detalle-dialog';
+import { estaAbierto } from '../../core/utils/estatus-expediente';
+import { mensajeDeError } from '../../core/utils/archivos';
 
 import {
   CitaPrimerContacto,
@@ -231,7 +233,10 @@ cargarAgendaPorFecha(fechaVista: string): void {
     this.bandejaService.obtenerBandeja().subscribe({
       next: (expedientes) => {
         this.expedientesPendientesCita = expedientes.filter(
-          expediente => expediente.estatus === 'Pendiente'
+          // Antes comparaba contra 'Pendiente', etiqueta que ya no existía, y la lista
+          // salía siempre vacía. Se puede citar mientras el expediente siga abierto y no
+          // tenga ya una cita activa.
+          expediente => estaAbierto(expediente.estatusCodigo) && !expediente.tieneCitaActiva
         );
       },
       error: () => {
@@ -314,54 +319,53 @@ cargarAgendaPorFecha(fechaVista: string): void {
       motivo: this.citaNueva.motivo
     };
 
-    const idACancelar = this.citaIdEnReagenda;
+    const idAReagendar = this.citaIdEnReagenda;
 
-    const registrarCitaNueva = () => {
-      this.agendaService.crearCita(dto).subscribe({
-        next: () => {
-          this.expedienteActual = undefined;
-          this.citaIdEnReagenda = null;
+    /*
+     * Reagendar mueve la MISMA cita (PUT /citas/{id}/reagendar). Antes se
+     * cancelaba la original y se creaba otra; si el segundo paso fallaba,
+     * el quejoso se quedaba sin cita.
+     */
+    const operacion = idAReagendar
+      ? this.agendaService.reagendarCita(idAReagendar, {
+          fechaCita: dto.fechaCita,
+          horaCita: dto.horaCita,
+          tipoCita: dto.tipoCita,
+          motivo: dto.motivo
+        })
+      : this.agendaService.crearCita(dto);
 
-          this.citaNueva = {
-            folio: '',
-            quejoso: '',
-            fecha: fechaSeleccionada,
-            hora: '',
-            tipo: 'Presencial',
-            motivo: '',
-            estatus: 'Programada'
-          };
+    operacion.subscribe({
+      next: () => {
+        this.expedienteActual = undefined;
+        this.citaIdEnReagenda = null;
 
-          this.cargarAgendaPorFecha(fechaSeleccionada);
-          this.cargarExpedientesPendientes();
+        this.citaNueva = {
+          folio: '',
+          quejoso: '',
+          fecha: fechaSeleccionada,
+          hora: '',
+          tipo: 'Presencial',
+          motivo: '',
+          estatus: 'Programada'
+        };
 
-          const mensaje = idACancelar ? 'Cita reagendada correctamente.' : 'Cita agendada correctamente.';
-          this.snackBar.open(mensaje, 'Cerrar', { duration: 3000 });
-        },
-        error: () => {
-          const mensaje = idACancelar
-            ? 'Se canceló la cita original, pero no fue posible crear la nueva. Vuelve a agendar desde el expediente.'
-            : 'No fue posible registrar la cita.';
-          this.snackBar.open(mensaje, 'Cerrar', { duration: 4000 });
-        }
-      });
-    };
+        this.cargarAgendaPorFecha(fechaSeleccionada);
+        this.cargarExpedientesPendientes();
 
-    // El backend rechaza crear una cita si el folio ya tiene una activa
-    // (existsByFolioAndEstatusNot), así que si estamos reagendando hay que
-    // cancelar la cita original ANTES de crear la nueva, no después.
-    if (idACancelar) {
-      this.agendaService.cancelarCita(idACancelar).subscribe({
-        next: () => registrarCitaNueva(),
-        error: () => {
-          this.snackBar.open('No fue posible cancelar la cita original para reagendarla.', 'Cerrar', {
-            duration: 3500
-          });
-        }
-      });
-    } else {
-      registrarCitaNueva();
-    }
+        const mensaje = idAReagendar
+          ? 'Cita reagendada. Se avisó al quejoso.'
+          : 'Cita agendada. Se avisó al quejoso.';
+        this.snackBar.open(mensaje, 'Cerrar', { duration: 3000 });
+      },
+      error: (error) => {
+        const mensaje = mensajeDeError(
+          error,
+          idAReagendar ? 'No fue posible reagendar la cita.' : 'No fue posible registrar la cita.'
+        );
+        this.snackBar.open(mensaje, 'Cerrar', { duration: 4000 });
+      }
+    });
   }
 
   abrirDetalle(cita: CitaPrimerContacto): void {
@@ -378,8 +382,7 @@ cargarAgendaPorFecha(fechaVista: string): void {
         // quedaba vacío y agendarCita() fallaba con "No hay expediente cargado".
         this.cargarExpediente(resultado.cita.folio);
 
-        // Bug 2: no bastaba con precargar el formulario; sin esto,
-        // agendarCita() crea una cita nueva y deja la original activa (duplicado).
+        // Con el id, agendarCita() reagenda esa misma cita en vez de crear otra.
         this.citaIdEnReagenda = resultado.cita.id ?? null;
 
         this.citaNueva = {
@@ -393,20 +396,42 @@ cargarAgendaPorFecha(fechaVista: string): void {
         });
       }
 
+      if (resultado.accion === 'confirmar') {
+        if (!resultado.cita.id) return;
+
+        this.agendaService.confirmarCita(resultado.cita.id).subscribe({
+          next: () => {
+            this.cargarAgendaPorFecha(this.fechaAgendaSeleccionada);
+
+            this.snackBar.open('Cita confirmada. Se avisó al quejoso.', 'Cerrar', {
+              duration: 3000
+            });
+          },
+          error: (error) => {
+            this.snackBar.open(mensajeDeError(error, 'No fue posible confirmar la cita.'), 'Cerrar', {
+              duration: 3500
+            });
+          }
+        });
+      }
+
       if (resultado.accion === 'cancelar') {
         if (!resultado.cita.id) return;
+
+        if (!confirm('¿Cancelar la cita? Se le avisará al quejoso.')) return;
 
         this.agendaService.cancelarCita(resultado.cita.id).subscribe({
           next: () => {
             this.cargarAgendaPorFecha(this.fechaAgendaSeleccionada);
+            this.cargarExpedientesPendientes();
 
-            this.snackBar.open('Cita cancelada correctamente.', 'Cerrar', {
+            this.snackBar.open('Cita cancelada. Se avisó al quejoso.', 'Cerrar', {
               duration: 3000
             });
           },
-          error: () => {
-            this.snackBar.open('No fue posible cancelar la cita.', 'Cerrar', {
-              duration: 3000
+          error: (error) => {
+            this.snackBar.open(mensajeDeError(error, 'No fue posible cancelar la cita.'), 'Cerrar', {
+              duration: 3500
             });
           }
         });

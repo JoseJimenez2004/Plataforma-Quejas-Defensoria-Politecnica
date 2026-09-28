@@ -19,4 +19,9 @@ public class RemisionDTO {
     private String sugerenciaQuejoso;
     private Boolean adjuntarExpediente;
     private String fechaRemision;
+
+    /* GENERADA | ENVIADA */
+    private String estatus;
+    private String numeroOficio;
+    private String fechaEnvio;
 }

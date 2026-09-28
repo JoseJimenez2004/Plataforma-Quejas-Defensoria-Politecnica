@@ -31,6 +31,16 @@
       <span>Estatus</span>
       <mat-chip>{{ cita.estatus }}</mat-chip>
     </div>
+
+    <div>
+      <span>Agendada por</span>
+      <strong>{{ cita.analistaNombre || '—' }}</strong>
+    </div>
+
+    <div>
+      <span>Último movimiento</span>
+      <strong>{{ cita.actualizadoPorNombre || '—' }}</strong>
+    </div>
   </div>
 
   <div class="section">
@@ -40,7 +50,10 @@
 
   <div class="section muted">
     <span>Notificación</span>
-    <p>La notificación será enviada al correo registrado de la persona quejosa.</p>
+    <p>
+      Al confirmar, reagendar o cancelar, el quejoso recibe un aviso en su panel y un correo
+      electrónico con los datos de la cita.
+    </p>
   </div>
 </mat-dialog-content>
 
@@ -50,15 +63,24 @@
     Ver expediente
   </button>
 
-  <button mat-stroked-button (click)="reagendar()">
-    <mat-icon>event_repeat</mat-icon>
-    Reagendar
-  </button>
+  @if (!cancelada) {
+    @if (!confirmada) {
+      <button mat-stroked-button class="success-outline" (click)="confirmar()">
+        <mat-icon>event_available</mat-icon>
+        Confirmar
+      </button>
+    }
 
-  <button mat-stroked-button class="danger-outline" (click)="cancelar()">
-    <mat-icon>event_busy</mat-icon>
-    Cancelar cita
-  </button>
+    <button mat-stroked-button (click)="reagendar()">
+      <mat-icon>event_repeat</mat-icon>
+      Reagendar
+    </button>
+
+    <button mat-stroked-button class="danger-outline" (click)="cancelar()">
+      <mat-icon>event_busy</mat-icon>
+      Cancelar cita
+    </button>
+  }
 
   <button mat-flat-button class="primary-btn" (click)="cerrar()">
     Cerrar

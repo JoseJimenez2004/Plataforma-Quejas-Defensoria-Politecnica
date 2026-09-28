@@ -2,6 +2,7 @@ package ipn.escom.defensoria.primercontacto.controller;
 
 import ipn.escom.defensoria.primercontacto.dto.CitaDTO;
 import ipn.escom.defensoria.primercontacto.dto.CrearCitaDTO;
+import ipn.escom.defensoria.primercontacto.dto.ReagendarCitaDTO;
 import ipn.escom.defensoria.primercontacto.service.CitaPrimerContactoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -77,15 +78,36 @@ public class CitaPrimerContactoController {
 
     @PutMapping("/{id}/confirmar")
     public CitaDTO confirmarCita(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
-        return citaPrimerContactoService.confirmarCita(id);
+        return citaPrimerContactoService.confirmarCita(
+                id,
+                analistaAutenticadoService.obtenerAnalista(authentication)
+        );
+    }
+
+    @PutMapping("/{id}/reagendar")
+    public CitaDTO reagendarCita(
+            @PathVariable Long id,
+            @Valid @RequestBody ReagendarCitaDTO dto,
+            Authentication authentication
+    ) {
+        return citaPrimerContactoService.reagendarCita(
+                id,
+                dto,
+                analistaAutenticadoService.obtenerAnalista(authentication)
+        );
     }
 
     @PutMapping("/{id}/cancelar")
     public CitaDTO cancelarCita(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
-        return citaPrimerContactoService.cancelarCita(id);
+        return citaPrimerContactoService.cancelarCita(
+                id,
+                analistaAutenticadoService.obtenerAnalista(authentication)
+        );
     }
 }

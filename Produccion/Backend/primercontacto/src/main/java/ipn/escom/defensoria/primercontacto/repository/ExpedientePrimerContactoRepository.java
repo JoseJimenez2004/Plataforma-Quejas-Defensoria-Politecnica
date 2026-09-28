@@ -1,6 +1,8 @@
 package ipn.escom.defensoria.primercontacto.repository;
 import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface ExpedientePrimerContactoRepository
@@ -13,4 +15,6 @@ public interface ExpedientePrimerContactoRepository
     boolean existsByFolio(String folio);
 
     boolean existsByFolioOrigen(String folioOrigen);
+
+    List<ExpedientePrimerContacto> findByEstatusIn(Collection<String> estatus);
 }

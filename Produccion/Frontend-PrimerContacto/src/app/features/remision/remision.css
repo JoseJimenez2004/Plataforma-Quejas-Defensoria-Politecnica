@@ -190,3 +190,35 @@ mat-chip {
     grid-template-columns: 1fr;
   }
 }
+/* ---- Oficio generado / enviado (CU-PC-09) ---- */
+.primary-btn {
+  background: var(--guinda) !important;
+  color: white !important;
+  font-weight: 700;
+  border-radius: 8px !important;
+  height: 42px;
+}
+
+.campo-ayuda {
+  margin: calc(-1 * var(--space-3)) 0 var(--space-4);
+  color: var(--texto-suave);
+  font-size: var(--font-size-xs);
+}
+
+.muted {
+  color: var(--texto-suave);
+  margin: 0;
+}
+
+.info-list .ok {
+  color: var(--exito);
+}
+
+.info-list .pendiente {
+  color: #9a5b00;
+}
+
+.back-link {
+  margin-top: var(--space-4);
+  color: var(--guinda) !important;
+}

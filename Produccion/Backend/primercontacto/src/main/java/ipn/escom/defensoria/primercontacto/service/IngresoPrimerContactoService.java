@@ -4,6 +4,7 @@ import ipn.escom.defensoria.primercontacto.dto.ExpedienteTurnadoRequest;
 import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
 import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
 import org.springframework.stereotype.Service;
+import ipn.escom.defensoria.primercontacto.entity.EstatusExpediente;
 import ipn.escom.defensoria.primercontacto.entity.EvidenciaPrimerContacto;
 import ipn.escom.defensoria.primercontacto.repository.EvidenciaPrimerContactoRepository;
 
@@ -51,7 +52,11 @@ public class IngresoPrimerContactoService {
                         .descripcionHechos(request.getDescripcionHechos())
                         .fechaRecepcionOrigen(request.getFechaRecepcion())
                         .prioridad(request.getPrioridad())
-                        .estatus("EN_ANALISIS")
+                        /*
+                         * Llega TURNADA (diagrama de estados); pasa a EN_ANALISIS
+                         * cuando un analista abre el expediente (CU-PC-03).
+                         */
+                        .estatus(EstatusExpediente.TURNADA)
                         .fechaCreacion(ahora)
                         .fechaActualizacion(ahora);
 

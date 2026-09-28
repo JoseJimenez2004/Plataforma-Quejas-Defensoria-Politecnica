@@ -10,6 +10,9 @@ export interface ExpedientePrimerContacto {
   estatus: string;
   prioridad: string;
 
+  fechaInicioAnalisis?: string;
+  analistaAnalisisNombre?: string;
+
   quejoso: {
     id?: number;
     nombreCompleto: string;
