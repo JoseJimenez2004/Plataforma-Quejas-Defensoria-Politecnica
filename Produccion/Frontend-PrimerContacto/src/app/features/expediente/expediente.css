@@ -469,3 +469,46 @@ mat-chip {
     flex-direction: column;
   }
 }
+
+/* ---- Aviso de antecedentes ---- */
+.antecedentes-aviso {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+  border-radius: 12px;
+  background: white;
+  border: 1px solid #f1f1f3;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.antecedentes-aviso.con-resultados {
+  background: var(--guinda-suave);
+  border-color: #ecd6de;
+}
+
+.antecedentes-aviso > mat-icon {
+  color: var(--guinda);
+}
+
+.antecedentes-aviso > div {
+  flex: 1;
+  display: grid;
+}
+
+.antecedentes-aviso strong {
+  color: var(--negro-inst);
+}
+
+.antecedentes-aviso span {
+  color: var(--texto-suave);
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 1000px) {
+  .antecedentes-aviso {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

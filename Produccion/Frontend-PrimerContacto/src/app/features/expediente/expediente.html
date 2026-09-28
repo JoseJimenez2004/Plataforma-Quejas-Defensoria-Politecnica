@@ -36,6 +36,33 @@
     </div>
   </div>
 
+  <!-- ============================ Antecedentes ============================ -->
+  <div class="antecedentes-aviso" [class.con-resultados]="(antecedentes?.total ?? 0) > 0">
+    <mat-icon>{{ (antecedentes?.total ?? 0) > 0 ? 'history' : 'manage_search' }}</mat-icon>
+    <div>
+      @if (!antecedentes) {
+        <strong>Buscando antecedentes…</strong>
+      } @else if (antecedentes.total === 0) {
+        <strong>Sin antecedentes detectados.</strong>
+        <span>No se encontraron otras quejas relacionadas con esta.</span>
+      } @else {
+        <strong>
+          {{ antecedentes.total }} posible{{ antecedentes.total === 1 ? '' : 's' }}
+          antecedente{{ antecedentes.total === 1 ? '' : 's' }}
+        </strong>
+        <span>
+          @if (antecedentes.mismoQuejoso > 0) {
+            {{ antecedentes.mismoQuejoso }} del mismo quejoso ·
+          }
+          similitud máxima {{ antecedentes.maxSimilitud }}%
+        </span>
+      }
+    </div>
+    <button mat-flat-button class="primary-btn" (click)="buscarAntecedentes()">
+      <mat-icon>manage_search</mat-icon> Buscar antecedentes
+    </button>
+  </div>
+
   <div class="expediente-grid">
 
     <mat-card class="card">

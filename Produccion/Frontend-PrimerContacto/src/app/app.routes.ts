@@ -5,6 +5,7 @@ import { MainLayout } from './layout/main-layout/main-layout';
 import { Dashboard } from './features/dashboard/dashboard';
 import { BandejaAnalisis } from './features/bandeja-analisis/bandeja-analisis';
 import { Expediente } from './features/expediente/expediente';
+import { Antecedentes } from './features/antecedentes/antecedentes';
 import { Agenda } from './features/agenda/agenda';
 import { Perfil } from './features/perfil/perfil';
 import { Remision } from './features/remision/remision';
@@ -39,6 +40,12 @@ export const routes: Routes = [
       {
         path: 'expediente/:id',
         component: Expediente
+      },
+
+      // Búsqueda de antecedentes de la queja (modelo de búsqueda).
+      {
+        path: 'expediente/:id/antecedentes',
+        component: Antecedentes
       },
 
       {

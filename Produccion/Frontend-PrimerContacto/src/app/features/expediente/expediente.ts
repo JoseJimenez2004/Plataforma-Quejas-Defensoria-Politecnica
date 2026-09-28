@@ -18,6 +18,7 @@ import { NotaAnalisisService } from '../../core/services/nota-analisis.service';
 import { ConciliacionService } from '../../core/services/conciliacion.service';
 import { DictamenService } from '../../core/services/dictamen.service';
 import { AgendaService } from '../../core/services/agenda.service';
+import { AntecedentesService } from '../../core/services/antecedentes.service';
 import { AnalistaSesionService } from '../../core/services/analista-sesion.service';
 import {
   claseEstatus,
@@ -73,6 +74,9 @@ export class Expediente implements OnInit {
   acuerdos: AcuerdoConciliacion[] = [];
   citaActiva?: CitaPrimerContacto;
 
+  /** Resumen de la búsqueda automática de antecedentes al abrir el expediente. */
+  antecedentes?: { total: number; mismoQuejoso: number; maxSimilitud: number };
+
   mostrarFormConciliacion = false;
   conciliacion = { asunto: '', terminos: '' };
 
@@ -93,6 +97,7 @@ export class Expediente implements OnInit {
     private conciliacionService: ConciliacionService,
     private dictamenService: DictamenService,
     private agendaService: AgendaService,
+    private antecedentesService: AntecedentesService,
     private analistaSesion: AnalistaSesionService,
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef
@@ -139,6 +144,7 @@ export class Expediente implements OnInit {
 
         this.cargarConciliaciones();
         this.cargarCitaActiva();
+        this.cargarResumenAntecedentes();
       },
       error: (error) => {
         this.cargando = false;
@@ -333,6 +339,26 @@ export class Expediente implements OnInit {
       default:
         return 'Esperando respuesta';
     }
+  }
+
+  // ---------------------------------------------------------------- Antecedentes
+
+  /** Al abrir el expediente se busca en automático; el detalle está en su propia pantalla. */
+  private cargarResumenAntecedentes(): void {
+    this.antecedentesService.buscar(this.folio).subscribe({
+      next: (busqueda) => {
+        this.antecedentes = {
+          total: busqueda.resultados.length,
+          mismoQuejoso: busqueda.resultados.filter(a => a.mismoQuejoso).length,
+          maxSimilitud: Math.max(0, ...busqueda.resultados.map(a => a.similitud))
+        };
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  buscarAntecedentes(): void {
+    this.router.navigate(['/expediente', this.folio, 'antecedentes']);
   }
 
   // ---------------------------------------------------------------- Citas (CU-04)

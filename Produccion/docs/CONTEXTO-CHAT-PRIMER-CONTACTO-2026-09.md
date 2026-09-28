@@ -209,9 +209,23 @@ zip, compartido con el equipo. Ubicación local:
 
 ## 9. Próximo paso
 
-Fases 1–3 implementadas (ver 9b). Siguiente: tarea 3 del usuario — pantalla de
-**antecedentes de la queja** dentro del detalle del expediente (revision-service ya tiene un
-`AntecedenteModel` / "Búsqueda de Antecedentes" que puede servir de referencia).
+Fases 1–3 implementadas (ver 9b) y pantalla de antecedentes hecha (ver 9c). Pendiente:
+conectar el modelo de búsqueda cuando exista, y el despliegue (Fase 4).
+
+## 9c. Búsqueda de antecedentes (2026-09-27)
+
+- Detalle del expediente: al abrirlo se hace una búsqueda automática y un aviso muestra
+  "N posibles antecedentes"; el botón **Buscar antecedentes** lleva a
+  `expediente/:id/antecedentes` (resultados con % de similitud, motivos de coincidencia,
+  filtros, "Marcar como antecedente" que deja una nota en el expediente).
+- Backend: `GET /api/primer-contacto/antecedentes/{folio}`. El parecido lo calcula la interfaz
+  `service/antecedentes/MotorAntecedentes`. Hoy la implementa `MotorAntecedentesReglas`
+  (PROVISIONAL: mismo quejoso 45 pts, misma unidad 15, palabras en común hasta 40; umbral 25).
+- **Para conectar el modelo:** crear otra implementación de `MotorAntecedentes` (por ejemplo,
+  una que llame por HTTP al servicio del modelo) y marcarla `@Primary`. El endpoint, el DTO
+  y la pantalla no cambian; la pantalla deja de mostrar el aviso "Motor provisional" cuando
+  `motor` ya no es `REGLAS_PROVISIONAL`.
+- Candidatas: todas las filas de `quejas` salvo la propia (no incluye `defensoria_historico_db`).
 
 ## 9b. Implementación de CU-PC-01..10 (2026-09-27) — HECHO, sin commitear
 
