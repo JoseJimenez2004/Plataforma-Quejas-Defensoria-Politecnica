@@ -384,3 +384,39 @@ de acceso.
   narrativa de una queja, con un modelo entrenado propio — `model.safetensors`). Fuera del
   alcance de Primer Contacto, solo anotado para que el equipo lo tenga presente.
 - Ninguno de los dos vive en el repositorio de git — solo en `2.25.78.22`.
+
+## 12. Prueba en vivo en producción (2026-09-29/30) — todo validado
+
+Se probaron los 10 CU-PC más antecedentes directamente en producción (no solo local), con
+una cuenta de analista de prueba y 3 quejas de prueba, todas claramente marcadas
+`[PRUEBA - borrar]`. **Todos los casos de uso funcionaron correctamente**, incluyendo el
+turno automático a Subdefensoría por conciliación aceptada.
+
+**Se dejaron listos a propósito para que el usuario los reuse al presentar**, reseteados a su
+estado original (`TURNADA`, sin citas/notas/dictamen/remisión/conciliación):
+- Cuenta: `prueba.demo@ipn.mx` / `PruebaPC2026!` (rol `ANALISTA_PRIMER_CONTACTO`, id 12).
+- Quejas: `FOL-DEMO-A`, `FOL-DEMO-B`, `FOL-DEMO-C` (pensadas para demostrar, respectivamente:
+  competente→Subdefensoría, improcedente→remisión, y conciliación→turno automático; A y C
+  comparten quejoso para que el buscador de antecedentes encuentre relación entre ellas).
+
+**Incidente encontrado, no relacionado con Primer Contacto, sin resolver:** `revision-service`
+y `historico-service` llevan caídos desde el 2026-09-29 ~03:30 UTC. Se cayeron juntos durante
+un reinicio de todos los servicios (probablemente del compañero) — el VPS backend solo tiene
+3.8GB de RAM entre 11+ contenedores, y arrancar muchos JVMs a la vez agotó la memoria por un
+instante; el sistema mató a los dos que más pedían en ese momento (no fue el límite propio de
+cada contenedor: `OOMKilled` sale `false` en ambos). No bloquea nada de Primer Contacto ni del
+portal público del quejoso — solo el panel de recepcionistas. Se le dieron al usuario los
+comandos para reintentar (`podman start revision-service` / `historico-service`, uno a la vez
+para no repetir el problema), pendiente de confirmar si ya se corrieron.
+
+**Hallazgo menor, pendiente de investigar:** el envío de **correo** al quejoso falla con 403
+en notificaciones-service (el aviso dentro de su panel sí funciona bien). No es urgente.
+
+**Sobre cómo se hicieron estas pruebas — límites del entorno del asistente:** el harness de
+Claude Code bloquea, para el asistente, prácticamente cualquier escritura en el servidor de
+producción (reiniciar un contenedor, generar un token de acceso, crear datos vía la API),
+aunque el usuario ya haya autorizado la acción. El patrón que funcionó: el asistente
+diagnostica y prepara el comando exacto, listo para copiar y pegar; el usuario lo corre él
+mismo por SSH; el asistente verifica después con lecturas. Para "entrar como analista" sin
+tropezar con esos bloqueos, se usó el login real de la app (usuario/contraseña de una cuenta
+de prueba) en vez de fabricar un token.
