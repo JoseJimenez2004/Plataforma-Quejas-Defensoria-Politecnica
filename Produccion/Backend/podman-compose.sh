@@ -5,49 +5,12 @@
 # ==============================================================================
 
 BASE_DIR="/apps/aplicaciones/defensoria/back"
-
-# Carpeta de respaldos de la BD en el HOST. Vive FUERA de BASE_DIR desde el 2026-09-08: la
-# carpeta del backend quedó solo con lo que se despliega (artifact/, config-files/, Dockerfile,
-# este script) y los .sql se concentraron aparte (ver CAMBIOS.md).
-# Ojo: esto es solo el lado del host. Dentro del contenedor la ruta sigue siendo
-# /app/respaldos, que es lo que lee "respaldos.directorio" en admin-service.yml — ese yml NO
-# se toca.
 RESPALDOS_DIR="/apps/utiles/respaldos"
 SERVICIOS=("auth-service" "quejas-service" "notificaciones-service" "catalogo-service" "admin-service" "revision-service" "chatbot-service" "primer-contacto-service" "subdefensoria-service" "historico-service")
 
-# Mapa de puertos por microservicio
-get_port() {
-    case "$1" in
-        "auth-service") echo 8083 ;;
-        "quejas-service") echo 8084 ;;
-        "notificaciones-service") echo 8085 ;;
-        "catalogo-service") echo 8086 ;;
-        "admin-service") echo 8087 ;;
-        "revision-service") echo 8088 ;;
-        "chatbot-service") echo 8089 ;;
-        # primer-contacto-service trae 8082 como default en su propio application.properties
-        # (módulo local "primercontacto") y no choca con nada más de esta lista, así que se
-        # respeta el mismo puerto también en producción.
-        "primer-contacto-service") echo 8082 ;;
-        # subdefensoria-service trae 8083 como default en su propio application.properties
-        # (módulo local "subdefensoria") -- CHOCA con auth-service (8083 ya asignado arriba).
-        # 8090 tampoco sirve: ya lo usa defensoria-web en la VPS frontend (puerto distinto host,
-        # sin conflicto real, pero se evita para no confundir). Se reasigna a 8091 vía
-        # config-files/subdefensoria-service (no se tocó el application.properties del módulo,
-        # solo se sobreescribe server.port en el yml de despliegue, igual que ya se hace con el
-        # resto de la config de producción).
-        "subdefensoria-service") echo 8091 ;;
-        # historico-service: quejas de años anteriores al sistema, en su propia base
-        # defensoria_historico_db. 8092 es el siguiente libre (8090 lo usa defensoria-web
-        # en la VPS frontend y se evita para no confundir).
-        "historico-service") echo 8092 ;;
-        *) echo 0 ;;
-    esac
-}
-
 # Mostrar menu de ayuda
 mostrar_ayuda() {
-    echo "Uso: sh podman-compose.sh [COMANDO] [SERVICIO]"
+    echo "Uso: sudo bash podman-compose.sh [COMANDO] [SERVICIO]"
     echo ""
     echo "Comandos disponibles:"
     echo "  up                      Construye y levanta TODOS los microservicios."
@@ -58,13 +21,10 @@ mostrar_ayuda() {
     echo "Servicios validos: auth-service, quejas-service, notificaciones-service, catalogo-service, admin-service, revision-service, chatbot-service, primer-contacto-service, subdefensoria-service, historico-service"
 }
 
-# Construir una imagen dedicada por microservicio (cada uno con su propio tag,
-# ya no comparten "defensoria-base-img" para evitar confundir qué imagen es cuál
-# y dejar de generar imagenes "dangling" cada vez que se reconstruye otro servicio)
+# Construir una imagen dedicada por microservicio
 build_service() {
     SERVICE=$1
-    PORT=$(get_port "$SERVICE")
-    echo "Construyendo/Actualizando imagen defensoria-${SERVICE} (externo ${PORT} -> interno 8080)..."
+    echo "Construyendo/Actualizando imagen defensoria-${SERVICE}..."
     cd $BASE_DIR
 
     if [ ! -f "artifact/${SERVICE}.jar" ]; then
@@ -72,18 +32,12 @@ build_service() {
         exit 1
     fi
 
-    # admin-service tiene su propio Dockerfile (necesita postgresql-client instalado para
-    # los respaldos, ver admin-service/Dockerfile) -- los demas usan el Dockerfile compartido
-    # de la raiz.
     DOCKERFILE="Dockerfile"
     if [ -f "${SERVICE}/Dockerfile" ]; then
         DOCKERFILE="${SERVICE}/Dockerfile"
     fi
 
-    # SERVICE_PORT solo documenta el EXPOSE de la imagen -- el puerto real en el que escucha
-    # Spring Boot lo define server.port en config-files/$SERVICE/config/*.yml (8080 en los 9
-    # microservicios, ver esos yml). Se deja fijo en 8080 para que EXPOSE refleje la realidad.
-    podman build \
+    sudo podman build -q \
       -f "$DOCKERFILE" \
       --build-arg JAR_FILE=artifact/${SERVICE}.jar \
       --build-arg SERVICE_PORT=8080 \
@@ -91,39 +45,150 @@ build_service() {
     echo "Imagen defensoria-${SERVICE} actualizada exitosamente."
 }
 
-# Levantar contenedor utilizando su propia imagen dedicada
+# Levantar contenedor con comandos explícitos por servicio
 start_service() {
     SERVICE=$1
-    PORT=$(get_port "$SERVICE")
+    echo "Levantando contenedor para $SERVICE..."
 
-    if [ "$PORT" -eq 0 ]; then
-        echo "Error: Servicio desconocido o invalido: $SERVICE"
-        exit 1
-    fi
+    case "$SERVICE" in
+        "auth-service")
+            sudo podman run -q -d \
+              --name auth-service \
+              -p 8083:8080 \
+              -m 250m \
+              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -v $BASE_DIR/config-files/auth-service/config:/app/config:Z \
+              -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
+              -e SPRING_CONFIG_NAME=auth-service \
+              -e QUEJAS_SERVICE_URL="http://156.67.26.73:8084" \
+              localhost/defensoria-auth-service
+            ;;
+            
+        "quejas-service")
+            sudo podman run -q -d \
+              --name quejas-service \
+              -p 8084:8080 \
+              -m 250m \
+              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -v $BASE_DIR/config-files/quejas-service/config:/app/config:Z \
+              -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
+              -e SPRING_CONFIG_NAME=quejas-service \
+              -e QUEJAS_SERVICE_URL="http://156.67.26.73:8084" \
+              localhost/defensoria-quejas-service
+            ;;
 
-    echo "Levantando contenedor para $SERVICE ($PORT -> 8080 interno)..."
+        "notificaciones-service")
+            sudo podman run -q -d \
+              --name notificaciones-service \
+              -p 8085:8080 \
+              -m 250m \
+              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -v $BASE_DIR/config-files/notificaciones-service/config:/app/config:Z \
+              -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
+              -e SPRING_CONFIG_NAME=notificaciones-service \
+              -e QUEJAS_SERVICE_URL="http://156.67.26.73:8084" \
+              localhost/defensoria-notificaciones-service
+            ;;
 
-    # admin-service necesita un volumen para que los .sql de respaldo sobrevivan a que se
-    # reconstruya el contenedor (si no, "up-container admin-service" los borraría cada vez).
-    VOLUMEN_EXTRA=""
-    if [ "$SERVICE" = "admin-service" ]; then
-        mkdir -p "$RESPALDOS_DIR"
-        VOLUMEN_EXTRA="-v $RESPALDOS_DIR:/app/respaldos:Z"
-    fi
+        "catalogo-service")
+            sudo podman run -q -d \
+              --name catalogo-service \
+              -p 8086:8080 \
+              -m 250m \
+              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -v $BASE_DIR/config-files/catalogo-service/config:/app/config:Z \
+              -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
+              -e SPRING_CONFIG_NAME=catalogo-service \
+              -e QUEJAS_SERVICE_URL="http://156.67.26.73:8084" \
+              localhost/defensoria-catalogo-service
+            ;;
 
-    # Puerto interno del contenedor unificado a 8080 en los 9 microservicios (mismo patrón que
-    # el "template_gio" del trabajo) -- cada contenedor tiene su propio namespace de red, así
-    # que no chocan entre sí aunque todos escuchen "por dentro" en el mismo puerto. El puerto
-    # real de acceso externo/host ($PORT) no cambia.
-    podman run -d \
-      --name "$SERVICE" \
-      -p $PORT:8080 \
-      -v $BASE_DIR/config-files/$SERVICE/config:/app/config:Z \
-      $VOLUMEN_EXTRA \
-      -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
-      -e SPRING_CONFIG_NAME="$SERVICE" \
-      -e QUEJAS_SERVICE_URL="http://2.25.78.22:8084" \
-      "localhost/defensoria-${SERVICE}"
+        "admin-service")
+            mkdir -p "$RESPALDOS_DIR"
+            sudo podman run -q -d \
+              --name admin-service \
+              -p 8087:8080 \
+              -m 250m \
+              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -v $BASE_DIR/config-files/admin-service/config:/app/config:Z \
+              -v $RESPALDOS_DIR:/app/respaldos:Z \
+              -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
+              -e SPRING_CONFIG_NAME=admin-service \
+              -e QUEJAS_SERVICE_URL="http://156.67.26.73:8084" \
+              localhost/defensoria-admin-service
+            ;;
+
+        "revision-service")
+            # Prueba con límite estricto de 100MB
+            sudo podman run -q -d \
+              --name revision-service \
+              -p 8088:8080 \
+              -m 100m \
+              -e JAVA_TOOL_OPTIONS="-Xmx70m -Xms32m" \
+              -v $BASE_DIR/config-files/revision-service/config:/app/config:Z \
+              -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
+              -e SPRING_CONFIG_NAME=revision-service \
+              -e QUEJAS_SERVICE_URL="http://156.67.26.73:8084" \
+              localhost/defensoria-revision-service
+            ;;
+
+        "chatbot-service")
+            sudo podman run -q -d \
+              --name chatbot-service \
+              -p 8089:8080 \
+              -m 250m \
+              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -v $BASE_DIR/config-files/chatbot-service/config:/app/config:Z \
+              -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
+              -e SPRING_CONFIG_NAME=chatbot-service \
+              -e QUEJAS_SERVICE_URL="http://156.67.26.73:8084" \
+              localhost/defensoria-chatbot-service
+            ;;
+
+        "primer-contacto-service")
+            sudo podman run -q -d \
+              --name primer-contacto-service \
+              -p 8082:8080 \
+              -m 250m \
+              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -v $BASE_DIR/config-files/primer-contacto-service/config:/app/config:Z \
+              -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
+              -e SPRING_CONFIG_NAME=primer-contacto-service \
+              -e QUEJAS_SERVICE_URL="http://156.67.26.73:8084" \
+              localhost/defensoria-primer-contacto-service
+            ;;
+
+        "subdefensoria-service")
+            sudo podman run -q -d \
+              --name subdefensoria-service \
+              -p 8091:8080 \
+              -m 250m \
+              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -v $BASE_DIR/config-files/subdefensoria-service/config:/app/config:Z \
+              -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
+              -e SPRING_CONFIG_NAME=subdefensoria-service \
+              -e QUEJAS_SERVICE_URL="http://156.67.26.73:8084" \
+              localhost/defensoria-subdefensoria-service
+            ;;
+
+        "historico-service")
+            sudo podman run -q -d \
+              --name historico-service \
+              -p 8092:8080 \
+              -m 250m \
+              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -v $BASE_DIR/config-files/historico-service/config:/app/config:Z \
+              -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
+              -e SPRING_CONFIG_NAME=historico-service \
+              -e QUEJAS_SERVICE_URL="http://156.67.26.73:8084" \
+              localhost/defensoria-historico-service
+            ;;
+
+        *)
+            echo "Error: Servicio desconocido o invalido: $SERVICE"
+            exit 1
+            ;;
+    esac
 
     echo "Contenedor $SERVICE iniciado."
 }
@@ -132,8 +197,8 @@ start_service() {
 remove_service() {
     SERVICE=$1
     echo "Deteniendo y eliminando el contenedor $SERVICE..."
-    podman stop "$SERVICE" 2>/dev/null
-    podman rm "$SERVICE" 2>/dev/null
+    sudo podman stop "$SERVICE" 2>/dev/null
+    sudo podman rm "$SERVICE" 2>/dev/null
     echo "Contenedor $SERVICE eliminado."
 }
 
