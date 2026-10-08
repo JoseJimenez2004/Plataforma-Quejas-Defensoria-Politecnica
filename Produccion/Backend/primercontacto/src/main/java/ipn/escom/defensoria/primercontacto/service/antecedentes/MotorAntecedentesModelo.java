@@ -20,6 +20,8 @@ import java.util.Map;
  *   POST {antecedentes.modelo.url}/api/antecedentes/buscar
  *        { "texto": "...", "umbral": 0.0, "topK": 500 }
  *   →    { "antecedentes": [ { "queja": {...}, "similitud": 0.42, "historico": true } ] }
+ *        (versión del repo) o, en la versión desplegada, cada item "plano":
+ *        { "folio", "similitud", "historico", "quejoso": {...}, "denunciado": {...}, "fragmento", ... }
  *
  * El modelo trae su propio índice de quejas (hoy, su dataset de prueba) y solo compara
  * TEXTO: no sabe quién es el quejoso. Por eso se le piden TODOS sus resultados (umbral 0,
@@ -99,7 +101,9 @@ public class MotorAntecedentesModelo implements MotorAntecedentes {
 
         List<AntecedenteDTO> resultados = new ArrayList<>();
         for (JsonNode item : respuesta.path("antecedentes")) {
-            JsonNode q = item.path("queja");
+            // Dos formatos: el del repo trae los datos dentro de "queja"; el desplegado en el
+            // servidor los trae "planos" en el mismo item (y la narrativa en "fragmento").
+            JsonNode q = item.has("queja") ? item.path("queja") : item;
             String folio = texto(q, "folio");
             if (folio != null && folio.equals(folioPropio)) {
                 continue;
@@ -108,7 +112,9 @@ public class MotorAntecedentesModelo implements MotorAntecedentes {
             String nombreQuejoso = persona(q.path("quejoso"));
             List<String> coincidencias = new ArrayList<>();
 
-            String narrativa = texto(q, "texto_original");
+            String narrativa = texto(q, "texto_original") != null
+                    ? texto(q, "texto_original")
+                    : texto(q, "fragmento");
 
             resultados.add(AntecedenteDTO.builder()
                     .folioQueja(folio)
