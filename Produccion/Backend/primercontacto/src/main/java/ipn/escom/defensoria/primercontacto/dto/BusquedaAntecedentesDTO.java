@@ -26,4 +26,7 @@ public class BusquedaAntecedentesDTO {
     private int quejasAnalizadas;
 
     private List<AntecedenteDTO> resultados;
+
+    /* Avisos para el analista: el modelo no respondió, el histórico no está disponible... */
+    private List<String> avisos;
 }

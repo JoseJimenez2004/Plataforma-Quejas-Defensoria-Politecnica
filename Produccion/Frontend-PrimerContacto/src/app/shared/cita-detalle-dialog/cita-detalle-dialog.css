@@ -55,3 +55,43 @@ strong {
   color: var(--exito) !important;
   border-color: var(--exito) !important;
 }
+
+/* ---- Respuesta del quejoso ---- */
+.respuesta {
+  padding: 12px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: #fbfbfc;
+}
+
+.respuesta.alerta {
+  border-color: #f4c27a;
+  background: #fff8ed;
+}
+
+.respuesta.ok {
+  border-color: #b7e4c7;
+  background: #f1fbf4;
+}
+
+.motivo-quejoso {
+  display: flex;
+  gap: 6px;
+  font-style: italic;
+}
+
+.motivo-quejoso mat-icon {
+  color: var(--guinda);
+  flex-shrink: 0;
+}
+
+.campo-motivo {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.acciones-motivo {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

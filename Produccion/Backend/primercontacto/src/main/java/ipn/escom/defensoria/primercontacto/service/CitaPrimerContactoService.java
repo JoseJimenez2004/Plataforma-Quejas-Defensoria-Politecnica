@@ -11,7 +11,13 @@ import ipn.escom.defensoria.primercontacto.exception.OperacionInvalidaException;
 import ipn.escom.defensoria.primercontacto.exception.RecursoNoEncontradoException;
 import ipn.escom.defensoria.primercontacto.repository.CitaPrimerContactoRepository;
 import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,29 +31,54 @@ import java.util.Locale;
  *
  * Quién agenda, confirma, reagenda o cancela sale siempre del JWT. Cada movimiento se le
  * avisa al quejoso (centro de notificaciones + correo).
+ *
+ * Respuesta del quejoso: al agendar o reagendar, el quejoso tiene un plazo (48 h por
+ * defecto) para confirmar o cancelar indicando el motivo, desde su panel o avisándole al
+ * analista. Ciclo de la cita:
+ *
+ *   PROGRAMADA ──quejoso confirma──────────▶ CONFIRMADA
+ *              ──quejoso cancela (motivo)──▶ CANCELADA_QUEJOSO ─┐
+ *              ──vence el plazo────────────▶ SIN_RESPUESTA ─────┤ el analista reagenda
+ *                                                               │ (vuelve a PROGRAMADA con
+ *   cualquiera ──el analista cancela───────▶ CANCELADA          │ un plazo nuevo) o cancela
+ *
+ * CANCELADA_QUEJOSO y SIN_RESPUESTA siguen contando como cita activa del expediente: quedan
+ * pendientes de que el analista decida qué hacer.
  */
 @Service
 public class CitaPrimerContactoService {
 
+    private static final Logger log = LoggerFactory.getLogger(CitaPrimerContactoService.class);
+
     public static final String PROGRAMADA = "PROGRAMADA";
     public static final String CONFIRMADA = "CONFIRMADA";
     public static final String CANCELADA = "CANCELADA";
+    public static final String CANCELADA_QUEJOSO = "CANCELADA_QUEJOSO";
+    public static final String SIN_RESPUESTA = "SIN_RESPUESTA";
+
+    public static final String RESPUESTA_QUEJOSO = "QUEJOSO";
+    public static final String RESPUESTA_ANALISTA = "ANALISTA";
 
     private static final DateTimeFormatter FECHA_AVISO =
             DateTimeFormatter.ofPattern("EEEE d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-MX"));
+    private static final DateTimeFormatter FECHA_HORA_LIMITE =
+            DateTimeFormatter.ofPattern("d 'de' MMMM 'a las' HH:mm 'h'", Locale.forLanguageTag("es-MX"));
 
     private final CitaPrimerContactoRepository citaPrimerContactoRepository;
     private final ExpedientePrimerContactoRepository expedienteRepository;
     private final NotificacionQuejosoService notificacionService;
+    private final long horasRespuesta;
 
     public CitaPrimerContactoService(
             CitaPrimerContactoRepository citaPrimerContactoRepository,
             ExpedientePrimerContactoRepository expedienteRepository,
-            NotificacionQuejosoService notificacionService
+            NotificacionQuejosoService notificacionService,
+            @Value("${primer-contacto.citas.horas-respuesta:48}") long horasRespuesta
     ) {
         this.citaPrimerContactoRepository = citaPrimerContactoRepository;
         this.expedienteRepository = expedienteRepository;
         this.notificacionService = notificacionService;
+        this.horasRespuesta = horasRespuesta;
     }
 
     public CitaDTO crearCita(
@@ -113,6 +144,7 @@ public class CitaPrimerContactoService {
                         .fechaActualizacion(ahora)
                         .actualizadoPorId(analista.getId())
                         .actualizadoPorNombre(analista.getNombreCompleto())
+                        .fechaLimiteRespuesta(ahora.plusHours(horasRespuesta))
                         .build();
 
         CitaPrimerContacto guardada =
@@ -122,7 +154,8 @@ public class CitaPrimerContactoService {
                 "Se agendó una cita de primer contacto",
                 "Primer Contacto agendó una cita para atender tu queja " + expediente.getFolioOrigen()
                         + ": " + describir(guardada) + "."
-                        + "\nMotivo: " + guardada.getMotivo());
+                        + "\nMotivo: " + guardada.getMotivo()
+                        + instruccionesRespuesta(guardada));
 
         return convertirADTO(guardada);
     }
@@ -161,6 +194,10 @@ public class CitaPrimerContactoService {
                 .toList();
     }
 
+    /**
+     * El analista registra que el quejoso confirmó (por ejemplo, por teléfono). Se acepta
+     * aunque el plazo ya haya vencido: es el analista quien lo hace constar.
+     */
     public CitaDTO confirmarCita(Long id, PersonalAdministrativo analista) {
 
         CitaPrimerContacto cita = obtenerActiva(id);
@@ -170,6 +207,7 @@ public class CitaPrimerContactoService {
         }
 
         cita.setEstatus(CONFIRMADA);
+        registrarRespuesta(cita, RESPUESTA_ANALISTA, null);
         registrarMovimiento(cita, analista);
 
         CitaPrimerContacto guardada = citaPrimerContactoRepository.save(cita);
@@ -206,7 +244,12 @@ public class CitaPrimerContactoService {
             cita.setMotivo(dto.getMotivo());
         }
 
+        // Fecha nueva = plazo nuevo; la respuesta anterior (si la hubo) ya no aplica.
         cita.setEstatus(PROGRAMADA);
+        cita.setFechaLimiteRespuesta(LocalDateTime.now().plusHours(horasRespuesta));
+        cita.setFechaRespuestaQuejoso(null);
+        cita.setMotivoCancelacionQuejoso(null);
+        cita.setRespuestaRegistradaPor(null);
         registrarMovimiento(cita, analista);
 
         CitaPrimerContacto guardada = citaPrimerContactoRepository.save(cita);
@@ -214,9 +257,153 @@ public class CitaPrimerContactoService {
         avisar(guardada, null,
                 "Tu cita de primer contacto cambió de fecha",
                 "Tu cita para la queja " + folioQueja(guardada) + " se reagendó para el "
-                        + describir(guardada) + ".");
+                        + describir(guardada) + "."
+                        + instruccionesRespuesta(guardada));
 
         return convertirADTO(guardada);
+    }
+
+    /**
+     * El analista registra que el quejoso canceló (por ejemplo, por teléfono), con su motivo.
+     * Queda en CANCELADA_QUEJOSO para que se reagende o se cancele en definitiva.
+     */
+    public CitaDTO registrarCancelacionQuejoso(
+            Long id,
+            String motivo,
+            PersonalAdministrativo analista
+    ) {
+
+        CitaPrimerContacto cita = obtenerActiva(id);
+
+        if (!PROGRAMADA.equals(cita.getEstatus()) && !SIN_RESPUESTA.equals(cita.getEstatus())) {
+            throw new OperacionInvalidaException(
+                    "Solo se registra la cancelación del quejoso en citas pendientes de respuesta."
+            );
+        }
+
+        cita.setEstatus(CANCELADA_QUEJOSO);
+        registrarRespuesta(cita, RESPUESTA_ANALISTA, motivoObligatorio(motivo));
+        registrarMovimiento(cita, analista);
+
+        return convertirADTO(citaPrimerContactoRepository.save(cita));
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Respuesta del quejoso desde su panel (/api/primer-contacto/quejoso/citas).
+    // El quejoso se identifica por el correo de su JWT, que debe ser el del expediente.
+    // ---------------------------------------------------------------------------------
+
+    public List<CitaDTO> citasDelQuejoso(String correo) {
+
+        List<Long> expedientes = expedienteRepository.findByQuejosoCorreoIgnoreCase(correo)
+                .stream()
+                .map(ExpedientePrimerContacto::getId)
+                .toList();
+
+        if (expedientes.isEmpty()) {
+            return List.of();
+        }
+
+        return citaPrimerContactoRepository
+                .findByExpedienteIdInOrderByFechaCitaDescHoraCitaDesc(expedientes)
+                .stream()
+                .map(this::convertirADTO)
+                .toList();
+    }
+
+    public CitaDTO confirmarPorQuejoso(Long id, String correo) {
+
+        CitaPrimerContacto cita = obtenerParaRespuestaDelQuejoso(id, correo);
+
+        cita.setEstatus(CONFIRMADA);
+        registrarRespuesta(cita, RESPUESTA_QUEJOSO, null);
+        cita.setFechaActualizacion(LocalDateTime.now());
+
+        return convertirADTO(citaPrimerContactoRepository.save(cita));
+    }
+
+    public CitaDTO cancelarPorQuejoso(Long id, String motivo, String correo) {
+
+        CitaPrimerContacto cita = obtenerParaRespuestaDelQuejoso(id, correo);
+
+        cita.setEstatus(CANCELADA_QUEJOSO);
+        registrarRespuesta(cita, RESPUESTA_QUEJOSO, motivoObligatorio(motivo));
+        cita.setFechaActualizacion(LocalDateTime.now());
+
+        return convertirADTO(citaPrimerContactoRepository.save(cita));
+    }
+
+    /**
+     * Citas PROGRAMADAS cuyo plazo de respuesta ya venció pasan a SIN_RESPUESTA, para que el
+     * analista las vea y decida si reagenda o cancela.
+     */
+    @Scheduled(
+            initialDelayString = "${primer-contacto.citas.revision-ms:300000}",
+            fixedDelayString = "${primer-contacto.citas.revision-ms:300000}"
+    )
+    public void marcarCitasSinRespuesta() {
+
+        List<CitaPrimerContacto> vencidas = citaPrimerContactoRepository
+                .findByEstatusAndFechaLimiteRespuestaBefore(PROGRAMADA, LocalDateTime.now());
+
+        for (CitaPrimerContacto cita : vencidas) {
+            cita.setEstatus(SIN_RESPUESTA);
+            cita.setFechaActualizacion(LocalDateTime.now());
+            citaPrimerContactoRepository.save(cita);
+            log.info("Cita {} del expediente {} sin respuesta del quejoso al vencer el plazo.",
+                    cita.getId(), cita.getFolio());
+        }
+    }
+
+    private CitaPrimerContacto obtenerParaRespuestaDelQuejoso(Long id, String correo) {
+
+        CitaPrimerContacto cita = citaPrimerContactoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cita no encontrada"));
+
+        ExpedientePrimerContacto expediente = expedienteRepository.findById(cita.getExpedienteId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cita no encontrada"));
+
+        // Una cita ajena se reporta igual que una inexistente: no se revela que existe.
+        if (correo == null || !correo.equalsIgnoreCase(expediente.getQuejosoCorreo())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cita no encontrada");
+        }
+
+        if (!PROGRAMADA.equals(cita.getEstatus())) {
+            throw new OperacionInvalidaException("Esta cita ya no está esperando tu respuesta.");
+        }
+
+        if (cita.getFechaLimiteRespuesta() != null
+                && LocalDateTime.now().isAfter(cita.getFechaLimiteRespuesta())) {
+            throw new OperacionInvalidaException(
+                    "El plazo para responder esta cita ya venció. Comunícate con Primer Contacto."
+            );
+        }
+
+        return cita;
+    }
+
+    private void registrarRespuesta(CitaPrimerContacto cita, String quien, String motivoCancelacion) {
+        cita.setRespuestaRegistradaPor(quien);
+        cita.setFechaRespuestaQuejoso(LocalDateTime.now());
+        cita.setMotivoCancelacionQuejoso(motivoCancelacion);
+    }
+
+    private String motivoObligatorio(String motivo) {
+        if (motivo == null || motivo.isBlank()) {
+            throw new OperacionInvalidaException("Indica el motivo de la cancelación.");
+        }
+        return motivo.strip();
+    }
+
+    private String instruccionesRespuesta(CitaPrimerContacto cita) {
+        if (cita.getFechaLimiteRespuesta() == null) {
+            return "";
+        }
+        return "\n\nTienes " + horasRespuesta + " horas (hasta el "
+                + cita.getFechaLimiteRespuesta().format(FECHA_HORA_LIMITE)
+                + ") para confirmar tu asistencia o cancelarla indicando el motivo, desde tu "
+                + "panel o comunicándote con Primer Contacto. Si la cancelas, podremos "
+                + "proponerte una nueva fecha.";
     }
 
     public CitaDTO cancelarCita(Long id, PersonalAdministrativo analista) {
@@ -305,6 +492,11 @@ public class CitaPrimerContactoService {
                 .fechaCreacion(cita.getFechaCreacion() != null ? cita.getFechaCreacion().toString() : null)
                 .actualizadoPorNombre(cita.getActualizadoPorNombre())
                 .fechaActualizacion(cita.getFechaActualizacion() != null ? cita.getFechaActualizacion().toString() : null)
+                .folioQueja(folioQueja(cita))
+                .fechaLimiteRespuesta(cita.getFechaLimiteRespuesta() != null ? cita.getFechaLimiteRespuesta().toString() : null)
+                .fechaRespuestaQuejoso(cita.getFechaRespuestaQuejoso() != null ? cita.getFechaRespuestaQuejoso().toString() : null)
+                .motivoCancelacionQuejoso(cita.getMotivoCancelacionQuejoso())
+                .respuestaRegistradaPor(cita.getRespuestaRegistradaPor())
                 .build();
     }
 }

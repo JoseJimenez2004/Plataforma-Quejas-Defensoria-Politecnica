@@ -1,5 +1,6 @@
 package ipn.escom.defensoria.primercontacto.controller;
 
+import ipn.escom.defensoria.primercontacto.dto.CancelacionCitaDTO;
 import ipn.escom.defensoria.primercontacto.dto.CitaDTO;
 import ipn.escom.defensoria.primercontacto.dto.CrearCitaDTO;
 import ipn.escom.defensoria.primercontacto.dto.ReagendarCitaDTO;
@@ -96,6 +97,22 @@ public class CitaPrimerContactoController {
         return citaPrimerContactoService.reagendarCita(
                 id,
                 dto,
+                analistaAutenticadoService.obtenerAnalista(authentication)
+        );
+    }
+
+    /*
+     * El analista registra que el quejoso canceló (por teléfono, en persona...), con su motivo.
+     */
+    @PutMapping("/{id}/cancelacion-quejoso")
+    public CitaDTO registrarCancelacionQuejoso(
+            @PathVariable Long id,
+            @Valid @RequestBody CancelacionCitaDTO dto,
+            Authentication authentication
+    ) {
+        return citaPrimerContactoService.registrarCancelacionQuejoso(
+                id,
+                dto.getMotivo(),
                 analistaAutenticadoService.obtenerAnalista(authentication)
         );
     }

@@ -253,6 +253,11 @@
             {{ citaActiva.estatus }} · {{ citaActiva.fecha }} a las {{ citaActiva.hora }}
             · {{ citaActiva.tipo }}. Confírmala, reagéndala o cancélala desde la Agenda.
           </p>
+          @if (citaActiva.estatusCodigo === 'CANCELADA_QUEJOSO') {
+            <p class="aviso-cita">Motivo del quejoso: “{{ citaActiva.motivoCancelacionQuejoso }}”</p>
+          } @else if (citaActiva.estatusCodigo === 'SIN_RESPUESTA') {
+            <p class="aviso-cita">El quejoso no respondió en el plazo de 48 horas.</p>
+          }
         } @else {
           <p>Sin cita activa. Agenda una si necesitas entrevistar al quejoso.</p>
         }

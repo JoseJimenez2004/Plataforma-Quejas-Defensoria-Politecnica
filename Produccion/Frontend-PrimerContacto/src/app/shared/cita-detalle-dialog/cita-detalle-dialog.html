@@ -48,11 +48,72 @@
     <p>{{ cita.motivo }}</p>
   </div>
 
+  <!-- Respuesta del quejoso -->
+  <div class="section respuesta"
+       [class.alerta]="cita.estatusCodigo === 'SIN_RESPUESTA' || canceladaPorQuejoso"
+       [class.ok]="confirmada">
+    <span>Respuesta del quejoso</span>
+    @switch (cita.estatusCodigo) {
+      @case ('PROGRAMADA') {
+        @if (cita.fechaLimiteRespuesta) {
+          <p>
+            Esperando respuesta. Tiene hasta el
+            <strong>{{ formatearFechaHora(cita.fechaLimiteRespuesta) }}</strong>
+            para confirmar o cancelar con motivo.
+          </p>
+        } @else {
+          <p>Esperando respuesta (cita registrada antes del plazo de 48 h).</p>
+        }
+      }
+      @case ('SIN_RESPUESTA') {
+        <p>
+          El quejoso <strong>no respondió</strong> dentro del plazo
+          (venció el {{ formatearFechaHora(cita.fechaLimiteRespuesta) }}). Reagenda o cancela la cita.
+        </p>
+      }
+      @case ('CONFIRMADA') {
+        <p>
+          Confirmada
+          @if (cita.fechaRespuestaQuejoso) {
+            el {{ formatearFechaHora(cita.fechaRespuestaQuejoso) }} por {{ quienRespondio }}.
+          }
+        </p>
+      }
+      @case ('CANCELADA_QUEJOSO') {
+        <p>
+          El quejoso <strong>canceló</strong> la cita
+          @if (cita.fechaRespuestaQuejoso) {
+            el {{ formatearFechaHora(cita.fechaRespuestaQuejoso) }}
+          }
+          (registrado por {{ quienRespondio }}). Reagenda con una nueva fecha o cancela la cita.
+        </p>
+        <p class="motivo-quejoso"><mat-icon>format_quote</mat-icon> {{ cita.motivoCancelacionQuejoso }}</p>
+      }
+      @default {
+        <p>La cita fue cancelada por Primer Contacto.</p>
+      }
+    }
+
+    @if (registrandoCancelacion) {
+      <mat-form-field appearance="outline" class="campo-motivo">
+        <mat-label>Motivo que dio el quejoso</mat-label>
+        <textarea matInput rows="3" [(ngModel)]="motivoCancelacion" maxlength="1000"></textarea>
+      </mat-form-field>
+      <div class="acciones-motivo">
+        <button mat-stroked-button (click)="registrandoCancelacion = false">Volver</button>
+        <button mat-flat-button class="primary-btn" [disabled]="!motivoCancelacion.trim()"
+                (click)="registrarCancelacionQuejoso()">
+          Registrar cancelación
+        </button>
+      </div>
+    }
+  </div>
+
   <div class="section muted">
     <span>Notificación</span>
     <p>
-      Al confirmar, reagendar o cancelar, el quejoso recibe un aviso en su panel y un correo
-      electrónico con los datos de la cita.
+      Al agendar o reagendar, el quejoso recibe un aviso en su panel y un correo con los datos
+      de la cita y el plazo de 48 horas para confirmarla o cancelarla.
     </p>
   </div>
 </mat-dialog-content>
@@ -63,11 +124,18 @@
     Ver expediente
   </button>
 
-  @if (!cancelada) {
+  @if (!cancelada && !registrandoCancelacion) {
     @if (!confirmada) {
       <button mat-stroked-button class="success-outline" (click)="confirmar()">
         <mat-icon>event_available</mat-icon>
-        Confirmar
+        Registrar confirmación
+      </button>
+    }
+
+    @if (pendienteDeRespuesta) {
+      <button mat-stroked-button (click)="registrandoCancelacion = true">
+        <mat-icon>person_off</mat-icon>
+        El quejoso canceló
       </button>
     }
 

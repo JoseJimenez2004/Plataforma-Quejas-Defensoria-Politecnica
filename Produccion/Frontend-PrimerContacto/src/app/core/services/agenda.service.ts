@@ -28,6 +28,11 @@ interface CitaBackendDTO {
 
   fechaCreacion?: string;
   actualizadoPorNombre?: string;
+
+  fechaLimiteRespuesta?: string;
+  fechaRespuestaQuejoso?: string;
+  motivoCancelacionQuejoso?: string;
+  respuestaRegistradaPor?: string;
 }
 
 @Injectable({
@@ -105,6 +110,19 @@ export class AgendaService {
       );
   }
 
+  /** El analista registra que el quejoso canceló (por teléfono, en persona...), con su motivo. */
+  registrarCancelacionQuejoso(
+    id: number,
+    motivo: string
+  ): Observable<CitaPrimerContacto> {
+
+    return this.api
+      .put<CitaBackendDTO>(`/citas/${id}/cancelacion-quejoso`, { motivo })
+      .pipe(
+        map(cita => this.mapearCita(cita))
+      );
+  }
+
   cancelarCita(
     id: number
   ): Observable<CitaPrimerContacto> {
@@ -152,7 +170,13 @@ export class AgendaService {
       ),
 
       fechaCreacion: cita.fechaCreacion,
-      actualizadoPorNombre: cita.actualizadoPorNombre
+      actualizadoPorNombre: cita.actualizadoPorNombre,
+
+      estatusCodigo: cita.estatus?.toUpperCase(),
+      fechaLimiteRespuesta: cita.fechaLimiteRespuesta,
+      fechaRespuestaQuejoso: cita.fechaRespuestaQuejoso,
+      motivoCancelacionQuejoso: cita.motivoCancelacionQuejoso,
+      respuestaRegistradaPor: cita.respuestaRegistradaPor
     };
   }
 
@@ -183,6 +207,12 @@ export class AgendaService {
 
       case 'CANCELADA':
         return 'Cancelada';
+
+      case 'CANCELADA_QUEJOSO':
+        return 'Cancelada por el quejoso';
+
+      case 'SIN_RESPUESTA':
+        return 'Sin respuesta';
 
       default:
         return estatus;

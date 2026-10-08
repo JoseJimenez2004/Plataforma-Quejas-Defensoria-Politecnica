@@ -4,6 +4,7 @@ import ipn.escom.defensoria.primercontacto.entity.CitaPrimerContacto;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface CitaPrimerContactoRepository
@@ -37,6 +38,17 @@ public interface CitaPrimerContactoRepository
     boolean existsByFolioAndEstatusNot(
             String folio,
             String estatus
+    );
+
+    List<CitaPrimerContacto>
+    findByEstatusAndFechaLimiteRespuestaBefore(
+            String estatus,
+            LocalDateTime limite
+    );
+
+    List<CitaPrimerContacto>
+    findByExpedienteIdInOrderByFechaCitaDescHoraCitaDesc(
+            List<Long> expedienteIds
     );
 
     boolean existsByExpedienteIdAndEstatusNot(

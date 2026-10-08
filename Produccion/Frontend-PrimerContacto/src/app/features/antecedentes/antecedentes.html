@@ -1,4 +1,4 @@
-<section class="page">
+<section class="page" [class.con-seleccion]="seleccion.size > 0">
   <div class="page-header">
     <div>
       <h2>Búsqueda de antecedentes</h2>
@@ -12,139 +12,301 @@
       <button mat-stroked-button (click)="volver()">
         <mat-icon>arrow_back</mat-icon> Volver al expediente
       </button>
-      <button mat-flat-button class="primary-btn" [disabled]="buscando" (click)="buscar()">
-        <mat-icon>manage_search</mat-icon> Volver a buscar
-      </button>
     </div>
   </div>
 
   <!-- Queja que se está analizando -->
   <mat-card class="card referencia">
     <mat-icon class="referencia-icon">description</mat-icon>
-    <div>
+    <div class="referencia-texto">
       <span class="eyebrow">Queja analizada</span>
       <strong>{{ expediente?.quejoso?.nombre }} · {{ expediente?.quejoso?.unidadAcademica }}</strong>
       <p>{{ expediente?.narrativa }}</p>
     </div>
+    <button mat-stroked-button (click)="verResumenQuejaAnalizada()">
+      <mat-icon>summarize</mat-icon> Resumen
+    </button>
   </mat-card>
 
-  @if (buscando) {
-    <mat-card class="card estado-busqueda">
-      <mat-icon class="pulso">psychology</mat-icon>
-      <div>
-        <strong>Buscando antecedentes…</strong>
-        <p>Comparando la queja con el historial de quejas del sistema.</p>
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-      </div>
-    </mat-card>
-  } @else if (error) {
-    <mat-card class="card estado-busqueda">
-      <mat-icon class="error-icon">error_outline</mat-icon>
-      <div>
-        <strong>No fue posible completar la búsqueda.</strong>
-        <p>Intenta de nuevo con “Volver a buscar”.</p>
-      </div>
-    </mat-card>
-  } @else if (busqueda) {
-
-    <!-- Motor que produjo el resultado -->
-    <div class="motor" [class.provisional]="esProvisional">
-      <mat-icon>{{ esProvisional ? 'construction' : 'psychology' }}</mat-icon>
-      <span>
-        <strong>{{ esProvisional ? 'Motor provisional' : 'Modelo de búsqueda' }}.</strong>
-        {{ busqueda.descripcionMotor }}
-        Se compararon {{ busqueda.quejasAnalizadas }} quejas.
-      </span>
+  <!-- Antecedentes finales ya guardados -->
+  <mat-card class="card guardados">
+    <div class="guardados-titulo">
+      <mat-icon>bookmarks</mat-icon>
+      <strong>Antecedentes guardados en el expediente</strong>
+      <span class="contador">{{ guardados.length }}</span>
     </div>
 
-    <!-- Resumen y filtros -->
-    <div class="barra">
-      <div class="resumen">
-        <div>
-          <span class="numero">{{ busqueda.resultados.length }}</span>
-          <span>posibles antecedentes</span>
-        </div>
-        <div>
-          <span class="numero">{{ totalMismoQuejoso }}</span>
-          <span>del mismo quejoso</span>
-        </div>
-      </div>
-
-      <div class="filtros">
-        <mat-slide-toggle [(ngModel)]="soloMismoQuejoso">Solo del mismo quejoso</mat-slide-toggle>
-
-        <mat-button-toggle-group [(ngModel)]="similitudMinima" aria-label="Similitud mínima">
-          <mat-button-toggle [value]="0">Todas</mat-button-toggle>
-          <mat-button-toggle [value]="40">≥ 40%</mat-button-toggle>
-          <mat-button-toggle [value]="70">≥ 70%</mat-button-toggle>
-        </mat-button-toggle-group>
-      </div>
-    </div>
-
-    <!-- Resultados -->
-    <div class="resultados">
-      @for (antecedente of resultados; track antecedente.folioQueja) {
-        <mat-card class="card resultado" [attr.data-nivel]="nivel(antecedente.similitud)">
-          <div class="similitud">
-            <span class="porcentaje">{{ antecedente.similitud }}%</span>
-            <div class="barra-similitud">
-              <div [style.width.%]="antecedente.similitud"></div>
+    @if (guardados.length === 0) {
+      <p class="ayuda">
+        Todavía no hay antecedentes guardados. Márcalos en la búsqueda manual o en la del modelo
+        y usa “Guardar seleccionados”.
+      </p>
+    } @else {
+      <div class="lista-guardados">
+        @for (guardado of guardados; track guardado.id) {
+          <div class="guardado">
+            <div class="guardado-datos">
+              <strong>{{ guardado.folioQueja }}</strong>
+              <span class="chip origen" [class.historico]="guardado.origen === 'HISTORICO'">
+                {{ etiquetaOrigen(guardado.origen) }}
+              </span>
+              <span class="chip">{{ etiquetaFuente(guardado.fuente) }}
+                @if (guardado.similitud != null) { · {{ guardado.similitud }}% }
+              </span>
+              <span class="guardado-asunto">{{ guardado.asunto || 'Sin asunto' }}</span>
+              <span class="meta">
+                Quejoso: {{ guardado.nombreQuejoso || '—' }}
+                · Denunciado: {{ guardado.nombreDenunciado || '—' }}
+                · Guardó {{ guardado.analistaNombre || '—' }}, {{ formatearFecha(guardado.fechaRegistro) }}
+              </span>
             </div>
-            <span class="nivel">Similitud {{ nivel(antecedente.similitud) }}</span>
-          </div>
-
-          <div class="contenido">
-            <div class="titulo">
-              <strong>{{ antecedente.asunto || 'Sin asunto' }}</strong>
-              <span class="estatus-queja">{{ etiquetaQueja(antecedente.estatus) }}</span>
-            </div>
-
-            <span class="meta">
-              {{ antecedente.folioQueja }} · {{ formatearFecha(antecedente.fecha) }}
-              · {{ antecedente.nombreQuejoso || 'Quejoso sin nombre' }}
-              · {{ antecedente.unidadAcademica || 'Sin unidad' }}
-            </span>
-
-            @if (antecedente.extracto) {
-              <p>{{ antecedente.extracto }}</p>
-            }
-
-            <div class="coincidencias">
-              @for (motivo of antecedente.coincidencias; track motivo) {
-                <span class="coincidencia" [class.fuerte]="motivo === 'Mismo quejoso'">{{ motivo }}</span>
+            <div class="guardado-acciones">
+              @if (guardado.folioPrimerContacto) {
+                <button mat-icon-button matTooltip="Ver expediente"
+                        (click)="abrirExpediente(guardado.folioPrimerContacto)">
+                  <mat-icon>open_in_new</mat-icon>
+                </button>
               }
+              <button mat-icon-button matTooltip="Quitar de los antecedentes" (click)="quitarGuardado(guardado)">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </mat-card>
+
+  <mat-tab-group class="pestanas" animationDuration="0ms">
+
+    <!-- ======================== Búsqueda manual ======================== -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">person_search</mat-icon> Búsqueda manual
+      </ng-template>
+
+      <div class="tab-contenido">
+        <form class="form-manual" (ngSubmit)="buscarManual()">
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre del quejoso</mat-label>
+            <input matInput name="quejoso" [(ngModel)]="nombreQuejoso" autocomplete="off">
+            <button mat-icon-button matSuffix type="button" matTooltip="Usar el quejoso de esta queja"
+                    (click)="usarQuejosoDeLaQueja()">
+              <mat-icon>person</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre del denunciado</mat-label>
+            <input matInput name="denunciado" [(ngModel)]="nombreDenunciado" autocomplete="off">
+          </mat-form-field>
+
+          <button mat-flat-button class="primary-btn" type="submit" [disabled]="buscandoManual">
+            <mat-icon>search</mat-icon> Buscar
+          </button>
+        </form>
+        <p class="ayuda">
+          Busca en las quejas del sistema y en los casos históricos. No importan mayúsculas ni
+          acentos; puedes escribir solo una parte del nombre.
+        </p>
+
+        @if (buscandoManual) {
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        } @else if (errorManual) {
+          <div class="aviso error"><mat-icon>error_outline</mat-icon><span>{{ errorManual }}</span></div>
+        } @else if (manual) {
+          @for (aviso of manual.avisos ?? []; track aviso) {
+            <div class="aviso"><mat-icon>info</mat-icon><span>{{ aviso }}</span></div>
+          }
+
+          <div class="resultados">
+            @for (antecedente of manual.resultados; track clave(antecedente)) {
+              <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: antecedente, fuente: 'MANUAL' }" />
+            } @empty {
+              <mat-card class="card vacio">
+                <mat-icon>search_off</mat-icon>
+                <p>No se encontraron quejas con esos nombres.</p>
+              </mat-card>
+            }
+          </div>
+        }
+      </div>
+    </mat-tab>
+
+    <!-- ======================== Búsqueda con el modelo ======================== -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">psychology</mat-icon> Con el modelo
+      </ng-template>
+
+      <div class="tab-contenido">
+        @if (buscandoModelo) {
+          <mat-card class="card estado-busqueda">
+            <mat-icon class="pulso">psychology</mat-icon>
+            <div>
+              <strong>Buscando antecedentes…</strong>
+              <p>Comparando la narrativa de la queja con otras quejas.</p>
+              <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            </div>
+          </mat-card>
+        } @else if (errorModelo) {
+          <mat-card class="card estado-busqueda">
+            <mat-icon class="error-icon">error_outline</mat-icon>
+            <div>
+              <strong>No fue posible completar la búsqueda.</strong>
+              <p>Intenta de nuevo con “Volver a buscar”.</p>
+            </div>
+            <button mat-stroked-button (click)="buscarConModelo()">
+              <mat-icon>refresh</mat-icon> Volver a buscar
+            </button>
+          </mat-card>
+        } @else if (modelo) {
+
+          @for (aviso of modelo.avisos ?? []; track aviso) {
+            <div class="aviso"><mat-icon>info</mat-icon><span>{{ aviso }}</span></div>
+          }
+
+          <!-- Motor que produjo el resultado -->
+          <div class="motor" [class.provisional]="esProvisional">
+            <mat-icon>{{ esProvisional ? 'construction' : 'psychology' }}</mat-icon>
+            <span>
+              <strong>{{ esProvisional ? 'Motor provisional' : 'Modelo de búsqueda' }}.</strong>
+              {{ modelo.descripcionMotor }}
+              @if (modelo.quejasAnalizadas > 0) {
+                Se compararon {{ modelo.quejasAnalizadas }} quejas.
+              }
+            </span>
+            <button mat-stroked-button class="motor-boton" (click)="buscarConModelo()">
+              <mat-icon>refresh</mat-icon> Volver a buscar
+            </button>
+          </div>
+
+          <!-- Resumen y filtros -->
+          <div class="barra">
+            <div class="resumen">
+              <div>
+                <span class="numero">{{ modelo.resultados.length }}</span>
+                <span>posibles antecedentes</span>
+              </div>
+              <div>
+                <span class="numero">{{ totalMismoQuejoso }}</span>
+                <span>del mismo quejoso</span>
+              </div>
+            </div>
+
+            <div class="filtros">
+              <mat-slide-toggle [(ngModel)]="soloMismoQuejoso">Solo del mismo quejoso</mat-slide-toggle>
+
+              <mat-button-toggle-group [(ngModel)]="similitudMinima" aria-label="Similitud mínima">
+                <mat-button-toggle [value]="0">Todas</mat-button-toggle>
+                <mat-button-toggle [value]="40">≥ 40%</mat-button-toggle>
+                <mat-button-toggle [value]="70">≥ 70%</mat-button-toggle>
+              </mat-button-toggle-group>
             </div>
           </div>
 
-          <div class="acciones">
-            @if (antecedente.folioPrimerContacto) {
-              <button mat-stroked-button (click)="abrirExpediente(antecedente)">
-                <mat-icon>open_in_new</mat-icon> Ver expediente
-              </button>
-            }
-            @if (registrados.has(antecedente.folioQueja)) {
-              <span class="registrado"><mat-icon>check</mat-icon> Registrado en notas</span>
-            } @else {
-              <button mat-flat-button class="primary-btn"
-                      matTooltip="Deja una nota en el expediente con este antecedente"
-                      (click)="registrarComoAntecedente(antecedente)">
-                <mat-icon>bookmark_add</mat-icon> Marcar como antecedente
-              </button>
+          <div class="resultados">
+            @for (antecedente of resultadosModelo; track clave(antecedente)) {
+              <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: antecedente, fuente: modelo.motor }" />
+            } @empty {
+              <mat-card class="card vacio">
+                <mat-icon>verified</mat-icon>
+                <p>
+                  @if (modelo.resultados.length === 0) {
+                    No se encontraron antecedentes para esta queja.
+                  } @else {
+                    Ningún antecedente cumple los filtros seleccionados.
+                  }
+                </p>
+              </mat-card>
             }
           </div>
-        </mat-card>
-      } @empty {
-        <mat-card class="card vacio">
-          <mat-icon>verified</mat-icon>
-          <p>
-            @if (busqueda.resultados.length === 0) {
-              No se encontraron antecedentes para esta queja.
-            } @else {
-              Ningún antecedente cumple los filtros seleccionados.
-            }
-          </p>
-        </mat-card>
-      }
+        }
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+  <!-- Barra de selección: cuenta lo marcado en ambas pestañas -->
+  @if (seleccion.size > 0) {
+    <div class="barra-seleccion">
+      <mat-icon>checklist</mat-icon>
+      <span>
+        <strong>{{ seleccion.size }}</strong>
+        seleccionado{{ seleccion.size === 1 ? '' : 's' }} (de cualquier pestaña)
+      </span>
+      <button mat-stroked-button (click)="limpiarSeleccion()" [disabled]="guardando">Limpiar</button>
+      <button mat-flat-button class="primary-btn" (click)="guardarSeleccion()" [disabled]="guardando">
+        <mat-icon>bookmark_add</mat-icon> Guardar seleccionados
+      </button>
     </div>
   }
 </section>
+
+<!-- Tarjeta de un resultado, igual en ambas pestañas -->
+<ng-template #tarjeta let-antecedente let-fuente="fuente">
+  <mat-card class="card resultado"
+            [class.manual]="fuente === 'MANUAL'"
+            [class.seleccionado]="estaSeleccionado(antecedente)"
+            [attr.data-nivel]="fuente === 'MANUAL' ? null : nivel(antecedente.similitud)">
+
+    <div class="marca">
+      @if (estaGuardado(antecedente)) {
+        <mat-icon class="ya-guardado" matTooltip="Ya está guardado en el expediente">bookmark_added</mat-icon>
+      } @else {
+        <mat-checkbox [checked]="estaSeleccionado(antecedente)"
+                      (change)="alternarSeleccion(antecedente, fuente)"
+                      aria-label="Seleccionar como antecedente"></mat-checkbox>
+      }
+    </div>
+
+    @if (fuente !== 'MANUAL') {
+      <div class="similitud">
+        <span class="porcentaje">{{ antecedente.similitud }}%</span>
+        <div class="barra-similitud">
+          <div [style.width.%]="antecedente.similitud"></div>
+        </div>
+        <span class="nivel">Similitud {{ nivel(antecedente.similitud) }}</span>
+      </div>
+    }
+
+    <div class="contenido">
+      <div class="titulo">
+        <strong>{{ antecedente.asunto || 'Sin asunto' }}</strong>
+        <span class="chip origen" [class.historico]="antecedente.origen === 'HISTORICO'">
+          {{ etiquetaOrigen(antecedente.origen) }}
+        </span>
+        <span class="estatus-queja">{{ etiquetaQueja(antecedente.estatus) }}</span>
+      </div>
+
+      <span class="meta">
+        {{ antecedente.folioQueja }} · {{ formatearFecha(antecedente.fecha) }}
+        · {{ antecedente.unidadAcademica || 'Sin unidad' }}
+      </span>
+      <span class="meta">
+        Quejoso: {{ antecedente.nombreQuejoso || '—' }}
+        · Denunciado: {{ antecedente.nombreDenunciado || '—' }}
+      </span>
+
+      @if (antecedente.extracto) {
+        <p>{{ antecedente.extracto }}</p>
+      }
+
+      <div class="coincidencias">
+        @for (motivo of antecedente.coincidencias; track motivo) {
+          <span class="coincidencia" [class.fuerte]="motivo === 'Mismo quejoso' || motivo.startsWith('Denunciado')">{{ motivo }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="acciones">
+      <button mat-stroked-button (click)="verResumen(antecedente)">
+        <mat-icon>summarize</mat-icon> Resumen
+      </button>
+      @if (antecedente.folioPrimerContacto) {
+        <button mat-stroked-button (click)="abrirExpediente(antecedente.folioPrimerContacto)">
+          <mat-icon>open_in_new</mat-icon> Ver expediente
+        </button>
+      }
+    </div>
+  </mat-card>
+</ng-template>

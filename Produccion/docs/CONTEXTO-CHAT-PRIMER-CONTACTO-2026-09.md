@@ -420,3 +420,44 @@ diagnostica y prepara el comando exacto, listo para copiar y pegar; el usuario l
 mismo por SSH; el asistente verifica después con lecturas. Para "entrar como analista" sin
 tropezar con esos bloqueos, se usó el login real de la app (usuario/contraseña de una cuenta
 de prueba) en vez de fabricar un token.
+
+## 13. Migración a 3 servidores y observaciones de Primer Contacto (2026-10-08)
+
+**Servidores nuevos** (el compañero migró el 2026-10-04; los viejos `2.25.78.22`/`2.25.64.47`
+quedan obsoletos): BD `169.58.62.99` (`defensoria-db` 5432, `historico-db` 5433), backend
+`156.67.26.73`, frontend `169.58.62.111`. La base se limpió a propósito: ya no existen la cuenta
+`prueba.demo@ipn.mx` ni las quejas `FOL-DEMO-*`. **Primer Contacto, Subdefensoría e Histórico
+todavía no están desplegados en los servidores nuevos** (hay imagen, no contenedor; el jar y el yml
+de primer-contacto que hay allá son los viejos, en H2). Tampoco hay front ni ruta nginx de Primer
+Contacto. `origin/Produccion` se mergeó a `Pre-Produccion2` sin conflictos (`28528f6`).
+
+**Observaciones implementadas** (probadas en local, 39/39 en la prueba E2E de la API + capturas):
+
+1. **Antecedentes manual + modelo.** Pestaña *Búsqueda manual* (por quejoso y/o denunciado, en
+   `quejas` y en `historico_db`, sin importar acentos) y pestaña *Con el modelo*
+   (`MotorAntecedentesModelo` → `antecedentes-service` del compañero, `POST /api/antecedentes/buscar`;
+   si no responde, cae al motor por reglas y lo avisa). La selección se mantiene entre pestañas y
+   se guarda como antecedentes finales en la tabla nueva `antecedentes_primer_contacto`
+   (`GET/POST /antecedentes/{folio}/guardados`, `DELETE .../guardados/{id}`). Sustituye al viejo
+   "Marcar como antecedente" que dejaba una nota. El histórico se lee directo y en solo lectura
+   (`HistoricoAntecedentesRepository`) porque la API interna de historico-service solo busca al
+   quejoso por nombre exacto. Ojo: el modelo hoy solo busca en su dataset de prueba (50 quejas
+   sintéticas), con similitudes bajas (≤ 0.13), por eso el umbral por defecto es 0.05.
+2. **Resumen simulado** (solo front): botón *Resumen* → resumen propuesto + frases de impacto,
+   calculados en el navegador (`core/utils/resumen-simulado.ts`) con la etiqueta "Simulado".
+3. **Quejas por analista:** NO se hizo. El compañero pidió dejar que Primer Contacto vea todas por
+   ahora (tema de roles pendiente). Roles: ADMIN_SISTEMAS, RECEPCIONISTA, ANALISTA_PRIMER_CONTACTO,
+   SUBDEFENSOR, DEFENSOR (sin pantalla) + quejoso sin rol. El combo "Defensor / Abogado
+   responsable" del turnado lista DEFENSOR/SUBDEFENSOR y ese dato no llega a Primer Contacto.
+4. **Citas con 48 h:** al agendar/reagendar se fija `fecha_limite_respuesta`; estados nuevos
+   `CANCELADA_QUEJOSO` (con motivo) y `SIN_RESPUESTA` (proceso cada 5 min). El analista puede
+   registrar la respuesta del quejoso. Para el portal del quejoso (lo hace el compañero) quedan
+   listos `/api/primer-contacto/quejoso/citas/...`; contrato en `docs/CONTRATO-CITAS-QUEJOSO.md`.
+
+**Para desplegar en el servidor nuevo, agregar al yml de primer-contacto** (además de datasource,
+JWT, `notificaciones.service.url` y `subdefensoria.base-url` con las IPs nuevas):
+`antecedentes.modelo.url: http://156.67.26.73:8093` y `historico.datasource.url/username/password`
+apuntando a `169.58.62.99:5433/historico_db`.
+
+**Pruebas locales:** `dev-local/init/04-busqueda-manual-prueba.sql` (idempotente) agrega
+denunciados de prueba y crea `historico_db` con 4 casos.

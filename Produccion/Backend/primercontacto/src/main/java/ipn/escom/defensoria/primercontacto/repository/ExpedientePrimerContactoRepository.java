@@ -17,4 +17,6 @@ public interface ExpedientePrimerContactoRepository
     boolean existsByFolioOrigen(String folioOrigen);
 
     List<ExpedientePrimerContacto> findByEstatusIn(Collection<String> estatus);
+
+    List<ExpedientePrimerContacto> findByQuejosoCorreoIgnoreCase(String quejosoCorreo);
 }

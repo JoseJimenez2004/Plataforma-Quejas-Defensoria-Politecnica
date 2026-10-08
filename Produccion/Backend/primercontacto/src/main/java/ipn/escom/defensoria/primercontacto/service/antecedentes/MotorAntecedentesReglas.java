@@ -123,6 +123,10 @@ public class MotorAntecedentesReglas implements MotorAntecedentes {
                         .similitud(Math.min(100, puntaje))
                         .coincidencias(coincidencias)
                         .mismoQuejoso(mismoQuejoso)
+                        .origen(NombresPersona.ORIGEN_SISTEMA)
+                        .nombreDenunciado(NombresPersona.unir(candidata.getNombreDenunciado(),
+                                candidata.getApellido1Denunciado(), candidata.getApellido2Denunciado()))
+                        .descripcion(candidata.getDescripcion())
                         .build());
             }
         }

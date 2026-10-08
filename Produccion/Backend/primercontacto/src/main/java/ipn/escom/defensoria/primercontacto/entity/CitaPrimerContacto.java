@@ -68,4 +68,22 @@ public class CitaPrimerContacto {
 
     @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
+
+    /*
+     * Respuesta del quejoso: al agendar o reagendar tiene un plazo (48 h por defecto) para
+     * confirmar o cancelar con motivo. Si no responde, la cita pasa a SIN_RESPUESTA.
+     * Las citas anteriores a este cambio quedan con fechaLimiteRespuesta en null y no vencen.
+     */
+    @Column(name = "fecha_limite_respuesta")
+    private LocalDateTime fechaLimiteRespuesta;
+
+    @Column(name = "fecha_respuesta_quejoso")
+    private LocalDateTime fechaRespuestaQuejoso;
+
+    @Column(name = "motivo_cancelacion_quejoso", columnDefinition = "TEXT")
+    private String motivoCancelacionQuejoso;
+
+    /* QUEJOSO si respondió desde su panel; ANALISTA si el analista registró su respuesta. */
+    @Column(name = "respuesta_registrada_por", length = 20)
+    private String respuestaRegistradaPor;
 }

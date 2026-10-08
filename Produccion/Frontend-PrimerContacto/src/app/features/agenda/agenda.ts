@@ -415,6 +415,25 @@ cargarAgendaPorFecha(fechaVista: string): void {
         });
       }
 
+      if (resultado.accion === 'cancelacion-quejoso') {
+        if (!resultado.cita.id) return;
+
+        this.agendaService.registrarCancelacionQuejoso(resultado.cita.id, resultado.motivo).subscribe({
+          next: () => {
+            this.cargarAgendaPorFecha(this.fechaAgendaSeleccionada);
+
+            this.snackBar.open('Cancelación del quejoso registrada. Reagenda o cancela la cita.', 'Cerrar', {
+              duration: 3500
+            });
+          },
+          error: (error) => {
+            this.snackBar.open(mensajeDeError(error, 'No fue posible registrar la cancelación.'), 'Cerrar', {
+              duration: 3500
+            });
+          }
+        });
+      }
+
       if (resultado.accion === 'cancelar') {
         if (!resultado.cita.id) return;
 

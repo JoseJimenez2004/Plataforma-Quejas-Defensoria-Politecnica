@@ -72,7 +72,8 @@
             <mat-chip
               [class.confirmed]="cita.estatus === 'Confirmada'"
               [class.scheduled]="cita.estatus === 'Programada'"
-              [class.cancelled]="cita.estatus === 'Cancelada'">
+              [class.cancelled]="cita.estatus === 'Cancelada'"
+              [class.needs-action]="cita.estatusCodigo === 'CANCELADA_QUEJOSO' || cita.estatusCodigo === 'SIN_RESPUESTA'">
               {{ cita.estatus }}
             </mat-chip>
           </div>
@@ -198,7 +199,8 @@
           <mat-chip
             [class.confirmed]="cita.estatus === 'Confirmada'"
             [class.scheduled]="cita.estatus === 'Programada'"
-            [class.cancelled]="cita.estatus === 'Cancelada'">
+            [class.cancelled]="cita.estatus === 'Cancelada'"
+            [class.needs-action]="cita.estatusCodigo === 'CANCELADA_QUEJOSO' || cita.estatusCodigo === 'SIN_RESPUESTA'">
             {{ cita.estatus }}
           </mat-chip>
 

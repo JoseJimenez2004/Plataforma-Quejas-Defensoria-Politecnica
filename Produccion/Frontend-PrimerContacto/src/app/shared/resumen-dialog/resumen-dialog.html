@@ -1,0 +1,44 @@
+<h2 mat-dialog-title>Resumen de la queja</h2>
+
+<mat-dialog-content>
+  <p class="encabezado">
+    <strong>{{ data.folio }}</strong>
+    @if (data.asunto) {
+      · {{ data.asunto }}
+    }
+  </p>
+
+  <div class="simulado">
+    <mat-icon>science</mat-icon>
+    <span>
+      <strong>Simulado.</strong> El modelo de resumen aún no está conectado; este resumen es
+      una aproximación de cómo se verá.
+    </span>
+  </div>
+
+  @if (!resultado.resumen) {
+    <p class="vacio">La queja no tiene narrativa para resumir.</p>
+  } @else {
+    <section>
+      <span class="etiqueta">Resumen propuesto</span>
+      <p class="resumen">{{ resultado.resumen }}</p>
+    </section>
+
+    <section>
+      <span class="etiqueta">Frases de impacto</span>
+      @if (resultado.frasesImpacto.length === 0) {
+        <p class="vacio">No se identificaron frases de impacto en la narrativa.</p>
+      } @else {
+        <ul class="frases">
+          @for (frase of resultado.frasesImpacto; track $index) {
+            <li><mat-icon>format_quote</mat-icon><span>{{ frase }}</span></li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-flat-button class="primary-btn" mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

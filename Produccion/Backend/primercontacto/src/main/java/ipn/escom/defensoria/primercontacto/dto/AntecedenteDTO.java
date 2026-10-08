@@ -34,4 +34,15 @@ public class AntecedenteDTO {
     private List<String> coincidencias;
 
     private boolean mismoQuejoso;
+
+    /* De dónde sale: SISTEMA (quejas de defensoria_db) o HISTORICO (casos históricos). */
+    private String origen;
+
+    private String nombreDenunciado;
+
+    /* Narrativa completa, para el resumen. El extracto es solo para la tarjeta. */
+    private String descripcion;
+
+    /* Solo históricos: cómo terminó el caso. */
+    private String resultado;
 }

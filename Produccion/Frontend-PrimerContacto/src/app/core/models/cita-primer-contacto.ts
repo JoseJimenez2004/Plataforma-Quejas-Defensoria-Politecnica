@@ -20,6 +20,16 @@ export interface CitaPrimerContacto {
 
   /** Último analista que confirmó, reagendó o canceló. */
   actualizadoPorNombre?: string;
+
+  /** Código del backend: PROGRAMADA, CONFIRMADA, CANCELADA, CANCELADA_QUEJOSO, SIN_RESPUESTA. */
+  estatusCodigo?: string;
+
+  /** Respuesta del quejoso (plazo de 48 h al agendar o reagendar). */
+  fechaLimiteRespuesta?: string;
+  fechaRespuestaQuejoso?: string;
+  motivoCancelacionQuejoso?: string;
+  /** QUEJOSO si respondió desde su panel; ANALISTA si lo registró el analista. */
+  respuestaRegistradaPor?: string;
 }
 
 export interface ReagendarCitaPrimerContacto {

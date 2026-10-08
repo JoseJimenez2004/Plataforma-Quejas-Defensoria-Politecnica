@@ -69,6 +69,15 @@ public class SecurityConfig {
                         ).permitAll()
 
                         /*
+                         * Portal del quejoso (respuesta a sus citas). Su token
+                         * no lleva rol: basta con que sea válido; el servicio
+                         * comprueba que la cita sea de su correo.
+                         */
+                        .requestMatchers(
+                                "/api/primer-contacto/quejoso/**"
+                        ).authenticated()
+
+                        /*
                          * Todas las operaciones normales de
                          * Primer Contacto requieren un JWT
                          * con rol ANALISTA_PRIMER_CONTACTO.
