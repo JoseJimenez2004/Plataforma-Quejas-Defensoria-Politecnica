@@ -766,9 +766,20 @@ Respaldos previos en `/apps/utiles/respaldos/2026-10-08/` de cada servidor: back
   y `prueba.recepcion@ipn.mx` (RECEPCIONISTA), contraseña `PruebaPC2026!`. Login real en
   `/revision/login` → entra a `/primer-contacto/` (verificado).
 
-### 14.3 Pendiente
-- Prueba en vivo del flujo completo (queja de prueba con quejoso Andrea Sánchez Vidal →
-  turnar → antecedentes/cita) — en curso al escribir esto.
+### 14.3 Prueba en vivo y último ajuste (~10:15–10:30)
+
+- Flujo real probado en producción: queja de prueba registrada en el portal con quejoso
+  **Andrea Sánchez Vidal** (FOL-89B658AA → expediente **PC-9110AC23**), turnada por
+  `prueba.recepcion@ipn.mx`, recibida en la bandeja de `prueba.demo@ipn.mx`.
+- **El modelo DESPLEGADO responde distinto al código del repo** (`Modelo-Java`): cada item
+  viene "plano" (`folio`, `similitud`, `historico`, `quejoso{}`, `denunciado{}`, `tipo_violencia`,
+  `fragmento`...) sin el campo `queja`, y su índice tiene 203 quejas (`corpus`). Ahí Andrea es
+  **FOL-HIS-0048**. `MotorAntecedentesModelo` ahora acepta ambos formatos (commit `5686db5`,
+  probado contra un simulador del formato del servidor) y se redesplegó el jar (57 682 137
+  bytes). Para revisar la respuesta real del modelo desde el backend:
+  `curl -s -X POST http://localhost:8093/api/antecedentes/buscar -H 'Content-Type: application/json' -d '{"texto":"...","umbral":0,"topK":5}'`.
+
+### 14.4 Pendiente
 - Subdefensoría sigue sin desplegar en los servidores nuevos (el dictamen procedente se guarda
   pero el envío falla; se puede reenviar después).
 - PR `Pre-Produccion2` → `Produccion`; arreglar las 7 pruebas "should create" del front.
