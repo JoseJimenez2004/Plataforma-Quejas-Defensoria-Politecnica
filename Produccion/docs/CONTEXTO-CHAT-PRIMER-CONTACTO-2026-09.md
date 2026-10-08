@@ -708,3 +708,67 @@ El contrato completo para el compañero está en **`docs/CONTRATO-CITAS-QUEJOSO.
   - CU-PC-01: la prioridad llega null.
   - El correo al quejoso fallaba con 403 en notificaciones-service (en los servidores viejos;
     no revisado en los nuevos).
+
+## 14. 2026-10-08 (mañana): ajustes del usuario + DESPLEGADO en los servidores nuevos
+
+> Lo más reciente. Primer Contacto **ya está en vivo** en los 3 servidores nuevos
+> (https://defensoria-escom.ddns.net/primer-contacto/). Commit de código `31158b2`.
+
+### 14.1 Ajustes pedidos tras revisar en local (commit `31158b2`)
+
+- **Antecedentes con el modelo = solo del MISMO QUEJOSO y/o del MISMO DENUNCIADO** (el usuario
+  aclaró que los antecedentes siempre tienen que ver con las personas). El modelo del
+  compañero **NO se toca** (instrucción explícita): se le pide todo (`umbral 0`, `topK 500`) y
+  `AntecedentesService.filtrarPorPersonas` se queda con los que coinciden en quejoso (misma
+  boleta/número de empleado, mismo correo o mismo nombre — `NombresPersona.mismoNombre`, ≥2
+  palabras, sin acentos) y/o denunciado (mismo nombre). Primero los que coinciden en ambos,
+  luego por similitud. También aplica al respaldo por reglas. La pestaña manual sigue libre.
+  Como el dataset del modelo es sintético (50 quejas, sin personas repetidas), para una demo
+  hay que usar un quejoso que exista ahí, p. ej. **Andrea Sánchez Vidal** (FOL-PRU-0028).
+- **Detalle al picar un antecedente** (título, "Ver detalle" o uno guardado):
+  `shared/antecedente-detalle-dialog`. Sin peticiones extra; los guardados ahora conservan la
+  narrativa completa (`antecedentes_primer_contacto.descripcion` y `resultado`).
+- **Historial de citas:** reagendar ya NO sobrescribe. La cita anterior queda `REAGENDADA`
+  (conserva respuesta/motivo del quejoso) y se crea una cita nueva con su propio plazo de 48 h
+  (`cita_anterior_id`). Activas = estatus fuera de `CERRADAS` (CANCELADA, REAGENDADA). El
+  expediente muestra "Historial de citas" con todas.
+- Prueba E2E local (`dev-local/prueba-observaciones.mjs`): **45/45**.
+
+### 14.2 Cómo quedó desplegado (2026-10-08, ~9:30–10:05)
+
+Respaldos previos en `/apps/utiles/respaldos/2026-10-08/` de cada servidor: backend
+(`config-files.tgz`, `podman-compose.sh`, jar e imagen viejos de primer-contacto), BD
+(`defensoria_db.sql` 28 MB, `historico_db.sql`), frontend (`router-config.tgz`,
+`defensoria.conf.antes-primer-contacto`).
+
+- **Backend 156.67.26.73:** jar nuevo en `back/artifact/` (57 682 069 bytes); yml escrito en
+  `back/config-files/primer-contacto-service/config/primer-contacto-service.yml` (password y
+  JWT copiados de `revision-service.yml`; ver copia de referencia SIN secretos en el repo).
+  **El contenedor arranca con `SPRING_CONFIG_NAME=primer-contacto-service`: el
+  application.properties del jar NO se carga, todo debe estar en el yml.**
+- **Bug encontrado en el servidor:** el `podman-compose.sh` DEL SERVIDOR (distinto al del repo,
+  trae `--restart always`) tenía `-m 50m` para primer-contacto → la JVM moría sin log y se
+  reiniciaba en bucle (85 reinicios). Se cambió la línea 168 a `-m 250m`. Avisar al compañero
+  que revise los `-m` de subdefensoria/histórico.
+- **Histórico:** la base del contenedor `historico-db` se llama **`defensoria_historico_db`**
+  (no `historico_db` como dice el doc del compañero). Tiene la tabla `quejas_historicas` con 0
+  filas por ahora.
+- **Frontend 169.58.62.111:** `/apps/aplicaciones/defensoria/front-primer-contacto/`
+  (dist/browser + Dockerfile + nginx.conf + script), contenedor `primer-contacto-web` en el
+  **puerto 8094**. En `router/config/defensoria.conf` (montado como archivo único en
+  `router-nginx`, `--network host`; editar con `cat > archivo`, NO con `sed -i`, o el
+  contenedor no ve el cambio) se agregaron, dentro del server 443:
+  `location /primer-contacto/ → 127.0.0.1:8094/`, `location /api/primer-contacto/ingesta/ →
+  403` (es interna, Revisión la llama directo por IP) y `location /api/primer-contacto/ →
+  156.67.26.73:8082`. Recarga: `podman exec router-nginx nginx -t && ... nginx -s reload`.
+- **Cuentas de prueba** (insertadas directo en `personal_administrativo` porque la pantalla de
+  alta de admin ya no sirve; BCrypt `$2b$10$...`): `prueba.demo@ipn.mx` (ANALISTA_PRIMER_CONTACTO)
+  y `prueba.recepcion@ipn.mx` (RECEPCIONISTA), contraseña `PruebaPC2026!`. Login real en
+  `/revision/login` → entra a `/primer-contacto/` (verificado).
+
+### 14.3 Pendiente
+- Prueba en vivo del flujo completo (queja de prueba con quejoso Andrea Sánchez Vidal →
+  turnar → antecedentes/cita) — en curso al escribir esto.
+- Subdefensoría sigue sin desplegar en los servidores nuevos (el dictamen procedente se guarda
+  pero el envío falla; se puede reenviar después).
+- PR `Pre-Produccion2` → `Produccion`; arreglar las 7 pruebas "should create" del front.

@@ -1,28 +1,58 @@
-# Config de producción de primer-contacto-service (módulo local "Backend/primercontacto").
-# Se monta como volumen en /app/config (ver podman-compose.sh -> start_service), y Spring Boot
-# la carga por encima de src/main/resources/application.properties del jar (que sigue siendo
-# el default de desarrollo -- no se tocó). Mismo patrón que el resto de los microservicios.
+# Config de producción de primer-contacto-service — COPIA DE REFERENCIA del servidor.
 #
-# A propósito NO se sobreescribe aquí ninguna clave de datasource/JPA: el servicio sigue
-# corriendo con su base H2 en memoria tal como está hoy (ver application.properties, comentario
-# "H2 temporal") -- eso es lógica/decisión propia del servicio, no una preocupación de
-# despliegue, y no se debía tocar en esta tarea.
+# La real vive en el backend (156.67.26.73):
+#   /apps/aplicaciones/defensoria/back/config-files/primer-contacto-service/config/primer-contacto-service.yml
+# Se desplegó el 2026-10-08. Esta copia es igual SALVO la contraseña y el secreto JWT, que no
+# se suben al repo: en el servidor son los mismos que usa revision-service.yml.
+#
+# IMPORTANTE: el contenedor arranca con SPRING_CONFIG_NAME=primer-contacto-service, así que el
+# application.properties del jar NO se carga. Todo lo que necesita el servicio tiene que estar
+# aquí. Si se reemplaza el archivo del servidor con esta copia, hay que volver a poner la
+# contraseña y el secreto o el servicio no arranca.
 
 server:
-  # Puerto interno unificado a 8080 en los 9 microservicios -- el acceso real sigue siendo
-  # por 8082, ahora vía el mapeo externo de Podman (ver -p en podman-compose.sh).
+  # Puerto interno; el acceso real es por 8082 (mapeo -p de podman-compose.sh).
   port: 8080
 
-# Dominio público real (router-nginx). Hoy no existe todavía una ruta de nginx ni un frontend
-# desplegado para Primer Contacto (ver docs/REQUERIMIENTOS.md, sección "Microservicios en
-# desarrollo"), así que este valor es un default seguro para cuando exista -- ya no localhost.
-# Revisar cuando se defina la ruta pública real de este servicio.
+spring:
+  application:
+    name: primer-contacto-service
+  datasource:
+    url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
+    username: postgres
+    password: "<la misma de revision-service.yml>"
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+jwt:
+  secret: "<el mismo de revision-service.yml>"
+
 cors:
   allowed-origins: https://defensoria-escom.ddns.net
 
-# Subdefensoría en producción corre en el puerto 8091 (reasignado por choque con auth-service
-# y con defensoria-web, ver get_port() en podman-compose.sh), en la misma VPS backend (IP
-# pública, mismo patrón que ya usan los otros microservicios para llamarse entre sí -- ver
-# quejas.service.url en auth-service.yml).
+# Subdefensoría y notificaciones, en la misma VPS backend.
 subdefensoria:
   base-url: http://156.67.26.73:8091
+notificaciones:
+  service:
+    url: http://156.67.26.73:8085
+
+# Modelo de antecedentes del compañero (antecedentes-service). Se le piden todos sus resultados
+# y Primer Contacto se queda con los del mismo quejoso o denunciado.
+antecedentes:
+  modelo:
+    url: http://156.67.26.73:8093
+    umbral: 0.0
+
+# Casos históricos (solo lectura). Ojo: la base se llama defensoria_historico_db.
+historico:
+  datasource:
+    url: jdbc:postgresql://169.58.62.99:5433/defensoria_historico_db
+    username: postgres
+    password: "<la misma de revision-service.yml>"
+
+primer-contacto:
+  sincronizar-estatus-queja: false
