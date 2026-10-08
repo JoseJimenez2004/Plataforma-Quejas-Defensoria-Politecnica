@@ -24,8 +24,7 @@ import { mensajeDeError } from '../../core/utils/archivos';
 
 import {
   CitaPrimerContacto,
-  CrearCitaPrimerContacto
-} from '../../core/models/cita-primer-contacto';
+  CrearCitaPrimerContacto, citaOcupaHorario } from '../../core/models/cita-primer-contacto';
 
 @Component({
   selector: 'app-agenda',
@@ -484,7 +483,7 @@ cargarAgendaPorFecha(fechaVista: string): void {
     return this.citasDelDia.some(cita =>
       cita.fecha === this.fechaAgendaSeleccionada &&
       cita.hora === this.citaNueva.hora &&
-      cita.estatus !== 'Cancelada'
+      citaOcupaHorario(cita)
     );
   }
 
@@ -493,7 +492,7 @@ cargarAgendaPorFecha(fechaVista: string): void {
       !this.citasDelDia.some(cita =>
         cita.fecha === this.fechaAgendaSeleccionada &&
         cita.hora === hora &&
-        cita.estatus !== 'Cancelada'
+        citaOcupaHorario(cita)
       )
     );
   }

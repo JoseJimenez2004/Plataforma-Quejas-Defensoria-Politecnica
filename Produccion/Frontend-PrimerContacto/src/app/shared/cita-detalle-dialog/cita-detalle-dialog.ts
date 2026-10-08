@@ -37,8 +37,9 @@ export class CitaDetalleDialog {
     private router: Router
   ) {}
 
+  /** Cancelada por Primer Contacto o sustituida al reagendar: solo se consulta. */
   get cancelada(): boolean {
-    return this.cita.estatusCodigo === 'CANCELADA';
+    return this.cita.estatusCodigo === 'CANCELADA' || this.cita.estatusCodigo === 'REAGENDADA';
   }
 
   get confirmada(): boolean {

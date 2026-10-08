@@ -30,6 +30,18 @@ export interface CitaPrimerContacto {
   motivoCancelacionQuejoso?: string;
   /** QUEJOSO si respondió desde su panel; ANALISTA si lo registró el analista. */
   respuestaRegistradaPor?: string;
+  /** Si sustituye a una cita reagendada, el id de la anterior. */
+  citaAnteriorId?: number;
+}
+
+/** Ya no cuentan como cita activa: canceladas por Primer Contacto o sustituidas al reagendar. */
+export function citaCerrada(cita: CitaPrimerContacto): boolean {
+  return cita.estatusCodigo === 'CANCELADA' || cita.estatusCodigo === 'REAGENDADA';
+}
+
+/** Ocupan su horario en la agenda (las demás dejaron libre la hora). */
+export function citaOcupaHorario(cita: CitaPrimerContacto): boolean {
+  return ['PROGRAMADA', 'CONFIRMADA', 'SIN_RESPUESTA'].includes(cita.estatusCodigo ?? '');
 }
 
 export interface ReagendarCitaPrimerContacto {

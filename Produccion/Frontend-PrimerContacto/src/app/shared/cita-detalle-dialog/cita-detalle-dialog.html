@@ -89,6 +89,22 @@
         </p>
         <p class="motivo-quejoso"><mat-icon>format_quote</mat-icon> {{ cita.motivoCancelacionQuejoso }}</p>
       }
+      @case ('REAGENDADA') {
+        <p>
+          Esta cita se <strong>reagendó</strong>; la sustituye una cita nueva.
+          @if (cita.motivoCancelacionQuejoso) {
+            Antes, el quejoso la había cancelado
+            (registrado por {{ quienRespondio }}):
+          } @else if (cita.fechaRespuestaQuejoso) {
+            El quejoso la había confirmado el {{ formatearFechaHora(cita.fechaRespuestaQuejoso) }}.
+          } @else {
+            El quejoso no había respondido.
+          }
+        </p>
+        @if (cita.motivoCancelacionQuejoso) {
+          <p class="motivo-quejoso"><mat-icon>format_quote</mat-icon> {{ cita.motivoCancelacionQuejoso }}</p>
+        }
+      }
       @default {
         <p>La cita fue cancelada por Primer Contacto.</p>
       }

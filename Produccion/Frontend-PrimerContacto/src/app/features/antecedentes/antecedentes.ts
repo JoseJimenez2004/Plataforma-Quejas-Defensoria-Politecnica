@@ -28,6 +28,10 @@ import { ExpedienteService } from '../../core/services/expediente.service';
 import { formatearFecha } from '../../core/utils/estatus-expediente';
 import { mensajeDeError } from '../../core/utils/archivos';
 import { ResumenDialog, ResumenDialogData } from '../../shared/resumen-dialog/resumen-dialog';
+import {
+  AntecedenteDetalleData,
+  AntecedenteDetalleDialog
+} from '../../shared/antecedente-detalle-dialog/antecedente-detalle-dialog';
 
 /** Estatus de quejas de cualquier etapa (recepción, primer contacto e histórico). */
 const ETIQUETAS_QUEJA: Record<string, string> = {
@@ -248,7 +252,9 @@ export class Antecedentes implements OnInit {
       unidadAcademica: antecedente.unidadAcademica,
       estatus: antecedente.estatus,
       folioPrimerContacto: antecedente.folioPrimerContacto,
-      extracto: antecedente.extracto
+      extracto: antecedente.extracto,
+      descripcion: antecedente.descripcion,
+      resultado: antecedente.resultado
     }));
 
     this.guardando = true;
@@ -315,6 +321,11 @@ export class Antecedentes implements OnInit {
       asunto: antecedente.asunto,
       texto: antecedente.descripcion ?? antecedente.extracto
     });
+  }
+
+  /** Detalle completo de un antecedente (resultado o guardado), con lo ya cargado. */
+  verDetalle(antecedente: AntecedenteDetalleData): void {
+    this.dialog.open(AntecedenteDetalleDialog, { width: '720px', data: antecedente });
   }
 
   private abrirResumen(data: ResumenDialogData): void {

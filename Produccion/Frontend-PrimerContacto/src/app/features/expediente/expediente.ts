@@ -12,7 +12,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ExpedienteDetalle, EvidenciaDetalle } from '../../core/models/expediente-detalle';
 import { NotaAnalisis } from '../../core/models/nota-analisis.model';
 import { AcuerdoConciliacion } from '../../core/models/conciliacion.model';
-import { CitaPrimerContacto } from '../../core/models/cita-primer-contacto';
+import { CitaPrimerContacto, citaCerrada } from '../../core/models/cita-primer-contacto';
 import { ExpedienteService } from '../../core/services/expediente.service';
 import { NotaAnalisisService } from '../../core/services/nota-analisis.service';
 import { ConciliacionService } from '../../core/services/conciliacion.service';
@@ -73,6 +73,8 @@ export class Expediente implements OnInit {
 
   acuerdos: AcuerdoConciliacion[] = [];
   citaActiva?: CitaPrimerContacto;
+  /** Todas las citas del expediente (incluidas las canceladas y reagendadas), más recientes primero. */
+  historialCitas: CitaPrimerContacto[] = [];
 
   /** Resumen de la búsqueda automática de antecedentes al abrir el expediente. */
   antecedentes?: { total: number; mismoQuejoso: number; maxSimilitud: number };
@@ -366,7 +368,8 @@ export class Expediente implements OnInit {
   private cargarCitaActiva(): void {
     this.agendaService.listarPorFolio(this.folio).subscribe({
       next: (citas) => {
-        this.citaActiva = citas.find(c => c.estatus !== 'Cancelada');
+        this.citaActiva = citas.find(c => !citaCerrada(c));
+        this.historialCitas = citas;
         this.cdr.detectChanges();
       }
     });

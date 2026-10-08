@@ -272,6 +272,28 @@
     </mat-card>
   }
 
+  <!-- Historial completo de citas: también las canceladas y las reagendadas -->
+  @if (historialCitas.length > 0) {
+    <mat-card class="actions-card historial-citas">
+      <div class="historial-contenido">
+        <h3>Historial de citas ({{ historialCitas.length }})</h3>
+        @for (cita of historialCitas; track cita.id) {
+          <div class="historial-cita">
+            <span class="historial-fecha">{{ cita.fecha }} · {{ cita.hora }} h · {{ cita.tipo }}</span>
+            <span class="historial-estatus" [attr.data-estatus]="cita.estatusCodigo">{{ cita.estatus }}</span>
+            <span class="historial-detalle">
+              {{ cita.motivo }}
+              @if (cita.motivoCancelacionQuejoso) {
+                — Motivo del quejoso: “{{ cita.motivoCancelacionQuejoso }}”
+              }
+              · Agendó {{ cita.analistaNombre || '—' }}
+            </span>
+          </div>
+        }
+      </div>
+    </mat-card>
+  }
+
   <!-- ============================ Dictamen (CU-PC-06/07/08/09) ============================ -->
   <mat-card class="decision-card">
     @switch (expediente.estatusCodigo) {

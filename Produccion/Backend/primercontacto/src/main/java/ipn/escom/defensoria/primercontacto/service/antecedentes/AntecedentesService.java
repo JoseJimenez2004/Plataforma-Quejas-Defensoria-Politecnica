@@ -76,11 +76,13 @@ public class AntecedentesService {
                 .orElse(null);
 
         List<String> avisos = new ArrayList<>();
+        Personas personas = Personas.de(expediente, queja);
 
         if (motorModelo.habilitado()) {
             try {
                 List<AntecedenteDTO> resultados = motorModelo.buscar(expediente, queja, List.of());
-                return resultado(expediente, motorModelo, 0, resultados, avisos);
+                return resultado(expediente, motorModelo, 0,
+                        filtrarPorPersonas(resultados, personas), avisos);
             } catch (Exception ex) {
                 log.warn("El modelo de antecedentes no respondió ({}); se usa el motor por reglas.",
                         ex.getMessage());
@@ -94,7 +96,66 @@ public class AntecedentesService {
                 .toList();
 
         return resultado(expediente, motorReglas, candidatas.size(),
-                motorReglas.buscar(expediente, queja, candidatas), avisos);
+                filtrarPorPersonas(motorReglas.buscar(expediente, queja, candidatas), personas), avisos);
+    }
+
+    /** Quejoso y denunciado de la queja que se analiza, para reconocerlos en otras quejas. */
+    private record Personas(String correo, String identificacion, String quejoso, String denunciado) {
+        static Personas de(ExpedientePrimerContacto expediente, QuejaReferencia queja) {
+            return new Personas(
+                    queja != null && queja.getCorreoInstitucional() != null
+                            ? queja.getCorreoInstitucional() : expediente.getQuejosoCorreo(),
+                    queja != null ? queja.getNumeroIdentificacionQuejoso() : null,
+                    queja != null
+                            ? NombresPersona.unir(queja.getNombreQuejoso(), queja.getApellido1Quejoso(),
+                                    queja.getApellido2Quejoso())
+                            : expediente.getQuejosoNombre(),
+                    queja != null
+                            ? NombresPersona.unir(queja.getNombreDenunciado(), queja.getApellido1Denunciado(),
+                                    queja.getApellido2Denunciado())
+                            : null
+            );
+        }
+    }
+
+    /**
+     * Los antecedentes siempre tienen que ver con las personas: el modelo (y el motor por
+     * reglas) solo comparan el texto, así que aquí se dejan únicamente las quejas del MISMO
+     * QUEJOSO (misma boleta/número de empleado, mismo correo o mismo nombre) y/o del MISMO
+     * DENUNCIADO (mismo nombre). Primero las que coinciden en ambos, luego por similitud.
+     */
+    private List<AntecedenteDTO> filtrarPorPersonas(List<AntecedenteDTO> resultados, Personas personas) {
+        List<AntecedenteDTO> filtrados = new ArrayList<>();
+        for (AntecedenteDTO a : resultados) {
+            boolean mismoQuejoso = NombresPersona.mismoDato(personas.identificacion(), a.getIdentificacionQuejoso())
+                    || NombresPersona.mismoDato(personas.correo(), a.getCorreoQuejoso())
+                    || NombresPersona.mismoNombre(personas.quejoso(), a.getNombreQuejoso());
+            boolean mismoDenunciado = NombresPersona.mismoNombre(personas.denunciado(), a.getNombreDenunciado());
+            if (!mismoQuejoso && !mismoDenunciado) {
+                continue;
+            }
+
+            List<String> coincidencias = new ArrayList<>();
+            if (mismoQuejoso) {
+                coincidencias.add("Mismo quejoso");
+            }
+            if (mismoDenunciado) {
+                coincidencias.add("Mismo denunciado: " + a.getNombreDenunciado());
+            }
+            if (a.getCoincidencias() != null) {
+                a.getCoincidencias().stream()
+                        .filter(c -> !"Mismo quejoso".equals(c))
+                        .forEach(coincidencias::add);
+            }
+            a.setCoincidencias(coincidencias);
+            a.setMismoQuejoso(mismoQuejoso);
+            filtrados.add(a);
+        }
+        filtrados.sort(Comparator
+                .comparingInt((AntecedenteDTO a) -> a.getCoincidencias().stream()
+                        .filter(c -> c.startsWith("Mismo")).count() > 1 ? 0 : 1)
+                .thenComparing(Comparator.comparingInt(AntecedenteDTO::getSimilitud).reversed()));
+        return filtrados;
     }
 
     // ---------------------------------------------------------------------------------
@@ -244,6 +305,8 @@ public class AntecedentesService {
                     .estatusAntecedente(recortar(item.getEstatus(), 50))
                     .folioPrimerContacto(recortar(item.getFolioPrimerContacto(), 50))
                     .extracto(item.getExtracto())
+                    .descripcion(item.getDescripcion())
+                    .resultado(recortar(item.getResultado(), 50))
                     .analistaId(analista.getId())
                     .analistaNombre(analista.getNombreCompleto())
                     .fechaRegistro(ahora)
@@ -298,6 +361,8 @@ public class AntecedentesService {
                 .estatus(a.getEstatusAntecedente())
                 .folioPrimerContacto(a.getFolioPrimerContacto())
                 .extracto(a.getExtracto())
+                .descripcion(a.getDescripcion())
+                .resultado(a.getResultado())
                 .analistaNombre(a.getAnalistaNombre())
                 .fechaRegistro(a.getFechaRegistro() != null ? a.getFechaRegistro().toString() : null)
                 .build();

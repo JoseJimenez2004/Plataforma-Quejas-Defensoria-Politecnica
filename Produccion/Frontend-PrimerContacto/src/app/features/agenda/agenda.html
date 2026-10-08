@@ -73,7 +73,8 @@
               [class.confirmed]="cita.estatus === 'Confirmada'"
               [class.scheduled]="cita.estatus === 'Programada'"
               [class.cancelled]="cita.estatus === 'Cancelada'"
-              [class.needs-action]="cita.estatusCodigo === 'CANCELADA_QUEJOSO' || cita.estatusCodigo === 'SIN_RESPUESTA'">
+              [class.needs-action]="cita.estatusCodigo === 'CANCELADA_QUEJOSO' || cita.estatusCodigo === 'SIN_RESPUESTA'"
+              [class.rescheduled]="cita.estatusCodigo === 'REAGENDADA'">
               {{ cita.estatus }}
             </mat-chip>
           </div>
@@ -200,7 +201,8 @@
             [class.confirmed]="cita.estatus === 'Confirmada'"
             [class.scheduled]="cita.estatus === 'Programada'"
             [class.cancelled]="cita.estatus === 'Cancelada'"
-            [class.needs-action]="cita.estatusCodigo === 'CANCELADA_QUEJOSO' || cita.estatusCodigo === 'SIN_RESPUESTA'">
+            [class.needs-action]="cita.estatusCodigo === 'CANCELADA_QUEJOSO' || cita.estatusCodigo === 'SIN_RESPUESTA'"
+              [class.rescheduled]="cita.estatusCodigo === 'REAGENDADA'">
             {{ cita.estatus }}
           </mat-chip>
 

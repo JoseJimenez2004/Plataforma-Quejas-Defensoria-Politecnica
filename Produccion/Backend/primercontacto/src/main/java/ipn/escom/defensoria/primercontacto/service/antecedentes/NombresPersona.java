@@ -46,6 +46,25 @@ final class NombresPersona {
         return limpio.isEmpty() ? List.of() : List.of(limpio.split(" "));
     }
 
+    /**
+     * Mismo nombre de persona, sin importar acentos ni mayúsculas: las palabras del nombre
+     * más corto están todas en el más largo ("Ana López" = "ANA LOPEZ RUIZ"). Se exigen al
+     * menos 2 palabras (nombre y apellido) para no confundir a dos "Ana".
+     */
+    static boolean mismoNombre(String a, String b) {
+        List<String> pa = palabras(a);
+        List<String> pb = palabras(b);
+        List<String> corto = pa.size() <= pb.size() ? pa : pb;
+        List<String> largo = pa.size() <= pb.size() ? pb : pa;
+        return corto.size() >= 2 && largo.containsAll(corto);
+    }
+
+    /** Ambos valores existen y son iguales (sin espacios ni mayúsculas). */
+    static boolean mismoDato(String a, String b) {
+        return a != null && b != null && !a.isBlank()
+                && a.strip().equalsIgnoreCase(b.strip());
+    }
+
     /** Todas las palabras buscadas aparecen en el nombre (en cualquier orden). */
     static boolean coincide(String nombreCompleto, List<String> palabras) {
         if (palabras.isEmpty() || nombreCompleto == null) {

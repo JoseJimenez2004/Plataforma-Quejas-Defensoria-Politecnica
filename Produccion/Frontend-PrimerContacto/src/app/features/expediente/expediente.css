@@ -518,3 +518,49 @@ mat-chip {
   color: #b45309;
   font-weight: 600;
 }
+
+/* ---- Historial de citas ---- */
+.historial-contenido {
+  width: 100%;
+}
+
+.historial-cita {
+  display: grid;
+  grid-template-columns: 220px 180px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--borde);
+  font-size: 14px;
+}
+
+.historial-fecha {
+  font-weight: 700;
+}
+
+.historial-estatus {
+  justify-self: start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #fdf6e3;
+  color: var(--advertencia);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.historial-estatus[data-estatus='CONFIRMADA'] { background: #e8f5e9; color: var(--exito); }
+.historial-estatus[data-estatus='CANCELADA'] { background: #ffebee; color: var(--peligro); }
+.historial-estatus[data-estatus='REAGENDADA'] { background: #f3f4f6; color: var(--texto-suave); }
+.historial-estatus[data-estatus='CANCELADA_QUEJOSO'],
+.historial-estatus[data-estatus='SIN_RESPUESTA'] { background: #fff1e0; color: #b45309; }
+
+.historial-detalle {
+  color: var(--texto-suave);
+}
+
+@media (max-width: 900px) {
+  .historial-cita {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

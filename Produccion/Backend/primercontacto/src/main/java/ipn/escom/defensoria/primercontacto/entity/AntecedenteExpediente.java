@@ -74,6 +74,13 @@ public class AntecedenteExpediente {
     @Column(name = "extracto", columnDefinition = "TEXT")
     private String extracto;
 
+    /* Narrativa completa, para ver el detalle del antecedente. */
+    @Column(name = "descripcion", columnDefinition = "TEXT")
+    private String descripcion;
+
+    @Column(name = "resultado", length = 50)
+    private String resultado;
+
     @Column(name = "analista_id", nullable = false)
     private Long analistaId;
 

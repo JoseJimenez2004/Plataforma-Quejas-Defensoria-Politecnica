@@ -1,0 +1,52 @@
+<h2 mat-dialog-title>{{ a.asunto || 'Queja sin asunto' }}</h2>
+
+<mat-dialog-content>
+  <p class="encabezado">
+    <strong>{{ a.folioQueja }}</strong> · {{ origen }}
+    @if (a.similitud != null) {
+      · Similitud {{ a.similitud }}%
+    }
+  </p>
+
+  @if (a.coincidencias?.length) {
+    <div class="coincidencias">
+      @for (c of a.coincidencias; track c) {
+        <span class="coincidencia">{{ c }}</span>
+      }
+    </div>
+  }
+
+  <div class="grid">
+    <div><span>Quejoso</span><strong>{{ a.nombreQuejoso || '—' }}</strong></div>
+    <div><span>Denunciado</span><strong>{{ a.nombreDenunciado || '—' }}</strong></div>
+    <div><span>Fecha</span><strong>{{ formatearFecha(a.fecha) || '—' }}</strong></div>
+    <div><span>Unidad académica</span><strong>{{ a.unidadAcademica || '—' }}</strong></div>
+    <div><span>Estatus</span><strong>{{ a.estatus || '—' }}</strong></div>
+    @if (a.resultado) {
+      <div><span>Resultado</span><strong>{{ a.resultado }}</strong></div>
+    }
+    @if (a.analistaNombre) {
+      <div><span>Guardado por</span><strong>{{ a.analistaNombre }} · {{ formatearFechaHora(a.fechaRegistro) }}</strong></div>
+      <div><span>Encontrado con</span><strong>{{ fuente }}</strong></div>
+    }
+  </div>
+
+  <section>
+    <span class="etiqueta">Narrativa de los hechos</span>
+    <p class="narrativa">{{ narrativa || 'Sin narrativa registrada.' }}</p>
+  </section>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  @if (narrativa) {
+    <button mat-stroked-button (click)="verResumen()">
+      <mat-icon>summarize</mat-icon> Resumen
+    </button>
+  }
+  @if (a.folioPrimerContacto) {
+    <button mat-stroked-button (click)="verExpediente()">
+      <mat-icon>open_in_new</mat-icon> Ver expediente
+    </button>
+  }
+  <button mat-flat-button class="primary-btn" mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

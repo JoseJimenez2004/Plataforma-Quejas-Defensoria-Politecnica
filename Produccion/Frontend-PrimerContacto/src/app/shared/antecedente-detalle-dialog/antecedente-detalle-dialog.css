@@ -1,0 +1,75 @@
+.encabezado {
+  margin: 0 0 10px;
+  color: var(--texto-suave);
+}
+
+.encabezado strong {
+  color: var(--negro-inst);
+}
+
+.coincidencias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.coincidencia {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--guinda-suave);
+  color: var(--guinda);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.grid div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: #fbfbfc;
+}
+
+.grid span,
+.etiqueta {
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.grid strong {
+  color: var(--negro-inst);
+}
+
+section {
+  margin-top: 16px;
+}
+
+.narrativa {
+  margin: 6px 0 0;
+  color: var(--negro-inst);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.primary-btn {
+  background: var(--guinda) !important;
+  color: white !important;
+  border-radius: 999px !important;
+  font-weight: 800;
+}
+
+@media (max-width: 700px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

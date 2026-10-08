@@ -1,7 +1,7 @@
 #!/bin/bash
 BASE_DIR="/apps/aplicaciones/defensoria/front-primer-contacto"
 CONTAINER_NAME="primer-contacto-web"
-PORT=22348
+PORT=8094
 
 case "$1" in
     up)

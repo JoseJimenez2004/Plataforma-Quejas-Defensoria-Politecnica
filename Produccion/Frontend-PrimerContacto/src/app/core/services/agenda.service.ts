@@ -33,6 +33,7 @@ interface CitaBackendDTO {
   fechaRespuestaQuejoso?: string;
   motivoCancelacionQuejoso?: string;
   respuestaRegistradaPor?: string;
+  citaAnteriorId?: number;
 }
 
 @Injectable({
@@ -176,7 +177,8 @@ export class AgendaService {
       fechaLimiteRespuesta: cita.fechaLimiteRespuesta,
       fechaRespuestaQuejoso: cita.fechaRespuestaQuejoso,
       motivoCancelacionQuejoso: cita.motivoCancelacionQuejoso,
-      respuestaRegistradaPor: cita.respuestaRegistradaPor
+      respuestaRegistradaPor: cita.respuestaRegistradaPor,
+      citaAnteriorId: cita.citaAnteriorId
     };
   }
 
@@ -213,6 +215,9 @@ export class AgendaService {
 
       case 'SIN_RESPUESTA':
         return 'Sin respuesta';
+
+      case 'REAGENDADA':
+        return 'Reagendada';
 
       default:
         return estatus;

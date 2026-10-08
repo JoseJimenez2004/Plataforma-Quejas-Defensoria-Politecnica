@@ -65,6 +65,8 @@ export interface AntecedenteGuardado {
   estatus?: string;
   folioPrimerContacto?: string;
   extracto?: string;
+  descripcion?: string;
+  resultado?: string;
 
   analistaNombre?: string;
   fechaRegistro?: string;

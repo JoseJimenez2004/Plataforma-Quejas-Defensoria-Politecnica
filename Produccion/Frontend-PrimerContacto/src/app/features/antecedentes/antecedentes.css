@@ -507,3 +507,14 @@ button {
     justify-items: start;
   }
 }
+
+/* Al picar un antecedente se abre su detalle. */
+.clicable {
+  cursor: pointer;
+}
+
+.titulo strong.clicable:hover,
+.guardado-datos.clicable:hover strong {
+  color: var(--guinda);
+  text-decoration: underline;
+}

@@ -79,8 +79,23 @@ console.log(`Expediente de prueba: ${PC} (queja ${FOLIO_Q})`);
 console.log('\n== Antecedentes');
 let r = await llamar('GET', `/antecedentes/${PC}`);
 check('Modelo responde (motor MODELO, sin avisos)', r.status === 200 && r.json.motor === 'MODELO' && r.json.avisos.length === 0, r.json?.motor);
-check('Modelo trae resultados con origen y similitud', r.json.resultados.length > 0 && r.json.resultados.every(a => a.origen && a.similitud >= 0 && a.descripcion), r.json.resultados[0]);
-const deModelo = r.json.resultados[0];
+check('Modelo: solo quejas del mismo quejoso o denunciado (Ana López no está en su dataset)',
+  r.json.resultados.every(a => a.coincidencias.some(c => c.startsWith('Mismo'))), r.json.resultados.map(a => a.folioQueja));
+
+// Segunda queja cuyo quejoso SÍ está en el dataset del modelo (FOL-PRU-0028: andrea sanchez vidal).
+const FOLIO_Q2 = 'FOL-OBS-M' + Date.now().toString().slice(-5);
+sql(`INSERT INTO quejas (id, numero_folio, correo_institucional, motivo, descripcion, fecha_creacion,
+       nombre_quejoso, apellido1_quejoso, apellido2_quejoso, unidad_academica_clave, origen_registro, estatus)
+     VALUES ((SELECT coalesce(max(id),0)+1 FROM quejas), '${FOLIO_Q2}', 'andrea.sv@alumno.ipn.mx', 'Comentarios sexuales',
+       'Un profesor me hace comentarios sexuales en clase y me incomoda.', now(), 'Andrea', 'Sánchez', 'Vidal', 'ESCOM', 'AUTENTICADO', 'TURNADA');`);
+const ing2 = await llamar('POST', '/ingesta/expedientes', { tk: null, body: {
+  folioOrigen: FOLIO_Q2, tema: 'Comentarios sexuales', descripcionHechos: 'Un profesor me hace comentarios sexuales en clase y me incomoda.',
+  fechaRecepcion: new Date().toISOString().slice(0, 19),
+  quejoso: { nombreCompleto: 'Andrea Sánchez Vidal', correo: 'andrea.sv@alumno.ipn.mx', unidadAcademica: 'ESCOM' } }});
+r = await llamar('GET', `/antecedentes/${ing2.json.folio}`);
+const deModelo = r.json.resultados.find(a => a.folioQueja === 'FOL-PRU-0028');
+check('Modelo: encuentra el caso del mismo quejoso (nombre sin acentos) con su %', deModelo && deModelo.coincidencias.includes('Mismo quejoso') && deModelo.similitud >= 0 && deModelo.descripcion, r.json.resultados);
+check('Modelo: no trae quejas de otras personas', r.json.resultados.every(a => a.coincidencias.some(c => c.startsWith('Mismo'))), r.json.resultados.map(a => a.folioQueja));
 
 r = await llamar('GET', `/antecedentes/${PC}/manual?quejoso=${encodeURIComponent('ana lopez')}`);
 const folios = x => x.json.resultados.map(a => a.folioQueja);
@@ -102,10 +117,11 @@ check('Manual sin nombres → 409', r.status === 409, r);
 const manualSel = (await llamar('GET', `/antecedentes/${PC}/manual?denunciado=gomez`)).json.resultados.find(a => a.folioQueja === 'HIST-2019-0101');
 const item = (a, fuente) => ({ origen: a.origen, folioQueja: a.folioQueja, fuente, similitud: a.similitud, asunto: a.asunto,
   fecha: a.fecha, nombreQuejoso: a.nombreQuejoso, nombreDenunciado: a.nombreDenunciado, unidadAcademica: a.unidadAcademica,
-  estatus: a.estatus, extracto: a.extracto });
+  estatus: a.estatus, extracto: a.extracto, descripcion: a.descripcion, resultado: a.resultado });
 
 r = await llamar('POST', `/antecedentes/${PC}/guardados`, { body: { antecedentes: [item(manualSel, 'MANUAL'), item(deModelo, 'MODELO')] } });
 check('Guardar selección de ambas pestañas → 2 guardados', r.status === 200 && r.json.length === 2, r);
+check('Guardado conserva la narrativa completa (para el detalle)', r.json.every(g => g.descripcion), r.json);
 check('Guardado manual sin similitud; con analista', r.json.find(g => g.fuente === 'MANUAL')?.similitud === null && r.json.every(g => g.analistaNombre), r.json);
 
 r = await llamar('POST', `/antecedentes/${PC}/guardados`, { body: { antecedentes: [item(manualSel, 'MANUAL')] } });
@@ -134,7 +150,7 @@ r = await llamar('POST', '/citas', { body: { folio: PC, fechaCita: manana, horaC
 check('Agendar → PROGRAMADA con plazo ≈ 48 h', r.status === 200 && r.json.estatus === 'PROGRAMADA'
   && Math.abs(new Date(r.json.fechaLimiteRespuesta) - Date.now() - 48 * 3600000) < 120000, r.json);
 check('Cita trae folioQueja', r.json.folioQueja === FOLIO_Q, r.json.folioQueja);
-const CITA = r.json.id;
+let CITA = r.json.id;
 
 r = await llamar('POST', '/citas', { body: { folio: PC, fechaCita: manana, horaCita: '12:00', tipoCita: 'PRESENCIAL', motivo: 'Otra' } });
 check('Segunda cita con una activa → 409', r.status === 409, r);
@@ -159,14 +175,20 @@ check('Cancelada por quejoso sigue activa (no deja crear otra) → 409', r.statu
 
 const pasado = new Date(Date.now() + 4 * 86400000).toISOString().slice(0, 10);
 r = await llamar('PUT', `/citas/${CITA}/reagendar`, { body: { fechaCita: pasado, horaCita: '09:00' } });
-check('Reagendar → PROGRAMADA, plazo nuevo y respuesta limpia', r.status === 200 && r.json.estatus === 'PROGRAMADA'
-  && !r.json.motivoCancelacionQuejoso && !r.json.respuestaRegistradaPor && r.json.fechaLimiteRespuesta, r.json);
+check('Reagendar crea cita NUEVA PROGRAMADA con plazo nuevo', r.status === 200 && r.json.estatus === 'PROGRAMADA'
+  && r.json.id !== CITA && r.json.citaAnteriorId === CITA && !r.json.motivoCancelacionQuejoso && r.json.fechaLimiteRespuesta, r.json);
+const ANTERIOR = CITA; CITA = r.json.id;
+let hist = (await llamar('GET', `/citas/folio/${PC}`)).json;
+const vieja = hist.find(c => c.id === ANTERIOR);
+check('Historial: la anterior queda REAGENDADA conservando el motivo del quejoso', vieja?.estatus === 'REAGENDADA' && vieja.motivoCancelacionQuejoso === 'Tengo examen ese día', vieja);
+r = await llamar('PUT', `/citas/${ANTERIOR}/confirmar`);
+check('La cita reagendada ya no acepta movimientos → 409', r.status === 409, r);
 
 r = await llamar('PUT', `/quejoso/citas/${CITA}/confirmar`, { tk: QUEJOSO });
 check('Quejoso confirma la nueva fecha → CONFIRMADA', r.status === 200 && r.json.estatus === 'CONFIRMADA' && r.json.respuestaRegistradaPor === 'QUEJOSO', r.json);
 
 // Vencimiento: se reagenda y se fuerza el plazo al pasado; el proceso corre cada 10 s en esta prueba.
-await llamar('PUT', `/citas/${CITA}/reagendar`, { body: { fechaCita: pasado, horaCita: '11:00' } });
+CITA = (await llamar('PUT', `/citas/${CITA}/reagendar`, { body: { fechaCita: pasado, horaCita: '11:00' } })).json.id;
 sql(`UPDATE citas_primer_contacto SET fecha_limite_respuesta = timestamp '2000-01-01 00:00' WHERE id = ${CITA};`);
 r = await llamar('PUT', `/quejoso/citas/${CITA}/confirmar`, { tk: QUEJOSO });
 check('Plazo vencido (antes del proceso): quejoso no puede confirmar → 409', r.status === 409, r);
@@ -186,4 +208,7 @@ r = await llamar('PUT', `/quejoso/citas/${CITA}/confirmar`, { tk: QUEJOSO });
 check('Cita cancelada: quejoso no puede responder → 409', r.status === 409, r);
 
 console.log(`\nResultado: ${ok} OK, ${fallas} fallas. Expediente ${PC}, queja ${FOLIO_Q}`);
+hist = (await llamar('GET', `/citas/folio/${PC}`)).json;
+check('Historial completo: 3 citas (2 reagendadas + 1 cancelada)', hist.length === 3 && hist.filter(c => c.estatus === 'REAGENDADA').length === 2, hist.map(c => c.estatus));
+console.log(`Total final: ${ok} OK, ${fallas} fallas.`);
 process.exit(fallas ? 1 : 0);

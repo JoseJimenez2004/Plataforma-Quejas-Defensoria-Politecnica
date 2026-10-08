@@ -123,9 +123,9 @@ public class BandejaAnalisisService {
     ) {
 
         boolean tieneCitaActiva =
-                citaRepository.existsByExpedienteIdAndEstatusNot(
+                citaRepository.existsByExpedienteIdAndEstatusNotIn(
                         expediente.getId(),
-                        CitaPrimerContactoService.CANCELADA
+                        CitaPrimerContactoService.CERRADAS
                 );
 
         return BandejaAnalisisDTO.builder()

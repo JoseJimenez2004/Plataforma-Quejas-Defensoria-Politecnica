@@ -18,11 +18,13 @@ import java.util.Map;
  * Motor que consulta el MODELO de antecedentes (antecedentes-service, proyecto Modelo-Java):
  *
  *   POST {antecedentes.modelo.url}/api/antecedentes/buscar
- *        { "texto": "...", "umbral": 0.05, "topK": 15 }
+ *        { "texto": "...", "umbral": 0.0, "topK": 500 }
  *   →    { "antecedentes": [ { "queja": {...}, "similitud": 0.42, "historico": true } ] }
  *
- * El modelo trae su propio índice de quejas (hoy, su dataset de prueba); aquí solo se
- * traduce su respuesta al formato de la pantalla. Si la URL no está configurada el motor
+ * El modelo trae su propio índice de quejas (hoy, su dataset de prueba) y solo compara
+ * TEXTO: no sabe quién es el quejoso. Por eso se le piden TODOS sus resultados (umbral 0,
+ * topK alto) y AntecedentesService se queda solo con los del mismo quejoso o del mismo
+ * denunciado. El modelo en sí no se modifica (es de otro compañero). Si la URL no está configurada el motor
  * queda deshabilitado, y si falla, AntecedentesService usa el motor por reglas.
  */
 @Component
@@ -38,8 +40,8 @@ public class MotorAntecedentesModelo implements MotorAntecedentes {
 
     public MotorAntecedentesModelo(
             @Value("${antecedentes.modelo.url:}") String url,
-            @Value("${antecedentes.modelo.umbral:0.05}") double umbral,
-            @Value("${antecedentes.modelo.max-resultados:15}") int maxResultados,
+            @Value("${antecedentes.modelo.umbral:0.0}") double umbral,
+            @Value("${antecedentes.modelo.max-resultados:500}") int maxResultados,
             QuejaReferenciaRepository quejaRepository
     ) {
         this.url = url == null ? "" : url.strip().replaceAll("/+$", "");
@@ -94,7 +96,6 @@ public class MotorAntecedentesModelo implements MotorAntecedentes {
         }
 
         String folioPropio = expediente.getFolioOrigen();
-        String quejosoPropio = NombresPersona.normalizar(expediente.getQuejosoNombre());
 
         List<AntecedenteDTO> resultados = new ArrayList<>();
         for (JsonNode item : respuesta.path("antecedentes")) {
@@ -105,14 +106,7 @@ public class MotorAntecedentesModelo implements MotorAntecedentes {
             }
 
             String nombreQuejoso = persona(q.path("quejoso"));
-            boolean mismoQuejoso = !quejosoPropio.isEmpty()
-                    && quejosoPropio.equals(NombresPersona.normalizar(nombreQuejoso));
-
             List<String> coincidencias = new ArrayList<>();
-            if (mismoQuejoso) {
-                coincidencias.add("Mismo quejoso");
-            }
-            coincidencias.add("Narrativa similar (modelo)");
 
             String narrativa = texto(q, "texto_original");
 
@@ -128,10 +122,11 @@ public class MotorAntecedentesModelo implements MotorAntecedentes {
                     .unidadAcademica(texto(q, "unidad_academica"))
                     .nombreQuejoso(nombreQuejoso)
                     .nombreDenunciado(persona(q.path("denunciado")))
+                    .correoQuejoso(texto(q.path("quejoso"), "correo"))
+                    .identificacionQuejoso(texto(q.path("quejoso"), "numero_identificacion"))
                     .estatus(texto(q, "estatus"))
                     .similitud((int) Math.round(Math.min(1.0, item.path("similitud").asDouble()) * 100))
                     .coincidencias(coincidencias)
-                    .mismoQuejoso(mismoQuejoso)
                     .origen(item.path("historico").asBoolean(false)
                             ? NombresPersona.ORIGEN_HISTORICO
                             : NombresPersona.ORIGEN_SISTEMA)

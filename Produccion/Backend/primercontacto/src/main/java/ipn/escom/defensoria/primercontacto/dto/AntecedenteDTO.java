@@ -45,4 +45,8 @@ public class AntecedenteDTO {
 
     /* Solo históricos: cómo terminó el caso. */
     private String resultado;
+
+    /* Para reconocer al mismo quejoso aunque el nombre venga escrito distinto. */
+    private String correoQuejoso;
+    private String identificacionQuejoso;
 }

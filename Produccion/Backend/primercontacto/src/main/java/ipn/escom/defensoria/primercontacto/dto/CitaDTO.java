@@ -35,4 +35,7 @@ public class CitaDTO {
     private String fechaRespuestaQuejoso;
     private String motivoCancelacionQuejoso;
     private String respuestaRegistradaPor;
+
+    /* Si sustituye a una cita reagendada, el id de la anterior. */
+    private Long citaAnteriorId;
 }

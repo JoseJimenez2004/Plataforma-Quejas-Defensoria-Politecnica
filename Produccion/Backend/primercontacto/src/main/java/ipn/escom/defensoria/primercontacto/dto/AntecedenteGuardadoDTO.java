@@ -36,6 +36,8 @@ public class AntecedenteGuardadoDTO {
     private String estatus;
     private String folioPrimerContacto;
     private String extracto;
+    private String descripcion;
+    private String resultado;
 
     private String analistaNombre;
     private String fechaRegistro;

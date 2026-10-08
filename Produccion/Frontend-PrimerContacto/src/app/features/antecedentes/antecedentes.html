@@ -45,7 +45,7 @@
       <div class="lista-guardados">
         @for (guardado of guardados; track guardado.id) {
           <div class="guardado">
-            <div class="guardado-datos">
+            <div class="guardado-datos clicable" (click)="verDetalle(guardado)" matTooltip="Ver detalle de la queja">
               <strong>{{ guardado.folioQueja }}</strong>
               <span class="chip origen" [class.historico]="guardado.origen === 'HISTORICO'">
                 {{ etiquetaOrigen(guardado.origen) }}
@@ -172,9 +172,7 @@
             <span>
               <strong>{{ esProvisional ? 'Motor provisional' : 'Modelo de búsqueda' }}.</strong>
               {{ modelo.descripcionMotor }}
-              @if (modelo.quejasAnalizadas > 0) {
-                Se compararon {{ modelo.quejasAnalizadas }} quejas.
-              }
+              Solo se muestran quejas del <strong>mismo quejoso</strong> o del <strong>mismo denunciado</strong>.
             </span>
             <button mat-stroked-button class="motor-boton" (click)="buscarConModelo()">
               <mat-icon>refresh</mat-icon> Volver a buscar
@@ -213,7 +211,7 @@
                 <mat-icon>verified</mat-icon>
                 <p>
                   @if (modelo.resultados.length === 0) {
-                    No se encontraron antecedentes para esta queja.
+                    No se encontraron quejas del mismo quejoso ni del mismo denunciado.
                   } @else {
                     Ningún antecedente cumple los filtros seleccionados.
                   }
@@ -271,7 +269,7 @@
 
     <div class="contenido">
       <div class="titulo">
-        <strong>{{ antecedente.asunto || 'Sin asunto' }}</strong>
+        <strong class="clicable" (click)="verDetalle(antecedente)" matTooltip="Ver detalle de la queja">{{ antecedente.asunto || 'Sin asunto' }}</strong>
         <span class="chip origen" [class.historico]="antecedente.origen === 'HISTORICO'">
           {{ etiquetaOrigen(antecedente.origen) }}
         </span>
@@ -299,6 +297,9 @@
     </div>
 
     <div class="acciones">
+      <button mat-stroked-button (click)="verDetalle(antecedente)">
+        <mat-icon>visibility</mat-icon> Ver detalle
+      </button>
       <button mat-stroked-button (click)="verResumen(antecedente)">
         <mat-icon>summarize</mat-icon> Resumen
       </button>

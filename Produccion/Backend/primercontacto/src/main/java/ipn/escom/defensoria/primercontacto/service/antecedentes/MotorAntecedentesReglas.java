@@ -127,6 +127,8 @@ public class MotorAntecedentesReglas implements MotorAntecedentes {
                         .nombreDenunciado(NombresPersona.unir(candidata.getNombreDenunciado(),
                                 candidata.getApellido1Denunciado(), candidata.getApellido2Denunciado()))
                         .descripcion(candidata.getDescripcion())
+                        .correoQuejoso(candidata.getCorreoInstitucional())
+                        .identificacionQuejoso(candidata.getNumeroIdentificacionQuejoso())
                         .build());
             }
         }

@@ -51,6 +51,11 @@ public interface CitaPrimerContactoRepository
             List<Long> expedienteIds
     );
 
+    boolean existsByExpedienteIdAndEstatusNotIn(
+            Long expedienteId,
+            java.util.Collection<String> estatus
+    );
+
     boolean existsByExpedienteIdAndEstatusNot(
             Long expedienteId,
             String estatus

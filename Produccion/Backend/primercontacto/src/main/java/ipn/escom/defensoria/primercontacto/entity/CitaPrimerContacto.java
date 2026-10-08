@@ -83,6 +83,10 @@ public class CitaPrimerContacto {
     @Column(name = "motivo_cancelacion_quejoso", columnDefinition = "TEXT")
     private String motivoCancelacionQuejoso;
 
+    /* Si esta cita sustituye a otra que se reagendó, el id de la anterior (historial). */
+    @Column(name = "cita_anterior_id")
+    private Long citaAnteriorId;
+
     /* QUEJOSO si respondió desde su panel; ANALISTA si el analista registró su respuesta. */
     @Column(name = "respuesta_registrada_por", length = 20)
     private String respuestaRegistradaPor;

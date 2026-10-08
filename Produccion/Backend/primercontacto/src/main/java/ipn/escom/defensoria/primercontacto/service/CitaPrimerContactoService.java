@@ -42,6 +42,10 @@ import java.util.Locale;
  *                                                               │ (vuelve a PROGRAMADA con
  *   cualquiera ──el analista cancela───────▶ CANCELADA          │ un plazo nuevo) o cancela
  *
+ * Reagendar NO modifica la cita: la deja en REAGENDADA (conservando lo que pasó con ella:
+ * respuesta del quejoso, motivo...) y crea una cita NUEVA con su propio plazo, que apunta a
+ * la anterior en citaAnteriorId. Así el expediente guarda el historial completo de citas.
+ *
  * CANCELADA_QUEJOSO y SIN_RESPUESTA siguen contando como cita activa del expediente: quedan
  * pendientes de que el analista decida qué hacer.
  */
@@ -55,6 +59,11 @@ public class CitaPrimerContactoService {
     public static final String CANCELADA = "CANCELADA";
     public static final String CANCELADA_QUEJOSO = "CANCELADA_QUEJOSO";
     public static final String SIN_RESPUESTA = "SIN_RESPUESTA";
+    /* La cita se movió a otra fecha: queda en el historial y la sustituye una cita nueva. */
+    public static final String REAGENDADA = "REAGENDADA";
+
+    /* Citas que ya no cuentan como cita activa del expediente. */
+    public static final List<String> CERRADAS = List.of(CANCELADA, REAGENDADA);
 
     public static final String RESPUESTA_QUEJOSO = "QUEJOSO";
     public static final String RESPUESTA_ANALISTA = "ANALISTA";
@@ -106,9 +115,9 @@ public class CitaPrimerContactoService {
         }
 
         boolean yaTieneCita = citaPrimerContactoRepository
-                .existsByExpedienteIdAndEstatusNot(
+                .existsByExpedienteIdAndEstatusNotIn(
                         expediente.getId(),
-                        CANCELADA
+                        CERRADAS
                 );
 
         if (yaTieneCita) {
@@ -221,9 +230,10 @@ public class CitaPrimerContactoService {
     }
 
     /**
-     * Reagendar de verdad: se mueve la MISMA cita (antes el front cancelaba y creaba otra,
-     * y si fallaba el segundo paso el quejoso se quedaba sin cita). Vuelve a PROGRAMADA
-     * porque la nueva fecha todavía no está confirmada.
+     * Reagendar: la cita actual queda en REAGENDADA (con su historia) y se crea una cita
+     * nueva PROGRAMADA con plazo de respuesta nuevo, en una sola transacción lógica: si el
+     * guardado de la nueva fallara, la anterior ya no estaría activa, así que el analista
+     * vería el error y volvería a agendar.
      */
     public CitaDTO reagendarCita(
             Long id,
@@ -231,28 +241,37 @@ public class CitaPrimerContactoService {
             PersonalAdministrativo analista
     ) {
 
-        CitaPrimerContacto cita = obtenerActiva(id);
+        CitaPrimerContacto anterior = obtenerActiva(id);
+        LocalDateTime ahora = LocalDateTime.now();
 
-        cita.setFechaCita(LocalDate.parse(dto.getFechaCita()));
-        cita.setHoraCita(LocalTime.parse(dto.getHoraCita()));
+        // La cita anterior queda en el historial tal como estaba (respuesta, motivo...).
+        anterior.setEstatus(REAGENDADA);
+        registrarMovimiento(anterior, analista);
+        citaPrimerContactoRepository.save(anterior);
 
-        if (dto.getTipoCita() != null && !dto.getTipoCita().isBlank()) {
-            cita.setTipoCita(dto.getTipoCita());
-        }
+        CitaPrimerContacto nueva = CitaPrimerContacto.builder()
+                .expedienteId(anterior.getExpedienteId())
+                .folio(anterior.getFolio())
+                .quejosoId(anterior.getQuejosoId())
+                .quejosoNombre(anterior.getQuejosoNombre())
+                .analistaId(analista.getId())
+                .analistaNombre(analista.getNombreCompleto())
+                .fechaCita(LocalDate.parse(dto.getFechaCita()))
+                .horaCita(LocalTime.parse(dto.getHoraCita()))
+                .tipoCita(dto.getTipoCita() != null && !dto.getTipoCita().isBlank()
+                        ? dto.getTipoCita() : anterior.getTipoCita())
+                .motivo(dto.getMotivo() != null && !dto.getMotivo().isBlank()
+                        ? dto.getMotivo() : anterior.getMotivo())
+                .estatus(PROGRAMADA)
+                .fechaCreacion(ahora)
+                .fechaActualizacion(ahora)
+                .actualizadoPorId(analista.getId())
+                .actualizadoPorNombre(analista.getNombreCompleto())
+                .fechaLimiteRespuesta(ahora.plusHours(horasRespuesta))
+                .citaAnteriorId(anterior.getId())
+                .build();
 
-        if (dto.getMotivo() != null && !dto.getMotivo().isBlank()) {
-            cita.setMotivo(dto.getMotivo());
-        }
-
-        // Fecha nueva = plazo nuevo; la respuesta anterior (si la hubo) ya no aplica.
-        cita.setEstatus(PROGRAMADA);
-        cita.setFechaLimiteRespuesta(LocalDateTime.now().plusHours(horasRespuesta));
-        cita.setFechaRespuestaQuejoso(null);
-        cita.setMotivoCancelacionQuejoso(null);
-        cita.setRespuestaRegistradaPor(null);
-        registrarMovimiento(cita, analista);
-
-        CitaPrimerContacto guardada = citaPrimerContactoRepository.save(cita);
+        CitaPrimerContacto guardada = citaPrimerContactoRepository.save(nueva);
 
         avisar(guardada, null,
                 "Tu cita de primer contacto cambió de fecha",
@@ -433,6 +452,10 @@ public class CitaPrimerContactoService {
             throw new OperacionInvalidaException("La cita ya está cancelada.");
         }
 
+        if (REAGENDADA.equals(cita.getEstatus())) {
+            throw new OperacionInvalidaException("Esta cita ya se reagendó; usa la cita nueva.");
+        }
+
         return cita;
     }
 
@@ -497,6 +520,7 @@ public class CitaPrimerContactoService {
                 .fechaRespuestaQuejoso(cita.getFechaRespuestaQuejoso() != null ? cita.getFechaRespuestaQuejoso().toString() : null)
                 .motivoCancelacionQuejoso(cita.getMotivoCancelacionQuejoso())
                 .respuestaRegistradaPor(cita.getRespuestaRegistradaPor())
+                .citaAnteriorId(cita.getCitaAnteriorId())
                 .build();
     }
 }

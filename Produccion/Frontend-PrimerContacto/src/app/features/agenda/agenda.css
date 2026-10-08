@@ -310,6 +310,12 @@ mat-chip {
   color: var(--peligro) !important;
 }
 
+/* Reagendada: quedó en el historial, la sustituye una cita nueva. */
+.rescheduled {
+  background: #f3f4f6 !important;
+  color: var(--texto-suave) !important;
+}
+
 /* Cancelada por el quejoso o sin respuesta: el analista debe reagendar o cancelar. */
 .needs-action {
   background: #fff1e0 !important;

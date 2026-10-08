@@ -72,6 +72,9 @@ public class QuejaReferencia {
     @Column(name = "apellido2_quejoso", insertable = false, updatable = false)
     private String apellido2Quejoso;
 
+    @Column(name = "numero_identificacion_quejoso", insertable = false, updatable = false)
+    private String numeroIdentificacionQuejoso;
+
     // ---- Solo lectura: búsqueda manual de antecedentes por denunciado ----
 
     @Column(name = "nombre_denunciado", insertable = false, updatable = false)
