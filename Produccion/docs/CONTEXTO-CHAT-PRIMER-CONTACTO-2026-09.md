@@ -2,7 +2,7 @@
 
 > Resumen de una conversación previa, escrito para darle contexto a un chat nuevo.
 > Repo: `Plataforma-Quejas-Defensoria-Politecnica`, rama de trabajo `Pre-Produccion2`.
-> Fecha del resumen: 2026-09-27.
+> Fecha del resumen: 2026-09-27 (actualizado 2026-10-08: ver sección 13, lo más reciente).
 
 ## 1. Objetivo original
 
@@ -421,43 +421,290 @@ mismo por SSH; el asistente verifica después con lecturas. Para "entrar como an
 tropezar con esos bloqueos, se usó el login real de la app (usuario/contraseña de una cuenta
 de prueba) en vez de fabricar un token.
 
-## 13. Migración a 3 servidores y observaciones de Primer Contacto (2026-10-08)
+## 13. Sesión 2026-10-08: migración a 3 servidores + observaciones del equipo
 
-**Servidores nuevos** (el compañero migró el 2026-10-04; los viejos `2.25.78.22`/`2.25.64.47`
-quedan obsoletos): BD `169.58.62.99` (`defensoria-db` 5432, `historico-db` 5433), backend
-`156.67.26.73`, frontend `169.58.62.111`. La base se limpió a propósito: ya no existen la cuenta
-`prueba.demo@ipn.mx` ni las quejas `FOL-DEMO-*`. **Primer Contacto, Subdefensoría e Histórico
-todavía no están desplegados en los servidores nuevos** (hay imagen, no contenedor; el jar y el yml
-de primer-contacto que hay allá son los viejos, en H2). Tampoco hay front ni ruta nginx de Primer
-Contacto. `origin/Produccion` se mergeó a `Pre-Produccion2` sin conflictos (`28528f6`).
+> **Lo más reciente: empezar aquí en el próximo chat.** Todo lo de esta sección está en el
+> commit `65b503b` (código) más el commit de documentación que le sigue, ambos empujados a
+> `origin/Pre-Produccion2`. **Nada de esto está desplegado en ningún servidor.** El usuario lo
+> iba a probar en local al día siguiente (2026-10-09). Al cerrar la sesión se apagaron todos los
+> servicios locales (backend, modelo, front y el contenedor `defensoria-db-local`).
 
-**Observaciones implementadas** (probadas en local, 39/39 en la prueba E2E de la API + capturas):
+### 13.1 Qué cambió en el proyecto (lo hizo el compañero, rama `Produccion`)
 
-1. **Antecedentes manual + modelo.** Pestaña *Búsqueda manual* (por quejoso y/o denunciado, en
-   `quejas` y en `historico_db`, sin importar acentos) y pestaña *Con el modelo*
-   (`MotorAntecedentesModelo` → `antecedentes-service` del compañero, `POST /api/antecedentes/buscar`;
-   si no responde, cae al motor por reglas y lo avisa). La selección se mantiene entre pestañas y
-   se guarda como antecedentes finales en la tabla nueva `antecedentes_primer_contacto`
-   (`GET/POST /antecedentes/{folio}/guardados`, `DELETE .../guardados/{id}`). Sustituye al viejo
-   "Marcar como antecedente" que dejaba una nota. El histórico se lee directo y en solo lectura
-   (`HistoricoAntecedentesRepository`) porque la API interna de historico-service solo busca al
-   quejoso por nombre exacto. Ojo: el modelo hoy solo busca en su dataset de prueba (50 quejas
-   sintéticas), con similitudes bajas (≤ 0.13), por eso el umbral por defecto es 0.05.
-2. **Resumen simulado** (solo front): botón *Resumen* → resumen propuesto + frases de impacto,
-   calculados en el navegador (`core/utils/resumen-simulado.ts`) con la etiqueta "Simulado".
-3. **Quejas por analista:** NO se hizo. El compañero pidió dejar que Primer Contacto vea todas por
-   ahora (tema de roles pendiente). Roles: ADMIN_SISTEMAS, RECEPCIONISTA, ANALISTA_PRIMER_CONTACTO,
-   SUBDEFENSOR, DEFENSOR (sin pantalla) + quejoso sin rol. El combo "Defensor / Abogado
-   responsable" del turnado lista DEFENSOR/SUBDEFENSOR y ese dato no llega a Primer Contacto.
-4. **Citas con 48 h:** al agendar/reagendar se fija `fecha_limite_respuesta`; estados nuevos
-   `CANCELADA_QUEJOSO` (con motivo) y `SIN_RESPUESTA` (proceso cada 5 min). El analista puede
-   registrar la respuesta del quejoso. Para el portal del quejoso (lo hace el compañero) quedan
-   listos `/api/primer-contacto/quejoso/citas/...`; contrato en `docs/CONTRATO-CITAS-QUEJOSO.md`.
+Commit `3e4f9f9` del compañero ("bicho", 2026-10-05): migró todo a **3 servidores nuevos** y
+empezó un modelo de antecedentes en Java (`Produccion/Modelo-Java/`). Los servidores viejos
+(`2.25.78.22` back, `2.25.64.47` front) quedan obsoletos.
 
-**Para desplegar en el servidor nuevo, agregar al yml de primer-contacto** (además de datasource,
-JWT, `notificaciones.service.url` y `subdefensoria.base-url` con las IPs nuevas):
-`antecedentes.modelo.url: http://156.67.26.73:8093` y `historico.datasource.url/username/password`
-apuntando a `169.58.62.99:5433/historico_db`.
+| Servidor | IP | Qué corre (verificado por SSH el 2026-10-08) |
+|---|---|---|
+| BD | `169.58.62.99` | `defensoria-db` (5432, `defensoria_db`) y `historico-db` (5433, `historico_db`) |
+| Backend | `156.67.26.73` | auth, quejas, notificaciones, catalogo, admin, revision, chatbot + IA: `antecedentes-service` (8093), `resumen-service` (8090), `qwen-gguf` |
+| Frontend | `169.58.62.111` | `router-nginx`, `defensoria-web` (8090), `admin-web` (8091), `revision-web` (8092) |
 
-**Pruebas locales:** `dev-local/init/04-busqueda-manual-prueba.sql` (idempotente) agrega
-denunciados de prueba y crea `historico_db` con 4 casos.
+Firewalls (capturas del usuario): la BD solo acepta 5432/5433 desde el backend; el backend
+acepta 8082–8099 solo desde el frontend; el frontend tiene 80/443/8090/8091/8092 abiertos a
+todos. SSH (22) abierto a todos en los 3, con contraseña de root. Se le recomendó al equipo
+cambiarla y usar llaves: la contraseña de Postgres (igual a la de root) está escrita en
+`Backend/ARQUITECTURA-3-SERVIDORES.md`. Además `revision-service.yml` del repo dice
+`Temportal2026@` (posible error de dedo).
+
+**Estado de Primer Contacto en los servidores nuevos: NO desplegado.**
+- `primer-contacto-service`, `subdefensoria-service` e `historico-service` tienen imagen
+  (`localhost/defensoria-*`) pero **no tienen contenedor**.
+- El `primer-contacto-service.jar` del servidor (53.9 MB) es el **viejo**: el bueno pesa
+  ~57.6 MB y trae OpenPDF y antecedentes.
+- El yml de primer-contacto del servidor es la **copia vieja del repo**: dice H2 y no tiene
+  datasource ni `notificaciones.service.url`. El compañero copió `config-files/` del repo.
+- La `defensoria_db` nueva se **limpió a propósito** (1 queja y 6 usuarios; ninguna tabla de
+  Primer Contacto). Ya no existen la cuenta `prueba.demo@ipn.mx` ni las quejas `FOL-DEMO-*`;
+  hay que recrearlas al desplegar.
+- El nginx activo (`/apps/aplicaciones/defensoria/router/config/defensoria.conf`) **no tiene**
+  `/primer-contacto/` ni `/api/primer-contacto/` (ni las de Subdefensoría). El compañero lo
+  estaba moviendo ese día (hay un `defensoria.conf.roto-20261008`).
+- Tip de SSH para el usuario: cada servidor se revisa entrando a ESE servidor (`exit` y
+  `ssh root@<otra-ip>`). La primera vez corrió todo dentro del backend por error.
+
+**Git:** se mergeó `origin/Produccion` → `Pre-Produccion2` (commit `28528f6`, sin conflictos:
+ningún archivo en común) y se empujó. **No** se mergeó `Pre-Produccion2` → `Produccion`. El
+plan es un PR cuando las observaciones estén probadas, avisando al compañero, porque él
+despliega desde `Produccion`.
+
+### 13.2 Observaciones del equipo y qué se decidió
+
+| # | Observación | Decisión |
+|---|---|---|
+| 1 | Antecedentes: búsqueda manual (por quejoso y denunciado) + con el modelo; el defensor elige cuáles guardar | **Hecho.** La manual busca en sistema + histórico; el modelo ya está conectado; la selección se mantiene entre pestañas |
+| 2 | Botón "Resumen" con resumen propuesto y frases de impacto | **Hecho, solo front y SIMULADO** (el modelo de resumen no está terminado) |
+| 3 | Que a cada abogado le lleguen solo sus quejas | **NO se hizo.** El compañero pidió que Primer Contacto siga viendo todas por ahora (tema de roles) |
+| 4 | Al agendar cita, el quejoso tiene 48 h para confirmar o cancelar con motivo | **Hecho del lado de Primer Contacto.** El portal del quejoso lo hace el compañero: **no tocar `Produccion/Frontend`** |
+
+Roles del sistema (para la discusión del punto 3): `ADMIN_SISTEMAS`, `RECEPCIONISTA`,
+`ANALISTA_PRIMER_CONTACTO`, `SUBDEFENSOR`, `DEFENSOR` (este último sin pantalla propia) y el
+quejoso, cuyo JWT no lleva claim `rol`.
+
+El combo "Defensor / Abogado responsable" del turnado (Frontend-Revision `pages/turnado`)
+lista DEFENSOR/SUBDEFENSOR y guarda el nombre en `quejas.defensor_asignado`, pero **ese dato no
+viaja a Primer Contacto**. `ExpedienteEntranteRequest.abogadoAsesorId/Nombre` existe, pero
+nadie lo llena. Opciones que se plantearon:
+- **(A)** el combo lista analistas de PC y cada uno ve solo las suyas;
+- **(B)** un segundo combo aparte.
+
+### 13.3 Antecedentes (observación 1): detalle técnico
+
+**Backend** (`primercontacto/.../service/antecedentes/`):
+- **`AntecedentesService` (reescrito):** `buscar` (modelo con fallback), `buscarManual`,
+  `listarGuardados`, `guardar`, `quitarGuardado`. Ya no inyecta la interfaz
+  `MotorAntecedentes`, sino las dos implementaciones concretas.
+- **`MotorAntecedentesModelo` (nuevo):**
+  - Hace `POST {antecedentes.modelo.url}/api/antecedentes/buscar` con `{texto, umbral, topK}`.
+  - Traduce `{antecedentes:[{queja, similitud, historico}]}` al `AntecedenteDTO`.
+  - Timeouts: 3 s de conexión y 15 s de lectura.
+  - Si la URL está vacía, queda deshabilitado. Si falla, `AntecedentesService` usa
+    `MotorAntecedentesReglas` y agrega un aviso.
+  - Texto que manda: tema + descripción del expediente + motivo y descripción de la queja.
+- **`HistoricoAntecedentesRepository` (nuevo):**
+  - Lee `historico_db.quejas_historicas` directo con `JdbcTemplate`, en solo lectura.
+  - **A propósito no registra un `DataSource` como bean**, porque eso desplazaría al
+    principal.
+  - Lee directo porque la API interna de historico-service
+    (`/api/historico/interno/antecedentes/por-nombre`) solo busca al quejoso por nombre exacto,
+    no al denunciado.
+  - Si `historico.datasource.url` está vacío o falla, avisa y busca solo en el sistema.
+  - El código fuente de historico-service está en `Produccion/_backups/historico-service-src.tgz`
+    (no en `Backend/`).
+- **`NombresPersona` (nuevo):** normaliza nombres (minúsculas, sin acentos, conserva la ñ) y
+  compara "todas las palabras buscadas aparecen en el nombre", por subcadena.
+- **Búsqueda manual:** carga `quejas` (sistema, sin la propia) + histórico. La "similitud" es
+  100 si coinciden quejoso y denunciado, y 50 si coincide uno. Solo sirve para ordenar; el
+  front no la muestra.
+- **`QuejaReferencia`:** nuevas columnas de solo lectura `apellido2_quejoso`,
+  `nombre_denunciado`, `apellido1_denunciado` y `apellido2_denunciado`.
+- **DTOs:**
+  - `AntecedenteDTO` agrega `origen` (SISTEMA/HISTORICO), `nombreDenunciado`, `descripcion`
+    (narrativa completa, para el resumen) y `resultado`.
+  - `BusquedaAntecedentesDTO` agrega `avisos`.
+- **Tabla nueva `antecedentes_primer_contacto`** (entidad `AntecedenteExpediente`):
+  - Guarda una copia de lo que se vio al elegir (asunto, nombres, extracto...), la `fuente`
+    (MANUAL/MODELO/REGLAS_PROVISIONAL), la `similitud` (null si es manual), el analista y la
+    fecha.
+  - Es única por (expediente, origen, folio): volver a guardar no duplica.
+  - No deja guardar la propia queja.
+
+**Endpoints** (todos con rol `ANALISTA_PRIMER_CONTACTO`):
+- `GET /api/primer-contacto/antecedentes/{folioPC}`: modelo (o reglas + aviso).
+- `GET /api/primer-contacto/antecedentes/{folioPC}/manual?quejoso=&denunciado=`: 409 si ambos
+  vienen vacíos.
+- `GET|POST /api/primer-contacto/antecedentes/{folioPC}/guardados`: el POST recibe
+  `{antecedentes:[...]}`.
+- `DELETE /api/primer-contacto/antecedentes/{folioPC}/guardados/{id}`: 404 si es de otro
+  expediente.
+
+**Configuración nueva** (`application.properties`):
+- `antecedentes.modelo.url` (`${ANTECEDENTES_MODELO_URL:}`)
+- `antecedentes.modelo.umbral=0.05`
+- `historico.datasource.url/username/password` (`${HISTORICO_DB_URL:...localhost:5433/historico_db}`)
+
+**Ojo con el modelo del compañero:**
+- Hoy solo busca en su dataset de prueba: 50 quejas sintéticas en `Modelo-Java/Dataset/*.json`,
+  no en quejas reales.
+- Sus similitudes son bajas (máximo ~0.13). Por eso el umbral se bajó de 0.15 a **0.05**: con
+  0.15 no salía nada.
+- Sus folios (`FOL-PRU-*`, `FOL-HIS-*`) no existen en `defensoria_db`. El flag `historico` del
+  modelo se traduce a origen HISTORICO/SISTEMA.
+
+**Front** (`Frontend-PrimerContacto`): `features/antecedentes/*` se reescribió.
+- Tarjeta "Queja analizada" con botón Resumen.
+- Tarjeta "Antecedentes guardados en el expediente", con opción de quitar.
+- `mat-tab-group` con dos pestañas:
+  - **Búsqueda manual:** campos de quejoso y denunciado, más un botón para usar el quejoso de
+    la queja.
+  - **Con el modelo:** los mismos filtros de similitud que antes.
+- Tarjeta de resultado común (`ng-template #tarjeta`) con casilla.
+- Barra fija abajo: "N seleccionados · Guardar seleccionados · Limpiar".
+- La selección vive en un `Map` con clave `origen:folio` (`claveAntecedente`); por eso persiste
+  entre pestañas.
+- Se quitó el viejo "Marcar como antecedente", que dejaba una nota.
+- `core/models/antecedentes.model.ts` y `core/services/antecedentes.service.ts` se ampliaron.
+
+### 13.4 Resumen simulado (observación 2)
+
+- **`core/utils/resumen-simulado.ts`:** parte la narrativa en oraciones.
+  - Resumen = primera oración + la de más "impacto".
+  - Frases de impacto = hasta 3 oraciones con raíces como golpe, amenaz, acos, hostig, humill,
+    insult, grit, discrimin...
+  - **Cuando exista el modelo de resumen, solo se cambia este archivo**, por una llamada al
+    `resumen-service`.
+- **`shared/resumen-dialog/*`:** diálogo con la etiqueta "Simulado". Se abre desde la queja
+  analizada y desde cada resultado; usa `descripcion` o, si no hay, el extracto.
+
+### 13.5 Citas con 48 h (observación 4): detalle técnico
+
+**Ciclo de la cita** (`CitaPrimerContactoService`):
+```
+PROGRAMADA ──quejoso confirma──────────▶ CONFIRMADA
+           ──quejoso cancela (motivo)──▶ CANCELADA_QUEJOSO ─┐ el analista reagenda (vuelve a
+           ──vence el plazo────────────▶ SIN_RESPUESTA ─────┤ PROGRAMADA con plazo nuevo y
+cualquiera ──el analista cancela───────▶ CANCELADA          │ respuesta limpia) o cancela
+```
+- **Siguen siendo citas activas:** `CANCELADA_QUEJOSO` y `SIN_RESPUESTA` no dejan crear otra.
+  En bandeja y dashboard, `tieneCitaActiva` sigue siendo "estatus ≠ CANCELADA".
+- **Columnas nuevas** en `citas_primer_contacto`: `fecha_limite_respuesta`,
+  `fecha_respuesta_quejoso`, `motivo_cancelacion_quejoso` y `respuesta_registrada_por`
+  (QUEJOSO/ANALISTA). Las citas viejas quedan con límite null y no vencen.
+- **Al agendar o reagendar:** límite = ahora + `primer-contacto.citas.horas-respuesta` (48).
+  El aviso al quejoso (panel + correo) agrega: "Tienes 48 horas (hasta el ...) para confirmar
+  tu asistencia o cancelarla indicando el motivo, desde tu panel o comunicándote con Primer
+  Contacto".
+- **Proceso automático:** `@Scheduled` `marcarCitasSinRespuesta` corre cada
+  `primer-contacto.citas.revision-ms` (300000 = 5 min) y pasa a SIN_RESPUESTA las PROGRAMADA
+  con el límite vencido.
+- **Hora:** las fechas se guardan en hora local de Java (México). En pruebas con SQL no usar
+  `now()` de Postgres: el contenedor está en UTC, 6 h adelante.
+
+**Endpoints del analista:**
+- `PUT /citas/{id}/confirmar`: ahora es "Registrar confirmación" (respuesta = ANALISTA).
+- `PUT /citas/{id}/cancelacion-quejoso` `{motivo}`: nuevo, solo desde PROGRAMADA o SIN_RESPUESTA.
+- `PUT /citas/{id}/reagendar` y `PUT /citas/{id}/cancelar`: igual que antes (reagendar
+  reinicia el plazo).
+
+**Endpoints del portal del quejoso** (nuevo `QuejosoCitaController`):
+- **Seguridad:** en `SecurityConfig`, `/api/primer-contacto/quejoso/**` solo pide
+  `.authenticated()`, porque el token del quejoso no trae rol. La cita debe ser del correo del
+  token (vía `expediente.quejosoCorreo`); si no, responde 404.
+- `GET /api/primer-contacto/quejoso/citas/mias`
+- `PUT /api/primer-contacto/quejoso/citas/{id}/confirmar`
+- `PUT /api/primer-contacto/quejoso/citas/{id}/cancelar` `{motivo}`: 400 sin motivo; 409 si ya
+  respondió o el plazo venció.
+
+El contrato completo para el compañero está en **`docs/CONTRATO-CITAS-QUEJOSO.md`**.
+
+**Front de Primer Contacto:**
+- **`shared/cita-detalle-dialog/*`:**
+  - Nueva sección "Respuesta del quejoso": plazo, quién respondió y motivo.
+  - Botones: "Registrar confirmación", "El quejoso canceló" (abre un campo para el motivo),
+    Reagendar y Cancelar cita.
+  - Ahora decide por `estatusCodigo` (el código del backend) en vez de la etiqueta.
+- **`core/services/agenda.service.ts`:** `registrarCancelacionQuejoso`, etiquetas "Cancelada
+  por el quejoso" / "Sin respuesta" y los campos nuevos.
+- **`features/agenda`:** chip naranja (`needs-action`) para esos dos estados y manejo de la
+  acción `cancelacion-quejoso`.
+- **`features/expediente`:** bajo "Cita con el quejoso" muestra el motivo del quejoso o que
+  "no respondió en 48 horas".
+
+### 13.6 Cómo probar en local (lo que el usuario quiere hacer el 2026-10-09)
+
+1. **Base de datos.** Abrir **Docker Desktop** y levantar la base: `docker start
+   defensoria-db-local` (o `docker compose -f dev-local/docker-compose.yml up -d` desde
+   `Backend/primercontacto`).
+   - Ya tiene cargado `dev-local/init/04-busqueda-manual-prueba.sql`. Es idempotente y agrega
+     denunciados de prueba ("Roberto Gómez Hernández" en FOL-HIST0020/0022).
+   - También crea `historico_db` con 4 casos: 2 contra el mismo profesor, 1 de Ana López y 1
+     sin relación.
+2. **Modelo del compañero en local.** Desde `Produccion/Modelo-Java`:
+   - compilar con `..\Backend\primercontacto\mvnw.cmd -f pom.xml -DskipTests package`;
+   - correr `java -jar target/antecedentes-service.jar` (puerto 8093). Hay que correrlo desde
+     esa carpeta, porque lee `Dataset/` con ruta relativa.
+3. **Backend.** En PowerShell, desde `Backend/primercontacto`:
+   - `. .\dev-local\variables-entorno.ps1`
+   - `$env:ANTECEDENTES_MODELO_URL="http://localhost:8093"`
+   - `$env:HISTORICO_DB_URL="jdbc:postgresql://localhost:5433/historico_db"`
+   - `.\mvnw.cmd spring-boot:run`. Para probar rápido el vencimiento, agregar
+     `-Dspring-boot.run.arguments="--primer-contacto.citas.revision-ms=10000"`.
+4. **Front.** Desde `Frontend-PrimerContacto`, correr `npx ng serve --port 4300` y abrir
+   **http://localhost:4300/primer-contacto**. La app vive bajo `/primer-contacto`, y 4300 es el
+   puerto permitido por CORS.
+   - Para entrar: `node dev-local/token-prueba.js`, pegar en la consola del navegador las 3
+     líneas `localStorage.setItem(...)` que imprime y recargar.
+5. **Prueba automática de la API.** `node dev-local/prueba-observaciones.mjs` debe dar
+   **39 OK, 0 fallas** (resultado del 2026-10-08). Crea su propia queja `FOL-OBS-...` y borra
+   las de corridas anteriores.
+
+**Qué mirar en pantalla:**
+- **Antecedentes:** Bandeja → abrir un expediente → "Buscar antecedentes" (o
+  `/expediente/<PC-...>/antecedentes`).
+  - En Manual, buscar el denunciado "gomez" o el quejoso "ana lopez".
+  - Marcar en ambas pestañas y usar "Guardar seleccionados".
+  - Probar el botón Resumen.
+- **Agenda:** agendar una cita, abrir "Detalles" y probar "El quejoso canceló".
+- **Expedientes de prueba:** los abiertos en local son los `FOL-OBS-*`; los `FOL-LOCAL*` ya
+  están dictaminados.
+
+### 13.7 Verificado y pendiente
+
+**Verificado (2026-10-08, en local):**
+- Compilan backend y front. El `ng build` de producción da un bundle de 1.10 MB: solo sale el
+  aviso del budget de 700 kB; el error sería a partir de 1.5 MB.
+- E2E de la API: 39/39.
+- Fallback con el modelo apagado: responde REGLAS_PROVISIONAL + aviso.
+- Capturas revisadas de antecedentes (manual, modelo, guardados, resumen), agenda y diálogo de
+  cita. La barra de selección no queda tapada por el pie de página.
+
+**Pendiente o sin resolver:**
+- **Fallan 7 pruebas unitarias del front.** Son las "should create" que genera Angular, sin
+  providers: app, dictamen, expediente, remision, main-layout, sidebar y cita-detalle-dialog.
+  No prueban lógica nueva y quedó acordado arreglarlas en un commit aparte. La prueba del
+  backend (`contextLoads`) necesita la base local arriba.
+- **Desplegar Primer Contacto en los servidores nuevos**, coordinado con el compañero y sin
+  reemplazar `config-files/`:
+  - **Backend:** subir el jar nuevo y crear el contenedor.
+  - **yml de primer-contacto:**
+    - datasource → `169.58.62.99:5432/defensoria_db`
+    - JWT
+    - `notificaciones.service.url: http://156.67.26.73:8085`
+    - `subdefensoria.base-url: http://156.67.26.73:8091`
+    - `antecedentes.modelo.url: http://156.67.26.73:8093`
+    - `historico.datasource.*` → `169.58.62.99:5433/historico_db`
+  - **Front:** crear `primer-contacto-web` en el servidor frontend (el 8090 ya lo usa
+    `defensoria-web`; elegir otro puerto) y agregar las rutas `/primer-contacto/` y
+    `/api/primer-contacto/` al nginx.
+  - **Subdefensoría:** lo mismo.
+  - **Base de datos:** como la base nueva está vacía, Hibernate crea las tablas y el SQL de
+    migración de estados no hace falta.
+  - **Datos de prueba:** recrear la cuenta de analista y las quejas demo.
+- PR `Pre-Produccion2` → `Produccion` cuando esté probado.
+- Pasarle al compañero `docs/CONTRATO-CITAS-QUEJOSO.md` para la pantalla del quejoso.
+- Asignación de quejas por analista (observación 3): en espera de la decisión sobre roles.
+- **Heredados:**
+  - CU-PC-01: la prioridad llega null.
+  - El correo al quejoso fallaba con 403 en notificaciones-service (en los servidores viejos;
+    no revisado en los nuevos).
