@@ -1,7 +1,7 @@
 #!/bin/bash
 BASE_DIR="/apps/aplicaciones/defensoria/front-revision"
 CONTAINER_NAME="revision-web"
-PORT=22347
+PORT=8092
 
 case "$1" in
     up)

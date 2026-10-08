@@ -7,9 +7,9 @@ spring:
   application:
     name: admin-service
   datasource:
-    url: jdbc:postgresql://2.25.78.22:5432/defensoria_db
+    url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
     username: postgres
-    password: Temporal2026@
+    password: Temportal2026@
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -34,17 +34,17 @@ jwt:
 
 catalogo:
   service:
-    url: http://2.25.78.22:8086
+    url: http://156.67.26.73:8086
 
 respaldos:
   directorio: /app/respaldos
 
 db:
-  host: 2.25.78.22
+  host: 169.58.62.99
   puerto: 5432
   nombre: defensoria_db
   usuario: postgres
-  password: Temporal2026@
+  password: Temportal2026@
 
 springdoc:
   swagger-ui:

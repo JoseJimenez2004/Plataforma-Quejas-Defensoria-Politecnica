@@ -10,9 +10,9 @@ spring:
   # desactivaba por completo el motor automático de JPA/datasource. Ahora persiste un centro
   # de notificaciones por usuario (entidad Notificacion), así que necesita conexión real.
   datasource:
-    url: jdbc:postgresql://2.25.78.22:5432/defensoria_db
+    url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
     username: postgres
-    password: Temporal2026@
+    password: Temportal2026@
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

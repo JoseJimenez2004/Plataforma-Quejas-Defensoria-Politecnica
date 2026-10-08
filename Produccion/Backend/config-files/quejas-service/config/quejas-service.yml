@@ -7,9 +7,9 @@ spring:
   application:
     name: quejas-service
   datasource:
-    url: jdbc:postgresql://2.25.78.22:5432/defensoria_db
+    url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
     username: postgres
-    password: Temporal2026@
+    password: Temportal2026@
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -28,7 +28,7 @@ jwt:
 
 notificaciones:
   service:
-    url: http://2.25.78.22:8085
+    url: http://156.67.26.73:8085
 
 # NOTA: ya no se usa almacenamiento en disco para evidencias — se guardan completas como
 # BYTEA en la tabla queja_evidencias (ver entity/QuejaEvidencia.java y docs/CAMBIOS.md).
