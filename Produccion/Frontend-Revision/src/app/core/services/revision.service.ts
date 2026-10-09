@@ -7,6 +7,7 @@ import {
   AreaOpcion,
   BandejaResumen,
   DefensorOpcion,
+  IdentificacionOficialOpcion,
   QuejaDetalle,
   RechazarQuejaRequest,
   RegistroManualResponse,
@@ -55,6 +56,10 @@ export class RevisionService {
 
   defensores(): Observable<DefensorOpcion[]> {
     return this.http.get<DefensorOpcion[]>(`${this.apiUrl}/catalogos/defensores`);
+  }
+
+  identificacionesOficiales(): Observable<IdentificacionOficialOpcion[]> {
+    return this.http.get<IdentificacionOficialOpcion[]>(`${this.apiUrl}/catalogos/identificaciones-oficiales`);
   }
 
   registrarManual(formData: FormData): Observable<RegistroManualResponse> {

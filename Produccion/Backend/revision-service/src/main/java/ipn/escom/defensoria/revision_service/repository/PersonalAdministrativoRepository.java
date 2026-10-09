@@ -16,4 +16,7 @@ public interface PersonalAdministrativoRepository extends JpaRepository<Personal
     /** Para mostrar el nombre de quien tiene una queja abierta en la bandeja -- ver
      * RevisionQuejaService.resolverNombre(). */
     Optional<PersonalAdministrativo> findByCorreoInstitucional(String correoInstitucional);
+
+    /** El combo de turnado guarda el NOMBRE del defensor; con esto se obtiene su correo para avisarle. */
+    Optional<PersonalAdministrativo> findFirstByNombreCompletoAndActivoTrue(String nombreCompleto);
 }

@@ -1,0 +1,134 @@
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filtros {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+
+  input,
+  select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 0.88rem;
+    background: #fff;
+  }
+}
+
+@media (max-width: 760px) {
+  .filtros {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tabla-contenedor {
+  overflow-x: auto;
+  padding: 0;
+}
+
+.col-orden {
+  width: 70px;
+  text-align: center;
+}
+
+.col-acciones {
+  width: 150px;
+  white-space: nowrap;
+}
+
+.categoria {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--guinda-suave);
+  color: var(--guinda);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.pregunta {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.respuesta {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.84rem;
+  color: var(--texto-suave);
+}
+
+tr.inactiva td {
+  opacity: 0.6;
+}
+
+.estado {
+  border: none;
+  cursor: pointer;
+  background: #eee;
+  color: var(--texto-suave);
+
+  &.activo {
+    background: var(--acento-verde-suave);
+    color: var(--acento-verde);
+  }
+}
+
+.peligro {
+  color: var(--peligro);
+}
+
+.btn-primary.peligro {
+  background: var(--peligro);
+  color: #fff;
+}
+
+.fila-modal {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px;
+  gap: 12px;
+}
+
+.contador {
+  display: block;
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--texto-suave);
+}
+
+.cerrar {
+  border: none;
+  background: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.casilla {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 12px;
+  font-weight: 500;
+
+  input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--guinda);
+  }
+}
+
+.modal textarea {
+  width: 100%;
+  font: inherit;
+}

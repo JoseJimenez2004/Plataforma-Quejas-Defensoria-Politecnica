@@ -6,7 +6,9 @@
 
 BASE_DIR="/apps/aplicaciones/defensoria/back"
 RESPALDOS_DIR="/apps/utiles/respaldos"
-SERVICIOS=("auth-service" "quejas-service" "notificaciones-service" "catalogo-service" "admin-service" "revision-service" "chatbot-service" "primer-contacto-service" "subdefensoria-service" "historico-service")
+# historico-service queda FUERA del "up" general (su base la está poblando otra persona). Se
+# puede levantar a mano cuando esté lista: bash podman-compose.sh up-container historico-service
+SERVICIOS=("auth-service" "quejas-service" "notificaciones-service" "catalogo-service" "admin-service" "revision-service" "chatbot-service" "primer-contacto-service" "subdefensoria-service" "denunciado-service")
 
 # Mostrar menu de ayuda
 mostrar_ayuda() {
@@ -18,7 +20,7 @@ mostrar_ayuda() {
     echo "  delete                  Detiene y elimina TODOS los microservicios."
     echo "  delete-container <srv>  Detiene y elimina UN microservicio especifico."
     echo ""
-    echo "Servicios validos: auth-service, quejas-service, notificaciones-service, catalogo-service, admin-service, revision-service, chatbot-service, primer-contacto-service, subdefensoria-service, historico-service"
+    echo "Servicios validos: auth-service, quejas-service, notificaciones-service, catalogo-service, admin-service, revision-service, chatbot-service, primer-contacto-service, subdefensoria-service, historico-service, denunciado-service"
 }
 
 # Construir una imagen dedicada por microservicio
@@ -53,10 +55,11 @@ start_service() {
     case "$SERVICE" in
         "auth-service")
             sudo podman run -q -d \
+              --restart always \
               --name auth-service \
               -p 8083:8080 \
-              -m 250m \
-              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -m 512m \
+              -e JAVA_TOOL_OPTIONS="-Xmx320m -Xms64m -XX:+ExitOnOutOfMemoryError" \
               -v $BASE_DIR/config-files/auth-service/config:/app/config:Z \
               -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
               -e SPRING_CONFIG_NAME=auth-service \
@@ -65,11 +68,17 @@ start_service() {
             ;;
             
         "quejas-service")
+            # Recibe las evidencias (hasta 60MB por petición) y las guarda como BYTEA: Java y el
+            # driver de Postgres hacen varias copias en memoria. Con 250m el kernel mataba el
+            # contenedor al primer envío con un PDF de ~12MB (502 en el navegador, log cortado
+            # sin error). Por eso tiene más memoria que los demás: 1g aguanta el máximo de 100MB
+            # por petición que permite quejas-service.yml.
             sudo podman run -q -d \
+              --restart always \
               --name quejas-service \
               -p 8084:8080 \
-              -m 250m \
-              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -m 1g \
+              -e JAVA_TOOL_OPTIONS="-Xmx640m -Xms64m -XX:+ExitOnOutOfMemoryError" \
               -v $BASE_DIR/config-files/quejas-service/config:/app/config:Z \
               -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
               -e SPRING_CONFIG_NAME=quejas-service \
@@ -79,10 +88,11 @@ start_service() {
 
         "notificaciones-service")
             sudo podman run -q -d \
+              --restart always \
               --name notificaciones-service \
               -p 8085:8080 \
-              -m 250m \
-              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -m 512m \
+              -e JAVA_TOOL_OPTIONS="-Xmx320m -Xms64m -XX:+ExitOnOutOfMemoryError" \
               -v $BASE_DIR/config-files/notificaciones-service/config:/app/config:Z \
               -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
               -e SPRING_CONFIG_NAME=notificaciones-service \
@@ -92,10 +102,11 @@ start_service() {
 
         "catalogo-service")
             sudo podman run -q -d \
+              --restart always \
               --name catalogo-service \
               -p 8086:8080 \
-              -m 250m \
-              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -m 512m \
+              -e JAVA_TOOL_OPTIONS="-Xmx320m -Xms64m -XX:+ExitOnOutOfMemoryError" \
               -v $BASE_DIR/config-files/catalogo-service/config:/app/config:Z \
               -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
               -e SPRING_CONFIG_NAME=catalogo-service \
@@ -106,10 +117,11 @@ start_service() {
         "admin-service")
             mkdir -p "$RESPALDOS_DIR"
             sudo podman run -q -d \
+              --restart always \
               --name admin-service \
               -p 8087:8080 \
-              -m 250m \
-              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -m 512m \
+              -e JAVA_TOOL_OPTIONS="-Xmx320m -Xms64m -XX:+ExitOnOutOfMemoryError" \
               -v $BASE_DIR/config-files/admin-service/config:/app/config:Z \
               -v $RESPALDOS_DIR:/app/respaldos:Z \
               -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
@@ -119,12 +131,14 @@ start_service() {
             ;;
 
         "revision-service")
-            # Prueba con límite estricto de 100MB
+            # Antes 100m/-Xmx70m: con el jar del 2026-10-07 el contenedor moría al arrancar
+            # (cgroup OOM, sin error de Java en el log).
             sudo podman run -q -d \
+              --restart always \
               --name revision-service \
               -p 8088:8080 \
-              -m 100m \
-              -e JAVA_TOOL_OPTIONS="-Xmx70m -Xms32m" \
+              -m 512m \
+              -e JAVA_TOOL_OPTIONS="-Xmx320m -Xms64m -XX:+ExitOnOutOfMemoryError" \
               -v $BASE_DIR/config-files/revision-service/config:/app/config:Z \
               -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
               -e SPRING_CONFIG_NAME=revision-service \
@@ -134,10 +148,11 @@ start_service() {
 
         "chatbot-service")
             sudo podman run -q -d \
+              --restart always \
               --name chatbot-service \
               -p 8089:8080 \
-              -m 250m \
-              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -m 512m \
+              -e JAVA_TOOL_OPTIONS="-Xmx320m -Xms64m -XX:+ExitOnOutOfMemoryError" \
               -v $BASE_DIR/config-files/chatbot-service/config:/app/config:Z \
               -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
               -e SPRING_CONFIG_NAME=chatbot-service \
@@ -147,6 +162,7 @@ start_service() {
 
         "primer-contacto-service")
             sudo podman run -q -d \
+              --restart always \
               --name primer-contacto-service \
               -p 8082:8080 \
               -m 250m \
@@ -160,6 +176,7 @@ start_service() {
 
         "subdefensoria-service")
             sudo podman run -q -d \
+              --restart always \
               --name subdefensoria-service \
               -p 8091:8080 \
               -m 250m \
@@ -173,15 +190,31 @@ start_service() {
 
         "historico-service")
             sudo podman run -q -d \
+              --restart always \
               --name historico-service \
               -p 8092:8080 \
-              -m 250m \
-              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -m 512m \
+              -e JAVA_TOOL_OPTIONS="-Xmx320m -Xms64m -XX:+ExitOnOutOfMemoryError" \
               -v $BASE_DIR/config-files/historico-service/config:/app/config:Z \
               -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
               -e SPRING_CONFIG_NAME=historico-service \
               -e QUEJAS_SERVICE_URL="http://156.67.26.73:8084" \
               localhost/defensoria-historico-service
+            ;;
+
+        "denunciado-service")
+            # Recibe credencial + evidencias (hasta 100MB por petición) y las guarda como BYTEA:
+            # mismo perfil de memoria que quejas-service.
+            sudo podman run -q -d \
+              --restart always \
+              --name denunciado-service \
+              -p 8094:8080 \
+              -m 1g \
+              -e JAVA_TOOL_OPTIONS="-Xmx640m -Xms64m -XX:+ExitOnOutOfMemoryError" \
+              -v $BASE_DIR/config-files/denunciado-service/config:/app/config:Z \
+              -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
+              -e SPRING_CONFIG_NAME=denunciado-service \
+              localhost/defensoria-denunciado-service
             ;;
 
         *)

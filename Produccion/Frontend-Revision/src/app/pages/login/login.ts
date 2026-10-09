@@ -5,6 +5,11 @@ import { Router } from '@angular/router';
 
 import { AuthRevisionService } from '../../core/services/auth-revision.service';
 import { ToastService } from '../../core/services/toast.service';
+import {
+  RUTA_PANEL_DEFENSORA,
+  cerrarSesionPersonal,
+  guardarSesionDefensora,
+} from '../../core/sesion/sesion-personal';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +24,9 @@ export class Login {
   mostrarPassword = false;
   cargando = false;
   error = '';
+  errorCorreo = false;
+  errorPassword = false;
+  mayusculasActivas = false;
 
   constructor(
     private authService: AuthRevisionService,
@@ -27,11 +35,37 @@ export class Login {
     private cdr: ChangeDetectorRef,
   ) {}
 
-  ingresar(): void {
+  limpiarError(): void {
     this.error = '';
+    this.errorCorreo = false;
+    this.errorPassword = false;
+  }
+
+  revisarMayusculas(evento: KeyboardEvent): void {
+    this.mayusculasActivas = !!evento.getModifierState?.('CapsLock');
+  }
+
+  ingresar(): void {
+    if (this.cargando) {
+      return;
+    }
+    this.limpiarError();
+    const correo = this.correo.trim();
+
+    this.errorCorreo = !correo;
+    this.errorPassword = !this.password;
+    if (this.errorCorreo || this.errorPassword) {
+      this.error = this.errorCorreo && this.errorPassword
+        ? 'Escribe tu correo institucional y tu contraseña.'
+        : this.errorCorreo
+          ? 'Escribe tu correo institucional.'
+          : 'Escribe tu contraseña.';
+      return;
+    }
+
     this.cargando = true;
 
-    this.authService.login({ correo: this.correo, password: this.password }).subscribe({
+    this.authService.login({ correo, password: this.password }).subscribe({
       next: (resp) => {
         this.cargando = false;
 
@@ -52,16 +86,12 @@ export class Login {
             window.location.assign('/subdefensoria/');
             break;
 
-          case 'ADMIN_SISTEMAS':
-            this.toast.advertencia(
-              'Tu cuenta corresponde a Administración. Utiliza la consola administrativa.'
-            );
-            break;
-
           case 'DEFENSOR':
-            this.toast.advertencia(
-              'La vista correspondiente al rol Defensor todavía no está disponible.'
-            );
+          case 'ADMIN_SISTEMAS':
+            // Panel de la Defensora (Frontend-Admin): todo lo de administración y más.
+            cerrarSesionPersonal();
+            guardarSesionDefensora(resp);
+            window.location.assign(RUTA_PANEL_DEFENSORA);
             break;
 
           default:
@@ -75,8 +105,13 @@ export class Login {
       },
       error: (err) => {
         this.cargando = false;
-        this.error = err?.error?.mensaje ?? 'Credenciales incorrectas.';
-        this.toast.error(this.error);
+        // Sin respuesta del servidor (status 0) o 5xx: no es culpa de las credenciales.
+        if (!err?.status || err.status >= 500) {
+          this.error = 'No pudimos conectar con el servidor. Intenta de nuevo en unos minutos.';
+        } else {
+          this.error = err?.error?.mensaje ?? 'Correo o contraseña incorrectos.';
+          this.errorPassword = true;
+        }
         this.cdr.detectChanges();
       },
     });

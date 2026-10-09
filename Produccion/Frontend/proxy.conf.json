@@ -1,32 +1,37 @@
 {
   "/api/auth": {
-    "target": "http://2.25.78.22:8083",
+    "target": "http://156.67.26.73:8083",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
   },
   "/api/quejoso": {
-    "target": "http://2.25.78.22:8084",
+    "target": "http://156.67.26.73:8084",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
   },
   "/api/notificaciones": {
-    "target": "http://2.25.78.22:8085",
+    "target": "http://156.67.26.73:8085",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
   },
   "/api/catalogos": {
-    "target": "http://2.25.78.22:8086",
+    "target": "http://156.67.26.73:8086",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
   },
   "/api/chatbot": {
-    "target": "http://2.25.78.22:8089",
+    "target": "http://156.67.26.73:8089",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
+  },
+  "/api/denunciado": {
+    "target": "http://156.67.26.73:8094",
+    "secure": false,
+    "changeOrigin": true
   }
 }

@@ -83,6 +83,48 @@ export interface DashboardResumen {
   totalDependencias: number;
   ultimoRespaldo: string;
   totalPlantillasActivas: number;
+  /** null si el backend no pudo calcularlos (p. ej. la tabla quejas aún no existe). */
+  quejas: IndicadoresQuejas | null;
+}
+
+export interface ConteoIndicador {
+  clave: string;
+  etiqueta: string;
+  total: number;
+}
+
+/** Indicadores de quejas del dashboard de la Defensora (admin-service). */
+export interface IndicadoresQuejas {
+  total: number;
+  recibidas: number;
+  enValidacion: number;
+  corregidas: number;
+  turnadas: number;
+  rechazadas: number;
+  canceladas: number;
+  ultimos30Dias: number;
+  turnadasEsteMes: number;
+  respuestasDenunciado: number;
+  unidadesConMasQuejas: ConteoIndicador[];
+  porMes: ConteoIndicador[];
+}
+
+/** Pregunta del chatbot del portal (chatbot-service). */
+export interface PreguntaChatbot {
+  id: number;
+  categoria: string;
+  pregunta: string;
+  respuesta: string;
+  orden: number;
+  activo: boolean;
+}
+
+export interface PreguntaChatbotRequest {
+  categoria: string;
+  pregunta: string;
+  respuesta: string;
+  orden: number;
+  activo: boolean;
 }
 
 export interface PlantillaDocumento {

@@ -2,8 +2,10 @@ package ipn.escom.defensoria.antecedentes_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
-@SpringBootApplication(scanBasePackages = "ipn.escom.defensoria")
+@SpringBootApplication
+@ConfigurationPropertiesScan
 public class AntecedentesServiceApplication {
 
     public static void main(String[] args) {

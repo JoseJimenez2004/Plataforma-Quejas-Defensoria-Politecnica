@@ -120,6 +120,11 @@ export interface DefensorOpcion {
   rol: string;
 }
 
+export interface IdentificacionOficialOpcion {
+  clave: string;
+  nombre: string;
+}
+
 export interface RegistroManualResponse {
   numeroFolio: string;
   mensaje: string;

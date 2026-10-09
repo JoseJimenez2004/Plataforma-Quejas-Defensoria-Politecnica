@@ -27,7 +27,9 @@ import jakarta.servlet.http.HttpServletRequest;
  * que no sea un solo clic accidental. */
 @RestController
 @RequestMapping("/api/admin/seguridad")
-@PreAuthorize("hasRole('ADMIN_SISTEMAS')")
+// La Defensora (DEFENSOR) tiene todas las funciones de administración; ADMIN_SISTEMAS se
+// conserva para la cuenta técnica inicial.
+@PreAuthorize("hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')")
 @Tag(name = "Seguridad y Respaldos", description = "Respaldos manuales/automáticos y bitácora de acciones")
 public class SeguridadController {
 

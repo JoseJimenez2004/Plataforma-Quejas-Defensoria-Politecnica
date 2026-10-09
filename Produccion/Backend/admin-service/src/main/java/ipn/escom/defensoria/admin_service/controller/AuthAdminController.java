@@ -35,7 +35,18 @@ public class AuthAdminController {
     @Operation(summary = "Login de personal administrativo (cualquier rol)")
     public ResponseEntity<AuthAdminResponseModel> login(@RequestBody LoginAdminModel model,
             HttpServletRequest request) {
-        PersonalAdministrativo personal = personalService.validarLogin(model.getCorreo(), model.getPassword());
+        PersonalAdministrativo personal;
+        try {
+            personal = personalService.validarLogin(model.getCorreo(), model.getPassword());
+        } catch (RuntimeException ex) {
+            // CU-ADM-09: los intentos fallidos también se auditan (fuerza bruta, cuentas desactivadas).
+            String correo = model.getCorreo() == null ? "(sin correo)" : model.getCorreo().trim();
+            if (correo.length() > 120) {
+                correo = correo.substring(0, 120);
+            }
+            bitacoraService.registrar(correo, "Intento de inicio de sesión fallido: " + ex.getMessage(), request);
+            throw ex;
+        }
         String token = jwtUtil.generarToken(personal.getCorreoInstitucional(), personal.getRol().name());
 
         bitacoraService.registrar(personal.getCorreoInstitucional(), "Inicio de sesión", request);

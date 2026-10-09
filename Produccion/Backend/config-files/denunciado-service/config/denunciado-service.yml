@@ -1,0 +1,34 @@
+# denunciado-service -- config de PRODUCCIÓN (montada en /app/config, SPRING_CONFIG_NAME=denunciado-service).
+# Puerto interno 8080; el externo es 8094 (ver podman-compose.sh).
+server:
+  port: 8080
+
+spring:
+  application:
+    name: denunciado-service
+  datasource:
+    url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
+    username: postgres
+    password: Temporal2026@
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 100MB
+
+jwt:
+  secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name}]"

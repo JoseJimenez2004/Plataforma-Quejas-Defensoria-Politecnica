@@ -20,7 +20,8 @@ export const jwtRevisionInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((err) => {
-      if (err.status === 401 && req.url.startsWith('/api/')) {
+      // La campana de notificaciones nunca debe sacar al personal del panel.
+      if (err.status === 401 && req.url.startsWith('/api/') && !req.url.startsWith('/api/notificaciones/')) {
         authService.logout();
         router.navigate(['/login']);
       }

@@ -376,7 +376,7 @@ def generar_queja(indice, historico=True):
 
 def generar_dataset(cantidad, historico=True):
     return {
-        "dataset": "quejas_historicas_20" if historico else "quejas_prueba_30",
+        "dataset": "quejas_historicas" if historico else "quejas_prueba_30",
         "formato": "json",
         "normalizacion": "texto_preprocesado en minusculas, sin tildes",
         "total": cantidad,
@@ -394,7 +394,7 @@ def guardar_json(datos, nombre):
 
 if __name__ == "__main__":
     random.seed(42)
-    dataset_20 = generar_dataset(20, historico=True)
+    dataset_50 = generar_dataset(50, historico=True)
     dataset_30 = generar_dataset(30, historico=False)
-    guardar_json(dataset_20, "quejas_sinteticas_20.json")
+    guardar_json(dataset_50, "quejas_sinteticas.json")
     guardar_json(dataset_30, "quejas_prueba_30.json")

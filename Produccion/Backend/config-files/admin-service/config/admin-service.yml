@@ -9,7 +9,7 @@ spring:
   datasource:
     url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
     username: postgres
-    password: Temportal2026@
+    password: Temporal2026@
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -44,7 +44,7 @@ db:
   puerto: 5432
   nombre: defensoria_db
   usuario: postgres
-  password: Temportal2026@
+  password: Temporal2026@
 
 springdoc:
   swagger-ui:

@@ -7,11 +7,12 @@ import { AuthRevisionService } from '../../core/services/auth-revision.service';
 import { PerfilService } from '../../core/services/perfil.service';
 import { ToastService } from '../../core/services/toast.service';
 import { etiquetaRol, iniciales } from '../../core/models/revision.models';
+import { CampanaNotificaciones } from '../../shared/campana-notificaciones/campana-notificaciones';
 
 @Component({
   selector: 'app-recepcion-layout',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, RouterOutlet, CampanaNotificaciones],
   templateUrl: './recepcion-layout.html',
   styleUrl: './recepcion-layout.scss',
 })

@@ -27,7 +27,9 @@ import ipn.escom.defensoria.chatbot_service.service.PreguntaChatbotService;
  */
 @RestController
 @RequestMapping("/api/chatbot/admin")
-@PreAuthorize("hasRole('ADMIN_SISTEMAS')")
+// La Defensora (DEFENSOR) tiene todas las funciones de administración; ADMIN_SISTEMAS se
+// conserva para la cuenta técnica inicial.
+@PreAuthorize("hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')")
 @Tag(name = "Chatbot (Admin)", description = "Alta, edición y baja de las preguntas del chatbot")
 public class ChatbotAdminController {
 

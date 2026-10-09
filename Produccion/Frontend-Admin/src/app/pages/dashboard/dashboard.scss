@@ -64,3 +64,127 @@
     font-size: 0.85rem;
   }
 }
+
+/* ---------- indicadores de quejas ---------- */
+.seccion-titulo {
+  margin: 8px 0 12px;
+  font-size: 1rem;
+  color: var(--texto);
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border-left: 4px solid var(--borde);
+  background: #fff;
+  box-shadow: var(--sombra-suave);
+
+  &.ambar { border-left-color: var(--acento-ambar); }
+  &.azul { border-left-color: var(--acento-azul); }
+  &.verde { border-left-color: var(--acento-verde); }
+  &.rojo { border-left-color: var(--peligro); }
+}
+
+.kpi-valor {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--negro-inst);
+}
+
+.kpi-etiqueta {
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+}
+
+.graficas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+
+  h4 {
+    margin: 0 0 14px;
+    font-size: 0.92rem;
+  }
+}
+
+.barras {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 160px;
+}
+
+.barra-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+}
+
+.barra {
+  width: 100%;
+  max-width: 42px;
+  min-height: 2px;
+  border-radius: 6px 6px 0 0;
+  background: var(--guinda);
+}
+
+.barra-valor,
+.barra-etiqueta {
+  font-size: 0.75rem;
+  color: var(--texto-suave);
+}
+
+.ranking {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 140px) minmax(0, 1fr) 32px;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+  }
+}
+
+.ranking-nombre {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ranking-barra {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--gris-fondo);
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: 5px;
+    background: var(--guinda-vivo);
+  }
+}
+
+.ranking-total {
+  text-align: right;
+  font-weight: 600;
+}

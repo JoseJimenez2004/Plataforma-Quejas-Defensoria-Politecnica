@@ -20,8 +20,23 @@ public class BitacoraService {
     }
 
     public void registrar(String usuario, String accion, HttpServletRequest request) {
-        String ip = (request != null) ? request.getRemoteAddr() : IP_DESCONOCIDA;
-        repository.save(new BitacoraAccion(usuario, accion, ip));
+        String ip = (request != null) ? ipCliente(request) : IP_DESCONOCIDA;
+        String texto = accion != null && accion.length() > 250 ? accion.substring(0, 250) : accion;
+        repository.save(new BitacoraAccion(usuario, texto, ip));
+    }
+
+    /** Detrás de router-nginx getRemoteAddr() siempre es la IP del servidor frontend; la del
+     * cliente real llega en X-Real-IP / X-Forwarded-For (los pone nginx). */
+    private static String ipCliente(HttpServletRequest request) {
+        String real = request.getHeader("X-Real-IP");
+        if (real != null && !real.isBlank()) {
+            return real.trim();
+        }
+        String reenviada = request.getHeader("X-Forwarded-For");
+        if (reenviada != null && !reenviada.isBlank()) {
+            return reenviada.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     public List<BitacoraAccion> listarRecientes() {

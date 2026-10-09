@@ -20,6 +20,7 @@ public class NotificacionQuejaService {
     private static final String ENDPOINT_REGISTRAR = "/api/notificaciones/registrar";
     private static final String TIPO_CAMBIO_ESTATUS = "CAMBIO_ESTATUS";
     private static final String TIPO_CONCILIACION = "CONCILIACION";
+    private static final String TIPO_GENERAL = "GENERAL";
     private static final String ENLACE_MIS_QUEJAS = "/panel/mis-quejas/";
     private static final String ENLACE_CONCILIACION = "/panel/conciliacion";
 
@@ -67,6 +68,11 @@ public class NotificacionQuejaService {
                 "Nuevo acuerdo de conciliación",
                 "Se te propuso un acuerdo de conciliación relacionado con tu queja " + folio + ": " + asunto,
                 ENLACE_CONCILIACION);
+    }
+
+    /** Aviso para el PERSONAL (no para el quejoso): se ve en la campana de su panel. */
+    public void notificarPersonal(String correoDestino, String titulo, String mensaje, String enlace) {
+        registrarNotificacion(correoDestino, TIPO_GENERAL, titulo, mensaje, enlace == null ? "" : enlace);
     }
 
     private void registrarNotificacion(String correoDestino, String tipo, String titulo, String mensaje, String enlace) {
