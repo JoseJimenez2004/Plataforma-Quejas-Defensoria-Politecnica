@@ -37,11 +37,8 @@ export class RedactarOficioDialog {
   contenidoRedactado = '';
   enviando = false;
 
-  get tituloAccion(): string {
-    return this.data.siguienteFase === 'GESTION_DIRECTOR'
-      ? 'Oficio al Director'
-      : 'Solicitud de Información (Primer Oficio)';
-  }
+  /** Un solo tipo de oficio: la solicitud de información, que responde el director. */
+  readonly tituloAccion = 'Solicitud de Información';
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: RedactarOficioDialogData,

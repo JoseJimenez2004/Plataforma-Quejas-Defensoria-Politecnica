@@ -32,6 +32,6 @@ public class ExpedienteResumenDTO {
     private Long diasTranscurridos;
     private Integer diasLimite;
 
-    /* Solo si toca emitir oficio: SOLICITUD_INFORMACION o GESTION_DIRECTOR. */
+    /* Solo si toca emitir oficio: SOLICITUD_INFORMACION. */
     private String siguienteFase;
 }

@@ -125,7 +125,7 @@ const oficio = contenido => sd('POST', '/oficios', { body: {
 }});
 const estatusExp = async () => (await sd('GET', `/expedientes/folio/${folioSD}`)).json?.estatus;
 
-console.log('\n== CU-SD-06 Oficio 1: solicitud de información (fila 15)');
+console.log('\n== CU-SD-06 Emitir oficio de solicitud de información (fila 15)');
 r = await oficio('Se solicita información sobre los hechos referidos.');
 check('Emitir oficio', r.status === 200 || r.status === 201, r);
 const OF1 = r.json;
@@ -148,27 +148,18 @@ r = await sd('GET', `/oficios/${OF1.id}`);
 check('El oficio vuelve a EN_ESPERA con plazo SUBSECUENTE y fecha nueva', r.json?.estatus === 'EN_ESPERA' && r.json?.tipoPlazo === 'SUBSECUENTE' && r.json?.fechaLimite > new Date().toISOString().slice(0, 10), r.json);
 check('El recordatorio no cambia el estatus (sigue EN_ESPERA_OFICIO)', (await estatusExp()) === 'EN_ESPERA_OFICIO');
 
-console.log('\n== CU-SD-08 Respuesta a la solicitud de información');
-r = await sd('POST', '/respuestas-externas', { body: { oficioId: OF1.id, canalRecepcion: 'Correo electrónico', resumen: 'La UA envió la información.' } });
-check('Registrar respuesta', r.status === 200 || r.status === 201, r);
-check('Ronda 1 respondida → regresa a EN_INVESTIGACION para el oficio de gestión', (await estatusExp()) === 'EN_INVESTIGACION' && estatusQueja() === 'EN_INVESTIGACION', estatusQueja());
+console.log('\n== CU-SD-08 Respuesta del director (fila 16)');
+r = await sd('POST', '/respuestas-externas', { body: { oficioId: OF1.id, canalRecepcion: 'Oficio físico', numeroOficioRespuestaUA: 'DIR-ESCOM-123', resumen: 'El director atendió la situación.' } });
+check('El director responde el oficio', r.status === 200 || r.status === 201, r);
+check('→ ELABORO_ACUERDO (fila 16), también en la queja', (await estatusExp()) === 'ELABORO_ACUERDO' && estatusQueja() === 'ELABORO_ACUERDO', estatusQueja());
 r = await sd('POST', '/respuestas-externas', { body: { oficioId: OF1.id, canalRecepcion: 'Correo', resumen: 'Otra' } });
 check('Segunda respuesta al mismo oficio → 409', r.status === 409, r);
 r = await sd('POST', '/recordatorios', { body: { oficioId: OF1.id, mensaje: 'x' } });
 check('Recordatorio de un oficio ya respondido → 409', r.status === 409, r);
-r = await sd('GET', '/bandeja-nuevas');
-check('Bandeja lo muestra listo para el oficio de gestión', r.json.some(e => e.folio === folioSD && e.siguienteFase === 'GESTION_DIRECTOR'), r.json);
-
-console.log('\n== Oficio 2: gestión con el director (filas 15 y 16)');
-r = await oficio('Se solicita la gestión del director para atender los hechos.');
-check('Oficio de gestión con el director', (r.status === 200 || r.status === 201) && r.json.fase === 'GESTION_DIRECTOR', r);
-const OF2 = r.json;
-check('EN_ESPERA_OFICIO', (await estatusExp()) === 'EN_ESPERA_OFICIO');
-r = await sd('POST', '/respuestas-externas', { body: { oficioId: OF2.id, canalRecepcion: 'Oficio físico', numeroOficioRespuestaUA: 'DIR-ESCOM-123', resumen: 'El director atendió la situación.' } });
-check('El director responde', r.status === 200 || r.status === 201, r);
-check('→ ELABORO_ACUERDO (fila 16)', (await estatusExp()) === 'ELABORO_ACUERDO' && estatusQueja() === 'ELABORO_ACUERDO', estatusQueja());
 r = await sd('GET', `/oficios/folio/${folioSD}`);
-check('Historial de oficios del expediente: 2', r.status === 200 && r.json.length === 2, r);
+check('Historial de oficios del expediente: 1', r.status === 200 && r.json.length === 1, r);
+r = await oficio('Otro oficio con el acuerdo por elaborar');
+check('En ELABORO_ACUERDO no se emiten más oficios → 409', r.status === 409, r);
 
 // ------------------------------------------------------------------ CU-SD-09
 console.log('\n== CU-SD-09 Acuerdo de conciliación (filas 17 y 18)');
@@ -182,8 +173,10 @@ check('Enviar el acuerdo al quejoso → PENDIENTE_CONCILIACION', (r.status === 2
 
 r = await llamar(SD, 'POST', `/acuerdos-conclusion/interno/${EXP.id}/rechazar?comentario=${encodeURIComponent('No estoy de acuerdo')}`);
 check('El quejoso rechaza → EN_INVESTIGACION (fila 18)', r.status === 200 && (await estatusExp()) === 'EN_INVESTIGACION' && estatusQueja() === 'EN_INVESTIGACION', r);
-r = await oficio('Nueva gestión tras el rechazo del quejoso.');
-check('Tras el rechazo se emite otro oficio de gestión (ya no se atora)', (r.status === 200 || r.status === 201) && r.json.fase === 'GESTION_DIRECTOR', r);
+r = await sd('GET', '/bandeja-nuevas');
+check('Tras el rechazo la bandeja lo muestra listo para otro oficio', r.json.some(e => e.folio === folioSD && e.siguienteFase === 'SOLICITUD_INFORMACION'), r.json);
+r = await oficio('Nuevo oficio tras el rechazo del quejoso.');
+check('Tras el rechazo se emite otro oficio (ya no se atora)', r.status === 200 || r.status === 201, r);
 const OF3 = r.json;
 r = await sd('POST', '/respuestas-externas', { body: { oficioId: OF3.id, canalRecepcion: 'Correo', resumen: 'El director propone nuevas medidas.' } });
 check('Nueva respuesta del director → ELABORO_ACUERDO', (await estatusExp()) === 'ELABORO_ACUERDO', r);

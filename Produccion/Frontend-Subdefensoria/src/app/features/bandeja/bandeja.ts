@@ -156,9 +156,7 @@ export class Bandeja implements OnInit {
 
   /** El backend indica qué oficio toca (siguienteFase) solo cuando hay que emitir uno. */
   etiquetaAccionPrincipal(e: ExpedienteResumen): string | null {
-    if (e.siguienteFase === 'SOLICITUD_INFORMACION') return 'Solicitar Oficio';
-    if (e.siguienteFase === 'GESTION_DIRECTOR') return 'Redactar Oficio al Director';
-    return null;
+    return e.siguienteFase ? 'Solicitar Oficio' : null;
   }
 
   accionPrincipal(e: ExpedienteResumen): void {

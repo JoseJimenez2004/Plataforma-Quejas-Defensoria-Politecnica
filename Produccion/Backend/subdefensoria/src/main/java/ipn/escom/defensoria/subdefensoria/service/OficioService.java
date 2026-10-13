@@ -67,12 +67,9 @@ public class OficioService {
                     "El expediente " + expediente.getFolio() + " ya tiene un oficio esperando respuesta.");
         }
 
-        // Dos rondas fijas: primero solicitud de información; ya respondida, gestión con el
-        // director (también la que sigue cuando el quejoso rechaza un acuerdo).
-        String fase = oficioRepository.existsByExpedienteIdAndFaseAndEstatus(
-                expediente.getId(), FaseOficio.SOLICITUD_INFORMACION, EstatusOficio.RESPONDIDO)
-                ? FaseOficio.GESTION_DIRECTOR
-                : FaseOficio.SOLICITUD_INFORMACION;
+        // Un solo tipo de oficio: la solicitud de información, cuya respuesta es la del
+        // director. También es el que se emite de nuevo cuando el quejoso rechaza un acuerdo.
+        String fase = FaseOficio.SOLICITUD_INFORMACION;
 
         LocalDate hoy = LocalDate.now();
         LocalDate fechaLimite = DiasHabilesCalculator.sumarDiasHabiles(hoy, diasPrimeraSolicitud);

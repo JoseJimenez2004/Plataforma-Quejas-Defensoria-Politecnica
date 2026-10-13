@@ -67,11 +67,8 @@ public class RespuestaExternaService {
         oficio.setEstatus(EstatusOficio.RESPONDIDO);
         oficioRepository.save(oficio);
 
-        // Fila 16 con dos rondas fijas: la respuesta a la solicitud de información regresa a
-        // EN_INVESTIGACION para emitir el oficio de gestión; la del director, a ELABORO_ACUERDO.
-        transicionService.cambiar(expediente, FaseOficio.SOLICITUD_INFORMACION.equals(oficio.getFase())
-                ? EstatusExpediente.EN_INVESTIGACION
-                : EstatusExpediente.ELABORO_ACUERDO);
+        // El director responde el oficio: se redacta el acuerdo de conciliación.
+        transicionService.cambiar(expediente, EstatusExpediente.ELABORO_ACUERDO);
 
         return RespuestaExternaDTO.builder()
                 .id(guardada.getId())

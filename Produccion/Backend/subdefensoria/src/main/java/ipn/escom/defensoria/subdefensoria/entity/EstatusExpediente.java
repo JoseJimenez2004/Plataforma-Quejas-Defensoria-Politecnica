@@ -12,12 +12,12 @@ package ipn.escom.defensoria.subdefensoria.entity;
  *     -> PENDIENTE_CONCLUSION   (el quejoso acepta el acuerdo de conciliación, CU-QJ-14)
  *     -> CONCLUIDO          (se manda el acuerdo de conclusión, CU-SD-09)
  *
- * Oficios en dos rondas fijas: el de SOLICITUD_INFORMACION, al responderse, regresa el
- * expediente a EN_INVESTIGACION para emitir el de GESTION_DIRECTOR; la respuesta a este
- * último lleva a ELABORO_ACUERDO.
+ * Un solo oficio por ciclo: se envía la solicitud de información (EN_ESPERA_OFICIO) y la
+ * respuesta es la del director (ELABORO_ACUERDO). El recordatorio de urgencia no cambia el
+ * estatus.
  *
  * Desde PENDIENTE_CONCILIACION, si el quejoso RECHAZA el acuerdo, el expediente regresa a
- * EN_INVESTIGACION y se emite otro oficio de gestión para buscar un nuevo acuerdo.
+ * EN_INVESTIGACION y se emite otro oficio para buscar un nuevo acuerdo.
  */
 public final class EstatusExpediente {
 

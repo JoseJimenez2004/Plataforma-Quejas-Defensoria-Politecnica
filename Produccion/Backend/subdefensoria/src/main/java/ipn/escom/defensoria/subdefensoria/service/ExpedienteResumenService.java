@@ -66,11 +66,8 @@ public class ExpedienteResumenService {
         if (ESTATUS_CON_OFICIO_ACTIVO.contains(e.getEstatus())) {
             Optional<OficioInformacion> vigente = oficioVigente(e.getId());
             if (vigente.isEmpty() && EstatusExpediente.EN_INVESTIGACION.equals(e.getEstatus())) {
-                // Sin oficio pendiente: toca emitir el siguiente (dos rondas fijas).
-                builder.siguienteFase(oficioRepository.existsByExpedienteIdAndFaseAndEstatus(
-                        e.getId(), FaseOficio.SOLICITUD_INFORMACION, EstatusOficio.RESPONDIDO)
-                        ? FaseOficio.GESTION_DIRECTOR
-                        : FaseOficio.SOLICITUD_INFORMACION);
+                // Sin oficio pendiente: toca emitir el oficio.
+                builder.siguienteFase(FaseOficio.SOLICITUD_INFORMACION);
             }
             vigente.ifPresent(oficio -> {
                 int diasLimite = "PRIMERA".equals(oficio.getTipoPlazo()) ? diasPrimeraSolicitud : diasRecordatorio;
