@@ -11,11 +11,14 @@
 //
 // Crea su propia queja FOL-SDP-... y borra las de corridas anteriores. Solo para desarrollo.
 import crypto from 'node:crypto';
+import fs from 'node:fs';
 import { execSync } from 'node:child_process';
 
 const PC = 'http://localhost:8082/api/primer-contacto';
 const SD = 'http://localhost:8083/api/subdefensoria';
 const SECRETO = 'gKxw6SOEVL3NQQzDdXk22-UPYsUnafSyQx0eBbgVrN4fqnrh';
+// Archivo jsonl donde un receptor falso en 8085 guarda avisos y correos (opcional).
+const NOTIFICACIONES = process.env.NOTIFICACIONES;
 
 function token(sub, rol) {
   const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
@@ -171,8 +174,29 @@ check('Concluir sin acuerdo de conciliación aceptado → 409', r.status === 409
 r = await acuerdo('Acuerdo de conciliación: el director se compromete a ...', true);
 check('Enviar el acuerdo al quejoso → PENDIENTE_CONCILIACION', (r.status === 200 || r.status === 201) && (await estatusExp()) === 'PENDIENTE_CONCILIACION' && estatusQueja() === 'PENDIENTE_CONCILIACION', estatusQueja());
 
-r = await llamar(SD, 'POST', `/acuerdos-conclusion/interno/${EXP.id}/rechazar?comentario=${encodeURIComponent('No estoy de acuerdo')}`);
-check('El quejoso rechaza → EN_INVESTIGACION (fila 18)', r.status === 200 && (await estatusExp()) === 'EN_INVESTIGACION' && estatusQueja() === 'EN_INVESTIGACION', r);
+// CU-QJ-14: el quejoso responde desde el enlace del correo (sin sesión).
+const tokenAcuerdo = () => sql(`SELECT token_respuesta FROM acuerdos_conclusion WHERE expediente_id = ${EXP.id}`);
+const publico = (m, ruta, body) => llamar(SD, m, `/publico/acuerdos/${ruta}`, { body });
+const TOK1 = tokenAcuerdo();
+check('El acuerdo enviado tiene token largo', TOK1.length === 64, TOK1);
+if (NOTIFICACIONES) {
+  const avisos = fs.readFileSync(NOTIFICACIONES, 'utf8').trim().split('\n').filter(Boolean).map(l => JSON.parse(l));
+  const correo = avisos.find(a => a.ruta === '/api/notificaciones/enviar' && a.cuerpo.cuerpo.includes(TOK1));
+  const panel = avisos.find(a => a.ruta === '/api/notificaciones/registrar' && a.cuerpo.enlace === `/acuerdo/responder?token=${TOK1}`);
+  check('Correo al quejoso con el texto del acuerdo y el enlace', correo && correo.cuerpo.destinatario === 'quejoso1@alumno.ipn.mx' && correo.cuerpo.cuerpo.includes('el director se compromete') && correo.cuerpo.cuerpo.includes(`/acuerdo/responder?token=${TOK1}`), correo?.cuerpo);
+  check('Notificación del panel que abre la página del acuerdo', !!panel && panel.cuerpo.tipo === 'CONCILIACION', panel?.cuerpo);
+}
+r = await publico('GET', TOK1);
+check('Consultar el acuerdo sin sesión', r.status === 200 && r.json.folioQueja === FOLIO_Q && r.json.puedeResponder === true && r.json.textoAcuerdo.includes('el director'), r);
+check('La vista pública no expone ids internos', r.json.expedienteId === undefined && r.json.id === undefined, r.json);
+r = await publico('GET', 'no-existe-123');
+check('Token inválido → 404', r.status === 404, r);
+r = await publico('PUT', `${TOK1}/rechazar`, { comentario: '  ' });
+check('Rechazar sin motivo → 409 con mensaje', r.status === 409 && /motivo/.test(r.json?.error), r);
+r = await publico('PUT', `${TOK1}/rechazar`, { comentario: 'No estoy de acuerdo con las medidas' });
+check('El quejoso rechaza por enlace → EN_INVESTIGACION (fila 19)', r.status === 200 && r.json.respuestaQuejoso === 'RECHAZADO' && !r.json.puedeResponder && (await estatusExp()) === 'EN_INVESTIGACION' && estatusQueja() === 'EN_INVESTIGACION', r);
+r = await publico('PUT', `${TOK1}/aceptar`, {});
+check('Ya rechazado no se puede aceptar → 409', r.status === 409, r);
 r = await sd('GET', '/bandeja-nuevas');
 check('Tras el rechazo la bandeja lo muestra listo para otro oficio', r.json.some(e => e.folio === folioSD && e.siguienteFase === 'SOLICITUD_INFORMACION'), r.json);
 r = await oficio('Nuevo oficio tras el rechazo del quejoso.');
@@ -183,17 +207,29 @@ check('Nueva respuesta del director → ELABORO_ACUERDO', (await estatusExp()) =
 r = await acuerdo('Segundo acuerdo de conciliación con las nuevas medidas.', true);
 check('Nuevo acuerdo enviado; la respuesta anterior se limpia', r.json?.respuestaQuejoso == null && (await estatusExp()) === 'PENDIENTE_CONCILIACION', r.json);
 
-console.log('\n== Acepta y acuerdo de conclusión (filas 19 y 20)');
-r = await llamar(SD, 'POST', `/acuerdos-conclusion/interno/${EXP.id}/aceptar`);
-check('El quejoso acepta → PENDIENTE_CONCLUSION (fila 19)', r.status === 200 && (await estatusExp()) === 'PENDIENTE_CONCLUSION' && estatusQueja() === 'PENDIENTE_CONCLUSION', estatusQueja());
-check('Aceptar no concluye el expediente todavía', r.json?.concluido === false && r.json?.respuestaQuejoso === 'ACEPTADO', r.json);
-r = await llamar(SD, 'POST', `/acuerdos-conclusion/interno/${EXP.id}/aceptar`);
+const TOK2 = tokenAcuerdo();
+check('El nuevo acuerdo trae un token nuevo', TOK2.length === 64 && TOK2 !== TOK1, [TOK1, TOK2]);
+r = await publico('GET', TOK1);
+check('El enlace del acuerdo anterior ya no sirve → 404', r.status === 404, r);
+
+console.log('\n== Acepta y acuerdo de conclusión (filas 20 y 21)');
+r = await publico('PUT', `${TOK2}/aceptar`, { comentario: 'De acuerdo' });
+check('El quejoso acepta por enlace → PENDIENTE_CONCLUSION (fila 20)', r.status === 200 && r.json.respuestaQuejoso === 'ACEPTADO' && (await estatusExp()) === 'PENDIENTE_CONCLUSION' && estatusQueja() === 'PENDIENTE_CONCLUSION', r);
+check('Aceptar no concluye el expediente todavía', r.json?.concluido === false && r.json?.puedeResponder === false, r.json);
+r = await publico('PUT', `${TOK2}/aceptar`, {});
 check('Aceptar dos veces → 409', r.status === 409, r);
 r = await sd('POST', `/acuerdos-conclusion/${EXP.id}/conclusion`, { body: { textoConclusion: ' ' } });
 check('Acuerdo de conclusión vacío → 400', r.status === 400, r);
 r = await sd('POST', `/acuerdos-conclusion/${EXP.id}/conclusion`, { body: { textoConclusion: 'Se concluye el expediente por haberse cumplido el acuerdo de conciliación.' } });
-check('Registrar acuerdo de conclusión → CONCLUIDO (fila 20)', r.status === 200 && r.json.concluido === true && r.json.textoConclusion && r.json.fechaConclusion, r);
+check('Registrar acuerdo de conclusión → CONCLUIDO (fila 21)', r.status === 200 && r.json.concluido === true && r.json.textoConclusion && r.json.fechaConclusion, r);
 check('Expediente CONCLUIDO y queja CONCLUIDA', (await estatusExp()) === 'CONCLUIDO' && estatusQueja() === 'CONCLUIDA', [await estatusExp(), estatusQueja()]);
+if (NOTIFICACIONES) {
+  const avisos = fs.readFileSync(NOTIFICACIONES, 'utf8').trim().split('\n').filter(Boolean).map(l => JSON.parse(l));
+  const fin = avisos.find(a => a.ruta === '/api/notificaciones/enviar' && a.cuerpo.asunto.includes('Tu caso ha concluido') && a.cuerpo.asunto.includes(FOLIO_Q));
+  check('Correo al quejoso de que su caso concluyó, con el acuerdo de conclusión', fin && fin.cuerpo.cuerpo.includes('haberse cumplido'), fin?.cuerpo);
+}
+r = await publico('GET', TOK2);
+check('El enlace ya muestra el caso concluido', r.status === 200 && r.json.concluido === true, r.json);
 r = await oficio('Después de concluir');
 check('Concluido no admite más oficios → 409', r.status === 409, r);
 

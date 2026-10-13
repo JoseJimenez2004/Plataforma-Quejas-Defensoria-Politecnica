@@ -66,4 +66,8 @@ public class AcuerdoConclusion {
 
     @Column(name = "fecha_conclusion")
     private LocalDateTime fechaConclusion;
+
+    /* Clave del enlace con que el quejoso responde el acuerdo de conciliación (sin sesión). */
+    @Column(name = "token_respuesta", length = 64)
+    private String tokenRespuesta;
 }

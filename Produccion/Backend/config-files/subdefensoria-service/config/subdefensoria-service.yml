@@ -44,3 +44,15 @@ primer-contacto:
 plazos:
   primera-solicitud-dias: 10
   recordatorio-dias: 5
+
+# Centro de notificaciones + correo del quejoso, en la misma VPS backend.
+notificaciones:
+  service:
+    url: http://156.67.26.73:8085
+
+subdefensoria:
+  # Refleja el avance del expediente en quejas.estatus (panel del quejoso).
+  sincronizar-estatus-queja: true
+  # Página pública del portal a la que lleva el enlace del acuerdo de conciliación.
+  portal:
+    url: https://defensoria-escom.ddns.net

@@ -78,6 +78,14 @@ public class SecurityConfig {
                         ).permitAll()
 
                         /*
+                         * Enlace del acuerdo que recibe el quejoso por correo:
+                         * el token del acuerdo es la credencial, sin sesión.
+                         */
+                        .requestMatchers(
+                                "/api/subdefensoria/publico/**"
+                        ).permitAll()
+
+                        /*
                          * Operaciones normales de Subdefensoría.
                          */
                         .requestMatchers(
