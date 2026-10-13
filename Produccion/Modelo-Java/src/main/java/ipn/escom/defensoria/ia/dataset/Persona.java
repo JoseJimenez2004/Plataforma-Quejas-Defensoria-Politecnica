@@ -1,5 +1,8 @@
 package ipn.escom.defensoria.ia.dataset;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Persona {
     public String nombre;
     public String apellido1;

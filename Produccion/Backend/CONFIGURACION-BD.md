@@ -1,3 +1,5 @@
+> ⚠️ **Obsoleto.** Ver `docs/VERSION-FINAL-TT.md` (contraseña, nombre de la base histórica y manejo de seeds cambiaron).
+
 # Configuración de Bases de Datos - Servidor Dedicado
 
 ## Arquitectura

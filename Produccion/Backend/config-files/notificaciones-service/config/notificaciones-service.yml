@@ -12,7 +12,7 @@ spring:
   datasource:
     url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
     username: postgres
-    password: Temportal2026@
+    password: Temporal2026@
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -34,6 +34,10 @@ spring:
           starttls:
             enable: true
             required: true
+          # Sin estos, si el proveedor del VPS bloquea el puerto 587 el envío se cuelga para siempre.
+          connectiontimeout: 5000
+          timeout: 10000
+          writetimeout: 10000
 
 jwt:
   secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026

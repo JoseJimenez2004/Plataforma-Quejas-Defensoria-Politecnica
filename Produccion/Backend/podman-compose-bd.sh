@@ -1,350 +1,228 @@
 #!/bin/bash
-
 # ==============================================================================
-# Podman Compose - Bases de Datos
-# Plataforma Defensoria de los Derechos Politécnicos
+# Bases de datos - Plataforma Defensoría de los Derechos Politécnicos
+# Servidor BD: 169.58.62.99  (correr como root: bash podman-compose-bd.sh <comando>)
 # ==============================================================================
-# 
-# Este script crea y levanta automáticamente 2 contenedores de Postgres:
-# - defensoria_db (puerto 5432) - Base principal del sistema
-# - historico_db (puerto 5433) - Base de histórico/archivo
+#  defensoria-db  -> puerto 5432 -> base defensoria_db           (todo el sistema)
+#  historico-db   -> puerto 5433 -> base defensoria_historico_db (solo historico-service)
 #
-# Los scripts SQL en database-scripts/ se ejecutan automáticamente cuando el
-# contenedor se levanta por primera vez.
-#
+#  Orden de arranque desde cero:
+#    1. bash podman-compose-bd.sh up         (crea las 2 bases vacías)
+#    2. bash podman-compose-bd.sh firewall   (5432/5433 solo desde el backend)
+#    3. levantar los microservicios en 156.67.26.73 (Hibernate crea las tablas)
+#    4. bash podman-compose-bd.sh seed       (dependencias, chatbot, personal de prueba)
 # ==============================================================================
 
-# Configuración
-BASE_DIR="/apps/aplicaciones/defensoria/database"
+APP_DIR="/apps/aplicaciones/defensoria"
+SCRIPTS_DIR="$APP_DIR/database-scripts"
+INIT_DIR="$SCRIPTS_DIR/init"      # se ejecuta solo al crear defensoria-db por primera vez
+SEEDS_DIR="$SCRIPTS_DIR/seeds"    # se ejecuta a mano con "seed", cuando ya existen las tablas
 DATA_DIR="/apps/data/postgresql"
-SCRIPTS_DIR="/apps/aplicaciones/defensoria/database-scripts"
 BACKUP_DIR="/apps/respaldos/bd"
 
-# Credenciales de base de datos (CAMBIAR EN PRODUCCIÓN)
+IMAGEN="docker.io/library/postgres:16-alpine"
 POSTGRES_USER="postgres"
+# Debe ser IDÉNTICA a spring.datasource.password / db.password de los config-files del backend.
 POSTGRES_PASSWORD="Temporal2026@"
 
-# Configuración de memoria
+DB_PRINCIPAL="defensoria_db"
+DB_HISTORICO="defensoria_historico_db"
+
+# Única IP que puede llegar a 5432/5433 desde fuera (servidor backend).
+IP_BACKEND="156.67.26.73"
+
 DEFENSORIA_DB_MEMORY="1g"
 HISTORICO_DB_MEMORY="512m"
 
-# Mostrar menu de ayuda
 mostrar_ayuda() {
-    echo "Uso: sudo bash podman-compose-bd.sh [COMANDO]"
-    echo ""
-    echo "Comandos disponibles:"
-    echo "  up                    Levanta AMBOS contenedores de BD"
-    echo "  up-defensoria        Levanta solo defensoria_db"
-    echo "  up-historico          Levanta solo historico_db"
-    echo "  down                  Detiene AMBOS contenedores"
-    echo "  down-defensoria       Detiene solo defensoria_db"
-    echo "  down-historico       Detiene solo historico_db"
-    echo "  restart              Reinicia AMBOS contenedores"
-    echo "  status               Muestra estado de los contenedores"
-    echo "  logs <contenedor>    Muestra logs de un contenedor"
-    echo "  backup               Hace respaldo de todas las BDs"
-    echo "  restore <archivo>     Restaura un respaldo"
-    echo "  connect-defensoria   Conecta a defensoria_db con psql"
-    echo "  connect-historico    Conecta a historico_db con psql"
-    echo ""
-    echo "Bases de datos:"
-    echo "  - defensoria_db       (puerto 5432) - Base principal del sistema"
-    echo "  - historico_db        (puerto 5433) - Base de histórico/archivo"
-    echo ""
-    echo "Scripts SQL disponibles en $SCRIPTS_DIR:"
-    ls -1 "$SCRIPTS_DIR"/*.sql 2>/dev/null || echo "  (No hay scripts SQL)"
+    cat <<AYUDA
+Uso: bash podman-compose-bd.sh <comando>
+
+  up                  Crea/levanta los 2 contenedores (bases vacías la primera vez)
+  up-defensoria       Solo defensoria-db
+  up-historico        Solo historico-db
+  down                Detiene y elimina los 2 contenedores (los DATOS se conservan)
+  reset               Elimina contenedores Y DATOS y vuelve a crear todo vacío (pide confirmación)
+  status              Estado de los contenedores
+  logs <contenedor>   Logs en vivo (defensoria-db | historico-db)
+  seed                Carga dependencias, chatbot y personal de prueba (después de levantar el backend)
+  firewall            Bloquea 5432/5433 a todo el que no sea $IP_BACKEND
+  firewall-boot       Instala un servicio systemd para reaplicar 'firewall' en cada reinicio
+  backup              Respaldo de las 2 bases en $BACKUP_DIR
+  restore <archivo>   Restaura un respaldo (.sql o .sql.gz)
+  psql-defensoria     Abre psql en defensoria_db
+  psql-historico      Abre psql en defensoria_historico_db
+AYUDA
 }
 
-# Crear directorios necesarios
-crear_directorios() {
-    echo "Creando directorios necesarios..."
-    mkdir -p "$DATA_DIR/defensoria_db"
-    mkdir -p "$DATA_DIR/historico_db"
-    mkdir -p "$BACKUP_DIR"
-    mkdir -p "$SCRIPTS_DIR"
-    echo "✅ Directorios creados"
+existe()   { podman ps -a --format '{{.Names}}' | grep -qx "$1"; }
+corriendo(){ podman ps    --format '{{.Names}}' | grep -qx "$1"; }
+
+esperar_listo() {
+    local C=$1 DB=$2
+    echo -n "Esperando a que $C acepte conexiones"
+    for i in $(seq 1 60); do
+        if podman exec "$C" pg_isready -U "$POSTGRES_USER" -d "$DB" >/dev/null 2>&1; then
+            echo " ✅"; return 0
+        fi
+        echo -n "."; sleep 1
+    done
+    echo " ❌ (revisa: bash podman-compose-bd.sh logs $C)"; return 1
 }
 
-# Levantar contenedor de defensoria_db
 start_defensoria_db() {
-    echo "Levantando contenedor defensoria_db..."
-    
-    # Verificar si ya existe
-    if sudo podman ps -a --format "{{.Names}}" | grep -q "^defensoria-db$"; then
-        echo "El contenedor defensoria-db ya existe. Eliminándolo..."
-        sudo podman rm -f defensoria-db
-    fi
-    
-    sudo podman run -d \
+    mkdir -p "$DATA_DIR/defensoria_db" "$INIT_DIR"
+    existe defensoria-db && podman rm -f defensoria-db >/dev/null
+    podman run -d \
       --name defensoria-db \
-      --restart unless-stopped \
+      --restart always \
       -p 5432:5432 \
-      -e POSTGRES_USER="$POSTGRES_USER" \
-      -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
-      -e POSTGRES_DB=defensoria_db \
-      -v "$DATA_DIR/defensoria_db:/var/lib/postgresql/data:Z" \
-      -v "$SCRIPTS_DIR:/docker-entrypoint-initdb.d:Z" \
       -m "$DEFENSORIA_DB_MEMORY" \
-      docker.io/library/postgres:16-alpine
-    
-    echo "✅ Contenedor defensoria_db iniciado en puerto 5432"
-    echo "   Base de datos: defensoria_db"
-    echo "   Usuario: $POSTGRES_USER"
-    echo "   Scripts SQL se ejecutarán automáticamente en el primer arranque"
-}
-
-# Levantar contenedor de historico_db
-start_historico_db() {
-    echo "Levantando contenedor historico_db..."
-    
-    # Verificar si ya existe
-    if sudo podman ps -a --format "{{.Names}}" | grep -q "^historico-db$"; then
-        echo "El contenedor historico-db ya existe. Eliminándolo..."
-        sudo podman rm -f historico-db
-    fi
-    
-    sudo podman run -d \
-      --name historico-db \
-      --restart unless-stopped \
-      -p 5433:5432 \
+      -e TZ=America/Mexico_City \
       -e POSTGRES_USER="$POSTGRES_USER" \
       -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
-      -e POSTGRES_DB=historico_db \
-      -v "$DATA_DIR/historico_db:/var/lib/postgresql/data:Z" \
+      -e POSTGRES_DB="$DB_PRINCIPAL" \
+      -v "$DATA_DIR/defensoria_db:/var/lib/postgresql/data:Z" \
+      -v "$INIT_DIR:/docker-entrypoint-initdb.d:ro,Z" \
+      "$IMAGEN" >/dev/null
+    esperar_listo defensoria-db "$DB_PRINCIPAL" && echo "defensoria-db -> :5432 / $DB_PRINCIPAL"
+}
+
+start_historico_db() {
+    mkdir -p "$DATA_DIR/historico_db"
+    existe historico-db && podman rm -f historico-db >/dev/null
+    podman run -d \
+      --name historico-db \
+      --restart always \
+      -p 5433:5432 \
       -m "$HISTORICO_DB_MEMORY" \
-      docker.io/library/postgres:16-alpine
-    
-    echo "✅ Contenedor historico_db iniciado en puerto 5433"
-    echo "   Base de datos: historico_db"
-    echo "   Usuario: $POSTGRES_USER"
+      -e TZ=America/Mexico_City \
+      -e POSTGRES_USER="$POSTGRES_USER" \
+      -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+      -e POSTGRES_DB="$DB_HISTORICO" \
+      -v "$DATA_DIR/historico_db:/var/lib/postgresql/data:Z" \
+      "$IMAGEN" >/dev/null
+    esperar_listo historico-db "$DB_HISTORICO" && \
+      podman exec historico-db psql -q -U "$POSTGRES_USER" -d "$DB_HISTORICO" \
+        -c "ALTER DATABASE $DB_HISTORICO SET timezone TO 'America/Mexico_City';" && \
+      echo "historico-db  -> :5433 / $DB_HISTORICO"
 }
 
-# Detener contenedor
-stop_container() {
-    CONTAINER=$1
-    echo "Deteniendo contenedor $CONTAINER..."
-    
-    if sudo podman ps --format "{{.Names}}" | grep -q "^$CONTAINER$"; then
-        sudo podman stop "$CONTAINER"
-        echo "✅ Contenedor $CONTAINER detenido"
+# Arranque automático tras reiniciar el VPS (aplica a contenedores con --restart always).
+habilitar_arranque() {
+    systemctl enable podman-restart.service >/dev/null 2>&1 && \
+      echo "podman-restart.service habilitado (los contenedores vuelven solos tras un reboot)"
+}
+
+eliminar() { existe "$1" && podman rm -f "$1" >/dev/null && echo "$1 eliminado"; }
+
+# --- seeds --------------------------------------------------------------------
+psql_q() { podman exec defensoria-db psql -U "$POSTGRES_USER" -d "$DB_PRINCIPAL" -tAc "$1"; }
+
+cargar_seed() {
+    local TABLA=$1 ARCHIVO=$2 SOLO_SI_VACIA=$3 SERVICIO=$4
+    if [ ! -f "$SEEDS_DIR/$ARCHIVO" ]; then echo "⚠️  No existe $SEEDS_DIR/$ARCHIVO"; return; fi
+    if [ "$(psql_q "SELECT to_regclass('public.$TABLA') IS NOT NULL")" != "t" ]; then
+        echo "⏭️  $TABLA no existe todavía -> levanta primero $SERVICIO en el backend y repite 'seed'"
+        return
+    fi
+    local N; N=$(psql_q "SELECT count(*) FROM $TABLA")
+    if [ "$SOLO_SI_VACIA" = "si" ] && [ "$N" -gt 0 ]; then
+        echo "⏭️  $TABLA ya tiene $N filas, no se vuelve a cargar"; return
+    fi
+    if podman exec -i defensoria-db psql -q -v ON_ERROR_STOP=1 -1 -U "$POSTGRES_USER" -d "$DB_PRINCIPAL" \
+         < "$SEEDS_DIR/$ARCHIVO" >/dev/null; then
+        echo "✅ $ARCHIVO -> $TABLA ahora tiene $(psql_q "SELECT count(*) FROM $TABLA") filas"
     else
-        echo "⚠️  El contenedor $CONTAINER no está corriendo"
+        echo "❌ $ARCHIVO falló (no se cargó nada, la transacción se revirtió)"
     fi
 }
 
-# Eliminar contenedor
-remove_container() {
-    CONTAINER=$1
-    echo "Eliminando contenedor $CONTAINER..."
-    
-    if sudo podman ps -a --format "{{.Names}}" | grep -q "^$CONTAINER$"; then
-        sudo podman rm -f "$CONTAINER"
-        echo "✅ Contenedor $CONTAINER eliminado"
-    else
-        echo "⚠️  El contenedor $CONTAINER no existe"
-    fi
+seed() {
+    corriendo defensoria-db || { echo "❌ defensoria-db no está corriendo"; exit 1; }
+    cargar_seed dependencias            01-dependencias_seed.sql si catalogo-service
+    cargar_seed preguntas_chatbot       02-chatbot_seed.sql      si chatbot-service
+    cargar_seed personal_administrativo 03-personal_test.sql     no admin-service   # es UPSERT
 }
 
-# Hacer respaldo de todas las BDs
-backup_all() {
-    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-    
-    echo "Iniciando respaldo de todas las bases de datos..."
-    
-    # Verificar que los contenedores estén corriendo
-    if ! sudo podman ps --format "{{.Names}}" | grep -q "^defensoria-db$"; then
-        echo "❌ Error: defensoria-db no está corriendo"
-        exit 1
-    fi
-    
-    if ! sudo podman ps --format "{{.Names}}" | grep -q "^historico-db$"; then
-        echo "❌ Error: historico-db no está corriendo"
-        exit 1
-    fi
-    
-    # Respaldo defensoria_db
-    echo "Respaldo de defensoria_db..."
-    sudo podman exec defensoria-db pg_dump -U "$POSTGRES_USER" defensoria_db \
-      > "$BACKUP_DIR/defensoria_db_$TIMESTAMP.sql"
-    
-    # Respaldo historico_db
-    echo "Respaldo de historico_db..."
-    sudo podman exec historico-db pg_dump -U "$POSTGRES_USER" historico_db \
-      > "$BACKUP_DIR/historico_db_$TIMESTAMP.sql"
-    
-    # Comprimir
-    gzip "$BACKUP_DIR/defensoria_db_$TIMESTAMP.sql"
-    gzip "$BACKUP_DIR/historico_db_$TIMESTAMP.sql"
-    
-    echo "✅ Respaldo completado:"
-    echo "   $BACKUP_DIR/defensoria_db_$TIMESTAMP.sql.gz"
-    echo "   $BACKUP_DIR/historico_db_$TIMESTAMP.sql.gz"
+# --- firewall -----------------------------------------------------------------
+# Podman publica los puertos con reglas DNAT que se saltan ufw (igual que Docker), así que
+# "ufw allow from ..." NO protege 5432/5433. La tabla raw se evalúa antes del DNAT.
+firewall() {
+    # Solo se filtra lo que entra por la interfaz pública: así el tráfico local y el de la
+    # red de Podman nunca se ve afectado (ver Backend/firewall-backend.sh).
+    local IFACE; IFACE=$(ip route show default | awk '{print $5; exit}')
+    [ -n "$IFACE" ] || { echo "❌ No pude detectar la interfaz pública"; exit 1; }
+    for P in 5432 5433; do
+        while iptables -t raw -D PREROUTING -p tcp --dport $P ! -s "$IP_BACKEND" ! -i lo -j DROP 2>/dev/null; do :; done
+        iptables -t raw -C PREROUTING -i "$IFACE" -p tcp --dport $P ! -s "$IP_BACKEND" -j DROP 2>/dev/null || \
+        iptables -t raw -I PREROUTING -i "$IFACE" -p tcp --dport $P ! -s "$IP_BACKEND" -j DROP
+    done
+    echo "✅ 5432 y 5433 solo aceptan conexiones de $IP_BACKEND"
+    iptables -t raw -S PREROUTING | grep -E 'dport (5432|5433)'
 }
 
-# Restaurar respaldo
-restore_backup() {
-    ARCHIVO=$1
-    
-    if [ -z "$ARCHIVO" ]; then
-        echo "❌ Error: Debes especificar el archivo de respaldo"
-        echo "   Uso: $0 restore <archivo.sql o archivo.sql.gz>"
-        exit 1
-    fi
-    
-    if [ ! -f "$ARCHIVO" ]; then
-        echo "❌ Error: El archivo $ARCHIVO no existe"
-        exit 1
-    fi
-    
-    # Determinar cual BD restaurar por el nombre del archivo
-    if [[ "$ARCHIVO" == *"defensoria_db"* ]]; then
-        CONTENEDOR="defensoria-db"
-        BD="defensoria_db"
-    elif [[ "$ARCHIVO" == *"historico_db"* ]]; then
-        CONTENEDOR="historico-db"
-        BD="historico_db"
-    else
-        echo "❌ Error: No se puede determinar la BD del archivo $ARCHIVO"
-        echo "   El nombre debe contener 'defensoria_db' o 'historico_db'"
-        exit 1
-    fi
-    
-    # Verificar que el contenedor esté corriendo
-    if ! sudo podman ps --format "{{.Names}}" | grep -q "^$CONTENEDOR$"; then
-        echo "❌ Error: El contenedor $CONTENEDOR no está corriendo"
-        exit 1
-    fi
-    
-    echo "Restaurando $ARCHIVO en $BD..."
-    
-    # Descomprimir si es .gz
-    if [[ "$ARCHIVO" == *.gz ]]; then
-        gunzip -c "$ARCHIVO" | sudo podman exec -i "$CONTENEDOR" psql -U "$POSTGRES_USER" "$BD"
-    else
-        cat "$ARCHIVO" | sudo podman exec -i "$CONTENEDOR" psql -U "$POSTGRES_USER" "$BD"
-    fi
-    
-    echo "✅ Restauración completada"
+firewall_boot() {
+    local RUTA; RUTA=$(readlink -f "$0")
+    cat > /etc/systemd/system/defensoria-bd-firewall.service <<UNIT
+[Unit]
+Description=Defensoria - restringe 5432/5433 al servidor backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash $RUTA firewall
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+    systemctl daemon-reload && systemctl enable --now defensoria-bd-firewall.service && \
+      echo "✅ La regla se reaplicará en cada reinicio"
 }
 
-# Mostrar estado
-show_status() {
-    echo "Estado de los contenedores de base de datos:"
-    echo ""
-    
-    echo "defensoria-db:"
-    if sudo podman ps -a --format "{{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -q "^defensoria-db"; then
-        sudo podman ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "defensoria-db"
-    else
-        echo "  ❌ No existe"
-    fi
-    
-    echo ""
-    echo "historico-db:"
-    if sudo podman ps -a --format "{{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -q "^historico-db"; then
-        sudo podman ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep "historico-db"
-    else
-        echo "  ❌ No existe"
-    fi
+# --- respaldos ----------------------------------------------------------------
+backup() {
+    mkdir -p "$BACKUP_DIR"
+    local T; T=$(date +%Y%m%d_%H%M%S)
+    corriendo defensoria-db && podman exec defensoria-db pg_dump -U "$POSTGRES_USER" "$DB_PRINCIPAL" \
+        | gzip > "$BACKUP_DIR/${DB_PRINCIPAL}_$T.sql.gz" && echo "✅ $BACKUP_DIR/${DB_PRINCIPAL}_$T.sql.gz"
+    corriendo historico-db && podman exec historico-db pg_dump -U "$POSTGRES_USER" "$DB_HISTORICO" \
+        | gzip > "$BACKUP_DIR/${DB_HISTORICO}_$T.sql.gz" && echo "✅ $BACKUP_DIR/${DB_HISTORICO}_$T.sql.gz"
 }
 
-# Mostrar logs
-show_logs() {
-    CONTENEDOR=$1
-    
-    if [ -z "$CONTENEDOR" ]; then
-        echo "❌ Error: Debes especificar el contenedor"
-        echo "   Uso: $0 logs <defensoria-db|historico-db>"
-        exit 1
-    fi
-    
-    if [[ "$CONTENEDOR" != "defensoria-db" && "$CONTENEDOR" != "historico-db" ]]; then
-        echo "❌ Error: Contenedor no válido. Debe ser 'defensoria-db' o 'historico-db'"
-        exit 1
-    fi
-    
-    echo "Mostrando logs de $CONTENEDOR (Ctrl+C para salir)..."
-    sudo podman logs -f "$CONTENEDOR"
+restore() {
+    local A=$1 C DB
+    [ -f "$A" ] || { echo "Uso: restore <archivo.sql[.gz]> (no existe '$A')"; exit 1; }
+    case "$A" in
+        *historico*) C=historico-db;  DB=$DB_HISTORICO ;;
+        *)           C=defensoria-db; DB=$DB_PRINCIPAL ;;
+    esac
+    echo "Restaurando $A en $DB ($C)..."
+    if [[ "$A" == *.gz ]]; then gunzip -c "$A"; else cat "$A"; fi \
+      | podman exec -i "$C" psql -q -U "$POSTGRES_USER" -d "$DB" && echo "✅ Restaurado"
 }
 
-# Conectar a BD con psql
-connect_db() {
-    CONTENEDOR=$1
-    BD=$2
-    
-    if ! sudo podman ps --format "{{.Names}}" | grep -q "^$CONTENEDOR$"; then
-        echo "❌ Error: El contenedor $CONTENEDOR no está corriendo"
-        exit 1
-    fi
-    
-    echo "Conectando a $BD en $CONTENEDOR..."
-    sudo podman exec -it "$CONTENEDOR" psql -U "$POSTGRES_USER" "$BD"
-}
-
-# Lógica principal
-COMANDO=$1
-PARAMETRO=$2
-
-case "$COMANDO" in
-    up)
-        crear_directorios
-        start_defensoria_db
-        start_historico_db
-        echo ""
-        echo "✅ Todos los contenedores de BD iniciados"
-        echo ""
-        echo "Esperando 10 segundos para que Postgres se inicialice..."
-        sleep 10
-        show_status
-        ;;
-    up-defensoria)
-        crear_directorios
-        start_defensoria_db
-        ;;
-    up-historico)
-        crear_directorios
-        start_historico_db
-        ;;
-    down)
-        stop_container "defensoria-db"
-        stop_container "historico-db"
-        echo ""
-        echo "✅ Todos los contenedores de BD detenidos"
-        ;;
-    down-defensoria)
-        stop_container "defensoria-db"
-        ;;
-    down-historico)
-        stop_container "historico-db"
-        ;;
-    restart)
-        stop_container "defensoria-db"
-        stop_container "historico-db"
-        sleep 2
-        start_defensoria_db
-        start_historico_db
-        echo ""
-        echo "✅ Todos los contenedores de BD reiniciados"
-        ;;
-    status)
-        show_status
-        ;;
-    logs)
-        show_logs "$PARAMETRO"
-        ;;
-    backup)
-        backup_all
-        ;;
-    restore)
-        restore_backup "$PARAMETRO"
-        ;;
-    connect-defensoria)
-        connect_db "defensoria-db" "defensoria_db"
-        ;;
-    connect-historico)
-        connect_db "historico-db" "historico_db"
-        ;;
-    *)
-        mostrar_ayuda
-        ;;
+case "$1" in
+    up)              start_defensoria_db; start_historico_db; habilitar_arranque; podman ps -a --filter name=-db ;;
+    up-defensoria)   start_defensoria_db ;;
+    up-historico)    start_historico_db ;;
+    down)            eliminar defensoria-db; eliminar historico-db ;;
+    reset)
+        read -r -p "Esto BORRA todos los datos de las 2 bases. Escribe BORRAR para continuar: " R
+        [ "$R" = "BORRAR" ] || { echo "Cancelado"; exit 1; }
+        eliminar defensoria-db; eliminar historico-db
+        rm -rf "$DATA_DIR/defensoria_db" "$DATA_DIR/historico_db"
+        start_defensoria_db; start_historico_db; habilitar_arranque ;;
+    status)          podman ps -a --filter name=-db --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' ;;
+    logs)            podman logs -f "$2" ;;
+    seed)            seed ;;
+    firewall)        firewall ;;
+    firewall-boot)   firewall_boot ;;
+    backup)          backup ;;
+    restore)         restore "$2" ;;
+    psql-defensoria) podman exec -it defensoria-db psql -U "$POSTGRES_USER" -d "$DB_PRINCIPAL" ;;
+    psql-historico)  podman exec -it historico-db  psql -U "$POSTGRES_USER" -d "$DB_HISTORICO" ;;
+    *)               mostrar_ayuda ;;
 esac

@@ -313,6 +313,16 @@ public class RevisionQuejaService {
                         + " para su atención."
         );
 
+        // Aviso en la campana del defensor/subdefensor al que se le asignó la queja.
+        personalRepository.findFirstByNombreCompletoAndActivoTrue(defensorAsignado)
+                .ifPresent(defensor -> notificacionService.notificarPersonal(
+                        defensor.getCorreoInstitucional(),
+                        "Se te turnó una queja",
+                        "La queja " + guardada.getNumeroFolio() + " fue validada por Recepción y turnada a "
+                                + AREA_DESTINO + "; quedaste como responsable."
+                                + (esVacio(comentarios) ? "" : " Comentarios de Recepción: " + comentarios),
+                        ""));
+
         return guardada;
     }
 

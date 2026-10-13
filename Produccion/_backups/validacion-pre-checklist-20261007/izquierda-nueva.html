@@ -1,0 +1,197 @@
+<div class="page-header">
+  <div>
+    <h2>Validación de Datos e Identificación — {{ folio }}</h2>
+    <p class="page-header-subtitulo">Verifica que los datos proporcionados existan y coincidan con la identificación.</p>
+  </div>
+  <a routerLink="/" class="btn-secondary">Volver a la Bandeja</a>
+</div>
+
+<!-- Botones Sí / No + observación cuando la respuesta es "No". Se reutiliza en las 5 preguntas. -->
+<ng-template #sino let-clave="clave" let-obsSiempre="obsSiempre">
+  <div class="acciones-pregunta">
+    <button type="button" class="btn-si" [class.activo]="respuestas[clave].valor === true"
+            (click)="setRespuesta(clave, true)">Sí</button>
+    <button type="button" class="btn-no" [class.activo]="respuestas[clave].valor === false"
+            (click)="setRespuesta(clave, false)">No</button>
+  </div>
+  @if (respuestas[clave].valor === false || obsSiempre) {
+    <div class="obs-pregunta" [class.obs-requerida]="respuestas[clave].valor === false">
+      <label [for]="'obs-' + clave">
+        Observaciones{{ respuestas[clave].valor === false ? ' para el quejoso (obligatorio)' : ' (opcional)' }}:
+      </label>
+      <textarea
+        [id]="'obs-' + clave"
+        rows="2"
+        [(ngModel)]="respuestas[clave].observacion"
+        [name]="'obs-' + clave"
+        placeholder="Qué falta o qué no coincide, y qué debe corregir el quejoso…"
+      ></textarea>
+    </div>
+  }
+</ng-template>
+
+@if (cargando) {
+  <p class="cargando">Cargando queja…</p>
+} @else if (queja) {
+  <div class="rejilla-validacion">
+
+    <!-- Columna izquierda: lista de verificación -->
+    <div class="card">
+      <h3>Revisión del Quejoso</h3>
+      <p class="pista-checks">
+        Contesta las {{ totalRequisitos }} preguntas comparando lo capturado contra la identificación.
+        Todas deben ser "Sí" para canalizar; si alguna es "No", escribe qué debe corregir el quejoso.
+      </p>
+
+      <ol class="lista-preguntas">
+        <!-- 1. Nombre completo -->
+        <li [class.dato-cumplido]="respuestas.nombreCompleto.valor === true"
+            [class.dato-fallido]="respuestas.nombreCompleto.valor === false">
+          <p class="etiqueta-dato">¿El quejoso proporcionó su nombre completo (nombre y apellidos*)?</p>
+          <div class="dato-capturado">
+            <strong>{{ queja.nombreCompletoQuejoso }}</strong>
+            <span class="meta">{{ queja.correoInstitucional }}</span>
+            @if (queja.telefonoContacto) {
+              <span class="meta">Tel: {{ queja.telefonoContacto }}</span>
+            }
+          </div>
+          <p class="nota-apellido">* Recuerde que hay personas que solo tienen un apellido.</p>
+          <ng-container *ngTemplateOutlet="sino; context: { clave: 'nombreCompleto' }"></ng-container>
+        </li>
+
+        <!-- 2. Identificación oficial -->
+        <li [class.dato-cumplido]="respuestas.identificacionOficial.valor === true"
+            [class.dato-fallido]="respuestas.identificacionOficial.valor === false">
+          <p class="instruccion">
+            Verifique que la identificación presentada sea <strong>legible, oficial, vigente</strong> y
+            <strong>coincida con el nombre proporcionado</strong>.
+          </p>
+          <p class="etiqueta-dato">
+            ¿El quejoso presentó una identificación oficial válida y vigente de acuerdo al artículo 48?
+            <button type="button" class="link-listado" (click)="alternarListadoOficial()">
+              {{ mostrarListadoOficial ? 'Ocultar listado oficial' : 'Ver listado oficial' }}
+            </button>
+          </p>
+          @if (mostrarListadoOficial) {
+            <div class="listado-oficial">
+              @if (cargandoIdentificaciones) {
+                <span class="sin-dato">Cargando listado…</span>
+              } @else if (identificaciones.length === 0) {
+                <span class="sin-dato">No se pudo cargar el listado oficial.</span>
+              } @else {
+                <ul>
+                  @for (identificacion of identificaciones; track identificacion.clave) {
+                    <li>{{ identificacion.nombre }}</li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+          @if (esAlumno) {
+            <p class="sub-pregunta">
+              En caso de ser alumno, la credencial del IPN vigente también es válida; revise que la boleta
+              coincida (pregunta 3).
+            </p>
+          }
+          <div class="input-group">
+            <label for="tipoIdentificacionPresentada">Identificación que presentó:</label>
+            <select id="tipoIdentificacionPresentada" [(ngModel)]="tipoIdentificacionPresentada"
+                    name="tipoIdentificacionPresentada" [disabled]="cargandoIdentificaciones">
+              <option value="" disabled>Seleccione el tipo de identificación</option>
+              @for (identificacion of identificaciones; track identificacion.clave) {
+                <option [value]="identificacion.clave">{{ identificacion.nombre }}</option>
+              }
+            </select>
+          </div>
+          <ng-container *ngTemplateOutlet="sino; context: { clave: 'identificacionOficial', obsSiempre: true }"></ng-container>
+        </li>
+
+        <!-- 3. Boleta / número de empleado -->
+        <li [class.dato-cumplido]="respuestas.numeroIdentificacion.valor === true"
+            [class.dato-fallido]="respuestas.numeroIdentificacion.valor === false">
+          <p class="etiqueta-dato">
+            ¿El {{ etiquetaTipoIdentificacion.toLowerCase() }} proporcionado coincide con el de la identificación?
+          </p>
+          <div class="dato-capturado">
+            @if (queja.numeroIdentificacionQuejoso) {
+              <strong>{{ etiquetaTipoIdentificacion }}: {{ queja.numeroIdentificacionQuejoso }}</strong>
+            } @else {
+              <span class="sin-dato">No proporcionó número de boleta ni de empleado.</span>
+            }
+          </div>
+          <ng-container *ngTemplateOutlet="sino; context: { clave: 'numeroIdentificacion' }"></ng-container>
+        </li>
+
+        <!-- 4. Fecha de los hechos: plazo de 90 días -->
+        <li [class.dato-cumplido]="respuestas.fechaHechos.valor === true"
+            [class.dato-fallido]="respuestas.fechaHechos.valor === false">
+          <p class="etiqueta-dato">
+            ¿Los hechos ocurrieron dentro de los {{ plazoDias }} días previos al registro de la queja?
+          </p>
+          <div class="dato-capturado">
+            @if (diasDesdeHechos !== null) {
+              <span class="meta">Fecha de los hechos: <strong class="en-linea">{{ formatearFecha(queja.fechaHechos) }}</strong></span>
+              <span class="meta">Fecha de registro: <strong class="en-linea">{{ formatearFecha(queja.fechaCreacion) }}</strong></span>
+              <span class="plazo" [class.plazo-ok]="dentroDePlazo" [class.plazo-vencido]="!dentroDePlazo">
+                {{ diasDesdeHechos }} {{ diasDesdeHechos === 1 ? 'día' : 'días' }} transcurridos —
+                {{ dentroDePlazo ? 'dentro del plazo' : 'fuera del plazo de ' + plazoDias + ' días' }}
+              </span>
+            } @else {
+              <span class="sin-dato">La queja no tiene fecha de los hechos capturada; verifíquela en el documento.</span>
+            }
+          </div>
+          <ng-container *ngTemplateOutlet="sino; context: { clave: 'fechaHechos' }"></ng-container>
+        </li>
+
+        <!-- 5. Datos del denunciado -->
+        <li [class.dato-cumplido]="respuestas.datosDenunciado.valor === true"
+            [class.dato-fallido]="respuestas.datosDenunciado.valor === false">
+          <p class="etiqueta-dato">¿El quejoso proporcionó los datos del denunciado (nombre y apellidos*)?</p>
+          <div class="dato-capturado">
+            @if (queja.nombreCompletoDenunciado && queja.nombreCompletoDenunciado.trim()) {
+              <strong>{{ queja.nombreCompletoDenunciado }}</strong>
+            } @else {
+              <span class="sin-dato">No capturó datos del denunciado.</span>
+            }
+          </div>
+          <p class="nota-apellido">* Recuerde que hay personas que solo tienen un apellido.</p>
+          <ng-container *ngTemplateOutlet="sino; context: { clave: 'datosDenunciado' }"></ng-container>
+        </li>
+      </ol>
+
+      <div class="observaciones-validacion">
+        <label for="obs-generales">Observaciones generales (opcional):</label>
+        <textarea
+          id="obs-generales"
+          rows="3"
+          [(ngModel)]="observaciones"
+          name="observaciones"
+          placeholder="Algo adicional que deba saber el quejoso…"
+        ></textarea>
+      </div>
+
+      <div class="progreso-requisitos">
+        <div class="progreso-barra">
+          <div class="progreso-relleno" [class.completo]="puedeCanalizar"
+               [style.width.%]="(cumplidos / totalRequisitos) * 100"></div>
+        </div>
+        <p class="contador-checks" [class.completo]="puedeCanalizar">
+          {{ cumplidos }} de {{ totalRequisitos }} verificaciones en "Sí"
+          @if (contestadas < totalRequisitos) {
+            · faltan {{ totalRequisitos - contestadas }} por contestar
+          }
+        </p>
+      </div>
+
+      <div class="acciones-validacion">
+        <button class="btn-exito" [disabled]="!puedeCanalizar"
+                [title]="puedeCanalizar ? '' : 'Todas las verificaciones deben ser Sí para canalizar.'"
+                (click)="irACanalizar()">
+          → Canalizar Queja
+        </button>
+        <button class="btn-secondary boton-rechazar" [disabled]="!puedeRegresar"
+                [title]="motivoBloqueoRegresar" (click)="regresarAlQuejoso()">
+          {{ enviando ? 'Enviando…' : '← Regresar al Quejoso' }}
+        </button>
+      </div>
+    </div>

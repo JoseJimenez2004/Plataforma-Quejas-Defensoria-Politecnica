@@ -1,4 +1,5 @@
 #!/bin/bash
+# ⚠️ Obsoleto: los config-files ya apuntan a 169.58.62.99. Ver docs/VERSION-FINAL-TT.md
 
 # Script para actualizar la IP de la base de datos en todos los config-files
 # Cambia de 2.25.78.22 a 169.58.62.99 (servidor BD)

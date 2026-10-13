@@ -1,147 +1,198 @@
 <div class="page-header">
   <div>
-    <h2>Validación de Requisitos — {{ folio }}</h2>
-    <p class="page-header-subtitulo">Revisa la queja antes de canalizarla o rechazarla.</p>
+    <h2>Validación de Datos e Identificación — {{ folio }}</h2>
+    <p class="page-header-subtitulo">Verifica que los datos proporcionados existan y coincidan con la identificación.</p>
   </div>
   <a routerLink="/" class="btn-secondary">Volver a la Bandeja</a>
 </div>
+
+<!-- Botones Sí / No + observación cuando la respuesta es "No". Se reutiliza en las 5 preguntas. -->
+<ng-template #sino let-clave="clave" let-obsSiempre="obsSiempre">
+  <div class="acciones-pregunta">
+    <button type="button" class="btn-si" [class.activo]="r(clave).valor === true"
+            (click)="setRespuesta(clave, true)">Sí</button>
+    <button type="button" class="btn-no" [class.activo]="r(clave).valor === false"
+            (click)="setRespuesta(clave, false)">No</button>
+  </div>
+  @if (r(clave).valor === false || obsSiempre) {
+    <div class="obs-pregunta" [class.obs-requerida]="r(clave).valor === false">
+      <label [for]="'obs-' + clave">
+        Observaciones{{ r(clave).valor === false ? ' para el quejoso (obligatorio)' : ' (opcional)' }}:
+      </label>
+      <textarea
+        [id]="'obs-' + clave"
+        rows="2"
+        [(ngModel)]="r(clave).observacion"
+        [name]="'obs-' + clave"
+        placeholder="Qué falta o qué no coincide, y qué debe corregir el quejoso…"
+      ></textarea>
+    </div>
+  }
+</ng-template>
 
 @if (cargando) {
   <p class="cargando">Cargando queja…</p>
 } @else if (queja) {
   <div class="rejilla-validacion">
 
-    <!-- Columna izquierda: datos de la queja, cada uno con su check -->
+    <!-- Columna izquierda: lista de verificación -->
     <div class="card">
-      <h3>Resumen de la Queja</h3>
-      <p class="pista-checks">Marca cada dato que cumpla con el requisito.</p>
+      <h3>Revisión del Quejoso</h3>
+      <p class="pista-checks">
+        Contesta las {{ totalRequisitos }} preguntas comparando lo capturado contra la identificación.
+        Todas deben ser "Sí" para canalizar; si alguna es "No", escribe qué debe corregir el quejoso.
+      </p>
 
-      <ul class="lista-datos">
-        <li [class.dato-cumplido]="checks.datos">
-          <label class="check-dato">
-            <input type="checkbox" [(ngModel)]="checks.datos" name="chk-datos" />
-            <span class="etiqueta-dato">Quejoso</span>
-          </label>
-          <div class="valor-dato">
+      <ol class="lista-preguntas">
+        <!-- 1. Nombre completo -->
+        <li [class.dato-cumplido]="respuestas.nombreCompleto.valor === true"
+            [class.dato-fallido]="respuestas.nombreCompleto.valor === false">
+          <p class="etiqueta-dato">¿El quejoso proporcionó su nombre completo (nombre y apellidos*)?</p>
+          <div class="dato-capturado">
             <strong>{{ queja.nombreCompletoQuejoso }}</strong>
             <span class="meta">{{ queja.correoInstitucional }}</span>
             @if (queja.telefonoContacto) {
               <span class="meta">Tel: {{ queja.telefonoContacto }}</span>
             }
           </div>
+          <p class="nota-apellido">* Recuerde que hay personas que solo tienen un apellido.</p>
+          <ng-container *ngTemplateOutlet="sino; context: { clave: 'nombreCompleto' }"></ng-container>
         </li>
 
-        <li [class.dato-cumplido]="checks.identificacion">
-          <label class="check-dato">
-            <input type="checkbox" [(ngModel)]="checks.identificacion" name="chk-identificacion" />
-            <span class="etiqueta-dato">Identificación</span>
-          </label>
-          <div class="valor-dato">
-            @if (queja.numeroIdentificacionQuejoso) {
-              <strong>{{ queja.tipoIdentificacionQuejoso || 'Boleta/Empleado' }}: {{ queja.numeroIdentificacionQuejoso }}</strong>
-            } @else {
-              <span class="sin-dato">No proporcionó identificación</span>
-            }
-            <span class="meta">Presentada el {{ queja.fechaCreacion | date: 'dd/MM/yy, HH:mm' }}</span>
-          </div>
-        </li>
-
-        <li [class.dato-cumplido]="checks.motivo">
-          <label class="check-dato">
-            <input type="checkbox" [(ngModel)]="checks.motivo" name="chk-motivo" />
-            <span class="etiqueta-dato">Motivo</span>
-          </label>
-          <div class="valor-dato">
-            <strong>{{ queja.motivo }}</strong>
-          </div>
-        </li>
-
-        <li [class.dato-cumplido]="checks.relato">
-          <label class="check-dato">
-            <input type="checkbox" [(ngModel)]="checks.relato" name="chk-relato" />
-            <span class="etiqueta-dato">Relato de hechos</span>
-          </label>
-          <div class="valor-dato">
-            <div class="bloque-redaccion">
-              <p class="descripcion" [class.difuminada]="!mostrarRedaccion">{{ queja.descripcion }}</p>
-              @if (!mostrarRedaccion) {
-                <button type="button" class="btn-revelar" (click)="alternarRedaccion()">
-                  Mostrar redacción
-                </button>
+        <!-- 2. Identificación oficial -->
+        <li [class.dato-cumplido]="respuestas.identificacionOficial.valor === true"
+            [class.dato-fallido]="respuestas.identificacionOficial.valor === false">
+          <p class="instruccion">
+            Verifique que la identificación presentada sea <strong>legible, oficial, vigente</strong> y
+            <strong>coincida con el nombre proporcionado</strong>.
+          </p>
+          <p class="etiqueta-dato">
+            ¿El quejoso presentó una identificación oficial válida y vigente de acuerdo al artículo 48?
+            <button type="button" class="link-listado" (click)="alternarListadoOficial()">
+              {{ mostrarListadoOficial ? 'Ocultar listado oficial' : 'Ver listado oficial' }}
+            </button>
+          </p>
+          @if (mostrarListadoOficial) {
+            <div class="listado-oficial">
+              @if (cargandoIdentificaciones) {
+                <span class="sin-dato">Cargando listado…</span>
+              } @else if (identificaciones.length === 0) {
+                <span class="sin-dato">No se pudo cargar el listado oficial.</span>
+              } @else {
+                <ul>
+                  @for (identificacion of identificaciones; track identificacion.clave) {
+                    <li>{{ identificacion.nombre }}</li>
+                  }
+                </ul>
               }
             </div>
-            @if (mostrarRedaccion) {
-              <button type="button" class="link-ocultar" (click)="alternarRedaccion()">Ocultar redacción</button>
-            }
-            <span class="meta nota-privacidad">
-              El relato se muestra difuminado: ábrelo solo si necesitas leerlo para validar.
-            </span>
+          }
+          @if (esAlumno) {
+            <p class="sub-pregunta">
+              En caso de ser alumno, la credencial del IPN vigente también es válida; revise que la boleta
+              coincida (pregunta 3).
+            </p>
+          }
+          <div class="input-group">
+            <label for="tipoIdentificacionPresentada">Identificación que presentó:</label>
+            <select id="tipoIdentificacionPresentada" [(ngModel)]="tipoIdentificacionPresentada"
+                    name="tipoIdentificacionPresentada" [disabled]="cargandoIdentificaciones">
+              <option value="" disabled>Seleccione el tipo de identificación</option>
+              @for (identificacion of identificaciones; track identificacion.clave) {
+                <option [value]="identificacion.clave">{{ identificacion.nombre }}</option>
+              }
+            </select>
           </div>
+          <ng-container *ngTemplateOutlet="sino; context: { clave: 'identificacionOficial', obsSiempre: true }"></ng-container>
         </li>
 
-        <li [class.dato-cumplido]="checks.evidencias">
-          <label class="check-dato">
-            <input type="checkbox" [(ngModel)]="checks.evidencias" name="chk-evidencias" />
-            <span class="etiqueta-dato">Evidencias</span>
-          </label>
-          <div class="valor-dato">
-            @if (queja.evidencias.length === 0) {
-              <span class="sin-dato">No se adjuntaron documentos.</span>
+        <!-- 3. Boleta / número de empleado -->
+        <li [class.dato-cumplido]="respuestas.numeroIdentificacion.valor === true"
+            [class.dato-fallido]="respuestas.numeroIdentificacion.valor === false">
+          <p class="etiqueta-dato">
+            ¿El {{ etiquetaTipoIdentificacion.toLowerCase() }} proporcionado coincide con el de la identificación?
+          </p>
+          <div class="dato-capturado">
+            @if (queja.numeroIdentificacionQuejoso) {
+              <strong>{{ etiquetaTipoIdentificacion }}: {{ queja.numeroIdentificacionQuejoso }}</strong>
             } @else {
-              <ul class="lista-documentos">
-                @for (ev of queja.evidencias; track ev.id) {
-                  <li>
-                    <span class="icono-documento" [class]="tipoIcono(ev)">
-                      @switch (tipoIcono(ev)) {
-                        @case ('imagen') {
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                        }
-                        @case ('pdf') {
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                        }
-                        @default {
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-                        }
-                      }
-                    </span>
-                    <span class="datos-documento">
-                      <span class="nombre-documento" [title]="ev.nombreArchivo">{{ ev.nombreArchivo }}</span>
-                      @if (ev.tamanioBytes) {
-                        <span class="meta">{{ formatearTamanio(ev.tamanioBytes) }}</span>
-                      }
-                    </span>
-                    <button class="btn-secondary boton-ver" (click)="verDocumento(ev.id)">Ver</button>
-                  </li>
-                }
-              </ul>
+              <span class="sin-dato">No proporcionó número de boleta ni de empleado.</span>
             }
           </div>
+          <ng-container *ngTemplateOutlet="sino; context: { clave: 'numeroIdentificacion' }"></ng-container>
         </li>
-      </ul>
+
+        <!-- 4. Fecha de los hechos: plazo de 90 días -->
+        <li [class.dato-cumplido]="respuestas.fechaHechos.valor === true"
+            [class.dato-fallido]="respuestas.fechaHechos.valor === false">
+          <p class="etiqueta-dato">
+            ¿Los hechos ocurrieron dentro de los {{ plazoDias }} días previos al registro de la queja?
+          </p>
+          <div class="dato-capturado">
+            @if (diasDesdeHechos !== null) {
+              <span class="meta">Fecha de los hechos: <strong class="en-linea">{{ formatearFecha(queja.fechaHechos) }}</strong></span>
+              <span class="meta">Fecha de registro: <strong class="en-linea">{{ formatearFecha(queja.fechaCreacion) }}</strong></span>
+              <span class="plazo" [class.plazo-ok]="dentroDePlazo" [class.plazo-vencido]="!dentroDePlazo">
+                {{ diasDesdeHechos }} {{ diasDesdeHechos === 1 ? 'día' : 'días' }} transcurridos —
+                {{ dentroDePlazo ? 'dentro del plazo' : 'fuera del plazo de ' + plazoDias + ' días' }}
+              </span>
+            } @else {
+              <span class="sin-dato">La queja no tiene fecha de los hechos capturada; verifíquela en el documento.</span>
+            }
+          </div>
+          <ng-container *ngTemplateOutlet="sino; context: { clave: 'fechaHechos' }"></ng-container>
+        </li>
+
+        <!-- 5. Datos del denunciado -->
+        <li [class.dato-cumplido]="respuestas.datosDenunciado.valor === true"
+            [class.dato-fallido]="respuestas.datosDenunciado.valor === false">
+          <p class="etiqueta-dato">¿El quejoso proporcionó los datos del denunciado (nombre y apellidos*)?</p>
+          <div class="dato-capturado">
+            @if (queja.nombreCompletoDenunciado && queja.nombreCompletoDenunciado.trim()) {
+              <strong>{{ queja.nombreCompletoDenunciado }}</strong>
+            } @else {
+              <span class="sin-dato">No capturó datos del denunciado.</span>
+            }
+          </div>
+          <p class="nota-apellido">* Recuerde que hay personas que solo tienen un apellido.</p>
+          <ng-container *ngTemplateOutlet="sino; context: { clave: 'datosDenunciado' }"></ng-container>
+        </li>
+      </ol>
+
+      <div class="observaciones-validacion">
+        <label for="obs-generales">Observaciones generales (opcional):</label>
+        <textarea
+          id="obs-generales"
+          rows="3"
+          [(ngModel)]="observaciones"
+          name="observaciones"
+          placeholder="Algo adicional que deba saber el quejoso…"
+        ></textarea>
+      </div>
 
       <div class="progreso-requisitos">
         <div class="progreso-barra">
-          <div
-            class="progreso-relleno"
-            [class.completo]="todosLosRequisitosCumplidos"
-            [style.width.%]="(cumplidos / totalRequisitos) * 100"
-          ></div>
+          <div class="progreso-relleno" [class.completo]="puedeCanalizar"
+               [style.width.%]="(cumplidos / totalRequisitos) * 100"></div>
         </div>
-        <p class="contador-checks" [class.completo]="todosLosRequisitosCumplidos">
-          {{ cumplidos }} de {{ totalRequisitos }} requisitos marcados
+        <p class="contador-checks" [class.completo]="puedeCanalizar">
+          {{ cumplidos }} de {{ totalRequisitos }} verificaciones en "Sí"
+          @if (contestadas < totalRequisitos) {
+            · faltan {{ totalRequisitos - contestadas }} por contestar
+          }
         </p>
       </div>
 
       <div class="acciones-validacion">
-        <button
-          class="btn-exito"
-          [disabled]="!todosLosRequisitosCumplidos"
-          [title]="todosLosRequisitosCumplidos ? '' : 'Marca los ' + totalRequisitos + ' requisitos para poder canalizar.'"
-          (click)="irACanalizar()"
-        >
+        <button class="btn-exito" [disabled]="!puedeCanalizar"
+                [title]="puedeCanalizar ? '' : 'Todas las verificaciones deben ser Sí para canalizar.'"
+                (click)="irACanalizar()">
           → Canalizar Queja
         </button>
-        <button class="btn-secondary boton-rechazar" (click)="irARechazar()">Rechazar Queja</button>
+        <button class="btn-secondary boton-rechazar" [disabled]="!puedeRegresar"
+                [title]="motivoBloqueoRegresar" (click)="regresarAlQuejoso()">
+          {{ enviando ? 'Enviando…' : '← Regresar al Quejoso' }}
+        </button>
       </div>
     </div>
 
@@ -186,6 +237,41 @@
           <p class="meta">Si el quejoso subió un PDF, ábrelo desde la lista de evidencias.</p>
         </div>
       }
+
+      <!-- Evidencias (lista compacta) -->
+      <div class="evidencias-validacion">
+        <h4>Evidencias adjuntas</h4>
+        @if (queja.evidencias.length === 0) {
+          <span class="sin-dato">No se adjuntaron documentos.</span>
+        } @else {
+          <ul class="lista-documentos">
+            @for (ev of queja.evidencias; track ev.id) {
+              <li>
+                <span class="icono-documento" [class]="tipoIcono(ev)">
+                  @switch (tipoIcono(ev)) {
+                    @case ('imagen') {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    }
+                    @case ('pdf') {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    }
+                    @default {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                    }
+                  }
+                </span>
+                <span class="datos-documento">
+                  <span class="nombre-documento" [title]="ev.nombreArchivo">{{ ev.nombreArchivo }}</span>
+                  @if (ev.tamanioBytes) {
+                    <span class="meta">{{ formatearTamanio(ev.tamanioBytes) }}</span>
+                  }
+                </span>
+                <button class="btn-secondary boton-ver" (click)="verDocumento(ev.id)">Ver</button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
     </div>
 
   </div>

@@ -4,8 +4,10 @@ import { authAdminGuard } from './core/guards/auth-admin.guard';
 
 export const routes: Routes = [
   {
+    // Login unificado: /admin/login manda al login único del personal (/revision/login).
     path: 'login',
-    loadComponent: () => import('./pages/login/login').then((m) => m.Login),
+    canActivate: [() => { window.location.assign('/revision/login'); return false; }],
+    children: [],
   },
   {
     path: '',
@@ -31,6 +33,10 @@ export const routes: Routes = [
       {
         path: 'plantillas',
         loadComponent: () => import('./pages/plantillas/plantillas').then((m) => m.Plantillas),
+      },
+      {
+        path: 'chatbot',
+        loadComponent: () => import('./pages/chatbot/chatbot').then((m) => m.Chatbot),
       },
       {
         path: 'seguridad-respaldos',

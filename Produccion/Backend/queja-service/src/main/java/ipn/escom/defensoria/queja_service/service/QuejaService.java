@@ -64,6 +64,9 @@ public class QuejaService {
     }
 
     public boolean validarFolioYCorreo(String folio, String correo) {
+        // Sin normalizar a propósito: auth-service guarda el correo de la cuenta tal cual se
+        // escribió al activar; si aquí se aceptara "Juan@..." la cuenta quedaría con un correo
+        // que no coincide con el de sus quejas y su panel saldría vacío.
         return quejaRepository.findByNumeroFolioAndCorreoInstitucional(folio, correo).isPresent();
     }
 
@@ -75,7 +78,8 @@ public class QuejaService {
      * placeholders como "Ciudadano Defensoría").
      */
     public Queja obtenerPorFolioYCorreo(String folio, String correo) {
-        return quejaRepository.findByNumeroFolioAndCorreoInstitucional(folio, correo)
+        return quejaRepository.findByNumeroFolioAndCorreoInstitucional(
+                        normalizarFolio(folio), normalizarCorreo(correo))
                 .orElseThrow(() -> new RuntimeException("El folio no existe o el correo no coincide con el registro."));
     }
 
@@ -121,6 +125,11 @@ public class QuejaService {
                 "Queja corregida",
                 "Reenviaste tu queja con folio " + guardada.getNumeroFolio()
                         + ". Recepción la revisará de nuevo.");
+        notificacionClienteService.notificarPersonal(
+                guardada.getValidadoPor(),
+                "Queja corregida por el quejoso",
+                "El quejoso atendió las observaciones de la queja " + guardada.getNumeroFolio()
+                        + " que rechazaste. Ya está de nuevo en la bandeja como CORREGIDA.");
         return guardada;
     }
 
@@ -425,5 +434,16 @@ public class QuejaService {
             throw new ValidacionException(
                     "No se pudo leer el archivo \"" + archivo.getOriginalFilename() + "\".");
         }
+    }
+
+    /** El registro guarda el correo en minúsculas (ValidadorCorreo) y el folio en mayúsculas
+     * (FOL-XXXXXXXX); la consulta pública debe comparar igual, si no "Juan@Gmail.com" o
+     * "fol-..." dan "el folio no existe" aunque la queja sí exista. */
+    private static String normalizarCorreo(String correo) {
+        return correo == null ? null : correo.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
+    private static String normalizarFolio(String folio) {
+        return folio == null ? null : folio.trim().toUpperCase(java.util.Locale.ROOT);
     }
 }

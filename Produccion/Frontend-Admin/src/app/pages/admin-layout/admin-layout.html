@@ -4,6 +4,8 @@
     <span>Defensoría de los Derechos Politécnicos</span>
   </div>
 
+  <div class="topbar-acciones">
+  <app-campana-notificaciones></app-campana-notificaciones>
   <div class="dropdown">
     <button class="perfil-boton" (click)="alternarMenu($event)">
       <span class="avatar">{{ inicialesUsuario }}</span>
@@ -28,6 +30,7 @@
       </div>
     }
   </div>
+  </div>
 </header>
 
 <div class="layout">
@@ -35,7 +38,7 @@
     <div class="marca">
       <div class="marca-escudo">DDP</div>
       <div class="marca-texto">
-        <strong>Consola Admin</strong>
+        <strong>Panel de la Defensora</strong>
         <span>Sistema de Accesos</span>
       </div>
     </div>
@@ -56,6 +59,10 @@
       <a routerLink="/plantillas" routerLinkActive="activo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>
         Plantillas Oficiales
+      </a>
+      <a routerLink="/chatbot" routerLinkActive="activo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 9h8"></path><path d="M8 13h5"></path></svg>
+        Preguntas del Chatbot
       </a>
       <a routerLink="/seguridad-respaldos" routerLinkActive="activo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"></path></svg>

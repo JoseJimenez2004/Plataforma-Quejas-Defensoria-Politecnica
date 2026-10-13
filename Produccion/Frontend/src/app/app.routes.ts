@@ -9,6 +9,7 @@ import { ActivarCuenta } from './pages/activar-cuenta/activar-cuenta';
 import { PortalLogin } from './pages/portal-login/portal-login';
 import { RecuperarPassword } from './pages/recuperar-password/recuperar-password';
 import { ResponderCita } from './pages/responder-cita/responder-cita';
+import { RespuestaDenunciado } from './pages/respuesta-denunciado/respuesta-denunciado';
 
 import { PanelLayout } from './pages/panel/panel-layout/panel-layout';
 import { Resumen } from './pages/panel/resumen/resumen';
@@ -37,6 +38,7 @@ export const routes: Routes = [
       { path: 'portal/login', component: PortalLogin },
       { path: 'portal/recuperar', component: RecuperarPassword },
       { path: 'cita/responder', component: ResponderCita },
+      { path: 'denunciado/respuesta', component: RespuestaDenunciado },
     ],
   },
   {

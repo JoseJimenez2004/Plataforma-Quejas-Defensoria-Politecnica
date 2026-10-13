@@ -3,11 +3,13 @@ package ipn.escom.defensoria.admin_service.service;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import ipn.escom.defensoria.admin_service.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.admin_service.entity.RolStaff;
 import ipn.escom.defensoria.admin_service.model.PersonalCreadoResponseModel;
 import ipn.escom.defensoria.admin_service.model.PersonalRequest;
 import ipn.escom.defensoria.admin_service.model.PersonalResumenModel;
@@ -86,8 +88,16 @@ public class PersonalAdministrativoService {
                 passwordTemporal);
     }
 
-    public PersonalAdministrativo editar(Long id, PersonalRequest datos) {
+    /** Roles que pueden administrar el sistema (personal, respaldos, catálogos, plantillas). */
+    private static final Set<RolStaff> ROLES_ADMINISTRACION = Set.of(RolStaff.ADMIN_SISTEMAS, RolStaff.DEFENSOR);
+
+    public PersonalAdministrativo editar(Long id, PersonalRequest datos, String correoActual) {
         PersonalAdministrativo personal = obtener(id);
+        boolean perderiaAdministracion = (datos.isDesactivarTemporalmente()
+                || (datos.getRol() != null && !ROLES_ADMINISTRACION.contains(datos.getRol())));
+        if (perderiaAdministracion) {
+            exigirQueNoSeQuedeSinAdministracion(personal, correoActual);
+        }
 
         if (!esVacio(datos.getNombreCompleto())) {
             personal.setNombreCompleto(datos.getNombreCompleto());
@@ -118,8 +128,9 @@ public class PersonalAdministrativoService {
         return nueva;
     }
 
-    public void darDeBaja(Long id) {
+    public void darDeBaja(Long id, String correoActual) {
         PersonalAdministrativo personal = obtener(id);
+        exigirQueNoSeQuedeSinAdministracion(personal, correoActual);
         personal.setActivo(false);
         repository.save(personal);
     }
@@ -128,6 +139,24 @@ public class PersonalAdministrativoService {
         PersonalAdministrativo personal = obtener(id);
         personal.setActivo(true);
         repository.save(personal);
+    }
+
+    /**
+     * Evita quedarse sin nadie que pueda administrar: no se puede desactivar ni quitar el rol
+     * a la propia cuenta con la que se está trabajando, ni a la última cuenta activa con rol
+     * de administración (DEFENSOR o ADMIN_SISTEMAS). Si pasara, nadie podría volver a dar de
+     * alta personal ni restaurar respaldos sin entrar a la base de datos a mano.
+     */
+    private void exigirQueNoSeQuedeSinAdministracion(PersonalAdministrativo objetivo, String correoActual) {
+        if (correoActual != null && correoActual.equalsIgnoreCase(objetivo.getCorreoInstitucional())) {
+            throw new RuntimeException("No puedes desactivar ni quitarte el rol de administración a ti misma(o). "
+                    + "Pídeselo a otra cuenta con ese rol.");
+        }
+        boolean esAdministracionActiva = objetivo.isActivo() && ROLES_ADMINISTRACION.contains(objetivo.getRol());
+        if (esAdministracionActiva && repository.countByActivoTrueAndRolIn(ROLES_ADMINISTRACION) <= 1) {
+            throw new RuntimeException("Es la última cuenta activa con rol de administración (Defensor/Admin. de "
+                    + "Sistemas). Da de alta otra antes de desactivarla o cambiarle el rol.");
+        }
     }
 
     public long contarActivos() {

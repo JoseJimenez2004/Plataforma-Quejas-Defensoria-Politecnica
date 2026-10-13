@@ -1,13 +1,61 @@
 <div class="page-header">
   <div>
-    <h2>Consola de Administración del Sistema</h2>
-    <p class="page-header-subtitulo">Panorama general de accesos, catálogo y respaldos.</p>
+    <h2>Panel de la Defensora</h2>
+    <p class="page-header-subtitulo">Panorama de las quejas y de la administración del sistema.</p>
   </div>
 </div>
 
 @if (cargando) {
   <p class="cargando">Cargando resumen…</p>
 } @else if (resumen) {
+  @if (resumen.quejas; as q) {
+    <section class="quejas">
+      <h3 class="seccion-titulo">Quejas</h3>
+      <div class="kpis">
+        <div class="kpi"><span class="kpi-valor">{{ q.total }}</span><span class="kpi-etiqueta">Total registradas</span></div>
+        <div class="kpi"><span class="kpi-valor">{{ q.ultimos30Dias }}</span><span class="kpi-etiqueta">Últimos 30 días</span></div>
+        <div class="kpi ambar"><span class="kpi-valor">{{ q.recibidas + q.corregidas }}</span><span class="kpi-etiqueta">Esperando revisión</span></div>
+        <div class="kpi azul"><span class="kpi-valor">{{ q.enValidacion }}</span><span class="kpi-etiqueta">En validación</span></div>
+        <div class="kpi verde"><span class="kpi-valor">{{ q.turnadas }}</span><span class="kpi-etiqueta">Turnadas ({{ q.turnadasEsteMes }} este mes)</span></div>
+        <div class="kpi rojo"><span class="kpi-valor">{{ q.rechazadas }}</span><span class="kpi-etiqueta">Rechazadas</span></div>
+        <div class="kpi"><span class="kpi-valor">{{ q.canceladas }}</span><span class="kpi-etiqueta">Canceladas por el quejoso</span></div>
+        <div class="kpi"><span class="kpi-valor">{{ q.respuestasDenunciado }}</span><span class="kpi-etiqueta">Respuestas de denunciados</span></div>
+      </div>
+
+      <div class="graficas">
+        <div class="card grafica">
+          <h4>Quejas por mes</h4>
+          <div class="barras">
+            @for (m of q.porMes; track m.clave) {
+              <div class="barra-col" [title]="m.total + ' quejas en ' + m.etiqueta">
+                <span class="barra-valor">{{ m.total }}</span>
+                <span class="barra" [style.height.%]="maximo(q.porMes) ? (m.total / maximo(q.porMes)) * 100 : 0"></span>
+                <span class="barra-etiqueta">{{ nombreMes(m.etiqueta) }}</span>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="card grafica">
+          <h4>Unidades con más quejas</h4>
+          @if (q.unidadesConMasQuejas.length === 0) {
+            <p class="dato-etiqueta">Todavía no hay quejas con unidad registrada.</p>
+          } @else {
+            <ul class="ranking">
+              @for (u of q.unidadesConMasQuejas; track u.clave) {
+                <li>
+                  <span class="ranking-nombre" [title]="u.clave">{{ u.etiqueta }}</span>
+                  <span class="ranking-barra"><span [style.width.%]="(u.total / q.unidadesConMasQuejas[0].total) * 100"></span></span>
+                  <span class="ranking-total">{{ u.total }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <h3 class="seccion-titulo">Administración</h3>
   <div class="tarjetas">
     <div class="card tarjeta">
       <div class="tarjeta-encabezado">

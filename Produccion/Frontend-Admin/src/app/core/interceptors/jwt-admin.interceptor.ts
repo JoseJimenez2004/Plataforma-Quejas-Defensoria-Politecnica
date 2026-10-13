@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 
 import { AuthAdminService } from '../services/auth-admin.service';
+import { irALoginPersonal } from '../sesion/sesion-personal';
 
 /** Adjunta el JWT del panel a toda petición hacia /api/... Si el backend responde 401/403,
  * cierra la sesión local y manda de vuelta al login (token vencido/rol sin permiso). */
@@ -20,9 +21,10 @@ export const jwtAdminInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((err) => {
-      if (err.status === 401 && req.url.startsWith('/api/')) {
+      // La campana de notificaciones nunca debe sacar al personal del panel.
+      if (err.status === 401 && req.url.startsWith('/api/') && !req.url.startsWith('/api/notificaciones/')) {
         authService.logout();
-        router.navigate(['/login']);
+        irALoginPersonal();
       }
       return throwError(() => err);
     }),

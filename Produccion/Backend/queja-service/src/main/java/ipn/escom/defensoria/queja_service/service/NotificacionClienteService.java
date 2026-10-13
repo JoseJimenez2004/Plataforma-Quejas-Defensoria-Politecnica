@@ -53,6 +53,22 @@ public class NotificacionClienteService {
         }
     }
 
+    /** Aviso en la campana de la recepcionista que rechazó la queja, cuando el quejoso la corrige. */
+    public void notificarPersonal(String correoDestino, String titulo, String mensaje) {
+        if (correoDestino == null || correoDestino.isBlank()) {
+            return;
+        }
+        try {
+            restTemplate.postForObject(
+                    notificacionesServiceUrl + ENDPOINT_REGISTRAR,
+                    Map.of("correoDestino", correoDestino, "tipo", "GENERAL", "titulo", titulo,
+                            "mensaje", mensaje, "enlace", ""),
+                    String.class);
+        } catch (Exception ex) {
+            log.error("No se pudo avisar al personal {}: {}", correoDestino, ex.getMessage());
+        }
+    }
+
     public void notificarQuejaCreada(String correoDestino, String folio) {
         try {
             restTemplate.postForObject(

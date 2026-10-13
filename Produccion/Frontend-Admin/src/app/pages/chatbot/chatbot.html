@@ -1,0 +1,132 @@
+<div class="page-header">
+  <div>
+    <h2>Preguntas del Chatbot</h2>
+    <p class="page-header-subtitulo">
+      Lo que ve el público en el asistente del portal. {{ totalActivas }} de {{ preguntas.length }} preguntas visibles.
+    </p>
+  </div>
+  <button type="button" class="btn-primary" (click)="nueva()">+ Nueva pregunta</button>
+</div>
+
+@if (cargando) {
+  <p class="cargando">Cargando preguntas…</p>
+} @else {
+  <div class="card filtros">
+    <input type="search" class="filtro-texto" placeholder="Buscar en preguntas y respuestas…"
+           [(ngModel)]="filtroTexto" name="filtroTexto" />
+    <select [(ngModel)]="filtroCategoria" name="filtroCategoria">
+      <option value="">Todas las categorías</option>
+      @for (c of categorias; track c) { <option [value]="c">{{ c }}</option> }
+    </select>
+    <select [(ngModel)]="filtroEstado" name="filtroEstado">
+      <option value="">Visibles y ocultas</option>
+      <option value="activas">Solo visibles</option>
+      <option value="inactivas">Solo ocultas</option>
+    </select>
+  </div>
+
+  @if (filtradas.length === 0) {
+    <div class="card estado-vacio">
+      <p>{{ preguntas.length === 0 ? 'Todavía no hay preguntas. Crea la primera.' : 'Ninguna pregunta coincide con los filtros.' }}</p>
+    </div>
+  } @else {
+    <div class="card tabla-contenedor">
+      <table class="tabla-admin">
+        <thead>
+          <tr>
+            <th class="col-orden">Orden</th>
+            <th>Categoría</th>
+            <th>Pregunta y respuesta</th>
+            <th>Estado</th>
+            <th class="col-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of filtradas; track p.id) {
+            <tr [class.inactiva]="!p.activo">
+              <td class="col-orden">{{ p.orden }}</td>
+              <td><span class="categoria">{{ p.categoria }}</span></td>
+              <td>
+                <strong class="pregunta">{{ p.pregunta }}</strong>
+                <span class="respuesta">{{ p.respuesta }}</span>
+              </td>
+              <td>
+                <button type="button" class="badge estado" [class.activo]="p.activo" (click)="alternarActivo(p)"
+                        [title]="p.activo ? 'Clic para ocultarla del chatbot' : 'Clic para mostrarla en el chatbot'">
+                  {{ p.activo ? 'Visible' : 'Oculta' }}
+                </button>
+              </td>
+              <td class="col-acciones">
+                <button type="button" class="btn-texto" (click)="editar(p)">Editar</button>
+                <button type="button" class="btn-texto peligro" (click)="confirmarEliminar(p)">Eliminar</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}
+
+@if (modalAbierto) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <form class="modal" (click)="$event.stopPropagation()" (submit)="$event.preventDefault(); guardar()">
+      <div class="modal-header">
+        <h3>{{ editando ? 'Editar pregunta' : 'Nueva pregunta' }}</h3>
+        <button type="button" class="cerrar" (click)="cerrarModal()" aria-label="Cerrar">×</button>
+      </div>
+
+      <div class="fila-modal">
+        <div class="input-group">
+          <label for="bot-categoria">Categoría</label>
+          <input id="bot-categoria" list="bot-categorias" [(ngModel)]="formulario.categoria" name="categoria"
+                 [maxlength]="categoriaMaxima" placeholder="Ej. Presentar una queja" />
+          <datalist id="bot-categorias">
+            @for (c of categorias; track c) { <option [value]="c"></option> }
+          </datalist>
+        </div>
+        <div class="input-group orden">
+          <label for="bot-orden">Orden</label>
+          <input id="bot-orden" type="number" min="0" [(ngModel)]="formulario.orden" name="orden" />
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="bot-pregunta">Pregunta</label>
+        <input id="bot-pregunta" [(ngModel)]="formulario.pregunta" name="pregunta" [maxlength]="preguntaMaxima" />
+        <span class="contador">{{ formulario.pregunta.length }} / {{ preguntaMaxima }}</span>
+      </div>
+
+      <div class="input-group">
+        <label for="bot-respuesta">Respuesta</label>
+        <textarea id="bot-respuesta" rows="6" [(ngModel)]="formulario.respuesta" name="respuesta"></textarea>
+      </div>
+
+      <label class="casilla">
+        <input type="checkbox" [(ngModel)]="formulario.activo" name="activo" />
+        Visible en el chatbot del portal
+      </label>
+
+      @if (errorFormulario) { <p class="aviso-peligro">{{ errorFormulario }}</p> }
+
+      <div class="modal-acciones">
+        <button type="button" class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (porEliminar) {
+  <div class="modal-overlay" (click)="porEliminar = null">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header"><h3>¿Eliminar esta pregunta?</h3></div>
+      <p><strong>{{ porEliminar.pregunta }}</strong></p>
+      <p class="aviso-inline">Se borra definitivamente. Si solo quieres que deje de verse, mejor márcala como oculta.</p>
+      <div class="modal-acciones">
+        <button type="button" class="btn-secondary" (click)="porEliminar = null">Cancelar</button>
+        <button type="button" class="btn-primary peligro" (click)="eliminar()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+}

@@ -28,7 +28,9 @@ import ipn.escom.defensoria.catalogo_service.service.DependenciaService;
  */
 @RestController
 @RequestMapping("/api/catalogos/dependencias/admin")
-@PreAuthorize("hasRole('ADMIN_SISTEMAS')")
+// La Defensora (DEFENSOR) tiene todas las funciones de administración; ADMIN_SISTEMAS se
+// conserva para la cuenta técnica inicial.
+@PreAuthorize("hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')")
 @Tag(name = "Dependencias (Admin)", description = "Alta, edición e importación masiva del catálogo")
 public class DependenciaAdminController {
 

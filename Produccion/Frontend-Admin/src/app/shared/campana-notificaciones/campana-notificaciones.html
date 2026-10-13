@@ -1,0 +1,38 @@
+<div class="campana">
+  <button type="button" class="campana-boton" (click)="alternar($event)"
+          [attr.aria-label]="noLeidas ? noLeidas + ' notificaciones sin leer' : 'Notificaciones'"
+          [title]="disponible ? 'Notificaciones' : 'Notificaciones no disponibles por ahora'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    @if (noLeidas > 0) {
+      <span class="campana-conteo">{{ noLeidas > 99 ? '99+' : noLeidas }}</span>
+    }
+  </button>
+
+  @if (abierta) {
+    <div class="campana-panel" (click)="$event.stopPropagation()">
+      <div class="campana-encabezado">
+        <strong>Notificaciones</strong>
+        @if (noLeidas > 0) {
+          <button type="button" class="campana-todas" (click)="marcarTodas($event)">Marcar todas como leídas</button>
+        }
+      </div>
+      @if (cargando) {
+        <p class="campana-vacio">Cargando…</p>
+      } @else if (!disponible) {
+        <p class="campana-vacio">No se pudieron cargar las notificaciones.</p>
+      } @else if (notificaciones.length === 0) {
+        <p class="campana-vacio">No tienes notificaciones.</p>
+      } @else {
+        <ul>
+          @for (n of notificaciones; track n.id) {
+            <li [class.no-leida]="!n.leida" (click)="marcarLeida(n, $event)">
+              <span class="titulo">{{ n.titulo }}</span>
+              <span class="mensaje">{{ n.mensaje }}</span>
+              <span class="fecha">{{ n.fechaCreacion | date: 'dd/MM/yyyy HH:mm' }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</div>

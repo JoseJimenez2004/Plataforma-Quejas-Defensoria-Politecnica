@@ -23,6 +23,18 @@ export class Dashboard implements OnInit {
     private cdr: ChangeDetectorRef,
   ) {}
 
+  private static readonly MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+  maximo(lista: { total: number }[]): number {
+    return lista.reduce((max, x) => Math.max(max, x.total), 0);
+  }
+
+  /** "2026-10" -> "Oct" */
+  nombreMes(clave: string): string {
+    const mes = Number(clave.split('-')[1]);
+    return Dashboard.MESES[mes - 1] ?? clave;
+  }
+
   ngOnInit(): void {
     this.dashboardService.resumen().subscribe({
       next: (resumen) => {

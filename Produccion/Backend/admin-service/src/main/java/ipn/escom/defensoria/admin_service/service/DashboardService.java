@@ -19,8 +19,10 @@ public class DashboardService {
     private final RespaldoService respaldoService;
     private final RestTemplate restTemplate;
     private final String catalogoServiceUrl;
+    private final IndicadoresQuejasService indicadoresQuejasService;
 
     public DashboardService(
+            IndicadoresQuejasService indicadoresQuejasService,
             PersonalAdministrativoService personalService,
             PlantillaService plantillaService,
             RespaldoService respaldoService,
@@ -31,6 +33,7 @@ public class DashboardService {
         this.respaldoService = respaldoService;
         this.restTemplate = restTemplate;
         this.catalogoServiceUrl = catalogoServiceUrl;
+        this.indicadoresQuejasService = indicadoresQuejasService;
     }
 
     public DashboardResumenModel obtenerResumen() {
@@ -39,7 +42,8 @@ public class DashboardService {
         String ultimoRespaldo = respaldoService.ultimoRespaldoTexto();
         long totalDependencias = obtenerTotalDependencias();
 
-        return new DashboardResumenModel(totalPersonal, totalDependencias, ultimoRespaldo, totalPlantillas);
+        return new DashboardResumenModel(totalPersonal, totalDependencias, ultimoRespaldo, totalPlantillas,
+                indicadoresQuejasService.obtener());
     }
 
     private long obtenerTotalDependencias() {
