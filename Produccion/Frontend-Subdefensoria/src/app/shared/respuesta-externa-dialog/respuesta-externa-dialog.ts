@@ -33,7 +33,29 @@ export class RespuestaExternaDialog {
   canalRecepcion = '';
   numeroOficioRespuestaUA = '';
   resumen = '';
+  archivo: File | null = null;
   enviando = false;
+
+  /** PDF, JPG o PNG de hasta 10 MB (el backend vuelve a validar por la firma real). */
+  readonly tiposAceptados = '.pdf,.jpg,.jpeg,.png';
+  private readonly tamanoMaximo = 10 * 1024 * 1024;
+
+  elegirArchivo(evento: Event): void {
+    const entrada = evento.target as HTMLInputElement;
+    const elegido = entrada.files?.[0] ?? null;
+    if (elegido && elegido.size > this.tamanoMaximo) {
+      this.snackBar.open('El archivo excede el tamaño máximo de 10 MB.', 'Cerrar', { duration: 3500 });
+      entrada.value = '';
+      this.archivo = null;
+      return;
+    }
+    this.archivo = elegido;
+  }
+
+  quitarArchivo(entrada: HTMLInputElement): void {
+    entrada.value = '';
+    this.archivo = null;
+  }
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: RespuestaExternaDialogData,
@@ -59,7 +81,7 @@ export class RespuestaExternaDialog {
       canalRecepcion: this.canalRecepcion.trim(),
       numeroOficioRespuestaUA: this.numeroOficioRespuestaUA.trim() || undefined,
       resumen: this.resumen.trim()
-    }).subscribe({
+    }, this.archivo).subscribe({
       next: (respuesta: RespuestaExterna) => {
         this.dialogRef.close(respuesta);
       },

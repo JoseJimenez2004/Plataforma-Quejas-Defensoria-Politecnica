@@ -9,6 +9,9 @@ export interface RespuestaExterna {
   resumen: string;
   fechaRecepcion: string;
   estatusExpediente: string;
+  /** Archivo de la respuesta (oficio escaneado o PDF), si se adjuntó. */
+  tieneArchivo?: boolean;
+  archivoNombre?: string | null;
 }
 
 export interface RegistrarRespuestaExternaPayload {

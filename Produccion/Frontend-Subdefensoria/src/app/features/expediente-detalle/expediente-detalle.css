@@ -214,3 +214,9 @@ mat-chip {
   padding-left: var(--space-4);
   font-size: var(--font-size-sm);
 }
+
+.respuesta {
+  border-left: 3px solid var(--exito);
+  padding-left: var(--space-3);
+  margin: var(--space-2) 0;
+}

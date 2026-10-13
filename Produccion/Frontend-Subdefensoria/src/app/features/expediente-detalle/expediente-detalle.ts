@@ -18,6 +18,8 @@ import { AcuerdoConclusionService } from '../../core/services/acuerdo-conclusion
 import { RecordatorioService } from '../../core/services/recordatorio.service';
 import { DocumentoService, abrirBlob } from '../../core/services/documento.service';
 import { Recordatorio } from '../../core/models/recordatorio';
+import { RespuestaExterna } from '../../core/models/respuesta-externa';
+import { RespuestaExternaService } from '../../core/services/respuesta-externa.service';
 import { Observable } from 'rxjs';
 import { ExpedienteInvestigacion } from '../../core/models/expediente-investigacion';
 import { Oficio } from '../../core/models/oficio';
@@ -65,6 +67,8 @@ export class ExpedienteDetalle implements OnInit {
   oficios: Oficio[] = [];
   /** Recordatorios enviados de cada oficio, por id de oficio. */
   recordatorios: Record<number, Recordatorio[]> = {};
+  /** Respuesta registrada de cada oficio (con su archivo, si lo tiene), por id de oficio. */
+  respuestas: Record<number, RespuestaExterna | undefined> = {};
   acuerdo: AcuerdoConclusion | null = null;
   textoAcuerdo = '';
   textoConclusion = '';
@@ -82,6 +86,7 @@ export class ExpedienteDetalle implements OnInit {
     private acuerdoConclusionService: AcuerdoConclusionService,
     private recordatorioService: RecordatorioService,
     private documentoService: DocumentoService,
+    private respuestaExternaService: RespuestaExternaService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef
@@ -121,12 +126,22 @@ export class ExpedienteDetalle implements OnInit {
     this.oficioService.historialPorFolio(this.folio).subscribe({
       next: (oficios) => {
         this.oficios = oficios;
-        oficios.forEach(o => this.recordatorioService.porOficio(o.id).subscribe({
-          next: (lista) => {
-            this.recordatorios[o.id] = lista;
-            this.cdr.detectChanges();
+        oficios.forEach(o => {
+          this.recordatorioService.porOficio(o.id).subscribe({
+            next: (lista) => {
+              this.recordatorios[o.id] = lista;
+              this.cdr.detectChanges();
+            }
+          });
+          if (o.estatus === 'RESPONDIDO') {
+            this.respuestaExternaService.porOficio(o.id).subscribe({
+              next: (lista) => {
+                this.respuestas[o.id] = lista[0];
+                this.cdr.detectChanges();
+              }
+            });
           }
-        }));
+        });
         this.cdr.detectChanges();
       }
     });
@@ -210,6 +225,32 @@ export class ExpedienteDetalle implements OnInit {
 
   verPdfAcuerdoConclusion(): void {
     if (this.expediente) this.abrirPdf(this.documentoService.acuerdoConclusion(this.expediente.id));
+  }
+
+  verArchivoRespuesta(r: RespuestaExterna): void {
+    this.abrirPdf(this.respuestaExternaService.archivo(r.id));
+  }
+
+  /** Adjuntar (o reemplazar) el archivo de una respuesta ya registrada. */
+  adjuntarArchivoRespuesta(r: RespuestaExterna, evento: Event): void {
+    const entrada = evento.target as HTMLInputElement;
+    const archivo = entrada.files?.[0];
+    entrada.value = '';
+    if (!archivo) return;
+    if (archivo.size > 10 * 1024 * 1024) {
+      this.snackBar.open('El archivo excede el tamaño máximo de 10 MB.', 'Cerrar', { duration: 3500 });
+      return;
+    }
+    this.respuestaExternaService.adjuntarArchivo(r.id, archivo).subscribe({
+      next: (actualizada) => {
+        this.respuestas[actualizada.oficioId] = actualizada;
+        this.snackBar.open('Archivo adjuntado.', 'Cerrar', { duration: 3000 });
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.snackBar.open(err?.error?.error ?? 'No fue posible adjuntar el archivo.', 'Cerrar', { duration: 4000 });
+      }
+    });
   }
 
   private abrirPdf(peticion: Observable<Blob>): void {

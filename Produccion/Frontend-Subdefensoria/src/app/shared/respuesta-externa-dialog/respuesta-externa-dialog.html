@@ -17,6 +17,24 @@
     <mat-label>Resumen de la información recibida</mat-label>
     <textarea matInput rows="5" [(ngModel)]="resumen"></textarea>
   </mat-form-field>
+
+  <div class="archivo">
+    <span class="archivo-etiqueta">Archivo de la respuesta (opcional): PDF, JPG o PNG, máx. 10 MB</span>
+    <input #entradaArchivo type="file" hidden [accept]="tiposAceptados" (change)="elegirArchivo($event)">
+    @if (archivo) {
+      <div class="archivo-elegido">
+        <mat-icon>attach_file</mat-icon>
+        <span>{{ archivo.name }}</span>
+        <button mat-icon-button type="button" aria-label="Quitar archivo" (click)="quitarArchivo(entradaArchivo)">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    } @else {
+      <button mat-stroked-button type="button" (click)="entradaArchivo.click()">
+        <mat-icon>upload_file</mat-icon> Elegir archivo
+      </button>
+    }
+  </div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

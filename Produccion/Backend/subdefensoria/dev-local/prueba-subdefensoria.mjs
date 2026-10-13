@@ -172,8 +172,35 @@ check('El oficio vuelve a EN_ESPERA con plazo SUBSECUENTE y fecha nueva', r.json
 check('El recordatorio no cambia el estatus (sigue EN_ESPERA_OFICIO)', (await estatusExp()) === 'EN_ESPERA_OFICIO');
 
 console.log('\n== CU-SD-08 Respuesta del director (fila 16)');
-r = await sd('POST', '/respuestas-externas', { body: { oficioId: OF1.id, canalRecepcion: 'Oficio físico', numeroOficioRespuestaUA: 'DIR-ESCOM-123', resumen: 'El director atendió la situación.' } });
-check('El director responde el oficio', r.status === 200 || r.status === 201, r);
+// Respuesta con archivo: multipart con "datos" (JSON) y "archivo".
+async function responderConArchivo(oficioId, contenido, nombre, tipo) {
+  const fd = new FormData();
+  fd.append('datos', new Blob([JSON.stringify({ oficioId, canalRecepcion: 'Oficio físico',
+    numeroOficioRespuestaUA: 'DIR-ESCOM-123', resumen: 'El director atendió la situación.' })], { type: 'application/json' }));
+  fd.append('archivo', new Blob([contenido], { type: tipo }), nombre);
+  const resp = await fetch(SD + '/respuestas-externas', { method: 'POST', headers: { Authorization: `Bearer ${SUBDEFENSOR}` }, body: fd });
+  const texto = await resp.text();
+  let json; try { json = JSON.parse(texto); } catch { json = texto; }
+  return { status: resp.status, json };
+}
+// Un PDF de verdad para adjuntar: el del propio oficio.
+const pdfOficio = Buffer.from(await (await fetch(SD + `/documentos/oficio/${OF1.id}`, { headers: { Authorization: `Bearer ${SUBDEFENSOR}` } })).arrayBuffer());
+
+r = await responderConArchivo(OF1.id, Buffer.from('esto no es un pdf'), 'respuesta.pdf', 'application/pdf');
+check('Archivo que no es PDF/JPG/PNG (aunque diga .pdf) → 409 y no se registra nada', r.status === 409 && /PDF, JPG o PNG/.test(r.json?.error) && (await estatusExp()) === 'EN_ESPERA_OFICIO', r);
+r = await responderConArchivo(OF1.id, Buffer.alloc(11 * 1024 * 1024, 1), 'grande.pdf', 'application/pdf');
+check('Archivo de más de 10 MB → 413', r.status === 413, r.status);
+check('…y tampoco se registra la respuesta', (await estatusExp()) === 'EN_ESPERA_OFICIO');
+r = await responderConArchivo(OF1.id, pdfOficio, 'Respuesta director ESCOM.pdf', 'application/pdf');
+check('El director responde el oficio, con su archivo PDF', (r.status === 200 || r.status === 201) && r.json.tieneArchivo === true && r.json.archivoNombre === 'Respuesta director ESCOM.pdf', r);
+const RESP1 = r.json;
+r = await sd('GET', `/respuestas-externas/oficio/${OF1.id}`);
+check('Consultar la respuesta del oficio (con el nombre del archivo)', r.status === 200 && r.json.length === 1 && r.json[0].archivoNombre === 'Respuesta director ESCOM.pdf' && r.json[0].resumen, r);
+let arch = await fetch(SD + `/respuestas-externas/${RESP1.id}/archivo`, { headers: { Authorization: `Bearer ${SUBDEFENSOR}` } });
+let bytes = Buffer.from(await arch.arrayBuffer());
+check('Descargar el archivo: mismo contenido y tipo PDF', arch.status === 200 && arch.headers.get('content-type') === 'application/pdf' && bytes.equals(pdfOficio), [arch.status, arch.headers.get('content-type'), bytes.length]);
+arch = await fetch(SD + `/respuestas-externas/${RESP1.id}/archivo`);
+check('Descargar el archivo sin token → 401/403', arch.status === 401 || arch.status === 403, arch.status);
 check('→ ELABORO_ACUERDO (fila 16), también en la queja', (await estatusExp()) === 'ELABORO_ACUERDO' && estatusQueja() === 'ELABORO_ACUERDO', estatusQueja());
 r = await sd('POST', '/respuestas-externas', { body: { oficioId: OF1.id, canalRecepcion: 'Correo', resumen: 'Otra' } });
 check('Segunda respuesta al mismo oficio → 409', r.status === 409, r);
@@ -230,6 +257,18 @@ check('Tras el rechazo se emite otro oficio (ya no se atora)', r.status === 200 
 const OF3 = r.json;
 r = await sd('POST', '/respuestas-externas', { body: { oficioId: OF3.id, canalRecepcion: 'Correo', resumen: 'El director propone nuevas medidas.' } });
 check('Nueva respuesta del director → ELABORO_ACUERDO', (await estatusExp()) === 'ELABORO_ACUERDO', r);
+check('Respuesta registrada sin archivo', r.json?.tieneArchivo === false, r.json);
+{
+  // Adjuntar el archivo después (PNG mínimo válido).
+  const png = Buffer.from('89504E470D0A1A0A0000000D49484452000000010000000108060000001F15C4890000000D4944415478DA63F8FFFF3F0005FE02FEA7E5A9F40000000049454E44AE426082', 'hex');
+  const fd = new FormData();
+  fd.append('archivo', new Blob([png], { type: 'image/png' }), 'respuesta.png');
+  const resp = await fetch(SD + `/respuestas-externas/${r.json.id}/archivo`, { method: 'POST', headers: { Authorization: `Bearer ${SUBDEFENSOR}` }, body: fd });
+  const json = await resp.json();
+  check('Adjuntar el archivo después (PNG)', resp.status === 200 && json.tieneArchivo && json.archivoNombre === 'respuesta.png', json);
+  const desc = await fetch(SD + `/respuestas-externas/${r.json.id}/archivo`, { headers: { Authorization: `Bearer ${SUBDEFENSOR}` } });
+  check('El PNG se descarga como image/png', desc.status === 200 && desc.headers.get('content-type') === 'image/png', desc.headers.get('content-type'));
+}
 r = await acuerdo('Segundo acuerdo de conciliación con las nuevas medidas.', true);
 check('Nuevo acuerdo enviado; la respuesta anterior se limpia', r.json?.respuestaQuejoso == null && (await estatusExp()) === 'PENDIENTE_CONCILIACION', r.json);
 

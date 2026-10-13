@@ -20,4 +20,8 @@ public class RespuestaExternaDTO {
     private String fechaRecepcion;
     /** Estatus del expediente despues de registrar esta respuesta (normalmente ELABORO_ACUERDO). */
     private String estatusExpediente;
+
+    /* Archivo de la respuesta (oficio escaneado o PDF), si se adjuntó. */
+    private boolean tieneArchivo;
+    private String archivoNombre;
 }

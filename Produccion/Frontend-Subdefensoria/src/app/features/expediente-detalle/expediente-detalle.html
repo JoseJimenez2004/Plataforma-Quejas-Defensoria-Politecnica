@@ -78,6 +78,28 @@
                 </ul>
               }
 
+              @if (respuestas[o.id]; as resp) {
+                <div class="respuesta">
+                  <p><strong>Respuesta recibida:</strong> {{ resp.fechaRecepcion | date:'d/MM/yyyy HH:mm' }}
+                    · {{ resp.canalRecepcion }}
+                    @if (resp.numeroOficioRespuestaUA) { · Oficio {{ resp.numeroOficioRespuestaUA }} }
+                  </p>
+                  <p class="contenido">{{ resp.resumen }}</p>
+                  <input #archivoRespuesta type="file" hidden accept=".pdf,.jpg,.jpeg,.png"
+                         (change)="adjuntarArchivoRespuesta(resp, $event)">
+                  @if (resp.tieneArchivo) {
+                    <button mat-button type="button" (click)="verArchivoRespuesta(resp)">
+                      <mat-icon>attach_file</mat-icon> {{ resp.archivoNombre }}
+                    </button>
+                    <button mat-button type="button" (click)="archivoRespuesta.click()">Reemplazar archivo</button>
+                  } @else {
+                    <button mat-button type="button" (click)="archivoRespuesta.click()">
+                      <mat-icon>upload_file</mat-icon> Adjuntar archivo de la respuesta
+                    </button>
+                  }
+                </div>
+              }
+
               <div class="oficio-actions">
                 <button mat-stroked-button class="outline-btn" (click)="verPdfOficio(o)">
                   <mat-icon>picture_as_pdf</mat-icon>

@@ -37,6 +37,12 @@ public class GlobalExceptionHandler {
         return construirRespuesta(HttpStatus.BAD_REQUEST, detalle);
     }
 
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> manejarArchivoGrande(
+            org.springframework.web.multipart.MaxUploadSizeExceededException ex) {
+        return construirRespuesta(HttpStatus.PAYLOAD_TOO_LARGE, "El archivo excede el tamaño máximo de 10 MB.");
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> manejarRuntime(RuntimeException ex) {
         return construirRespuesta(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
