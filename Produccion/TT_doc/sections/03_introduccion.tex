@@ -1,79 +1,20 @@
 	\section{Introducción}
-	El presente documento reúne el avance del Trabajo Terminal 2026-B009, desarrollado durante el
-	semestre 2025-2 en colaboración con la Defensoría de los Derechos Politécnicos (DDP) del Instituto
-	Politécnico Nacional (IPN), con el objetivo de identificar áreas de oportunidad en sus procesos
-	internos y proponer una solución tecnológica que los optimice.
+	El presente documento expone los avances del Trabajo Terminal 2026-B009, desarrollado en colaboración con la Defensoría de los Derechos Politécnicos (DDP) del Instituto Politécnico Nacional (IPN), cuyo propósito es diseñar e implementar una plataforma web que contribuya a optimizar los procesos de recepción, atención y seguimiento de quejas. Para ello, se analizan las necesidades operativas de la institución, las limitaciones de los procedimientos actuales y las alternativas tecnológicas que pueden contribuir a su mejora. La propuesta contempla la integración de herramientas de inteligencia artificial orientadas a la recuperación de antecedentes, la identificación de posibles duplicidades y la generación de resúmenes narrativos, como mecanismos de apoyo para las actividades del personal de la Defensoría.
 	
-	El Instituto Politécnico Nacional es una institución educativa pública mexicana consolidada como una
-	de las principales casas de estudio del país, la cual ofrece una amplia gama de programas académicos
-	en diversas áreas del conocimiento \cite{ipn_ley_organica}.
+	La Defensoría de Derechos Politécnicos es un órgano del Instituto Politécnico Nacional encargado de promover, proteger y defender los derechos de la comunidad politécnica. El IPN es una institución pública de educación media superior y superior, que ofrece programas académicos en distintas áreas del conocimiento y cuya organización se encuentra regulada por disposiciones institucionales específicas \cite{ipn_ley_organica}. Bajo este contexto, la DDP desempeña funciones relacionadas con la orientación, recepción y atención de asuntos que involucran posibles vulneraciones de derechos, conforme a las atribuciones establecidas en su marco normativo  \cite{ipn_acuerdo622, ipn_manual_organizacion_ddp}. El cumplimiento de estas funciones requiere procedimientos que permitan administrar la información de manera organizada y dar seguimiento a las solicitudes presentadas por la comunidad.
 	
-	La transformación digital ha modificado profundamente la manera en que las instituciones administran
-	sus procesos internos, resguardan información sensible y prestan servicios a sus usuarios. En este
-	contexto, las organizaciones educativas enfrentan retos nuevos relacionados con la atención de
-	quejas, la protección de los derechos de su comunidad y la necesidad de contar con mecanismos
-	tecnológicos capaces de garantizar seguridad, trazabilidad y eficiencia operativa. Dentro del IPN,
-	la Defensoría de los Derechos Politécnicos desempeña un papel fundamental como órgano encargado de
-	promover, proteger y defender los derechos de estudiantes, docentes, personal administrativo y demás
-	integrantes de la comunidad politécnica \cite{ipn_acuerdo622, ipn_manual_organizacion_ddp}.
+	Los procedimientos de atención de quejas de la DDP presentan áreas de oportunidad relacionadas con la digitalización y la organización de sus actividades internas. De acuerdo con el análisis de sus procesos y la documentación institucional, determinadas actividades de recepción, revisión y seguimiento requieren la intervención directa del personal responsable \cite{ipn_manual_procedimientos_ddp}. Esta dependencia puede incrementar la carga administrativa, dificultar la consulta de información y limitar la automatización de tareas repetitivas. Asimismo, la revisión de las solicitudes requiere analizar los hechos descritos por los quejosos, consultar expedientes anteriores e identificar posibles coincidencias con casos previamente registrados. Estas actividades pueden demandar tiempo cuando la información se encuentra distribuida en distintos registros o cuando las descripciones presentan diferencias en su redacción. Tales condiciones hacen pertinente incorporar mecanismos tecnológicos que faciliten la recuperación de antecedentes, la identificación de posibles duplicidades y la comprensión del contenido de las quejas. Estas condiciones hacen pertinente evaluar mecanismos tecnológicos que faciliten la gestión de los expedientes y apoyen las actividades del personal.
 	
-	Actualmente, buena parte de los procedimientos de recepción, análisis y seguimiento de quejas
-	depende de procesos manuales o parcialmente digitalizados, lo que ocasiona diversos problemas
-	operativos \cite{ipn_manual_procedimientos_ddp}. Entre las limitaciones identificadas destacan la
-	saturación administrativa, la dependencia del criterio humano en la etapa de primer contacto, la
-	dificultad para dar seguimiento oportuno a los expedientes y la ausencia de mecanismos inteligentes
-	que automaticen la clasificación y canalización de casos. Estas problemáticas provocan retrasos en
-	la atención, inconsistencias en la interpretación normativa y una capacidad institucional limitada
-	para responder al incremento constante de solicitudes.
+	La transformación digital ofrece alternativas para mejorar la administración de información y la ejecución de procesos institucionales. En el ámbito de la atención de quejas, las plataformas informáticas permiten centralizar registros, establecer mecanismos de seguimiento y controlar el acceso a información sensible. Sin embargo, la incorporación de tecnología no debe limitarse a sustituir documentos físicos por formularios electrónicos, sino que debe responder a las necesidades de los usuarios y a las características de los procedimientos existentes. Por esta razón, el desarrollo de una solución para la DDP requiere considerar tanto la gestión administrativa de los casos como las actividades de análisis que intervienen durante su atención.
 	
-	A partir de este escenario surge la necesidad de desarrollar una plataforma web especializada en la
-	gestión digital de quejas y denuncias dentro de la DDP-IPN. La propuesta que aquí se presenta busca
-	diseñar e implementar una solución tecnológica moderna que optimice el flujo operativo institucional
-	mediante la integración de herramientas de procesamiento de lenguaje natural, aprendizaje
-	automático, arquitectura de microservicios y mecanismos avanzados de seguridad informática. El
-	propósito no se limita a digitalizar formularios o expedientes, sino a construir un ecosistema
-	integral capaz de asistir al personal jurídico y administrativo en la toma de decisiones sobre la
-	admisión y clasificación de quejas.
+	A partir de las necesidades identificadas, el Trabajo Terminal propone el desarrollo de una plataforma web para administrar el proceso de atención de quejas dentro de la Defensoría. La solución contempla funcionalidades para el registro de solicitudes, la gestión de expedientes, el seguimiento de casos y la administración de usuarios conforme a sus responsabilidades institucionales. También considera la incorporación de herramientas que apoyen determinadas actividades de análisis y consulta de información. De esta manera, la plataforma busca integrar en un mismo entorno los componentes necesarios para facilitar la operación del personal y mantener organizada la información generada durante las distintas etapas de atención.
 	
-	El proyecto se fundamenta en un análisis previo del estado del arte de plataformas gubernamentales,
-	académicas e internacionales orientadas a la gestión de denuncias digitales
-	\cite{sfp_sidec,cdmx_denuncia_digital,whistlelink,eqs_integrity_line,navex_whistleb,unam_ddu_denuncia}.
-	Dicho análisis permitió identificar que las soluciones existentes presentan limitaciones importantes en
-	escalabilidad, automatización inteligente, protección de identidad, interoperabilidad institucional
-	y especialización universitaria. Mientras algunas priorizan el cumplimiento normativo y la
-	formalización administrativa, otras se enfocan en la anonimización o la gestión corporativa, y dejan
-	vacíos relevantes en contextos educativos donde convergen necesidades jurídicas, administrativas y
-	de protección de derechos humanos. De ahí que se identificara una oportunidad tecnológica para
-	desarrollar una solución adaptada a las necesidades operativas de la DDP.
+	Uno de los componentes de inteligencia artificial del proyecto está orientado a la detección de posibles duplicidades y la recuperación de antecedentes mediante técnicas de Procesamiento de Lenguaje Natural (PLN). Este modelo analiza la similitud semántica entre una nueva queja y los expedientes previamente registrados, con el propósito de recuperar antecedentes relacionados e identificar posibles duplicidades que requieran una revisión posterior. Para ello, se emplean técnicas de representación vectorial de textos y recuperación de información que permiten comparar las descripciones de los hechos, incluso cuando se utilizan expresiones diferentes. Los resultados proporcionan al personal de la Defensoría una referencia para localizar antecedentes y reconocer posibles registros duplicados, sin sustituir la revisión necesaria para determinar si corresponden a un mismo caso.
+
+	El segundo componente de inteligencia artificial se enfoca en la generación automática de resúmenes narrativos a partir de las quejas presentadas por los integrantes de la comunidad politécnica. Su finalidad es transformar descripciones extensas, informales o poco estructuradas en textos concisos y coherentes que conserven los acontecimientos relevantes del relato original. Para ello, se consideran modelos de lenguaje capaces de procesar información textual y generar síntesis en lenguaje natural, estableciendo como criterios de evaluación la fidelidad al contenido original, la conservación de los hechos relevantes y la ausencia de información no sustentada en el relato del quejoso. Este componente busca facilitar la lectura y comprensión inicial de las solicitudes, así como apoyar al personal responsable durante la revisión y documentación de los casos.
+
+	La plataforma contempla una arquitectura basada en microservicios para organizar sus funcionalidades en componentes independientes. Este enfoque permite separar responsabilidades, facilitar el mantenimiento y desarrollar modificaciones en determinados módulos sin intervenir directamente en la totalidad del sistema \cite{aws_microservicios, villamizar_microservices}. Entre los componentes considerados se encuentran el portal del quejoso, los módulos administrativos, la gestión de expedientes, los mecanismos de autenticación y autorización, y los servicios relacionados con el procesamiento de información mediante inteligencia artificial. La comunicación entre estos componentes requiere definir interfaces, reglas de acceso y mecanismos de intercambio de datos que permitan mantener la integridad y disponibilidad de la información.
 	
-	Uno de los principales aportes de este trabajo consiste en la incorporación de un clasificador
-	inteligente de quejas basado en técnicas de Procesamiento de Lenguaje Natural (PLN) y aprendizaje
-	supervisado \cite{cortes1995svm, breiman2001rf, reimers2019sbert}. Este componente asiste al
-	personal de primer contacto en la determinación de competencia o incompetencia de una queja, y toma
-	como referencia el marco normativo establecido en el Acuerdo Número Extraordinario 622 de la Gaceta
-	Politécnica \cite{ipn_acuerdo622}. Hoy en día esa decisión depende del análisis manual que realiza
-	el personal administrativo y jurídico, lo cual genera variabilidad en los criterios de
-	interpretación y un consumo considerable de tiempo operativo.
+	El desarrollo del proyecto se apoya en el levantamiento y análisis de requerimientos realizado en colaboración con personal de la Defensoría. Mediante reuniones de trabajo y revisión de procedimientos institucionales se identificaron actividades, responsabilidades y reglas de negocio relacionadas con la atención de quejas. Esta información permitió representar procesos mediante diagramas BPMN, elaborar propuestas de interfaces y diseñar estructuras de datos acordes con las necesidades identificadas. Asimismo, se realizaron actividades de implementación de componentes de backend y frontend, junto con pruebas funcionales y experimentales orientadas a revisar el comportamiento de las soluciones desarrolladas. Estos trabajos constituyen la base para continuar con la integración y validación de la plataforma.
 	
-	Además del componente de inteligencia artificial, el proyecto contempla una arquitectura moderna
-	basada en microservicios, orientada a garantizar modularidad, escalabilidad y mantenibilidad del
-	sistema \cite{aws_microservicios, villamizar_microservices}. Entre los módulos principales destacan
-	el portal del quejoso, el módulo administrativo, el expediente digital, el sistema de seguridad y
-	control de acceso, y el clasificador inteligente. Esta arquitectura desacopla las funcionalidades
-	críticas y facilita futuras ampliaciones sin afectar la operación general de la plataforma.
-	
-	Como parte del trabajo realizado se mantuvo una interacción constante con la DDP mediante reuniones,
-	levantamiento de requerimientos y validación de procesos operativos. Ello permitió modelar el flujo
-	real de atención de quejas con diagramas BPMN, identificar reglas de negocio críticas y diseñar
-	soluciones alineadas con las necesidades institucionales. También se elaboraron prototipos
-	funcionales, mockups, modelos de base de datos, la implementación de backend y frontend del
-	microservicio de atención al quejoso, así como pruebas funcionales y experimentales para validar el
-	comportamiento del sistema.
-	
-	En conjunto, este trabajo presenta una propuesta integral para modernizar la gestión de quejas y
-	denuncias dentro de la Defensoría de los Derechos Politécnicos del IPN. La integración de
-	inteligencia artificial, arquitecturas escalables y mecanismos de seguridad avanzada sienta las
-	bases de una plataforma institucional capaz de optimizar procesos administrativos, reducir tiempos
-	de respuesta y fortalecer la protección de los derechos de la comunidad politécnica. En los
-	capítulos siguientes se desarrollan los fundamentos teóricos, metodológicos y técnicos que sustentan
-	el diseño, la implementación y la validación de la solución propuesta.
+	La integración de herramientas de gestión digital, procesamiento de lenguaje natural y servicios informáticos constituye el enfoque tecnológico propuesto para atender las necesidades identificadas en la DDP. Se espera que la plataforma contribuya a organizar la información, facilitar el seguimiento de expedientes y proporcionar herramientas de apoyo para determinadas actividades administrativas y de análisis. No obstante, el alcance de estos beneficios deberá determinarse mediante las pruebas y evaluaciones correspondientes. En los capítulos siguientes se presentan los antecedentes, fundamentos teóricos, requerimientos, decisiones de diseño, actividades de implementación y procedimientos de evaluación que sustentan el desarrollo del Trabajo Terminal.
