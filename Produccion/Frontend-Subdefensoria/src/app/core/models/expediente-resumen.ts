@@ -1,3 +1,5 @@
+import { EstatusExpediente } from './estatus-expediente';
+
 export interface ExpedienteResumen {
   expedienteId: number;
   folio: string;
@@ -5,7 +7,7 @@ export interface ExpedienteResumen {
   asunto: string;
   unidadAcademica: string;
   fechaAdmision: string;
-  estatus: 'RECIBIDO' | 'EN_INVESTIGACION' | 'EN_ESPERA_OFICIO' | 'ELABORO_ACUERDO' | 'PENDIENTE_CONCLUSION' | 'CONCLUIDO';
+  estatus: EstatusExpediente;
   oficioIdVigente: number | null;
   numeroOficioVigente: string | null;
   destinatarioNombreVigente: string | null;
@@ -13,4 +15,6 @@ export interface ExpedienteResumen {
   estatusOficioVigente: 'EN_ESPERA' | 'VENCIDO' | null;
   diasTranscurridos: number | null;
   diasLimite: number | null;
+  /** Solo si toca emitir oficio. */
+  siguienteFase?: 'SOLICITUD_INFORMACION' | 'GESTION_DIRECTOR' | null;
 }

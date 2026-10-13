@@ -31,4 +31,7 @@ public class ExpedienteResumenDTO {
     private String estatusOficioVigente;
     private Long diasTranscurridos;
     private Integer diasLimite;
+
+    /* Solo si toca emitir oficio: SOLICITUD_INFORMACION o GESTION_DIRECTOR. */
+    private String siguienteFase;
 }

@@ -11,6 +11,11 @@ export class AcuerdoConclusionService {
     return this.api.post<AcuerdoConclusion>('/acuerdos-conclusion', payload);
   }
 
+  /** Acuerdo de conclusión, con el de conciliación ya aceptado: el expediente se concluye. */
+  registrarConclusion(expedienteId: number, textoConclusion: string): Observable<AcuerdoConclusion> {
+    return this.api.post<AcuerdoConclusion>(`/acuerdos-conclusion/${expedienteId}/conclusion`, { textoConclusion });
+  }
+
   obtenerPorExpediente(expedienteId: number): Observable<AcuerdoConclusion> {
     return this.api.get<AcuerdoConclusion>(`/acuerdos-conclusion/expediente/${expedienteId}`);
   }

@@ -118,8 +118,10 @@ tr:hover td {
 
 .status-recibido { background: #e0e7ff; color: #3730a3; }
 .status-en_investigacion,
-.status-en_gestion_director { background: #fdf6e3; color: var(--advertencia); }
-.status-listo_a_dictaminar { background: #dbeafe; color: #1e40af; }
+.status-en_espera_oficio { background: #fdf6e3; color: var(--advertencia); }
+.status-elaboro_acuerdo,
+.status-pendiente_conciliacion,
+.status-pendiente_conclusion { background: #dbeafe; color: #1e40af; }
 .status-concluido { background: #e8f5e9; color: var(--exito); }
 
 .progreso-vencido {

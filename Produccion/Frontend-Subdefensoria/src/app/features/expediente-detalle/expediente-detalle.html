@@ -7,25 +7,16 @@
   </div>
 
   <div class="flow-card">
-    <div class="step" [class.done]="pasoIndice('RECIBIDO') < pasoActualIndice" [class.active]="e.estatus === 'RECIBIDO'">
-      <mat-icon>check_circle</mat-icon><span>Recibido</span>
-    </div>
-    <div class="line"></div>
-    <div class="step" [class.done]="pasoIndice('EN_INVESTIGACION') < pasoActualIndice" [class.active]="e.estatus === 'EN_INVESTIGACION'">
-      <mat-icon>search</mat-icon><span>Investigación</span>
-    </div>
-    <div class="line"></div>
-    <div class="step" [class.done]="pasoIndice('EN_ESPERA_OFICIO') < pasoActualIndice" [class.active]="e.estatus === 'EN_ESPERA_OFICIO'">
-      <mat-icon>groups</mat-icon><span>Gestión con Director</span>
-    </div>
-    <div class="line"></div>
-    <div class="step" [class.done]="pasoIndice('ELABORO_ACUERDO') < pasoActualIndice" [class.active]="e.estatus === 'ELABORO_ACUERDO'">
-      <mat-icon>edit_document</mat-icon><span>Listo a Dictaminar</span>
-    </div>
-    <div class="line"></div>
-    <div class="step" [class.active]="e.estatus === 'CONCLUIDO'">
-      <mat-icon>task_alt</mat-icon><span>Concluido</span>
-    </div>
+    @for (paso of pasos; track paso; let ultimo = $last) {
+      <div class="step"
+           [class.done]="pasoIndice(paso) < pasoActualIndice || (paso === 'CONCLUIDO' && e.estatus === 'CONCLUIDO')"
+           [class.active]="e.estatus === paso && paso !== 'CONCLUIDO'">
+        <mat-icon>{{ iconos[paso] }}</mat-icon><span>{{ etiquetas[paso] }}</span>
+      </div>
+      @if (!ultimo) {
+        <div class="line"></div>
+      }
+    }
   </div>
 
   <div class="grid">
@@ -33,6 +24,9 @@
       <h3>Datos del expediente</h3>
       <div class="info-list">
         <div><span>Folio</span><strong>{{ e.folio }}</strong></div>
+        @if (e.folioQueja) {
+          <div><span>Folio de la queja</span><strong>{{ e.folioQueja }}</strong></div>
+        }
         <div><span>Quejoso</span><strong>{{ e.quejosoNombre }}</strong></div>
         <div><span>Asunto</span><strong>{{ e.asunto }}</strong></div>
         <div><span>Unidad académica</span><strong>{{ e.unidadAcademica }}</strong></div>
@@ -41,7 +35,7 @@
         @if (e.observacionesAnalista) {
           <div><span>Observaciones del analista</span><strong>{{ e.observacionesAnalista }}</strong></div>
         }
-        <div><span>Estatus</span><strong>{{ e.estatus }}</strong></div>
+        <div><span>Estatus</span><strong>{{ etiquetaEstatus(e.estatus) }}</strong></div>
       </div>
     </mat-card>
 
@@ -87,12 +81,23 @@
         </mat-accordion>
       </mat-card>
 
+      @if (acuerdoRechazado && acuerdo) {
+        <mat-card class="card">
+          <h3>El quejoso rechazó el acuerdo de conciliación</h3>
+          <p class="contenido">{{ acuerdo.textoAcuerdo }}</p>
+          @if (acuerdo.comentarioQuejoso) {
+            <p class="meta">Motivo del quejoso: {{ acuerdo.comentarioQuejoso }}</p>
+          }
+          <p class="meta">Emite un nuevo oficio de gestión con el director para buscar otro acuerdo.</p>
+        </mat-card>
+      }
+
       @if (e.estatus === 'ELABORO_ACUERDO') {
         <mat-card class="card form-card">
-          <h3>Elaboración de Proyecto de Resolución</h3>
+          <h3>Acuerdo de conciliación</h3>
 
           <mat-form-field appearance="outline">
-            <mat-label>Conclusión de la investigación e instrucción</mat-label>
+            <mat-label>Propuesta de acuerdo para el quejoso</mat-label>
             <textarea matInput rows="7" [(ngModel)]="textoAcuerdo"></textarea>
           </mat-form-field>
 
@@ -101,9 +106,41 @@
               <mat-icon>save</mat-icon>
               Guardar Borrador
             </button>
-            <button mat-flat-button class="primary-btn" [disabled]="guardando" (click)="concluirExpediente()">
-              <mat-icon>check_circle</mat-icon>
+            <button mat-flat-button class="primary-btn" [disabled]="guardando" (click)="enviarAcuerdo()">
+              <mat-icon>send</mat-icon>
               Enviar acuerdo al quejoso
+            </button>
+          </div>
+        </mat-card>
+      }
+
+      @if (e.estatus === 'PENDIENTE_CONCILIACION' && acuerdo) {
+        <mat-card class="card">
+          <h3>Acuerdo de conciliación enviado</h3>
+          <p class="contenido">{{ acuerdo.textoAcuerdo }}</p>
+          <p class="meta">Enviado al quejoso: {{ acuerdo.fechaEnvioSecretarial | date:'d/MM/yyyy HH:mm' }} · Esperando su respuesta.</p>
+        </mat-card>
+      }
+
+      @if (e.estatus === 'PENDIENTE_CONCLUSION' && acuerdo) {
+        <mat-card class="card">
+          <h3>Acuerdo de conciliación aceptado</h3>
+          <p class="contenido">{{ acuerdo.textoAcuerdo }}</p>
+          <p class="meta">El quejoso lo aceptó el {{ acuerdo.fechaRespuestaQuejoso | date:'d/MM/yyyy HH:mm' }}.</p>
+        </mat-card>
+
+        <mat-card class="card form-card">
+          <h3>Acuerdo de conclusión</h3>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Texto del acuerdo de conclusión</mat-label>
+            <textarea matInput rows="7" [(ngModel)]="textoConclusion"></textarea>
+          </mat-form-field>
+
+          <div class="actions">
+            <button mat-flat-button class="primary-btn" [disabled]="guardando" (click)="registrarConclusion()">
+              <mat-icon>task_alt</mat-icon>
+              Registrar acuerdo de conclusión
             </button>
           </div>
         </mat-card>
@@ -111,9 +148,13 @@
 
       @if (e.estatus === 'CONCLUIDO' && acuerdo) {
         <mat-card class="card">
-          <h3>Acuerdo de Conclusión</h3>
+          <h3>Acuerdo de conclusión</h3>
+          <p class="contenido">{{ acuerdo.textoConclusion }}</p>
+          <p class="meta">Concluido el {{ acuerdo.fechaConclusion | date:'d/MM/yyyy HH:mm' }}</p>
+        </mat-card>
+        <mat-card class="card">
+          <h3>Acuerdo de conciliación (aceptado)</h3>
           <p class="contenido">{{ acuerdo.textoAcuerdo }}</p>
-          <p class="meta">Enviado al área secretarial: {{ acuerdo.fechaEnvioSecretarial }}</p>
         </mat-card>
       }
     </div>

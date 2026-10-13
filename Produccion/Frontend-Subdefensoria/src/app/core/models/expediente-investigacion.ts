@@ -3,6 +3,8 @@ export interface ExpedienteInvestigacion {
 
   folio: string;
   folioOrigen: string;
+  /** Folio FOL-... de la queja (el que conoce el quejoso). */
+  folioQueja?: string | null;
 
   quejosoNombre: string;
   unidadAcademica: string;

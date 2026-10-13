@@ -18,13 +18,23 @@ import { AcuerdoConclusionService } from '../../core/services/acuerdo-conclusion
 import { ExpedienteInvestigacion } from '../../core/models/expediente-investigacion';
 import { Oficio } from '../../core/models/oficio';
 import { AcuerdoConclusion } from '../../core/models/acuerdo-conclusion';
+import { ETIQUETAS_ESTATUS, PASOS_EXPEDIENTE, etiquetaEstatus } from '../../core/models/estatus-expediente';
 import { RecordatorioDialog, RecordatorioDialogData } from '../../shared/recordatorio-dialog/recordatorio-dialog';
 import { RespuestaExternaDialog, RespuestaExternaDialogData } from '../../shared/respuesta-externa-dialog/respuesta-externa-dialog';
 
-// El acuerdo ya no cierra el expediente: pasa por PENDIENTE_CONCLUSION mientras el quejoso
-// decide si lo acepta. Si lo rechaza, el expediente regresa a EN_INVESTIGACION.
-const PASOS = ['RECIBIDO', 'EN_INVESTIGACION', 'EN_ESPERA_OFICIO', 'ELABORO_ACUERDO',
-               'PENDIENTE_CONCLUSION', 'CONCLUIDO'];
+/** Íconos de la barra de pasos (mismo orden que PASOS_EXPEDIENTE). */
+const ICONOS_PASO: Record<string, string> = {
+  RECIBIDO: 'inbox',
+  EN_INVESTIGACION: 'search',
+  EN_ESPERA_OFICIO: 'hourglass_top',
+  ELABORO_ACUERDO: 'edit_document',
+  PENDIENTE_CONCILIACION: 'handshake',
+  PENDIENTE_CONCLUSION: 'gavel',
+  CONCLUIDO: 'task_alt'
+};
+
+/** Estatus en los que ya existe un acuerdo que mostrar. */
+const CON_ACUERDO = ['EN_INVESTIGACION', 'ELABORO_ACUERDO', 'PENDIENTE_CONCILIACION', 'PENDIENTE_CONCLUSION', 'CONCLUIDO'];
 
 @Component({
   selector: 'app-expediente-detalle',
@@ -51,9 +61,13 @@ export class ExpedienteDetalle implements OnInit {
   oficios: Oficio[] = [];
   acuerdo: AcuerdoConclusion | null = null;
   textoAcuerdo = '';
+  textoConclusion = '';
   guardando = false;
 
-  readonly pasos = PASOS;
+  readonly pasos = PASOS_EXPEDIENTE;
+  readonly etiquetas: Record<string, string> = ETIQUETAS_ESTATUS;
+  readonly iconos = ICONOS_PASO;
+  readonly etiquetaEstatus = etiquetaEstatus;
 
   constructor(
     private route: ActivatedRoute,
@@ -72,13 +86,17 @@ export class ExpedienteDetalle implements OnInit {
     this.cargarExpediente();
   }
 
+  /**
+   * Abrir el detalle es "iniciar la investigación" (fila 14 del diagrama): un expediente
+   * RECIBIDO pasa a EN_INVESTIGACION; en otro estatus solo se devuelve.
+   */
   cargarExpediente(): void {
-    this.expedienteService.obtenerPorFolio(this.folio).subscribe({
+    this.expedienteService.iniciarInvestigacion(this.folio).subscribe({
       next: (expediente) => {
         this.expediente = expediente;
         this.cargarHistorial();
 
-        if (expediente.estatus === 'ELABORO_ACUERDO' || expediente.estatus === 'CONCLUIDO') {
+        if (CON_ACUERDO.includes(expediente.estatus)) {
           this.cargarAcuerdo(expediente.id);
         } else {
           this.cdr.detectChanges();
@@ -114,7 +132,7 @@ export class ExpedienteDetalle implements OnInit {
   }
 
   pasoIndice(paso: string): number {
-    return this.pasos.indexOf(paso);
+    return (this.pasos as string[]).indexOf(paso);
   }
 
   get pasoActualIndice(): number {
@@ -125,11 +143,41 @@ export class ExpedienteDetalle implements OnInit {
     this.guardarOConcluir(false);
   }
 
-  concluirExpediente(): void {
-    if (!confirm('¿Confirmas que deseas enviar el acuerdo al quejoso? El expediente quedará pendiente de su respuesta: si lo acepta se concluye, si lo rechaza regresa a investigación.')) {
+  enviarAcuerdo(): void {
+    if (!confirm('¿Enviar el acuerdo de conciliación al quejoso? El expediente quedará pendiente de su respuesta: si lo acepta, se elabora el acuerdo de conclusión; si lo rechaza, regresa a investigación.')) {
       return;
     }
     this.guardarOConcluir(true);
+  }
+
+  /** Fila 20: con el acuerdo de conciliación aceptado, el expediente se concluye. */
+  registrarConclusion(): void {
+    if (!this.expediente) return;
+    if (!this.textoConclusion.trim()) {
+      this.snackBar.open('Redacta el acuerdo de conclusión antes de continuar.', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    if (!confirm('¿Registrar el acuerdo de conclusión? El expediente se cerrará definitivamente.')) {
+      return;
+    }
+
+    this.guardando = true;
+    this.acuerdoConclusionService.registrarConclusion(this.expediente.id, this.textoConclusion.trim()).subscribe({
+      next: () => {
+        this.guardando = false;
+        this.snackBar.open('Expediente concluido.', 'Cerrar', { duration: 3000 });
+        this.cargarExpediente();
+      },
+      error: (err) => {
+        this.guardando = false;
+        this.snackBar.open(err?.error?.error ?? 'No fue posible registrar la conclusión.', 'Cerrar', { duration: 4000 });
+      }
+    });
+  }
+
+  /** El quejoso rechazó el último acuerdo y el expediente volvió a investigación. */
+  get acuerdoRechazado(): boolean {
+    return this.expediente?.estatus === 'EN_INVESTIGACION' && this.acuerdo?.respuestaQuejoso === 'RECHAZADO';
   }
 
   esOficioActivo(o: Oficio): boolean {

@@ -28,6 +28,9 @@
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   padding: var(--space-4);
   margin-bottom: var(--space-5);
+  /* 7 pasos no caben en una línea en pantallas medianas: se acomodan en dos. */
+  flex-wrap: wrap;
+  row-gap: var(--space-2);
 }
 
 .step {
@@ -57,6 +60,7 @@
   height: 2px;
   background: #f1f1f3;
   flex: 1;
+  min-width: 12px;
 }
 
 .grid {
