@@ -21,4 +21,10 @@ public class RecordatorioController {
     public RecordatorioDTO generarRecordatorio(@Valid @RequestBody GenerarRecordatorioDTO dto) {
         return recordatorioService.generarRecordatorio(dto);
     }
+
+    /* Recordatorios ya enviados de un oficio (para el historial y sus PDF). */
+    @GetMapping("/oficio/{oficioId}")
+    public java.util.List<RecordatorioDTO> porOficio(@PathVariable Long oficioId) {
+        return recordatorioService.porOficio(oficioId);
+    }
 }

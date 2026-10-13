@@ -115,6 +115,11 @@ export class ResponderAcuerdo implements OnInit {
     });
   }
 
+  /** PDF del acuerdo (ruta pública con el mismo token del enlace). */
+  pdfUrl(tipo: 'conciliacion' | 'conclusion'): string {
+    return `/api/subdefensoria/publico/acuerdos/${encodeURIComponent(this.token)}/pdf?tipo=${tipo}`;
+  }
+
   /** "13 de octubre de 2026" */
   fecha(fechaIso?: string | null): string {
     if (!fechaIso) return '';

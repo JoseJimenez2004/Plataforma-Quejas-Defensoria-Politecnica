@@ -64,6 +64,27 @@
               <p><strong>Correo:</strong> {{ o.destinatarioCorreo }}</p>
               <p class="contenido">{{ o.contenidoRedactado }}</p>
 
+              @if (recordatorios[o.id]?.length) {
+                <p><strong>Recordatorios enviados:</strong></p>
+                <ul class="recordatorios">
+                  @for (r of recordatorios[o.id]; track r.id; let i = $index) {
+                    <li>
+                      {{ r.fechaEnvio | date:'d/MM/yyyy' }} · {{ r.mensaje }}
+                      <button mat-button type="button" (click)="verPdfRecordatorio(r)">
+                        <mat-icon>picture_as_pdf</mat-icon> PDF
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+
+              <div class="oficio-actions">
+                <button mat-stroked-button class="outline-btn" (click)="verPdfOficio(o)">
+                  <mat-icon>picture_as_pdf</mat-icon>
+                  Ver oficio (PDF)
+                </button>
+              </div>
+
               @if (esOficioActivo(o)) {
                 <div class="oficio-actions">
                   <button mat-stroked-button class="outline-btn" (click)="abrirRecordatorio(o)">
@@ -119,6 +140,11 @@
           <h3>Acuerdo de conciliación enviado</h3>
           <p class="contenido">{{ acuerdo.textoAcuerdo }}</p>
           <p class="meta">Enviado al quejoso: {{ acuerdo.fechaEnvioSecretarial | date:'d/MM/yyyy HH:mm' }} · Esperando su respuesta.</p>
+          <div class="actions">
+            <button mat-stroked-button class="outline-btn" (click)="verPdfAcuerdoConciliacion()">
+              <mat-icon>picture_as_pdf</mat-icon> Ver acuerdo (PDF)
+            </button>
+          </div>
         </mat-card>
       }
 
@@ -127,6 +153,11 @@
           <h3>Acuerdo de conciliación aceptado</h3>
           <p class="contenido">{{ acuerdo.textoAcuerdo }}</p>
           <p class="meta">El quejoso lo aceptó el {{ acuerdo.fechaRespuestaQuejoso | date:'d/MM/yyyy HH:mm' }}.</p>
+          <div class="actions">
+            <button mat-stroked-button class="outline-btn" (click)="verPdfAcuerdoConciliacion()">
+              <mat-icon>picture_as_pdf</mat-icon> Ver acuerdo (PDF)
+            </button>
+          </div>
         </mat-card>
 
         <mat-card class="card form-card">
@@ -151,6 +182,11 @@
           <h3>Acuerdo de conclusión</h3>
           <p class="contenido">{{ acuerdo.textoConclusion }}</p>
           <p class="meta">Concluido el {{ acuerdo.fechaConclusion | date:'d/MM/yyyy HH:mm' }}</p>
+          <div class="actions">
+            <button mat-flat-button class="primary-btn" (click)="verPdfAcuerdoConclusion()">
+              <mat-icon>picture_as_pdf</mat-icon> Ver acuerdo de conclusión (PDF)
+            </button>
+          </div>
         </mat-card>
         <mat-card class="card">
           <h3>Acuerdo de conciliación (aceptado)</h3>

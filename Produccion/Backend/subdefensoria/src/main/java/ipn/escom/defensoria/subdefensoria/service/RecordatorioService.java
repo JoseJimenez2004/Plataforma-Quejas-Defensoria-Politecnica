@@ -89,4 +89,20 @@ public class RecordatorioService {
                 .estatusExpediente(expediente.getEstatus())
                 .build();
     }
+
+    public java.util.List<RecordatorioDTO> porOficio(Long oficioId) {
+        OficioInformacion oficio = oficioRepository.findById(oficioId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el oficio " + oficioId));
+        return recordatorioRepository.findByOficioIdOrderByFechaEnvioDesc(oficioId).stream()
+                .map(r -> RecordatorioDTO.builder()
+                        .id(r.getId())
+                        .oficioId(oficio.getId())
+                        .numeroOficio(oficio.getNumeroOficio())
+                        .mensaje(r.getMensaje())
+                        .medidasOfrecidas(r.getMedidasOfrecidas())
+                        .diasRetraso(r.getDiasRetraso())
+                        .fechaEnvio(r.getFechaEnvio() != null ? r.getFechaEnvio().toString() : null)
+                        .build())
+                .toList();
+    }
 }

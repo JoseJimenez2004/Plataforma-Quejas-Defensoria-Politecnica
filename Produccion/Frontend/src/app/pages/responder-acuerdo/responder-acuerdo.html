@@ -16,6 +16,7 @@
       </p>
 
       <div class="texto-acuerdo">{{ acuerdo.textoAcuerdo }}</div>
+      <a class="enlace-pdf" [href]="pdfUrl('conciliacion')" target="_blank" rel="noopener">Ver el acuerdo en PDF</a>
 
       @if (acuerdo.puedeResponder) {
         @if (!decision) {
@@ -58,6 +59,7 @@
         }
       } @else if (acuerdo.concluido) {
         <div class="resultado ok">✅ Tu caso concluyó. Te enviamos el acuerdo de conclusión por correo.</div>
+        <a class="enlace-pdf" [href]="pdfUrl('conclusion')" target="_blank" rel="noopener">Ver el acuerdo de conclusión en PDF</a>
       } @else if (acuerdo.respuestaQuejoso === 'ACEPTADO') {
         <div class="resultado ok">
           ✅ Aceptaste este acuerdo. La Defensoría elaborará el acuerdo de conclusión de tu caso.

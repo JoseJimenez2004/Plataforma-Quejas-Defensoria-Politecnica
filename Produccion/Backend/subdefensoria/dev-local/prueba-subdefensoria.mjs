@@ -46,6 +46,16 @@ async function llamar(base, metodo, ruta, { tk, body } = {}) {
 const pc = (m, ruta, o = {}) => llamar(PC, m, ruta, { tk: ANALISTA, ...o });
 const sd = (m, ruta, o = {}) => llamar(SD, m, ruta, { tk: SUBDEFENSOR, ...o });
 
+// PDF: devuelve { status, tipo, esPdf }; si PDF_DIR está definido, lo guarda para revisarlo.
+const PDF_DIR = process.env.PDF_DIR;
+async function pdf(ruta, { tk = SUBDEFENSOR, guardarComo } = {}) {
+  const r = await fetch(SD + ruta, { headers: tk ? { Authorization: `Bearer ${tk}` } : {} });
+  const bytes = Buffer.from(await r.arrayBuffer());
+  if (PDF_DIR && guardarComo && r.status === 200) fs.writeFileSync(`${PDF_DIR}/${guardarComo}`, bytes);
+  return { status: r.status, tipo: r.headers.get('content-type'), esPdf: bytes.subarray(0, 4).toString() === '%PDF' };
+}
+const pdfOk = x => x.status === 200 && x.tipo === 'application/pdf' && x.esPdf;
+
 const sql = q => execSync(`docker exec -i defensoria-db-local psql -U postgres -d defensoria_db -tA`, { input: q }).toString().trim();
 
 let ok = 0, fallas = 0;
@@ -147,6 +157,16 @@ r = await sd('GET', '/alertas/vencidos');
 check('CU-SD-04 Alerta de oficio vencido', r.status === 200 && r.json.some(a => a.oficioId === OF1.id && a.diasRetraso > 0), r);
 r = await sd('POST', '/recordatorios', { body: { oficioId: OF1.id, mensaje: 'Se recuerda la respuesta pendiente.' } });
 check('CU-SD-07 Generar recordatorio', r.status === 200 || r.status === 201, r);
+const REC1 = r.json;
+
+let p = await pdf(`/documentos/oficio/${OF1.id}`, { guardarComo: 'oficio.pdf' });
+check('PDF del oficio', pdfOk(p), p);
+p = await pdf(`/documentos/oficio/${OF1.id}`, { tk: null });
+check('PDF del oficio sin token → 401/403', p.status === 401 || p.status === 403, p.status);
+p = await pdf(`/documentos/recordatorio/${REC1.id}`, { guardarComo: 'recordatorio.pdf' });
+check('PDF del recordatorio', pdfOk(p), p);
+r = await sd('GET', `/recordatorios/oficio/${OF1.id}`);
+check('Lista de recordatorios del oficio', r.status === 200 && r.json.length === 1 && r.json[0].id === REC1.id, r);
 r = await sd('GET', `/oficios/${OF1.id}`);
 check('El oficio vuelve a EN_ESPERA con plazo SUBSECUENTE y fecha nueva', r.json?.estatus === 'EN_ESPERA' && r.json?.tipoPlazo === 'SUBSECUENTE' && r.json?.fechaLimite > new Date().toISOString().slice(0, 10), r.json);
 check('El recordatorio no cambia el estatus (sigue EN_ESPERA_OFICIO)', (await estatusExp()) === 'EN_ESPERA_OFICIO');
@@ -169,10 +189,16 @@ console.log('\n== CU-SD-09 Acuerdo de conciliación (filas 17 y 18)');
 const acuerdo = (texto, concluir) => sd('POST', '/acuerdos-conclusion', { body: { expedienteId: EXP.id, textoAcuerdo: texto, concluir } });
 r = await acuerdo('Borrador del acuerdo.', false);
 check('Guardar borrador (sigue ELABORO_ACUERDO)', (r.status === 200 || r.status === 201) && (await estatusExp()) === 'ELABORO_ACUERDO', r);
+p = await pdf(`/documentos/acuerdo-conciliacion/${EXP.id}`);
+check('PDF de un acuerdo en borrador → 409', p.status === 409, p);
 r = await sd('POST', `/acuerdos-conclusion/${EXP.id}/conclusion`, { body: { textoConclusion: 'x' } });
 check('Concluir sin acuerdo de conciliación aceptado → 409', r.status === 409, r);
 r = await acuerdo('Acuerdo de conciliación: el director se compromete a ...', true);
 check('Enviar el acuerdo al quejoso → PENDIENTE_CONCILIACION', (r.status === 200 || r.status === 201) && (await estatusExp()) === 'PENDIENTE_CONCILIACION' && estatusQueja() === 'PENDIENTE_CONCILIACION', estatusQueja());
+p = await pdf(`/documentos/acuerdo-conciliacion/${EXP.id}`);
+check('PDF del acuerdo de conciliación enviado', pdfOk(p), p);
+p = await pdf(`/documentos/acuerdo-conclusion/${EXP.id}`);
+check('PDF de conclusión antes de concluir → 409', p.status === 409, p);
 
 // CU-QJ-14: el quejoso responde desde el enlace del correo (sin sesión).
 const tokenAcuerdo = () => sql(`SELECT token_respuesta FROM acuerdos_conclusion WHERE expediente_id = ${EXP.id}`);
@@ -230,6 +256,14 @@ if (NOTIFICACIONES) {
 }
 r = await publico('GET', TOK2);
 check('El enlace ya muestra el caso concluido', r.status === 200 && r.json.concluido === true, r.json);
+p = await pdf(`/documentos/acuerdo-conciliacion/${EXP.id}`, { guardarComo: 'acuerdo-conciliacion.pdf' });
+check('PDF del acuerdo de conciliación aceptado', pdfOk(p), p);
+p = await pdf(`/documentos/acuerdo-conclusion/${EXP.id}`, { guardarComo: 'acuerdo-conclusion.pdf' });
+check('PDF del acuerdo de conclusión', pdfOk(p), p);
+p = await pdf(`/publico/acuerdos/${TOK2}/pdf?tipo=conclusion`, { tk: null });
+check('El quejoso descarga el acuerdo de conclusión desde su enlace (sin sesión)', pdfOk(p), p);
+p = await pdf(`/publico/acuerdos/${TOK1}/pdf`, { tk: null });
+check('Con el enlace viejo no se descarga nada → 404', p.status === 404, p);
 r = await oficio('Después de concluir');
 check('Concluido no admite más oficios → 409', r.status === 409, r);
 

@@ -15,6 +15,10 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ExpedienteService } from '../../core/services/expediente.service';
 import { OficioService } from '../../core/services/oficio.service';
 import { AcuerdoConclusionService } from '../../core/services/acuerdo-conclusion.service';
+import { RecordatorioService } from '../../core/services/recordatorio.service';
+import { DocumentoService, abrirBlob } from '../../core/services/documento.service';
+import { Recordatorio } from '../../core/models/recordatorio';
+import { Observable } from 'rxjs';
 import { ExpedienteInvestigacion } from '../../core/models/expediente-investigacion';
 import { Oficio } from '../../core/models/oficio';
 import { AcuerdoConclusion } from '../../core/models/acuerdo-conclusion';
@@ -59,6 +63,8 @@ export class ExpedienteDetalle implements OnInit {
   folio = '';
   expediente?: ExpedienteInvestigacion;
   oficios: Oficio[] = [];
+  /** Recordatorios enviados de cada oficio, por id de oficio. */
+  recordatorios: Record<number, Recordatorio[]> = {};
   acuerdo: AcuerdoConclusion | null = null;
   textoAcuerdo = '';
   textoConclusion = '';
@@ -74,6 +80,8 @@ export class ExpedienteDetalle implements OnInit {
     private expedienteService: ExpedienteService,
     private oficioService: OficioService,
     private acuerdoConclusionService: AcuerdoConclusionService,
+    private recordatorioService: RecordatorioService,
+    private documentoService: DocumentoService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef
@@ -113,6 +121,12 @@ export class ExpedienteDetalle implements OnInit {
     this.oficioService.historialPorFolio(this.folio).subscribe({
       next: (oficios) => {
         this.oficios = oficios;
+        oficios.forEach(o => this.recordatorioService.porOficio(o.id).subscribe({
+          next: (lista) => {
+            this.recordatorios[o.id] = lista;
+            this.cdr.detectChanges();
+          }
+        }));
         this.cdr.detectChanges();
       }
     });
@@ -178,6 +192,31 @@ export class ExpedienteDetalle implements OnInit {
   /** El quejoso rechazó el último acuerdo y el expediente volvió a investigación. */
   get acuerdoRechazado(): boolean {
     return this.expediente?.estatus === 'EN_INVESTIGACION' && this.acuerdo?.respuestaQuejoso === 'RECHAZADO';
+  }
+
+  // ------------------------------------------------------------------ PDF
+
+  verPdfOficio(o: Oficio): void {
+    this.abrirPdf(this.documentoService.oficio(o.id));
+  }
+
+  verPdfRecordatorio(r: Recordatorio): void {
+    this.abrirPdf(this.documentoService.recordatorio(r.id));
+  }
+
+  verPdfAcuerdoConciliacion(): void {
+    if (this.expediente) this.abrirPdf(this.documentoService.acuerdoConciliacion(this.expediente.id));
+  }
+
+  verPdfAcuerdoConclusion(): void {
+    if (this.expediente) this.abrirPdf(this.documentoService.acuerdoConclusion(this.expediente.id));
+  }
+
+  private abrirPdf(peticion: Observable<Blob>): void {
+    peticion.subscribe({
+      next: (blob) => abrirBlob(blob),
+      error: () => this.snackBar.open('No fue posible generar el PDF.', 'Cerrar', { duration: 3000 })
+    });
   }
 
   esOficioActivo(o: Oficio): boolean {
