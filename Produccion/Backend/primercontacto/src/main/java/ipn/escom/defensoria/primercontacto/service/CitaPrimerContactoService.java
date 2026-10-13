@@ -1,6 +1,7 @@
 package ipn.escom.defensoria.primercontacto.service;
 
 import ipn.escom.defensoria.primercontacto.dto.CitaDTO;
+import ipn.escom.defensoria.primercontacto.dto.CitaPublicaDTO;
 import ipn.escom.defensoria.primercontacto.dto.CrearCitaDTO;
 import ipn.escom.defensoria.primercontacto.dto.ReagendarCitaDTO;
 import ipn.escom.defensoria.primercontacto.entity.CitaPrimerContacto;
@@ -19,12 +20,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 /**
  * Citas de Primer Contacto (CU-PC-04).
@@ -48,6 +51,12 @@ import java.util.Locale;
  *
  * CANCELADA_QUEJOSO y SIN_RESPUESTA siguen contando como cita activa del expediente: quedan
  * pendientes de que el analista decida qué hacer.
+ *
+ * El quejoso responde desde el enlace que le llega por correo y en su centro de
+ * notificaciones (/cita/responder?token=..., sin iniciar sesión) o desde su panel.
+ *
+ * Horario: cada cita ocupa duracionMinutos (60 por defecto) y un analista no puede tener dos
+ * citas PROGRAMADAS o CONFIRMADAS encimadas. Dos analistas sí pueden citar a la misma hora.
  */
 @Service
 public class CitaPrimerContactoService {
@@ -65,6 +74,12 @@ public class CitaPrimerContactoService {
     /* Citas que ya no cuentan como cita activa del expediente. */
     public static final List<String> CERRADAS = List.of(CANCELADA, REAGENDADA);
 
+    /* Citas que apartan el horario del analista (las canceladas o sin respuesta lo liberan). */
+    public static final List<String> OCUPAN_HORARIO = List.of(PROGRAMADA, CONFIRMADA);
+
+    /* Página pública del portal del quejoso donde confirma o cancela. */
+    private static final String ENLACE_RESPUESTA = "/cita/responder?token=";
+
     public static final String RESPUESTA_QUEJOSO = "QUEJOSO";
     public static final String RESPUESTA_ANALISTA = "ANALISTA";
 
@@ -77,17 +92,23 @@ public class CitaPrimerContactoService {
     private final ExpedientePrimerContactoRepository expedienteRepository;
     private final NotificacionQuejosoService notificacionService;
     private final long horasRespuesta;
+    private final long duracionMinutos;
+    private final String portalUrl;
 
     public CitaPrimerContactoService(
             CitaPrimerContactoRepository citaPrimerContactoRepository,
             ExpedientePrimerContactoRepository expedienteRepository,
             NotificacionQuejosoService notificacionService,
-            @Value("${primer-contacto.citas.horas-respuesta:48}") long horasRespuesta
+            @Value("${primer-contacto.citas.horas-respuesta:48}") long horasRespuesta,
+            @Value("${primer-contacto.citas.duracion-minutos:60}") long duracionMinutos,
+            @Value("${primer-contacto.portal.url:https://defensoria-escom.ddns.net}") String portalUrl
     ) {
         this.citaPrimerContactoRepository = citaPrimerContactoRepository;
         this.expedienteRepository = expedienteRepository;
         this.notificacionService = notificacionService;
         this.horasRespuesta = horasRespuesta;
+        this.duracionMinutos = duracionMinutos;
+        this.portalUrl = portalUrl == null ? "" : portalUrl.strip().replaceAll("/+$", "");
     }
 
     public CitaDTO crearCita(
@@ -126,6 +147,10 @@ public class CitaPrimerContactoService {
             );
         }
 
+        LocalDate fechaCita = LocalDate.parse(dto.getFechaCita());
+        LocalTime horaCita = LocalTime.parse(dto.getHoraCita());
+        validarSinTraslape(analista.getId(), fechaCita, horaCita, null);
+
         LocalDateTime ahora = LocalDateTime.now();
 
         CitaPrimerContacto cita =
@@ -144,8 +169,8 @@ public class CitaPrimerContactoService {
                         )
                         .analistaId(analista.getId())
                         .analistaNombre(analista.getNombreCompleto())
-                        .fechaCita(LocalDate.parse(dto.getFechaCita()))
-                        .horaCita(LocalTime.parse(dto.getHoraCita()))
+                        .fechaCita(fechaCita)
+                        .horaCita(horaCita)
                         .tipoCita(dto.getTipoCita())
                         .motivo(dto.getMotivo())
                         .estatus(PROGRAMADA)
@@ -154,6 +179,7 @@ public class CitaPrimerContactoService {
                         .actualizadoPorId(analista.getId())
                         .actualizadoPorNombre(analista.getNombreCompleto())
                         .fechaLimiteRespuesta(ahora.plusHours(horasRespuesta))
+                        .tokenRespuesta(nuevoToken())
                         .build();
 
         CitaPrimerContacto guardada =
@@ -164,7 +190,8 @@ public class CitaPrimerContactoService {
                 "Primer Contacto agendó una cita para atender tu queja " + expediente.getFolioOrigen()
                         + ": " + describir(guardada) + "."
                         + "\nMotivo: " + guardada.getMotivo()
-                        + instruccionesRespuesta(guardada));
+                        + instruccionesRespuesta(guardada),
+                enlaceRespuesta(guardada));
 
         return convertirADTO(guardada);
     }
@@ -242,6 +269,12 @@ public class CitaPrimerContactoService {
     ) {
 
         CitaPrimerContacto anterior = obtenerActiva(id);
+
+        LocalDate fechaCita = LocalDate.parse(dto.getFechaCita());
+        LocalTime horaCita = LocalTime.parse(dto.getHoraCita());
+        // La cita que se mueve no estorba: su horario se libera al reagendar.
+        validarSinTraslape(analista.getId(), fechaCita, horaCita, anterior.getId());
+
         LocalDateTime ahora = LocalDateTime.now();
 
         // La cita anterior queda en el historial tal como estaba (respuesta, motivo...).
@@ -256,8 +289,8 @@ public class CitaPrimerContactoService {
                 .quejosoNombre(anterior.getQuejosoNombre())
                 .analistaId(analista.getId())
                 .analistaNombre(analista.getNombreCompleto())
-                .fechaCita(LocalDate.parse(dto.getFechaCita()))
-                .horaCita(LocalTime.parse(dto.getHoraCita()))
+                .fechaCita(fechaCita)
+                .horaCita(horaCita)
                 .tipoCita(dto.getTipoCita() != null && !dto.getTipoCita().isBlank()
                         ? dto.getTipoCita() : anterior.getTipoCita())
                 .motivo(dto.getMotivo() != null && !dto.getMotivo().isBlank()
@@ -269,6 +302,7 @@ public class CitaPrimerContactoService {
                 .actualizadoPorNombre(analista.getNombreCompleto())
                 .fechaLimiteRespuesta(ahora.plusHours(horasRespuesta))
                 .citaAnteriorId(anterior.getId())
+                .tokenRespuesta(nuevoToken())
                 .build();
 
         CitaPrimerContacto guardada = citaPrimerContactoRepository.save(nueva);
@@ -277,7 +311,8 @@ public class CitaPrimerContactoService {
                 "Tu cita de primer contacto cambió de fecha",
                 "Tu cita para la queja " + folioQueja(guardada) + " se reagendó para el "
                         + describir(guardada) + "."
-                        + instruccionesRespuesta(guardada));
+                        + instruccionesRespuesta(guardada),
+                enlaceRespuesta(guardada));
 
         return convertirADTO(guardada);
     }
@@ -352,6 +387,47 @@ public class CitaPrimerContactoService {
         return convertirADTO(citaPrimerContactoRepository.save(cita));
     }
 
+    // ---------------------------------------------------------------------------------
+    // Respuesta del quejoso desde el enlace del correo / notificación (sin sesión).
+    // ---------------------------------------------------------------------------------
+
+    public CitaPublicaDTO citaPorToken(String token) {
+        return convertirAPublica(obtenerPorToken(token));
+    }
+
+    public CitaPublicaDTO confirmarPorToken(String token) {
+
+        CitaPrimerContacto cita = obtenerPorToken(token);
+        validarPendienteDeRespuesta(cita);
+
+        cita.setEstatus(CONFIRMADA);
+        registrarRespuesta(cita, RESPUESTA_QUEJOSO, null);
+        cita.setFechaActualizacion(LocalDateTime.now());
+
+        return convertirAPublica(citaPrimerContactoRepository.save(cita));
+    }
+
+    public CitaPublicaDTO cancelarPorToken(String token, String motivo) {
+
+        CitaPrimerContacto cita = obtenerPorToken(token);
+        validarPendienteDeRespuesta(cita);
+
+        cita.setEstatus(CANCELADA_QUEJOSO);
+        registrarRespuesta(cita, RESPUESTA_QUEJOSO, motivoObligatorio(motivo));
+        cita.setFechaActualizacion(LocalDateTime.now());
+
+        return convertirAPublica(citaPrimerContactoRepository.save(cita));
+    }
+
+    private CitaPrimerContacto obtenerPorToken(String token) {
+        if (token == null || token.isBlank()) {
+            throw new RecursoNoEncontradoException("El enlace de la cita no es válido.");
+        }
+        return citaPrimerContactoRepository.findByTokenRespuesta(token.strip())
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "El enlace de la cita no es válido o ya no existe."));
+    }
+
     /**
      * Citas PROGRAMADAS cuyo plazo de respuesta ya venció pasan a SIN_RESPUESTA, para que el
      * analista las vea y decida si reagenda o cancela.
@@ -387,18 +463,61 @@ public class CitaPrimerContactoService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cita no encontrada");
         }
 
+        validarPendienteDeRespuesta(cita);
+
+        return cita;
+    }
+
+    private void validarPendienteDeRespuesta(CitaPrimerContacto cita) {
+
         if (!PROGRAMADA.equals(cita.getEstatus())) {
             throw new OperacionInvalidaException("Esta cita ya no está esperando tu respuesta.");
         }
 
-        if (cita.getFechaLimiteRespuesta() != null
-                && LocalDateTime.now().isAfter(cita.getFechaLimiteRespuesta())) {
+        if (plazoVencido(cita)) {
             throw new OperacionInvalidaException(
                     "El plazo para responder esta cita ya venció. Comunícate con Primer Contacto."
             );
         }
+    }
 
-        return cita;
+    private boolean plazoVencido(CitaPrimerContacto cita) {
+        return cita.getFechaLimiteRespuesta() != null
+                && LocalDateTime.now().isAfter(cita.getFechaLimiteRespuesta());
+    }
+
+    /**
+     * Un analista no puede tener dos citas encimadas: cada una ocupa duracionMinutos. Solo
+     * cuentan las PROGRAMADAS y CONFIRMADAS; excluirId es la cita que se está reagendando.
+     */
+    private void validarSinTraslape(Long analistaId, LocalDate fecha, LocalTime hora, Long excluirId) {
+
+        for (CitaPrimerContacto otra : citaPrimerContactoRepository
+                .findByAnalistaIdAndFechaCitaAndEstatusIn(analistaId, fecha, OCUPAN_HORARIO)) {
+
+            if (otra.getId().equals(excluirId)) {
+                continue;
+            }
+
+            long separacion = Math.abs(Duration.between(otra.getHoraCita(), hora).toMinutes());
+            if (separacion < duracionMinutos) {
+                throw new OperacionInvalidaException(
+                        "Ya tienes una cita ese día a las " + otra.getHoraCita().toString().substring(0, 5)
+                                + " h (expediente " + otra.getFolio() + "). Cada cita dura "
+                                + duracionMinutos + " minutos: elige otro horario."
+                );
+            }
+        }
+    }
+
+    private static String nuevoToken() {
+        return UUID.randomUUID().toString().replace("-", "")
+                + UUID.randomUUID().toString().replace("-", "");
+    }
+
+    /* Ruta dentro del portal; el aviso del panel navega a ella y el correo le antepone portalUrl. */
+    private String enlaceRespuesta(CitaPrimerContacto cita) {
+        return cita.getTokenRespuesta() == null ? null : ENLACE_RESPUESTA + cita.getTokenRespuesta();
     }
 
     private void registrarRespuesta(CitaPrimerContacto cita, String quien, String motivoCancelacion) {
@@ -418,11 +537,17 @@ public class CitaPrimerContactoService {
         if (cita.getFechaLimiteRespuesta() == null) {
             return "";
         }
-        return "\n\nTienes " + horasRespuesta + " horas (hasta el "
+        String plazo = "\n\nTienes " + horasRespuesta + " horas (hasta el "
                 + cita.getFechaLimiteRespuesta().format(FECHA_HORA_LIMITE)
-                + ") para confirmar tu asistencia o cancelarla indicando el motivo, desde tu "
-                + "panel o comunicándote con Primer Contacto. Si la cancelas, podremos "
-                + "proponerte una nueva fecha.";
+                + ") para confirmar tu asistencia o cancelarla indicando el motivo";
+        String enlace = enlaceRespuesta(cita);
+        if (enlace != null) {
+            plazo += " en este enlace:\n" + portalUrl + enlace + "\n\nTambién puedes hacerlo";
+        } else {
+            plazo += ",";
+        }
+        return plazo + " desde tu panel o comunicándote con Primer Contacto. Si la cancelas, "
+                + "podremos proponerte una nueva fecha.";
     }
 
     public CitaDTO cancelarCita(Long id, PersonalAdministrativo analista) {
@@ -471,6 +596,16 @@ public class CitaPrimerContactoService {
             String titulo,
             String mensaje
     ) {
+        avisar(cita, expediente, titulo, mensaje, null);
+    }
+
+    private void avisar(
+            CitaPrimerContacto cita,
+            ExpedientePrimerContacto expediente,
+            String titulo,
+            String mensaje,
+            String enlace
+    ) {
         ExpedientePrimerContacto destino = expediente != null
                 ? expediente
                 : expedienteRepository.findById(cita.getExpedienteId()).orElse(null);
@@ -480,7 +615,8 @@ public class CitaPrimerContactoService {
                     destino,
                     NotificacionQuejosoService.TIPO_CITA,
                     titulo,
-                    mensaje
+                    mensaje,
+                    enlace
             );
         }
     }
@@ -521,6 +657,23 @@ public class CitaPrimerContactoService {
                 .motivoCancelacionQuejoso(cita.getMotivoCancelacionQuejoso())
                 .respuestaRegistradaPor(cita.getRespuestaRegistradaPor())
                 .citaAnteriorId(cita.getCitaAnteriorId())
+                .build();
+    }
+
+    private CitaPublicaDTO convertirAPublica(CitaPrimerContacto cita) {
+
+        return CitaPublicaDTO.builder()
+                .folioQueja(folioQueja(cita))
+                .quejosoNombre(cita.getQuejosoNombre())
+                .fechaCita(cita.getFechaCita() != null ? cita.getFechaCita().toString() : null)
+                .horaCita(cita.getHoraCita() != null ? cita.getHoraCita().toString() : null)
+                .tipoCita(cita.getTipoCita())
+                .motivo(cita.getMotivo())
+                .estatus(cita.getEstatus())
+                .fechaLimiteRespuesta(cita.getFechaLimiteRespuesta() != null ? cita.getFechaLimiteRespuesta().toString() : null)
+                .motivoCancelacionQuejoso(cita.getMotivoCancelacionQuejoso())
+                .analistaNombre(cita.getAnalistaNombre())
+                .puedeResponder(PROGRAMADA.equals(cita.getEstatus()) && !plazoVencido(cita))
                 .build();
     }
 }

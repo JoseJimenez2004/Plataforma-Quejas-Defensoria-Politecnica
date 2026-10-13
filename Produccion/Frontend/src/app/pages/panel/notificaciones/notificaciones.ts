@@ -49,6 +49,8 @@ export class Notificaciones implements OnInit {
         return '📋';
       case 'CONCILIACION':
         return '🤝';
+      case 'CITA':
+        return '📅';
       default:
         return '🔔';
     }

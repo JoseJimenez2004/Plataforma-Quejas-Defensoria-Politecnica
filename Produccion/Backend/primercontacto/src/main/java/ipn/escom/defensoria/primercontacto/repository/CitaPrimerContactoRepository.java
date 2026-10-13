@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface CitaPrimerContactoRepository
         extends JpaRepository<CitaPrimerContacto, Long> {
@@ -59,5 +60,16 @@ public interface CitaPrimerContactoRepository
     boolean existsByExpedienteIdAndEstatusNot(
             Long expedienteId,
             String estatus
+    );
+
+    Optional<CitaPrimerContacto> findByTokenRespuesta(
+            String tokenRespuesta
+    );
+
+    List<CitaPrimerContacto>
+    findByAnalistaIdAndFechaCitaAndEstatusIn(
+            Long analistaId,
+            LocalDate fechaCita,
+            java.util.Collection<String> estatus
     );
 }

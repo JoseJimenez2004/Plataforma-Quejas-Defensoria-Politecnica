@@ -90,4 +90,11 @@ public class CitaPrimerContacto {
     /* QUEJOSO si respondió desde su panel; ANALISTA si el analista registró su respuesta. */
     @Column(name = "respuesta_registrada_por", length = 20)
     private String respuestaRegistradaPor;
+
+    /*
+     * Clave del enlace que se le manda al quejoso (correo y notificación) para confirmar o
+     * cancelar sin iniciar sesión. Las citas anteriores a este cambio quedan en null.
+     */
+    @Column(name = "token_respuesta", length = 64)
+    private String tokenRespuesta;
 }

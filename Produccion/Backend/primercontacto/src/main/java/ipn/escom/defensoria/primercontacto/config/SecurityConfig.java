@@ -69,6 +69,14 @@ public class SecurityConfig {
                         ).permitAll()
 
                         /*
+                         * Enlace de la cita que recibe el quejoso por correo:
+                         * el token de la cita es la credencial, sin sesión.
+                         */
+                        .requestMatchers(
+                                "/api/primer-contacto/publico/**"
+                        ).permitAll()
+
+                        /*
                          * Portal del quejoso (respuesta a sus citas). Su token
                          * no lleva rol: basta con que sea válido; el servicio
                          * comprueba que la cita sea de su correo.

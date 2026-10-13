@@ -60,6 +60,17 @@ public class NotificacionQuejosoService {
             String titulo,
             String mensaje
     ) {
+        notificar(expediente, tipo, titulo, mensaje, null);
+    }
+
+    /** Igual, pero el aviso del panel abre {@code enlace} (si no es null) en vez de la queja. */
+    public void notificar(
+            ExpedientePrimerContacto expediente,
+            String tipo,
+            String titulo,
+            String mensaje,
+            String enlace
+    ) {
         String correo = expediente.getQuejosoCorreo();
 
         if (correo == null || correo.isBlank()) {
@@ -68,9 +79,11 @@ public class NotificacionQuejosoService {
             return;
         }
 
-        String enlace = TIPO_CONCILIACION.equals(tipo)
-                ? ENLACE_CONCILIACION
-                : ENLACE_MIS_QUEJAS + expediente.getFolioOrigen();
+        if (enlace == null) {
+            enlace = TIPO_CONCILIACION.equals(tipo)
+                    ? ENLACE_CONCILIACION
+                    : ENLACE_MIS_QUEJAS + expediente.getFolioOrigen();
+        }
 
         registrar(correo, tipo, titulo, mensaje, enlace);
 
