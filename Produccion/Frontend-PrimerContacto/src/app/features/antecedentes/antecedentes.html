@@ -172,28 +172,50 @@
             <span>
               <strong>{{ esProvisional ? 'Motor provisional' : 'Modelo de búsqueda' }}.</strong>
               {{ modelo.descripcionMotor }}
-              Solo se muestran quejas del <strong>mismo quejoso</strong> o del <strong>mismo denunciado</strong>.
+              Los resultados apoyan la revisión: no determinan si una queja está duplicada.
             </span>
             <button mat-stroked-button class="motor-boton" (click)="buscarConModelo()">
               <mat-icon>refresh</mat-icon> Volver a buscar
             </button>
           </div>
 
-          <!-- Resumen y filtros -->
-          <div class="barra">
-            <div class="resumen">
-              <div>
-                <span class="numero">{{ modelo.resultados.length }}</span>
-                <span>posibles antecedentes</span>
-              </div>
-              <div>
-                <span class="numero">{{ totalMismoQuejoso }}</span>
-                <span>del mismo quejoso</span>
-              </div>
-            </div>
+          <!-- Las tres listas del modelo -->
+          <div class="categorias" role="tablist" aria-label="Tipo de antecedente">
+            <button type="button" class="categoria fuertes" role="tab"
+                    [class.activa]="categoria === 'fuertes'" [attr.aria-selected]="categoria === 'fuertes'"
+                    (click)="categoria = 'fuertes'">
+              <span class="numero">{{ lista('fuertes').length }}</span>
+              <span class="categoria-texto">
+                <strong>Coincidencias fuertes</strong>
+                <small>Misma persona y hechos parecidos: revisar primero</small>
+              </span>
+            </button>
+            <button type="button" class="categoria" role="tab"
+                    [class.activa]="categoria === 'involucrados'" [attr.aria-selected]="categoria === 'involucrados'"
+                    (click)="categoria = 'involucrados'">
+              <span class="numero">{{ lista('involucrados').length }}</span>
+              <span class="categoria-texto">
+                <strong>Por involucrados</strong>
+                <small>Mismo quejoso y/o denunciado</small>
+              </span>
+            </button>
+            <button type="button" class="categoria" role="tab"
+                    [class.activa]="categoria === 'hechos'" [attr.aria-selected]="categoria === 'hechos'"
+                    (click)="categoria = 'hechos'">
+              <span class="numero">{{ lista('hechos').length }}</span>
+              <span class="categoria-texto">
+                <strong>Por hechos</strong>
+                <small>Narrativa parecida, aunque sean otras personas</small>
+              </span>
+            </button>
+          </div>
 
+          <!-- Filtros -->
+          <div class="barra">
             <div class="filtros">
-              <mat-slide-toggle [(ngModel)]="soloMismoQuejoso">Solo del mismo quejoso</mat-slide-toggle>
+              @if (categoria === 'involucrados') {
+                <mat-slide-toggle [(ngModel)]="soloMismoQuejoso">Solo del mismo quejoso</mat-slide-toggle>
+              }
 
               <mat-button-toggle-group [(ngModel)]="similitudMinima" aria-label="Similitud mínima">
                 <mat-button-toggle [value]="0">Todas</mat-button-toggle>
@@ -210,10 +232,14 @@
               <mat-card class="card vacio">
                 <mat-icon>verified</mat-icon>
                 <p>
-                  @if (modelo.resultados.length === 0) {
+                  @if (lista(categoria).length > 0) {
+                    Ningún antecedente cumple los filtros seleccionados.
+                  } @else if (categoria === 'fuertes') {
+                    No hay quejas de la misma persona con hechos parecidos.
+                  } @else if (categoria === 'involucrados') {
                     No se encontraron quejas del mismo quejoso ni del mismo denunciado.
                   } @else {
-                    Ningún antecedente cumple los filtros seleccionados.
+                    No se encontraron quejas con hechos parecidos.
                   }
                 </p>
               </mat-card>
@@ -285,13 +311,22 @@
         · Denunciado: {{ antecedente.nombreDenunciado || '—' }}
       </span>
 
+      @if (antecedente.razonCoincidencia) {
+        <span class="razon"><mat-icon>priority_high</mat-icon>{{ antecedente.razonCoincidencia }}</span>
+      }
+
       @if (antecedente.extracto) {
         <p>{{ antecedente.extracto }}</p>
       }
 
       <div class="coincidencias">
         @for (motivo of antecedente.coincidencias; track motivo) {
-          <span class="coincidencia" [class.fuerte]="motivo === 'Mismo quejoso' || motivo.startsWith('Denunciado')">{{ motivo }}</span>
+          <span class="coincidencia"
+                [class.fuerte]="motivo.startsWith('Quejoso:') || motivo.startsWith('Denunciado:') || motivo.startsWith('Identificación') || motivo.startsWith('Correo')"
+                [class.por-verificar]="motivo.includes('por verificar')">{{ motivo }}</span>
+        }
+        @if (antecedente.diasDiferencia != null) {
+          <span class="coincidencia">Hechos con {{ antecedente.diasDiferencia }} días de diferencia</span>
         }
       </div>
     </div>

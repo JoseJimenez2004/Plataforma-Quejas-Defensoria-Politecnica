@@ -20,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Búsqueda de antecedentes de una queja, en dos modalidades que el analista puede combinar:
@@ -41,6 +43,8 @@ public class AntecedentesService {
 
     static final String MOTOR_MANUAL = "MANUAL";
     private static final int MAX_RESULTADOS_MANUAL = 100;
+    private static final int MAX_POR_HECHOS = 20;
+    private static final int SIMILITUD_COINCIDENCIA_FUERTE = 50;
 
     private final TransicionExpedienteService transicionService;
     private final QuejaReferenciaRepository quejaRepository;
@@ -80,9 +84,18 @@ public class AntecedentesService {
 
         if (motorModelo.habilitado()) {
             try {
+                MotorAntecedentesModelo.ResultadoV5 v5 = motorModelo.buscarV5(expediente, queja);
+                if (v5 != null) {
+                    return tresListas(expediente, motorModelo, v5.porHechos().size(),
+                            v5.porHechos(),
+                            completarInvolucrados(v5.porInvolucrados(), v5.porHechos(), personas),
+                            v5.coincidenciasFuertes(),
+                            avisos);
+                }
+                // El modelo desplegado todavía es el anterior (sin ruta V5).
                 List<AntecedenteDTO> resultados = motorModelo.buscar(expediente, queja, List.of());
-                return resultado(expediente, motorModelo, 0,
-                        filtrarPorPersonas(resultados, personas), avisos);
+                return tresListasDesdeTexto(expediente, motorModelo, resultados.size(), resultados,
+                        personas, avisos);
             } catch (Exception ex) {
                 log.warn("El modelo de antecedentes no respondió ({}); se usa el motor por reglas.",
                         ex.getMessage());
@@ -95,8 +108,115 @@ public class AntecedentesService {
                 .filter(q -> !q.getNumeroFolio().equals(expediente.getFolioOrigen()))
                 .toList();
 
-        return resultado(expediente, motorReglas, candidatas.size(),
-                filtrarPorPersonas(motorReglas.buscar(expediente, queja, candidatas), personas), avisos);
+        return tresListasDesdeTexto(expediente, motorReglas, candidatas.size(),
+                motorReglas.buscar(expediente, queja, candidatas), personas, avisos);
+    }
+
+    /**
+     * Las tres listas que ve el analista, igual que las del modelo V5:
+     *   - por hechos: narrativas parecidas, aunque las personas sean otras (las primeras 20);
+     *   - por involucrados: el mismo quejoso y/o denunciado;
+     *   - coincidencias fuertes: misma persona Y hechos parecidos (prioritarias).
+     */
+    private BusquedaAntecedentesDTO tresListas(
+            ExpedientePrimerContacto expediente,
+            MotorAntecedentes motor,
+            int analizadas,
+            List<AntecedenteDTO> porHechos,
+            List<AntecedenteDTO> porInvolucrados,
+            List<AntecedenteDTO> coincidenciasFuertes,
+            List<String> avisos
+    ) {
+        BusquedaAntecedentesDTO busqueda = resultado(expediente, motor, analizadas, porInvolucrados, avisos);
+        busqueda.setPorHechos(porHechos.stream().limit(MAX_POR_HECHOS).toList());
+        busqueda.setPorInvolucrados(porInvolucrados);
+        busqueda.setCoincidenciasFuertes(coincidenciasFuertes);
+        return busqueda;
+    }
+
+    /**
+     * Para el modelo anterior y el motor por reglas, que solo comparan texto: las personas se
+     * reconocen aquí, y es coincidencia fuerte la misma persona por identificación o correo
+     * con similitud de hechos de 50% o más (el mismo criterio del modelo V5).
+     */
+    private BusquedaAntecedentesDTO tresListasDesdeTexto(
+            ExpedientePrimerContacto expediente,
+            MotorAntecedentes motor,
+            int analizadas,
+            List<AntecedenteDTO> resultados,
+            Personas personas,
+            List<String> avisos
+    ) {
+        List<AntecedenteDTO> porHechos = resultados.stream()
+                .sorted(Comparator.comparingInt(AntecedenteDTO::getSimilitud).reversed())
+                .toList();
+        List<AntecedenteDTO> porInvolucrados = filtrarPorPersonas(copias(porHechos), personas);
+        List<AntecedenteDTO> fuertes = new ArrayList<>();
+        for (AntecedenteDTO a : porInvolucrados) {
+            if (a.isIdentidadVerificada() && a.getSimilitud() >= SIMILITUD_COINCIDENCIA_FUERTE) {
+                AntecedenteDTO fuerte = copia(a);
+                fuerte.setRazonCoincidencia(a.getTipoCoincidencia() + " | similitud de hechos "
+                        + a.getSimilitud() + "%");
+                fuertes.add(fuerte);
+            }
+        }
+        return tresListas(expediente, motor, analizadas, porHechos, porInvolucrados, fuertes, avisos);
+    }
+
+    /**
+     * El modelo V5 reconoce a las personas por número de identificación o por nombre completo
+     * idéntico. Se agregan además las que aquí se reconocen por correo o por nombre sin
+     * segundo apellido ("Ana López" = "Ana López Ruiz"), marcadas como por verificar.
+     */
+    private List<AntecedenteDTO> completarInvolucrados(
+            List<AntecedenteDTO> delModelo,
+            List<AntecedenteDTO> porHechos,
+            Personas personas
+    ) {
+        List<AntecedenteDTO> involucrados = new ArrayList<>(delModelo);
+        Set<String> yaIncluidos = new HashSet<>();
+        for (AntecedenteDTO a : delModelo) {
+            yaIncluidos.add(MotorAntecedentesModelo.clave(a));
+            // El modelo pudo reconocer solo a una de las dos personas: se completa la otra.
+            filtrarPorPersonas(List.of(copia(a)), personas).stream().findFirst().ifPresent(nuestro -> {
+                if (nuestro.isMismoQuejoso() && !a.isMismoQuejoso()
+                        || nuestro.isMismoDenunciado() && !a.isMismoDenunciado()) {
+                    List<String> nuevos = new ArrayList<>();
+                    if (nuestro.isMismoQuejoso() && !a.isMismoQuejoso()) {
+                        nuevos.add("Nombre del quejoso (por verificar)");
+                    }
+                    if (nuestro.isMismoDenunciado() && !a.isMismoDenunciado()) {
+                        nuevos.add("Nombre del denunciado (por verificar)");
+                    }
+                    List<String> tipo = new ArrayList<>();
+                    if (a.getTipoCoincidencia() != null && !a.getTipoCoincidencia().isBlank()) {
+                        tipo.add(a.getTipoCoincidencia());
+                    }
+                    tipo.addAll(nuevos);
+                    a.setTipoCoincidencia(String.join(" + ", tipo));
+                    a.getCoincidencias().addAll(0, nuevos);
+                    a.setMismoQuejoso(a.isMismoQuejoso() || nuestro.isMismoQuejoso());
+                    a.setMismoDenunciado(a.isMismoDenunciado() || nuestro.isMismoDenunciado());
+                    a.setIdentidadVerificada(a.isIdentidadVerificada() || nuestro.isIdentidadVerificada());
+                }
+            });
+        }
+
+        List<AntecedenteDTO> faltantes = porHechos.stream()
+                .filter(a -> !yaIncluidos.contains(MotorAntecedentesModelo.clave(a)))
+                .toList();
+        involucrados.addAll(filtrarPorPersonas(copias(faltantes), personas));
+        return involucrados;
+    }
+
+    private static List<AntecedenteDTO> copias(List<AntecedenteDTO> lista) {
+        return lista.stream().map(AntecedentesService::copia).toList();
+    }
+
+    private static AntecedenteDTO copia(AntecedenteDTO a) {
+        return a.toBuilder()
+                .coincidencias(a.getCoincidencias() != null ? new ArrayList<>(a.getCoincidencias()) : new ArrayList<>())
+                .build();
     }
 
     /** Quejoso y denunciado de la queja que se analiza, para reconocerlos en otras quejas. */
@@ -127,21 +247,32 @@ public class AntecedentesService {
     private List<AntecedenteDTO> filtrarPorPersonas(List<AntecedenteDTO> resultados, Personas personas) {
         List<AntecedenteDTO> filtrados = new ArrayList<>();
         for (AntecedenteDTO a : resultados) {
-            boolean mismoQuejoso = NombresPersona.mismoDato(personas.identificacion(), a.getIdentificacionQuejoso())
-                    || NombresPersona.mismoDato(personas.correo(), a.getCorreoQuejoso())
+            boolean mismaIdentificacion = NombresPersona.mismoDato(personas.identificacion(), a.getIdentificacionQuejoso());
+            boolean mismoCorreo = NombresPersona.mismoDato(personas.correo(), a.getCorreoQuejoso());
+            boolean mismoQuejoso = mismaIdentificacion || mismoCorreo
                     || NombresPersona.mismoNombre(personas.quejoso(), a.getNombreQuejoso());
             boolean mismoDenunciado = NombresPersona.mismoNombre(personas.denunciado(), a.getNombreDenunciado());
             if (!mismoQuejoso && !mismoDenunciado) {
                 continue;
             }
 
-            List<String> coincidencias = new ArrayList<>();
-            if (mismoQuejoso) {
-                coincidencias.add("Mismo quejoso");
+            List<String> tipo = new ArrayList<>();
+            if (mismaIdentificacion) {
+                tipo.add("Identificación del quejoso");
+            } else if (mismoCorreo) {
+                tipo.add("Correo del quejoso");
+            } else if (mismoQuejoso) {
+                tipo.add("Nombre del quejoso (por verificar)");
             }
             if (mismoDenunciado) {
-                coincidencias.add("Mismo denunciado: " + a.getNombreDenunciado());
+                tipo.add("Nombre del denunciado (por verificar)");
             }
+            a.setTipoCoincidencia(String.join(" + ", tipo));
+            a.setIdentidadVerificada(mismaIdentificacion || mismoCorreo);
+            a.setMismoDenunciado(mismoDenunciado);
+
+            // Mismas etiquetas que el modelo V5: dicen CÓMO coincidió la persona.
+            List<String> coincidencias = new ArrayList<>(tipo);
             if (a.getCoincidencias() != null) {
                 a.getCoincidencias().stream()
                         .filter(c -> !"Mismo quejoso".equals(c))
@@ -151,9 +282,9 @@ public class AntecedentesService {
             a.setMismoQuejoso(mismoQuejoso);
             filtrados.add(a);
         }
+        // Primero las que coinciden en quejoso Y denunciado, luego por similitud.
         filtrados.sort(Comparator
-                .comparingInt((AntecedenteDTO a) -> a.getCoincidencias().stream()
-                        .filter(c -> c.startsWith("Mismo")).count() > 1 ? 0 : 1)
+                .comparingInt((AntecedenteDTO a) -> a.isMismoQuejoso() && a.isMismoDenunciado() ? 0 : 1)
                 .thenComparing(Comparator.comparingInt(AntecedenteDTO::getSimilitud).reversed()));
         return filtrados;
     }

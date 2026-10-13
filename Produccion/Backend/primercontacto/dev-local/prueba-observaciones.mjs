@@ -79,8 +79,12 @@ console.log(`Expediente de prueba: ${PC} (queja ${FOLIO_Q})`);
 console.log('\n== Antecedentes');
 let r = await llamar('GET', `/antecedentes/${PC}`);
 check('Modelo responde (motor MODELO, sin avisos)', r.status === 200 && r.json.motor === 'MODELO' && r.json.avisos.length === 0, r.json?.motor);
-check('Modelo: solo quejas del mismo quejoso o denunciado (Ana López no está en su dataset)',
-  r.json.resultados.every(a => a.coincidencias.some(c => c.startsWith('Mismo'))), r.json.resultados.map(a => a.folioQueja));
+// Con el modelo V5 (lee las quejas del sistema e históricas), "resultados" = por involucrados.
+check('Modelo: resultados solo del mismo quejoso o denunciado',
+  r.json.resultados.length > 0 && r.json.resultados.every(a => a.mismoQuejoso || a.mismoDenunciado), r.json.resultados.map(a => a.folioQueja));
+const deModelo = r.json.porInvolucrados.find(a => a.folioQueja === 'FOL-HIST0020');
+check('Modelo: encuentra el caso de Ana López contra Roberto Gómez con su % y narrativa',
+  deModelo && deModelo.mismoQuejoso && deModelo.mismoDenunciado && deModelo.similitud >= 0 && deModelo.descripcion, r.json.porInvolucrados);
 
 // Segunda queja cuyo quejoso SÍ está en el dataset del modelo (FOL-PRU-0028: andrea sanchez vidal).
 const FOLIO_Q2 = 'FOL-OBS-M' + Date.now().toString().slice(-5);
@@ -93,9 +97,7 @@ const ing2 = await llamar('POST', '/ingesta/expedientes', { tk: null, body: {
   fechaRecepcion: new Date().toISOString().slice(0, 19),
   quejoso: { nombreCompleto: 'Andrea Sánchez Vidal', correo: 'andrea.sv@alumno.ipn.mx', unidadAcademica: 'ESCOM' } }});
 r = await llamar('GET', `/antecedentes/${ing2.json.folio}`);
-const deModelo = r.json.resultados.find(a => a.folioQueja === 'FOL-PRU-0028');
-check('Modelo: encuentra el caso del mismo quejoso (nombre sin acentos) con su %', deModelo && deModelo.coincidencias.includes('Mismo quejoso') && deModelo.similitud >= 0 && deModelo.descripcion, r.json.resultados);
-check('Modelo: no trae quejas de otras personas', r.json.resultados.every(a => a.coincidencias.some(c => c.startsWith('Mismo'))), r.json.resultados.map(a => a.folioQueja));
+check('Modelo: no trae quejas de otras personas en "resultados"', r.json.resultados.every(a => a.mismoQuejoso || a.mismoDenunciado), r.json.resultados.map(a => a.folioQueja));
 
 r = await llamar('GET', `/antecedentes/${PC}/manual?quejoso=${encodeURIComponent('ana lopez')}`);
 const folios = x => x.json.resultados.map(a => a.folioQueja);

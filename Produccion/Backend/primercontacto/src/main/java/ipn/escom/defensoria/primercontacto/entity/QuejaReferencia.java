@@ -63,6 +63,10 @@ public class QuejaReferencia {
     @Column(name = "fecha_creacion", insertable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
+    /* Para el modelo de antecedentes V5 (cercanía en el tiempo entre quejas). */
+    @Column(name = "fecha_hechos", insertable = false, updatable = false)
+    private java.time.LocalDate fechaHechos;
+
     @Column(name = "nombre_quejoso", insertable = false, updatable = false)
     private String nombreQuejoso;
 

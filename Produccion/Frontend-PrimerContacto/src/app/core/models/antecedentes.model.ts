@@ -30,7 +30,23 @@ export interface Antecedente {
   /** Por qué salió: "Mismo quejoso", "Denunciado: ...", "Narrativa similar (modelo)"... */
   coincidencias: string[];
   mismoQuejoso: boolean;
+
+  // ---- Modelo V5 ----
+  mismoDenunciado?: boolean;
+  /** true si la persona coincide por número de identificación o correo (no solo por nombre). */
+  identidadVerificada?: boolean;
+  /** Ej. "Identificación del quejoso + Nombre del denunciado (por verificar)". */
+  tipoCoincidencia?: string;
+  /** Alta / Moderada / Baja. */
+  nivelSimilitud?: string;
+  /** Solo coincidencias fuertes: por qué son prioritarias. */
+  razonCoincidencia?: string;
+  /** Días entre las fechas de los hechos de ambas quejas. */
+  diasDiferencia?: number | null;
 }
+
+/** Las tres listas de la búsqueda con el modelo. */
+export type CategoriaModelo = 'fuertes' | 'involucrados' | 'hechos';
 
 export interface BusquedaAntecedentes {
   folio: string;
@@ -43,7 +59,13 @@ export interface BusquedaAntecedentes {
   generadoEn: string;
   quejasAnalizadas: number;
 
+  /** Mismo quejoso y/o denunciado (en la búsqueda con el modelo, igual a porInvolucrados). */
   resultados: Antecedente[];
+
+  /** Solo búsqueda con el modelo. */
+  porHechos?: Antecedente[];
+  porInvolucrados?: Antecedente[];
+  coincidenciasFuertes?: Antecedente[];
 
   /** Avisos para el analista: el modelo no respondió, el histórico no está disponible... */
   avisos?: string[];

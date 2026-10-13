@@ -19,6 +19,7 @@ import {
   Antecedente,
   AntecedenteGuardado,
   BusquedaAntecedentes,
+  CategoriaModelo,
   FuenteAntecedente,
   claveAntecedente
 } from '../../core/models/antecedentes.model';
@@ -111,6 +112,8 @@ export class Antecedentes implements OnInit {
   errorModelo = false;
   soloMismoQuejoso = false;
   similitudMinima = 0;
+  /** Lista del modelo que se está viendo: coincidencias fuertes, por involucrados o por hechos. */
+  categoria: CategoriaModelo = 'involucrados';
 
   // ---- Selección y guardados ----
   /** Marcados en cualquiera de las dos pestañas, por clave origen:folio. */
@@ -184,6 +187,10 @@ export class Antecedentes implements OnInit {
     this.antecedentesService.buscar(this.folio).subscribe({
       next: (busqueda) => {
         this.modelo = busqueda;
+        // Se abre la lista más relevante que tenga resultados.
+        this.categoria = this.lista('fuertes').length > 0 ? 'fuertes'
+          : this.lista('involucrados').length > 0 ? 'involucrados'
+          : 'hechos';
         this.buscandoModelo = false;
         this.cdr.detectChanges();
       },
@@ -195,14 +202,23 @@ export class Antecedentes implements OnInit {
     });
   }
 
-  get resultadosModelo(): Antecedente[] {
-    return (this.modelo?.resultados ?? []).filter(a =>
-      (!this.soloMismoQuejoso || a.mismoQuejoso) && a.similitud >= this.similitudMinima
-    );
+  /** Una de las tres listas del modelo (un backend anterior solo manda "resultados"). */
+  lista(categoria: CategoriaModelo): Antecedente[] {
+    switch (categoria) {
+      case 'fuertes':
+        return this.modelo?.coincidenciasFuertes ?? [];
+      case 'hechos':
+        return this.modelo?.porHechos ?? [];
+      default:
+        return this.modelo?.porInvolucrados ?? this.modelo?.resultados ?? [];
+    }
   }
 
-  get totalMismoQuejoso(): number {
-    return (this.modelo?.resultados ?? []).filter(a => a.mismoQuejoso).length;
+  get resultadosModelo(): Antecedente[] {
+    return this.lista(this.categoria).filter(a =>
+      (this.categoria !== 'involucrados' || !this.soloMismoQuejoso || a.mismoQuejoso)
+      && a.similitud >= this.similitudMinima
+    );
   }
 
   get esProvisional(): boolean {

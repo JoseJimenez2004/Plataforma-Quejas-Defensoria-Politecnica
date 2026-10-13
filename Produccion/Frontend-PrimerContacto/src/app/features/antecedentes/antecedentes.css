@@ -127,6 +127,67 @@ button {
   color: #7a4800;
 }
 
+/* ---- Las tres listas del modelo ---- */
+.categorias {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.categoria {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--borde, #e5e7eb);
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: var(--texto);
+}
+
+.categoria:hover {
+  border-color: var(--guinda-suave);
+}
+
+.categoria.activa {
+  border-color: var(--guinda);
+  background: var(--guinda-suave);
+}
+
+.categoria:focus-visible {
+  outline: 3px solid var(--guinda);
+  outline-offset: 2px;
+}
+
+.categoria-texto {
+  display: grid;
+  gap: 2px;
+}
+
+.categoria-texto small {
+  color: var(--texto-suave);
+  font-size: var(--font-size-xs);
+}
+
+.razon {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--guinda);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.razon mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
 /* ---- Resumen y filtros ---- */
 .barra {
   display: flex;
@@ -266,6 +327,11 @@ button {
 .coincidencia.fuerte {
   background: var(--guinda-suave);
   color: var(--guinda);
+}
+
+.coincidencia.por-verificar {
+  background: #fff4e5;
+  color: #7a4800;
 }
 
 .acciones {

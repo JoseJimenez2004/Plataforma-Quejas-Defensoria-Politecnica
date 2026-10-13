@@ -11,7 +11,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class AntecedenteDTO {
 
     /* Folio de la queja previa (FOL-...). */
@@ -49,4 +49,23 @@ public class AntecedenteDTO {
     /* Para reconocer al mismo quejoso aunque el nombre venga escrito distinto. */
     private String correoQuejoso;
     private String identificacionQuejoso;
+
+    // ---- Modelo V5 ----
+
+    private boolean mismoDenunciado;
+
+    /* true si la coincidencia de persona es por número de identificación (no solo por nombre). */
+    private boolean identidadVerificada;
+
+    /* Cómo coincidió la persona, ej. "Identificación del quejoso + Nombre del denunciado (por verificar)". */
+    private String tipoCoincidencia;
+
+    /* Alta / Moderada / Baja, según la similitud de los hechos. */
+    private String nivelSimilitud;
+
+    /* Solo coincidencias fuertes: por qué el modelo la marcó como prioritaria. */
+    private String razonCoincidencia;
+
+    /* Días entre la fecha de los hechos de ambas quejas, si las dos la tienen. */
+    private Integer diasDiferencia;
 }
