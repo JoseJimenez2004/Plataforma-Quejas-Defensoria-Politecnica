@@ -21,4 +21,6 @@ public class AcuerdoConclusionDTO {
     private String respuestaQuejoso;
     private String comentarioQuejoso;
     private String fechaRespuestaQuejoso;
+    private String textoConclusion;
+    private String fechaConclusion;
 }

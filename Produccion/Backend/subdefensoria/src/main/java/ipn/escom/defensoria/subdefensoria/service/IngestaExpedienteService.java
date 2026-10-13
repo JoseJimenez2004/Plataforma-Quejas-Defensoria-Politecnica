@@ -14,11 +14,14 @@ import java.util.UUID;
 public class IngestaExpedienteService {
 
     private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final TransicionExpedienteService transicionService;
 
     public IngestaExpedienteService(
-            ExpedienteInvestigacionRepository expedienteRepository
+            ExpedienteInvestigacionRepository expedienteRepository,
+            TransicionExpedienteService transicionService
     ) {
         this.expedienteRepository = expedienteRepository;
+        this.transicionService = transicionService;
     }
 
     public ExpedienteInvestigacionDTO recibirExpediente(
@@ -55,6 +58,10 @@ public class IngestaExpedienteService {
                                 entrante.getFolioOrigen()
                         )
 
+                        .folioQueja(
+                                entrante.getFolioQueja()
+                        )
+
                         .asunto(
                                 entrante.getAsunto()
                         )
@@ -83,6 +90,14 @@ public class IngestaExpedienteService {
                                         : null
                         )
 
+                        .quejosoCorreo(
+                                entrante.getQuejoso() != null
+                                        ? entrante
+                                        .getQuejoso()
+                                        .getCorreo()
+                                        : null
+                        )
+
                         .unidadAcademica(
                                 entrante.getQuejoso() != null
                                         ? entrante
@@ -108,6 +123,9 @@ public class IngestaExpedienteService {
         ExpedienteInvestigacion guardado =
                 expedienteRepository.save(expediente);
 
+        // La queja pasa a "Recibida (Subdefensoría)" (fila 12 del diagrama).
+        transicionService.sincronizarQueja(guardado);
+
         return convertirADTO(guardado);
     }
 
@@ -128,6 +146,7 @@ public class IngestaExpedienteService {
                 .id(e.getId())
                 .folio(e.getFolio())
                 .folioOrigen(e.getFolioOrigen())
+                .folioQueja(e.getFolioQueja())
                 .quejosoNombre(e.getQuejosoNombre())
                 .unidadAcademica(e.getUnidadAcademica())
                 .asunto(e.getAsunto())

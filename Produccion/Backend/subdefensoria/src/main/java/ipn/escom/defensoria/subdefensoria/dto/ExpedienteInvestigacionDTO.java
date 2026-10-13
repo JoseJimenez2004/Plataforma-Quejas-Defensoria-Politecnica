@@ -12,6 +12,7 @@ public class ExpedienteInvestigacionDTO {
     private Long id;
     private String folio;
     private String folioOrigen;
+    private String folioQueja;
     private String quejosoNombre;
     private String unidadAcademica;
     private String asunto;

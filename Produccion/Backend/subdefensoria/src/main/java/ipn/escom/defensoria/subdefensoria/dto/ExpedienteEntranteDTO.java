@@ -29,6 +29,9 @@ public class ExpedienteEntranteDTO {
     @NotBlank
     private String folioOrigen;
 
+    /* Folio FOL-... de la queja (el que conoce el quejoso). Opcional para clientes anteriores. */
+    private String folioQueja;
+
     @NotBlank
     private String asunto;
 

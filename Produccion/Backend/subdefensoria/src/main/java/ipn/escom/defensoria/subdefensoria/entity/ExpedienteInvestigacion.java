@@ -48,8 +48,19 @@ public class ExpedienteInvestigacion {
     @Column(name = "folio_origen", nullable = false, unique = true, length = 50)
     private String folioOrigen;
 
+    /*
+     * Folio de la queja que conoce el quejoso (FOL-...). folioOrigen es el de Primer
+     * Contacto (PC-...). Con este se sincroniza quejas.estatus y se le escribe al quejoso.
+     * Los expedientes anteriores a este cambio quedan en null.
+     */
+    @Column(name = "folio_queja", length = 50)
+    private String folioQueja;
+
     @Column(name = "quejoso_nombre", length = 150)
     private String quejosoNombre;
+
+    @Column(name = "quejoso_correo", length = 150)
+    private String quejosoCorreo;
 
     @Column(name = "unidad_academica", length = 100)
     private String unidadAcademica;

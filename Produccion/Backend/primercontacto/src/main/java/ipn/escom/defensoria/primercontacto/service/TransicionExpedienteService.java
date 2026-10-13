@@ -17,11 +17,9 @@ import java.time.LocalDateTime;
  * EstatusExpediente para el diagrama).
  *
  * Además refleja el cambio en quejas.estatus, que es lo que ven los demás módulos, cuando
- * primer-contacto.sincronizar-estatus-queja=true. Viene APAGADO por defecto: el panel del
- * quejoso (Frontend) todavía solo reconoce RECIBIDA/EN_VALIDACION/TURNADA/RECHAZADA/
- * CANCELADA, así que un EN_ANALISIS le aparecería como "Recibida". Se enciende cuando ese
- * front tenga las etiquetas nuevas. Mientras tanto el quejoso se entera por el centro de
- * notificaciones (NotificacionQuejosoService).
+ * primer-contacto.sincronizar-estatus-queja=true (por defecto desde 2026-10-13, cuando el
+ * panel del quejoso aprendió las etiquetas de todos los estados del diagrama). Además el
+ * quejoso se entera por el centro de notificaciones (NotificacionQuejosoService).
  */
 @Service
 public class TransicionExpedienteService {
@@ -35,7 +33,7 @@ public class TransicionExpedienteService {
     public TransicionExpedienteService(
             ExpedientePrimerContactoRepository expedienteRepository,
             QuejaReferenciaRepository quejaRepository,
-            @Value("${primer-contacto.sincronizar-estatus-queja:false}")
+            @Value("${primer-contacto.sincronizar-estatus-queja:true}")
             boolean sincronizarQueja
     ) {
         this.expedienteRepository = expedienteRepository;

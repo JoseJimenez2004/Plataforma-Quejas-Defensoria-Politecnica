@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-/** TS-07: redactar el acuerdo final. concluir=true cierra el expediente (TS-08); false solo guarda borrador. */
+/** CU-SD-09: acuerdo de conciliación. concluir=true lo envía al quejoso; false solo guarda borrador. */
 @Getter
 @Setter
 @NoArgsConstructor

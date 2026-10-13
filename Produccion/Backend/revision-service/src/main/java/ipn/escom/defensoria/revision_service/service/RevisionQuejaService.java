@@ -39,6 +39,18 @@ public class RevisionQuejaService {
      */
     public static final String CORREGIDA = "CORREGIDA";
 
+    /**
+     * Desde 2026-10-13 Primer Contacto y Subdefensoría escriben su avance en quejas.estatus
+     * (diagrama de estados de la queja), así que una queja turnada ya no se queda en TURNADA.
+     * Para Recepción todas estas siguen siendo "turnadas": salieron de su bandeja hacia
+     * Primer Contacto.
+     */
+    public static final List<String> TURNADA_O_POSTERIOR = List.of(
+            TURNADA,
+            "EN_ANALISIS", "PROCEDENTE", "IMPROCEDENTE", "REMITIDA",
+            "RECIBIDA_SUBDEFENSORIA", "EN_INVESTIGACION", "EN_ESPERA_OFICIO", "ELABORO_ACUERDO",
+            "PENDIENTE_CONCILIACION", "PENDIENTE_CONCLUSION", "CONCLUIDA");
+
     private static final String ORIGEN_MANUAL = "MANUAL";
     private static final String PREFIJO_FOLIO = "FOL-";
     private static final int LONGITUD_UUID_FOLIO = 8;
@@ -81,7 +93,8 @@ public class RevisionQuejaService {
 
         LocalDateTime inicioHoy = LocalDate.now().atStartOfDay();
         LocalDateTime finHoy = LocalDate.now().atTime(LocalTime.MAX);
-        long turnadasHoy = quejaRepository.countByEstatusAndFechaTurnadoBetween(TURNADA, inicioHoy, finHoy);
+        // fecha_turnado solo se llena al turnar: cuenta aunque la queja ya haya avanzado.
+        long turnadasHoy = quejaRepository.countByFechaTurnadoBetween(inicioHoy, finHoy);
 
         List<QuejaResumenBandejaModel> lista = quejaRepository
                 .findByEstatusInOrderByFechaCreacionAsc(List.of(RECIBIDA, CORREGIDA, EN_VALIDACION))
@@ -252,7 +265,7 @@ public class RevisionQuejaService {
          * Si ya fue turnada correctamente anteriormente,
          * no volvemos a crear ni enviar el expediente.
          */
-        if (TURNADA.equals(queja.getEstatus())
+        if (TURNADA_O_POSTERIOR.contains(queja.getEstatus())
                 && !esVacio(queja.getFolioPrimerContacto())) {
             return queja;
         }
@@ -380,7 +393,9 @@ public class RevisionQuejaService {
      * puede venir vacío para dejar ese extremo abierto (ej. solo "hasta" = todo lo procesado
      * hasta esa fecha). Antes solo se podía filtrar un día exacto. */
     public List<HistorialItemModel> historial(String texto, String estatus, LocalDate fechaDesde, LocalDate fechaHasta) {
-        List<Queja> procesadas = quejaRepository.findByEstatusInOrderByFechaCreacionDesc(List.of(RECHAZADA, TURNADA));
+        List<String> estatusProcesadas = new java.util.ArrayList<>(TURNADA_O_POSTERIOR);
+        estatusProcesadas.add(RECHAZADA);
+        List<Queja> procesadas = quejaRepository.findByEstatusInOrderByFechaCreacionDesc(estatusProcesadas);
 
         return procesadas.stream()
                 .filter(q -> estatus == null || estatus.isBlank() || etiquetaEstatusFinal(q.getEstatus()).equalsIgnoreCase(estatus))
@@ -449,15 +464,14 @@ public class RevisionQuejaService {
     }
 
     private String etiquetaEstatus(String estatus) {
-        return switch (estatus == null ? RECIBIDA : estatus) {
-            case TURNADA -> "TURNADA";
-            case RECHAZADA -> "RECHAZADA";
-            default -> "EN PROCESO";
-        };
+        if (TURNADA_O_POSTERIOR.contains(estatus)) {
+            return "TURNADA";
+        }
+        return RECHAZADA.equals(estatus) ? "RECHAZADA" : "EN PROCESO";
     }
 
     private String etiquetaEstatusFinal(String estatus) {
-        return TURNADA.equals(estatus) ? "TURNADO" : "RECHAZADO";
+        return RECHAZADA.equals(estatus) ? "RECHAZADO" : "TURNADO";
     }
 
     private boolean coincideTexto(Queja q, String texto) {

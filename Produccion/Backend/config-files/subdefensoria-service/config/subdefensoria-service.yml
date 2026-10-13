@@ -1,33 +1,46 @@
-# Config de producción de subdefensoria-service (módulo local "Backend/subdefensoria").
-# Se monta como volumen en /app/config (ver podman-compose.sh -> start_service), y Spring Boot
-# la carga por encima de src/main/resources/application.properties del jar (que sigue siendo
-# el default de desarrollo -- no se tocó). Mismo patrón que el resto de los microservicios.
+# Config de producción de subdefensoria-service — COPIA DE REFERENCIA del servidor.
 #
-# A propósito NO se sobreescribe aquí ninguna clave de datasource/JPA (sigue en H2 en memoria)
-# ni los plazos de negocio (plazos.primera-solicitud-dias / plazos.recordatorio-dias, ya vienen
-# bien en application.properties) -- eso es lógica/decisión propia del servicio, no una
-# preocupación de despliegue, y no se debía tocar en esta tarea.
+# La real vive en el backend (156.67.26.73):
+#   /apps/aplicaciones/defensoria/back/config-files/subdefensoria-service/config/subdefensoria-service.yml
+# Esta copia es igual SALVO la contraseña y el secreto JWT, que no se suben al repo: en el
+# servidor son los mismos que usa revision-service.yml.
 #
-# El puerto EXTERNO/host de este servicio sigue siendo 8091 (el módulo trae 8083 como default,
-# pero 8083 ya lo usa auth-service en esta misma VPS backend; 8090 también se descartó por ser
-# el de defensoria-web en la VPS frontend). Ver get_port() en podman-compose.sh.
+# IMPORTANTE: el contenedor arranca con SPRING_CONFIG_NAME=subdefensoria-service (ver
+# podman-compose.sh), así que el application.properties del jar NO se carga. Todo lo que
+# necesita el servicio tiene que estar aquí: sin datasource, jwt.secret y plazos no arranca.
 #
-# El puerto INTERNO del contenedor, en cambio, ya no es 8091 sino 8080 -- unificado igual que
-# en los otros 8 microservicios (cada contenedor tiene su propio namespace de red, así que
-# varios pueden escuchar en 8080 "por dentro" sin chocar; solo el mapeo -p host:8080 tiene que
-# ser único). El puerto real por el que se accede al servicio no cambia.
+# Puertos: interno 8080; el acceso real es por 8091 (mapeo -p de podman-compose.sh). 8083 lo
+# usa auth-service en esta misma VPS.
 
 server:
   port: 8080
 
-# Dominio público real (router-nginx). Hoy no existe todavía una ruta de nginx ni un frontend
-# desplegado para Subdefensoría (ver docs/REQUERIMIENTOS.md, sección "Microservicios en
-# desarrollo"), así que este valor es un default seguro para cuando exista -- ya no localhost.
-# Revisar cuando se defina la ruta pública real de este servicio.
+spring:
+  application:
+    name: subdefensoria-service
+  # Antes era H2 en memoria (se perdía todo al reiniciar). Sus tablas ya existen en
+  # defensoria_db con este esquema; ddl-auto=update solo agrega columnas nuevas.
+  datasource:
+    url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
+    username: postgres
+    password: "<la misma de revision-service.yml>"
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+jwt:
+  secret: "<el mismo de revision-service.yml>"
+
 cors:
   allowed-origins: https://defensoria-escom.ddns.net
 
-# Primer Contacto en producción corre en el puerto 8082 (no chocó con nada, se conservó tal
-# cual), en la misma VPS backend.
+# Primer Contacto, en la misma VPS backend.
 primer-contacto:
   base-url: http://156.67.26.73:8082
+
+# Plazos de los oficios (días).
+plazos:
+  primera-solicitud-dias: 10
+  recordatorio-dias: 5

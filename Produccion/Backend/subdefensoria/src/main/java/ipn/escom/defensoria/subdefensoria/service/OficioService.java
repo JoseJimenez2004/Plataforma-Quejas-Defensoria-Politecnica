@@ -31,15 +31,18 @@ public class OficioService {
     private final OficioInformacionRepository oficioRepository;
     private final ExpedienteInvestigacionRepository expedienteRepository;
     private final int diasPrimeraSolicitud;
+    private final TransicionExpedienteService transicionService;
 
     public OficioService(
             OficioInformacionRepository oficioRepository,
             ExpedienteInvestigacionRepository expedienteRepository,
-            @Value("${plazos.primera-solicitud-dias}") int diasPrimeraSolicitud
+            @Value("${plazos.primera-solicitud-dias}") int diasPrimeraSolicitud,
+            TransicionExpedienteService transicionService
     ) {
         this.oficioRepository = oficioRepository;
         this.expedienteRepository = expedienteRepository;
         this.diasPrimeraSolicitud = diasPrimeraSolicitud;
+        this.transicionService = transicionService;
     }
 
     public OficioDTO crearOficio(CrearOficioDTO dto) {
@@ -48,22 +51,28 @@ public class OficioService {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "No existe el expediente " + dto.getExpedienteId()));
 
-        String fase;
-        String nuevoEstatusExpediente;
-
+        // Si se oficia sin haber abierto el detalle, primero pasa por EN_INVESTIGACION (fila 14).
         if (EstatusExpediente.RECIBIDO.equals(expediente.getEstatus())) {
-            fase = FaseOficio.SOLICITUD_INFORMACION;
-            nuevoEstatusExpediente = EstatusExpediente.EN_INVESTIGACION;
-        } else if (EstatusExpediente.EN_ESPERA_OFICIO.equals(expediente.getEstatus())
-                && !oficioRepository.existsByExpedienteIdAndEstatus(expediente.getId(), EstatusOficio.EN_ESPERA)
-                && !oficioRepository.existsByExpedienteIdAndEstatus(expediente.getId(), EstatusOficio.VENCIDO)) {
-            fase = FaseOficio.GESTION_DIRECTOR;
-            nuevoEstatusExpediente = EstatusExpediente.EN_ESPERA_OFICIO;
-        } else {
+            expediente = transicionService.cambiar(expediente, EstatusExpediente.EN_INVESTIGACION);
+        }
+
+        if (!EstatusExpediente.EN_INVESTIGACION.equals(expediente.getEstatus())) {
             throw new OperacionInvalidaException(
                     "El expediente " + expediente.getFolio() + " no admite generar un nuevo oficio en su estatus actual ("
                             + expediente.getEstatus() + ").");
         }
+        if (oficioRepository.existsByExpedienteIdAndEstatus(expediente.getId(), EstatusOficio.EN_ESPERA)
+                || oficioRepository.existsByExpedienteIdAndEstatus(expediente.getId(), EstatusOficio.VENCIDO)) {
+            throw new OperacionInvalidaException(
+                    "El expediente " + expediente.getFolio() + " ya tiene un oficio esperando respuesta.");
+        }
+
+        // Dos rondas fijas: primero solicitud de información; ya respondida, gestión con el
+        // director (también la que sigue cuando el quejoso rechaza un acuerdo).
+        String fase = oficioRepository.existsByExpedienteIdAndFaseAndEstatus(
+                expediente.getId(), FaseOficio.SOLICITUD_INFORMACION, EstatusOficio.RESPONDIDO)
+                ? FaseOficio.GESTION_DIRECTOR
+                : FaseOficio.SOLICITUD_INFORMACION;
 
         LocalDate hoy = LocalDate.now();
         LocalDate fechaLimite = DiasHabilesCalculator.sumarDiasHabiles(hoy, diasPrimeraSolicitud);
@@ -90,9 +99,8 @@ public class OficioService {
 
         OficioInformacion guardado = oficioRepository.save(oficio);
 
-        expediente.setEstatus(nuevoEstatusExpediente);
-        expediente.setFechaActualizacion(LocalDateTime.now());
-        expedienteRepository.save(expediente);
+        // Fila 15: oficio enviado, se espera la respuesta.
+        transicionService.cambiar(expediente, EstatusExpediente.EN_ESPERA_OFICIO);
 
         return convertirADTO(guardado);
     }

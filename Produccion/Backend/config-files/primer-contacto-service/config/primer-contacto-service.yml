@@ -55,4 +55,9 @@ historico:
     password: "<la misma de revision-service.yml>"
 
 primer-contacto:
-  sincronizar-estatus-queja: false
+  # Encendido junto con el panel del quejoso que ya conoce todos los estados (2026-10-13).
+  # En el servidor estaba en false: CAMBIARLO a true al desplegar.
+  sincronizar-estatus-queja: true
+  # Página pública del portal a la que lleva el enlace de la cita (correo y notificación).
+  portal:
+    url: https://defensoria-escom.ddns.net

@@ -17,6 +17,9 @@ public class ExpedienteEntranteRequest {
      */
     private String folioOrigen;
 
+    /* Folio FOL-... de la queja: con él Subdefensoría sincroniza quejas.estatus. */
+    private String folioQueja;
+
     private String asunto;
 
     private String descripcionHechos;

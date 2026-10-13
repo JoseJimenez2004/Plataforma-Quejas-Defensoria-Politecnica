@@ -22,6 +22,8 @@ public interface QuejaRepository extends JpaRepository<Queja, Long> {
 
     long countByEstatusAndFechaTurnadoBetween(String estatus, LocalDateTime desde, LocalDateTime hasta);
 
+    long countByFechaTurnadoBetween(LocalDateTime desde, LocalDateTime hasta);
+
     /** Antecedentes: otras quejas de la misma persona, excluyendo la queja actual. Se busca
      * por número de identificación (boleta/empleado) cuando existe; si no (ej. queja pública
      * sin ese dato), se cae a buscar por correo institucional -- ver RevisionQuejaService. */

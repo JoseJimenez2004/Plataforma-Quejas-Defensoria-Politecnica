@@ -355,6 +355,7 @@ public class DictamenPrimerContactoService {
         ExpedienteEntranteRequest solicitud =
                 ExpedienteEntranteRequest.builder()
                         .folioOrigen(expediente.getFolio())
+                        .folioQueja(expediente.getFolioOrigen())
                         .asunto(expediente.getTema())
                         .descripcionHechos(expediente.getDescripcionHechos())
                         .fechaAdmision(LocalDate.now())

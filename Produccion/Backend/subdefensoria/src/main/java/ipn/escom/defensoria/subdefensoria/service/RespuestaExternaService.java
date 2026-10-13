@@ -25,15 +25,18 @@ public class RespuestaExternaService {
     private final RespuestaExternaRepository respuestaRepository;
     private final OficioInformacionRepository oficioRepository;
     private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final TransicionExpedienteService transicionService;
 
     public RespuestaExternaService(
             RespuestaExternaRepository respuestaRepository,
             OficioInformacionRepository oficioRepository,
-            ExpedienteInvestigacionRepository expedienteRepository
+            ExpedienteInvestigacionRepository expedienteRepository,
+            TransicionExpedienteService transicionService
     ) {
         this.respuestaRepository = respuestaRepository;
         this.oficioRepository = oficioRepository;
         this.expedienteRepository = expedienteRepository;
+        this.transicionService = transicionService;
     }
 
     public RespuestaExternaDTO registrarRespuesta(RegistrarRespuestaExternaDTO dto) {
@@ -64,11 +67,11 @@ public class RespuestaExternaService {
         oficio.setEstatus(EstatusOficio.RESPONDIDO);
         oficioRepository.save(oficio);
 
-        expediente.setEstatus(FaseOficio.SOLICITUD_INFORMACION.equals(oficio.getFase())
-                ? EstatusExpediente.EN_ESPERA_OFICIO
+        // Fila 16 con dos rondas fijas: la respuesta a la solicitud de información regresa a
+        // EN_INVESTIGACION para emitir el oficio de gestión; la del director, a ELABORO_ACUERDO.
+        transicionService.cambiar(expediente, FaseOficio.SOLICITUD_INFORMACION.equals(oficio.getFase())
+                ? EstatusExpediente.EN_INVESTIGACION
                 : EstatusExpediente.ELABORO_ACUERDO);
-        expediente.setFechaActualizacion(LocalDateTime.now());
-        expedienteRepository.save(expediente);
 
         return RespuestaExternaDTO.builder()
                 .id(guardada.getId())

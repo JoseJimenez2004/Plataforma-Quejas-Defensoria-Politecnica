@@ -14,16 +14,16 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
 /**
- * TS-07/TS-08: redaccion del acuerdo de conclusion y su envio al quejoso.
+ * CU-SD-09: los dos acuerdos con que termina la investigación (filas 17 a 20 del diagrama).
  *
- * OJO con el cambio de semantica del 2026-09-18: antes, concluir=true pasaba el
- * expediente directo a CONCLUIDO. Ahora NO lo concluye: lo manda al quejoso y lo deja
- * en PENDIENTE_CONCLUSION. Quien concluye el expediente es el quejoso al aceptar el
- * acuerdo; si lo rechaza, el expediente regresa a EN_INVESTIGACION para otra ronda.
- * Asi lo exige el diagrama de estados, y tiene sentido: un acuerdo de conclusion que se
- * cierra sin que el quejoso opine no es un acuerdo.
+ *   1. Acuerdo de CONCILIACIÓN (textoAcuerdo): el subdefensor lo redacta en ELABORO_ACUERDO
+ *      (concluir=false guarda el borrador) y lo envía al quejoso (concluir=true) ->
+ *      PENDIENTE_CONCILIACION. El quejoso lo acepta -> PENDIENTE_CONCLUSION, o lo rechaza ->
+ *      EN_INVESTIGACION, para otro oficio de gestión y un nuevo acuerdo.
+ *   2. Acuerdo de CONCLUSIÓN (textoConclusion): con el de conciliación aceptado, el
+ *      subdefensor lo registra -> CONCLUIDO. Es el único camino a CONCLUIDO.
  *
- * concluir=false sigue guardando solo el borrador.
+ * Ambos viven en la misma fila de acuerdos_conclusion (una por expediente).
  */
 @Service
 public class AcuerdoConclusionService {
@@ -33,13 +33,16 @@ public class AcuerdoConclusionService {
 
     private final AcuerdoConclusionRepository acuerdoRepository;
     private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final TransicionExpedienteService transicionService;
 
     public AcuerdoConclusionService(
             AcuerdoConclusionRepository acuerdoRepository,
-            ExpedienteInvestigacionRepository expedienteRepository
+            ExpedienteInvestigacionRepository expedienteRepository,
+            TransicionExpedienteService transicionService
     ) {
         this.acuerdoRepository = acuerdoRepository;
         this.expedienteRepository = expedienteRepository;
+        this.transicionService = transicionService;
     }
 
     public AcuerdoConclusionDTO guardarOConcluir(CrearAcuerdoConclusionDTO dto) {
@@ -69,18 +72,20 @@ public class AcuerdoConclusionService {
 
         acuerdo.setTextoAcuerdo(dto.getTextoAcuerdo());
 
+        String estatus = expediente.getEstatus();
         if (Boolean.TRUE.equals(dto.getConcluir())) {
-            // "concluir" aqui significa ENVIAR el acuerdo al quejoso. El expediente queda
-            // esperando su respuesta; concluido sigue en false hasta que el quejoso acepte.
+            // "concluir" significa ENVIAR el acuerdo de conciliación al quejoso (fila 17).
+            // Si es un acuerdo nuevo tras un rechazo, la respuesta anterior se limpia.
             acuerdo.setFechaEnvioSecretarial(LocalDateTime.now());
-            expediente.setEstatus(EstatusExpediente.PENDIENTE_CONCLUSION);
-            expediente.setFechaActualizacion(LocalDateTime.now());
-            expedienteRepository.save(expediente);
+            acuerdo.setRespuestaQuejoso(null);
+            acuerdo.setComentarioQuejoso(null);
+            acuerdo.setFechaRespuestaQuejoso(null);
+            estatus = transicionService.cambiar(expediente, EstatusExpediente.PENDIENTE_CONCILIACION).getEstatus();
         }
 
         AcuerdoConclusion guardado = acuerdoRepository.save(acuerdo);
 
-        return convertirADTO(guardado, expediente.getEstatus());
+        return convertirADTO(guardado, estatus);
     }
 
     public AcuerdoConclusionDTO obtenerPorExpediente(Long expedienteId) {
@@ -93,44 +98,63 @@ public class AcuerdoConclusionService {
     }
 
     /**
-     * El quejoso ACEPTA el acuerdo: el expediente se concluye. Es el unico camino por el
-     * que un expediente llega a CONCLUIDO.
+     * El quejoso ACEPTA el acuerdo de conciliación (fila 19): queda pendiente el acuerdo de
+     * conclusión que redacta el subdefensor.
      */
     public AcuerdoConclusionDTO aceptarPorQuejoso(Long expedienteId, String comentario) {
         ExpedienteInvestigacion expediente = exigirPendienteDeRespuesta(expedienteId);
         AcuerdoConclusion acuerdo = exigirAcuerdo(expedienteId);
 
-        acuerdo.setConcluido(true);
         acuerdo.setRespuestaQuejoso(RESPUESTA_ACEPTADO);
         acuerdo.setComentarioQuejoso(comentario);
         acuerdo.setFechaRespuestaQuejoso(LocalDateTime.now());
+        AcuerdoConclusion guardado = acuerdoRepository.save(acuerdo);
 
-        expediente.setEstatus(EstatusExpediente.CONCLUIDO);
-        expediente.setFechaActualizacion(LocalDateTime.now());
-        expedienteRepository.save(expediente);
-
-        return convertirADTO(acuerdoRepository.save(acuerdo), expediente.getEstatus());
+        transicionService.cambiar(expediente, EstatusExpediente.PENDIENTE_CONCLUSION);
+        return convertirADTO(guardado, expediente.getEstatus());
     }
 
     /**
-     * El quejoso RECHAZA el acuerdo: el expediente regresa a EN_INVESTIGACION para otra
-     * ronda de oficios. El texto del acuerdo se conserva como antecedente de lo que se le
-     * habia propuesto.
+     * El subdefensor registra el acuerdo de CONCLUSIÓN (fila 20): el expediente se cierra
+     * definitivamente. Solo con el acuerdo de conciliación aceptado.
+     */
+    public AcuerdoConclusionDTO registrarConclusion(Long expedienteId, String textoConclusion) {
+        ExpedienteInvestigacion expediente = expedienteRepository.findById(expedienteId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el expediente " + expedienteId));
+
+        if (!EstatusExpediente.PENDIENTE_CONCLUSION.equals(expediente.getEstatus())) {
+            throw new OperacionInvalidaException(
+                    "El expediente " + expediente.getFolio()
+                            + " solo se concluye cuando el quejoso aceptó el acuerdo de conciliación (estatus actual: "
+                            + expediente.getEstatus() + ").");
+        }
+
+        AcuerdoConclusion acuerdo = exigirAcuerdo(expedienteId);
+        acuerdo.setTextoConclusion(textoConclusion.strip());
+        acuerdo.setFechaConclusion(LocalDateTime.now());
+        acuerdo.setConcluido(true);
+        AcuerdoConclusion guardado = acuerdoRepository.save(acuerdo);
+
+        transicionService.cambiar(expediente, EstatusExpediente.CONCLUIDO);
+        return convertirADTO(guardado, expediente.getEstatus());
+    }
+
+    /**
+     * El quejoso RECHAZA el acuerdo de conciliación (fila 18): el expediente regresa a
+     * EN_INVESTIGACION para otro oficio de gestión y un nuevo acuerdo. El texto se conserva
+     * como antecedente de lo que se le había propuesto.
      */
     public AcuerdoConclusionDTO rechazarPorQuejoso(Long expedienteId, String comentario) {
         ExpedienteInvestigacion expediente = exigirPendienteDeRespuesta(expedienteId);
         AcuerdoConclusion acuerdo = exigirAcuerdo(expedienteId);
 
-        acuerdo.setConcluido(false);
         acuerdo.setRespuestaQuejoso(RESPUESTA_RECHAZADO);
         acuerdo.setComentarioQuejoso(comentario);
         acuerdo.setFechaRespuestaQuejoso(LocalDateTime.now());
+        AcuerdoConclusion guardado = acuerdoRepository.save(acuerdo);
 
-        expediente.setEstatus(EstatusExpediente.EN_INVESTIGACION);
-        expediente.setFechaActualizacion(LocalDateTime.now());
-        expedienteRepository.save(expediente);
-
-        return convertirADTO(acuerdoRepository.save(acuerdo), expediente.getEstatus());
+        transicionService.cambiar(expediente, EstatusExpediente.EN_INVESTIGACION);
+        return convertirADTO(guardado, expediente.getEstatus());
     }
 
     private ExpedienteInvestigacion exigirPendienteDeRespuesta(Long expedienteId) {
@@ -138,7 +162,7 @@ public class AcuerdoConclusionService {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "No existe el expediente " + expedienteId));
 
-        if (!EstatusExpediente.PENDIENTE_CONCLUSION.equals(expediente.getEstatus())) {
+        if (!EstatusExpediente.PENDIENTE_CONCILIACION.equals(expediente.getEstatus())) {
             throw new OperacionInvalidaException(
                     "El expediente " + expediente.getFolio()
                             + " no tiene un acuerdo esperando respuesta (estatus actual: "
@@ -167,6 +191,8 @@ public class AcuerdoConclusionService {
                 .comentarioQuejoso(a.getComentarioQuejoso())
                 .fechaRespuestaQuejoso(a.getFechaRespuestaQuejoso() != null
                         ? a.getFechaRespuestaQuejoso().toString() : null)
+                .textoConclusion(a.getTextoConclusion())
+                .fechaConclusion(a.getFechaConclusion() != null ? a.getFechaConclusion().toString() : null)
                 .build();
     }
 }

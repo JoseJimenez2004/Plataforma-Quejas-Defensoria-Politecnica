@@ -2,6 +2,7 @@ package ipn.escom.defensoria.subdefensoria.controller;
 
 import ipn.escom.defensoria.subdefensoria.dto.AcuerdoConclusionDTO;
 import ipn.escom.defensoria.subdefensoria.dto.CrearAcuerdoConclusionDTO;
+import ipn.escom.defensoria.subdefensoria.dto.RegistrarConclusionDTO;
 import ipn.escom.defensoria.subdefensoria.service.AcuerdoConclusionService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class AcuerdoConclusionController {
     }
 
     /**
-     * El quejoso acepta el acuerdo -> el expediente pasa a CONCLUIDO.
+     * El quejoso acepta el acuerdo de conciliación -> PENDIENTE_CONCLUSION.
      *
      * Va bajo /interno porque quien la invoca es queja-service en nombre del quejoso, no
      * una persona de Subdefensoria: el quejoso tiene un JWT de quejoso, que este servicio
@@ -44,6 +45,13 @@ public class AcuerdoConclusionController {
     public AcuerdoConclusionDTO rechazar(@PathVariable Long expedienteId,
                                          @RequestParam(required = false) String comentario) {
         return acuerdoConclusionService.rechazarPorQuejoso(expedienteId, comentario);
+    }
+
+    /* Acuerdo de conclusión, con el de conciliación ya aceptado por el quejoso. */
+    @PostMapping("/{expedienteId}/conclusion")
+    public AcuerdoConclusionDTO registrarConclusion(@PathVariable Long expedienteId,
+                                                    @Valid @RequestBody RegistrarConclusionDTO dto) {
+        return acuerdoConclusionService.registrarConclusion(expedienteId, dto.getTextoConclusion());
     }
 
     @GetMapping("/expediente/{expedienteId}")

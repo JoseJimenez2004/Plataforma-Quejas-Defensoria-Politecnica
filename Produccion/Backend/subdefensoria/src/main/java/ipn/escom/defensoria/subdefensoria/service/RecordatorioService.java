@@ -49,14 +49,19 @@ public class RecordatorioService {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "No existe el expediente " + oficio.getExpedienteId()));
 
-        if (EstatusExpediente.CONCLUIDO.equals(expediente.getEstatus())) {
-            throw new OperacionInvalidaException("El expediente " + expediente.getFolio() + " ya está concluido.");
+        // Un recordatorio es para un oficio que sigue sin respuesta (CU-SD-07). Si el quejoso
+        // no queda conforme con un acuerdo, el camino es su rechazo (fila 18), no reabrir oficios.
+        if (EstatusOficio.RESPONDIDO.equals(oficio.getEstatus())) {
+            throw new OperacionInvalidaException(
+                    "El oficio " + oficio.getNumeroOficio() + " ya tiene respuesta; no requiere recordatorio.");
+        }
+        if (!EstatusExpediente.EN_ESPERA_OFICIO.equals(expediente.getEstatus())) {
+            throw new OperacionInvalidaException("El expediente " + expediente.getFolio()
+                    + " no está esperando la respuesta de un oficio (estatus: " + expediente.getEstatus() + ").");
         }
 
         LocalDate hoy = LocalDate.now();
-        long diasRetraso = oficio.getEstatus().equals(EstatusOficio.RESPONDIDO)
-                ? 0
-                : DiasHabilesCalculator.diasHabilesTranscurridos(oficio.getFechaLimite(), hoy);
+        long diasRetraso = DiasHabilesCalculator.diasHabilesTranscurridos(oficio.getFechaLimite(), hoy);
 
         RecordatorioUrgencia recordatorio = RecordatorioUrgencia.builder()
                 .oficioId(oficio.getId())
@@ -67,20 +72,10 @@ public class RecordatorioService {
                 .build();
         recordatorioRepository.save(recordatorio);
 
-        // TS-06: si el oficio de gestion con el director ya tenia respuesta
-        // pero se decidio "no concluyo", se reabre para un nuevo ciclo.
-        boolean seReabrio = EstatusOficio.RESPONDIDO.equals(oficio.getEstatus());
-
         oficio.setTipoPlazo("SUBSECUENTE");
         oficio.setFechaLimite(DiasHabilesCalculator.sumarDiasHabiles(hoy, diasRecordatorio));
         oficio.setEstatus(EstatusOficio.EN_ESPERA);
         OficioInformacion actualizado = oficioRepository.save(oficio);
-
-        if (seReabrio && EstatusExpediente.ELABORO_ACUERDO.equals(expediente.getEstatus())) {
-            expediente.setEstatus(EstatusExpediente.EN_ESPERA_OFICIO);
-            expediente.setFechaActualizacion(LocalDateTime.now());
-            expedienteRepository.save(expediente);
-        }
 
         return RecordatorioDTO.builder()
                 .id(recordatorio.getId())

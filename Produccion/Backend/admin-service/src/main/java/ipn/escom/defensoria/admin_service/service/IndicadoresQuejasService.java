@@ -21,6 +21,13 @@ public class IndicadoresQuejasService {
 
     private static final Logger log = LoggerFactory.getLogger(IndicadoresQuejasService.class);
 
+    /** Turnadas = TURNADA o cualquier estado posterior de Primer Contacto / Subdefensoría. */
+    private static final java.util.List<String> TURNADA_O_POSTERIOR = java.util.List.of(
+            "TURNADA",
+            "EN_ANALISIS", "PROCEDENTE", "IMPROCEDENTE", "REMITIDA",
+            "RECIBIDA_SUBDEFENSORIA", "EN_INVESTIGACION", "EN_ESPERA_OFICIO", "ELABORO_ACUERDO",
+            "PENDIENTE_CONCILIACION", "PENDIENTE_CONCLUSION", "CONCLUIDA");
+
     private final JdbcTemplate jdbc;
 
     public IndicadoresQuejasService(JdbcTemplate jdbc) {
@@ -35,8 +42,10 @@ public class IndicadoresQuejasService {
             long total = porEstatus.values().stream().mapToLong(Long::longValue).sum();
 
             long ultimos30 = contar("SELECT COUNT(*) FROM quejas WHERE fecha_creacion >= NOW() - INTERVAL '30 days'");
-            long turnadasMes = contar("SELECT COUNT(*) FROM quejas WHERE estatus = 'TURNADA' "
-                    + "AND fecha_turnado >= date_trunc('month', NOW())");
+            // fecha_turnado solo se llena al turnar: cuenta aunque la queja ya haya avanzado a
+            // Primer Contacto o Subdefensoría (que desde 2026-10-13 escriben quejas.estatus).
+            long turnadasMes = contar("SELECT COUNT(*) FROM quejas "
+                    + "WHERE fecha_turnado >= date_trunc('month', NOW())");
             long respuestas = contarSiExiste("respuestas_denunciado", "SELECT COUNT(*) FROM respuestas_denunciado");
 
             List<ConteoModel> unidades = jdbc.query(
@@ -60,7 +69,7 @@ public class IndicadoresQuejasService {
                     porEstatus.getOrDefault("RECIBIDA", 0L),
                     porEstatus.getOrDefault("EN_VALIDACION", 0L),
                     porEstatus.getOrDefault("CORREGIDA", 0L),
-                    porEstatus.getOrDefault("TURNADA", 0L),
+                    TURNADA_O_POSTERIOR.stream().mapToLong(e -> porEstatus.getOrDefault(e, 0L)).sum(),
                     porEstatus.getOrDefault("RECHAZADA", 0L),
                     porEstatus.getOrDefault("CANCELADA", 0L),
                     ultimos30, turnadasMes, respuestas, unidades, porMes);
