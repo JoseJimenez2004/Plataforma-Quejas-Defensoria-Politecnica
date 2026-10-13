@@ -783,3 +783,87 @@ Respaldos previos en `/apps/utiles/respaldos/2026-10-08/` de cada servidor: back
 - Subdefensoría sigue sin desplegar en los servidores nuevos (el dictamen procedente se guarda
   pero el envío falla; se puede reenviar después).
 - PR `Pre-Produccion2` → `Produccion`; arreglar las 7 pruebas "should create" del front.
+
+## 15. 2026-10-12/13: observaciones de la reunión, modelo V5 y Subdefensoría
+
+> Lo más reciente. **Nada de esto está desplegado todavía**: la decisión fue terminar
+> Subdefensoría y subir todo junto. Rama `Pre-Produccion2`; lo hasta `981f6ac` está en GitHub,
+> los commits posteriores (`546ec0e` … `934115f`) están **solo en local, sin push**.
+
+### 15.1 Observaciones de la reunión sobre Primer Contacto (commits `3424bed`, `364f2b0`)
+- **Citas sin traslape POR ANALISTA**: cada cita dura `primer-contacto.citas.duracion-minutos`
+  (60); solo cuentan PROGRAMADA/CONFIRMADA; dos analistas sí pueden citar a la misma hora.
+- **Cancelación/confirmación del quejoso por ENLACE** (decisión del equipo: por correo, y además
+  desde la notificación): token por cita, página pública del portal `/cita/responder?token=`,
+  endpoints `/api/primer-contacto/publico/citas/{token}` (GET, PUT confirmar, PUT cancelar con
+  motivo). Config nueva: `primer-contacto.portal.url`.
+- **Modelo de antecedentes V5** (Python de Jair, ya desplegado en 8093; su código NO se toca):
+  `MotorAntecedentesModelo.buscarV5` usa `POST /api/v5/antecedentes/buscar`; si da 404 usa la
+  ruta vieja; si no responde, motor por reglas. Pantalla con 3 listas: **coincidencias fuertes**,
+  **por involucrados** (V5 + nuestras reglas de correo/nombre parcial, marcadas "por verificar")
+  y **por hechos** (top 20). Timeout del modelo 45 s (`antecedentes.modelo.timeout-segundos`).
+- Observación 1 (búsqueda manual "no encuentra nada"): probablemente falta de datos
+  (`quejas_historicas` con 0 filas en el servidor). **Pendiente** confirmarlo con los logs.
+- La sugerencia de abogado en recepción (propuesta de Jair) NO la hacemos nosotros.
+- Merge de `Produccion` (39035fd, 24de0a4) en `536b2b9`; rutas de Primer Contacto agregadas
+  al `Produccion/nginx/config/defensoria.conf` del repo (`981f6ac`).
+
+### 15.2 Estados de la queja (tabla ECA definitiva, 21 filas)
+El usuario pasó el diagrama y la tabla; se acordó: **manda la tabla**, **un solo oficio por
+ciclo** (solicitud de información → responde el director), recordatorio como ciclo en
+En_Espera_oficio. Subdefensoría:
+`RECIBIDO →(abrir, POST iniciar-investigacion) EN_INVESTIGACION →(oficio) EN_ESPERA_OFICIO
+→(responde el director) ELABORO_ACUERDO →(se envía acuerdo) PENDIENTE_CONCILIACION
+→(quejoso rechaza) EN_INVESTIGACION | →(quejoso acepta) PENDIENTE_CONCLUSION
+→(subdefensor registra acuerdo de conclusión) CONCLUIDO`.
+- `quejas.estatus` refleja todo (sincronización ENCENDIDA en PC y SD). Valores en la queja:
+  RECIBIDA_SUBDEFENSORIA … PENDIENTE_CONCLUSION, CONCLUIDA.
+- revision-service y admin-service (código del compañero) ajustados: "turnada" = TURNADA o
+  cualquier estado posterior (historial, turnadas del día/mes). **Avisarle.**
+- Portal del quejoso: solo textos y línea del tiempo (`queja.models.ts`). **El usuario NO
+  quiere cambios de estilos en el portal**: se reutilizan las clases existentes.
+
+### 15.3 Subdefensoría (commits `546ec0e`, `6707fe3`, `51effcc`, `9ad04ed`, `edf4e0c`, `934115f`)
+- **PostgreSQL** (antes H2 en memoria). Sus tablas ya existían en `defensoria_db`.
+- **OJO despliegue**: el contenedor usa `SPRING_CONFIG_NAME=subdefensoria-service`, así que el
+  `application.properties` del jar NO se carga. La copia de referencia
+  `Backend/config-files/subdefensoria-service/config/subdefensoria-service.yml` ya trae todo
+  (datasource, jwt, plazos, notificaciones, portal, multipart) con `<…>` en password/jwt.
+- **CU-QJ-14**: el quejoso acepta/rechaza (motivo obligatorio) el acuerdo por enlace: correo +
+  notificación (tipo CONCILIACION), página pública `/acuerdo/responder?token=`, endpoints
+  `/api/subdefensoria/publico/acuerdos/{token}`. Un acuerdo nuevo invalida el enlace anterior.
+  Al concluir se avisa al quejoso.
+- **PDF de ejemplo** (OpenPDF, formato como la remisión de PC): oficio, recordatorio, acuerdo
+  de conciliación y de conclusión. `GET /api/subdefensoria/documentos/...` y, para el quejoso,
+  `/publico/acuerdos/{token}/pdf?tipo=conciliacion|conclusion`.
+- **CU-SD-08 archivo de la respuesta** (PDF/JPG/PNG ≤ 10 MB, tabla
+  `respuestas_externas_archivos`, bytea): multipart en `POST /respuestas-externas`, adjuntar
+  después en `POST /{id}/archivo`, consultar `GET /oficio/{id}`, descargar `GET /{id}/archivo`.
+- Frontend SD: barra de 7 pasos, acuerdo de conclusión, botones "Ver PDF", respuesta y su
+  archivo en el historial de oficios, bandeja usa `siguienteFase` del backend.
+- nginx del repo: `/subdefensoria/` → 127.0.0.1:**8095** (puerto del front, a confirmar al
+  desplegar), `/api/subdefensoria/` → 156.67.26.73:8091, ingesta e `interno/` bloqueados (403).
+
+### 15.4 Pruebas locales (todas en verde al cierre)
+Base `primercontacto/dev-local` (docker, 5433). Scripts:
+- `Backend/subdefensoria/dev-local/prueba-subdefensoria.mjs` → **76/76** (flujo completo, estados
+  en la queja, enlace del quejoso, PDF, archivo). Variables opcionales `NOTIFICACIONES` (jsonl
+  de un receptor falso en 8085) y `PDF_DIR`.
+- `Backend/primercontacto/dev-local/prueba-observaciones.mjs` → 45/45 (con el V5 local en 8093
+  y `--primer-contacto.citas.revision-ms=10000`).
+- `Backend/primercontacto/dev-local/prueba-citas-antecedentes-v5.mjs` → 33/33.
+Para correr el V5 sin descargar el modelo se usó un script temporal (fuera del repo) que
+importa `antecedentes_service` y sustituye el codificador de texto; ver notas del chat.
+
+### 15.5 Pendiente (siguiente chat)
+1. Revisar las capturas del diálogo de respuesta con archivo (no se alcanzaron a revisar).
+2. **Correo a la unidad académica** con el oficio/recordatorio PDF adjunto; mientras se valida,
+   redirigir todo a un correo de prueba (el usuario lo va a dar).
+3. **Homologación visual** de Subdefensoría con Primer Contacto (p. ej. el botón de la bandeja
+   cuyo texto no cabe).
+4. Push de los commits locales y despliegue conjunto PC + SD: respaldos; jars; yml del servidor
+   (en el de PC poner `sincronizar-estatus-queja: true` y `portal.url`; el de SD completo);
+   front de SD (contenedor nuevo); portal del quejoso (es del compañero: páginas
+   `cita/responder` y `acuerdo/responder`); nginx; revisar los `-m` de memoria.
+5. Avisar al compañero de los cambios en revision-service, admin-service y el portal.
+6. Confirmar la observación 1 (búsqueda manual) con los logs del servidor.
