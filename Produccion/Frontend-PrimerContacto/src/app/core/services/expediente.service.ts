@@ -83,6 +83,8 @@ export class ExpedienteService {
           exp.quejoso?.unidadAcademica ?? ''
       },
 
+      datosQueja: exp.datosQueja,
+
       evidencias: (exp.evidencias ?? []).map(
         evidencia => ({
           id: evidencia.id,

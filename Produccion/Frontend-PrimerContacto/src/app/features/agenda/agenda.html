@@ -166,17 +166,17 @@
 
   <mat-card class="table-card">
     <div style="padding: var(--space-4) var(--space-4) 0;">
-      <h3 class="card-title-custom">Próximas Citas de la Unidad</h3>
+      <h3 class="card-title-custom">Mis Próximas Citas</h3>
     </div>
 
-    @if (citasDelDia.length === 0) {
+    @if (proximasCitas.length === 0) {
       <p class="empty-state-text" style="padding: var(--space-5);">
-        No hay próximas citas registradas para el segmento actual.
+        No tienes próximas citas registradas.
       </p>
     }
 
     <div class="appointments-list">
-      @for (cita of citasDelDia; track cita.id) {
+      @for (cita of proximasCitas; track cita.id) {
         <div class="appointment-row">
           <div>
             <strong>{{ cita.folio }}</strong>

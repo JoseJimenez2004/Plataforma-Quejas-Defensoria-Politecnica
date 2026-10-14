@@ -1,5 +1,6 @@
 package ipn.escom.defensoria.primercontacto.service;
 
+import ipn.escom.defensoria.primercontacto.dto.DatosQuejaDTO;
 import ipn.escom.defensoria.primercontacto.dto.EvidenciaDTO;
 import ipn.escom.defensoria.primercontacto.dto.ExpedienteAnalisisDTO;
 import ipn.escom.defensoria.primercontacto.dto.NotaAnalisisDTO;
@@ -16,6 +17,7 @@ import ipn.escom.defensoria.primercontacto.exception.RecursoNoEncontradoExceptio
 import ipn.escom.defensoria.primercontacto.repository.EvidenciaPrimerContactoRepository;
 import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
 import ipn.escom.defensoria.primercontacto.repository.NotaAnalisisRepository;
+import ipn.escom.defensoria.primercontacto.repository.QuejaReferenciaRepository;
 
 import org.springframework.stereotype.Service;
 
@@ -29,17 +31,20 @@ public class ExpedienteAnalisisService {
     private final NotaAnalisisRepository notaAnalisisRepository;
     private final EvidenciaPrimerContactoRepository evidenciaRepository;
     private final TransicionExpedienteService transicionService;
+    private final QuejaReferenciaRepository quejaRepository;
 
     public ExpedienteAnalisisService(
             ExpedientePrimerContactoRepository expedienteRepository,
             NotaAnalisisRepository notaAnalisisRepository,
             EvidenciaPrimerContactoRepository evidenciaRepository,
-            TransicionExpedienteService transicionService
+            TransicionExpedienteService transicionService,
+            QuejaReferenciaRepository quejaRepository
     ) {
         this.expedienteRepository = expedienteRepository;
         this.notaAnalisisRepository = notaAnalisisRepository;
         this.evidenciaRepository = evidenciaRepository;
         this.transicionService = transicionService;
+        this.quejaRepository = quejaRepository;
     }
 
     /*
@@ -205,9 +210,47 @@ public class ExpedienteAnalisisService {
                         expediente.getAnalistaAnalisisNombre()
                 )
                 .quejoso(quejoso)
+                .datosQueja(datosQueja(expediente))
                 .evidencias(evidencias)
                 .notas(notas)
                 .build();
+    }
+
+    /*
+     * Lo que el quejoso capturó en su queja (denunciado, fecha de los hechos...), leído de la
+     * tabla quejas por el folio de origen. Si falla, el detalle se muestra sin estos datos.
+     */
+    private DatosQuejaDTO datosQueja(ExpedientePrimerContacto expediente) {
+        if (expediente.getFolioOrigen() == null) {
+            return null;
+        }
+        try {
+            return quejaRepository.findByNumeroFolio(expediente.getFolioOrigen())
+                    .map(q -> DatosQuejaDTO.builder()
+                            .fechaRegistro(q.getFechaCreacion() != null
+                                    ? q.getFechaCreacion().toLocalDate().toString() : null)
+                            .asunto(q.getMotivo())
+                            .fechaHechos(q.getFechaHechos() != null ? q.getFechaHechos().toString() : null)
+                            .unidadAcademicaClave(q.getUnidadAcademicaClave())
+                            .tipoIdentificacionQuejoso(q.getTipoIdentificacionQuejoso())
+                            .numeroIdentificacionQuejoso(q.getNumeroIdentificacionQuejoso())
+                            .fechaNacimientoQuejoso(q.getFechaNacimientoQuejoso() != null
+                                    ? q.getFechaNacimientoQuejoso().toString() : null)
+                            .denunciado(unir(q.getNombreDenunciado(), q.getApellido1Denunciado(),
+                                    q.getApellido2Denunciado()))
+                            .build())
+                    .orElse(null);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private static String unir(String... partes) {
+        String nombre = java.util.Arrays.stream(partes)
+                .filter(p -> p != null && !p.isBlank())
+                .map(String::strip)
+                .collect(java.util.stream.Collectors.joining(" "));
+        return nombre.isEmpty() ? null : nombre;
     }
 
     private NotaAnalisisDTO convertirNotaDTO(

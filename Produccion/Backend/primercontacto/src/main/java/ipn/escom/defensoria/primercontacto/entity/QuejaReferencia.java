@@ -79,6 +79,14 @@ public class QuejaReferencia {
     @Column(name = "numero_identificacion_quejoso", insertable = false, updatable = false)
     private String numeroIdentificacionQuejoso;
 
+    // ---- Solo lectura: datos de la queja en el detalle del expediente ----
+
+    @Column(name = "tipo_identificacion_quejoso", insertable = false, updatable = false)
+    private String tipoIdentificacionQuejoso;
+
+    @Column(name = "fecha_nacimiento_quejoso", insertable = false, updatable = false)
+    private java.time.LocalDate fechaNacimientoQuejoso;
+
     // ---- Solo lectura: búsqueda manual de antecedentes por denunciado ----
 
     @Column(name = "nombre_denunciado", insertable = false, updatable = false)

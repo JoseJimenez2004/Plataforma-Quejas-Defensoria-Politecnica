@@ -48,6 +48,12 @@ public class ExpedienteAnalisisDTO {
 
     private QuejosoDTO quejoso;
 
+    /*
+     * Datos de la queja original (denunciado, fecha de los hechos, identificación...).
+     * null si la queja ya no existe en la tabla quejas.
+     */
+    private DatosQuejaDTO datosQueja;
+
     private List<EvidenciaDTO> evidencias;
 
     private List<NotaAnalisisDTO> notas;

@@ -70,6 +70,12 @@ public class CitaPrimerContactoController {
         return citaPrimerContactoService.obtenerAgendaDia(fecha);
     }
 
+    @GetMapping("/mias")
+    public List<CitaDTO> misProximasCitas(Authentication authentication) {
+        return citaPrimerContactoService.proximasDelAnalista(
+                analistaAutenticadoService.obtenerAnalista(authentication));
+    }
+
     @GetMapping("/analista/{analistaId}")
     public List<CitaDTO> obtenerAgendaAnalista(
             @PathVariable Long analistaId

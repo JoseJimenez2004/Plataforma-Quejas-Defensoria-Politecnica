@@ -222,6 +222,16 @@ public class CitaPrimerContactoService {
                 .toList();
     }
 
+    /** Citas vigentes del analista de hoy en adelante, de cualquier día (agenda general). */
+    public List<CitaDTO> proximasDelAnalista(PersonalAdministrativo analista) {
+        return citaPrimerContactoRepository
+                .findByAnalistaIdAndFechaCitaGreaterThanEqualAndEstatusNotInOrderByFechaCitaAscHoraCitaAsc(
+                        analista.getId(), LocalDate.now(), CERRADAS)
+                .stream()
+                .map(this::convertirADTO)
+                .toList();
+    }
+
     public List<CitaDTO> obtenerAgendaAnalista(Long analistaId) {
         return citaPrimerContactoRepository
                 .findByAnalistaIdOrderByFechaCitaAscHoraCitaAsc(analistaId)

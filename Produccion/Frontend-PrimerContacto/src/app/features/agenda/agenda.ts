@@ -80,6 +80,9 @@ export class Agenda implements OnInit {
 
   citasDelDia: CitaPrimerContacto[] = [];
 
+  // Todas las citas vigentes del analista, de cualquier día (lista de abajo).
+  proximasCitas: CitaPrimerContacto[] = [];
+
   private fechaAgendaSubject = new Subject<string>();
 
   horariosSugeridos = [
@@ -227,7 +230,24 @@ cargarAgendaPorFecha(fechaVista: string): void {
   });
 
   this.fechaAgendaSubject.next(fechaVista);
+  this.cargarProximasCitas();
 }
+
+  cargarProximasCitas(): void {
+    this.agendaService.obtenerMisProximasCitas().subscribe({
+      next: (citas) => {
+        this.zone.run(() => {
+          this.proximasCitas = [...citas];
+          this.cdr.detectChanges();
+        });
+      },
+      error: () => {
+        this.snackBar.open('No fue posible cargar tus próximas citas.', 'Cerrar', {
+          duration: 3000
+        });
+      }
+    });
+  }
   cargarExpedientesPendientes(): void {
     this.bandejaService.obtenerBandeja().subscribe({
       next: (expedientes) => {

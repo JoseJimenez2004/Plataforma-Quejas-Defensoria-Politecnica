@@ -32,6 +32,13 @@ public interface CitaPrimerContactoRepository
     );
 
     List<CitaPrimerContacto>
+    findByAnalistaIdAndFechaCitaGreaterThanEqualAndEstatusNotInOrderByFechaCitaAscHoraCitaAsc(
+            Long analistaId,
+            LocalDate desde,
+            java.util.Collection<String> estatus
+    );
+
+    List<CitaPrimerContacto>
     findByEstatusOrderByFechaCitaAscHoraCitaAsc(
             String estatus
     );

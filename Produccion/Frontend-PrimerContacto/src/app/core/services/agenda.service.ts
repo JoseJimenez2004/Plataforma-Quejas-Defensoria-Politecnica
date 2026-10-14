@@ -69,6 +69,17 @@ export class AgendaService {
       );
   }
 
+  /** Citas vigentes del analista en sesión, de hoy en adelante (cualquier día). */
+  obtenerMisProximasCitas(): Observable<CitaPrimerContacto[]> {
+    return this.api
+      .get<CitaBackendDTO[]>('/citas/mias')
+      .pipe(
+        map(citas =>
+          citas.map(cita => this.mapearCita(cita))
+        )
+      );
+  }
+
   listarPorFolio(
     folio: string
   ): Observable<CitaPrimerContacto[]> {

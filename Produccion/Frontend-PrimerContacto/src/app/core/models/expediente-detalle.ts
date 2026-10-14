@@ -1,4 +1,5 @@
 import { NotaAnalisis } from './nota-analisis.model';
+import { DatosQueja } from './expediente-primer-contacto';
 
 export interface EvidenciaDetalle {
   /** Id de la evidencia original (queja_evidencias): con él se abre el archivo. */
@@ -34,6 +35,8 @@ export interface ExpedienteDetalle {
     telefono: string;
     unidadAcademica: string;
   };
+
+  datosQueja?: DatosQueja;
 
   evidencias: EvidenciaDetalle[];
 

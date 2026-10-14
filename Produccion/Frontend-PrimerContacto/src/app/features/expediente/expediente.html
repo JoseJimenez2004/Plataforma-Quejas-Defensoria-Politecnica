@@ -72,6 +72,34 @@
       </div>
     </mat-card>
 
+    @if (expediente.datosQueja; as q) {
+      <mat-card class="card">
+        <h3 class="card-title">Datos de la Queja</h3>
+        <div class="info-list">
+          <div>
+            <span>Fecha de registro</span>
+            <strong>{{ q.fechaRegistro || '—' }}</strong>
+          </div>
+          <div>
+            <span>Asunto</span>
+            <strong>{{ q.asunto || '—' }}</strong>
+          </div>
+          <div>
+            <span>Persona denunciada</span>
+            <strong>{{ q.denunciado || '—' }}</strong>
+          </div>
+          <div>
+            <span>Lugar de los hechos</span>
+            <strong>{{ q.unidadAcademicaClave || '—' }}</strong>
+          </div>
+          <div>
+            <span>Fecha de los hechos</span>
+            <strong>{{ q.fechaHechos || '—' }}</strong>
+          </div>
+        </div>
+      </mat-card>
+    }
+
     <mat-card class="card">
       <h3 class="card-title">Datos del Quejoso</h3>
       <div class="info-list">
@@ -82,6 +110,19 @@
         <div>
           <span>Tipo de usuario</span>
           <strong>{{ expediente.quejoso.boleta || '—' }}</strong>
+        </div>
+        <div>
+          <span>Identificación</span>
+          <strong>
+            {{ expediente.datosQueja?.numeroIdentificacionQuejoso
+              ? (expediente.datosQueja?.tipoIdentificacionQuejoso ? expediente.datosQueja?.tipoIdentificacionQuejoso + ': ' : '')
+                + expediente.datosQueja?.numeroIdentificacionQuejoso
+              : '—' }}
+          </strong>
+        </div>
+        <div>
+          <span>Fecha de nacimiento</span>
+          <strong>{{ expediente.datosQueja?.fechaNacimientoQuejoso || '—' }}</strong>
         </div>
         <div>
           <span>Correo electrónico</span>
