@@ -788,7 +788,7 @@ Respaldos previos en `/apps/utiles/respaldos/2026-10-08/` de cada servidor: back
 
 > Lo más reciente. **Nada de esto está desplegado todavía**: la decisión fue terminar
 > Subdefensoría y subir todo junto. Rama `Pre-Produccion2`; lo hasta `981f6ac` está en GitHub,
-> los commits posteriores (`546ec0e` … `934115f`) están **solo en local, sin push**.
+> los commits posteriores (`546ec0e` … `237f20c`, 9 commits) están **solo en local, sin push**.
 
 ### 15.1 Observaciones de la reunión sobre Primer Contacto (commits `3424bed`, `364f2b0`)
 - **Citas sin traslape POR ANALISTA**: cada cita dura `primer-contacto.citas.duracion-minutos`
@@ -855,15 +855,37 @@ Base `primercontacto/dev-local` (docker, 5433). Scripts:
 Para correr el V5 sin descargar el modelo se usó un script temporal (fuera del repo) que
 importa `antecedentes_service` y sustituye el codificador de texto; ver notas del chat.
 
-### 15.5 Pendiente (siguiente chat)
-1. Revisar las capturas del diálogo de respuesta con archivo (no se alcanzaron a revisar).
-2. **Correo a la unidad académica** con el oficio/recordatorio PDF adjunto; mientras se valida,
-   redirigir todo a un correo de prueba (el usuario lo va a dar).
-3. **Homologación visual** de Subdefensoría con Primer Contacto (p. ej. el botón de la bandeja
-   cuyo texto no cabe).
-4. Push de los commits locales y despliegue conjunto PC + SD: respaldos; jars; yml del servidor
-   (en el de PC poner `sincronizar-estatus-queja: true` y `portal.url`; el de SD completo);
-   front de SD (contenedor nuevo); portal del quejoso (es del compañero: páginas
-   `cita/responder` y `acuerdo/responder`); nginx; revisar los `-m` de memoria.
-5. Avisar al compañero de los cambios en revision-service, admin-service y el portal.
+### 15.5 Hecho el 2026-10-13 (tarde, commits `dd59d63`, `237f20c`)
+- **Capturas del diálogo de respuesta con archivo revisadas**: funciona bien (archivo adjunto,
+  límite, toast, oficio pasa a RESPONDIDO y se habilita el acuerdo).
+- **Homologación visual SD** (`dd59d63`): en la bandeja los botones de Acciones van en fila
+  con `flex-wrap` y sin partir el texto, el folio no se corta (`white-space: nowrap`), tabla
+  `min-width: 900px`; en el historial de oficios hay espacio entre el tipo y la etiqueta
+  (RESPONDIDO/EN_ESPERA). El botón ya decía "Solicitar Oficio". Solo compilado, no visto.
+- **Correo a la unidad académica con PDF adjunto** (`237f20c`), decisión del usuario: ampliar
+  `notificaciones-service` (no duplicar la cuenta SMTP en SD).
+  - `notificaciones-service` (**código del compañero**): `POST /api/notificaciones/enviar`
+    acepta opcionales `adjuntoNombre`, `adjuntoTipo` (default application/pdf) y
+    `adjuntoBase64`; `CorreoService` usa `MimeMessageHelper`. Sin adjunto sale igual que antes.
+  - SD: `CorreoUnidadAcademicaService` (best-effort). `OficioService.crearOficio` manda el
+    oficio en PDF y marca `correoEnviado=true` si salió; `RecordatorioService` manda el
+    recordatorio en PDF.
+  - Config: `correo.unidad-academica.habilitado` (true) y `correo.unidad-academica.redirigir-a`.
+    En el yml del servidor de SD quedó `redirigir-a: leishasr2@gmail.com` (correo de prueba del
+    usuario): asunto con `[PRUEBA]` y nota de a quién iba dirigido. Vaciarlo al validar.
+  - Compilan ambos servicios. Prueba local `prueba-subdefensoria.mjs` → **76/76** con el
+    receptor falso en 8085: salen 3 correos a la UA con PDF válido (oficio, recordatorio y
+    segundo oficio tras el rechazo) y `correo_enviado = true`. **Falta probar con SMTP real**
+    (en el servidor, tras desplegar notificaciones-service).
+  - `notificaciones-service` no tiene `mvnw`: compilar con `../subdefensoria/mvnw -f pom.xml`.
+
+### 15.6 Pendiente (siguiente chat)
+4. Push de los commits locales y despliegue conjunto PC + SD **+ notificaciones-service**:
+   respaldos; jars; yml del servidor (en el de PC poner `sincronizar-estatus-queja: true` y
+   `portal.url`; el de SD completo, con `correo.unidad-academica`); front de SD (contenedor
+   nuevo); portal del quejoso (es del compañero: páginas `cita/responder` y
+   `acuerdo/responder`); nginx; revisar los `-m` de memoria. Probar el correo con adjunto en
+   el servidor (debe llegar a leishasr2@gmail.com).
+5. Avisar al compañero de los cambios en revision-service, admin-service, el portal **y
+   notificaciones-service** (adjuntos opcionales en `/enviar`).
 6. Confirmar la observación 1 (búsqueda manual) con los logs del servidor.
