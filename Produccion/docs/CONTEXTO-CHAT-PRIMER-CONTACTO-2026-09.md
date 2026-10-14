@@ -942,14 +942,51 @@ revision/admin.
 - nginx gzip/caché: propuesta en https://claude.ai/artifact/FPEuGFuwQNQLqfBkrrfV21, pendiente de
   que el equipo la apruebe (el compañero creía que ya cacheaba: es caché heurístico, sin gzip).
 
-### 15.9 Pendiente (siguiente chat)
-- Revisar "Pepito Ramírez" en "Por involucrados" (falta el folio de la queja analizada; con los
-  datos dados, el V5 directo no lo marca como involucrado).
-- Conectar el modelo de resumen. Formulario del involucrado en PC (por definir dónde).
-- Probar con SMTP real el correo a la UA con PDF (debe llegar a leishasr2@gmail.com).
-- Borrar `C:\Users\leish\despliegue-1013` (tiene contraseñas) y `/tmp/despliegue-101*`.
+### 15.9 Estado al cierre del 2026-10-14 (todo desplegado y probado por el usuario)
+Rama `Pre-Produccion2`, todo en GitHub (último commit de código `e4c9482`). Servidores:
+- **Backend**: PC (512m, pool 3), SD (512m, pool 3), quejas, revision, admin y notificaciones con
+  nuestros jars; `qwen-gguf` + `resumen-service` encendidos (8 hilos). Respaldos del día en
+  `/apps/utiles/respaldos/2026-10-14/` (jars y ymls anteriores, `*.b`/`*.c`, y el yml roto de
+  notificaciones que puso el compañero: `notificaciones-service.yml.roto`).
+- **Frontend**: portal, PC y SD con la versión nueva. nginx SIN gzip/caché (propuesta pendiente).
+- El usuario probó: guiones de PC/SD, nueva queja del panel, correo a la UA con PDF (llegó),
+  formulario del denunciado y resumen. Dijo "a grandes rasgos está bien".
 
-### 15.10 Pendiente anterior (ya cubierto en 15.6–15.8)
+**Resumen: lo que se vio en las pruebas (no se tocó; el modelo lo maneja OTRO compañero).**
+- La conexión manda la narrativa completa y muestra lo que devuelve el modelo sin cambios.
+- D9 (extractor) a veces deja fuera la oración con quién/cuándo/dónde (prueba: 10 de octubre,
+  salón 2103, profesor Pepito López).
+- Qwen (editor) cambia palabras: FOL-FF4CF7FB "los echos trabajados" → "los ejes trabajados";
+  FOL-AF3F5047 "no me quiso revisar" → "no me quería revisar", sin acentos. En quejas de una
+  sola oración el resumen ≈ la queja.
+- Los "fragmentos clave" son la cita literal del quejoso (con sus faltas): es a propósito.
+- Ideas propuestas que el usuario decidió NO hacer por ahora: no llamar al modelo con
+  narrativas cortas (< ~40 palabras); mostrar denunciado · fecha · lugar arriba del resumen.
+- En el chat quedó redactado un mensaje para el compañero del modelo con esos ejemplos.
+
+### 15.10 Pendiente (siguiente chat)
+1. **Afinaciones** que el usuario encuentre al revisar (dijo que las revisa el 2026-10-14).
+2. **nginx gzip/caché**: esperar la decisión del equipo. Comandos y riesgos en el artifact
+   https://claude.ai/artifact/FPEuGFuwQNQLqfBkrrfV21; archivo listo en
+   `C:\Users\leish\despliegue-nginx\defensoria.conf` (respaldar y `nginx -t` antes de recargar).
+3. **Pool de conexiones de los servicios del compañero**: sus ymls tienen `max-poolSize`,
+   `idle-timeout`, `max-lifeTime` directo bajo `datasource` (Spring los ignora → siguen en 10).
+   Se le pasó el comando para moverlos a `hikari:`; que él decida. Hay poco margen en
+   `max_connections` de defensoria_db.
+4. **Pepito Ramírez en "Por involucrados"**: eran quejas de prueba con el MISMO correo
+   (leishasr@gmail.com) y otros nombres; ya sale "Mismo correo, otro nombre (por verificar)".
+   Confirmar con una queja nueva.
+5. Observación 1 (búsqueda manual que no encontraba nada): no se volvió a revisar; los logs
+   viejos se perdieron al recrear el contenedor. Repetir la búsqueda y leer el log.
+6. Seguridad (para el compañero): bots probando contraseñas de root por SSH (34 en 15 min);
+   sugerir fail2ban o llaves. El scp a veces corta por eso o por tardar más de 2 min en la contraseña.
+7. Limpieza: borrar `C:\Users\leish\despliegue-1013` (TIENE CONTRASEÑAS), `despliegue-1014`,
+   `-1014b`, `-1014c`, `despliegue-portal`, `despliegue-quejas`, `despliegue-nginx`; y en ambos
+   servidores `rm -rf /tmp/despliegue-101* /tmp/portal-1014 /tmp/quejas-service.jar`.
+8. Correo a la UA: al validar, vaciar `correo.unidad-academica.redirigir-a` en el yml de SD
+   del servidor (hoy todo va a leishasr2@gmail.com con [PRUEBA]).
+
+### 15.11 Pendiente anterior (ya cubierto en 15.6–15.9)
 4. Fase B del despliegue (ver arriba) + prueba funcional con un subdefensor real + correo:
    respaldos; jars; yml del servidor (en el de PC poner `sincronizar-estatus-queja: true` y
    `portal.url`; el de SD completo, con `correo.unidad-academica`); front de SD (contenedor
