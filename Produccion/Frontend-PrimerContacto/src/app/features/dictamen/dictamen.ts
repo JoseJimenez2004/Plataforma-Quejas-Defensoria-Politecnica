@@ -212,7 +212,13 @@ export class Dictamen implements OnInit {
 
         this.snackBar.open(mensaje, 'Cerrar', { duration: 4500 });
 
-        this.router.navigate(['/expediente', this.folio]);
+        // Recibido por Subdefensoría: ya no hay nada que hacer aquí, se vuelve al inicio. Si
+        // no respondió, se queda en el expediente para reintentar el envío.
+        if (dictamen.folioSubdefensoria) {
+          this.router.navigate(['/dashboard']);
+        } else {
+          this.router.navigate(['/expediente', this.folio]);
+        }
       },
 
       error: (error) => {

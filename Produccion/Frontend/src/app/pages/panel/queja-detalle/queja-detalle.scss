@@ -86,6 +86,10 @@
 
 .paso--completado .paso__linea { background: #1b6b4a; }
 
+/* Con 7 pasos la línea del tiempo ocupa dos filas de 4: el último paso de cada fila no
+ * dibuja línea, porque el siguiente ya está abajo. */
+.pasos:not(.pasos--cancelada) .paso:nth-child(4n) .paso__linea { display: none; }
+
 .paso__marca {
   display: flex;
   align-items: center;
@@ -508,6 +512,8 @@ h4 {
 
   .paso__marca { grid-row: span 3; }
   .paso__descripcion { max-width: none; }
+
+  .pasos:not(.pasos--cancelada) .paso:nth-child(4n) .paso__linea { display: block; }
 
   .paso__linea {
     top: 40px;

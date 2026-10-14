@@ -249,6 +249,12 @@ public class AntecedentesService {
         for (AntecedenteDTO a : resultados) {
             boolean mismaIdentificacion = NombresPersona.mismoDato(personas.identificacion(), a.getIdentificacionQuejoso());
             boolean mismoCorreo = NombresPersona.mismoDato(personas.correo(), a.getCorreoQuejoso());
+            // Mismo correo pero las dos quejas traen nombres que no coinciden (p. ej. alguien
+            // registró quejas a nombre de otras personas con su correo): no se da por verificado.
+            boolean correoConOtroNombre = mismoCorreo && !mismaIdentificacion
+                    && personas.quejoso() != null && a.getNombreQuejoso() != null
+                    && !a.getNombreQuejoso().isBlank()
+                    && !NombresPersona.mismoNombre(personas.quejoso(), a.getNombreQuejoso());
             boolean mismoQuejoso = mismaIdentificacion || mismoCorreo
                     || NombresPersona.mismoNombre(personas.quejoso(), a.getNombreQuejoso());
             boolean mismoDenunciado = NombresPersona.mismoNombre(personas.denunciado(), a.getNombreDenunciado());
@@ -259,6 +265,8 @@ public class AntecedentesService {
             List<String> tipo = new ArrayList<>();
             if (mismaIdentificacion) {
                 tipo.add("Identificación del quejoso");
+            } else if (correoConOtroNombre) {
+                tipo.add("Mismo correo, otro nombre (por verificar)");
             } else if (mismoCorreo) {
                 tipo.add("Correo del quejoso");
             } else if (mismoQuejoso) {
@@ -268,7 +276,7 @@ public class AntecedentesService {
                 tipo.add("Nombre del denunciado (por verificar)");
             }
             a.setTipoCoincidencia(String.join(" + ", tipo));
-            a.setIdentidadVerificada(mismaIdentificacion || mismoCorreo);
+            a.setIdentidadVerificada(mismaIdentificacion || (mismoCorreo && !correoConOtroNombre));
             a.setMismoDenunciado(mismoDenunciado);
 
             // Mismas etiquetas que el modelo V5: dicen CÓMO coincidió la persona.

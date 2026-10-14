@@ -17,6 +17,7 @@ import ipn.escom.defensoria.queja_service.entity.Queja;
 import ipn.escom.defensoria.queja_service.entity.QuejaEvidencia;
 import ipn.escom.defensoria.queja_service.entity.QuejaTutor;
 import ipn.escom.defensoria.queja_service.repository.QuejaEvidenciaRepository;
+import ipn.escom.defensoria.queja_service.repository.CuentaQuejosoRepository;
 import ipn.escom.defensoria.queja_service.repository.QuejaRepository;
 import ipn.escom.defensoria.queja_service.validacion.ReglasQueja;
 import ipn.escom.defensoria.queja_service.validacion.ValidacionException;
@@ -52,15 +53,18 @@ public class QuejaService {
     private final QuejaEvidenciaRepository quejaEvidenciaRepository;
     private final NotificacionClienteService notificacionClienteService;
     private final ValidadorQuejaPublica validadorQuejaPublica;
+    private final CuentaQuejosoRepository cuentaQuejosoRepository;
 
     public QuejaService(QuejaRepository quejaRepository,
                         QuejaEvidenciaRepository quejaEvidenciaRepository,
                         NotificacionClienteService notificacionClienteService,
-                        ValidadorQuejaPublica validadorQuejaPublica) {
+                        ValidadorQuejaPublica validadorQuejaPublica,
+                        CuentaQuejosoRepository cuentaQuejosoRepository) {
         this.quejaRepository = quejaRepository;
         this.quejaEvidenciaRepository = quejaEvidenciaRepository;
         this.notificacionClienteService = notificacionClienteService;
         this.validadorQuejaPublica = validadorQuejaPublica;
+        this.cuentaQuejosoRepository = cuentaQuejosoRepository;
     }
 
     public boolean validarFolioYCorreo(String folio, String correo) {
@@ -322,6 +326,12 @@ public class QuejaService {
         queja.setNombreDenunciado(nombreDenunciado);
         queja.setApellido1Denunciado(apellido1Denunciado);
         queja.setOrigenRegistro(ORIGEN_AUTENTICADO);
+        // Con sesión solo llega el correo del JWT: el nombre y la boleta salen de su cuenta
+        // (el formulario público, en cambio, los pide). Sin cuenta, la queja se guarda igual.
+        cuentaQuejosoRepository.findFirstByCorreoInstitucionalIgnoreCase(correo).ifPresent(cuenta -> {
+            queja.setNombreQuejoso(cuenta.getNombre());
+            queja.setNumeroIdentificacionQuejoso(cuenta.getBoleta());
+        });
 
         agregarEvidencias(queja, archivos);
 

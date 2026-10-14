@@ -165,8 +165,8 @@ start_service() {
               --restart always \
               --name primer-contacto-service \
               -p 8082:8080 \
-              -m 250m \
-              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -m 512m \
+              -e JAVA_TOOL_OPTIONS="-Xmx320m -Xms64m" \
               -v $BASE_DIR/config-files/primer-contacto-service/config:/app/config:Z \
               -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
               -e SPRING_CONFIG_NAME=primer-contacto-service \
@@ -179,8 +179,8 @@ start_service() {
               --restart always \
               --name subdefensoria-service \
               -p 8091:8080 \
-              -m 250m \
-              -e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m" \
+              -m 512m \
+              -e JAVA_TOOL_OPTIONS="-Xmx320m -Xms64m" \
               -v $BASE_DIR/config-files/subdefensoria-service/config:/app/config:Z \
               -e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/ \
               -e SPRING_CONFIG_NAME=subdefensoria-service \
