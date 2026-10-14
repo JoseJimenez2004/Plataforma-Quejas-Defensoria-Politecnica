@@ -1,6 +1,5 @@
 server:
-  # Puerto interno unificado a 8080 -- el acceso real es por 8093 vía el mapeo
-  # externo de Podman (ver -p en podman-compose-modelo.sh).
+
   port: 8080
   tomcat:
     threads:
@@ -10,9 +9,7 @@ spring:
   application:
     name: antecedentes-service
 
-# Modelo de IA: búsqueda de antecedentes (TF-IDF + coseno) y resumen extractivo (TextRank).
-# Los datasets viven en el volumen /app/data (montado desde $BASE_DIR/modelo/Dataset).
-# quejas_aprendidas.json lo escribe el propio servicio cada vez que aprende quejas nuevas.
+
 ia:
   dataset:
     historico: /app/data/quejas_sinteticas.json

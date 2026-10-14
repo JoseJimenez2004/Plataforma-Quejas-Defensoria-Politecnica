@@ -1,5 +1,3 @@
-# historico-service -- config de PRODUCCIÓN (montada en /app/config, SPRING_CONFIG_NAME=historico-service).
-# Puerto interno 8080; el externo es 8092 (ver podman-compose.sh).
 server:
   port: 8080
 
@@ -7,12 +5,13 @@ spring:
   application:
     name: historico-service
   datasource:
-    # Contenedor historico-db en el servidor BD (169.58.62.99), publicado en 5433.
-    # Base SEPARADA de defensoria_db: quejas de años anteriores, solo consulta.
     url: jdbc:postgresql://169.58.62.99:5433/defensoria_historico_db
     username: postgres
     password: Temporal2026@
     driver-class-name: org.postgresql.Driver
+    idle-timeout: 1800000
+    max-poolSize: 3
+    max-lifeTime: 1800000
   jpa:
     hibernate:
       ddl-auto: update

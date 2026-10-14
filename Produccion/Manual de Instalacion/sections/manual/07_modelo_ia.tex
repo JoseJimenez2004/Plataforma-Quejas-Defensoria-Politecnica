@@ -1,0 +1,128 @@
+\section{Modelo de IA: antecedentes-service (8093)}\label{sec:modelo}
+
+\subsection{Descripción del modelo}
+El microservicio \texttt{antecedentes-service} contiene el modelo de inteligencia artificial de la plataforma. No depende de servicios externos ni de GPU: se ejecuta dentro de la JVM con dos técnicas de procesamiento de lenguaje natural.
+\begin{itemize}
+  \item \textbf{Búsqueda de antecedentes:} representa cada queja con TF-IDF y la compara con el corpus histórico mediante similitud coseno. Devuelve las quejas más parecidas por encima de un umbral.
+  \item \textbf{Resumen extractivo:} aplica TextRank para elegir las oraciones más representativas de una queja larga, descartando las redundantes.
+  \item \textbf{Aprendizaje incremental:} las quejas nuevas se agregan al corpus y se guardan en \texttt{quejas\_aprendidas.json}, sin reentrenar ni reiniciar.
+\end{itemize}
+\pendiente{diagrama del flujo: texto $\rightarrow$ normalización $\rightarrow$ vector TF-IDF $\rightarrow$ coseno $\rightarrow$ top-k}
+
+\subsection{Quién lo consume}
+\pendiente{revision-service lo llama durante el turnado; Frontend-Revision muestra los antecedentes y el resumen en la pantalla de turnado}
+
+\subsection{Estructura del proyecto Modelo-Java}
+\begin{table}[H]
+\centering
+\caption{Paquetes del modelo}
+\begin{tabular}{ll}
+\toprule
+\textbf{Paquete} & \textbf{Contenido} \\
+\midrule
+\texttt{antecedentes\_service} & API REST, configuración (\texttt{IaProperties}) y servicio \\
+\texttt{ia.dataset} & Lectura de los JSON del corpus (\texttt{LectorDataset}) \\
+\texttt{ia.normalizacion} & Limpieza y normalización del texto \\
+\texttt{ia.tfidf} & Índice TF-IDF y vectores dispersos \\
+\texttt{ia.antecedentes} & Buscador por similitud coseno \\
+\texttt{ia.resumen} & Resumen extractivo TextRank \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Conjuntos de datos (Dataset)}
+\begin{table}[H]
+\centering
+\caption{Archivos del corpus}
+\begin{tabular}{lp{8.5cm}}
+\toprule
+\textbf{Archivo} & \textbf{Uso} \\
+\midrule
+\texttt{quejas\_sinteticas.json} & Corpus histórico base del índice \\
+\texttt{quejas\_prueba\_30.json} & Quejas nuevas de prueba \\
+\texttt{quejas\_aprendidas.json} & Lo escribe el propio servicio al aprender quejas nuevas (no se debe sobrescribir en producción) \\
+\bottomrule
+\end{tabular}
+\end{table}
+\pendiente{cómo se generaron los datos sintéticos con \texttt{generar\_datasets.py} y \texttt{generar\_quejas\_variadas.py}}
+
+\subsection{Compilación}
+\begin{lstlisting}
+$ cd Modelo-Java
+$ mvn clean package -DskipTests
+$ cp target/antecedentes-service-0.1.0.jar antecedentes-service.jar
+\end{lstlisting}
+Spring Boot 3.5.16, Java 21, solo \texttt{spring-boot-starter-web}.
+
+\subsection{Archivos en el servidor backend}
+\begin{table}[H]
+\centering
+\caption{Ubicación de los archivos del modelo (base: /apps/aplicaciones/defensoria/back)}
+\begin{tabular}{ll}
+\toprule
+\textbf{Archivo} & \textbf{Ruta} \\
+\midrule
+JAR & \texttt{artifact/antecedentes-service.jar} \\
+Configuración & \texttt{config-files/antecedentes-service/config/antecedentes-service.yml} \\
+Datasets & \texttt{modelo/Dataset/} \\
+Script & \texttt{podman-compose-modelo.sh} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Parámetros de configuración}
+\begin{table}[H]
+\centering
+\caption{Parámetros del modelo (prefijo \texttt{ia.})}
+\begin{tabular}{llp{6.5cm}}
+\toprule
+\textbf{Parámetro} & \textbf{Valor} & \textbf{Significado} \\
+\midrule
+\texttt{busqueda.umbral} & 0.25 & Similitud mínima para considerar un antecedente (subir a 0.70 al comparar quejas completas con un corpus grande) \\
+\texttt{busqueda.top-k} & 5 & Antecedentes devueltos por defecto \\
+\texttt{busqueda.top-k-maximo} & 50 & Límite que puede pedir el cliente \\
+\texttt{resumen.numero-oraciones} & 3 & Oraciones del resumen por defecto \\
+\texttt{resumen.numero-oraciones-maximo} & 20 & Límite de oraciones \\
+\texttt{resumen.redundancia} & 0.60 & Similitud a partir de la cual una oración se descarta por repetida \\
+\texttt{dataset.*} & \texttt{/app/data/...} & Rutas de los JSON dentro del contenedor \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Despliegue con podman-compose-modelo.sh}
+\begin{lstlisting}
+# sudo bash podman-compose-modelo.sh up       # construye y levanta
+# sudo bash podman-compose-modelo.sh status   # estado + health
+# sudo bash podman-compose-modelo.sh logs
+# sudo bash podman-compose-modelo.sh restart | delete
+\end{lstlisting}
+El contenedor publica \texttt{8093:8080}, se limita a 250\,MB con \texttt{-Xmx150m -Xms64m -XX:+UseSerialGC} y monta la configuración en \texttt{/app/config} y los datasets en \texttt{/app/data}.
+
+\subsection{Endpoints}
+\begin{table}[H]
+\centering
+\caption{API del modelo (\texttt{/api/antecedentes})}
+\begin{tabular}{llp{7cm}}
+\toprule
+\textbf{Método} & \textbf{Ruta} & \textbf{Función} \\
+\midrule
+POST & \texttt{/buscar} & Antecedentes similares a un texto (\texttt{texto}, \texttt{umbral}, \texttt{topK}) \\
+POST & \texttt{/resumir} & Resumen extractivo de una queja \\
+POST & \texttt{/entrenar} & Agrega una queja al corpus \\
+POST & \texttt{/entrenar-batch} & Agrega varias quejas \\
+GET & \texttt{/corpus} & Tamaño y estado del corpus \\
+GET & \texttt{/health} & Verificación de funcionamiento \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Verificación}
+\begin{lstlisting}
+# curl -s http://127.0.0.1:8093/api/antecedentes/health
+# curl -s -X POST http://127.0.0.1:8093/api/antecedentes/buscar \
+    -H "Content-Type: application/json" -d @pruebas/buscar.json
+\end{lstlisting}
+\pendiente{respuesta esperada; la carpeta \texttt{Modelo-Java/pruebas} trae más ejemplos (resumir, entrenar)}
+
+\subsection{Respaldo del aprendizaje}
+\pendiente{respaldar \texttt{modelo/Dataset/quejas\_aprendidas.json} junto con la base de datos}

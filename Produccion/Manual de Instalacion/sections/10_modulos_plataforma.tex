@@ -1,0 +1,252 @@
+	\section{Módulos de la Plataforma}
+	\label{cap:modulos}
+	Este capítulo recorre los módulos entregados desde la perspectiva de quien los usa. Mientras el
+	Capítulo~\ref{cap:implementacion} describe cómo se construyó el sistema por capas técnicas, aquí
+	se describe qué hace cada aplicación, pantalla por pantalla, y cómo esas pantallas se
+	corresponden con los casos de uso definidos en la Sección~\ref{sec:casos_uso}. El orden sigue el
+	recorrido natural de la información dentro de la institución: entra por el portal del quejoso,
+	se procesa en el panel de revisión y se sostiene desde la consola de administración.
+	
+	\subsection{Portal del quejoso}
+	\label{sec:modulo_quejoso}
+	El portal del quejoso es la única aplicación de acceso público y, por lo tanto, la que define la
+	experiencia que la comunidad politécnica tiene de la Defensoría en línea. Su diseño parte de una
+	premisa que condicionó todo lo demás: la persona que necesita presentar una queja no debería
+	tener que crear una cuenta antes de poder hacerlo.
+	
+	\subsubsection{Área pública}
+	El área pública es accesible sin credenciales y agrupa cuatro funciones.
+	
+	La \textbf{página de inicio} presenta la identidad institucional y tres accesos directos:
+	presentar una queja, consultar el estado de una queja existente e iniciar sesión. Incorpora
+	además una sección de servicios en línea que replica los accesos de referencia del sitio
+	institucional de la Defensoría, de modo que el portal se perciba como continuación del servicio
+	existente y no como un sistema desconectado.
+	
+	El \textbf{formulario de registro de queja} implementa el caso de uso CU-Q01 y es la pantalla más
+	compleja del portal. Está organizada en secciones numeradas: datos del quejoso, datos de la
+	queja, evidencias y, cuando corresponde, datos del tutor. Tres decisiones de diseño merecen
+	mención. La unidad académica donde ocurrieron los hechos se selecciona del catálogo institucional
+	en lugar de capturarse como texto libre, lo que hace el dato comparable entre expedientes. Las
+	evidencias admiten varios archivos con lista previa de lo seleccionado y opción de retirar
+	alguno antes de enviar. Y el aviso normativo sobre el plazo para presentar una queja se presenta
+	en un elemento flotante consultable en cualquier momento, en lugar de un bloque fijo que
+	compitiera por el espacio del formulario.
+	
+	El \textbf{tratamiento de menores de edad} se resuelve dentro del mismo formulario. Cuando la
+	fecha de nacimiento indica que el quejoso es menor, el sistema exige los datos de un tutor o
+	adulto responsable antes de permitir el envío, conforme a la regla RN-Q01. Una vez capturados, el
+	formulario muestra un aviso persistente que confirma que ya se registraron y ofrece editarlos,
+	porque en una versión previa no existía ninguna señal visual de que ese paso se hubiera
+	completado y los usuarios volvían a abrir el diálogo por duda.
+	
+	La \textbf{consulta por folio} implementa el caso de uso CU-Q02 y permite conocer el estado de un
+	expediente con el folio y el correo con que se presentó, sin necesidad de cuenta. Es la
+	funcionalidad que resuelve de forma más directa el problema de trazabilidad que motivó el
+	proyecto.
+	
+	Completa el área pública un \textbf{menú de preguntas frecuentes} sobre la Defensoría y el
+	proceso de queja, cuyo contenido administra el personal de sistemas sin intervención del equipo
+	de desarrollo.
+	
+	\subsubsection{Panel autenticado}
+	Tras activar una cuenta con el folio de una queja previa, el quejoso accede a un panel con seis
+	secciones.
+	
+	\begin{itemize}
+		\item \textbf{Resumen.} Conteo de las quejas propias agrupadas por estatus, como vista de
+		entrada al panel.
+	
+		\item \textbf{Mis Quejas.} Listado con filtros por estatus y por texto, y detalle de cada
+		expediente con su línea de tiempo. Desde el detalle se editan los campos habilitados, pero
+		únicamente mientras la queja no haya iniciado su validación: al pasar a validación los campos
+		se bloquean, y el servidor rechaza la modificación aunque se intente por otra vía.
+	
+		\item \textbf{Nueva Queja.} Registro de una queja adicional sin volver a capturar la
+		identidad, que se toma de la sesión.
+	
+		\item \textbf{Acuerdos de Conciliación.} Consulta de los acuerdos propuestos por la
+		Defensoría, con la posibilidad de aceptarlos o rechazarlos y añadir un comentario.
+	
+		\item \textbf{Notificaciones.} Historial persistente de avisos ---accesos, quejas creadas,
+		cambios de estatus, acuerdos--- con contador de no leídas que se actualiza al marcarlas.
+	
+		\item \textbf{Perfil.} Edición de los datos de contacto. El nombre, el correo institucional y
+		la boleta o número de empleado se muestran en modo de solo lectura, porque provienen de la
+		activación de la cuenta y modificarlos rompería la correspondencia con las quejas ya
+		presentadas.
+	\end{itemize}
+	
+	\subsection{Panel de revisión}
+	\label{sec:modulo_revision}
+	El panel de revisión es la herramienta de trabajo diario del personal de recepción y el punto
+	donde una queja deja de ser un formulario recibido para convertirse en un expediente en trámite.
+	Su diseño se organiza alrededor de una secuencia fija: revisar, decidir, registrar.
+	
+	\subsubsection{Bandeja de entrada}
+	La bandeja es la pantalla de inicio y presenta contadores de quejas pendientes, en proceso y
+	turnadas en el día, junto con la lista de expedientes por trabajar. La elección de encabezar con
+	contadores responde a una necesidad expresada en las sesiones de levantamiento: el personal
+	necesita saber de un vistazo cuánta carga tiene antes de empezar a abrir expedientes.
+	
+	\subsubsection{Detalle y validación}
+	Al abrir un expediente, el personal accede al resumen completo de la queja y a sus documentos
+	adjuntos, que puede previsualizar o descargar. La pantalla incorpora además una \textbf{búsqueda
+	de antecedentes}: otras quejas previas de la misma persona. Esta función atiende un problema real
+	del proceso, la duplicidad de expedientes cuando alguien presenta la misma queja por distintos
+	canales, y su ubicación en la pantalla de decisión es deliberada: el dato debe estar disponible
+	en el momento de decidir, no en un módulo separado que haya que consultar por iniciativa propia.
+	
+	Desde esta pantalla el personal toma una de dos decisiones excluyentes.
+	
+	El \textbf{rechazo} exige seleccionar al menos un motivo y admite observaciones libres. Al
+	confirmarlo, el expediente pasa a estado rechazado y el sistema envía de forma automática el
+	correo correspondiente al quejoso. La regla RN-R03 hace que el rechazo nunca sea una acción
+	silenciosa: no es posible descartar un expediente sin que su autor se entere ni sin dejar
+	registrado el motivo.
+	
+	El \textbf{turnado} exige elegir el área o dependencia ---tomada del catálogo institucional--- y
+	el defensor o subdefensor responsable, tomado del catálogo de personal activo con esos roles.
+	Admite comentarios y genera el folio oficial de turnado, distinto del folio de seguimiento que
+	conoce el quejoso.
+	
+	En ambos casos el sistema registra quién procesó el expediente y cuándo, sin excepción, conforme
+	al requerimiento RNF-R01.
+	
+	\subsubsection{Registro manual de quejas en papel}
+	Una parte del volumen que recibe la Defensoría llega en papel. El módulo de registro manual
+	permite incorporar esos expedientes al mismo flujo digital, capturando la identidad del quejoso,
+	la dependencia, el número de oficio, la fecha de recepción física, el tipo de documento, la
+	descripción, la ubicación física del expediente y, de forma opcional, el archivo digitalizado.
+	
+	Este módulo tiene una particularidad de diseño: admite que no se conozca la boleta o el número de
+	empleado del quejoso, situación que el registro propio no permite. La razón es que un documento
+	en papel puede provenir de una persona externa o llegar sin esos datos, y rechazarlo por ello
+	significaría dejar fuera del sistema quejas que la institución sí recibió. El expediente queda
+	marcado con origen manual, de modo que su procedencia siempre es identificable.
+	
+	\subsubsection{Historial y exportación}
+	El historial reúne los expedientes ya procesados ---turnados o rechazados--- con filtros por
+	texto, estatus y fecha. Su función principal no es la consulta puntual, que ya resuelve la
+	búsqueda de antecedentes, sino la generación de reportes: el resultado filtrado se exporta a un
+	archivo de hoja de cálculo que se abre directamente en las herramientas ofimáticas que el
+	personal ya usa, sin conversión previa.
+	
+	\subsubsection{Emisión de acuerdos de conciliación}
+	El personal puede emitir un acuerdo de conciliación dirigido al quejoso de un expediente,
+	capturando asunto y términos. El acuerdo queda en estado pendiente y aparece de inmediato en el
+	panel del quejoso, que puede aceptarlo o rechazarlo. Este módulo es el punto donde el flujo de la
+	plataforma se conecta con las etapas del procedimiento que aún no tienen interfaz propia.
+	
+	\subsection{Consola de administración}
+	\label{sec:modulo_admin}
+	La consola de administración es la que hace que la plataforma sea operable a largo plazo sin
+	intervención del equipo de desarrollo. Agrupa cuatro frentes independientes entre sí.
+	
+	\subsubsection{Usuarios y roles}
+	Ciclo de vida completo de las cuentas del personal: alta con contraseña temporal generada por el
+	sistema, edición, restablecimiento de contraseña, baja y reactivación, para cualquiera de los
+	cinco roles.
+	
+	Dos decisiones de diseño de este módulo tienen consecuencias de seguridad. La primera es que las
+	cuentas nuevas se crean siempre como temporales y con obligación de cambiar la contraseña en el
+	primer acceso, de modo que la contraseña generada por el sistema nunca sea la contraseña
+	permanente de nadie. La segunda es que dar de baja una cuenta la desactiva en lugar de
+	eliminarla: si se eliminara, las acciones que esa cuenta registró en la bitácora quedarían sin
+	autor identificable, lo que anularía el propósito de la auditoría.
+	
+	\subsubsection{Catálogo de unidades académicas}
+	Administración del catálogo institucional que consumen el formulario público de quejas y el
+	turnado del panel de revisión. Permite el alta y la edición individual, y la importación masiva
+	desde un archivo de hoja de cálculo con el formato institucional.
+	
+	La importación masiva se diseñó para ser tolerante a errores: en lugar de rechazar el archivo
+	completo cuando una fila está mal formada, procesa lo que puede y devuelve un resumen de filas
+	procesadas, creadas, actualizadas y con error. El criterio detrás de esa decisión es que un
+	archivo de doscientos registros con un error tipográfico en uno de ellos no debería obligar a
+	repetir toda la carga.
+	
+	\subsubsection{Plantillas de documentos oficiales}
+	Administración del contenido reutilizable de los oficios que genera el procedimiento. Cada
+	plantilla admite marcadores que el sistema sustituye por los datos del expediente al generar el
+	documento, y la consola permite consultar qué marcadores están disponibles, previsualizar el
+	resultado con datos de ejemplo y publicar los cambios.
+	
+	Cada plantilla se identifica por una clave estable de negocio y no por su identificador
+	autogenerado, de modo que el resto del sistema pueda referenciarla sin depender del orden en que
+	se hayan creado. Cada actualización registra quién la hizo y cuándo.
+	
+	\subsubsection{Seguridad y respaldos}
+	Este módulo agrupa la operación más sensible de la plataforma. Permite listar los respaldos
+	existentes, ejecutar un respaldo bajo demanda, descargar uno específico y restaurar la base de
+	datos a partir de él.
+	
+	La restauración es la única operación destructiva de todo el sistema y recibe un tratamiento
+	diferenciado: exige una confirmación explícita en el cuerpo de la petición, de modo que no pueda
+	dispararse por accidente con una sola acción de la interfaz. Además, la capacidad de generar,
+	descargar y restaurar respaldos está reservada al rol de administración de sistemas, que es el
+	único que dispone de esos puntos de acceso.
+	
+	El módulo incluye también la \textbf{bitácora de acciones críticas}, que registra las altas,
+	bajas, ediciones y reactivaciones de cuentas, los restablecimientos de contraseña, las
+	actualizaciones de plantillas, los respaldos manuales, las restauraciones y los inicios de
+	sesión, con el usuario que los ejecutó, la dirección de origen y la fecha. Esta bitácora es el
+	mecanismo que hace verificable el requerimiento RNF-A02 y, junto con la regla de que las cuentas
+	se desactivan en lugar de eliminarse, constituye el soporte de auditoría de la plataforma.
+	
+	\subsubsection{Administración de preguntas frecuentes}
+	Alta, edición y eliminación del contenido del menú de preguntas del portal público. Los cambios
+	se reflejan de inmediato en el portal, sin necesidad de recompilar ni redesplegar la aplicación
+	del quejoso, lo que traslada el mantenimiento de ese contenido del equipo de desarrollo al
+	personal de la institución.
+	
+	\subsection{Relación entre módulos y casos de uso}
+	\label{sec:trazabilidad_modulos}
+	La Tabla~\ref{tab:trazabilidad} presenta la correspondencia entre los módulos entregados y los
+	casos de uso especificados en la Sección~\ref{sec:casos_uso}. Su función es de trazabilidad:
+	permite verificar que cada caso de uso especificado tiene un módulo que lo realiza, y que ningún
+	módulo se construyó sin un caso de uso que lo justifique.
+	
+	\rowcolors{2}{rowblue}{white}
+	
+	\small
+	\renewcommand{\arraystretch}{1.25}
+	\setlength{\tabcolsep}{4pt}
+	
+	\begin{longtable}{|p{4.6cm}|p{4.4cm}|p{5.0cm}|}
+		\caption{Correspondencia entre módulos entregados y casos de uso}
+		\label{tab:trazabilidad} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Módulo} & \headercell{Casos de uso} & \headercell{Requerimientos} \\
+		\hline
+		\endfirsthead
+	
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Módulo} & \headercell{Casos de uso} & \headercell{Requerimientos} \\
+		\hline
+		\endhead
+	
+		Registro público de quejas & CU-Q01 & RF-Q02, RF-Q03, RF-Q15 \\ \hline
+		Consulta por folio & CU-Q02 & RF-Q01 \\ \hline
+		Activación de cuenta y acceso & CU-Q03, CU-Q04, CU-Q05 & RF-Q04, RF-Q05, RF-Q06 \\ \hline
+		Panel del quejoso & CU-Q06, CU-Q07, CU-Q09, CU-Q10 & RF-Q07 a RF-Q11, RF-Q13, RF-Q14
+		\\ \hline
+		Acuerdos de conciliación (quejoso) & CU-Q08 & RF-Q12 \\ \hline
+		Preguntas frecuentes & --- & RF-Q16 \\ \hline
+		Bandeja de entrada & CU-R02 & RF-R02 \\ \hline
+		Detalle, rechazo y turnado & CU-R03, CU-R04 & RF-R03 a RF-R07, RF-R12 \\ \hline
+		Registro manual & CU-R05 & RF-R08 \\ \hline
+		Historial y exportación & CU-R06 & RF-R09, RF-R10 \\ \hline
+		Emisión de acuerdos & CU-R07 & RF-R11 \\ \hline
+		Usuarios y roles & CU-A02, CU-A03, CU-A04 & RF-A03 \\ \hline
+		Catálogo institucional & CU-A05 & RF-A04 \\ \hline
+		Plantillas de documentos & CU-A06 & RF-A05 \\ \hline
+		Seguridad y respaldos & CU-A07, CU-A08, CU-A09 & RF-A06, RF-A07 \\ \hline
+		Administración de preguntas & CU-A10 & RF-A08 \\ \hline
+	\end{longtable}
+	
+	\normalsize
+	\setlength{\tabcolsep}{6pt}
+	\renewcommand{\arraystretch}{1}

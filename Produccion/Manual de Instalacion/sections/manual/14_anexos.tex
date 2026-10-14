@@ -1,0 +1,44 @@
+\section{Anexos}\label{sec:anexos}
+
+\subsection{Tabla de puertos}
+\begin{table}[H]
+\centering
+\caption{Puertos de la plataforma}
+\begin{tabular}{llll}
+\toprule
+\textbf{Servicio} & \textbf{Servidor} & \textbf{Puerto} & \textbf{Ruta nginx} \\
+\midrule
+defensoria-db & BD & 5432 & -- \\
+historico-db & BD & 5433 & -- \\
+primercontacto & Backend & 8082 & \pendiente{} \\
+auth-service & Backend & 8083 & /api/auth/ \\
+queja-service & Backend & 8084 & /api/quejas/ \\
+notificaciones-service & Backend & 8085 & /api/notificaciones/ \\
+catalogo-service & Backend & 8086 & /api/catalogo/ \\
+admin-service & Backend & 8087 & /api/admin/ \\
+revision-service & Backend & 8088 & /api/revision/ \\
+chatbot-service & Backend & 8089 & /api/chatbot/ \\
+subdefensoria & Backend & 8091 & \pendiente{} \\
+historico-service & Backend & 8092 & \pendiente{} \\
+antecedentes (IA) & Backend & 8093 & \pendiente{} \\
+denunciado-service & Backend & 8094 & /api/denunciado/ \\
+defensoria-web & Frontend & 8090 & / \\
+admin-web & Frontend & 8091 & /admin/ \\
+revision-web & Frontend & 8092 & /revision/ \\
+router-nginx & Frontend & 80, 443 & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+\pendiente{confirmar las rutas nginx contra defensoria.conf}
+
+\subsection{Resumen de comandos por servidor}
+\pendiente{chuleta de comandos más usados}
+
+\subsection{Archivo defensoria.conf completo}
+\pendiente{\texttt{\textbackslash lstinputlisting} del archivo real}
+
+\subsection{Ejemplo de archivo de configuración de un microservicio}
+\pendiente{YAML con contraseñas reemplazadas por \texttt{<CONTRASEÑA>}}
+
+\subsection{Registro de cambios del manual}
+\pendiente{versión, fecha, cambio}
