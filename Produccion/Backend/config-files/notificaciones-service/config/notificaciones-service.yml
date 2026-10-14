@@ -4,14 +4,16 @@ server:
 spring:
   application:
     name: notificaciones-service
-    datasource:
+  datasource:
     url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
     username: postgres
     password: Temporal2026@
     driver-class-name: org.postgresql.Driver
-    idle-timeout: 1800000
-    max-poolSize: 3
-    max-lifeTime: 1800000
+    # El pool va dentro de "hikari:" con estos nombres; directo bajo datasource Spring los ignora.
+    hikari:
+      maximum-pool-size: 3
+      idle-timeout: 1800000
+      max-lifetime: 1800000
   jpa:
     hibernate:
       ddl-auto: update
