@@ -19,6 +19,31 @@
   margin-bottom: 16px;
 }
 
+/* Borrador del modelo: mismo aviso, en tono informativo en vez de advertencia. */
+.simulado.revision {
+  background: #eef4ff;
+  color: #1e3a8a;
+}
+
+.generando {
+  display: grid;
+  gap: 12px;
+  margin: 8px 0 4px;
+}
+
+.generando p {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.generando strong {
+  display: block;
+  color: var(--negro-inst);
+  font-size: 14px;
+}
+
 section {
   margin-top: 14px;
 }

@@ -51,6 +51,13 @@ antecedentes:
     url: http://156.67.26.73:8093
     umbral: 0.0
 
+# Modelo de resumen del compañero (resumen-service + qwen-gguf). En CPU tarda hasta ~2 min:
+# el tiempo de espera queda por debajo del proxy_read_timeout de nginx (120 s).
+resumen:
+  service:
+    url: http://156.67.26.73:8090
+  timeout-segundos: 110
+
 # Casos históricos (solo lectura). Ojo: la base se llama defensoria_historico_db.
 historico:
   datasource:
