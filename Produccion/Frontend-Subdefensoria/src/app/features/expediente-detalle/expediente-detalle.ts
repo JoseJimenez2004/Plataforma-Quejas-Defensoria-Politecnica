@@ -26,6 +26,7 @@ import { Oficio } from '../../core/models/oficio';
 import { AcuerdoConclusion } from '../../core/models/acuerdo-conclusion';
 import { ETIQUETAS_ESTATUS, PASOS_EXPEDIENTE, etiquetaEstatus } from '../../core/models/estatus-expediente';
 import { RecordatorioDialog, RecordatorioDialogData } from '../../shared/recordatorio-dialog/recordatorio-dialog';
+import { RedactarOficioDialog, RedactarOficioDialogData } from '../../shared/redactar-oficio-dialog/redactar-oficio-dialog';
 import { RespuestaExternaDialog, RespuestaExternaDialogData } from '../../shared/respuesta-externa-dialog/respuesta-externa-dialog';
 
 /** Íconos de la barra de pasos (mismo orden que PASOS_EXPEDIENTE). */
@@ -200,6 +201,33 @@ export class ExpedienteDetalle implements OnInit {
       error: (err) => {
         this.guardando = false;
         this.snackBar.open(err?.error?.error ?? 'No fue posible registrar la conclusión.', 'Cerrar', { duration: 4000 });
+      }
+    });
+  }
+
+  /**
+   * Igual que el botón de la bandeja: se puede oficiar mientras el expediente esté en
+   * investigación y no haya un oficio esperando respuesta (el backend lo vuelve a validar).
+   */
+  get puedeSolicitarOficio(): boolean {
+    return this.expediente?.estatus === 'EN_INVESTIGACION'
+      && !this.oficios.some(o => o.estatus === 'EN_ESPERA' || o.estatus === 'VENCIDO');
+  }
+
+  solicitarOficio(): void {
+    if (!this.expediente) return;
+
+    const data: RedactarOficioDialogData = {
+      expedienteId: this.expediente.id,
+      folio: this.expediente.folio,
+      siguienteFase: 'SOLICITUD_INFORMACION',
+      unidadAcademica: this.expediente.unidadAcademica
+    };
+
+    this.dialog.open(RedactarOficioDialog, { width: '560px', data }).afterClosed().subscribe(resultado => {
+      if (resultado) {
+        this.snackBar.open('Oficio generado correctamente.', 'Cerrar', { duration: 3000 });
+        this.cargarExpediente();
       }
     });
   }

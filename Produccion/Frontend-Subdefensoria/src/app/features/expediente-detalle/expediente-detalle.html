@@ -122,6 +122,15 @@
             </mat-expansion-panel>
           }
         </mat-accordion>
+
+        @if (puedeSolicitarOficio) {
+          <div class="oficio-actions">
+            <button mat-flat-button class="primary-btn" (click)="solicitarOficio()">
+              <mat-icon>send</mat-icon>
+              Solicitar Oficio
+            </button>
+          </div>
+        }
       </mat-card>
 
       @if (acuerdoRechazado && acuerdo) {
