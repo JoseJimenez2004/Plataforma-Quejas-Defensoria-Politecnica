@@ -15,4 +15,9 @@ public interface QuejaRepository extends JpaRepository<Queja, Long> {
     // logueado, sin importar si las registró como autenticado o (antes de tener cuenta) como
     // invitado con ese mismo correo. Orden más reciente primero.
     List<Queja> findByCorreoInstitucionalOrderByFechaCreacionDesc(String correoInstitucional);
+
+    /** Última queja del mismo correo que ya trae los datos del quejoso (la del formulario
+     *  público con la que nació su cuenta, o una posterior que los heredó). */
+    Optional<Queja> findFirstByCorreoInstitucionalIgnoreCaseAndNombreQuejosoIsNotNullOrderByFechaCreacionDesc(
+            String correoInstitucional);
 }

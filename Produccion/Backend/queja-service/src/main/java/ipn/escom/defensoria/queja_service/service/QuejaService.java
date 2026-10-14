@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -326,18 +327,38 @@ public class QuejaService {
         queja.setNombreDenunciado(nombreDenunciado);
         queja.setApellido1Denunciado(apellido1Denunciado);
         queja.setOrigenRegistro(ORIGEN_AUTENTICADO);
-        // Con sesión solo llega el correo del JWT: el nombre y la boleta salen de su cuenta
-        // (el formulario público, en cambio, los pide). Sin cuenta, la queja se guarda igual.
-        cuentaQuejosoRepository.findFirstByCorreoInstitucionalIgnoreCase(correo).ifPresent(cuenta -> {
-            queja.setNombreQuejoso(cuenta.getNombre());
-            queja.setNumeroIdentificacionQuejoso(cuenta.getBoleta());
-        });
+        completarDatosQuejoso(queja, correo);
 
         agregarEvidencias(queja, archivos);
 
         Queja guardada = quejaRepository.save(queja);
         notificacionClienteService.notificarQuejaCreada(guardada.getCorreoInstitucional(), guardada.getNumeroFolio());
         return guardada;
+    }
+
+    /**
+     * Con sesión solo llega el correo del JWT. La cuenta del quejoso nace de su primera queja
+     * (formulario público), que sí pide nombre, apellidos, fecha de nacimiento e
+     * identificación; la tabla usuarios solo guarda nombre y boleta. Por eso se copian de su
+     * queja anterior más reciente y, si no hay, de la cuenta. Sin ninguna, se guarda igual.
+     */
+    private void completarDatosQuejoso(Queja queja, String correo) {
+        Optional<Queja> anterior = quejaRepository
+                .findFirstByCorreoInstitucionalIgnoreCaseAndNombreQuejosoIsNotNullOrderByFechaCreacionDesc(correo);
+        if (anterior.isPresent()) {
+            Queja q = anterior.get();
+            queja.setNombreQuejoso(q.getNombreQuejoso());
+            queja.setApellido1Quejoso(q.getApellido1Quejoso());
+            queja.setApellido2Quejoso(q.getApellido2Quejoso());
+            queja.setFechaNacimientoQuejoso(q.getFechaNacimientoQuejoso());
+            queja.setTipoIdentificacionQuejoso(q.getTipoIdentificacionQuejoso());
+            queja.setNumeroIdentificacionQuejoso(q.getNumeroIdentificacionQuejoso());
+            return;
+        }
+        cuentaQuejosoRepository.findFirstByCorreoInstitucionalIgnoreCase(correo).ifPresent(cuenta -> {
+            queja.setNombreQuejoso(cuenta.getNombre());
+            queja.setNumeroIdentificacionQuejoso(cuenta.getBoleta());
+        });
     }
 
     /**
