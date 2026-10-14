@@ -967,12 +967,23 @@ Rama `Pre-Produccion2`, todo en GitHub (último commit de código `e4c9482`). Se
 ### 15.10 Pendiente (siguiente chat)
 1. **Afinaciones** que el usuario encuentre al revisar (dijo que las revisa el 2026-10-14).
 2. **nginx gzip/caché**: esperar la decisión del equipo. Comandos y riesgos en el artifact
-   https://claude.ai/artifact/FPEuGFuwQNQLqfBkrrfV21; archivo listo en
-   `C:\Users\leish\despliegue-nginx\defensoria.conf` (respaldar y `nginx -t` antes de recargar).
+   https://claude.ai/artifact/FPEuGFuwQNQLqfBkrrfV21. En el repo, `nginx/config/defensoria.conf`
+   = lo que corre hoy en el servidor; la propuesta está en `defensoria.conf.propuesta-gzip`
+   (también en `C:\Users\leish\despliegue-nginx\defensoria.conf`). Respaldar y `nginx -t`.
 3. **Pool de conexiones de los servicios del compañero**: sus ymls tienen `max-poolSize`,
-   `idle-timeout`, `max-lifeTime` directo bajo `datasource` (Spring los ignora → siguen en 10).
-   Se le pasó el comando para moverlos a `hikari:`; que él decida. Hay poco margen en
-   `max_connections` de defensoria_db.
+   `idle-timeout`, `max-lifeTime` directo bajo `datasource`. Según el código (ningún servicio
+   configura la base a mano: todo es autoconfiguración de Spring Boot con Hikari), Spring los
+   ignora y siguen en 10; el compañero dice que pasarlos a `hikari:` obliga a cambiar la
+   lógica. Se intentó medirlo en local (contar conexiones con las 3 formas) pero Docker estaba
+   apagado: repetir la prueba si hace falta convencer. Hay poco margen en `max_connections`.
+
+**Regla acordada con el usuario (2026-10-14):** el repo (rama Pre-Produccion2 = Produccion)
+debe tener exactamente lo que funciona en el servidor, para que si alguien carga desde la
+rama suba lo probado. Al cierre se verificó: los 6 jars y los 3 fronts del servidor son
+idénticos (md5) a los compilados del repo, y todos los yml + podman-compose.sh + nginx
+coinciden (salvo contraseñas, que en el repo van como marcadores, y el orden del bloque
+`resumen:` en el yml de PC). En `notificaciones-service.yml` del repo se corrigió la sangría
+de `datasource:` (estaba dentro de `application:`), igual que en el servidor.
 4. **Pepito Ramírez en "Por involucrados"**: eran quejas de prueba con el MISMO correo
    (leishasr@gmail.com) y otros nombres; ya sale "Mismo correo, otro nombre (por verificar)".
    Confirmar con una queja nueva.
