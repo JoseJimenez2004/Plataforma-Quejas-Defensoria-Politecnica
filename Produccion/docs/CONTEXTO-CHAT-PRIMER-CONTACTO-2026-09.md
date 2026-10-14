@@ -904,7 +904,31 @@ enlaces de los correos al quejoso no abren, el oficio no sale con adjunto (SD lo
 el log y deja `correo_enviado=false`) y las quejas en SD no cuentan como turnadas en
 revision/admin.
 
-### 15.7 Pendiente (siguiente chat)
+### 15.7 Despliegue 2 + fase B (2026-10-14 madrugada) — HECHO
+- **"too many clients"**: `defensoria_db` se llenó al sumar SD (cada Spring abre 10) y el
+  modelo V5 respondía 503. PC y SD bajaron a `hikari.maximum-pool-size: 3` (servidor y repo).
+  No era el firewall. El compañero quiere bajar también los suyos (ojo: él había puesto
+  `max-poolSize` directo bajo `datasource`, que Spring ignora; va en `hikari.maximum-pool-size`).
+- Cambios por las pruebas del usuario (`320133d`, `1900c2c`): agenda "Mis Próximas Citas"
+  (`GET /citas/mias`, todas las vigentes del analista), tarjeta "Datos de la Queja" en el
+  detalle de PC (denunciado, fecha de hechos, identificación...), botón "Solicitar Oficio" en
+  el detalle de SD.
+- Desplegado: jars de PC, **notificaciones, revision y admin** (fase B) y los fronts del
+  **portal**, PC y SD. Antes se verificó que lo desplegado del compañero = GitHub (CRC por
+  clase de los jars; textos del bundle del portal). Respaldos en `/apps/utiles/respaldos/2026-10-14/`.
+  Todo arranca sin errores; V5 responde 200.
+- El "estado no cambia en el panel del quejoso" era el portal viejo (solo conocía 3 estados).
+- `resumen-service` y `qwen-gguf` siguen apagados (Exited 0 desde ~10-08): preguntar al compañero.
+- Bots intentan contraseñas de root por SSH en los servidores (sugerir fail2ban/llaves).
+
+### 15.8 Pendiente (siguiente chat)
+- Revisar "Pepito Ramírez" en "Por involucrados" (falta el folio de la queja analizada; con los
+  datos dados, el V5 directo no lo marca como involucrado).
+- Conectar el modelo de resumen. Formulario del involucrado en PC (por definir dónde).
+- Probar con SMTP real el correo a la UA con PDF (debe llegar a leishasr2@gmail.com).
+- Borrar `C:\Users\leish\despliegue-1013` (tiene contraseñas) y `/tmp/despliegue-101*`.
+
+### 15.9 Pendiente anterior (ya cubierto en 15.6–15.7)
 4. Fase B del despliegue (ver arriba) + prueba funcional con un subdefensor real + correo:
    respaldos; jars; yml del servidor (en el de PC poner `sincronizar-estatus-queja: true` y
    `portal.url`; el de SD completo, con `correo.unidad-academica`); front de SD (contenedor
