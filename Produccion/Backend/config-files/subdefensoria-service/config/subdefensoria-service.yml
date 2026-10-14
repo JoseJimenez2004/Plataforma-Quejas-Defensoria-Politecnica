@@ -25,6 +25,10 @@ spring:
     username: postgres
     password: "<la misma de revision-service.yml>"
     driver-class-name: org.postgresql.Driver
+    # PostgreSQL tiene max_connections=100 compartido por todos los servicios; con 10 por
+    # servicio se llenaba (2026-10-13: "too many clients" tumbó el modelo de antecedentes).
+    hikari:
+      maximum-pool-size: 3
   jpa:
     hibernate:
       ddl-auto: update
