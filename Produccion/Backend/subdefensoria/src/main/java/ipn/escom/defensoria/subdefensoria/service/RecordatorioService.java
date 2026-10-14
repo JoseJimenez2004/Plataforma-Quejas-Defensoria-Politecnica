@@ -9,6 +9,8 @@ import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepo
 import ipn.escom.defensoria.subdefensoria.repository.OficioInformacionRepository;
 import ipn.escom.defensoria.subdefensoria.repository.RecordatorioUrgenciaRepository;
 import ipn.escom.defensoria.subdefensoria.util.DiasHabilesCalculator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,21 +25,29 @@ import java.time.LocalDateTime;
 @Service
 public class RecordatorioService {
 
+    private static final Logger log = LoggerFactory.getLogger(RecordatorioService.class);
+
     private final OficioInformacionRepository oficioRepository;
     private final RecordatorioUrgenciaRepository recordatorioRepository;
     private final ExpedienteInvestigacionRepository expedienteRepository;
     private final int diasRecordatorio;
+    private final DocumentoService documentoService;
+    private final CorreoUnidadAcademicaService correoService;
 
     public RecordatorioService(
             OficioInformacionRepository oficioRepository,
             RecordatorioUrgenciaRepository recordatorioRepository,
             ExpedienteInvestigacionRepository expedienteRepository,
-            @Value("${plazos.recordatorio-dias}") int diasRecordatorio
+            @Value("${plazos.recordatorio-dias}") int diasRecordatorio,
+            DocumentoService documentoService,
+            CorreoUnidadAcademicaService correoService
     ) {
         this.oficioRepository = oficioRepository;
         this.recordatorioRepository = recordatorioRepository;
         this.expedienteRepository = expedienteRepository;
         this.diasRecordatorio = diasRecordatorio;
+        this.documentoService = documentoService;
+        this.correoService = correoService;
     }
 
     public RecordatorioDTO generarRecordatorio(GenerarRecordatorioDTO dto) {
@@ -77,6 +87,8 @@ public class RecordatorioService {
         oficio.setEstatus(EstatusOficio.EN_ESPERA);
         OficioInformacion actualizado = oficioRepository.save(oficio);
 
+        enviarPorCorreo(recordatorio, actualizado, expediente);
+
         return RecordatorioDTO.builder()
                 .id(recordatorio.getId())
                 .oficioId(actualizado.getId())
@@ -88,6 +100,23 @@ public class RecordatorioService {
                 .nuevaFechaLimite(actualizado.getFechaLimite().toString())
                 .estatusExpediente(expediente.getEstatus())
                 .build();
+    }
+
+    /** Correo a la unidad académica con el recordatorio en PDF; si falla, ya quedó guardado. */
+    private void enviarPorCorreo(RecordatorioUrgencia recordatorio, OficioInformacion oficio,
+                                 ExpedienteInvestigacion expediente) {
+        try {
+            correoService.enviar(
+                    oficio.getDestinatarioCorreo(),
+                    "Recordatorio del oficio " + oficio.getNumeroOficio() + " (" + expediente.getFolio() + ")",
+                    "Estimado(a) " + oficio.getDestinatarioNombre() + ",\n\nSe adjunta el recordatorio del oficio "
+                            + oficio.getNumeroOficio() + ", que sigue sin respuesta. Le agradeceremos que la haga "
+                            + "llegar a más tardar el " + oficio.getFechaLimite() + ".",
+                    documentoService.recordatorio(recordatorio.getId()));
+        } catch (Exception ex) {
+            log.error("No se pudo enviar el recordatorio del oficio {} por correo: {}",
+                    oficio.getNumeroOficio(), ex.getMessage());
+        }
     }
 
     public java.util.List<RecordatorioDTO> porOficio(Long oficioId) {

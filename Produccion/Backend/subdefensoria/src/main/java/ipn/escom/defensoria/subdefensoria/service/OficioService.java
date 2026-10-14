@@ -8,6 +8,8 @@ import ipn.escom.defensoria.subdefensoria.exception.RecursoNoEncontradoException
 import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
 import ipn.escom.defensoria.subdefensoria.repository.OficioInformacionRepository;
 import ipn.escom.defensoria.subdefensoria.util.DiasHabilesCalculator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -28,21 +30,29 @@ import java.util.List;
 @Service
 public class OficioService {
 
+    private static final Logger log = LoggerFactory.getLogger(OficioService.class);
+
     private final OficioInformacionRepository oficioRepository;
     private final ExpedienteInvestigacionRepository expedienteRepository;
     private final int diasPrimeraSolicitud;
     private final TransicionExpedienteService transicionService;
+    private final DocumentoService documentoService;
+    private final CorreoUnidadAcademicaService correoService;
 
     public OficioService(
             OficioInformacionRepository oficioRepository,
             ExpedienteInvestigacionRepository expedienteRepository,
             @Value("${plazos.primera-solicitud-dias}") int diasPrimeraSolicitud,
-            TransicionExpedienteService transicionService
+            TransicionExpedienteService transicionService,
+            DocumentoService documentoService,
+            CorreoUnidadAcademicaService correoService
     ) {
         this.oficioRepository = oficioRepository;
         this.expedienteRepository = expedienteRepository;
         this.diasPrimeraSolicitud = diasPrimeraSolicitud;
         this.transicionService = transicionService;
+        this.documentoService = documentoService;
+        this.correoService = correoService;
     }
 
     public OficioDTO crearOficio(CrearOficioDTO dto) {
@@ -99,7 +109,29 @@ public class OficioService {
         // Fila 15: oficio enviado, se espera la respuesta.
         transicionService.cambiar(expediente, EstatusExpediente.EN_ESPERA_OFICIO);
 
+        enviarPorCorreo(guardado, expediente);
+
         return convertirADTO(guardado);
+    }
+
+    /** Correo a la unidad académica con el oficio en PDF; si falla, el oficio ya está guardado. */
+    private void enviarPorCorreo(OficioInformacion oficio, ExpedienteInvestigacion expediente) {
+        try {
+            boolean enviado = correoService.enviar(
+                    oficio.getDestinatarioCorreo(),
+                    "Oficio " + oficio.getNumeroOficio() + " — solicitud de información (" + expediente.getFolio() + ")",
+                    "Estimado(a) " + oficio.getDestinatarioNombre() + ",\n\nSe adjunta el oficio "
+                            + oficio.getNumeroOficio() + " con la solicitud de información del expediente "
+                            + expediente.getFolio() + ". Le agradeceremos su respuesta a más tardar el "
+                            + oficio.getFechaLimite() + ".",
+                    documentoService.oficio(oficio.getId()));
+            if (enviado) {
+                oficio.setCorreoEnviado(true);
+                oficioRepository.save(oficio);
+            }
+        } catch (Exception ex) {
+            log.error("No se pudo enviar el oficio {} por correo: {}", oficio.getNumeroOficio(), ex.getMessage());
+        }
     }
 
     public List<OficioDTO> historialPorFolio(String folio) {
