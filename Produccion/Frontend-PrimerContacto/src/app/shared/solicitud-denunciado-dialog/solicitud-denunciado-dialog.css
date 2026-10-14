@@ -1,0 +1,35 @@
+.intro {
+  margin: 0 0 16px;
+  color: var(--negro-inst);
+  line-height: 1.5;
+}
+
+.campo {
+  width: 100%;
+}
+
+.error {
+  color: var(--peligro);
+}
+
+.nota {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.inline-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.primary-btn {
+  background: var(--guinda) !important;
+  color: white !important;
+  border-radius: 999px !important;
+  font-weight: 800;
+}

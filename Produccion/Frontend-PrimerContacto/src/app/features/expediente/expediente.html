@@ -335,6 +335,57 @@
     </mat-card>
   }
 
+  <!-- ============================ Versión del denunciado ============================ -->
+  @if (abierto || solicitudesDenunciado.length > 0 || respuestasDenunciado.length > 0) {
+    <mat-card class="actions-card">
+      <div>
+        <h3>Versión del denunciado</h3>
+        @if (respuestasDenunciado.length > 0) {
+          <p>
+            <mat-icon class="inline-icon">mark_email_read</mat-icon>
+            Respondió el {{ formatearFechaHora(respuestasDenunciado[0].fechaRegistro) }}
+            ({{ respuestasDenunciado[0].folioRespuesta }}).
+            @if (respuestasDenunciado.length > 1) {
+              Hay {{ respuestasDenunciado.length }} respuestas.
+            }
+          </p>
+        }
+        @if (ultimaSolicitudDenunciado; as s) {
+          <p>
+            <mat-icon class="inline-icon">outgoing_mail</mat-icon>
+            Solicitud enviada a {{ s.correoDenunciado }} el {{ formatearFechaHora(s.fechaEnvio) }}
+            @if (s.enviadoPorNombre) {
+              por {{ s.enviadoPorNombre }}
+            }.
+            @if (respuestasDenunciado.length === 0) {
+              Aún no responde.
+            }
+          </p>
+          @if (!s.correoEnviado) {
+            <p class="aviso-cita">El último correo no se pudo enviar. Revisa la dirección y reenvíalo.</p>
+          }
+        } @else if (respuestasDenunciado.length === 0) {
+          <p>Aún no se le ha pedido al denunciado su versión de los hechos.</p>
+        }
+      </div>
+
+      <div class="actions">
+        @if (respuestasDenunciado.length > 0) {
+          <button mat-stroked-button class="outline-btn" (click)="verRespuestaDenunciado()">
+            <mat-icon>visibility</mat-icon> Ver respuesta
+          </button>
+        }
+        @if (abierto) {
+          <button mat-flat-button class="primary-btn" [disabled]="enviandoSolicitudDenunciado"
+                  (click)="solicitarRespuestaDenunciado()">
+            <mat-icon>forward_to_inbox</mat-icon>
+            {{ ultimaSolicitudDenunciado ? 'Reenviar solicitud' : 'Solicitar respuesta del denunciado' }}
+          </button>
+        }
+      </div>
+    </mat-card>
+  }
+
   <!-- ============================ Dictamen (CU-PC-06/07/08/09) ============================ -->
   <mat-card class="decision-card">
     @switch (expediente.estatusCodigo) {

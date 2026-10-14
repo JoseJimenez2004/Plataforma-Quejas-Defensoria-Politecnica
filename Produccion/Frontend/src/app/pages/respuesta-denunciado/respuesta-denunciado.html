@@ -17,6 +17,16 @@
       <p class="nota">Guarda este folio. El personal de la Defensoría revisará tu versión de los hechos junto con la queja.</p>
       <a routerLink="/" class="btn-primary">Volver al inicio</a>
     </div>
+  } @else if (!enlaceValido) {
+    <!-- ================= Enlace sin folio ================= -->
+    <div class="card acuse">
+      <h2>Enlace incompleto</h2>
+      <p class="nota">
+        Para responder, abre el enlace que te llegó por correo de la Defensoría de los Derechos
+        Politécnicos: ese enlace indica la queja a la que corresponde tu respuesta.
+      </p>
+      <a routerLink="/" class="btn-primary">Volver al inicio</a>
+    </div>
   } @else {
     <!-- ================= Formulario ================= -->
     <header class="encabezado">

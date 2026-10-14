@@ -11,9 +11,10 @@ export const jwtPrimerContactoInterceptor: HttpInterceptorFn = (
   const sesion = inject(SesionPersonalService);
   const token = sesion.getToken();
 
-  // Solo agregamos el JWT a llamadas de Primer Contacto.
+  // Solo agregamos el JWT a llamadas de Primer Contacto y a la consulta de la respuesta del
+  // denunciado (denunciado-service acepta al analista con el mismo token).
   const esPeticionPrimerContacto =
-    req.url.includes('/api/primer-contacto');
+    req.url.includes('/api/primer-contacto') || req.url.includes('/api/denunciado');
 
   if (!token || !esPeticionPrimerContacto) {
     return next(req);

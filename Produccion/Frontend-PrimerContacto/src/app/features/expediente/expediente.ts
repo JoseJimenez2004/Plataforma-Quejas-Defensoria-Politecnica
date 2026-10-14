@@ -9,6 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ExpedienteDetalle, EvidenciaDetalle } from '../../core/models/expediente-detalle';
 import { NotaAnalisis } from '../../core/models/nota-analisis.model';
 import { AcuerdoConciliacion } from '../../core/models/conciliacion.model';
@@ -26,6 +27,16 @@ import {
   formatearFechaHora
 } from '../../core/utils/estatus-expediente';
 import { abrirBlob, mensajeDeError } from '../../core/utils/archivos';
+import { DenunciadoService } from '../../core/services/denunciado.service';
+import { RespuestaDenunciado, SolicitudDenunciado } from '../../core/models/denunciado.model';
+import {
+  SolicitudDenunciadoDialog,
+  SolicitudDenunciadoDialogData
+} from '../../shared/solicitud-denunciado-dialog/solicitud-denunciado-dialog';
+import {
+  RespuestaDenunciadoDialog,
+  RespuestaDenunciadoDialogData
+} from '../../shared/respuesta-denunciado-dialog/respuesta-denunciado-dialog';
 
 @Component({
   selector: 'app-expediente',
@@ -38,7 +49,8 @@ import { abrirBlob, mensajeDeError } from '../../core/utils/archivos';
     MatFormFieldModule,
     MatInputModule,
     MatTooltipModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatDialogModule
   ],
   templateUrl: './expediente.html',
   styleUrl: './expediente.css'
@@ -76,6 +88,11 @@ export class Expediente implements OnInit {
   /** Todas las citas del expediente (incluidas las canceladas y reagendadas), más recientes primero. */
   historialCitas: CitaPrimerContacto[] = [];
 
+  // Versión del denunciado: correos enviados (Primer Contacto) y respuestas (denunciado-service).
+  solicitudesDenunciado: SolicitudDenunciado[] = [];
+  respuestasDenunciado: RespuestaDenunciado[] = [];
+  enviandoSolicitudDenunciado = false;
+
   /** Resumen de la búsqueda automática de antecedentes al abrir el expediente. */
   antecedentes?: { total: number; mismoQuejoso: number; maxSimilitud: number };
 
@@ -102,7 +119,9 @@ export class Expediente implements OnInit {
     private antecedentesService: AntecedentesService,
     private analistaSesion: AnalistaSesionService,
     private snackBar: MatSnackBar,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private denunciadoService: DenunciadoService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -147,6 +166,7 @@ export class Expediente implements OnInit {
         this.cargarConciliaciones();
         this.cargarCitaActiva();
         this.cargarResumenAntecedentes();
+        this.cargarDenunciado();
       },
       error: (error) => {
         this.cargando = false;
@@ -361,6 +381,72 @@ export class Expediente implements OnInit {
 
   buscarAntecedentes(): void {
     this.router.navigate(['/expediente', this.folio, 'antecedentes']);
+  }
+
+  // ---------------------------------------------------------------- Versión del denunciado
+
+  /** Última solicitud enviada (la vigente); las anteriores quedan como historial. */
+  get ultimaSolicitudDenunciado(): SolicitudDenunciado | undefined {
+    return this.solicitudesDenunciado[0];
+  }
+
+  private cargarDenunciado(): void {
+    this.denunciadoService.listarSolicitudes(this.folio).subscribe({
+      next: (solicitudes) => {
+        this.solicitudesDenunciado = solicitudes;
+        this.cdr.detectChanges();
+      }
+    });
+
+    const folioQueja = this.expediente?.folioOrigen;
+    if (!folioQueja) return;
+    this.denunciadoService.listarRespuestas(folioQueja).subscribe({
+      next: (respuestas) => {
+        this.respuestasDenunciado = [...respuestas].sort(
+          (a, b) => (b.fechaRegistro ?? '').localeCompare(a.fechaRegistro ?? '')
+        );
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  solicitarRespuestaDenunciado(): void {
+    const folioQueja = this.expediente?.folioOrigen;
+    if (!folioQueja) return;
+
+    const data: SolicitudDenunciadoDialogData = {
+      folioQueja,
+      denunciado: this.expediente?.datosQueja?.denunciado,
+      correoAnterior: this.ultimaSolicitudDenunciado?.correoDenunciado
+    };
+
+    this.dialog.open(SolicitudDenunciadoDialog, { width: '560px', data }).afterClosed().subscribe(correo => {
+      if (!correo) return;
+
+      this.enviandoSolicitudDenunciado = true;
+      this.denunciadoService.enviarSolicitud(this.folio, correo).subscribe({
+        next: () => {
+          this.enviandoSolicitudDenunciado = false;
+          this.snackBar.open(`Se envió la solicitud a ${correo}.`, 'Cerrar', { duration: 3500 });
+          this.cargarDenunciado();
+        },
+        error: (error) => {
+          this.enviandoSolicitudDenunciado = false;
+          this.snackBar.open(mensajeDeError(error, 'No fue posible enviar la solicitud.'), 'Cerrar', {
+            duration: 4500
+          });
+          this.cargarDenunciado();
+        }
+      });
+    });
+  }
+
+  verRespuestaDenunciado(): void {
+    const folioQueja = this.expediente?.folioOrigen;
+    if (!folioQueja || this.respuestasDenunciado.length === 0) return;
+
+    const data: RespuestaDenunciadoDialogData = { folioQueja, respuestas: this.respuestasDenunciado };
+    this.dialog.open(RespuestaDenunciadoDialog, { width: '720px', data });
   }
 
   // ---------------------------------------------------------------- Citas (CU-04)

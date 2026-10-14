@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { DenunciadoService } from '../../core/services/denunciado.service';
@@ -11,12 +11,8 @@ import { RespuestaRegistrada } from '../../core/models/denunciado.models';
 import { AutocompletarDependencia } from '../../shared/autocompletar-dependencia/autocompletar-dependencia';
 import * as Reglas from '../../core/validaciones/reglas-queja';
 
-/**
- * TEMPORAL: folio fijo de la queja a la que responde el denunciado. Más adelante llegará por
- * la URL (enlace que se le envíe) o por consulta; solo hay que cambiar esta constante por
- * la lectura de ActivatedRoute.
- */
-export const FOLIO_QUEJA_PRUEBA = 'FOL-DEMO0001';
+/** Mismo formato que valida denunciado-service (FOL- y 8 caracteres). */
+const FORMATO_FOLIO_QUEJA = /^FOL-[A-Z0-9]{8}$/;
 
 /** Versión del aviso de privacidad del denunciado (texto propio, distinto al del quejoso). */
 export const AVISO_DENUNCIADO_VERSION = 'D-1.0';
@@ -40,7 +36,9 @@ type TipoIdentificacion = 'ALUMNO' | 'EMPLEADO';
   styleUrl: './respuesta-denunciado.scss',
 })
 export class RespuestaDenunciado implements OnInit, OnDestroy {
-  readonly folioQueja = FOLIO_QUEJA_PRUEBA;
+  /** Llega en el enlace del correo que manda Primer Contacto: /denunciado/respuesta?folio=FOL-... */
+  readonly folioQueja: string;
+  readonly enlaceValido: boolean;
   readonly nombreLongitudMaxima = Reglas.NOMBRE_LONGITUD_MAXIMA;
   readonly descripcionMaxima = Reglas.DESCRIPCION_LONGITUD_MAXIMA;
   readonly formatearTamanio = Reglas.formatearTamanio;
@@ -71,7 +69,11 @@ export class RespuestaDenunciado implements OnInit, OnDestroy {
     private denunciadoService: DenunciadoService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef,
-  ) {}
+    route: ActivatedRoute,
+  ) {
+    this.folioQueja = (route.snapshot.queryParamMap.get('folio') ?? '').trim().toUpperCase();
+    this.enlaceValido = FORMATO_FOLIO_QUEJA.test(this.folioQueja);
+  }
 
   ngOnInit(): void {
     this.catalogoService.listarDependencias().subscribe({

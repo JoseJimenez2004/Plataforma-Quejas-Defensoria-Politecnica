@@ -112,6 +112,28 @@ public class NotificacionQuejosoService {
         }
     }
 
+    /**
+     * Correo a alguien que no es el quejoso (p. ej. el denunciado). Igual de best-effort, pero
+     * dice si notificaciones-service lo aceptó para que la pantalla lo pueda avisar.
+     */
+    public boolean enviarCorreoExterno(String destinatario, String asunto, String cuerpo) {
+        try {
+            restTemplate.postForObject(
+                    notificacionesUrl + ENDPOINT_ENVIAR,
+                    Map.of(
+                            "destinatario", destinatario,
+                            "asunto", asunto,
+                            "cuerpo", cuerpo
+                    ),
+                    String.class
+            );
+            return true;
+        } catch (Exception ex) {
+            log.error("No se pudo enviar el correo \"{}\" a {}: {}", asunto, destinatario, ex.getMessage());
+            return false;
+        }
+    }
+
     private void enviarCorreo(String destinatario, String asunto, String cuerpo) {
         try {
             restTemplate.postForObject(
