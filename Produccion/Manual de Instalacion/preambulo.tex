@@ -1,0 +1,76 @@
+
+% Idioma y codificación
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+% Tablas bonitas
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{tabularx}
+\usepackage[table]{xcolor}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{amsmath}
+\definecolor{headerblue}{RGB}{26,97,133}
+\definecolor{lineblue}{RGB}{82,172,220}
+\definecolor{rowblue}{RGB}{173,211,230}
+
+\arrayrulecolor{lineblue}
+\setlength{\arrayrulewidth}{0.5pt}
+
+\usepackage[ruled,vlined]{algorithm2e}
+\newcommand{\headercell}[1]{\textcolor{white}{\textbf{#1}}}
+% Control de figuras/tablas y referencias
+\usepackage{caption}
+\usepackage{subcaption} % subfiguras
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+% Para que [H] funcione y no se muevan tanto
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{xcolor}
+% Links (índice clickeable, referencias clickeables)
+\usepackage[colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue]{hyperref}
+
+% Listas mejoradas
+\usepackage{enumitem}
+\definecolor{azulESCOM}{RGB}{82,172,220}
+% Código (recomendado)
+\usepackage{listings}
+\usepackage{xcolor}
+% Bibliografía IEEE
+
+\usepackage[backend=biber,style=ieee]{biblatex}
+
+% Evita los parentesis vacios "()" en referencias web sin fecha de publicacion
+\usepackage{xpatch}
+\xpatchbibdriver{online}
+  {\printtext[parens]{\usebibmacro{date}}}
+  {\iffieldundef{year}{}{\printtext[parens]{\usebibmacro{date}}}}
+  {}{}
+\addbibresource{references.bib}
+\setlength{\parindent}{0pt}%sangria
+\setlength{\parskip}{0.4em}
+
+\usepackage{csquotes}
+
+% Gráficos y márgenes
+\usepackage{graphicx}
+\usepackage[
+a4paper,
+left=3cm,
+right=2cm,
+top=2cm,
+bottom=2cm
+]{geometry}
+
+% Numeracion de tablas y figuras por seccion (Tabla 3.1, Figura 3.2, ...)
+\numberwithin{table}{section}
+\numberwithin{figure}{section}
+\numberwithin{equation}{section}
+
+% Margen de holgura para lineas dificiles de partir (URLs largas en la bibliografia)
+\setlength{\emergencystretch}{3em}

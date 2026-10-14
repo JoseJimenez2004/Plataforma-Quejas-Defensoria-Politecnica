@@ -1,18 +1,17 @@
 server:
-  # Puerto interno del contenedor unificado a 8080 (igual en los 9 microservicios) -- el
-  # puerto real por el que se accede a este servicio sigue siendo 8083, solo que ahora es
-  # el mapeo externo de Podman (ver -p en podman-compose.sh), no el puerto en el que escucha
-  # Spring Boot dentro del contenedor. Mismo patrón que se usa en el trabajo con template_gio.
   port: 8080
 
 spring:
   application:
     name: auth-service
   datasource:
-    url: jdbc:postgresql://2.25.78.22:5432/defensoria_db
+    url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
     username: postgres
     password: Temporal2026@
     driver-class-name: org.postgresql.Driver
+    idle-timeout: 1800000
+    max-poolSize: 3
+    max-lifeTime: 1800000
   jpa:
     hibernate:
       ddl-auto: update
@@ -28,11 +27,20 @@ spring:
           starttls:
             enable: true
             required: true
+          connectiontimeout: 5000
+          timeout: 10000
+          writetimeout: 10000
 
 
   cloud:
     compatibility-verifier:
       enabled: false
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 3000
+            read-timeout: 10000
 
 jwt:
   secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
@@ -40,11 +48,11 @@ jwt:
 
 quejas:
   service:
-    url: http://2.25.78.22:8084
+    url: http://156.67.26.73:8084
 
 notificaciones:
   service:
-    url: http://2.25.78.22:8085
+    url: http://156.67.26.73:8085
 
 springdoc:
   swagger-ui:

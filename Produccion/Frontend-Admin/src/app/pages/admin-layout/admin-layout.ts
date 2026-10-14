@@ -7,11 +7,13 @@ import { AuthAdminService } from '../../core/services/auth-admin.service';
 import { PerfilService } from '../../core/services/perfil.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CambiarPasswordRequest, etiquetaRol, iniciales } from '../../core/models/admin.models';
+import { irALoginPersonal } from '../../core/sesion/sesion-personal';
+import { CampanaNotificaciones } from '../../shared/campana-notificaciones/campana-notificaciones';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, RouterOutlet, CampanaNotificaciones],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.scss',
 })
@@ -143,6 +145,6 @@ export class AdminLayout implements OnInit {
 
   cerrarSesion(): void {
     this.authService.logout();
-    this.router.navigate(['/login']);
+    irALoginPersonal();
   }
 }

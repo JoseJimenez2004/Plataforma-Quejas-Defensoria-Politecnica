@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
 import { AuthResponse, LoginRequest, RolStaff } from '../models/revision.models';
+import { cerrarSesionPersonal } from '../sesion/sesion-personal';
 
 const TOKEN_KEY = 'ddp_revision_token';
 const NOMBRE_KEY = 'ddp_revision_nombre';
@@ -33,10 +34,7 @@ export class AuthRevisionService {
   }
 
   logout(): void {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(NOMBRE_KEY);
-    localStorage.removeItem(ROL_KEY);
-    localStorage.removeItem(FORZAR_KEY);
+    cerrarSesionPersonal(); // una sola salida para todos los paneles del personal
     this.usuarioActual.set(null);
   }
 
@@ -57,6 +55,9 @@ export class AuthRevisionService {
   }
 
   private guardarSesion(resp: AuthResponse): void {
+    // Cada inicio de sesión borra antes cualquier sesión del personal que hubiera quedado en
+    // este navegador (p. ej. la Defensora en una computadora compartida de la oficina).
+    cerrarSesionPersonal();
     localStorage.setItem(TOKEN_KEY, resp.token);
     localStorage.setItem(NOMBRE_KEY, resp.nombre);
     localStorage.setItem(ROL_KEY, resp.rol);

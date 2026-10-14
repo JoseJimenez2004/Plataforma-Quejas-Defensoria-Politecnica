@@ -1,7 +1,7 @@
 #!/bin/bash
 BASE_DIR="/apps/aplicaciones/defensoria/front-admin"
 CONTAINER_NAME="admin-web"
-PORT=22346
+PORT=8091
 
 case "$1" in
     up)

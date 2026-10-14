@@ -1,0 +1,16 @@
+\section{Dominio y HTTPS}
+
+\subsection{Dominio dinámico en No-IP}
+\pendiente{registro de defensoria-escom.ddns.net apuntando a 169.58.62.111 y renovación del host}
+
+\subsection{Obtención del certificado con Certbot (webroot)}
+\pendiente{instalación de certbot, carpeta webroot compartida con router-nginx, comando \texttt{certonly --webroot}}
+
+\subsection{Montaje de los certificados en router-nginx}
+\pendiente{volúmenes de /etc/letsencrypt}
+
+\subsection{Renovación automática}
+\pendiente{\texttt{certbot renew --dry-run}, hook para recargar nginx}
+
+\subsection{Verificación}
+\pendiente{navegador y \texttt{curl -I https://defensoria-escom.ddns.net}}

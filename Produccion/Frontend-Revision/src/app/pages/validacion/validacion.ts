@@ -6,16 +6,51 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { RevisionService } from '../../core/services/revision.service';
 import { ToastService } from '../../core/services/toast.service';
-import { EvidenciaResumen, QuejaDetalle } from '../../core/models/revision.models';
+import { EvidenciaResumen, IdentificacionOficialOpcion, QuejaDetalle } from '../../core/models/revision.models';
 
-/** Requisitos que el recepcionista marca uno por uno junto al dato correspondiente. */
-interface ChecksValidacion {
-  datos: boolean;
-  identificacion: boolean;
-  motivo: boolean;
-  relato: boolean;
-  evidencias: boolean;
+/** Plazo para presentar la queja, en días naturales, contado desde la fecha de los hechos
+ * hasta la fecha en que se registró la queja. */
+export const PLAZO_DIAS_QUEJA = 90;
+
+/** Claves de las preguntas de la lista de verificación, en el orden en que se muestran. */
+type ClavePregunta =
+  | 'nombreCompleto'
+  | 'identificacionOficial'
+  | 'numeroIdentificacion'
+  | 'fechaHechos'
+  | 'datosDenunciado';
+
+interface RespuestaPregunta {
+  valor: boolean | null;
+  observacion: string;
 }
+
+/** Texto del motivo que se le manda al quejoso cuando la respuesta es "No". */
+const MOTIVO_SI_NO: Record<ClavePregunta, string> = {
+  nombreCompleto: 'No proporcionó su nombre completo (nombre y apellidos).',
+  identificacionOficial:
+    'La identificación oficial no es legible, no es oficial, no está vigente o no coincide con el nombre proporcionado.',
+  numeroIdentificacion: 'El número de boleta o de empleado no coincide con el de la identificación presentada.',
+  fechaHechos: `Los hechos ocurrieron hace más de ${PLAZO_DIAS_QUEJA} días respecto a la fecha de registro de la queja.`,
+  datosDenunciado: 'Faltan los datos de la persona denunciada (nombre y apellidos).',
+};
+
+/** Encabezado corto de cada pregunta, para armar las observaciones del correo. */
+const TITULO_PREGUNTA: Record<ClavePregunta, string> = {
+  nombreCompleto: 'Nombre completo',
+  identificacionOficial: 'Identificación oficial',
+  numeroIdentificacion: 'Número de boleta / empleado',
+  fechaHechos: 'Fecha de los hechos',
+  datosDenunciado: 'Datos del denunciado',
+};
+
+const ORDEN_PREGUNTAS: ClavePregunta[] = [
+  'nombreCompleto',
+  'identificacionOficial',
+  'numeroIdentificacion',
+  'fechaHechos',
+  'datosDenunciado',
+];
 
 @Component({
   selector: 'app-validacion',
@@ -25,28 +60,30 @@ interface ChecksValidacion {
   styleUrl: './validacion.scss',
 })
 export class Validacion implements OnInit, OnDestroy {
+  readonly plazoDias = PLAZO_DIAS_QUEJA;
+
   folio = '';
   queja: QuejaDetalle | null = null;
   cargando = true;
+  enviando = false;
 
-  /** Un check por cada dato de la queja; todos deben quedar marcados para canalizar. */
-  checks: ChecksValidacion = {
-    datos: false,
-    identificacion: false,
-    motivo: false,
-    relato: false,
-    evidencias: false,
+  respuestas: Record<ClavePregunta, RespuestaPregunta> = {
+    nombreCompleto: { valor: null, observacion: '' },
+    identificacionOficial: { valor: null, observacion: '' },
+    numeroIdentificacion: { valor: null, observacion: '' },
+    fechaHechos: { valor: null, observacion: '' },
+    datosDenunciado: { valor: null, observacion: '' },
   };
-  readonly totalRequisitos = 5;
+  readonly totalRequisitos = ORDEN_PREGUNTAS.length;
 
-  /**
-   * El relato de hechos se muestra difuminado por defecto: el recepcionista valida forma
-   * (que exista y sea suficiente), no contenido. Si necesita leerlo lo revela a propósito.
-   */
-  mostrarRedaccion = false;
+  /** Observaciones generales, adicionales a las de cada pregunta (opcional). */
+  observaciones = '';
 
-  /** Identificación del quejoso mostrada en grande en la columna derecha. Puede haber más de
-   * una imagen (ej. credencial frente y reverso) -- se listan todas y se ve una a la vez. */
+  identificaciones: IdentificacionOficialOpcion[] = [];
+  tipoIdentificacionPresentada = '';
+  cargandoIdentificaciones = false;
+  mostrarListadoOficial = false;
+
   imagenesCredencial: EvidenciaResumen[] = [];
   indiceCredencial = 0;
   credencialUrl: SafeUrl | null = null;
@@ -70,23 +107,161 @@ export class Validacion implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // El object URL reserva memoria del navegador hasta que se revoca explícitamente.
     if (this.credencialObjectUrl) {
       URL.revokeObjectURL(this.credencialObjectUrl);
       this.credencialObjectUrl = null;
     }
   }
 
-  get cumplidos(): number {
-    return Object.values(this.checks).filter(Boolean).length;
+  // ---------------- lista de verificación ----------------
+
+  /** Acceso tipado desde la plantilla (el ng-template recibe la clave como string). */
+  r(clave: string): RespuestaPregunta {
+    return this.respuestas[clave as ClavePregunta];
   }
 
-  get todosLosRequisitosCumplidos(): boolean {
+  setRespuesta(clave: string, valor: boolean): void {
+    this.r(clave).valor = valor;
+    this.cdr.detectChanges();
+  }
+
+  get cumplidos(): number {
+    return ORDEN_PREGUNTAS.filter((c) => this.respuestas[c].valor === true).length;
+  }
+
+  get contestadas(): number {
+    return ORDEN_PREGUNTAS.filter((c) => this.respuestas[c].valor !== null).length;
+  }
+
+  /** Preguntas contestadas con "No". */
+  get preguntasEnNo(): ClavePregunta[] {
+    return ORDEN_PREGUNTAS.filter((c) => this.respuestas[c].valor === false);
+  }
+
+  /** Preguntas en "No" a las que todavía les falta la observación para el quejoso. */
+  get noSinObservacion(): ClavePregunta[] {
+    return this.preguntasEnNo.filter((c) => !this.respuestas[c].observacion.trim());
+  }
+
+  get puedeCanalizar(): boolean {
     return this.cumplidos === this.totalRequisitos;
   }
 
-  alternarRedaccion(): void {
-    this.mostrarRedaccion = !this.mostrarRedaccion;
+  get puedeRegresar(): boolean {
+    return this.preguntasEnNo.length > 0 && this.noSinObservacion.length === 0 && !this.enviando;
+  }
+
+  get motivoBloqueoRegresar(): string {
+    if (this.preguntasEnNo.length === 0) {
+      return 'Marca al menos una pregunta como "No" para regresar la queja.';
+    }
+    if (this.noSinObservacion.length > 0) {
+      return 'Escribe la observación de cada pregunta marcada como "No".';
+    }
+    return '';
+  }
+
+  // ---------------- datos calculados para las preguntas ----------------
+
+  /** Días naturales entre la fecha de los hechos y la fecha de registro de la queja.
+   * null si la queja no trae fecha de los hechos (p. ej. registros manuales). */
+  get diasDesdeHechos(): number | null {
+    const hechos = this.aFechaLocal(this.queja?.fechaHechos);
+    const registro = this.aFechaLocal(this.queja?.fechaCreacion);
+    if (!hechos || !registro) {
+      return null;
+    }
+    const msPorDia = 24 * 60 * 60 * 1000;
+    return Math.round((registro.getTime() - hechos.getTime()) / msPorDia);
+  }
+
+  get dentroDePlazo(): boolean | null {
+    const dias = this.diasDesdeHechos;
+    return dias === null ? null : dias <= this.plazoDias;
+  }
+
+  get etiquetaTipoIdentificacion(): string {
+    switch ((this.queja?.tipoIdentificacionQuejoso ?? '').toLowerCase()) {
+      case 'alumno':
+        return 'Número de boleta';
+      case 'empleado':
+        return 'Número de empleado';
+      default:
+        return 'Boleta / número de empleado';
+    }
+  }
+
+  get esAlumno(): boolean {
+    return (this.queja?.tipoIdentificacionQuejoso ?? '').toLowerCase() === 'alumno';
+  }
+
+  /** "2026-09-30" o "2026-09-30T12:34:56" → fecha local a medianoche, sin corrimiento por
+   * zona horaria (new Date('2026-09-30') la interpretaría como UTC y en México daría el 29). */
+  private aFechaLocal(valor: string | null | undefined): Date | null {
+    if (!valor) {
+      return null;
+    }
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(valor);
+    if (!m) {
+      return null;
+    }
+    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  }
+
+  formatearFecha(valor: string | null | undefined): string {
+    const fecha = this.aFechaLocal(valor);
+    return fecha
+      ? fecha.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })
+      : '';
+  }
+
+  alternarListadoOficial(): void {
+    this.mostrarListadoOficial = !this.mostrarListadoOficial;
+  }
+
+  // ---------------- acciones ----------------
+
+  irACanalizar(): void {
+    if (!this.puedeCanalizar) {
+      this.toast.advertencia('Todas las verificaciones deben estar en "Sí" para canalizar la queja.');
+      return;
+    }
+    this.router.navigate(['/turnado', this.folio]);
+  }
+
+  regresarAlQuejoso(): void {
+    if (!this.puedeRegresar) {
+      this.toast.advertencia(this.motivoBloqueoRegresar || 'Revisa las respuestas antes de regresar la queja.');
+      return;
+    }
+
+    const motivos = this.preguntasEnNo.map((c) => MOTIVO_SI_NO[c]);
+
+    const detalle = this.preguntasEnNo.map(
+      (c) => `• ${TITULO_PREGUNTA[c]}: ${this.respuestas[c].observacion.trim()}`,
+    );
+    const idPresentada = this.identificaciones.find((i) => i.clave === this.tipoIdentificacionPresentada);
+    if (idPresentada && this.respuestas.identificacionOficial.valor === false) {
+      detalle.push(`• Identificación revisada: ${idPresentada.nombre}`);
+    }
+    if (this.observaciones.trim()) {
+      detalle.push('', this.observaciones.trim());
+    }
+
+    this.enviando = true;
+    this.revisionService
+      .rechazar(this.folio, { motivos, observaciones: detalle.join('\n') })
+      .subscribe({
+        next: () => {
+          this.toast.exito('La queja fue regresada al quejoso con observaciones.');
+          this.router.navigate(['/']);
+        },
+        error: (err) => {
+          this.enviando = false;
+          this.toast.error(err?.error?.mensaje ?? 'No se pudo regresar la queja.');
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   verDocumento(id: number): void {
@@ -99,19 +274,7 @@ export class Validacion implements OnInit, OnDestroy {
     });
   }
 
-  irACanalizar(): void {
-    if (!this.todosLosRequisitosCumplidos) {
-      this.toast.advertencia(
-        `Marca los ${this.totalRequisitos} requisitos antes de canalizar la queja.`,
-      );
-      return;
-    }
-    this.router.navigate(['/turnado', this.folio]);
-  }
-
-  irARechazar(): void {
-    this.router.navigate(['/rechazo', this.folio]);
-  }
+  // ---------------- carga ----------------
 
   private cargar(): void {
     this.cargando = true;
@@ -120,6 +283,7 @@ export class Validacion implements OnInit, OnDestroy {
         this.queja = queja;
         this.cargando = false;
         this.cargarCredencial();
+        this.cargarIdentificaciones();
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -130,11 +294,22 @@ export class Validacion implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Reúne todas las imágenes entre las evidencias (credencial frente/reverso, capturas, etc.)
-   * y baja la primera para mostrarla en grande. Si el quejoso solo subió PDFs no se muestra
-   * nada: se abren desde la lista de evidencias.
-   */
+  private cargarIdentificaciones(): void {
+    this.cargandoIdentificaciones = true;
+    this.revisionService.identificacionesOficiales().subscribe({
+      next: (lista) => {
+        this.identificaciones = lista;
+        this.cargandoIdentificaciones = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargandoIdentificaciones = false;
+        this.identificaciones = [];
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   private cargarCredencial(): void {
     this.imagenesCredencial = (this.queja?.evidencias ?? []).filter((ev) =>
       (ev.tipoMime ?? '').toLowerCase().startsWith('image/'),
@@ -148,7 +323,6 @@ export class Validacion implements OnInit, OnDestroy {
     this.mostrarCredencial(0);
   }
 
-  /** Cambia cuál imagen se ve en grande (ej. pasar de frente a reverso de la credencial). */
   seleccionarCredencial(indice: number): void {
     if (indice === this.indiceCredencial || indice < 0 || indice >= this.imagenesCredencial.length) {
       return;
@@ -167,8 +341,6 @@ export class Validacion implements OnInit, OnDestroy {
     this.credencialNombre = imagen.nombreArchivo;
     this.cargandoCredencial = true;
 
-    // El object URL de la imagen anterior ya no hace falta -- se libera antes de pedir la
-    // siguiente, igual que al salir de la pantalla (ver ngOnDestroy).
     if (this.credencialObjectUrl) {
       URL.revokeObjectURL(this.credencialObjectUrl);
       this.credencialObjectUrl = null;
@@ -189,7 +361,6 @@ export class Validacion implements OnInit, OnDestroy {
     });
   }
 
-  /** Formatea el tamaño de un archivo (bytes) para mostrarlo junto a cada evidencia. */
   formatearTamanio(bytes: number): string {
     if (!bytes || bytes <= 0) {
       return '';
@@ -204,7 +375,6 @@ export class Validacion implements OnInit, OnDestroy {
     return `${(kb / 1024).toFixed(1)} MB`;
   }
 
-  /** Icono a mostrar en la lista de evidencias según el tipo de archivo. */
   tipoIcono(ev: EvidenciaResumen): 'imagen' | 'pdf' | 'archivo' {
     const tipo = (ev.tipoMime ?? '').toLowerCase();
     if (tipo.startsWith('image/')) {

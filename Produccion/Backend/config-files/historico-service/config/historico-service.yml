@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: historico-service
+  datasource:
+    url: jdbc:postgresql://169.58.62.99:5433/defensoria_historico_db
+    username: postgres
+    password: Temporal2026@
+    driver-class-name: org.postgresql.Driver
+    idle-timeout: 1800000
+    max-poolSize: 3
+    max-lifeTime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 25MB
+
+jwt:
+  secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name}]"

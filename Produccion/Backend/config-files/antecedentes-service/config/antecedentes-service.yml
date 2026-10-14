@@ -1,0 +1,31 @@
+server:
+
+  port: 8080
+  tomcat:
+    threads:
+      max: 20
+
+spring:
+  application:
+    name: antecedentes-service
+
+
+ia:
+  dataset:
+    historico: /app/data/quejas_sinteticas.json
+    nuevo: /app/data/quejas_prueba_30.json
+    aprendidas: /app/data/quejas_aprendidas.json
+  busqueda:
+    # Consultas cortas dan ~0.25-0.30; una queja completa contra casos parecidos da 0.55-0.75.
+    # Subir a 0.70 cuando se comparen quejas completas y el corpus tenga cientos de casos.
+    umbral: 0.25
+    top-k: 5
+    top-k-maximo: 50
+  resumen:
+    numero-oraciones: 3
+    numero-oraciones-maximo: 20
+    redundancia: 0.60
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name}]"

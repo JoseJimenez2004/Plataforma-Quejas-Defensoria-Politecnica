@@ -1,0 +1,190 @@
+<div class="contenedor">
+  @if (registrada) {
+    <!-- ================= Acuse ================= -->
+    <div class="card acuse">
+      <div class="acuse-icono" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
+      </div>
+      <h2>Tu respuesta fue registrada</h2>
+      <p>Folio de tu respuesta:</p>
+      <div class="acuse-folio">{{ registrada.folioRespuesta }}</div>
+      <dl class="acuse-datos">
+        <div><dt>Queja</dt><dd>{{ registrada.folioQueja }}</dd></div>
+        <div><dt>Nombre</dt><dd>{{ registrada.nombreCompleto }}</dd></div>
+        <div><dt>Fecha</dt><dd>{{ registrada.fechaRegistro | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+        <div><dt>Archivos</dt><dd>{{ registrada.credenciales }} de identificación · {{ registrada.evidencias }} {{ registrada.evidencias === 1 ? 'evidencia' : 'evidencias' }}</dd></div>
+      </dl>
+      <p class="nota">Guarda este folio. El personal de la Defensoría revisará tu versión de los hechos junto con la queja.</p>
+      <a routerLink="/" class="btn-primary">Volver al inicio</a>
+    </div>
+  } @else {
+    <!-- ================= Formulario ================= -->
+    <header class="encabezado">
+      <p class="encabezado-etiqueta">Respuesta de la persona señalada</p>
+      <h2>Tu versión de los hechos</h2>
+      <p class="encabezado-texto">
+        Fuiste señalado(a) en una queja presentada ante la Defensoría de los Derechos Politécnicos.
+        Aquí puedes identificarte, dar tu versión de lo ocurrido y adjuntar las pruebas que consideres.
+      </p>
+    </header>
+
+    <div class="folio-queja" role="status">
+      <span class="folio-queja-etiqueta">Folio de la queja en la que estás involucrado(a)</span>
+      <span class="folio-queja-valor">{{ folioQueja }}</span>
+    </div>
+
+    <form class="card formulario" (submit)="$event.preventDefault(); enviar()" novalidate>
+      <!-- 1. Datos personales -->
+      <section class="seccion">
+        <h3><span class="paso">1</span> Tus datos</h3>
+        <div class="rejilla">
+          <div class="input-group" [class.input-invalid]="intentoEnviar && errorNombre">
+            <label for="den-nombre">Nombre(s)</label>
+            <input id="den-nombre" type="text" name="nombre" [(ngModel)]="nombre" [maxlength]="nombreLongitudMaxima"
+                   (keypress)="soloLetras($event)" autocomplete="given-name" />
+            @if (intentoEnviar && errorNombre) { <span class="mensaje-campo">{{ errorNombre }}</span> }
+          </div>
+          <div class="input-group" [class.input-invalid]="intentoEnviar && errorApellido1">
+            <label for="den-ap1">Primer apellido</label>
+            <input id="den-ap1" type="text" name="apellido1" [(ngModel)]="apellido1" [maxlength]="nombreLongitudMaxima"
+                   (keypress)="soloLetras($event)" autocomplete="family-name" />
+            @if (intentoEnviar && errorApellido1) { <span class="mensaje-campo">{{ errorApellido1 }}</span> }
+          </div>
+          <div class="input-group" [class.input-invalid]="intentoEnviar && errorApellido2">
+            <label for="den-ap2">Segundo apellido <span class="opcional">(opcional)</span></label>
+            <input id="den-ap2" type="text" name="apellido2" [(ngModel)]="apellido2" [maxlength]="nombreLongitudMaxima"
+                   (keypress)="soloLetras($event)" />
+            @if (intentoEnviar && errorApellido2) { <span class="mensaje-campo">{{ errorApellido2 }}</span> }
+          </div>
+        </div>
+
+        <div class="input-group" [class.input-invalid]="intentoEnviar && errorUnidad">
+          <label>Unidad de procedencia</label>
+          <app-autocompletar-dependencia
+            name="unidadProcedencia"
+            [(ngModel)]="unidadProcedenciaClave"
+            [dependencias]="dependencias"
+            [cargando]="cargandoDependencias"
+          ></app-autocompletar-dependencia>
+          @if (intentoEnviar && errorUnidad) { <span class="mensaje-campo">{{ errorUnidad }}</span> }
+        </div>
+
+        <div class="rejilla rejilla-2">
+          <fieldset class="input-group tipo-identificacion">
+            <legend>Eres</legend>
+            <label class="opcion">
+              <input type="radio" name="tipoIdentificacion" value="ALUMNO" [(ngModel)]="tipoIdentificacion" /> Alumno(a)
+            </label>
+            <label class="opcion">
+              <input type="radio" name="tipoIdentificacion" value="EMPLEADO" [(ngModel)]="tipoIdentificacion" /> Personal del IPN
+            </label>
+          </fieldset>
+          <div class="input-group" [class.input-invalid]="intentoEnviar && errorNumero">
+            <label for="den-numero">{{ etiquetaNumero }}</label>
+            <input id="den-numero" type="text" inputmode="numeric" name="numeroIdentificacion"
+                   [(ngModel)]="numeroIdentificacion" maxlength="10" (keypress)="soloDigitos($event)" />
+            @if (intentoEnviar && errorNumero) { <span class="mensaje-campo">{{ errorNumero }}</span> }
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Credencial -->
+      <section class="seccion">
+        <h3><span class="paso">2</span> Credencial con la que te identificas</h3>
+        <p class="pista">Foto legible de tu credencial vigente (frente y, si quieres, reverso). Solo JPG o PNG, máximo 3 MB cada una.</p>
+        @if (credencial.length < 2) {
+          <label class="zona-carga" [class.zona-error]="intentoEnviar && errorCredencial">
+            <input type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple (change)="seleccionarCredencial($event)" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 14h4M6 16c.5-1.5 1.7-2 3-2s2.5.5 3 2"/></svg>
+            <span><strong>Elegir imagen de credencial</strong> · {{ credencial.length }}/2</span>
+          </label>
+        }
+        @if (intentoEnviar && errorCredencial) { <span class="mensaje-campo">{{ errorCredencial }}</span> }
+        <ng-container *ngTemplateOutlet="listaArchivos; context: { lista: credencial }"></ng-container>
+      </section>
+
+      <!-- 3. Hechos y evidencias -->
+      <section class="seccion">
+        <h3><span class="paso">3</span> Tu descripción de los hechos</h3>
+        <div class="input-group" [class.input-invalid]="intentoEnviar && errorDescripcion">
+          <label for="den-descripcion">Cuéntanos lo que ocurrió desde tu punto de vista</label>
+          <textarea id="den-descripcion" name="descripcionHechos" rows="7" [(ngModel)]="descripcionHechos"
+                    [maxlength]="descripcionMaxima"
+                    placeholder="Fechas, lugares, personas presentes y cualquier detalle que ayude a entender tu versión…"></textarea>
+          <span class="contador">{{ descripcionHechos.length }} / {{ descripcionMaxima }}</span>
+          @if (intentoEnviar && errorDescripcion) { <span class="mensaje-campo">{{ errorDescripcion }}</span> }
+        </div>
+
+        <p class="etiqueta-evidencias">Evidencias <span class="opcional">(opcional)</span></p>
+        <p class="pista">PDF, JPG, PNG, MP4 o MP3 · máximo 30 MB por archivo, 95 MB en total, hasta 10 archivos.</p>
+        <label class="zona-carga">
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.mp4,.mp3" multiple (change)="seleccionarEvidencias($event)" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>
+          <span><strong>Elegir evidencias</strong>@if (evidencias.length) { · {{ evidencias.length }} · {{ formatearTamanio(tamanioEvidencias) }} }</span>
+        </label>
+        <ng-container *ngTemplateOutlet="listaArchivos; context: { lista: evidencias }"></ng-container>
+      </section>
+
+      <!-- 4. Aviso de privacidad -->
+      <section class="seccion aviso">
+        <h3><span class="paso">4</span> Aviso de privacidad</h3>
+        <p class="pista">
+          La Defensoría de los Derechos Politécnicos usará tus datos únicamente para atender la queja
+          {{ folioQueja }} y documentar tu versión de los hechos.
+          <button type="button" class="enlace" (click)="mostrarAvisoCompleto = !mostrarAvisoCompleto">
+            {{ mostrarAvisoCompleto ? 'Ocultar aviso completo' : 'Leer aviso completo' }}
+          </button>
+        </p>
+        @if (mostrarAvisoCompleto) {
+          <div class="aviso-texto">
+            <p><strong>Datos que se recaban:</strong> nombre, unidad de procedencia, número de boleta o de empleado, la imagen de tu credencial, tu descripción de los hechos y los archivos que adjuntes.</p>
+            <p><strong>Finalidad:</strong> identificarte como la persona señalada en la queja, integrar tu versión de los hechos al expediente y que el personal autorizado de la Defensoría pueda analizarla.</p>
+            <p><strong>Acceso:</strong> solo el personal autorizado de la Defensoría que interviene en la atención de la queja. No se comparten con terceros salvo obligación legal.</p>
+            <p><strong>Derechos ARCO:</strong> puedes solicitar el acceso, rectificación, cancelación u oposición al tratamiento de tus datos ante la Defensoría, indicando tu nombre y el folio de la queja.</p>
+          </div>
+        }
+        <label class="casilla" [class.casilla-error]="intentoEnviar && errorAviso">
+          <input type="checkbox" name="avisoAceptado" [(ngModel)]="avisoAceptado" />
+          He leído y acepto el aviso de privacidad.
+        </label>
+      </section>
+
+      @if (errorEnvio) {
+        <div class="error" role="alert">{{ errorEnvio }}</div>
+      }
+      @if (intentoEnviar && errores.length > 0) {
+        <div class="resumen-errores" role="alert">
+          <strong>Falta completar {{ errores.length }} {{ errores.length === 1 ? 'dato' : 'datos' }}:</strong>
+          <ul>
+            @for (e of errores; track e) { <li>{{ e }}</li> }
+          </ul>
+        </div>
+      }
+
+      <button type="submit" class="btn-primary btn-enviar" [disabled]="enviando">
+        @if (enviando) { <span class="spinner" aria-hidden="true"></span> Enviando… } @else { Enviar mi respuesta }
+      </button>
+    </form>
+  }
+</div>
+
+<ng-template #listaArchivos let-lista="lista">
+  @if (lista.length > 0) {
+    <ul class="archivos">
+      @for (a of lista; track a; let i = $index) {
+        <li>
+          @if (a.vistaPrevia) {
+            <img [src]="a.vistaPrevia" [alt]="a.archivo.name" />
+          } @else {
+            <span class="archivo-tipo">{{ a.extension }}</span>
+          }
+          <span class="archivo-datos">
+            <span class="archivo-nombre" [title]="a.archivo.name">{{ a.archivo.name }}</span>
+            <span class="archivo-peso">{{ formatearTamanio(a.archivo.size) }}</span>
+          </span>
+          <button type="button" class="archivo-quitar" (click)="quitar(lista, i)" [attr.aria-label]="'Quitar ' + a.archivo.name">×</button>
+        </li>
+      }
+    </ul>
+  }
+</ng-template>

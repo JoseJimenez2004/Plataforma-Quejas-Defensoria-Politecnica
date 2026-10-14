@@ -1,0 +1,28 @@
+\section{Preparación de las VPS}\label{sec:preparacion}
+
+\subsection{Primer acceso por SSH}
+\pendiente{conexión, cambio de contraseña root, recomendación de llaves SSH}
+
+\subsection{Actualización del sistema y zona horaria}
+\begin{lstlisting}
+# apt update && apt upgrade -y
+# timedatectl set-timezone America/Mexico_City
+\end{lstlisting}
+
+\subsection{Nombre de host}
+\pendiente{vmi3633025 (BD), vmi3633021 (Backend), vmi3633026 (Frontend)}
+
+\subsection{Instalación de Podman}
+\pendiente{\texttt{apt install podman}, verificación con \texttt{podman info}, registro por defecto docker.io}
+
+\subsection{Habilitar el reinicio automático de contenedores}
+\pendiente{\texttt{podman-restart.service} y la política \texttt{--restart always}}
+
+\subsection{Estructura de directorios en el servidor}
+\pendiente{carpeta de trabajo de cada VPS (scripts, \texttt{config-files/}, \texttt{jars/}, \texttt{database-scripts/}, respaldos)}
+
+\subsection{Transferencia de archivos al servidor}
+\pendiente{uso de \texttt{scp} / WinSCP / FileZilla desde la carpeta \texttt{Produccion}}
+
+\subsection{Consideraciones de firewall}
+\pendiente{por qué ufw no basta con Podman (el DNAT lo omite) y por qué se usan reglas en la tabla raw de iptables limitadas a la interfaz pública}

@@ -28,7 +28,9 @@ import jakarta.servlet.http.HttpServletRequest;
 /** Todo este controller es exclusivo de ADMIN_SISTEMAS -- "Usuarios y Roles" del mockup. */
 @RestController
 @RequestMapping("/api/admin/personal")
-@PreAuthorize("hasRole('ADMIN_SISTEMAS')")
+// La Defensora (DEFENSOR) tiene todas las funciones de administración; ADMIN_SISTEMAS se
+// conserva para la cuenta técnica inicial.
+@PreAuthorize("hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')")
 @Tag(name = "Personal Administrativo", description = "Gestión de usuarios y roles del personal")
 public class PersonalController {
 
@@ -59,7 +61,7 @@ public class PersonalController {
     @Operation(summary = "Edita nombre, correo, rol; o restablece contraseña / desactiva la cuenta")
     public ResponseEntity<PersonalAdministrativo> editar(@PathVariable Long id, @RequestBody PersonalRequest datos,
             HttpServletRequest request) {
-        PersonalAdministrativo actualizado = personalService.editar(id, datos);
+        PersonalAdministrativo actualizado = personalService.editar(id, datos, usuarioActual());
         bitacoraService.registrar(usuarioActual(), "Edición de usuario: " + actualizado.getCorreoInstitucional(), request);
         actualizado.setPassword(null);
         return ResponseEntity.ok(actualizado);
@@ -77,7 +79,7 @@ public class PersonalController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Da de baja (desactiva) una cuenta de personal administrativo")
     public ResponseEntity<Void> darDeBaja(@PathVariable Long id, HttpServletRequest request) {
-        personalService.darDeBaja(id);
+        personalService.darDeBaja(id, usuarioActual());
         bitacoraService.registrar(usuarioActual(), "Baja de usuario (id " + id + ")", request);
         return ResponseEntity.noContent().build();
     }

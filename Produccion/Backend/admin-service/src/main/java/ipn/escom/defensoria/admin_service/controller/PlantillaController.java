@@ -24,7 +24,9 @@ import jakarta.servlet.http.HttpServletRequest;
 /** "Plantillas Oficiales" del mockup -- exclusivo de ADMIN_SISTEMAS. */
 @RestController
 @RequestMapping("/api/admin/plantillas")
-@PreAuthorize("hasRole('ADMIN_SISTEMAS')")
+// La Defensora (DEFENSOR) tiene todas las funciones de administración; ADMIN_SISTEMAS se
+// conserva para la cuenta técnica inicial.
+@PreAuthorize("hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')")
 @Tag(name = "Plantillas Oficiales", description = "Edición de plantillas de oficios y formatos legales")
 public class PlantillaController {
 

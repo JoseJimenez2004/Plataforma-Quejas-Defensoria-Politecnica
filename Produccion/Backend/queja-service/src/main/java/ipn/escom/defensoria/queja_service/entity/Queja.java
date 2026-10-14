@@ -124,6 +124,12 @@ public class Queja {
     @Column(name = "motivo_rechazo", columnDefinition = "TEXT")
     private String motivoRechazo;
 
+    /** Correo de la recepcionista que validó/rechazó la queja. Lo escribe revision-service;
+     * aquí es SOLO lectura (para avisarle cuando el quejoso corrige) y nunca sale en el JSON. */
+    @JsonIgnore
+    @Column(name = "validado_por", insertable = false, updatable = false)
+    private String validadoPor;
+
     @Column(name = "area_turnada")
     private String areaTurnada;
 

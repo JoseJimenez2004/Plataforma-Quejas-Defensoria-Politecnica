@@ -1,0 +1,111 @@
+.campana {
+  position: relative;
+}
+
+.campana-boton {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--texto-suave, #666);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--guinda-suave, #f7eef1);
+    color: var(--guinda, #6c1d45);
+  }
+
+  svg {
+    width: 21px;
+    height: 21px;
+  }
+}
+
+.campana-conteo {
+  position: absolute;
+  top: 3px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--peligro, #c62828);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.campana-panel {
+  position: absolute;
+  right: 0;
+  top: 46px;
+  z-index: 50;
+  width: min(360px, 90vw);
+  max-height: 420px;
+  overflow-y: auto;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(16, 24, 40, 0.18);
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    display: grid;
+    gap: 2px;
+    padding: 10px 14px;
+    border-top: 1px solid #eee;
+    cursor: pointer;
+
+    &.no-leida {
+      background: var(--guinda-suave, #f7eef1);
+    }
+  }
+}
+
+.campana-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+}
+
+.campana-todas {
+  border: none;
+  background: none;
+  color: var(--guinda-vivo, #9d2449);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.titulo {
+  font-weight: 600;
+  font-size: 0.86rem;
+}
+
+.mensaje {
+  font-size: 0.82rem;
+  color: var(--texto, #333);
+}
+
+.fecha {
+  font-size: 0.72rem;
+  color: var(--texto-suave, #666);
+}
+
+.campana-vacio {
+  margin: 0;
+  padding: 18px 14px;
+  font-size: 0.85rem;
+  color: var(--texto-suave, #666);
+}

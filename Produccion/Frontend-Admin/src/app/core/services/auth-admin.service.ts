@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
 import { AuthAdminResponse, LoginAdminRequest, RolStaff } from '../models/admin.models';
+import { cerrarSesionPersonal } from '../sesion/sesion-personal';
 
 const TOKEN_KEY = 'ddp_admin_token';
 const NOMBRE_KEY = 'ddp_admin_nombre';
@@ -30,11 +31,9 @@ export class AuthAdminService {
     );
   }
 
+  /** Cierra la sesión del personal en todos los paneles (login unificado). */
   logout(): void {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(NOMBRE_KEY);
-    localStorage.removeItem(ROL_KEY);
-    localStorage.removeItem(FORZAR_KEY);
+    cerrarSesionPersonal();
     this.usuarioActual.set(null);
   }
 

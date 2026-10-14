@@ -1,16 +1,17 @@
 server:
-  # Puerto interno unificado a 8080 en los 9 microservicios -- el acceso real sigue siendo
-  # por 8086, ahora vía el mapeo externo de Podman (ver -p en podman-compose.sh).
   port: 8080
 
 spring:
   application:
     name: catalogo-service
   datasource:
-    url: jdbc:postgresql://2.25.78.22:5432/defensoria_db
+    url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
     username: postgres
     password: Temporal2026@
     driver-class-name: org.postgresql.Driver
+    idle-timeout: 1800000
+    max-poolSize: 3
+    max-lifeTime: 1800000
   jpa:
     hibernate:
       ddl-auto: update
