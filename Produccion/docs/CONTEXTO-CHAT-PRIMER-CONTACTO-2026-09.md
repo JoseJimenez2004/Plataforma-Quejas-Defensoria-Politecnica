@@ -879,8 +879,33 @@ importa `antecedentes_service` y sustituye el codificador de texto; ver notas de
     (en el servidor, tras desplegar notificaciones-service).
   - `notificaciones-service` no tiene `mvnw`: compilar con `../subdefensoria/mvnw -f pom.xml`.
 
-### 15.6 Pendiente (siguiente chat)
-4. Push de los commits locales y despliegue conjunto PC + SD **+ notificaciones-service**:
+### 15.6 Despliegue fase A (2026-10-13 noche) — HECHO
+Todo en GitHub (`Pre-Produccion2`). Respaldos en `/apps/utiles/respaldos/2026-10-13/` (back:
+jars y ymls viejos de PC y SD + `podman-compose.sh`; front: `defensoria.conf` y
+`front-primer-contacto.tgz`). Desplegado y verificado por el dominio:
+- **primer-contacto-service**: jar nuevo; yml con `sincronizar-estatus-queja: true` y
+  `portal.url`. Arranca sin errores.
+- **subdefensoria-service** (8091): jar nuevo; yml completo (PostgreSQL, jwt, plazos,
+  notificaciones, `correo.unidad-academica.redirigir-a: leishasr2@gmail.com`). En
+  `podman-compose.sh` del servidor su memoria subió a `-m 512m`/`-Xmx320m`. Creó sus tablas
+  en `defensoria_db` al arrancar (antes no existían; los WARN "constraint ... does not exist,
+  skipping" son normales). `quejas.estatus` es varchar(255) sin CHECK.
+- **Front**: `primer-contacto-web` actualizado; **`subdefensoria-web` nuevo** en 8095
+  (`/apps/aplicaciones/defensoria/front-subdefensoria`, con `--restart always`; ojo: el de PC
+  no lo tiene). nginx con las rutas de SD (`/subdefensoria/`, `/api/subdefensoria/` → 8091,
+  ingesta e `interno/` → 403).
+- Archivos temporales: `/tmp/despliegue-1013` en back y front, y `C:\Users\leish\despliegue-1013`
+  local (llevan contraseñas: borrar).
+
+**Fase B (código del compañero, pendiente de coordinarlo con él):** notificaciones-service
+(adjuntos), revision-service y admin-service ("turnada" incluye estados posteriores), portal
+del quejoso (`Frontend/`: páginas `cita/responder` y `acuerdo/responder`). Sin ella: los
+enlaces de los correos al quejoso no abren, el oficio no sale con adjunto (SD lo registra en
+el log y deja `correo_enviado=false`) y las quejas en SD no cuentan como turnadas en
+revision/admin.
+
+### 15.7 Pendiente (siguiente chat)
+4. Fase B del despliegue (ver arriba) + prueba funcional con un subdefensor real + correo:
    respaldos; jars; yml del servidor (en el de PC poner `sincronizar-estatus-queja: true` y
    `portal.url`; el de SD completo, con `correo.unidad-academica`); front de SD (contenedor
    nuevo); portal del quejoso (es del compañero: páginas `cita/responder` y
