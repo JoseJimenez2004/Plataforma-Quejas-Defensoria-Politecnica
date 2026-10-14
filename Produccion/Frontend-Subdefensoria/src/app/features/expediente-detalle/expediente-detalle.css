@@ -137,6 +137,11 @@
   font-size: var(--font-size-sm);
 }
 
+mat-panel-description {
+  align-items: center;
+  gap: var(--space-3);
+}
+
 mat-chip {
   font-weight: 700 !important;
   font-size: var(--font-size-xs) !important;
