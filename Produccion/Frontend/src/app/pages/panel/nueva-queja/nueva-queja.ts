@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -44,6 +44,7 @@ export class NuevaQueja implements OnInit {
     private quejaService: QuejaService,
     private catalogoService: CatalogoService,
     private router: Router,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -152,10 +153,14 @@ export class NuevaQueja implements OnInit {
         next: (queja) => {
           this.cargando = false;
           this.quejaCreada = queja;
+          // App zoneless (sin zone.js): igual que en registro-queja-publico, sin esto la queja
+          // se guarda pero la vista se queda en "Enviando…" hasta recargar.
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.cargando = false;
           this.error = err?.error?.mensaje ?? 'No se pudo registrar la queja. Intenta de nuevo.';
+          this.cdr.detectChanges();
         },
       });
   }
