@@ -921,14 +921,35 @@ revision/admin.
 - `resumen-service` y `qwen-gguf` siguen apagados (Exited 0 desde ~10-08): preguntar al compañero.
 - Bots intentan contraseñas de root por SSH en los servidores (sugerir fail2ban/llaves).
 
-### 15.8 Pendiente (siguiente chat)
+### 15.8 2026-10-14 (madrugada): arreglos de pruebas, denunciado y resumen — DESPLEGADO
+- **PC se caía por memoria** (OOM killer, límite 250m): subido a `-m 512m`/`-Xmx320m` (servidor y repo).
+- quejas-service: la queja del panel copia los datos del quejoso de su **queja anterior** (o de
+  la cuenta `usuarios`: nombre y boleta). Portal: "Nueva queja" ya no se queda en "Enviando"
+  (app zoneless), línea del tiempo de 7 pasos en 2 filas, encabezado "Mi panel" con sesión.
+  PC: al turnar a SD vuelve al inicio; "Mismo correo, otro nombre (por verificar)".
+- **Formulario del denunciado** (decisión del usuario: una sola URL como la hizo el compañero,
+  sin enlace único ni plazo): PC `POST/GET /expedientes/folio/{folio}/denunciado/solicitudes`
+  (tabla `solicitudes_denunciado`), correo con `…/denunciado/respuesta?folio=FOL-…`; el portal
+  toma el folio de la URL; el expediente muestra "Versión del denunciado" con "Ver respuesta"
+  (lee `GET /api/denunciado/respuestas?folioQueja=` con el JWT del analista; el interceptor de
+  PC ahora también firma `/api/denunciado`). denunciado-service NO se tocó.
+- **Modelo de resumen** conectado: PC `POST /api/primer-contacto/resumen` → resumen-service
+  (`resumen.service.url: http://156.67.26.73:8090`, timeout 110 s, caché en memoria por texto);
+  el cuadro "Resumen" muestra el borrador + fragmentos, o el simulado si no responde (503).
+  `qwen-gguf` y `resumen-service` se volvieron a encender con 8 hilos (decisión del usuario):
+  un resumen real tardó 24 s y usó ~780% CPU / 4.6 GB. El resumen omitió quién/cuándo/dónde
+  (comportamiento del modelo del compañero).
+- nginx gzip/caché: propuesta en https://claude.ai/artifact/FPEuGFuwQNQLqfBkrrfV21, pendiente de
+  que el equipo la apruebe (el compañero creía que ya cacheaba: es caché heurístico, sin gzip).
+
+### 15.9 Pendiente (siguiente chat)
 - Revisar "Pepito Ramírez" en "Por involucrados" (falta el folio de la queja analizada; con los
   datos dados, el V5 directo no lo marca como involucrado).
 - Conectar el modelo de resumen. Formulario del involucrado en PC (por definir dónde).
 - Probar con SMTP real el correo a la UA con PDF (debe llegar a leishasr2@gmail.com).
 - Borrar `C:\Users\leish\despliegue-1013` (tiene contraseñas) y `/tmp/despliegue-101*`.
 
-### 15.9 Pendiente anterior (ya cubierto en 15.6–15.7)
+### 15.10 Pendiente anterior (ya cubierto en 15.6–15.8)
 4. Fase B del despliegue (ver arriba) + prueba funcional con un subdefensor real + correo:
    respaldos; jars; yml del servidor (en el de PC poner `sincronizar-estatus-queja: true` y
    `portal.url`; el de SD completo, con `correo.unidad-academica`); front de SD (contenedor
