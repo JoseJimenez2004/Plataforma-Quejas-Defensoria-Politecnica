@@ -1,0 +1,26 @@
+\section{Compilación de los artefactos}
+
+\subsection{Preparación del equipo de desarrollo}
+\pendiente{JDK 21, Maven, Node.js y Angular CLI; variables JAVA\_HOME}
+
+\subsection{Estructura del repositorio (carpeta Produccion)}
+\pendiente{Backend/, Frontend*/, Modelo-Java/, nginx/, docs/}
+
+\subsection{Compilación de los microservicios con Maven}
+\begin{lstlisting}
+$ cd Backend/queja-service
+$ mvn clean package -DskipTests
+$ ls target/*.jar
+\end{lstlisting}
+\pendiente{repetir para cada servicio: auth, queja, notificaciones, catalogo, admin, revision, chatbot, denunciado}
+
+\subsection{Compilación de los frontends Angular}
+\begin{lstlisting}
+$ cd Frontend
+$ npm ci
+$ npx ng build --configuration production
+\end{lstlisting}
+\pendiente{Frontend (defensoria-web), Frontend-Revision (/revision/), Frontend-Admin (/admin/); el \texttt{base-href} de cada uno}
+
+\subsection{Artefactos resultantes y a dónde se suben}
+\pendiente{tabla: artefacto $\rightarrow$ servidor $\rightarrow$ carpeta destino}

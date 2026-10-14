@@ -1,6 +1,4 @@
 server:
-  # Puerto interno unificado a 8080 en los 9 microservicios -- el acceso real sigue siendo
-  # por 8089, ahora vía el mapeo externo de Podman (ver -p en podman-compose.sh).
   port: 8080
 
 spring:
@@ -19,8 +17,6 @@ spring:
     compatibility-verifier:
       enabled: false
 
-# Mismo secreto que el resto de microservicios -- este servicio nunca emite tokens, solo
-# verifica los que ya emitió admin-service para proteger el CRUD de /api/chatbot/admin.
 jwt:
   secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
   expiration: 3600000

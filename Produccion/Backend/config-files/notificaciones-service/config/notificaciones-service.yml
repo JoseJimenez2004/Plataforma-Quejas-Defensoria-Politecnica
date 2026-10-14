@@ -1,19 +1,17 @@
 server:
-  # Puerto interno unificado a 8080 en los 9 microservicios -- el acceso real sigue siendo
-  # por 8085, ahora vía el mapeo externo de Podman (ver -p en podman-compose.sh).
   port: 8080
 
 spring:
   application:
     name: notificaciones-service
-  # Antes este servicio no tenía base de datos (era "fire-and-forget" de correo saliente) y
-  # desactivaba por completo el motor automático de JPA/datasource. Ahora persiste un centro
-  # de notificaciones por usuario (entidad Notificacion), así que necesita conexión real.
-  datasource:
+    datasource:
     url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
     username: postgres
     password: Temporal2026@
     driver-class-name: org.postgresql.Driver
+    idle-timeout: 1800000
+    max-poolSize: 3
+    max-lifeTime: 1800000
   jpa:
     hibernate:
       ddl-auto: update
@@ -34,7 +32,7 @@ spring:
           starttls:
             enable: true
             required: true
-          # Sin estos, si el proveedor del VPS bloquea el puerto 587 el envío se cuelga para siempre.
+
           connectiontimeout: 5000
           timeout: 10000
           writetimeout: 10000

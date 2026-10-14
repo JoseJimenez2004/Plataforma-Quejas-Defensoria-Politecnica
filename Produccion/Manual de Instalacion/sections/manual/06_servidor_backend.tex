@@ -1,0 +1,60 @@
+\section{Servidor backend (156.67.26.73)}
+
+\subsection{Archivos necesarios}
+\pendiente{jars, Dockerfiles, \texttt{config-files/}, \texttt{podman-compose.sh}, \texttt{firewall-backend.sh}}
+
+\subsection{Archivos de configuración externos (config-files)}
+\pendiente{un YAML por servicio montado en \texttt{/config}; selección con \texttt{SPRING\_CONFIG\_NAME}}
+
+\subsubsection{Conexión a la base de datos}
+\pendiente{URL jdbc hacia 169.58.62.99:5432 y :5433}
+\subsubsection{Secreto JWT compartido}
+\pendiente{el mismo \texttt{jwt.secret} en todos los servicios}
+\subsubsection{Correo SMTP y tiempos de espera}
+\pendiente{auth y notificaciones; timeouts de correo y de Feign}
+\subsubsection{URLs entre microservicios}
+\pendiente{cómo se llaman entre sí (puertos publicados)}
+
+\subsection{Dockerfile de los microservicios}
+\pendiente{base eclipse-temurin:21-jre-jammy; caso especial admin-service con postgresql-client-16 (PGDG) para respaldos}
+
+\subsection{El script podman-compose.sh}
+\pendiente{construcción de imágenes, levantar/detener servicios, logs}
+
+\subsection{Límites de memoria y JVM}
+\begin{table}[H]
+\centering
+\caption{Memoria asignada por microservicio}
+\begin{tabular}{lll}
+\toprule
+\textbf{Servicio} & \textbf{Límite contenedor} & \textbf{Heap JVM} \\
+\midrule
+queja-service & 1 GB & -Xmx640m \\
+denunciado-service & 1 GB & \pendiente{} \\
+auth, notificaciones, catalogo, admin, revision, chatbot & 512 MB & -Xmx320m \\
+primercontacto, subdefensoria & 250 MB & \pendiente{} \\
+antecedentes-service (IA) & 250 MB & -Xmx150m \\
+\bottomrule
+\end{tabular}
+\end{table}
+\pendiente{uso de \texttt{-XX:+ExitOnOutOfMemoryError} y \texttt{--restart always}}
+
+\subsection{Despliegue de cada microservicio}
+\pendiente{una subsección corta por servicio: propósito, puerto, dependencias, comando y verificación}
+\subsubsection{auth-service (8083)}
+\subsubsection{queja-service (8084)}
+\subsubsection{notificaciones-service (8085)}
+\subsubsection{catalogo-service (8086)}
+\subsubsection{admin-service (8087)}
+\subsubsection{revision-service (8088)}
+\subsubsection{chatbot-service (8089)}
+\subsubsection{denunciado-service (8094)}
+\subsubsection{historico-service (8092)}
+\pendiente{no se levanta por defecto}
+\subsubsection{Servicios de otros equipos: primercontacto (8082) y subdefensoria (8091)}
+
+\subsection{Firewall del backend}
+\pendiente{\texttt{firewall-backend.sh aplicar|boot|quitar}; rango 8082:8094 solo desde el Frontend y solo en la interfaz pública para no bloquear el tráfico entre contenedores}
+
+\subsection{Verificación}
+\pendiente{\texttt{podman ps}, \texttt{podman stats}, \texttt{curl localhost:<puerto>/actuator/health} o Swagger}

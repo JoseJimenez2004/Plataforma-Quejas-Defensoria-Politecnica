@@ -1,8 +1,4 @@
 server:
-  # Puerto interno del contenedor unificado a 8080 (igual en los 9 microservicios) -- el
-  # puerto real por el que se accede a este servicio sigue siendo 8083, solo que ahora es
-  # el mapeo externo de Podman (ver -p en podman-compose.sh), no el puerto en el que escucha
-  # Spring Boot dentro del contenedor. Mismo patrón que se usa en el trabajo con template_gio.
   port: 8080
 
 spring:
@@ -13,6 +9,9 @@ spring:
     username: postgres
     password: Temporal2026@
     driver-class-name: org.postgresql.Driver
+    idle-timeout: 1800000
+    max-poolSize: 3
+    max-lifeTime: 1800000
   jpa:
     hibernate:
       ddl-auto: update
@@ -28,7 +27,6 @@ spring:
           starttls:
             enable: true
             required: true
-          # Sin estos, si el proveedor del VPS bloquea el puerto 587 el envío se cuelga para siempre.
           connectiontimeout: 5000
           timeout: 10000
           writetimeout: 10000
@@ -37,8 +35,6 @@ spring:
   cloud:
     compatibility-verifier:
       enabled: false
-    # Timeouts de los clientes Feign (QuejasClient, NotificacionesClient): sin ellos, si
-    # quejas-service o notificaciones-service no responden, la activación de cuenta se cuelga.
     openfeign:
       client:
         config:

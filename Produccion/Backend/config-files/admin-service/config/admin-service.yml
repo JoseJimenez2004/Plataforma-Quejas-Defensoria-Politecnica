@@ -1,6 +1,4 @@
 server:
-  # Puerto interno unificado a 8080 en los 9 microservicios -- el acceso real sigue siendo
-  # por 8087, ahora vía el mapeo externo de Podman (ver -p en podman-compose.sh).
   port: 8080
 
 spring:
@@ -11,6 +9,9 @@ spring:
     username: postgres
     password: Temporal2026@
     driver-class-name: org.postgresql.Driver
+    idle-timeout: 1800000
+    max-poolSize: 3
+    max-lifeTime: 1800000
   jpa:
     hibernate:
       ddl-auto: update
@@ -19,15 +20,11 @@ spring:
     compatibility-verifier:
       enabled: false
 
-# Incluye el nombre del microservicio junto al nivel de log -- antes todos los contenedores
-# se veían idénticos en los logs (solo mostraban el hilo "main"). No aplica a
-# primer-contacto-service ni subdefensoria-service (fuera de este cambio).
+
 logging:
   pattern:
     level: "%5p [${spring.application.name}]"
 
-# Mismo secreto que auth-service/queja-service/catalogo-service -- un JWT emitido por
-# cualquiera de los servicios es valido para todos (ver JwtUtil de cada uno).
 jwt:
   secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
   expiration: 3600000

@@ -17,9 +17,6 @@ public class AppConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /** Cliente HTTP simple para pedirle a catalogo-service el total de dependencias en el
-     * resumen del dashboard -- no se justifica traer todo Spring Cloud OpenFeign para una
-     * sola llamada de lectura. */
     @Bean
     public RestTemplate restTemplate() {
         // Sin timeouts, si el otro servicio no responde (caído o bloqueado por firewall) la

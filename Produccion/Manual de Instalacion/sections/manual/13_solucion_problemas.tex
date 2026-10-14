@@ -1,0 +1,22 @@
+\section{Solución de problemas}
+
+\subsection{Un microservicio se reinicia o termina con código 137 (OOM)}
+\pendiente{diagnóstico con dmesg/podman stats; ajustar -m y -Xmx}
+
+\subsection{Error 504 o peticiones que se quedan colgadas}
+\pendiente{regla de firewall sin \texttt{-i <interfaz>} que bloquea tráfico entre contenedores; timeouts de RestTemplate/Feign}
+
+\subsection{El sitio pierde HTTPS o redirige al portal principal}
+\pendiente{defensoria.conf incompleto; falta una ruta location}
+
+\subsection{No se envían correos}
+\pendiente{credenciales SMTP, endpoint /api/notificaciones/enviar, timeouts}
+
+\subsection{Error de conexión a la base de datos}
+\pendiente{firewall de BD, IP permitida, contraseña en config-files}
+
+\subsection{Fallan los respaldos desde el panel}
+\pendiente{versión del cliente pg\_dump debe ser 16}
+
+\subsection{Error 401/403 en el login del personal}
+\pendiente{jwt.secret distinto entre servicios, rol sin permisos, sesión guardada en el navegador}

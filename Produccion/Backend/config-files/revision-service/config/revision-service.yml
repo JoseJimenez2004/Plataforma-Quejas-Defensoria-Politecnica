@@ -1,6 +1,4 @@
 server:
-  # Puerto interno unificado a 8080 en los 9 microservicios -- el acceso real sigue siendo
-  # por 8088, ahora vía el mapeo externo de Podman (ver -p en podman-compose.sh).
   port: 8080
 
 spring:
@@ -11,6 +9,9 @@ spring:
     username: postgres
     password: Temporal2026@
     driver-class-name: org.postgresql.Driver
+    idle-timeout: 1800000
+    max-poolSize: 3
+    max-lifeTime: 1800000
   jpa:
     hibernate:
       ddl-auto: update
@@ -19,8 +20,6 @@ spring:
     compatibility-verifier:
       enabled: false
 
-# Mismo secreto que el resto de microservicios -- un JWT emitido por admin-service (que es
-# quien hace login del personal) es valido aqui tambien.
 jwt:
   secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
   expiration: 3600000
@@ -33,9 +32,7 @@ notificaciones:
   service:
     url: http://156.67.26.73:8085
 
-# Mismo host/puerto que ya usa subdefensoria-service.yml para llegar a primer-contacto-service
-# (puerto 8082, ver get_port() en podman-compose.sh). Faltaba aquí -- PrimerContactoClientService
-# la necesita para poder turnar una queja.
+
 primer-contacto:
   base-url: http://156.67.26.73:8082
 

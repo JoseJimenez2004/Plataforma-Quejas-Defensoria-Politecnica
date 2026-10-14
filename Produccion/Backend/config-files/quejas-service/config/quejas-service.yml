@@ -1,6 +1,4 @@
 server:
-  # Puerto interno unificado a 8080 en los 9 microservicios -- el acceso real sigue siendo
-  # por 8084, ahora vía el mapeo externo de Podman (ver -p en podman-compose.sh).
   port: 8080
 
 spring:
@@ -11,6 +9,9 @@ spring:
     username: postgres
     password: Temporal2026@
     driver-class-name: org.postgresql.Driver
+    idle-timeout: 1800000
+    max-poolSize: 3
+    max-lifeTime: 1800000
   jpa:
     hibernate:
       ddl-auto: update
@@ -30,8 +31,6 @@ notificaciones:
   service:
     url: http://156.67.26.73:8085
 
-# NOTA: ya no se usa almacenamiento en disco para evidencias — se guardan completas como
-# BYTEA en la tabla queja_evidencias (ver entity/QuejaEvidencia.java y docs/CAMBIOS.md).
 
 springdoc:
   swagger-ui:
