@@ -38,7 +38,6 @@ public final class ReglasQueja {
 
     // ---- Descripción ---------------------------------------------------------------------
     public static final int DESCRIPCION_LONGITUD_MINIMA = 20;
-    public static final int DESCRIPCION_LONGITUD_MAXIMA = 4000;
 
     // ---- Archivos ------------------------------------------------------------------------
     /**

@@ -1,0 +1,65 @@
+<div class="datepicker">
+  <button
+    type="button"
+    class="datepicker__disparador"
+    [class.datepicker__disparador--vacio]="!valor"
+    [disabled]="disabled"
+    (click)="alternar()"
+  >
+    <span>{{ textoMostrado || placeholder }}</span>
+    <span class="datepicker__icono">📅</span>
+  </button>
+
+  @if (abierto) {
+    <div class="datepicker__panel" (click)="$event.stopPropagation()">
+      <div class="datepicker__cabecera">
+        <button type="button" class="datepicker__nav" (click)="cambiarMesVista(-1)" aria-label="Mes anterior">‹</button>
+
+        <!-- ngValue, NO value: con [value] el <option> guarda el indice como TEXTO, y
+             entonces vistaMes + 1 concatena en vez de sumar ("2" + 1 = "21"), lo que producia
+             fechas invalidas como 2004-21-19. [ngValue] conserva el tipo numerico. -->
+        <select class="datepicker__select" [(ngModel)]="vistaMes" aria-label="Mes">
+          @for (nombre of nombresMes; track nombre; let i = $index) {
+            <option [ngValue]="i">{{ nombre }}</option>
+          }
+        </select>
+        <select class="datepicker__select" [(ngModel)]="vistaAno" aria-label="Año">
+          @for (ano of listaAnos; track ano) {
+            <option [ngValue]="ano">{{ ano }}</option>
+          }
+        </select>
+
+        <button type="button" class="datepicker__nav" (click)="cambiarMesVista(1)" aria-label="Mes siguiente">›</button>
+      </div>
+
+      <div class="datepicker__dias-semana">
+        @for (d of nombresDia; track $index) {
+          <span>{{ d }}</span>
+        }
+      </div>
+
+      @for (semana of semanas; track $index) {
+        <div class="datepicker__semana">
+          @for (celda of semana; track celda.iso) {
+            <button
+              type="button"
+              class="datepicker__dia"
+              [class.datepicker__dia--fuera]="celda.fueraDeMes"
+              [class.datepicker__dia--hoy]="celda.esHoy"
+              [class.datepicker__dia--seleccionado]="celda.esSeleccionado"
+              [disabled]="celda.deshabilitado"
+              (click)="seleccionarDia(celda)"
+            >
+              {{ celda.dia }}
+            </button>
+          }
+        </div>
+      }
+
+      <div class="datepicker__pie">
+        <button type="button" class="datepicker__accion" (click)="irAHoy()">Hoy</button>
+        <button type="button" class="datepicker__accion" (click)="limpiar()">Limpiar</button>
+      </div>
+    </div>
+  }
+</div>

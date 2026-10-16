@@ -3,7 +3,7 @@
     <h2>Búsqueda de Antecedentes y Turnado</h2>
     @if (queja) {
       <p class="page-header-subtitulo">
-        C. {{ queja.nombreCompletoQuejoso }}
+        {{ folio }} · C. {{ queja.nombreCompletoQuejoso }}
         @if (queja.numeroIdentificacionQuejoso) { | Boleta/Empleado: {{ queja.numeroIdentificacionQuejoso }} }
       </p>
     }
@@ -13,70 +13,126 @@
 @if (cargando) {
   <p class="cargando">Cargando…</p>
 } @else if (queja) {
+  <!-- ================= Antecedentes ================= -->
   <div class="card">
-    <h3>Historial del Usuario en el Sistema</h3>
+    <div class="titulo-con-conteo">
+      <h3>Antecedentes de la queja</h3>
+      @if (antecedentes.length) { <span class="conteo">{{ antecedentes.length }}</span> }
+    </div>
 
     @if (antecedentes.length === 0) {
       <p class="sin-antecedentes">No se encontraron quejas previas de esta persona.</p>
     } @else {
-      <table class="tabla-admin">
-        <thead>
-          <tr>
-            <th>Folio</th>
-            <th>Fecha</th>
-            <th>Asunto</th>
-            <th>Estado Actual</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (a of antecedentes; track a.numeroFolio) {
-            <tr>
-              <td>{{ a.numeroFolio }}</td>
-              <td>{{ a.fecha | date: 'dd/MM/yy' }}</td>
-              <td>{{ a.asunto }}</td>
-              <td>{{ a.estadoActual }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-
+      <p class="explicacion">
+        Otras quejas de la misma persona quejosa o contra la misma persona señalada. Revisa si hay duplicidad y
+        quién las atiende antes de turnar.
+      </p>
+      <div class="antecedentes">
+        @for (a of antecedentes; track a.numeroFolio) {
+          <article class="antecedente" [class.cerrado]="!a.enCurso">
+            <div class="antecedente-cabeza">
+              <span class="antecedente-folio">{{ a.numeroFolio }}</span>
+              <span class="chip-relacion" [class.denunciado]="a.relacion === 'MISMO_DENUNCIADO'">
+                {{ a.relacion === 'MISMO_DENUNCIADO' ? 'Mismo denunciado' : 'Misma persona quejosa' }}
+              </span>
+            </div>
+            <dl>
+              <div><dt>Fecha</dt><dd>{{ a.fecha | date: 'dd/MM/yyyy' }}</dd></div>
+              <div><dt>Unidad</dt><dd>{{ a.unidadAcademicaClave || '—' }}</dd></div>
+              <div><dt>Estado</dt><dd>{{ a.estadoActual }}</dd></div>
+              <div>
+                <dt>Abogado</dt>
+                <dd>
+                  @if (a.defensorAsignado) { <strong>{{ a.defensorAsignado }}</strong> }
+                  @else { <span class="sin-dato">Sin abogado asignado</span> }
+                </dd>
+              </div>
+            </dl>
+          </article>
+        }
+      </div>
       <p class="aviso-peligro">
-        Se encontraron {{ antecedentes.length }} antecedente(s) relacionado(s). Verifica si existe
-        duplicidad antes de turnar.
+        Se encontraron {{ antecedentes.length }} antecedente(s) relacionado(s). Verifica si existe duplicidad antes de turnar.
       </p>
     }
   </div>
 
-  <div class="card canalizacion-card">
-    <h3>Canalización del Expediente</h3>
+  <div class="rejilla-turnado">
+    <!-- ================= Canalización ================= -->
+    <div class="card">
+      <h3>Canalización del Expediente</h3>
 
-    <p class="aviso-inline">Esta queja se canalizará a <strong>Primer Contacto</strong> para su análisis.</p>
+      <p class="aviso-inline">Esta queja se canalizará a <strong>Primer Contacto</strong> para su análisis.</p>
 
-    <div class="input-group">
-      <label>Defensor / Abogado Responsable:</label>
-      <select [(ngModel)]="defensorAsignado" name="defensorAsignado">
-        <option value="" disabled selected>Seleccione un responsable</option>
-        @for (defensor of defensores; track defensor.id) {
-          <option [value]="defensor.nombreCompleto">{{ defensor.nombreCompleto }}</option>
+      <div class="input-group">
+        <label>Defensor / Abogado Responsable:</label>
+        <select [(ngModel)]="defensorAsignado" name="defensorAsignado">
+          <option value="" disabled>Seleccione un responsable</option>
+          @for (ab of abogados; track ab.id) {
+            <option [value]="ab.nombre">
+              {{ ab.nombre }} — {{ ab.cargaActiva }} en trámite{{ ab.sugerido ? ' · sugerido' : '' }}
+            </option>
+          }
+        </select>
+        @if (abogados.length === 0) {
+          <span class="mensaje-campo aviso-sin-datos">
+            Todavía no hay abogados (rol Subdefensor o Defensor) dados de alta en Usuarios y Roles.
+          </span>
         }
-      </select>
-      @if (defensores.length === 0) {
-        <span class="mensaje-campo aviso-sin-datos">
-          Todavía no hay personal con rol Defensor/Subdefensor dado de alta en Usuarios y Roles.
-        </span>
-      }
+        @if (avisoCarga) {
+          <span class="aviso-carga">{{ avisoCarga }}</span>
+        }
+      </div>
+
+      <div class="input-group">
+        <label>Comentarios de Recepción:</label>
+        <textarea rows="4" [(ngModel)]="comentarios" name="comentarios" placeholder="Escriba aquí una nota breve para el abogado…"></textarea>
+      </div>
+
+      <div class="modal-acciones acciones-turnado">
+        <button class="btn-primary" (click)="turnar()" [disabled]="turnando">
+          {{ turnando ? 'Turnando…' : '⬆ Generar Folio Oficial y Turnar' }}
+        </button>
+        <button class="btn-secondary" (click)="pausar()">Pausar / Guardar Avance</button>
+      </div>
     </div>
 
-    <div class="input-group">
-      <label>Comentarios de Recepción:</label>
-      <textarea rows="4" [(ngModel)]="comentarios" name="comentarios" placeholder="Escriba aquí una nota breve para el abogado…"></textarea>
-    </div>
-
-    <div class="modal-acciones acciones-turnado">
-      <button class="btn-primary" (click)="turnar()" [disabled]="turnando">
-        {{ turnando ? 'Turnando…' : '⬆ Generar Folio Oficial y Turnar' }}
-      </button>
-      <button class="btn-secondary" (click)="pausar()">Pausar / Guardar Avance</button>
-    </div>
+    <!-- ================= Carga de los abogados ================= -->
+    <aside class="card carga">
+      <h3>Carga de trabajo de los abogados</h3>
+      <p class="explicacion">
+        Quejas en trámite de cada abogado, de menor a mayor. Se sugiere al de menor carga, salvo que alguien ya
+        lleve un antecedente de esta queja: en ese caso se le sugiere a él para dar continuidad.
+      </p>
+      <ul class="carga-lista">
+        @for (ab of abogados; track ab.id) {
+          <li>
+            <button type="button" class="carga-fila" [class.elegido]="defensorAsignado === ab.nombre"
+                    [class.sugerido]="ab.sugerido" (click)="elegir(ab)">
+              <span class="carga-cabeza">
+                <span class="carga-nombre">{{ ab.nombre }}</span>
+                <span class="carga-numero">{{ ab.cargaActiva }}</span>
+              </span>
+              <span class="carga-barra"><span [style.width.%]="anchoCarga(ab)"></span></span>
+              <span class="carga-pie">
+                {{ ab.cargaActiva }} en trámite · {{ ab.totalAsignadas }} en total
+                @if (ab.rol === 'DEFENSOR') { · Titular }
+              </span>
+              @if (ab.sugerido || ab.foliosAntecedente.length) {
+                <span class="carga-etiquetas">
+                  @if (ab.sugerido) { <span class="etiqueta sugerido">Sugerido</span> }
+                  @if (ab.foliosAntecedente.length) {
+                    <span class="etiqueta antecedente">Lleva {{ ab.foliosAntecedente.join(', ') }}</span>
+                  }
+                </span>
+              }
+              @if (ab.sugerido && ab.motivoSugerencia) {
+                <span class="carga-motivo">{{ ab.motivoSugerencia }}</span>
+              }
+            </button>
+          </li>
+        }
+      </ul>
+    </aside>
   </div>
 }

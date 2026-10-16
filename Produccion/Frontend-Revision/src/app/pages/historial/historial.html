@@ -1,80 +1,168 @@
-<div class="page-header">
-  <div>
-    <h2>Historial de Trámites Recibidos</h2>
-    <p class="page-header-subtitulo">Consulta de quejas ya turnadas o rechazadas.</p>
-  </div>
-</div>
-
-<div class="card">
-  <div class="fila-filtros">
-    <div class="buscador buscador-ancho">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" [(ngModel)]="filtroTexto" name="filtroTexto" placeholder="Buscar por Folio (DDP-XXXX), Nombre o Unidad Académica" />
+<section class="pagina">
+  <div class="encabezado">
+    <div>
+      <h2>Historial de Recepción</h2>
+      <p class="fecha">{{ fechaHoy }} · Quejas que Recepción ya turnó o regresó con observaciones.</p>
     </div>
-    <select [(ngModel)]="filtroEstatus" name="filtroEstatus" class="select-estatus">
-      <option value="">Estatus</option>
-      <option value="TURNADO">Turnado</option>
-      <option value="RECHAZADO">Rechazado</option>
-    </select>
-    <div class="filtro-rango-fechas">
-      <label class="etiqueta-rango">Desde
-        <input type="date" [(ngModel)]="filtroFechaDesde" name="filtroFechaDesde" />
-      </label>
-      <label class="etiqueta-rango">Hasta
-        <input type="date" [(ngModel)]="filtroFechaHasta" name="filtroFechaHasta" />
-      </label>
-    </div>
-    <button class="btn-primary" (click)="aplicarFiltros()">Aplicar Filtros</button>
-    <button class="btn-secondary" (click)="exportar()" [disabled]="exportando">
-      {{ exportando ? 'Exportando…' : 'Exportar Reporte (Excel)' }}
+    <button type="button" class="btn-guinda" (click)="exportar()" [disabled]="exportando">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      {{ exportando ? 'Exportando…' : 'Exportar a Excel' }}
     </button>
   </div>
 
-  @if (cargando) {
-    <p class="cargando">Cargando historial…</p>
-  } @else if (items.length === 0) {
-    <div class="estado-vacio">
-      <svg class="estado-vacio-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><polyline points="3 4 3 9 8 9"></polyline></svg>
-      <p>No hay trámites que coincidan con los filtros.</p>
+  @if (datos; as d) {
+    <div class="indicadores">
+      <div class="indicador">
+        <span class="indicador-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><polyline points="3 4 3 9 8 9"></polyline><polyline points="12 7 12 12 16 14"></polyline></svg></span>
+        <span class="indicador-cuerpo">
+          <span class="indicador-titulo">Atendidas</span>
+          <strong>{{ d.resumen.total }}</strong>
+          <span class="indicador-detalle">{{ hayFiltros ? 'con los filtros aplicados' : 'en todo el historial' }}</span>
+        </span>
+      </div>
+      <button type="button" class="indicador clic" [class.seleccionado]="resultado === 'TURNADO'" (click)="cambiarResultado(resultado === 'TURNADO' ? '' : 'TURNADO')">
+        <span class="indicador-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg></span>
+        <span class="indicador-cuerpo">
+          <span class="indicador-titulo">Turnadas</span>
+          <strong>{{ d.resumen.turnadas }}</strong>
+          <span class="indicador-detalle">{{ porcentaje(d.resumen.turnadas, d.resumen.total) }}% admitidas a Primer Contacto</span>
+        </span>
+      </button>
+      <button type="button" class="indicador clic" [class.seleccionado]="resultado === 'RECHAZADO'" (click)="cambiarResultado(resultado === 'RECHAZADO' ? '' : 'RECHAZADO')">
+        <span class="indicador-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg></span>
+        <span class="indicador-cuerpo">
+          <span class="indicador-titulo">Con observaciones</span>
+          <strong>{{ d.resumen.rechazadas }}</strong>
+          <span class="indicador-detalle">{{ porcentaje(d.resumen.rechazadas, d.resumen.total) }}% regresadas al quejoso</span>
+        </span>
+      </button>
+      <button type="button" class="indicador clic" [class.seleccionado]="soloMias" (click)="cambiarSoloMias(!soloMias)">
+        <span class="indicador-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"></path></svg></span>
+        <span class="indicador-cuerpo">
+          <span class="indicador-titulo">Atendidas por ti</span>
+          <strong>{{ d.resumen.atendidasPorMi }}</strong>
+          <span class="indicador-detalle">{{ soloMias ? 'mostrando solo las tuyas' : 'clic para ver solo las tuyas' }}</span>
+        </span>
+      </button>
+      <div class="indicador" title="Promedio entre que llegó la queja y Recepción la atendió">
+        <span class="indicador-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+        <span class="indicador-cuerpo">
+          <span class="indicador-titulo">Tiempo de atención</span>
+          <strong>{{ duracion(d.resumen.horasPromedioAtencion) }}</strong>
+          <span class="indicador-detalle">promedio de llegada a atención</span>
+        </span>
+      </div>
     </div>
-  } @else {
-    <table class="tabla-admin">
-      <thead>
-        <tr>
-          <th>Folio</th>
-          <th>Fecha Recibido</th>
-          <th>Quejoso</th>
-          <th>Tipo de Ingreso</th>
-          <th>Estatus Final</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of items; track item.numeroFolio) {
-          <tr>
-            <td>{{ item.numeroFolio }}</td>
-            <td>{{ item.fechaCreacion | date: 'dd/MM/yy' }}</td>
-            <td>{{ item.nombreQuejoso }}</td>
-            <td>{{ item.tipoIngreso }}</td>
-            <td>
-              <span class="badge" [class.exito]="item.estatusFinal === 'TURNADO'" [class.peligro]="item.estatusFinal === 'RECHAZADO'">
-                {{ item.estatusFinal }}
-              </span>
-            </td>
-            <td>
-              @if (item.estatusFinal === 'RECHAZADO') {
-                <button class="btn-texto peligro" (click)="verDetalle(item.numeroFolio)">Ver Motivo</button>
-              } @else {
-                <button class="btn-texto" (click)="verDetalle(item.numeroFolio)">Ver Detalle</button>
-              }
-            </td>
-          </tr>
+
+    <div class="card-panel">
+      <div class="filtros">
+        <div class="buscador">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" [(ngModel)]="texto" (ngModelChange)="buscar()" name="texto" placeholder="Folio, nombre o unidad" aria-label="Buscar en el historial" />
+        </div>
+        <div class="pestanas" role="tablist">
+          @for (op of opcionesResultado; track op.valor) {
+            <button type="button" role="tab" [class.activa]="resultado === op.valor" [attr.aria-selected]="resultado === op.valor"
+                    (click)="cambiarResultado(op.valor)">{{ op.etiqueta }}</button>
+          }
+        </div>
+        <div class="pestanas" role="tablist" aria-label="Quién la atendió">
+          <button type="button" [class.activa]="!soloMias" (click)="cambiarSoloMias(false)">Todo el equipo</button>
+          <button type="button" [class.activa]="soloMias" (click)="cambiarSoloMias(true)">Solo yo</button>
+        </div>
+        <div class="rango">
+          <label>Llegaron del
+            <input type="date" [(ngModel)]="fechaDesde" (change)="cambiarFechas()" name="fechaDesde" />
+          </label>
+          <label>al
+            <input type="date" [(ngModel)]="fechaHasta" (change)="cambiarFechas()" name="fechaHasta" />
+          </label>
+        </div>
+        @if (hayFiltros) {
+          <button type="button" class="limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
         }
-      </tbody>
-    </table>
-    <p class="pie-conteo">Mostrando {{ items.length }} registro(s) procesado(s).</p>
+      </div>
+
+      @if (cargando && !d.filas.length) {
+        <p class="estado">Cargando…</p>
+      } @else if (d.filas.length === 0) {
+        <div class="estado">No hay quejas atendidas que coincidan con los filtros.</div>
+      } @else {
+        <div class="tabla-envoltura" [class.recargando]="cargando">
+          <table class="tabla-cola">
+            <thead>
+              <tr>
+                <th>Folio</th>
+                <th>Llegó</th>
+                <th>Atendida</th>
+                <th>Quejoso</th>
+                <th>Resultado</th>
+                <th>Dónde va</th>
+                <th>Atendió</th>
+                <th class="derecha"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of d.filas; track f.numeroFolio) {
+                <tr [class.mia]="f.esMia">
+                  <td>
+                    <span class="folio">{{ f.numeroFolio }}</span>
+                    @if (f.tipoIngreso === 'Ventanilla') { <span class="etiqueta-origen">Ventanilla</span> }
+                  </td>
+                  <td><span class="fecha-fila">{{ f.fechaCreacion | date: 'dd/MM/yy HH:mm' }}</span></td>
+                  <td>
+                    <span class="fecha-fila">{{ f.fechaAtencion ? (f.fechaAtencion | date: 'dd/MM/yy HH:mm') : '—' }}</span>
+                    <span class="hace">en {{ duracion(f.horasAtencion) }}</span>
+                  </td>
+                  <td class="quejoso">
+                    {{ f.nombreQuejoso }}
+                    <span class="hace">{{ f.unidadAcademicaClave || '' }}</span>
+                  </td>
+                  <td>
+                    @if (f.resultado === 'TURNADO') {
+                      <span class="chip contigo">Turnada</span>
+                    } @else {
+                      <span class="chip observaciones">Con observaciones</span>
+                    }
+                  </td>
+                  <td class="donde">
+                    {{ f.estatusActual }}
+                    @if (f.folioPrimerContacto) { <span class="hace">{{ f.folioPrimerContacto }}</span> }
+                  </td>
+                  <td>{{ f.atendioNombre || '—' }} @if (f.esMia) { <em class="tu">(tú)</em> }</td>
+                  <td class="derecha">
+                    <button type="button" class="btn-fila secundario" (click)="verDetalle(f)">
+                      {{ f.resultado === 'RECHAZADO' ? 'Ver motivo' : 'Ver detalle' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="paginado">
+          <span class="paginado-rango">{{ rangoMostrado }}</span>
+          @if (d.totalPaginas > 1) {
+            <nav aria-label="Páginas del historial">
+              <button type="button" (click)="irAPagina(pagina - 1)" [disabled]="pagina === 0" aria-label="Página anterior">‹</button>
+              @for (p of paginasVisibles; track $index) {
+                @if (p === null) {
+                  <span class="paginado-salto">…</span>
+                } @else {
+                  <button type="button" [class.actual]="p === pagina" (click)="irAPagina(p)">{{ p + 1 }}</button>
+                }
+              }
+              <button type="button" (click)="irAPagina(pagina + 1)" [disabled]="pagina >= d.totalPaginas - 1" aria-label="Página siguiente">›</button>
+            </nav>
+          }
+        </div>
+      }
+    </div>
+  } @else if (cargando) {
+    <p class="estado">Cargando historial…</p>
   }
-</div>
+</section>
 
 @if (mostrarModalDetalle && detalleSeleccionado) {
   <div class="modal-overlay" (click)="cerrarDetalle()">

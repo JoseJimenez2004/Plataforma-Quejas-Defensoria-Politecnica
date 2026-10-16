@@ -98,10 +98,8 @@ public class ValidadorQuejaPublica {
             throw new ValidacionException("Describe los hechos con al menos "
                     + ReglasQueja.DESCRIPCION_LONGITUD_MINIMA + " caracteres.");
         }
-        if (descripcion.length() > ReglasQueja.DESCRIPCION_LONGITUD_MAXIMA) {
-            throw new ValidacionException("La descripción de los hechos no puede exceder "
-                    + ReglasQueja.DESCRIPCION_LONGITUD_MAXIMA + " caracteres.");
-        }
+        // Sin máximo (decisión 2026-10-14): la columna quejas.descripcion es TEXT. El único
+        // tope práctico es el tamaño de la petición (max-request-size / nginx, 100MB).
     }
 
     // ---------------------------------------------------------------------------------------

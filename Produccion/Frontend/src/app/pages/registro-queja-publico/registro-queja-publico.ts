@@ -136,7 +136,6 @@ export class RegistroQuejaPublico implements OnInit, OnDestroy {
   readonly nombreLongitudMaxima = Reglas.NOMBRE_LONGITUD_MAXIMA;
   readonly boletaLongitudMaxima = Reglas.NUMERO_IDENTIFICACION_LONGITUD_MAXIMA;
   readonly descripcionLongitudMinima = Reglas.DESCRIPCION_LONGITUD_MINIMA;
-  readonly descripcionLongitudMaxima = Reglas.DESCRIPCION_LONGITUD_MAXIMA;
   readonly identificacionCantidadMaxima = Reglas.IDENTIFICACION_CANTIDAD_MAXIMA;
 
   constructor(
@@ -303,9 +302,6 @@ export class RegistroQuejaPublico implements OnInit, OnDestroy {
     }
     if (texto.length < this.descripcionLongitudMinima) {
       return `Describe los hechos con al menos ${this.descripcionLongitudMinima} caracteres.`;
-    }
-    if (texto.length > this.descripcionLongitudMaxima) {
-      return `La descripción no puede exceder ${this.descripcionLongitudMaxima} caracteres.`;
     }
     return null;
   }

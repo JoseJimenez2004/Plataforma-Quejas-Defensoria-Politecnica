@@ -52,22 +52,59 @@ export interface EvidenciaResumen {
   fechaSubida: string;
 }
 
+/** Filtros de la Bandeja de Entrada (ver revision-service BandejaController). */
+export type FiltroBandeja = 'todas' | 'disponibles' | 'mias' | 'corregidas' | 'en_atencion';
+
 export interface QuejaResumenBandeja {
   numeroFolio: string;
   fechaCreacion: string;
   nombreQuejoso: string;
+  unidadAcademicaClave?: string | null;
   documentacionAparenteCompleta: boolean;
+  /** RECIBIDA (nueva), CORREGIDA (reenviada tras un rechazo) o EN_VALIDACION (alguien la atiende). */
   estatus: string;
-  /** Nombre de quien tiene la queja abierta ahora mismo. Solo viene cuando estatus es
-   * EN_VALIDACION; null/undefined si nadie la está viendo todavía. */
+  /** Quién la tiene abierta; solo cuando estatus es EN_VALIDACION. */
   revisandoPorNombre?: string | null;
+  /** true si quien consulta es quien la tiene abierta. */
+  esMia: boolean;
+  /** WEB (formulario público) o MANUAL (capturada en ventanilla). */
+  origen: 'WEB' | 'MANUAL';
+  /** En una corregida: quién la había regresado al quejoso. */
+  rechazadaAntesPor?: string | null;
+}
+
+export interface IndicadoresBandeja {
+  porAtender: number;
+  nuevasHoy: number;
+  corregidas: number;
+  enAtencion: number;
+  enAtencionMias: number;
+  atendidasHoy: number;
+  atendidasHoyMias: number;
+  turnadasHoy: number;
+  rechazadasHoy: number;
+  folioMasAntiguo?: string | null;
+  fechaMasAntigua?: string | null;
+  /** Horas promedio entre que llega una queja y Recepción la valida (últimos 30 días). */
+  horasPromedioAtencion?: number | null;
+  atendidasUltimos30: number;
+}
+
+export interface CargaRecepcionista {
+  nombre: string;
+  soyYo: boolean;
+  enAtencion: number;
+  atendidasHoy: number;
 }
 
 export interface BandejaResumen {
-  pendientes: number;
-  enProceso: number;
-  turnadasHoy: number;
+  indicadores: IndicadoresBandeja;
   lista: QuejaResumenBandeja[];
+  pagina: number;
+  tamanio: number;
+  totalElementos: number;
+  totalPaginas: number;
+  equipo: CargaRecepcionista[];
 }
 
 export interface QuejaDetalle {
@@ -97,6 +134,23 @@ export interface AntecedenteItem {
   fecha: string;
   asunto: string;
   estadoActual: string;
+  /** MISMA_PERSONA (misma persona quejosa) o MISMO_DENUNCIADO (misma persona señalada). */
+  relacion: 'MISMA_PERSONA' | 'MISMO_DENUNCIADO';
+  unidadAcademicaClave?: string | null;
+  defensorAsignado?: string | null;
+  enCurso: boolean;
+}
+
+/** Abogado con su carga de trabajo, para decidir a quién turnar. */
+export interface CargaAbogado {
+  id: number;
+  nombre: string;
+  rol: string;
+  cargaActiva: number;
+  totalAsignadas: number;
+  foliosAntecedente: string[];
+  sugerido: boolean;
+  motivoSugerencia?: string | null;
 }
 
 export interface RechazarQuejaRequest {
@@ -123,6 +177,9 @@ export interface DefensorOpcion {
 export interface IdentificacionOficialOpcion {
   clave: string;
   nombre: string;
+  /** Identificación oficial, Identificación institucional (IPN) o Representación. */
+  grupo: string;
+  detalle?: string;
 }
 
 export interface RegistroManualResponse {
@@ -137,4 +194,40 @@ export interface HistorialItem {
   tipoIngreso: string;
   estatusFinal: string;
   motivoRechazo: string | null;
+}
+
+/** Historial paginado (2026-10-16). */
+export interface HistorialFila {
+  numeroFolio: string;
+  fechaCreacion: string;
+  fechaAtencion?: string | null;
+  horasAtencion?: number | null;
+  nombreQuejoso: string;
+  unidadAcademicaClave?: string | null;
+  /** Web | Ventanilla */
+  tipoIngreso: string;
+  /** TURNADO | RECHAZADO */
+  resultado: 'TURNADO' | 'RECHAZADO';
+  estatusActual: string;
+  atendioNombre?: string | null;
+  esMia: boolean;
+  folioPrimerContacto?: string | null;
+  defensorAsignado?: string | null;
+}
+
+export interface HistorialResumen {
+  total: number;
+  turnadas: number;
+  rechazadas: number;
+  atendidasPorMi: number;
+  horasPromedioAtencion?: number | null;
+}
+
+export interface HistorialPagina {
+  resumen: HistorialResumen;
+  filas: HistorialFila[];
+  pagina: number;
+  tamanio: number;
+  totalElementos: number;
+  totalPaginas: number;
 }

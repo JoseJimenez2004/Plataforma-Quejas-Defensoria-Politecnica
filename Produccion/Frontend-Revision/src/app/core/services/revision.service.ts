@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import {
   AntecedenteItem,
   AreaOpcion,
+  CargaAbogado,
   BandejaResumen,
   DefensorOpcion,
+  FiltroBandeja,
   IdentificacionOficialOpcion,
   QuejaDetalle,
   RechazarQuejaRequest,
@@ -20,8 +22,23 @@ export class RevisionService {
 
   constructor(private http: HttpClient) {}
 
-  bandeja(): Observable<BandejaResumen> {
-    return this.http.get<BandejaResumen>(`${this.apiUrl}/bandeja`);
+  /** Una página de la cola (10 por defecto, la más reciente arriba) + indicadores + equipo. */
+  bandeja(filtro: FiltroBandeja = 'todas', texto = '', pagina = 0, tamanio = 10): Observable<BandejaResumen> {
+    let params = new HttpParams().set('filtro', filtro).set('pagina', pagina).set('tamanio', tamanio);
+    if (texto.trim()) {
+      params = params.set('q', texto.trim());
+    }
+    return this.http.get<BandejaResumen>(`${this.apiUrl}/bandeja`, { params });
+  }
+
+  /** Suelta la queja (la regresa a la cola para que la tome otra recepcionista). */
+  liberar(folio: string): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/quejas/${folio}/liberar`, {});
+  }
+
+  /** Mantiene la queja a nombre de quien la revisa mientras sigue abierta en pantalla. */
+  renovar(folio: string): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/quejas/${folio}/renovar`, {});
   }
 
   detalle(folio: string): Observable<QuejaDetalle> {
@@ -30,6 +47,11 @@ export class RevisionService {
 
   antecedentes(folio: string): Observable<AntecedenteItem[]> {
     return this.http.get<AntecedenteItem[]>(`${this.apiUrl}/quejas/${folio}/antecedentes`);
+  }
+
+  /** Abogados con su carga de trabajo y cuál sugiere el sistema para esta queja. */
+  abogados(folio: string): Observable<CargaAbogado[]> {
+    return this.http.get<CargaAbogado[]>(`${this.apiUrl}/quejas/${folio}/abogados`);
   }
 
   urlEvidencia(id: number): string {

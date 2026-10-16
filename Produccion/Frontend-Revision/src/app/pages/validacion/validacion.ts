@@ -17,31 +17,38 @@ type ClavePregunta =
   | 'nombreCompleto'
   | 'identificacionOficial'
   | 'numeroIdentificacion'
+  /** Sub-pregunta del requisito 3: solo aparece si la boleta es "No aplicable". */
+  | 'numeroEmpleado'
   | 'fechaHechos'
   | 'datosDenunciado';
 
+/** true = Sí, false = No, 'na' = No aplicable (solo la pregunta de la boleta), null = sin contestar. */
+type ValorRespuesta = boolean | 'na' | null;
+
 interface RespuestaPregunta {
-  valor: boolean | null;
+  valor: ValorRespuesta;
   observacion: string;
 }
 
 /** Texto del motivo que se le manda al quejoso cuando la respuesta es "No". */
 const MOTIVO_SI_NO: Record<ClavePregunta, string> = {
-  nombreCompleto: 'No proporcionó su nombre completo (nombre y apellidos).',
+  nombreCompleto: 'El nombre asentado en la queja no coincide íntegramente con la identificación oficial adjunta.',
   identificacionOficial:
-    'La identificación oficial no es legible, no es oficial, no está vigente o no coincide con el nombre proporcionado.',
-  numeroIdentificacion: 'El número de boleta o de empleado no coincide con el de la identificación presentada.',
-  fechaHechos: `Los hechos ocurrieron hace más de ${PLAZO_DIAS_QUEJA} días respecto a la fecha de registro de la queja.`,
-  datosDenunciado: 'Faltan los datos de la persona denunciada (nombre y apellidos).',
+    'No se exhibió una identificación oficial con fotografía válida y vigente (o, en su caso, la constancia idónea de representación legal), en términos del Artículo 13 de la Gaceta Politécnica y del apartado de Control y Gestión Administrativa de Documentos.',
+  numeroIdentificacion: 'El número de boleta registrado no concuerda con la constancia o credencial institucional aportada.',
+  numeroEmpleado: 'El número de empleado registrado no concuerda con la constancia o credencial institucional aportada.',
+  fechaHechos: `La queja no fue promovida dentro del término de ${PLAZO_DIAS_QUEJA} días naturales posteriores a los hechos.`,
+  datosDenunciado: 'La queja no aporta elementos suficientes para la plena identificación de la persona señalada.',
 };
 
-/** Encabezado corto de cada pregunta, para armar las observaciones del correo. */
+/** Encabezado corto de cada requisito, para armar las observaciones del correo. */
 const TITULO_PREGUNTA: Record<ClavePregunta, string> = {
-  nombreCompleto: 'Nombre completo',
-  identificacionOficial: 'Identificación oficial',
-  numeroIdentificacion: 'Número de boleta / empleado',
-  fechaHechos: 'Fecha de los hechos',
-  datosDenunciado: 'Datos del denunciado',
+  nombreCompleto: 'Identidad de la persona quejosa',
+  identificacionOficial: 'Documentación de identidad y personalidad jurídica',
+  numeroIdentificacion: 'Matrícula institucional (boleta)',
+  numeroEmpleado: 'Matrícula institucional (número de empleado)',
+  fechaHechos: 'Oportunidad en la presentación',
+  datosDenunciado: 'Identificación de la persona señalada',
 };
 
 const ORDEN_PREGUNTAS: ClavePregunta[] = [
@@ -71,6 +78,7 @@ export class Validacion implements OnInit, OnDestroy {
     nombreCompleto: { valor: null, observacion: '' },
     identificacionOficial: { valor: null, observacion: '' },
     numeroIdentificacion: { valor: null, observacion: '' },
+    numeroEmpleado: { valor: null, observacion: '' },
     fechaHechos: { valor: null, observacion: '' },
     datosDenunciado: { valor: null, observacion: '' },
   };
@@ -120,22 +128,37 @@ export class Validacion implements OnInit, OnDestroy {
     return this.respuestas[clave as ClavePregunta];
   }
 
-  setRespuesta(clave: string, valor: boolean): void {
+  setRespuesta(clave: string, valor: ValorRespuesta): void {
     this.r(clave).valor = valor;
     this.cdr.detectChanges();
   }
 
+  /**
+   * Estado de cada requisito: 'si' (Sí o No aplicable), 'no' o null (sin contestar). El
+   * requisito 3 combina la boleta y, si la boleta "No aplica", el número de empleado.
+   */
+  estadoRequisito(clave: string): 'si' | 'no' | null {
+    const valor = this.r(clave).valor;
+    if (clave === 'numeroIdentificacion' && valor === 'na') {
+      const empleado = this.respuestas.numeroEmpleado.valor;
+      return empleado === null ? null : empleado === false ? 'no' : 'si';
+    }
+    return valor === null ? null : valor === false ? 'no' : 'si';
+  }
+
   get cumplidos(): number {
-    return ORDEN_PREGUNTAS.filter((c) => this.respuestas[c].valor === true).length;
+    return ORDEN_PREGUNTAS.filter((c) => this.estadoRequisito(c) === 'si').length;
   }
 
   get contestadas(): number {
-    return ORDEN_PREGUNTAS.filter((c) => this.respuestas[c].valor !== null).length;
+    return ORDEN_PREGUNTAS.filter((c) => this.estadoRequisito(c) !== null).length;
   }
 
-  /** Preguntas contestadas con "No". */
+  /** Preguntas contestadas con "No" (en el requisito 3, la boleta o el número de empleado). */
   get preguntasEnNo(): ClavePregunta[] {
-    return ORDEN_PREGUNTAS.filter((c) => this.respuestas[c].valor === false);
+    return ORDEN_PREGUNTAS.filter((c) => this.estadoRequisito(c) === 'no').map((c) =>
+      c === 'numeroIdentificacion' && this.respuestas.numeroIdentificacion.valor === 'na' ? 'numeroEmpleado' : c,
+    );
   }
 
   /** Preguntas en "No" a las que todavía les falta la observación para el quejoso. */
@@ -191,6 +214,40 @@ export class Validacion implements OnInit, OnDestroy {
     }
   }
 
+  get esEmpleado(): boolean {
+    return (this.queja?.tipoIdentificacionQuejoso ?? '').toLowerCase() === 'empleado';
+  }
+
+  /** Catálogo de documentos agrupado (identificación oficial, IPN, representación). */
+  get gruposIdentificacion(): { grupo: string; items: IdentificacionOficialOpcion[] }[] {
+    const grupos: { grupo: string; items: IdentificacionOficialOpcion[] }[] = [];
+    for (const doc of this.identificaciones) {
+      const nombre = doc.grupo || 'Identificación oficial';
+      let g = grupos.find((x) => x.grupo === nombre);
+      if (!g) {
+        g = { grupo: nombre, items: [] };
+        grupos.push(g);
+      }
+      g.items.push(doc);
+    }
+    return grupos;
+  }
+
+  /** "Boleta" o "Número de empleado" para el dato capturado de la pregunta 3. */
+  get etiquetaDatoCapturado(): string {
+    return (this.queja?.tipoIdentificacionQuejoso ?? '').toLowerCase() === 'empleado' ? 'Número de empleado' : 'Boleta';
+  }
+
+  /** "15/jun/2023" -- formato del cómputo automático de la pregunta 4. */
+  fechaCorta(valor: string | null | undefined): string {
+    const fecha = this.aFechaLocal(valor);
+    if (!fecha) {
+      return '';
+    }
+    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    return `${String(fecha.getDate()).padStart(2, '0')}/${meses[fecha.getMonth()]}/${fecha.getFullYear()}`;
+  }
+
   get esAlumno(): boolean {
     return (this.queja?.tipoIdentificacionQuejoso ?? '').toLowerCase() === 'alumno';
   }
@@ -223,7 +280,7 @@ export class Validacion implements OnInit, OnDestroy {
 
   irACanalizar(): void {
     if (!this.puedeCanalizar) {
-      this.toast.advertencia('Todas las verificaciones deben estar en "Sí" para canalizar la queja.');
+      this.toast.advertencia('Todos los requisitos deben estar en "Sí" (o "No aplicable") para canalizar la queja.');
       return;
     }
     this.router.navigate(['/turnado', this.folio]);
@@ -276,6 +333,24 @@ export class Validacion implements OnInit, OnDestroy {
 
   // ---------------- carga ----------------
 
+  soltando = false;
+
+  /** Regresa la queja a la cola (deja de estar a nombre de esta recepcionista). */
+  soltar(): void {
+    this.soltando = true;
+    this.revisionService.liberar(this.folio).subscribe({
+      next: () => {
+        this.toast.exito(`La queja ${this.folio} regresó a la bandeja.`);
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        this.soltando = false;
+        this.toast.error(err?.error?.mensaje ?? 'No se pudo soltar la queja.');
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   private cargar(): void {
     this.cargando = true;
     this.revisionService.detalle(this.folio).subscribe({
@@ -289,7 +364,8 @@ export class Validacion implements OnInit, OnDestroy {
       error: (err) => {
         this.cargando = false;
         this.toast.error(err?.error?.mensaje ?? 'No se pudo cargar la queja.');
-        this.cdr.detectChanges();
+        // Si otra recepcionista ya la tiene, no tiene caso quedarse en esta pantalla.
+        this.router.navigate(['/']);
       },
     });
   }

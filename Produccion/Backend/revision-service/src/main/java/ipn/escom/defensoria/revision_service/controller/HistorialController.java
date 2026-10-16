@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import ipn.escom.defensoria.revision_service.model.HistorialItemModel;
+import ipn.escom.defensoria.revision_service.model.HistorialPaginaModel;
+import org.springframework.security.core.Authentication;
 import ipn.escom.defensoria.revision_service.service.HistorialExportService;
 import ipn.escom.defensoria.revision_service.service.RevisionQuejaService;
 
@@ -43,6 +45,21 @@ public class HistorialController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta) {
         return ResponseEntity.ok(revisionService.historial(texto, estatus, fechaDesde, fechaHasta));
+    }
+
+    @GetMapping("/pagina")
+    @Operation(summary = "Historial paginado (10 por página) con totales del periodo; filtro 'soloMias' por quien la atendió")
+    public ResponseEntity<HistorialPaginaModel> pagina(
+            @RequestParam(required = false) String texto,
+            @RequestParam(required = false) String estatus,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+            @RequestParam(defaultValue = "false") boolean soloMias,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "10") int tamanio,
+            Authentication authentication) {
+        return ResponseEntity.ok(revisionService.historialPagina(
+                authentication.getName(), texto, estatus, fechaDesde, fechaHasta, soloMias, pagina, tamanio));
     }
 
     @GetMapping("/exportar")
