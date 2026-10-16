@@ -19,6 +19,18 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
       },
       {
+        path: 'quejas',
+        loadComponent: () => import('./pages/quejas/quejas').then((m) => m.Quejas),
+      },
+      {
+        path: 'quejas/:folio',
+        loadComponent: () => import('./pages/queja-detalle/queja-detalle').then((m) => m.QuejaDetalle),
+      },
+      {
+        path: 'unidades',
+        loadComponent: () => import('./pages/unidades/unidades').then((m) => m.Unidades),
+      },
+      {
         path: 'usuarios-roles',
         loadComponent: () =>
           import('./pages/usuarios-roles/usuarios-roles').then((m) => m.UsuariosRoles),

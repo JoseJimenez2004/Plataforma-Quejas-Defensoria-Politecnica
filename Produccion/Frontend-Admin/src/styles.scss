@@ -560,3 +560,336 @@ button {
     }
   }
 }
+
+/* =====================================================================================
+   Seguimiento de quejas (Panel de la Defensora, 2026-10-16). Clases globales "seg-" que
+   comparten Panel general, Quejas, Quejas por unidad y el detalle de una queja; mismo
+   lenguaje visual que Recepción y Primer Contacto.
+   ===================================================================================== */
+.seg-pagina {
+  max-width: 1440px;
+}
+
+.seg-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 22px;
+
+  h2 {
+    margin: 0;
+    color: var(--guinda);
+    font-size: 28px;
+    font-weight: 800;
+  }
+
+  .seg-sub {
+    margin: 4px 0 0;
+    color: var(--texto-suave);
+    font-size: 14px;
+  }
+}
+
+.seg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 1px solid var(--guinda);
+  border-radius: 8px;
+  background: var(--guinda);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--guinda-oscuro);
+  }
+
+  &.sec {
+    background: #fff;
+    color: var(--guinda);
+
+    &:hover {
+      background: var(--guinda-suave);
+    }
+  }
+
+  &.chico {
+    padding: 5px 12px;
+    font-size: 13px;
+  }
+}
+
+.seg-panel {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  padding: 18px 20px;
+  min-width: 0;
+}
+
+.seg-panel-cabeza {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  h3 {
+    margin: 0;
+    color: var(--negro-inst);
+    font-size: 17px;
+    font-weight: 900;
+  }
+
+  p {
+    margin: 2px 0 0;
+    color: var(--texto-suave);
+    font-size: 12.5px;
+  }
+
+  a,
+  .seg-link {
+    color: var(--guinda);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.seg-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 1100px) {
+  .seg-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.seg-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.seg-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  text-decoration: none;
+
+  &.clic {
+    cursor: pointer;
+
+    &:hover {
+      border-color: #e6c9d6;
+    }
+  }
+
+  .titulo {
+    color: var(--texto-suave);
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  strong {
+    color: var(--negro-inst);
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+
+  .detalle {
+    color: var(--texto-suave);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  &.alerta {
+    background: #fff8eb;
+    border-color: #f0d7a6;
+  }
+
+  &::before {
+    content: '';
+    display: block;
+    width: 28px;
+    height: 4px;
+    margin-bottom: 8px;
+    border-radius: 2px;
+    background: var(--acento, var(--guinda));
+  }
+}
+
+/* Colores por etapa del proceso */
+.etapa-RECEPCION { --acento: #c4841d; --suave: #fbf1e0; --texto-etapa: #8a5a0e; }
+.etapa-CON_QUEJOSO { --acento: #c62828; --suave: #fdecec; --texto-etapa: #a32020; }
+.etapa-PRIMER_CONTACTO { --acento: #2f6fed; --suave: #e8eefc; --texto-etapa: #2450b5; }
+.etapa-SUBDEFENSORIA { --acento: #7c4dc4; --suave: #f1eafb; --texto-etapa: #5b3d99; }
+.etapa-CERRADA { --acento: #2e7d32; --suave: #e7f4e8; --texto-etapa: #1d6b3a; }
+.etapa-OTRA { --acento: #8a8f98; --suave: #eef0f3; --texto-etapa: #555; }
+
+.seg-chip {
+  display: inline-block;
+  max-width: 220px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--suave, #eef0f3);
+  color: var(--texto-etapa, #555);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.seg-barra {
+  height: 8px;
+  border-radius: 999px;
+  background: #eceef1;
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--acento, var(--guinda));
+  }
+}
+
+.seg-tabla-envoltura {
+  overflow-x: auto;
+}
+
+.seg-tabla {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 5px;
+  font-size: 13.5px;
+
+  th {
+    padding: 6px 10px 2px;
+    color: var(--texto-suave);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 9px 10px;
+    background: #f9fafb;
+    vertical-align: middle;
+
+    &:first-child {
+      border-radius: 8px 0 0 8px;
+    }
+
+    &:last-child {
+      border-radius: 0 8px 8px 0;
+    }
+  }
+
+  tr.clic {
+    cursor: pointer;
+
+    &:hover td {
+      background: var(--guinda-suave);
+    }
+  }
+
+  .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .fuerte {
+    font-weight: 700;
+    color: var(--negro-inst);
+    white-space: nowrap;
+  }
+
+  .suave {
+    display: block;
+    color: var(--texto-suave);
+    font-size: 12px;
+  }
+}
+
+.seg-vacio {
+  padding: 24px 8px;
+  color: var(--texto-suave);
+  text-align: center;
+  font-size: 14px;
+}
+
+.seg-paginado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  color: var(--texto-suave);
+  font-size: 13px;
+
+  nav {
+    display: flex;
+    gap: 4px;
+  }
+
+  button {
+    min-width: 34px;
+    height: 34px;
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    background: #fff;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.actual {
+      border-color: var(--guinda);
+      background: var(--guinda);
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+}

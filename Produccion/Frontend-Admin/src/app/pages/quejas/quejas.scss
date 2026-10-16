@@ -1,0 +1,99 @@
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+  margin-bottom: 10px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    color: var(--texto-suave);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  select,
+  input[type='month'] {
+    min-width: 150px;
+    max-width: 230px;
+    padding: 7px 8px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--texto);
+  }
+}
+
+.buscador {
+  position: relative;
+  flex: 1 1 260px;
+
+  svg {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    width: 16px;
+    height: 16px;
+    transform: translateY(-50%);
+    color: var(--texto-suave);
+  }
+
+  input {
+    width: 100%;
+    padding: 9px 10px 9px 34px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+  }
+}
+
+.activos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+
+  button {
+    border: none;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .activo {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--guinda-suave);
+    color: var(--guinda);
+    font-weight: 700;
+  }
+
+  .limpiar {
+    background: none;
+    color: var(--guinda);
+    text-decoration: underline;
+  }
+}
+
+.recargando {
+  opacity: 0.6;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.punto-activo {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: #2f6fed;
+}

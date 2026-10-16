@@ -812,3 +812,20 @@ Sin cambios en base de datos, queja-service ni nginx.
 | `05-abogados.sql` | BD | `podman exec -i defensoria-db psql -U postgres -d defensoria_db < 05-abogados.sql` |
 | `revision-service.jar` | backend `artifact/` | `bash podman-compose.sh up-container revision-service` |
 | `Frontend-Revision` (`ng build`) | frontend `front-revision/dist/browser/` | `bash podman-compose-front-revision.sh up` |
+
+---
+
+## 19. Panel de la Defensora: seguimiento de quejas — 2026-10-16
+
+- **Mismo armazón que Recepción** (encabezado blanco con IPN, menú claro con secciones *Seguimiento* / *Administración*, pie guinda). El subtítulo dice "Panel de la Defensora" para el rol DEFENSOR y "Panel de Administración" para la cuenta técnica.
+- **Panel general** (`pages/dashboard`, `GET /api/admin/seguimiento/tablero`): indicadores por etapa (Recepción, con el quejoso, Primer Contacto, Subdefensoría, cerradas) y tiempo de respuesta de Recepción; "¿Dónde están las quejas?" con el desglose por estatus; quejas por mes (12 meses, recibidas vs atendidas); unidades con más quejas; tabla de Recepción (abiertas, hoy, atendidas, turnadas, observaciones por recepcionista); carga de cada abogado; motivos de rechazo más frecuentes y quejas esperando corrección; accesos a Personal, Dependencias y Preguntas Frecuentes. Se quitaron las tarjetas de Seguridad y Formatos Legales de la pantalla principal (siguen en el menú).
+- **Quejas** (`pages/quejas`): explorador con filtros en la URL (etapa, estatus, unidad, abogado o "sin abogado", recepcionista, mes, texto) — cada número del panel abre esta lista ya filtrada. **Detalle** de solo lectura (`pages/queja-detalle`): persona quejosa, hechos, archivos (se pueden abrir), seguimiento (área, recepcionista, abogado, folio de Primer Contacto), observaciones al quejoso y línea de tiempo.
+- **Quejas por unidad** (`pages/unidades`): dependencias y unidades académicas con quejas (en trámite / cerradas / última) → clic abre sus quejas.
+- Renombrados: "Personal de la Defensoría", "Dependencias y Unidades (Académicas)", "Preguntas Frecuentes".
+- Backend: `admin-service` → `SeguimientoController` + `SeguimientoQuejasService` (SQL de solo lectura) + `SeguimientoModels`.
+
+### 19.1 Qué subir
+| Qué | Dónde | Después |
+|---|---|---|
+| `admin-service` → `target/admin-service.jar` | backend `artifact/` | `bash podman-compose.sh up-container admin-service` |
+| `Frontend-Admin` → `dist/defensoria-admin/browser/*` | frontend `/apps/aplicaciones/defensoria/front-admin/dist/browser/` (vaciarla antes) | `bash podman-compose-front-admin.sh up` |

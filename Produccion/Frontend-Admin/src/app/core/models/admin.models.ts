@@ -164,3 +164,167 @@ export interface Dependencia {
   correoContacto?: string;
   nombreTitular?: string;
 }
+
+// ======================================================================================
+// Seguimiento de quejas (Panel de la Defensora, 2026-10-16)
+// ======================================================================================
+
+export interface ConteoSeg {
+  clave: string;
+  etiqueta: string;
+  total: number;
+}
+
+export interface EtapaSeg {
+  clave: string;
+  etiqueta: string;
+  total: number;
+  estatus: ConteoSeg[];
+}
+
+export interface KpisSeg {
+  total: number;
+  ultimos30: number;
+  enRecepcion: number;
+  sinTomarMas3Dias: number;
+  conQuejoso: number;
+  rechazadasAlgunaVez: number;
+  enPrimerContacto: number;
+  enSubdefensoria: number;
+  cerradas: number;
+  atendidasRecepcion: number;
+  horasPromedioRecepcion?: number | null;
+  respuestasDenunciado: number;
+}
+
+export interface MesSeg {
+  clave: string;
+  etiqueta: string;
+  recibidas: number;
+  atendidas: number;
+}
+
+export interface UnidadSeg {
+  clave: string;
+  nombre?: string | null;
+  abreviatura?: string | null;
+  tipo?: string | null;
+  total: number;
+  enTramite: number;
+  cerradas: number;
+  ultimaQueja?: string | null;
+}
+
+export interface RecepcionistaSeg {
+  nombre: string;
+  correo: string;
+  abiertasAhora: number;
+  atendidas: number;
+  turnadas: number;
+  conObservaciones: number;
+  atendidasHoy: number;
+}
+
+export interface AbogadoSeg {
+  nombre: string;
+  rol: string;
+  enTramite: number;
+  total: number;
+  cerradas: number;
+}
+
+export interface RechazoSeg {
+  folio: string;
+  fecha?: string | null;
+  quejoso: string;
+  recepcionista?: string | null;
+  motivo?: string | null;
+  estatusActual: string;
+}
+
+export interface TableroSeg {
+  kpis: KpisSeg;
+  etapas: EtapaSeg[];
+  porMes: MesSeg[];
+  unidades: UnidadSeg[];
+  recepcion: RecepcionistaSeg[];
+  abogados: AbogadoSeg[];
+  motivosRechazo: ConteoSeg[];
+  rechazosRecientes: RechazoSeg[];
+  personal: { total: number; porRol: ConteoSeg[]; dependencias: number };
+}
+
+export interface FilaQuejaSeg {
+  folio: string;
+  fecha: string;
+  quejoso: string;
+  unidadClave?: string | null;
+  unidadNombre?: string | null;
+  etapa: string;
+  estatus: string;
+  estatusEtiqueta: string;
+  recepcionista?: string | null;
+  atendiendoAhora: boolean;
+  abogado?: string | null;
+  folioPrimerContacto?: string | null;
+  origen: string;
+}
+
+export interface PaginaQuejasSeg {
+  filas: FilaQuejaSeg[];
+  pagina: number;
+  tamanio: number;
+  totalElementos: number;
+  totalPaginas: number;
+}
+
+export interface FiltrosSeg {
+  recepcionistas: { correo: string; nombre: string }[];
+  abogados: string[];
+  etapas: ConteoSeg[];
+}
+
+export interface DetalleQuejaSeg {
+  folio: string;
+  etapa: string;
+  etapaEtiqueta: string;
+  estatus: string;
+  estatusEtiqueta: string;
+  origen: string;
+  fechaCreacion?: string | null;
+  quejoso?: string | null;
+  correo?: string | null;
+  telefono?: string | null;
+  fechaNacimiento?: string | null;
+  tipoIdentificacion?: string | null;
+  numeroIdentificacion?: string | null;
+  unidadClave?: string | null;
+  unidadNombre?: string | null;
+  fechaHechos?: string | null;
+  denunciado?: string | null;
+  descripcion?: string | null;
+  recepcionista?: string | null;
+  atendiendoAhora: boolean;
+  abogado?: string | null;
+  folioPrimerContacto?: string | null;
+  comentariosRecepcion?: string | null;
+  motivoRechazo?: string | null;
+  tipoDocumentoFisico?: string | null;
+  numeroOficio?: string | null;
+  fechaRecepcionFisica?: string | null;
+  ubicacionFisica?: string | null;
+  evidencias: { id: number; nombre: string; tipoMime?: string | null; tipo?: string | null; tamanio?: number | null; fecha?: string | null }[];
+  respuestasDenunciado: number;
+  linea: { fecha?: string | null; titulo: string; detalle?: string | null }[];
+}
+
+/** Filtros del explorador de quejas (todos opcionales). */
+export interface FiltroQuejasSeg {
+  etapa?: string;
+  estatus?: string;
+  unidad?: string;
+  abogado?: string;
+  recepcionista?: string;
+  mes?: string;
+  q?: string;
+}

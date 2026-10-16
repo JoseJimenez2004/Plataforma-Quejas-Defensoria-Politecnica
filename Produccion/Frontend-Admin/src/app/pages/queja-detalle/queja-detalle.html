@@ -1,0 +1,130 @@
+<section class="seg-pagina">
+  @if (cargando) {
+    <p class="seg-vacio">Cargando queja…</p>
+  } @else if (queja; as q) {
+    <div class="seg-encabezado">
+      <div>
+        <h2>{{ q.folio }}</h2>
+        <p class="seg-sub">
+          <span [class]="'seg-chip etapa-' + q.etapa">{{ q.etapaEtiqueta }}</span>
+          <span [class]="'seg-chip etapa-' + q.etapa">{{ q.estatusEtiqueta }}</span>
+          · Recibida {{ q.fechaCreacion | date: "dd/MM/yyyy 'a las' HH:mm" }} por {{ q.origen === 'Ventanilla' ? 'ventanilla' : 'el portal' }}
+          · <em>Solo lectura</em>
+        </p>
+      </div>
+      <button type="button" class="seg-btn sec" (click)="regresar()">← Regresar</button>
+    </div>
+
+    <div class="detalle">
+      <div class="columna">
+        <div class="seg-panel">
+          <h3>Persona quejosa</h3>
+          <dl class="datos">
+            <div><dt>Nombre</dt><dd>{{ q.quejoso || '—' }}</dd></div>
+            <div><dt>Correo</dt><dd>{{ q.correo || '—' }}</dd></div>
+            @if (q.telefono) { <div><dt>Teléfono</dt><dd>{{ q.telefono }}</dd></div> }
+            <div><dt>{{ q.tipoIdentificacion === 'empleado' ? 'Núm. de empleado' : 'Boleta' }}</dt><dd>{{ q.numeroIdentificacion || '—' }}</dd></div>
+            @if (q.fechaNacimiento) { <div><dt>Nacimiento</dt><dd>{{ q.fechaNacimiento | date: 'dd/MM/yyyy' }}</dd></div> }
+          </dl>
+        </div>
+
+        <div class="seg-panel">
+          <h3>Hechos</h3>
+          <dl class="datos">
+            <div>
+              <dt>Lugar</dt>
+              <dd>
+                @if (q.unidadClave) { <a routerLink="/quejas" [queryParams]="{ unidad: q.unidadClave }">{{ q.unidadNombre || q.unidadClave }}</a> }
+                @else { — }
+              </dd>
+            </div>
+            <div><dt>Fecha de los hechos</dt><dd>{{ q.fechaHechos ? (q.fechaHechos | date: 'dd/MM/yyyy') : '—' }}</dd></div>
+            <div><dt>Persona señalada</dt><dd>{{ q.denunciado || 'No especificada' }}</dd></div>
+          </dl>
+          <p class="etiqueta">Descripción de los hechos</p>
+          <p class="descripcion">{{ q.descripcion || 'Sin descripción.' }}</p>
+        </div>
+
+        <div class="seg-panel">
+          <h3>Archivos ({{ q.evidencias.length }})</h3>
+          @if (q.evidencias.length === 0) {
+            <p class="seg-vacio">La queja no tiene archivos.</p>
+          }
+          <ul class="archivos">
+            @for (e of q.evidencias; track e.id) {
+              <li>
+                <span class="archivo-tipo">{{ e.tipo === 'IDENTIFICACION' ? 'Credencial' : 'Evidencia' }}</span>
+                <span class="archivo-nombre" [title]="e.nombre">{{ e.nombre }}</span>
+                <span class="archivo-peso">{{ peso(e.tamanio) }}</span>
+                <button type="button" class="seg-btn sec chico" (click)="verArchivo(e.id)" [disabled]="abriendo === e.id">
+                  {{ abriendo === e.id ? '…' : 'Ver' }}
+                </button>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+
+      <div class="columna">
+        <div class="seg-panel">
+          <h3>Seguimiento</h3>
+          <dl class="datos">
+            <div><dt>Área actual</dt><dd><span [class]="'seg-chip etapa-' + q.etapa">{{ q.etapaEtiqueta }}</span></dd></div>
+            <div>
+              <dt>{{ q.atendiendoAhora ? 'La atiende ahora' : 'Recepcionista' }}</dt>
+              <dd>{{ q.recepcionista || 'Nadie la ha tomado' }}</dd>
+            </div>
+            <div>
+              <dt>Abogado</dt>
+              <dd>
+                @if (q.abogado) { <a routerLink="/quejas" [queryParams]="{ abogado: q.abogado }">{{ q.abogado }}</a> }
+                @else { Sin asignar }
+              </dd>
+            </div>
+            @if (q.folioPrimerContacto) { <div><dt>Folio Primer Contacto</dt><dd>{{ q.folioPrimerContacto }}</dd></div> }
+            <div><dt>Respuestas del denunciado</dt><dd>{{ q.respuestasDenunciado }}</dd></div>
+          </dl>
+          @if (q.comentariosRecepcion) {
+            <p class="etiqueta">Comentarios de Recepción al turnar</p>
+            <p class="nota">{{ q.comentariosRecepcion }}</p>
+          }
+        </div>
+
+        @if (q.motivoRechazo) {
+          <div class="seg-panel rechazo">
+            <h3>Observaciones al quejoso</h3>
+            <ul>
+              @for (m of motivos; track m) { <li>{{ m }}</li> }
+            </ul>
+            @if (observaciones) { <p class="nota">{{ observaciones }}</p> }
+          </div>
+        }
+
+        <div class="seg-panel">
+          <h3>Línea de tiempo</h3>
+          <ol class="linea">
+            @for (e of q.linea; track $index) {
+              <li>
+                <span class="linea-fecha">{{ e.fecha ? (e.fecha | date: 'dd/MM/yy HH:mm') : 'Actual' }}</span>
+                <b>{{ e.titulo }}</b>
+                @if (e.detalle) { <span class="linea-detalle">{{ e.detalle }}</span> }
+              </li>
+            }
+          </ol>
+        </div>
+
+        @if (q.origen === 'Ventanilla') {
+          <div class="seg-panel">
+            <h3>Recepción en ventanilla</h3>
+            <dl class="datos">
+              <div><dt>Documento</dt><dd>{{ q.tipoDocumentoFisico || '—' }}</dd></div>
+              <div><dt>Recepción física</dt><dd>{{ q.fechaRecepcionFisica ? (q.fechaRecepcionFisica | date: 'dd/MM/yyyy') : '—' }}</dd></div>
+              @if (q.numeroOficio) { <div><dt>Oficio</dt><dd>{{ q.numeroOficio }}</dd></div> }
+              @if (q.ubicacionFisica) { <div><dt>Expediente físico</dt><dd>{{ q.ubicacionFisica }}</dd></div> }
+            </dl>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</section>
