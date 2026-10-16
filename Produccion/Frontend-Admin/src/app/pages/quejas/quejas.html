@@ -1,0 +1,116 @@
+<section class="seg-pagina">
+  <div class="seg-encabezado">
+    <div>
+      <h2>Quejas</h2>
+      <p class="seg-sub">Todas las quejas del sistema, la más reciente arriba. Abre una para ver su expediente (solo lectura).</p>
+    </div>
+    <a routerLink="/" class="seg-btn sec">← Panel general</a>
+  </div>
+
+  <div class="seg-panel">
+    <div class="filtros">
+      <div class="buscador">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="search" [(ngModel)]="texto" (ngModelChange)="buscar()" placeholder="Folio, quejoso, denunciado o abogado" aria-label="Buscar quejas" />
+      </div>
+
+      <label>Etapa
+        <select [ngModel]="filtro.etapa" (ngModelChange)="aplicar({ etapa: $event, estatus: '' })">
+          <option value="">Todas</option>
+          @for (e of opciones?.etapas ?? []; track e.clave) { <option [value]="e.clave">{{ e.etiqueta }}</option> }
+        </select>
+      </label>
+
+      <label>Unidad / dependencia
+        <select [ngModel]="filtro.unidad" (ngModelChange)="aplicar({ unidad: $event })">
+          <option value="">Todas</option>
+          @for (u of unidades; track u.clave) { <option [value]="u.clave">{{ u.abreviatura || u.nombre || u.clave }} ({{ u.total }})</option> }
+        </select>
+      </label>
+
+      <label>Abogado
+        <select [ngModel]="filtro.abogado" (ngModelChange)="aplicar({ abogado: $event })">
+          <option value="">Todos</option>
+          <option value="SIN_ASIGNAR">Sin abogado asignado</option>
+          @for (a of opciones?.abogados ?? []; track a) { <option [value]="a">{{ a }}</option> }
+        </select>
+      </label>
+
+      <label>Recepcionista
+        <select [ngModel]="filtro.recepcionista" (ngModelChange)="aplicar({ recepcionista: $event })">
+          <option value="">Todas</option>
+          @for (r of opciones?.recepcionistas ?? []; track r.correo) { <option [value]="r.correo">{{ r.nombre }}</option> }
+        </select>
+      </label>
+
+      <label>Mes de llegada
+        <input type="month" [ngModel]="filtro.mes" (ngModelChange)="aplicar({ mes: $event })" />
+      </label>
+    </div>
+
+    @if (hayFiltros) {
+      <div class="activos">
+        @if (filtro.estatus) {
+          <button type="button" class="activo" (click)="aplicar({ estatus: '' })">Estatus: {{ etiquetaEstatus }} ×</button>
+        }
+        <button type="button" class="limpiar" (click)="limpiar()">Quitar todos los filtros</button>
+      </div>
+    }
+
+    @if (cargando && !datos) {
+      <p class="seg-vacio">Cargando quejas…</p>
+    } @else if (datos && datos.filas.length === 0) {
+      <p class="seg-vacio">No hay quejas con estos filtros.</p>
+    } @else if (datos) {
+      <div class="seg-tabla-envoltura" [class.recargando]="cargando">
+        <table class="seg-tabla">
+          <thead>
+            <tr>
+              <th>Folio</th>
+              <th>Llegó</th>
+              <th>Quejoso</th>
+              <th>Unidad</th>
+              <th>Dónde va</th>
+              <th>Recepcionista</th>
+              <th>Abogado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of datos.filas; track f.folio) {
+              <tr class="clic" (click)="abrir(f.folio)" [title]="'Ver la queja ' + f.folio">
+                <td>
+                  <span class="fuerte">{{ f.folio }}</span>
+                  @if (f.origen === 'Ventanilla') { <span class="suave">Ventanilla</span> }
+                </td>
+                <td class="nowrap">{{ f.fecha | date: 'dd/MM/yy' }}<span class="suave">{{ f.fecha | date: 'HH:mm' }}</span></td>
+                <td>{{ f.quejoso }}</td>
+                <td>{{ f.unidadNombre || f.unidadClave || '—' }}</td>
+                <td><span [class]="'seg-chip etapa-' + f.etapa" [title]="f.estatusEtiqueta">{{ f.estatusEtiqueta }}</span></td>
+                <td>
+                  @if (f.recepcionista) {
+                    @if (f.atendiendoAhora) { <span class="punto-activo" title="La está atendiendo ahora"></span> }
+                    {{ f.recepcionista }}
+                  } @else if (f.etapa === 'RECEPCION') { <span class="suave">Nadie la ha tomado</span> } @else { — }
+                </td>
+                <td>{{ f.abogado || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="seg-paginado">
+        <span>{{ rango }}</span>
+        @if (datos.totalPaginas > 1) {
+          <nav>
+            <button type="button" (click)="irAPagina(pagina - 1)" [disabled]="pagina === 0" aria-label="Anterior">‹</button>
+            @for (p of paginasVisibles; track $index) {
+              @if (p === null) { <span>…</span> }
+              @else { <button type="button" [class.actual]="p === pagina" (click)="irAPagina(p)">{{ p + 1 }}</button> }
+            }
+            <button type="button" (click)="irAPagina(pagina + 1)" [disabled]="pagina >= datos.totalPaginas - 1" aria-label="Siguiente">›</button>
+          </nav>
+        }
+      </div>
+    }
+  </div>
+</section>

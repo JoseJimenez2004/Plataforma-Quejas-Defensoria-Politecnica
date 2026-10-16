@@ -19,6 +19,12 @@ import { CampanaNotificaciones } from '../../shared/campana-notificaciones/campa
 })
 export class AdminLayout implements OnInit {
   readonly etiquetaRol = etiquetaRol;
+  readonly anio = new Date().getFullYear();
+
+  /** "Panel de la Defensora" para el rol DEFENSOR; "Panel de Administración" para la cuenta técnica. */
+  get tituloPanel(): string {
+    return this.authService.usuarioActual()?.rol === 'DEFENSOR' ? 'Panel de la Defensora' : 'Panel de Administración';
+  }
 
   menuAbierto = false;
   mostrarModalPassword = false;
