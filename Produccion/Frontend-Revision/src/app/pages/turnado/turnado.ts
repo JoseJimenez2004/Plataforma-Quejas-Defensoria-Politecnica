@@ -6,7 +6,7 @@ import { forkJoin } from 'rxjs';
 
 import { RevisionService } from '../../core/services/revision.service';
 import { ToastService } from '../../core/services/toast.service';
-import { AntecedenteItem, DefensorOpcion, QuejaDetalle } from '../../core/models/revision.models';
+import { AntecedenteItem, CargaAbogado, QuejaDetalle } from '../../core/models/revision.models';
 
 @Component({
   selector: 'app-turnado',
@@ -19,7 +19,7 @@ export class Turnado implements OnInit {
   folio = '';
   queja: QuejaDetalle | null = null;
   antecedentes: AntecedenteItem[] = [];
-  defensores: DefensorOpcion[] = [];
+  abogados: CargaAbogado[] = [];
   cargando = true;
   turnando = false;
 
@@ -44,12 +44,14 @@ export class Turnado implements OnInit {
     forkJoin({
       queja: this.revisionService.detalle(this.folio),
       antecedentes: this.revisionService.antecedentes(this.folio),
-      defensores: this.revisionService.defensores(),
+      abogados: this.revisionService.abogados(this.folio),
     }).subscribe({
-      next: ({ queja, antecedentes, defensores }) => {
+      next: ({ queja, antecedentes, abogados }) => {
         this.queja = queja;
         this.antecedentes = antecedentes;
-        this.defensores = defensores;
+        this.abogados = abogados;
+        // Se preselecciona al abogado sugerido; la recepcionista puede cambiarlo.
+        this.defensorAsignado = abogados.find((a) => a.sugerido)?.nombre ?? '';
         this.cargando = false;
         this.cdr.detectChanges();
       },
@@ -59,6 +61,27 @@ export class Turnado implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  elegir(abogado: CargaAbogado): void {
+    this.defensorAsignado = abogado.nombre;
+  }
+
+  /** Ancho de la barra de carga relativo a quien más quejas en trámite lleva. */
+  anchoCarga(abogado: CargaAbogado): number {
+    const maximo = Math.max(1, ...this.abogados.map((a) => a.cargaActiva));
+    return Math.round((abogado.cargaActiva / maximo) * 100);
+  }
+
+  /** Aviso cuando se elige a alguien con más carga que el sugerido (sin bloquear el turnado). */
+  get avisoCarga(): string {
+    const elegido = this.abogados.find((a) => a.nombre === this.defensorAsignado);
+    const sugerido = this.abogados.find((a) => a.sugerido);
+    if (!elegido || !sugerido || elegido === sugerido || elegido.cargaActiva <= sugerido.cargaActiva) {
+      return '';
+    }
+    return `${elegido.nombre} lleva ${elegido.cargaActiva} quejas en trámite; ${sugerido.nombre} lleva ${sugerido.cargaActiva}. `
+      + 'Confirma que hay una razón para asignársela.';
   }
 
   pausar(): void {

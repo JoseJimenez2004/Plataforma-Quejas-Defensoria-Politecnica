@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, forkJoin, map } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 import {
   DashboardActividad,
@@ -11,7 +11,6 @@ import {
 import { BandejaService } from './bandeja.service';
 import { AgendaService } from './agenda.service';
 import { ExpedienteBandeja } from '../models/expediente-bandeja';
-import { CitaPrimerContacto } from '../models/cita-primer-contacto';
 
 @Injectable({
   providedIn: 'root'
@@ -24,27 +23,27 @@ export class DashboardService {
   ) {}
 
   obtenerResumen(): Observable<DashboardResumen[]> {
-    return this.combinarBandejaYCitasHoy().pipe(
-      map(({ expedientes, folioConCita }) => this.construirResumen(expedientes, folioConCita))
+    return this.bandejaService.obtenerBandeja().pipe(
+      map(expedientes => this.construirResumen(expedientes))
     );
   }
 
   obtenerLista(): Observable<DashboardItemLista[]> {
-    return this.combinarBandejaYCitasHoy().pipe(
-      map(({ expedientes, folioConCita }) =>
-        expedientes.map(exp => this.mapearItemLista(exp, folioConCita))
-      )
+    return this.bandejaService.obtenerBandeja().pipe(
+      map(expedientes => expedientes.map(exp => this.mapearItemLista(exp)))
     );
   }
 
   obtenerCitasHoy(): Observable<DashboardCitaHoy[]> {
     return this.agendaService.obtenerAgendaDia(this.formatearFechaHoy()).pipe(
-      map(citas => citas.map(cita => ({
-        hora: cita.hora,
-        quejoso: cita.quejoso,
-        folio: cita.folio,
-        tipo: cita.tipo
-      })))
+      map(citas => citas
+        .filter(cita => cita.estatus !== 'Cancelada')
+        .map(cita => ({
+          hora: cita.hora,
+          quejoso: cita.quejoso,
+          folio: cita.folio,
+          tipo: cita.tipo
+        })))
     );
   }
 
@@ -54,46 +53,29 @@ export class DashboardService {
     );
   }
 
-  private combinarBandejaYCitasHoy(): Observable<{
-    expedientes: ExpedienteBandeja[];
-    folioConCita: Set<string>;
-  }> {
-    return forkJoin({
-      expedientes: this.bandejaService.obtenerBandeja(),
-      citasHoy: this.agendaService.obtenerAgendaDia(this.formatearFechaHoy())
-    }).pipe(
-      map(({ expedientes, citasHoy }: { expedientes: ExpedienteBandeja[]; citasHoy: CitaPrimerContacto[] }) => ({
-        expedientes,
-        folioConCita: new Set(citasHoy.map(c => c.folio))
-      }))
-    );
-  }
-
   private construirResumen(
-    expedientes: ExpedienteBandeja[],
-    folioConCita: Set<string>
+    expedientes: ExpedienteBandeja[]
   ): DashboardResumen[] {
     const contar = (tipo: DashboardResumen['tipo']) =>
-      expedientes.filter(e => this.tipoDeExpediente(e, folioConCita) === tipo).length;
+      expedientes.filter(e => this.tipoDeExpediente(e) === tipo).length;
 
     return [
       { titulo: 'Pendientes', valor: contar('PENDIENTES'), icono: 'assignment', tipo: 'PENDIENTES' },
       { titulo: 'Con cita', valor: contar('CON_CITA'), icono: 'event', tipo: 'CON_CITA' },
-      { titulo: 'En dictamen', valor: contar('EN_DICTAMEN'), icono: 'description', tipo: 'EN_DICTAMEN' },
+      { titulo: 'Dictaminados', valor: contar('EN_DICTAMEN'), icono: 'description', tipo: 'EN_DICTAMEN' },
       { titulo: 'Remitidos', valor: contar('REMITIDOS'), icono: 'outgoing_mail', tipo: 'REMITIDOS' }
     ];
   }
 
   private mapearItemLista(
-    exp: ExpedienteBandeja,
-    folioConCita: Set<string>
+    exp: ExpedienteBandeja
   ): DashboardItemLista {
     return {
       folio: exp.folio,
       nombre: exp.nombreQuejoso,
       detalle: exp.tema,
       estado: exp.estatus,
-      tipo: this.tipoDeExpediente(exp, folioConCita)
+      tipo: this.tipoDeExpediente(exp)
     };
   }
 
@@ -111,23 +93,22 @@ export class DashboardService {
       }));
   }
 
+  /**
+   * Una sola regla, la misma que la bandeja: "con cita" es el indicador tieneCitaActiva
+   * que calcula el backend (antes el dashboard contaba solo las citas de HOY, y la bandeja
+   * cualquier cita activa: dos definiciones de lo mismo).
+   */
   private tipoDeExpediente(
-    exp: ExpedienteBandeja,
-    folioConCita: Set<string>
+    exp: ExpedienteBandeja
   ): DashboardResumen['tipo'] {
-    if (folioConCita.has(exp.folio)) {
-      return 'CON_CITA';
-    }
-
-    switch (exp.estatus) {
-      case 'Competente':
+    switch (exp.estatusCodigo) {
+      case 'PROCEDENTE':
+      case 'IMPROCEDENTE':
         return 'EN_DICTAMEN';
-      case 'Remitida':
+      case 'REMITIDA':
         return 'REMITIDOS';
-      case 'Pendiente':
-      case 'En análisis':
       default:
-        return 'PENDIENTES';
+        return exp.tieneCitaActiva ? 'CON_CITA' : 'PENDIENTES';
     }
   }
 

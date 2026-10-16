@@ -71,6 +71,13 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 
+		<!-- PDF de oficios, recordatorios y acuerdos (misma librería que primercontacto). -->
+		<dependency>
+			<groupId>com.github.librepdf</groupId>
+			<artifactId>openpdf</artifactId>
+			<version>2.0.3</version>
+		</dependency>
+
 		<!-- Security -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

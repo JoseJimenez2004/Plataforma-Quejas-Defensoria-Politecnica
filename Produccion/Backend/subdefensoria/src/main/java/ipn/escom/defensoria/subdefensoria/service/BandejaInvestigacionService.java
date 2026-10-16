@@ -37,10 +37,12 @@ public class BandejaInvestigacionService {
         expedienteRepository.findByEstatusOrderByFechaAdmisionAsc(EstatusExpediente.RECIBIDO)
                 .forEach(e -> resultado.add(convertirADTO(e, FaseOficio.SOLICITUD_INFORMACION)));
 
-        expedienteRepository.findByEstatusOrderByFechaAdmisionAsc(EstatusExpediente.EN_ESPERA_OFICIO).stream()
+        // En investigación (abierto o con un acuerdo rechazado) y sin oficio pendiente: toca
+        // emitir el oficio.
+        expedienteRepository.findByEstatusOrderByFechaAdmisionAsc(EstatusExpediente.EN_INVESTIGACION).stream()
                 .filter(e -> !oficioRepository.existsByExpedienteIdAndEstatus(e.getId(), EstatusOficio.EN_ESPERA)
                         && !oficioRepository.existsByExpedienteIdAndEstatus(e.getId(), EstatusOficio.VENCIDO))
-                .forEach(e -> resultado.add(convertirADTO(e, FaseOficio.GESTION_DIRECTOR)));
+                .forEach(e -> resultado.add(convertirADTO(e, FaseOficio.SOLICITUD_INFORMACION)));
 
         return resultado;
     }

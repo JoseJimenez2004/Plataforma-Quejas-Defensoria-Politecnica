@@ -35,12 +35,24 @@ export class DictamenService {
     );
   }
 
+  /** 404 si el expediente todavía no tiene dictamen. */
   obtenerPorFolio(
     folio: string
   ): Observable<Dictamen> {
 
     return this.api.get<Dictamen>(
       `/dictamenes/folio/${encodeURIComponent(folio)}`
+    );
+  }
+
+  /** Expediente PROCEDENTE que Subdefensoría no alcanzó a recibir. */
+  reenviarASubdefensoria(
+    folio: string
+  ): Observable<Dictamen> {
+
+    return this.api.post<Dictamen>(
+      `/dictamenes/folio/${encodeURIComponent(folio)}/reenviar-subdefensoria`,
+      {}
     );
   }
 }

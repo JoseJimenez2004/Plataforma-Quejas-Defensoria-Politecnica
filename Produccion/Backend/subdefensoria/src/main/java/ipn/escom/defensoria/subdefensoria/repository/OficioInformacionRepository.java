@@ -20,5 +20,7 @@ public interface OficioInformacionRepository extends JpaRepository<OficioInforma
 
     boolean existsByExpedienteIdAndEstatus(Long expedienteId, String estatus);
 
+    boolean existsByExpedienteIdAndFaseAndEstatus(Long expedienteId, String fase, String estatus);
+
     long countByEstatus(String estatus);
 }

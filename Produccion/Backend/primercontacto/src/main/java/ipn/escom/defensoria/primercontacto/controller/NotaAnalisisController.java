@@ -64,15 +64,24 @@ public class NotaAnalisisController {
     @PutMapping("/{id}")
     public NotaAnalisisDTO actualizarNota(
             @PathVariable Long id,
-            @Valid @RequestBody CrearNotaAnalisisDTO dto
+            @Valid @RequestBody CrearNotaAnalisisDTO dto,
+            Authentication authentication
     ) {
-        return notaAnalisisService.actualizarNota(id, dto);
+        return notaAnalisisService.actualizarNota(
+                id,
+                dto,
+                analistaAutenticadoService.obtenerAnalista(authentication)
+        );
     }
 
     @DeleteMapping("/{id}")
     public void eliminarNota(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
-        notaAnalisisService.eliminarNota(id);
+        notaAnalisisService.eliminarNota(
+                id,
+                analistaAutenticadoService.obtenerAnalista(authentication)
+        );
     }
 }

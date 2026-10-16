@@ -357,11 +357,10 @@
           [(ngModel)]="descripcion"
           name="descripcion"
           #descripcionModel="ngModel"
-          [maxlength]="descripcionLongitudMaxima"
           required
         ></textarea>
         <div class="contador-caracteres">
-          {{ descripcion.length }} / {{ descripcionLongitudMaxima }}
+          {{ descripcion.length }} caracteres
         </div>
         @if (errorDescripcion && (descripcionModel.touched || intentoEnviar)) {
           <span class="mensaje-campo">{{ errorDescripcion }}</span>

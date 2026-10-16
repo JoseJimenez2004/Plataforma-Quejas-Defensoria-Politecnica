@@ -59,7 +59,7 @@
       <mat-icon>
         {{
           tipoDictamen === 'improcedente'
-            ? 'task_alt'
+            ? 'outgoing_mail'
             : 'forward_to_inbox'
         }}
       </mat-icon>
@@ -67,7 +67,7 @@
       <span>
         {{
           tipoDictamen === 'improcedente'
-            ? 'Cierre'
+            ? 'Remisión'
             : 'Subdefensoría'
         }}
       </span>
@@ -153,6 +153,21 @@
 
       </div>
 
+      <!-- CU-PC-06/07: revisar las evidencias reales antes de decidir -->
+      <h3 class="subtitulo">Evidencias de la queja</h3>
+
+      <div class="evidencias">
+        @for (evidencia of expediente?.evidencias ?? []; track evidencia.id) {
+          <button mat-stroked-button class="evidencia-btn" (click)="abrirEvidencia(evidencia)">
+            <mat-icon>attach_file</mat-icon>
+            {{ evidencia.nombre }}
+            <mat-icon class="abrir">open_in_new</mat-icon>
+          </button>
+        } @empty {
+          <p class="sin-evidencias">La queja no trae evidencias adjuntas.</p>
+        }
+      </div>
+
     </mat-card>
 
 
@@ -223,11 +238,19 @@
       }
 
 
+      @if (bloqueado) {
+        <p class="aviso-bloqueo">
+          <mat-icon>info</mat-icon>
+          Este expediente ya no está en análisis ({{ expediente?.estatus }}), así que no admite un nuevo dictamen.
+        </p>
+      }
+
       <div class="actions">
 
         <button
           mat-flat-button
           class="primary-btn"
+          [disabled]="bloqueado || enviando"
           (click)="enviarTitular()">
 
           <mat-icon>

@@ -96,7 +96,7 @@ get tituloLista(): string {
       return 'Expedientes con cita';
 
     case 'EN_DICTAMEN':
-      return 'Expedientes en elaboración de dictamen';
+      return 'Expedientes dictaminados (procedentes e improcedentes)';
 
     case 'REMITIDOS':
       return 'Expedientes remitidos';

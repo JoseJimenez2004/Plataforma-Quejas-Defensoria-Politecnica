@@ -8,13 +8,32 @@ mat-form-field {
 }
 
 .folio-line {
-  color: #6b7280;
+  color: var(--texto-suave);
   margin: 0 0 var(--space-4);
 }
 
 .primary-btn {
-  background: #b91c1c !important;
+  background: var(--guinda) !important;
   color: white !important;
   font-weight: 700;
   border-radius: 8px !important;
+}
+
+.archivo {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.archivo-etiqueta {
+  font-size: var(--font-size-sm);
+  color: var(--texto-suave);
+}
+
+.archivo-elegido {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
 }

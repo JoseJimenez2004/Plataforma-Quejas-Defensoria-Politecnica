@@ -1,0 +1,108 @@
+<div class="contenedor">
+  <div class="card">
+    <h2>Tu cita de primer contacto</h2>
+
+    @if (cargando) {
+      <p class="subtitulo">Cargando tu cita…</p>
+    } @else if (errorCarga) {
+      <p class="error">{{ errorCarga }}</p>
+      <a routerLink="/" class="volver">Regresar al inicio</a>
+    } @else if (cita) {
+      <p class="subtitulo">Queja {{ cita.folioQueja }}</p>
+
+      <dl class="datos">
+        <dt>Fecha</dt>
+        <dd class="capitalizar">{{ fechaLarga(cita.fechaCita) }}</dd>
+        <dt>Hora</dt>
+        <dd>{{ hora(cita.horaCita) }} h</dd>
+        <dt>Modalidad</dt>
+        <dd>{{ modalidad(cita.tipoCita) }}</dd>
+        @if (cita.motivo) {
+          <dt>Motivo</dt>
+          <dd>{{ cita.motivo }}</dd>
+        }
+      </dl>
+
+      @switch (cita.estatus) {
+        @case ('PROGRAMADA') {
+          @if (cita.puedeResponder) {
+            <p class="plazo">
+              Confirma tu asistencia o cancela indicando el motivo antes del
+              <strong>{{ fechaHora(cita.fechaLimiteRespuesta) }}</strong>.
+            </p>
+
+            @if (!cancelando) {
+              <div class="acciones">
+                <button type="button" class="btn-primary" [disabled]="enviando" (click)="confirmar()">
+                  {{ enviando ? 'Enviando…' : 'Confirmar asistencia' }}
+                </button>
+                <button type="button" class="btn-secondary" [disabled]="enviando" (click)="cancelando = true">
+                  No podré asistir
+                </button>
+              </div>
+            } @else {
+              <form (submit)="$event.preventDefault(); cancelar()">
+                <div class="input-group">
+                  <label for="motivo">¿Por qué no podrás asistir?</label>
+                  <textarea
+                    id="motivo"
+                    name="motivo"
+                    rows="4"
+                    [(ngModel)]="motivo"
+                    [attr.maxlength]="motivoMaximo"
+                    placeholder="Así Primer Contacto podrá proponerte otra fecha"
+                  ></textarea>
+                  @if (intentoCancelar && errorMotivo) {
+                    <span class="mensaje-campo">{{ errorMotivo }}</span>
+                  }
+                  <span class="contador">{{ motivo.length }}/{{ motivoMaximo }}</span>
+                </div>
+                <div class="acciones">
+                  <button type="submit" class="btn-primary" [disabled]="enviando">
+                    {{ enviando ? 'Enviando…' : 'Cancelar la cita' }}
+                  </button>
+                  <button type="button" class="btn-secondary" [disabled]="enviando" (click)="cancelando = false">
+                    Regresar
+                  </button>
+                </div>
+              </form>
+            }
+          } @else {
+            <div class="resultado aviso">
+              El plazo para responder esta cita ya venció. Primer Contacto se comunicará contigo.
+            </div>
+          }
+        }
+        @case ('CONFIRMADA') {
+          <div class="resultado ok">✅ Confirmaste tu asistencia. ¡Te esperamos!</div>
+        }
+        @case ('CANCELADA_QUEJOSO') {
+          <div class="resultado aviso">
+            @if (cita.motivoCancelacionQuejoso) {
+              Cancelaste esta cita: «{{ cita.motivoCancelacionQuejoso }}».
+            } @else {
+              Cancelaste esta cita.
+            }
+            Primer Contacto te propondrá otra fecha.
+          </div>
+        }
+        @case ('SIN_RESPUESTA') {
+          <div class="resultado aviso">
+            El plazo para responder venció. Primer Contacto se comunicará contigo.
+          </div>
+        }
+        @case ('REAGENDADA') {
+          <div class="resultado aviso">
+            Esta cita se cambió de fecha. Revisa tu correo o tus notificaciones: te enviamos la
+            nueva cita.
+          </div>
+        }
+        @default {
+          <div class="resultado aviso">Esta cita fue cancelada por Primer Contacto.</div>
+        }
+      }
+
+      <a routerLink="/panel/notificaciones" class="volver">Ir a mis notificaciones</a>
+    }
+  </div>
+</div>

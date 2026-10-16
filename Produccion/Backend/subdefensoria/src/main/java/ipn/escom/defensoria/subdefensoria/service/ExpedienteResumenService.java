@@ -3,6 +3,7 @@ package ipn.escom.defensoria.subdefensoria.service;
 import ipn.escom.defensoria.subdefensoria.dto.ExpedienteResumenDTO;
 import ipn.escom.defensoria.subdefensoria.entity.EstatusExpediente;
 import ipn.escom.defensoria.subdefensoria.entity.EstatusOficio;
+import ipn.escom.defensoria.subdefensoria.entity.FaseOficio;
 import ipn.escom.defensoria.subdefensoria.entity.ExpedienteInvestigacion;
 import ipn.escom.defensoria.subdefensoria.entity.OficioInformacion;
 import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
@@ -63,7 +64,12 @@ public class ExpedienteResumenService {
                 .estatus(e.getEstatus());
 
         if (ESTATUS_CON_OFICIO_ACTIVO.contains(e.getEstatus())) {
-            oficioVigente(e.getId()).ifPresent(oficio -> {
+            Optional<OficioInformacion> vigente = oficioVigente(e.getId());
+            if (vigente.isEmpty() && EstatusExpediente.EN_INVESTIGACION.equals(e.getEstatus())) {
+                // Sin oficio pendiente: toca emitir el oficio.
+                builder.siguienteFase(FaseOficio.SOLICITUD_INFORMACION);
+            }
+            vigente.ifPresent(oficio -> {
                 int diasLimite = "PRIMERA".equals(oficio.getTipoPlazo()) ? diasPrimeraSolicitud : diasRecordatorio;
                 long diasTranscurridos = DiasHabilesCalculator.diasHabilesTranscurridos(
                         oficio.getFechaEnvio(), LocalDate.now());
@@ -76,6 +82,10 @@ public class ExpedienteResumenService {
                         .diasTranscurridos(diasTranscurridos)
                         .diasLimite(diasLimite);
             });
+        }
+
+        if (EstatusExpediente.RECIBIDO.equals(e.getEstatus())) {
+            builder.siguienteFase(FaseOficio.SOLICITUD_INFORMACION);
         }
 
         return builder.build();

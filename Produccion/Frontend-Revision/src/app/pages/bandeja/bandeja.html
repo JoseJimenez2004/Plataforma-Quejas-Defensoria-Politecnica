@@ -1,107 +1,241 @@
-<div class="page-header">
-  <div>
-    <h2>Bandeja de Entrada</h2>
-    <p class="page-header-subtitulo">Quejas pendientes de validar y turnar.</p>
+<section class="pagina">
+  <div class="encabezado">
+    <div>
+      <h2>Bandeja de Entrada</h2>
+      <p class="fecha">{{ fechaHoy }}</p>
+    </div>
+    <a routerLink="/registro-manual" class="btn-guinda">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+      Registro manual
+    </a>
   </div>
-</div>
 
-@if (cargando) {
-  <p class="cargando">Cargando bandeja…</p>
-} @else if (resumen) {
-  <div class="tarjetas">
-    <div class="card tarjeta">
-      <div class="tarjeta-encabezado">
-        <span class="icono-acento ambar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="22 6 12 13 2 6"></polyline></svg>
+  @if (resumen; as r) {
+    <!-- ================= Indicadores ================= -->
+    <div class="indicadores">
+      <button type="button" class="indicador clic" [class.seleccionado]="filtro === 'disponibles'"
+              (click)="cambiarFiltro('disponibles')" title="Ver las quejas que nadie ha tomado">
+        <span class="indicador-icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M22 6l-10 7L2 6"></path></svg>
         </span>
-        <h3>Pendientes</h3>
-      </div>
-      <p class="dato-numero">{{ resumen.pendientes }}</p>
-    </div>
-
-    <div class="card tarjeta">
-      <div class="tarjeta-encabezado">
-        <span class="icono-acento azul">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span class="indicador-cuerpo">
+          <span class="indicador-titulo">Por atender</span>
+          <strong>{{ r.indicadores.porAtender }}</strong>
+          <span class="indicador-detalle">{{ r.indicadores.nuevasHoy }} llegaron hoy · {{ r.indicadores.corregidas }} corregidas</span>
         </span>
-        <h3>En Proceso</h3>
-      </div>
-      <p class="dato-numero">{{ resumen.enProceso }}</p>
-    </div>
+      </button>
 
-    <div class="card tarjeta">
-      <div class="tarjeta-encabezado">
-        <span class="icono-acento verde">
+      <button type="button" class="indicador clic" [class.seleccionado]="filtro === 'en_atencion'"
+              (click)="cambiarFiltro('en_atencion')" title="Ver quién está atendiendo qué">
+        <span class="indicador-icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </span>
+        <span class="indicador-cuerpo">
+          <span class="indicador-titulo">En atención ahora</span>
+          <strong>{{ r.indicadores.enAtencion }}</strong>
+          <span class="indicador-detalle">{{ r.indicadores.enAtencionMias }} contigo</span>
+        </span>
+      </button>
+
+      <div class="indicador">
+        <span class="indicador-icono">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         </span>
-        <h3>Turnadas hoy</h3>
+        <span class="indicador-cuerpo">
+          <span class="indicador-titulo">Atendidas hoy</span>
+          <strong>{{ r.indicadores.atendidasHoy }}</strong>
+          <span class="indicador-detalle">{{ r.indicadores.turnadasHoy }} turnadas · {{ r.indicadores.rechazadasHoy }} con observaciones</span>
+        </span>
       </div>
-      <p class="dato-numero">{{ resumen.turnadasHoy }}</p>
+
+      <div class="indicador" [class.alerta]="esperaEnAlerta"
+           [title]="esperaEnAlerta ? 'Lleva ' + diasAlertaEspera + ' días o más sin que nadie la tome' : 'La queja que más tiempo lleva esperando'">
+        <span class="indicador-icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </span>
+        <span class="indicador-cuerpo">
+          <span class="indicador-titulo">Espera más larga</span>
+          <strong>{{ esperaMasLarga }}</strong>
+          <span class="indicador-detalle">{{ r.indicadores.folioMasAntiguo ?? 'Sin quejas en espera' }}</span>
+        </span>
+      </div>
+
+      <div class="indicador" title="Tiempo promedio entre que llega una queja y Recepción la turna o la regresa con observaciones">
+        <span class="indicador-icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 15l4-4 3 3 5-6"></path></svg>
+        </span>
+        <span class="indicador-cuerpo">
+          <span class="indicador-titulo">Tiempo de respuesta</span>
+          <strong>{{ tiempoPromedio }}</strong>
+          <span class="indicador-detalle">promedio · últimos 30 días ({{ r.indicadores.atendidasUltimos30 }})</span>
+        </span>
+      </div>
     </div>
-  </div>
 
-  <div class="card tabla-contenedor">
-    <h3>Panel de Gestión de Recepción</h3>
+    <div class="distribucion">
+      <!-- ================= Cola ================= -->
+      <div class="card-panel cola">
+        <div class="cola-encabezado">
+          <div>
+            <h3>Cola de quejas</h3>
+            <p>La más reciente arriba. Al abrir una queja queda a tu nombre y nadie más puede atenderla.</p>
+          </div>
+          <div class="buscador">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input type="search" [(ngModel)]="busqueda" (ngModelChange)="buscar()" name="busqueda"
+                   placeholder="Folio, nombre o unidad" aria-label="Buscar en la cola" />
+            @if (busqueda) {
+              <button type="button" class="buscador-limpiar" (click)="limpiarBusqueda()" aria-label="Limpiar búsqueda">×</button>
+            }
+          </div>
+        </div>
 
-    @if (resumen.lista.length === 0) {
-      <div class="estado-vacio">
-        <svg class="estado-vacio-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="22 6 12 13 2 6"></polyline></svg>
-        <p>No hay quejas pendientes por trabajar.</p>
-      </div>
-    } @else {
-      <table class="tabla-admin">
-        <thead>
-          <tr>
-            <th>Folio</th>
-            <th>Fecha</th>
-            <th>Quejoso</th>
-            <th>Documentación</th>
-            <th>Estatus</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of resumen.lista; track item.numeroFolio) {
-            <tr [class.fila-bloqueada]="bloqueadaPorOtro(item)">
-              <td>{{ item.numeroFolio }}</td>
-              <td>{{ item.fechaCreacion | date: 'dd/MM/yy' }}</td>
-              <td>{{ item.nombreQuejoso }}</td>
-              <td>
-                @if (item.documentacionAparenteCompleta) {
-                  <span class="indicador verde" title="Documentación aparente completa">✓</span>
-                } @else {
-                  <span class="indicador rojo" title="Podría faltar documentación">✕</span>
-                }
-              </td>
-              <td>
-                @if (item.estatus === 'EN_VALIDACION' && item.revisandoPorNombre) {
-                  <span class="badge-estatus en-revision" [title]="'En revisión por ' + item.revisandoPorNombre">
-                    En revisión · {{ item.revisandoPorNombre }}
-                  </span>
-                } @else {
-                  <span class="badge-estatus pendiente">Pendiente</span>
-                }
-              </td>
-              <td>
-                @if (bloqueadaPorOtro(item)) {
-                  <button
-                    type="button"
-                    class="btn-primary boton-validar"
-                    disabled
-                    [title]="'La está revisando ' + item.revisandoPorNombre + '. Se libera sola si la deja inactiva.'"
-                  >
-                    En revisión
-                  </button>
-                } @else {
-                  <a [routerLink]="['/validacion', item.numeroFolio]" class="btn-primary boton-validar">
-                    {{ esMiRevision(item) ? 'Continuar' : 'Validar' }}
-                  </a>
-                }
-              </td>
-            </tr>
+        <div class="pestanas" role="tablist">
+          @for (op of opcionesFiltro; track op.valor) {
+            <button type="button" role="tab" [attr.aria-selected]="filtro === op.valor"
+                    [class.activa]="filtro === op.valor" (click)="cambiarFiltro(op.valor)" [title]="op.ayuda">
+              {{ op.etiqueta }}
+              <span class="pestana-conteo">{{ conteoFiltro(op.valor) }}</span>
+            </button>
           }
-        </tbody>
-      </table>
-    }
-  </div>
-}
+        </div>
+
+        @if (cargando) {
+          <p class="estado">Cargando…</p>
+        } @else if (r.lista.length === 0) {
+          <div class="estado vacio">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="22 6 12 13 2 6"></polyline></svg>
+            <p>
+              @if (busqueda) { No hay quejas que coincidan con "{{ busqueda }}". }
+              @else if (filtro === 'mias') { No tienes quejas abiertas. Toma una de "Disponibles". }
+              @else { No hay quejas en esta vista. }
+            </p>
+          </div>
+        } @else {
+          <div class="tabla-envoltura">
+            <table class="tabla-cola">
+              <thead>
+                <tr>
+                  <th>Folio</th>
+                  <th>Llegó</th>
+                  <th>Quejoso</th>
+                  <th>Unidad</th>
+                  <th class="centro">Docs.</th>
+                  <th>Estado</th>
+                  <th class="derecha">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of r.lista; track item.numeroFolio) {
+                  <tr [class.ocupada]="bloqueadaPorOtro(item)" [class.mia]="item.esMia">
+                    <td>
+                      <span class="folio">{{ item.numeroFolio }}</span>
+                      @if (item.origen === 'MANUAL') { <span class="etiqueta-origen">Ventanilla</span> }
+                    </td>
+                    <td>
+                      <span class="fecha-fila">{{ item.fechaCreacion | date: 'dd/MM/yy HH:mm' }}</span>
+                      <span class="hace">{{ hace(item.fechaCreacion) }}</span>
+                    </td>
+                    <td class="quejoso">{{ item.nombreQuejoso }}</td>
+                    <td>{{ item.unidadAcademicaClave || '—' }}</td>
+                    <td class="centro">
+                      @if (item.documentacionAparenteCompleta) {
+                        <span class="docs ok" title="Trae archivos adjuntos y datos mínimos">✓</span>
+                      } @else {
+                        <span class="docs falta" title="Podría faltar documentación">!</span>
+                      }
+                    </td>
+                    <td>
+                      @if (item.estatus === 'EN_VALIDACION') {
+                        @if (item.esMia) {
+                          <span class="chip contigo">Contigo</span>
+                        } @else {
+                          <span class="chip ocupada" [title]="'La está atendiendo ' + item.revisandoPorNombre">Con {{ item.revisandoPorNombre }}</span>
+                        }
+                      } @else if (item.estatus === 'CORREGIDA') {
+                        <span class="chip corregida"
+                              [title]="item.rechazadaAntesPor ? 'La regresó con observaciones ' + item.rechazadaAntesPor : 'El quejoso atendió las observaciones'">
+                          Corregida
+                        </span>
+                      } @else {
+                        <span class="chip nueva">Nueva</span>
+                      }
+                    </td>
+                    <td class="derecha acciones">
+                      @if (bloqueadaPorOtro(item)) {
+                        <button type="button" class="btn-fila" disabled
+                                [title]="'La atiende ' + item.revisandoPorNombre + '. Se libera sola si la deja 20 min sin actividad.'">
+                          Ocupada
+                        </button>
+                      } @else if (item.esMia) {
+                        <button type="button" class="btn-fila secundario" (click)="soltar(item)"
+                                [disabled]="soltando === item.numeroFolio" title="Regresarla a la cola">
+                          {{ soltando === item.numeroFolio ? '…' : 'Soltar' }}
+                        </button>
+                        <button type="button" class="btn-fila" (click)="atender(item)">Continuar</button>
+                      } @else {
+                        <button type="button" class="btn-fila" (click)="atender(item)">Atender</button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (r.totalPaginas > 1 || r.totalElementos > 0) {
+            <div class="paginado">
+              <span class="paginado-rango">{{ rangoMostrado }}</span>
+              @if (r.totalPaginas > 1) {
+                <nav aria-label="Páginas de la cola">
+                  <button type="button" (click)="irAPagina(pagina - 1)" [disabled]="pagina === 0" aria-label="Página anterior">‹</button>
+                  @for (p of paginasVisibles; track $index) {
+                    @if (p === null) {
+                      <span class="paginado-salto">…</span>
+                    } @else {
+                      <button type="button" [class.actual]="p === pagina" (click)="irAPagina(p)"
+                              [attr.aria-current]="p === pagina ? 'page' : null">{{ p + 1 }}</button>
+                    }
+                  }
+                  <button type="button" (click)="irAPagina(pagina + 1)" [disabled]="pagina >= r.totalPaginas - 1" aria-label="Página siguiente">›</button>
+                </nav>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      <!-- ================= Equipo ================= -->
+      <aside class="card-panel equipo">
+        <h3>Equipo de Recepción</h3>
+        <p class="equipo-sub">Quejas abiertas y atendidas hoy por cada recepcionista.</p>
+
+        <ul class="equipo-lista">
+          @for (p of r.equipo; track p.nombre) {
+            <li [class.yo]="p.soyYo">
+              <div class="equipo-fila">
+                <span class="equipo-nombre">{{ p.nombre }} @if (p.soyYo) { <em>(tú)</em> }</span>
+                <span class="equipo-abiertas" [class.activa]="p.enAtencion > 0"
+                      [title]="p.enAtencion + ' queja(s) abiertas ahora'">{{ p.enAtencion }} abiertas</span>
+              </div>
+              <div class="equipo-barra" [title]="p.atendidasHoy + ' atendidas hoy'">
+                <span [style.width.%]="anchoBarra(p)"></span>
+              </div>
+              <span class="equipo-atendidas">{{ p.atendidasHoy }} atendidas hoy</span>
+            </li>
+          } @empty {
+            <li class="equipo-vacio">No hay recepcionistas activas.</li>
+          }
+        </ul>
+
+        <div class="tu-dia">
+          <span>Tu día</span>
+          <strong>{{ r.indicadores.atendidasHoyMias }}</strong>
+          <span>atendidas · {{ r.indicadores.enAtencionMias }} abiertas</span>
+        </div>
+      </aside>
+    </div>
+  } @else if (cargando) {
+    <p class="estado">Cargando bandeja…</p>
+  }
+</section>

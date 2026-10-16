@@ -3,11 +3,16 @@ package ipn.escom.defensoria.notificaciones_service.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import ipn.escom.defensoria.notificaciones_service.model.EnviarCorreoRequest;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+
+import java.util.Base64;
 
 /**
  * Envío de correo saliente (SMTP configurado en spring.mail de notificaciones-service.yml).
@@ -47,13 +52,33 @@ public class CorreoService {
             return;
         }
 
-        SimpleMailMessage mensaje = new SimpleMailMessage();
-        mensaje.setFrom(remitente);
-        mensaje.setTo(destinatario);
-        mensaje.setSubject(datos.getAsunto());
-        mensaje.setText(datos.getCuerpo());
-        mailSender.send(mensaje);
-        log.info("Correo enviado a {} ({})", destinatario, datos.getAsunto());
+        boolean conAdjunto = !esVacio(datos.getAdjuntoBase64());
+        byte[] adjunto = null;
+        if (conAdjunto) {
+            try {
+                adjunto = Base64.getDecoder().decode(datos.getAdjuntoBase64());
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException("El adjunto no está en base64 válido.");
+            }
+        }
+
+        try {
+            MimeMessage mensaje = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mensaje, conAdjunto, "UTF-8");
+            helper.setFrom(remitente);
+            helper.setTo(destinatario);
+            helper.setSubject(datos.getAsunto());
+            helper.setText(datos.getCuerpo());
+            if (conAdjunto) {
+                String nombre = esVacio(datos.getAdjuntoNombre()) ? "adjunto.pdf" : datos.getAdjuntoNombre().trim();
+                String tipo = esVacio(datos.getAdjuntoTipo()) ? "application/pdf" : datos.getAdjuntoTipo().trim();
+                helper.addAttachment(nombre, new ByteArrayResource(adjunto), tipo);
+            }
+            mailSender.send(mensaje);
+        } catch (MessagingException ex) {
+            throw new IllegalArgumentException("No se pudo armar el correo: " + ex.getMessage());
+        }
+        log.info("Correo enviado a {} ({}){}", destinatario, datos.getAsunto(), conAdjunto ? " con adjunto" : "");
     }
 
     private static boolean esVacio(String valor) {

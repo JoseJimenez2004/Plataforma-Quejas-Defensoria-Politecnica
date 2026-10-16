@@ -16,18 +16,11 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ExpedienteResumenService } from '../../core/services/expediente-resumen.service';
 import { ExpedienteResumen } from '../../core/models/expediente-resumen';
+import { ETIQUETAS_ESTATUS } from '../../core/models/estatus-expediente';
 import { RedactarOficioDialog, RedactarOficioDialogData } from '../../shared/redactar-oficio-dialog/redactar-oficio-dialog';
 import { RecordatorioDialog, RecordatorioDialogData } from '../../shared/recordatorio-dialog/recordatorio-dialog';
 import { RespuestaExternaDialog, RespuestaExternaDialogData } from '../../shared/respuesta-externa-dialog/respuesta-externa-dialog';
 
-const ETIQUETAS_ESTATUS: Record<string, string> = {
-  RECIBIDO: 'Recibido',
-  EN_INVESTIGACION: 'En Investigación',
-  EN_ESPERA_OFICIO: 'En espera de oficio',
-  ELABORO_ACUERDO: 'Elaboró acuerdo',
-  PENDIENTE_CONCLUSION: 'Pendiente de conclusión',
-  CONCLUIDO: 'Concluido'
-};
 
 interface Faceta {
   valor: string;
@@ -73,7 +66,7 @@ export class Bandeja implements OnInit {
   asuntosSeleccionados = new Set<string>();
   unidadesSeleccionadas = new Set<string>();
 
-  readonly etiquetasEstatus = ETIQUETAS_ESTATUS;
+  readonly etiquetasEstatus: Record<string, string> = ETIQUETAS_ESTATUS;
 
   constructor(
     private expedienteResumenService: ExpedienteResumenService,
@@ -105,7 +98,7 @@ export class Bandeja implements OnInit {
   private construirFacetas(): void {
     this.facetasEstatus = Object.keys(ETIQUETAS_ESTATUS).map(valor => ({
       valor,
-      etiqueta: ETIQUETAS_ESTATUS[valor],
+      etiqueta: this.etiquetasEstatus[valor],
       total: this.todos.filter(e => e.estatus === valor).length
     }));
 
@@ -161,14 +154,14 @@ export class Bandeja implements OnInit {
     return this.etiquetasEstatus[estatus] ?? estatus;
   }
 
+  /** El backend indica qué oficio toca (siguienteFase) solo cuando hay que emitir uno. */
   etiquetaAccionPrincipal(e: ExpedienteResumen): string | null {
-    if (e.estatus === 'RECIBIDO') return 'Solicitar Oficio';
-    if (e.estatus === 'EN_ESPERA_OFICIO' && !e.numeroOficioVigente) return 'Redactar Oficio al Director';
-    return null;
+    return e.siguienteFase ? 'Solicitar Oficio' : null;
   }
 
   accionPrincipal(e: ExpedienteResumen): void {
-    const siguienteFase = e.estatus === 'RECIBIDO' ? 'SOLICITUD_INFORMACION' : 'GESTION_DIRECTOR';
+    if (!e.siguienteFase) return;
+    const siguienteFase = e.siguienteFase;
 
     const data: RedactarOficioDialogData = {
       expedienteId: e.expedienteId,

@@ -55,4 +55,46 @@ public class CitaPrimerContacto {
 
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
+
+    /*
+     * Último analista que confirmó, reagendó o canceló la cita (CU-PC-04):
+     * quien la agenda queda en analistaId/analistaNombre, quien la movió después, aquí.
+     */
+    @Column(name = "actualizado_por_id")
+    private Long actualizadoPorId;
+
+    @Column(name = "actualizado_por_nombre", length = 150)
+    private String actualizadoPorNombre;
+
+    @Column(name = "fecha_actualizacion")
+    private LocalDateTime fechaActualizacion;
+
+    /*
+     * Respuesta del quejoso: al agendar o reagendar tiene un plazo (48 h por defecto) para
+     * confirmar o cancelar con motivo. Si no responde, la cita pasa a SIN_RESPUESTA.
+     * Las citas anteriores a este cambio quedan con fechaLimiteRespuesta en null y no vencen.
+     */
+    @Column(name = "fecha_limite_respuesta")
+    private LocalDateTime fechaLimiteRespuesta;
+
+    @Column(name = "fecha_respuesta_quejoso")
+    private LocalDateTime fechaRespuestaQuejoso;
+
+    @Column(name = "motivo_cancelacion_quejoso", columnDefinition = "TEXT")
+    private String motivoCancelacionQuejoso;
+
+    /* Si esta cita sustituye a otra que se reagendó, el id de la anterior (historial). */
+    @Column(name = "cita_anterior_id")
+    private Long citaAnteriorId;
+
+    /* QUEJOSO si respondió desde su panel; ANALISTA si el analista registró su respuesta. */
+    @Column(name = "respuesta_registrada_por", length = 20)
+    private String respuestaRegistradaPor;
+
+    /*
+     * Clave del enlace que se le manda al quejoso (correo y notificación) para confirmar o
+     * cancelar sin iniciar sesión. Las citas anteriores a este cambio quedan en null.
+     */
+    @Column(name = "token_respuesta", length = 64)
+    private String tokenRespuesta;
 }

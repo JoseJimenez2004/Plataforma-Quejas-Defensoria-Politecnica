@@ -6,7 +6,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import ipn.escom.defensoria.revision_service.entity.Queja;
+import ipn.escom.defensoria.revision_service.model.DatosVentanillaRequest;
 import ipn.escom.defensoria.revision_service.model.RegistroManualResponse;
 import ipn.escom.defensoria.revision_service.service.RevisionQuejaService;
 
@@ -56,5 +59,20 @@ public class RegistroManualController {
 
         return ResponseEntity.ok(new RegistroManualResponse(
                 creada.getNumeroFolio(), "Entrada registrada. Folio de seguimiento: " + creada.getNumeroFolio()));
+    }
+
+    /**
+     * Segundo paso del registro en ventanilla (2026-10-16): la queja ya se creó con el
+     * formulario público; aquí se marca como recibida en ventanilla y se guardan los datos del
+     * documento físico.
+     */
+    @PostMapping("/{folio}/ventanilla")
+    @Operation(summary = "Marca una queja recién capturada como recibida en ventanilla (origen MANUAL)")
+    public ResponseEntity<java.util.Map<String, String>> marcarVentanilla(
+            @PathVariable String folio,
+            @RequestBody DatosVentanillaRequest datos,
+            Authentication authentication) {
+        revisionService.marcarVentanilla(folio, datos, authentication.getName());
+        return ResponseEntity.ok(java.util.Map.of("mensaje", "Queja marcada como recibida en ventanilla."));
     }
 }

@@ -3,7 +3,7 @@
 }
 
 .fecha-hoy {
-  color: #6b7280;
+  color: var(--texto-suave);
   margin: 0 0 var(--space-4);
   text-transform: capitalize;
 }
@@ -24,21 +24,22 @@
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   cursor: pointer;
   border: 2px solid transparent;
+  background: white;
 }
 
 .stat-card.selected {
-  border-color: #6a1238;
+  border-color: var(--guinda);
 }
 
 .stat-card mat-icon {
   font-size: 30px;
   width: 30px;
   height: 30px;
-  color: #6a1238;
+  color: var(--guinda);
 }
 
 .stat-card.alert mat-icon {
-  color: #b91c1c;
+  color: var(--peligro);
 }
 
 .stat-card div {
@@ -47,13 +48,13 @@
 }
 
 .stat-card span {
-  color: #6b7280;
+  color: var(--texto-suave);
   font-size: var(--font-size-sm);
 }
 
 .stat-card strong {
   font-size: 26px;
-  color: #111827;
+  color: var(--negro-inst);
 }
 
 .grid {
@@ -67,16 +68,17 @@
   border-radius: 14px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   padding: var(--space-4);
+  background: white;
 }
 
 .list-card h3, .urgentes-card h3 {
   margin: 0;
-  color: #111827;
+  color: var(--negro-inst);
   font-size: var(--font-size-lg);
 }
 
 .subtitle {
-  color: #6b7280;
+  color: var(--texto-suave);
   margin: 4px 0 var(--space-4);
   font-size: var(--font-size-sm);
 }
@@ -105,7 +107,7 @@
 }
 
 .expediente-row span {
-  color: #6b7280;
+  color: var(--texto-suave);
   font-size: var(--font-size-sm);
 }
 
@@ -138,7 +140,7 @@
 }
 
 .urgente-row span {
-  color: #b91c1c;
+  color: var(--peligro);
   font-size: var(--font-size-sm);
   font-weight: 600;
 }

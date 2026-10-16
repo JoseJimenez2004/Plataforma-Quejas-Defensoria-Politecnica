@@ -2,7 +2,13 @@ import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import { ApiService } from './api.service';
-import { ExpedienteBandeja } from '../models/expediente-bandeja';
+import { ExpedienteBandeja, FiltroBandeja } from '../models/expediente-bandeja';
+import {
+  etiquetaEstatus,
+  codigoEstatus,
+  formatearFecha,
+  formatearPrioridad
+} from '../utils/estatus-expediente';
 
 interface BandejaBackendDTO {
   expedienteId: number;
@@ -15,6 +21,7 @@ interface BandejaBackendDTO {
   prioridad: string;
   estatus: string;
   fechaRecepcion: string;
+  tieneCitaActiva: boolean;
 }
 
 @Injectable({
@@ -26,6 +33,16 @@ export class BandejaService {
 
   obtenerBandeja(): Observable<ExpedienteBandeja[]> {
     return this.api.get<BandejaBackendDTO[]>('/bandeja').pipe(
+      map(items => items.map(item => this.mapearExpediente(item)))
+    );
+  }
+
+  /**
+   * CU-PC-02: el filtrado lo hace el backend (POST /bandeja/filtrar). Los valores de
+   * prioridad y estatus se mandan como códigos del backend (ALTA, EN_ANALISIS...).
+   */
+  filtrar(filtro: FiltroBandeja): Observable<ExpedienteBandeja[]> {
+    return this.api.post<BandejaBackendDTO[]>('/bandeja/filtrar', filtro).pipe(
       map(items => items.map(item => this.mapearExpediente(item)))
     );
   }
@@ -47,74 +64,15 @@ export class BandejaService {
       folio: item.folio,
       folioOrigen: item.folioOrigen,
 
-      nombreQuejoso: item.nombreQuejoso,
-      unidadAcademica: item.unidadAcademica,
-      tema: item.tema,
+      nombreQuejoso: item.nombreQuejoso ?? '',
+      unidadAcademica: item.unidadAcademica ?? '',
+      tema: item.tema ?? '',
 
-      prioridad: this.formatearPrioridad(item.prioridad),
-      estatus: this.formatearEstatus(item.estatus),
-      fechaRecepcion: this.formatearFecha(item.fechaRecepcion)
+      prioridad: formatearPrioridad(item.prioridad),
+      estatus: etiquetaEstatus(item.estatus),
+      estatusCodigo: codigoEstatus(item.estatus),
+      fechaRecepcion: formatearFecha(item.fechaRecepcion),
+      tieneCitaActiva: !!item.tieneCitaActiva
     };
-  }
-
-  private formatearPrioridad(
-    prioridad: string
-  ): 'Alta' | 'Media' | 'Baja' {
-
-    switch (prioridad?.toUpperCase()) {
-
-      case 'ALTA':
-        return 'Alta';
-
-      case 'BAJA':
-        return 'Baja';
-
-      case 'MEDIA':
-      default:
-        return 'Media';
-    }
-  }
-
-  private formatearEstatus(
-    estatus: string
-  ): string {
-
-    switch (estatus?.toUpperCase()) {
-
-      case 'PENDIENTE':
-      case 'EN_ANALISIS':
-        return 'En análisis';
-
-      case 'COMPETENTE':
-        return 'Competente';
-
-      case 'IMPROCEDENTE':
-        return 'Improcedente';
-
-      case 'PENDIENTE_REMISION':
-        return 'Pendiente de remisión';
-
-      case 'REMITIDA':
-        return 'Remitida';
-
-      case 'PROCEDENTE':
-        return 'Turnado a Subdefensoría';
-
-      default:
-        return estatus;
-    }
-  }
-
-  private formatearFecha(
-    fecha: string
-  ): string {
-
-    if (!fecha) {
-      return '';
-    }
-
-    const [year, month, day] = fecha.split('-');
-
-    return `${day}/${month}/${year}`;
   }
 }

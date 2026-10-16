@@ -1,6 +1,21 @@
 /* You can add global styles to this file, and also import other style files */
 
 :root {
+  /* ---- Paleta institucional (misma que Frontend/Frontend-Revision/Frontend-Admin,
+     para que los 5 paneles del sistema se vean consistentes) ---- */
+  --guinda: #6c1d45;
+  --guinda-oscuro: #501533;
+  --guinda-vivo: #9d2449;
+  --guinda-suave: #f7eef1;
+  --negro-inst: #1a1a1a;
+  --gris-fondo: #f4f5f7;
+  --texto: #333;
+  --texto-suave: #666;
+  --borde: #ddd;
+  --exito: #2e7d32;
+  --advertencia: #b8860b;
+  --peligro: #c62828;
+
   /* ---- Escala de espaciado (norma del proyecto, base 4px) ---- */
   --space-1: 4px;
   --space-2: 8px;
@@ -39,4 +54,41 @@ p, span, li {
 
 h1, h2, h3, h4 {
   line-height: var(--line-height-tight);
+}
+/* ---- Chips de estatus del expediente (ver core/utils/estatus-expediente.ts) ----
+   Un color por estado del diagrama, iguales en todas las pantallas. */
+.estatus-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.estatus-turnada { background: #eef2ff; color: #3730a3; }
+.estatus-en-analisis { background: #e0f2fe; color: #075985; }
+.estatus-procedente { background: #e8f5e9; color: var(--exito); }
+.estatus-improcedente { background: #fff4e5; color: #9a5b00; }
+.estatus-remitida { background: var(--guinda-suave); color: var(--guinda); }
+.estatus-desconocido { background: #f3f4f6; color: var(--texto-suave); }
+
+/* Indicador de cita activa: NO es un estado, va junto al chip de estatus. */
+.cita-indicador {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 6px;
+  color: var(--guinda);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.cita-indicador mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
 }

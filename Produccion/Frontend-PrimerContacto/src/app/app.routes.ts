@@ -5,10 +5,12 @@ import { MainLayout } from './layout/main-layout/main-layout';
 import { Dashboard } from './features/dashboard/dashboard';
 import { BandejaAnalisis } from './features/bandeja-analisis/bandeja-analisis';
 import { Expediente } from './features/expediente/expediente';
+import { Antecedentes } from './features/antecedentes/antecedentes';
 import { Agenda } from './features/agenda/agenda';
 import { Perfil } from './features/perfil/perfil';
 import { Remision } from './features/remision/remision';
 import { Dictamen } from './features/dictamen/dictamen';
+import { DictamenConsulta } from './features/dictamen-consulta/dictamen-consulta';
 
 import { authPrimerContactoGuard } from './core/guards/auth-primer-contacto.guard';
 
@@ -40,6 +42,12 @@ export const routes: Routes = [
         component: Expediente
       },
 
+      // Búsqueda de antecedentes de la queja (modelo de búsqueda).
+      {
+        path: 'expediente/:id/antecedentes',
+        component: Antecedentes
+      },
+
       {
         path: 'agenda',
         component: Agenda
@@ -53,6 +61,12 @@ export const routes: Routes = [
       {
         path: 'dictamen/:id',
         component: Dictamen
+      },
+
+      // CU-PC-08: consulta del dictamen ya registrado.
+      {
+        path: 'dictamen/:id/consulta',
+        component: DictamenConsulta
       },
 
       {

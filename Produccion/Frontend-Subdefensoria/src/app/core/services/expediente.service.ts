@@ -10,4 +10,9 @@ export class ExpedienteService {
   obtenerPorFolio(folio: string): Observable<ExpedienteInvestigacion> {
     return this.api.get<ExpedienteInvestigacion>(`/expedientes/folio/${folio}`);
   }
+
+  /** Al abrir el detalle: RECIBIDO pasa a EN_INVESTIGACION (en otro estado solo lo devuelve). */
+  iniciarInvestigacion(folio: string): Observable<ExpedienteInvestigacion> {
+    return this.api.post<ExpedienteInvestigacion>(`/expedientes/folio/${folio}/iniciar-investigacion`, {});
+  }
 }

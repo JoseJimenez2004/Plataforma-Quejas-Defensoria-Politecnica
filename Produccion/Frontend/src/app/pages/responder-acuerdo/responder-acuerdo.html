@@ -1,0 +1,83 @@
+<div class="contenedor">
+  <div class="card">
+    <h2>Acuerdo de conciliación</h2>
+
+    @if (cargando) {
+      <p class="subtitulo">Cargando el acuerdo…</p>
+    } @else if (errorCarga) {
+      <p class="error">{{ errorCarga }}</p>
+      <a routerLink="/" class="volver">Regresar al inicio</a>
+    } @else if (acuerdo) {
+      <p class="subtitulo">
+        Queja {{ acuerdo.folioQueja }}
+        @if (acuerdo.fechaEnvio) {
+          · enviado el {{ fecha(acuerdo.fechaEnvio) }}
+        }
+      </p>
+
+      <div class="texto-acuerdo">{{ acuerdo.textoAcuerdo }}</div>
+      <a class="enlace-pdf" [href]="pdfUrl('conciliacion')" target="_blank" rel="noopener">Ver el acuerdo en PDF</a>
+
+      @if (acuerdo.puedeResponder) {
+        @if (!decision) {
+          <p class="instruccion">
+            Revisa la propuesta. Si la aceptas, la Defensoría elaborará el acuerdo de conclusión
+            de tu caso; si la rechazas, continuará la investigación para buscar otro acuerdo.
+          </p>
+          <div class="acciones">
+            <button type="button" class="btn-primary" (click)="elegir('aceptar')">Aceptar el acuerdo</button>
+            <button type="button" class="btn-secondary" (click)="elegir('rechazar')">Rechazar el acuerdo</button>
+          </div>
+        } @else {
+          <form (submit)="$event.preventDefault(); enviar()">
+            <div class="input-group">
+              <label for="comentario">
+                {{ decision === 'rechazar' ? '¿Por qué rechazas el acuerdo?' : 'Comentario (opcional)' }}
+              </label>
+              <textarea
+                id="comentario"
+                name="comentario"
+                rows="4"
+                [(ngModel)]="comentario"
+                [attr.maxlength]="comentarioMaximo"
+                [placeholder]="decision === 'rechazar' ? 'Así la Defensoría podrá buscar un mejor acuerdo' : ''"
+              ></textarea>
+              @if (intentoEnviar && errorComentario) {
+                <span class="mensaje-campo">{{ errorComentario }}</span>
+              }
+              <span class="contador">{{ comentario.length }}/{{ comentarioMaximo }}</span>
+            </div>
+            <div class="acciones">
+              <button type="submit" class="btn-primary" [disabled]="enviando">
+                {{ enviando ? 'Enviando…' : decision === 'aceptar' ? 'Confirmar que acepto' : 'Confirmar que rechazo' }}
+              </button>
+              <button type="button" class="btn-secondary" [disabled]="enviando" (click)="decision = null">
+                Regresar
+              </button>
+            </div>
+          </form>
+        }
+      } @else if (acuerdo.concluido) {
+        <div class="resultado ok">✅ Tu caso concluyó. Te enviamos el acuerdo de conclusión por correo.</div>
+        <a class="enlace-pdf" [href]="pdfUrl('conclusion')" target="_blank" rel="noopener">Ver el acuerdo de conclusión en PDF</a>
+      } @else if (acuerdo.respuestaQuejoso === 'ACEPTADO') {
+        <div class="resultado ok">
+          ✅ Aceptaste este acuerdo. La Defensoría elaborará el acuerdo de conclusión de tu caso.
+        </div>
+      } @else if (acuerdo.respuestaQuejoso === 'RECHAZADO') {
+        <div class="resultado aviso">
+          @if (acuerdo.comentarioQuejoso) {
+            Rechazaste este acuerdo: «{{ acuerdo.comentarioQuejoso }}».
+          } @else {
+            Rechazaste este acuerdo.
+          }
+          La Defensoría continuará la investigación.
+        </div>
+      } @else {
+        <div class="resultado aviso">Este acuerdo ya no está esperando tu respuesta.</div>
+      }
+
+      <a routerLink="/panel/notificaciones" class="volver">Ir a mis notificaciones</a>
+    }
+  </div>
+</div>

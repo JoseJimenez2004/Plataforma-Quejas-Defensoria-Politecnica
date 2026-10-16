@@ -21,4 +21,11 @@ public class DictamenDTO {
     private String fechaDictamen;
     private String observaciones;
 
+    /*
+     * Para la pantalla de consulta (CU-PC-08): en qué quedó el expediente
+     * y, si fue procedente, si Subdefensoría ya lo recibió.
+     */
+    private String estatusExpediente;
+    private String folioSubdefensoria;
+
 }

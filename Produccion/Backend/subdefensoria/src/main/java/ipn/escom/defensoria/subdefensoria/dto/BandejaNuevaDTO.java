@@ -20,6 +20,6 @@ public class BandejaNuevaDTO {
     private String quejosoNombre;
     private String asunto;
     private String unidadAcademica;
-    /** SOLICITUD_INFORMACION o GESTION_DIRECTOR: que oficio hay que redactar a continuacion. */
+    /** Oficio que hay que redactar a continuacion (siempre SOLICITUD_INFORMACION). */
     private String siguienteFase;
 }

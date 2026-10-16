@@ -1,0 +1,101 @@
+# Configuración REAL de router-nginx (VPS frontend 169.58.62.111).
+# En el servidor vive en: /apps/aplicaciones/defensoria/router/config/defensoria.conf
+# (montado en el contenedor router-nginx como /etc/nginx/conf.d/default.conf, --network host).
+# Reconstruida el 2026-10-08 después de que se perdiera la versión con HTTPS.
+
+# Caché del navegador (2026-10-14): los archivos con hash en el nombre (main-AB12CD34.js,
+# styles-....css) nunca cambian de contenido, así que el navegador los guarda un año. Todo
+# lo demás (index.html, respuestas de la API) se revisa siempre con el servidor: así cada
+# despliegue se ve de inmediato sin Ctrl+Shift+R.
+map $uri $cache_estaticos {
+    ~-[A-Z0-9]{8}\.(js|css)$  "public, max-age=31536000, immutable";
+    default                    "no-cache";
+}
+
+# ---------- 80: solo reto de Certbot + redirección a HTTPS ----------
+server {
+    listen 80;
+    server_name defensoria-escom.ddns.net;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ---------- 443: sitio real ----------
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name defensoria-escom.ddns.net;
+
+    ssl_certificate     /etc/letsencrypt/live/defensoria-escom.ddns.net/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/defensoria-escom.ddns.net/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # Compresión (2026-10-14): sin ella el main.js de cada front viajaba completo (~900 KB);
+    # comprimido pesa ~4 veces menos. El servidor está lejos, así que se nota mucho.
+    # A propósito NO se comprime application/json (las respuestas de la API): ahí viajan el
+    # token y los datos de las quejas, y comprimir respuestas con secretos abre la puerta al
+    # ataque BREACH. Solo se comprimen los archivos de las pantallas, que son públicos.
+    gzip on;
+    gzip_comp_level 5;
+    gzip_min_length 1024;
+    gzip_proxied any;
+    gzip_vary on;
+    gzip_types text/css application/javascript image/svg+xml;
+
+    add_header Cache-Control $cache_estaticos;
+
+    # Varios archivos por queja (quejas-service acepta hasta 100MB por petición).
+    client_max_body_size 100M;
+    proxy_read_timeout 120s;
+    proxy_send_timeout 120s;
+
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    # --- Frontends (contenedores en esta misma VPS) ---
+    location / {
+        proxy_pass http://127.0.0.1:8090;          # defensoria-web (portal del quejoso)
+    }
+    location /admin/ {
+        proxy_pass http://127.0.0.1:8091/;         # admin-web
+    }
+    location /revision/ {
+        proxy_pass http://127.0.0.1:8092/;         # revision-web
+    }
+    location /primer-contacto/ {
+        proxy_pass http://127.0.0.1:8094/;         # primer-contacto-web
+    }
+    location /subdefensoria/ {
+        proxy_pass http://127.0.0.1:8095/;         # subdefensoria-web
+    }
+
+    # --- Rutas INTERNAS de notificaciones: solo entre microservicios, nunca desde internet ---
+    location = /api/notificaciones/enviar    { return 403; }
+    location = /api/notificaciones/registrar { return 403; }
+    # Ingesta de Primer Contacto: la llama revision-service directo por IP, nunca internet.
+    location /api/primer-contacto/ingesta/   { return 403; }
+    # Subdefensoría: la ingesta la llama Primer Contacto y la respuesta "interna" al acuerdo
+    # otro servicio, ambos directo por IP. El quejoso responde por /api/subdefensoria/publico/.
+    location /api/subdefensoria/ingesta/     { return 403; }
+    location /api/subdefensoria/acuerdos-conclusion/interno/ { return 403; }
+
+    # --- Microservicios (VPS backend 156.67.26.73) ---
+    location /api/auth/           { proxy_pass http://156.67.26.73:8083; }
+    location /api/quejoso/        { proxy_pass http://156.67.26.73:8084; }
+    location /api/notificaciones/ { proxy_pass http://156.67.26.73:8085; }
+    location /api/catalogos/      { proxy_pass http://156.67.26.73:8086; }
+    location /api/admin/          { proxy_pass http://156.67.26.73:8087; }
+    location /api/revision/       { proxy_pass http://156.67.26.73:8088; }
+    location /api/chatbot/        { proxy_pass http://156.67.26.73:8089; }
+    location /api/denunciado/     { proxy_pass http://156.67.26.73:8094; }
+    location /api/primer-contacto/ { proxy_pass http://156.67.26.73:8082; }
+    location /api/subdefensoria/  { proxy_pass http://156.67.26.73:8091; }
+}

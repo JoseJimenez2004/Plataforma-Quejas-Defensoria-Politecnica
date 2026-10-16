@@ -8,14 +8,14 @@
 
 .page-header h2 {
   margin: 0;
-  color: #6a1238;
+  color: var(--guinda);
   font-size: 28px;
   font-weight: 800;
 }
 
 .page-header p {
   margin: var(--space-1) 0 0;
-  color: #6b7280;
+  color: var(--texto-suave);
 }
 
 /* ---- Layout de dos columnas: panel de filtros + resultados ---- */
@@ -33,6 +33,7 @@
   padding: var(--space-4);
   position: sticky;
   top: calc(72px + var(--space-5)); /* debajo del header fijo */
+  background: white;
 }
 
 .filters-panel-header {
@@ -46,11 +47,11 @@
   margin: 0;
   font-size: var(--font-size-lg);
   font-weight: 900;
-  color: #111827;
+  color: var(--negro-inst);
 }
 
 .clear-link {
-  color: #b91c1c !important;
+  color: var(--guinda) !important;
   font-weight: 700;
   font-size: var(--font-size-sm);
   min-width: 0;
@@ -68,7 +69,7 @@
 
 .filters-accordion mat-panel-title {
   font-weight: 800;
-  color: #111827;
+  color: var(--negro-inst);
   font-size: var(--font-size-base);
 }
 
@@ -111,6 +112,7 @@
   grid-template-columns: 1fr 220px;
   align-items: start;
   gap: var(--space-4);
+  background: white;
 }
 
 .search-field,
@@ -127,7 +129,7 @@
 
 .results-count {
   margin: 0;
-  color: #6b7280;
+  color: var(--texto-suave);
   font-size: var(--font-size-sm);
   font-weight: 700;
 }
@@ -140,6 +142,7 @@
   border-radius: 14px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   padding: 0;
+  background: white;
 }
 
 table {
@@ -148,7 +151,7 @@ table {
 }
 
 th {
-  background: #111827 !important;
+  background: var(--negro-inst) !important;
   color: white;
   font-weight: 800;
 }
@@ -167,27 +170,27 @@ mat-chip {
 }
 
 .chip-high {
-  background: #fee2e2 !important;
-  color: #991b1b !important;
+  background: #ffebee !important;
+  color: var(--peligro) !important;
 }
 
 .chip-medium {
-  background: #fef3c7 !important;
-  color: #92400e !important;
+  background: #fdf6e3 !important;
+  color: var(--advertencia) !important;
 }
 
 .chip-low {
-  background: #dcfce7 !important;
-  color: #166534 !important;
+  background: #e8f5e9 !important;
+  color: var(--exito) !important;
 }
 
 .status {
   font-weight: 700;
-  color: #374151;
+  color: var(--texto);
 }
 
 .action-btn {
-  background: #b91c1c !important;
+  background: var(--guinda) !important;
   color: white !important;
   font-weight: 700;
   border-radius: 8px;
@@ -196,7 +199,7 @@ mat-chip {
 
 .empty-state {
   text-align: center;
-  color: #6b7280;
+  color: var(--texto-suave);
   padding: var(--space-6);
   margin: 0;
 }

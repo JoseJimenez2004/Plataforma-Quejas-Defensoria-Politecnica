@@ -32,4 +32,18 @@ export class NotaAnalisisService {
       `/notas/folio/${encodeURIComponent(folio)}`
     );
   }
+
+  /** Solo el autor de la nota puede editarla (el backend responde 403 si no). */
+  actualizarNota(
+    id: number,
+    dto: CrearNotaAnalisis
+  ): Observable<NotaAnalisis> {
+
+    return this.api.put<NotaAnalisis>(`/notas/${id}`, dto);
+  }
+
+  /** Solo el autor de la nota puede eliminarla (el backend responde 403 si no). */
+  eliminarNota(id: number): Observable<void> {
+    return this.api.delete<void>(`/notas/${id}`);
+  }
 }

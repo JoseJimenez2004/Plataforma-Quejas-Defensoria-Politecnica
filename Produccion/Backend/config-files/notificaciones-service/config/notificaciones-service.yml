@@ -4,7 +4,7 @@ server:
 spring:
   application:
     name: notificaciones-service
-    datasource:
+  datasource:
     url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
     username: postgres
     password: Temporal2026@

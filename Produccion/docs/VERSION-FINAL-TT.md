@@ -718,3 +718,97 @@ UPDATE personal_administrativo SET rol = 'DEFENSOR' WHERE correo_institucional =
 nginx (`defensoria.conf`), firewall, `podman-compose.sh` y `config-files` ya están aplicados.
 Prueba final: `/revision/login` con la cuenta DEFENSOR → `/admin/` con indicadores de quejas,
 campana y "Preguntas del Chatbot"; "Generar respaldo" debe crear el `.sql`.
+
+---
+
+## 15. Carga del front, redacción sin límite y carga masiva — 2026-10-14
+
+### 15.1 Front más rápido
+- **Carga diferida de pantallas** (`Frontend/src/app/app.routes.ts`): antes todo iba en un solo `main.js` de ~600 KB. Ahora el paquete inicial pesa ~320 KB (~90 KB comprimido) y cada pantalla se baja la primera vez que se abre (registro de queja ~64 KB, panel aparte). El chatbot flotante se carga con `@defer (on idle)` cuando la página ya está lista. Revisión y Admin ya tenían carga diferida.
+- **router-nginx** (`nginx/config/defensoria.conf`): `gzip` para JS/CSS/SVG (no para JSON de la API, por BREACH) y caché de un año para los archivos con hash (`main-XXXXXXXX.js`, `chunk-…`, `styles-…`). `index.html` y la API van con `no-cache`, así cada despliegue se ve de inmediato.
+
+### 15.2 Redacción de la queja sin límite de caracteres
+- `queja-service`: se quitó el máximo de 4000 en `ValidadorQuejaPublica` / `ReglasQueja` (la columna `quejas.descripcion` ya era `TEXT`; el único tope es el de la petición, 100 MB).
+- `Frontend`: formulario público y edición en el panel sin `maxlength`; el contador solo muestra cuántos caracteres van. La respuesta del denunciado conserva su máximo de 4000.
+
+### 15.3 Carga masiva de quejas (`Backend/carga-masiva/`)
+`cargar-quejas.sh` registra quejas desde un `.csv` (separado por `|`) por el endpoint público (`/registro-publico`) con credencial y evidencias, y genera `cuentas-quejosos.sql` (BCrypt con pgcrypto) para que cada quejoso entre con correo y contraseña sin mandar correos. `generar-csv.py` arma el `.csv` con las 170 quejas del dataset del modelo. Instrucciones en `Backend/carga-masiva/LEEME.md`.
+
+### 15.4 Qué subir
+| Qué | Dónde | Después |
+|---|---|---|
+| `queja-service` recompilado → `quejas-service.jar` | backend `/apps/aplicaciones/defensoria/back/artifact/` | `bash podman-compose.sh up-container quejas-service` |
+| `Frontend` → `ng build` → `dist/defensoria-front/browser/*` | frontend `/apps/aplicaciones/defensoria/front/dist/browser/` (vaciarla antes) | `bash podman-compose-front.sh up` |
+| `nginx/config/defensoria.conf` | frontend `/apps/aplicaciones/defensoria/router/config/defensoria.conf` | probar con un contenedor desechable y luego `podman restart router-nginx` (ver abajo) |
+| `Backend/carga-masiva/` (carpeta completa) | backend `/apps/aplicaciones/defensoria/back/carga-masiva/` | ver LEEME.md |
+
+Probar el `defensoria.conf` nuevo **antes** de reiniciar el router (el archivo va montado como archivo suelto, así que el contenedor en marcha sigue viendo el viejo hasta reiniciarse):
+```bash
+cd /apps/aplicaciones/defensoria/router/config
+cp defensoria.conf defensoria.conf.antes-gzip        # respaldo, antes de subir el nuevo
+# (subir el nuevo defensoria.conf aquí)
+podman run --rm -v $PWD/defensoria.conf:/etc/nginx/conf.d/default.conf:ro \
+  -v /etc/letsencrypt:/etc/letsencrypt:ro docker.io/library/nginx:alpine nginx -t
+podman restart router-nginx
+curl -sI https://defensoria-escom.ddns.net/ | grep -i cache-control              # no-cache
+curl -s https://defensoria-escom.ddns.net/ | grep -o 'main-[A-Z0-9]*\.js' | head -1  # nombre del main
+curl -sI -H 'Accept-Encoding: gzip' https://defensoria-escom.ddns.net/<ese main>.js | grep -iE 'content-encoding|cache-control'
+```
+Si `nginx -t` falla, no reinicies: regresa `defensoria.conf.antes-gzip`.
+
+---
+
+## 16. Recepción como proceso real: 5 recepcionistas, cola paginada e indicadores — 2026-10-15
+
+### 16.1 Qué cambió
+- **Cuentas:** `Backend/database-scripts/seeds/04-recepcionistas.sql` agrega 4 recepcionistas (contraseña de pruebas `Temporal2026@`, igual que `bryanrecep@ipn.mx.com`): `ana.torres.recep@ipn.mx`, `luis.gomez.recep@ipn.mx`, `mariana.castillo.recep@ipn.mx`, `jorge.rios.recep@ipn.mx`.
+- **Una queja = una recepcionista** (`revision-service`):
+  - Al abrir una queja queda a nombre de quien la abrió con un solo `UPDATE … WHERE estatus IN ('RECIBIDA','CORREGIDA')`; si dos la abren al mismo tiempo, solo una la obtiene (probado 10/10 carreras).
+  - `rechazar` y `turnar` ahora exigen que la queja sea tuya (antes otra recepcionista podía cerrarla).
+  - Nuevo `POST /api/revision/quejas/{folio}/liberar` (botón "Soltar") y `/renovar` (el front lo llama cada 4 min mientras la queja está abierta, para que no se libere a media revisión; si se abandona se libera sola a los 20 min).
+- **Bandeja paginada:** `GET /api/revision/bandeja?filtro=todas|disponibles|mias|corregidas|en_atencion&q=&pagina=0&tamanio=10`. La más reciente arriba, 10 por página, búsqueda por folio/nombre/unidad. Ya no baja todas las quejas ni sus archivos en cada refresco (el ✓ de documentación ahora es un `count`).
+- **Indicadores** (`IndicadoresBandejaService`, SQL directo): por atender (nuevas hoy, corregidas), en atención ahora (cuántas contigo), atendidas hoy (turnadas / con observaciones), espera más larga (folio y días; ámbar desde 3 días, constante `DIAS_ALERTA_ESPERA` del front) y tiempo de respuesta promedio de los últimos 30 días. Panel **Equipo de Recepción**: abiertas y atendidas hoy por recepcionista.
+- **Front Revisión** con el mismo armazón que Primer Contacto (encabezado blanco con marca IPN, menú lateral claro, pie guinda).
+
+### 16.2 Qué subir
+| Qué | Dónde | Después |
+|---|---|---|
+| `04-recepcionistas.sql` | BD | `podman exec -i defensoria-db psql -U postgres -d defensoria_db < 04-recepcionistas.sql` |
+| `revision-service` → `mvn clean package -DskipTests` → `target/revision-service.jar` | backend `/apps/aplicaciones/defensoria/back/artifact/` | `bash podman-compose.sh up-container revision-service` |
+| `Frontend-Revision` → `ng build` → `dist/defensoria-revision/browser/*` | frontend `/apps/aplicaciones/defensoria/front-revision/dist/browser/` (vaciarla antes) | `bash podman-compose-front-revision.sh up` |
+
+No cambia la base de datos (usa columnas que ya existían), ni nginx.
+
+---
+
+## 17. Validación con redacción jurídica, Historial nuevo y Registro en ventanilla — 2026-10-16
+
+- **Validación de requisitos** (`Frontend-Revision/pages/validacion`): instrucción y 5 requisitos con la redacción recomendada (identidad de la persona quejosa; documentación de identidad y personalidad jurídica, Art. 13 de los Lineamientos y MP-DDP; matrícula institucional con opción **No aplicable (no es estudiante)**; oportunidad dentro de 90 días naturales con cómputo automático "Fecha de hechos | Presentación | Transcurridos (En término / Término fenecido)"; identificación de la persona señalada), cada uno con su criterio de cotejo. "No aplicable" cuenta como requisito satisfecho. Los motivos que se envían al quejoso usan la misma redacción.
+- **Historial** con el formato de la Bandeja: totales (atendidas, turnadas, con observaciones, atendidas por ti, tiempo de atención), búsqueda, filtros por resultado / "Solo yo" / rango de llegada y lista paginada de 10 (la atendida más recientemente arriba) con columnas "Dónde va" (estatus actual en Primer Contacto/Subdefensoría) y "Atendió". Nuevo endpoint `GET /api/revision/historial/pagina`. La exportación a Excel no cambió.
+- **Registro manual = formulario del portal** (`pages/registro-ventanilla`, copia de `Frontend/pages/registro-queja-publico` + `shared/` datepicker, autocompletar, aviso de privacidad): misma captura y validaciones, más la sección "Recepción en ventanilla" (documento recibido, fecha de recepción física, oficio, ubicación del expediente). Se registra en `/api/quejoso/quejas/registro-publico` y luego `POST /api/revision/registro-manual/{folio}/ventanilla` la marca como `MANUAL` (solo quejas recién creadas, 2 h). En la cola y el historial aparece con la etiqueta "Ventanilla". La pantalla vieja `pages/registro-manual` quedó sin ruta.
+- Presupuesto de estilos por componente de Frontend-Revision subido a 12 kB / 20 kB (el formulario del portal es grande).
+
+### 17.1 Qué subir
+| Qué | Dónde | Después |
+|---|---|---|
+| `revision-service` → `target/revision-service.jar` | backend `/apps/aplicaciones/defensoria/back/artifact/` | `bash podman-compose.sh up-container revision-service` |
+| `Frontend-Revision` → `dist/defensoria-revision/browser/*` | frontend `/apps/aplicaciones/defensoria/front-revision/dist/browser/` (vaciarla antes) | `bash podman-compose-front-revision.sh up` |
+
+Sin cambios en base de datos, queja-service ni nginx.
+
+---
+
+## 18. Catálogo de documentos, matrícula en dos pasos, antecedentes y carga de abogados — 2026-10-16
+
+- **Requisito 2:** "¿El Quejoso exhibió…", con fundamento en el Artículo 13 de la Gaceta Politécnica y el apartado de Control y Gestión Administrativa de Documentos. El catálogo (`IdentificacionOficialService`) ahora va agrupado (Identificación oficial / Identificación institucional (IPN) / Representación), incluye la **Credencial del IPN**, se muestra como tarjetas que se pueden elegir y el combo usa grupos.
+- **Requisito 3 en dos pasos:** boleta (Sí / No / No aplicable). Si la boleta no aplica, aparece el número de empleado (Sí / No / "No aplica: ni boleta ni número de empleado; exhibió otra identificación"). El requisito se cumple con boleta Sí, o boleta N/A + empleado Sí o N/A.
+- **Turnado:** "Antecedentes de la queja" en tarjetas (folio, fecha, unidad, estado actual, abogado que la lleva y si es *misma persona quejosa* o *mismo denunciado*). Sin antecedentes deja la leyenda de siempre.
+- **Carga de trabajo de los abogados** (`GET /api/revision/quejas/{folio}/abogados`): abogados (SUBDEFENSOR y DEFENSOR) de menor a mayor carga en trámite (excluye CONCLUIDA, IMPROCEDENTE, REMITIDA y RECHAZADA). Sugiere al de menor carga, salvo que alguien ya lleve en trámite un antecedente de esta queja (continuidad). El sugerido se preselecciona; si se elige a alguien con más carga aparece un aviso (no bloquea).
+- **SQL:** `seeds/05-abogados.sql` (5 abogados, rol SUBDEFENSOR, contraseña de pruebas `Temporal2026@`) y `consultas/quejas-con-antecedentes.sql` (folios en Recepción que sí tienen antecedentes).
+
+### 18.1 Qué subir
+| Qué | Dónde | Después |
+|---|---|---|
+| `05-abogados.sql` | BD | `podman exec -i defensoria-db psql -U postgres -d defensoria_db < 05-abogados.sql` |
+| `revision-service.jar` | backend `artifact/` | `bash podman-compose.sh up-container revision-service` |
+| `Frontend-Revision` (`ng build`) | frontend `front-revision/dist/browser/` | `bash podman-compose-front-revision.sh up` |

@@ -2,7 +2,9 @@ package ipn.escom.defensoria.revision_service.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,8 +27,13 @@ public class BandejaController {
     }
 
     @GetMapping
-    @Operation(summary = "Contadores (pendientes/en proceso/turnadas hoy) y lista de quejas por trabajar")
-    public ResponseEntity<BandejaResumenModel> bandeja() {
-        return ResponseEntity.ok(revisionService.bandeja());
+    @Operation(summary = "Indicadores, una página de la cola (más reciente arriba) y carga del equipo de Recepción")
+    public ResponseEntity<BandejaResumenModel> bandeja(
+            @RequestParam(defaultValue = "todas") String filtro,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "10") int tamanio,
+            Authentication authentication) {
+        return ResponseEntity.ok(revisionService.bandeja(authentication.getName(), filtro, q, pagina, tamanio));
     }
 }

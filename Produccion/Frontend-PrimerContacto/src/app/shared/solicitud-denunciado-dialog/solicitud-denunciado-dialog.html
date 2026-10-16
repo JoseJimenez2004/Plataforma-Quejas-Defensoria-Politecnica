@@ -1,0 +1,36 @@
+<h2 mat-dialog-title>{{ data.correoAnterior ? 'Reenviar solicitud al denunciado' : 'Solicitar respuesta del denunciado' }}</h2>
+
+<mat-dialog-content>
+  <p class="intro">
+    Se enviará un correo
+    @if (data.denunciado) {
+      a <strong>{{ data.denunciado }}</strong>
+    }
+    para pedirle su versión de los hechos de la queja <strong>{{ data.folioQueja }}</strong>,
+    con el enlace al formulario donde puede responder y adjuntar su credencial y evidencias.
+    El correo le pide contestar a la brevedad.
+  </p>
+
+  <mat-form-field appearance="outline" class="campo">
+    <mat-label>Correo del denunciado</mat-label>
+    <input matInput type="email" id="correo-denunciado" [(ngModel)]="correo"
+           placeholder="nombre@ipn.mx" (keydown.enter)="enviar()" cdkFocusInitial>
+    @if (intentoEnviar && !correoValido) {
+      <mat-hint class="error">Escribe un correo válido.</mat-hint>
+    }
+  </mat-form-field>
+
+  @if (data.correoAnterior) {
+    <p class="nota">
+      <mat-icon class="inline-icon">info</mat-icon>
+      La solicitud anterior se envió a {{ data.correoAnterior }}. Puedes corregir la dirección.
+    </p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancelar</button>
+  <button mat-flat-button class="primary-btn" (click)="enviar()">
+    <mat-icon>send</mat-icon> Enviar correo
+  </button>
+</mat-dialog-actions>

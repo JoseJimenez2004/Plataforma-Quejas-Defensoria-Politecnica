@@ -59,4 +59,15 @@ public class AcuerdoConclusion {
 
     @Column(name = "fecha_respuesta_quejoso")
     private LocalDateTime fechaRespuestaQuejoso;
+
+    /* Acuerdo de CONCLUSIÓN: se registra después de que el quejoso aceptó el de conciliación. */
+    @Column(name = "texto_conclusion", columnDefinition = "TEXT")
+    private String textoConclusion;
+
+    @Column(name = "fecha_conclusion")
+    private LocalDateTime fechaConclusion;
+
+    /* Clave del enlace con que el quejoso responde el acuerdo de conciliación (sin sesión). */
+    @Column(name = "token_respuesta", length = 64)
+    private String tokenRespuesta;
 }

@@ -4,7 +4,8 @@ import { Observable, map } from 'rxjs';
 import { ApiService } from './api.service';
 import {
   CitaPrimerContacto,
-  CrearCitaPrimerContacto
+  CrearCitaPrimerContacto,
+  ReagendarCitaPrimerContacto
 } from '../models/cita-primer-contacto';
 
 interface CitaBackendDTO {
@@ -26,6 +27,13 @@ interface CitaBackendDTO {
   estatus: string;
 
   fechaCreacion?: string;
+  actualizadoPorNombre?: string;
+
+  fechaLimiteRespuesta?: string;
+  fechaRespuestaQuejoso?: string;
+  motivoCancelacionQuejoso?: string;
+  respuestaRegistradaPor?: string;
+  citaAnteriorId?: number;
 }
 
 @Injectable({
@@ -61,6 +69,17 @@ export class AgendaService {
       );
   }
 
+  /** Citas vigentes del analista en sesión, de hoy en adelante (cualquier día). */
+  obtenerMisProximasCitas(): Observable<CitaPrimerContacto[]> {
+    return this.api
+      .get<CitaBackendDTO[]>('/citas/mias')
+      .pipe(
+        map(citas =>
+          citas.map(cita => this.mapearCita(cita))
+        )
+      );
+  }
+
   listarPorFolio(
     folio: string
   ): Observable<CitaPrimerContacto[]> {
@@ -73,6 +92,46 @@ export class AgendaService {
         map(citas =>
           citas.map(cita => this.mapearCita(cita))
         )
+      );
+  }
+
+  confirmarCita(
+    id: number
+  ): Observable<CitaPrimerContacto> {
+
+    return this.api
+      .put<CitaBackendDTO>(`/citas/${id}/confirmar`, {})
+      .pipe(
+        map(cita => this.mapearCita(cita))
+      );
+  }
+
+  /**
+   * Mueve la MISMA cita a otra fecha/hora. Antes se simulaba cancelando y creando otra,
+   * y si el segundo paso fallaba el quejoso se quedaba sin cita.
+   */
+  reagendarCita(
+    id: number,
+    dto: ReagendarCitaPrimerContacto
+  ): Observable<CitaPrimerContacto> {
+
+    return this.api
+      .put<CitaBackendDTO>(`/citas/${id}/reagendar`, dto)
+      .pipe(
+        map(cita => this.mapearCita(cita))
+      );
+  }
+
+  /** El analista registra que el quejoso canceló (por teléfono, en persona...), con su motivo. */
+  registrarCancelacionQuejoso(
+    id: number,
+    motivo: string
+  ): Observable<CitaPrimerContacto> {
+
+    return this.api
+      .put<CitaBackendDTO>(`/citas/${id}/cancelacion-quejoso`, { motivo })
+      .pipe(
+        map(cita => this.mapearCita(cita))
       );
   }
 
@@ -122,7 +181,15 @@ export class AgendaService {
         cita.estatus
       ),
 
-      fechaCreacion: cita.fechaCreacion
+      fechaCreacion: cita.fechaCreacion,
+      actualizadoPorNombre: cita.actualizadoPorNombre,
+
+      estatusCodigo: cita.estatus?.toUpperCase(),
+      fechaLimiteRespuesta: cita.fechaLimiteRespuesta,
+      fechaRespuestaQuejoso: cita.fechaRespuestaQuejoso,
+      motivoCancelacionQuejoso: cita.motivoCancelacionQuejoso,
+      respuestaRegistradaPor: cita.respuestaRegistradaPor,
+      citaAnteriorId: cita.citaAnteriorId
     };
   }
 
@@ -153,6 +220,15 @@ export class AgendaService {
 
       case 'CANCELADA':
         return 'Cancelada';
+
+      case 'CANCELADA_QUEJOSO':
+        return 'Cancelada por el quejoso';
+
+      case 'SIN_RESPUESTA':
+        return 'Sin respuesta';
+
+      case 'REAGENDADA':
+        return 'Reagendada';
 
       default:
         return estatus;

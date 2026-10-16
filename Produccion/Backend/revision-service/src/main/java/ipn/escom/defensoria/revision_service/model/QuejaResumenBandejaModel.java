@@ -2,22 +2,25 @@ package ipn.escom.defensoria.revision_service.model;
 
 import java.time.LocalDateTime;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
-/** Una fila de la tabla "Panel de Gestión de Recepción" en la Bandeja de Entrada. */
-@Data
-@AllArgsConstructor
-public class QuejaResumenBandejaModel {
-    private String numeroFolio;
-    private LocalDateTime fechaCreacion;
-    private String nombreQuejoso;
-    /** true si tiene al menos una evidencia adjunta Y los datos mínimos del quejoso -- solo
-     * es una señal visual (✓/✗) en la bandeja; la validación real la hace el recepcionista a
-     * mano en "Validación de Requisitos". */
-    private boolean documentacionAparenteCompleta;
-    private String estatus;
-    /** Nombre de quien tiene la queja abierta ahora mismo. Solo tiene valor cuando estatus es
-     * EN_VALIDACION; null si nadie la está viendo todavía. */
-    private String revisandoPorNombre;
+/**
+ * Una fila de la cola de la Bandeja de Entrada.
+ *
+ * @param documentacionAparenteCompleta true si tiene al menos un archivo adjunto y los datos
+ *        mínimos -- solo es una señal visual; la validación real la hace la recepcionista.
+ * @param revisandoPorNombre quién la tiene abierta (solo cuando estatus es EN_VALIDACION)
+ * @param esMia              true si quien consulta es quien la tiene abierta
+ * @param origen             WEB (formulario público) o MANUAL (capturada en ventanilla)
+ * @param rechazadaAntesPor  en una queja CORREGIDA, quién la había regresado al quejoso
+ */
+public record QuejaResumenBandejaModel(
+        String numeroFolio,
+        LocalDateTime fechaCreacion,
+        String nombreQuejoso,
+        String unidadAcademicaClave,
+        boolean documentacionAparenteCompleta,
+        String estatus,
+        String revisandoPorNombre,
+        boolean esMia,
+        String origen,
+        String rechazadaAntesPor) {
 }

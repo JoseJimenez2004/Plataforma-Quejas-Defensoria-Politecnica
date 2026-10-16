@@ -90,9 +90,23 @@ public class ExpedientePrimerContacto {
 
     /*
      * Estado del expediente dentro de Primer Contacto.
+     * Catálogo en EstatusExpediente (mismos nombres que el diagrama de estados).
      */
     @Column(name = "estatus", nullable = false, length = 40)
     private String estatus;
+
+    /*
+     * Momento y analista que abrió el expediente por primera vez
+     * (TURNADA -> EN_ANALISIS, CU-PC-03).
+     */
+    @Column(name = "fecha_inicio_analisis")
+    private LocalDateTime fechaInicioAnalisis;
+
+    @Column(name = "analista_analisis_id")
+    private Long analistaAnalisisId;
+
+    @Column(name = "analista_analisis_nombre", length = 150)
+    private String analistaAnalisisNombre;
 
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;

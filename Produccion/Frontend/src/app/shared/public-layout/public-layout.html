@@ -33,7 +33,11 @@
       <a routerLink="/">Promoción y Formación</a>
       <a routerLink="/">Contacto</a>
     </div>
-    <a routerLink="/portal/login" class="nav-login">Iniciar sesión</a>
+    @if (haySesion) {
+      <a routerLink="/panel" class="nav-login">Mi panel</a>
+    } @else {
+      <a routerLink="/portal/login" class="nav-login">Iniciar sesión</a>
+    }
   </nav>
 </header>
 
@@ -79,4 +83,6 @@
   </div>
 </footer>
 
-<app-chatbot-widget />
+@defer (on idle) {
+  <app-chatbot-widget />
+}

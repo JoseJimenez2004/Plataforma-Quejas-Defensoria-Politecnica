@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface AcuerdoConclusionRepository extends JpaRepository<AcuerdoConclusion, Long> {
     Optional<AcuerdoConclusion> findByExpedienteId(Long expedienteId);
+
+    Optional<AcuerdoConclusion> findByTokenRespuesta(String tokenRespuesta);
 }

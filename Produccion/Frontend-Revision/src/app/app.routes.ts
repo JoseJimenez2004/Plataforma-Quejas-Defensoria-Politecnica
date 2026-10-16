@@ -30,7 +30,8 @@ export const routes: Routes = [
       },
       {
         path: 'registro-manual',
-        loadComponent: () => import('./pages/registro-manual/registro-manual').then((m) => m.RegistroManual),
+        // Registro manual = el mismo formulario del portal público + datos de ventanilla (2026-10-16).
+        loadComponent: () => import('./pages/registro-ventanilla/registro-ventanilla').then((m) => m.RegistroVentanilla),
       },
       {
         path: 'historial',

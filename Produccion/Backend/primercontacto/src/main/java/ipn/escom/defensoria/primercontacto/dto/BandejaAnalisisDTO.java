@@ -29,4 +29,11 @@ public class BandejaAnalisisDTO {
     private String prioridad;
     private String estatus;
     private String fechaRecepcion;
+
+    /*
+     * Indicador aparte, NO un estado: el expediente tiene una cita
+     * programada o confirmada. Sustituye al pseudo-estado CON_CITA,
+     * que tapaba el estatus real y el dashboard calculaba distinto.
+     */
+    private boolean tieneCitaActiva;
 }

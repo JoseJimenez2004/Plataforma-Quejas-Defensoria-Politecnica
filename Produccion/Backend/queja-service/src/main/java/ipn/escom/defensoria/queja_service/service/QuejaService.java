@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import ipn.escom.defensoria.queja_service.entity.Queja;
 import ipn.escom.defensoria.queja_service.entity.QuejaEvidencia;
 import ipn.escom.defensoria.queja_service.entity.QuejaTutor;
 import ipn.escom.defensoria.queja_service.repository.QuejaEvidenciaRepository;
+import ipn.escom.defensoria.queja_service.repository.CuentaQuejosoRepository;
 import ipn.escom.defensoria.queja_service.repository.QuejaRepository;
 import ipn.escom.defensoria.queja_service.validacion.ReglasQueja;
 import ipn.escom.defensoria.queja_service.validacion.ValidacionException;
@@ -52,15 +54,18 @@ public class QuejaService {
     private final QuejaEvidenciaRepository quejaEvidenciaRepository;
     private final NotificacionClienteService notificacionClienteService;
     private final ValidadorQuejaPublica validadorQuejaPublica;
+    private final CuentaQuejosoRepository cuentaQuejosoRepository;
 
     public QuejaService(QuejaRepository quejaRepository,
                         QuejaEvidenciaRepository quejaEvidenciaRepository,
                         NotificacionClienteService notificacionClienteService,
-                        ValidadorQuejaPublica validadorQuejaPublica) {
+                        ValidadorQuejaPublica validadorQuejaPublica,
+                        CuentaQuejosoRepository cuentaQuejosoRepository) {
         this.quejaRepository = quejaRepository;
         this.quejaEvidenciaRepository = quejaEvidenciaRepository;
         this.notificacionClienteService = notificacionClienteService;
         this.validadorQuejaPublica = validadorQuejaPublica;
+        this.cuentaQuejosoRepository = cuentaQuejosoRepository;
     }
 
     public boolean validarFolioYCorreo(String folio, String correo) {
@@ -322,12 +327,38 @@ public class QuejaService {
         queja.setNombreDenunciado(nombreDenunciado);
         queja.setApellido1Denunciado(apellido1Denunciado);
         queja.setOrigenRegistro(ORIGEN_AUTENTICADO);
+        completarDatosQuejoso(queja, correo);
 
         agregarEvidencias(queja, archivos);
 
         Queja guardada = quejaRepository.save(queja);
         notificacionClienteService.notificarQuejaCreada(guardada.getCorreoInstitucional(), guardada.getNumeroFolio());
         return guardada;
+    }
+
+    /**
+     * Con sesión solo llega el correo del JWT. La cuenta del quejoso nace de su primera queja
+     * (formulario público), que sí pide nombre, apellidos, fecha de nacimiento e
+     * identificación; la tabla usuarios solo guarda nombre y boleta. Por eso se copian de su
+     * queja anterior más reciente y, si no hay, de la cuenta. Sin ninguna, se guarda igual.
+     */
+    private void completarDatosQuejoso(Queja queja, String correo) {
+        Optional<Queja> anterior = quejaRepository
+                .findFirstByCorreoInstitucionalIgnoreCaseAndNombreQuejosoIsNotNullOrderByFechaCreacionDesc(correo);
+        if (anterior.isPresent()) {
+            Queja q = anterior.get();
+            queja.setNombreQuejoso(q.getNombreQuejoso());
+            queja.setApellido1Quejoso(q.getApellido1Quejoso());
+            queja.setApellido2Quejoso(q.getApellido2Quejoso());
+            queja.setFechaNacimientoQuejoso(q.getFechaNacimientoQuejoso());
+            queja.setTipoIdentificacionQuejoso(q.getTipoIdentificacionQuejoso());
+            queja.setNumeroIdentificacionQuejoso(q.getNumeroIdentificacionQuejoso());
+            return;
+        }
+        cuentaQuejosoRepository.findFirstByCorreoInstitucionalIgnoreCase(correo).ifPresent(cuenta -> {
+            queja.setNombreQuejoso(cuenta.getNombre());
+            queja.setNumeroIdentificacionQuejoso(cuenta.getBoleta());
+        });
     }
 
     /**

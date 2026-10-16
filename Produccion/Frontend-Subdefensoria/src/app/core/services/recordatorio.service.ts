@@ -10,4 +10,8 @@ export class RecordatorioService {
   generarRecordatorio(payload: GenerarRecordatorioPayload): Observable<Recordatorio> {
     return this.api.post<Recordatorio>('/recordatorios', payload);
   }
+
+  porOficio(oficioId: number): Observable<Recordatorio[]> {
+    return this.api.get<Recordatorio[]>(`/recordatorios/oficio/${oficioId}`);
+  }
 }

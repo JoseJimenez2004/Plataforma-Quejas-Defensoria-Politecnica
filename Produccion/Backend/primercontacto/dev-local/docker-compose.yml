@@ -1,0 +1,29 @@
+# Base PostgreSQL LOCAL para desarrollar Primer Contacto sin tocar la base del servidor.
+#
+#   docker compose -f dev-local/docker-compose.yml up -d        (desde Backend/primercontacto)
+#   docker compose -f dev-local/docker-compose.yml down -v      (borra la base y la recrea limpia)
+#
+# Los scripts de init/ solo corren la PRIMERA vez que se crea el volumen: esquema de
+# defensoria_db (01) + datos de prueba (02). Puerto 5433 para no chocar con una Postgres
+# que ya tengas instalada en 5432.
+#
+# Variables de entorno que espera el backend (ver dev-local/variables-entorno.ps1):
+#   DB_URL=jdbc:postgresql://localhost:5433/defensoria_db
+#   DB_USERNAME=postgres
+#   DB_PASSWORD=defensoria_local
+services:
+  defensoria-db-local:
+    image: postgres:16
+    container_name: defensoria-db-local
+    environment:
+      POSTGRES_DB: defensoria_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: defensoria_local
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d:ro
+      - defensoria-db-local-data:/var/lib/postgresql/data
+
+volumes:
+  defensoria-db-local-data:

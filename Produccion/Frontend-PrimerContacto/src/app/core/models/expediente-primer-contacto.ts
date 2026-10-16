@@ -1,3 +1,15 @@
+/** Datos de la queja original (lo que capturó el quejoso). Solo lectura. */
+export interface DatosQueja {
+  fechaRegistro?: string;
+  asunto?: string;
+  fechaHechos?: string;
+  unidadAcademicaClave?: string;
+  tipoIdentificacionQuejoso?: string;
+  numeroIdentificacionQuejoso?: string;
+  fechaNacimientoQuejoso?: string;
+  denunciado?: string;
+}
+
 export interface ExpedientePrimerContacto {
   expedienteId: number;
   folio: string;
@@ -10,6 +22,9 @@ export interface ExpedientePrimerContacto {
   estatus: string;
   prioridad: string;
 
+  fechaInicioAnalisis?: string;
+  analistaAnalisisNombre?: string;
+
   quejoso: {
     id?: number;
     nombreCompleto: string;
@@ -18,6 +33,8 @@ export interface ExpedientePrimerContacto {
     unidadAcademica: string;
     tipoUsuario: string;
   };
+
+  datosQueja?: DatosQueja;
 
   evidencias?: {
     id: number;

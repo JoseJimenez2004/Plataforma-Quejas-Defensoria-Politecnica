@@ -1,0 +1,95 @@
+.contenedor {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.card {
+  width: 100%;
+  max-width: 480px;
+}
+
+h2 {
+  text-align: center;
+}
+
+.subtitulo {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+  margin: 0 0 20px;
+  padding: 16px;
+  background: var(--gris-fondo);
+  border-radius: 6px;
+
+  dt {
+    font-weight: 600;
+    color: var(--texto-suave);
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.capitalizar::first-letter {
+  text-transform: uppercase;
+}
+
+.plazo {
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  button {
+    width: 100%;
+  }
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+}
+
+.contador {
+  display: block;
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--texto-suave);
+}
+
+.resultado {
+  padding: 16px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+
+  &.ok {
+    background: #e8f5e9;
+  }
+
+  &.aviso {
+    background: var(--guinda-suave);
+  }
+}
+
+.volver {
+  display: block;
+  margin-top: 16px;
+  font-size: 0.85rem;
+  text-align: center;
+  text-decoration: none;
+}

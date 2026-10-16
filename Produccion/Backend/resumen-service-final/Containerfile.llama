@@ -1,0 +1,22 @@
+FROM debian:bookworm-slim AS builder
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git cmake build-essential ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+RUN git clone --depth 1 https://github.com/ggml-org/llama.cpp.git /llama.cpp
+WORKDIR /llama.cpp
+RUN cmake -B build \
+    -DGGML_NATIVE=OFF \
+    -DGGML_AVX=ON \
+    -DGGML_AVX2=ON \
+    -DGGML_FMA=ON \
+    -DGGML_CUDA=OFF \
+    -DLLAMA_CURL=OFF \
+    -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build --config Release -j 8
+FROM debian:bookworm-slim
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libgomp1 libstdc++6 && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=builder /llama.cpp/build/bin/ /usr/local/bin/
+ENV LD_LIBRARY_PATH=/usr/local/bin
+ENTRYPOINT ["llama-cli"]

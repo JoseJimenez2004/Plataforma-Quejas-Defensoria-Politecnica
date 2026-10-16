@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -11,8 +11,11 @@ import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
-import { ExpedienteBandeja } from '../../core/models/expediente-bandeja';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subject, Subscription, debounceTime, switchMap } from 'rxjs';
+import { ExpedienteBandeja, FiltroBandeja } from '../../core/models/expediente-bandeja';
 import { BandejaService } from '../../core/services/bandeja.service';
+import { claseEstatus, etiquetaEstatus } from '../../core/utils/estatus-expediente';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 type CampoFacetado = 'prioridades' | 'temas' | 'escuelas' | 'estatus';
@@ -23,8 +26,12 @@ interface FiltrosBandeja {
   prioridades: string[];
   temas: string[];
   escuelas: string[];
+  /** Códigos del backend (EN_ANALISIS...), no etiquetas. */
   estatus: string[];
 }
+
+/** Orden del diagrama de estados, para listar la faceta de estatus. */
+const ORDEN_ESTATUS = ['TURNADA', 'EN_ANALISIS', 'PROCEDENTE', 'IMPROCEDENTE', 'REMITIDA'];
 
 @Component({
   selector: 'app-bandeja-analisis',
@@ -40,12 +47,13 @@ interface FiltrosBandeja {
     MatButtonModule,
     MatIconModule,
     MatChipsModule,
+    MatTooltipModule,
     MatSnackBarModule
   ],
   templateUrl: './bandeja-analisis.html',
   styleUrl: './bandeja-analisis.css'
 })
-export class BandejaAnalisis implements OnInit {
+export class BandejaAnalisis implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
@@ -67,28 +75,16 @@ export class BandejaAnalisis implements OnInit {
 
   expedientes = new MatTableDataSource<ExpedienteBandeja>([]);
 
-  // Copia sin filtrar tal como llega del backend; los filtros siempre
-  // se recalculan a partir de esta lista, nunca se pierde el original.
+  /*
+   * Lista completa, solo para armar las opciones de cada faceta y sus
+   * conteos. Los RESULTADOS los filtra el backend (CU-PC-02).
+   */
   private expedientesOriginal: ExpedienteBandeja[] = [];
 
   prioridades: string[] = ['Alta', 'Media', 'Baja'];
 
-  temas: string[] = ['Género', 'Académico', 'Inclusión'];
-
-  // TODO: catálogo temporal mientras se define el catálogo oficial de
-  // unidades académicas del IPN. Reemplazar cuando exista el servicio real.
-  escuelas: string[] = [
-    'ESCOM',
-    'ESIME Zacatenco',
-    'ESIME Culhuacán',
-    'ESIQIE',
-    'ESFM',
-    'ENCB',
-    'UPIICSA',
-    'ESCA Santo Tomás',
-    'ESCA Tepepan',
-    'ESIA Zacatenco'
-  ];
+  readonly etiquetaEstatus = etiquetaEstatus;
+  readonly claseEstatus = claseEstatus;
 
   filtros: FiltrosBandeja = {
     texto: '',
@@ -99,15 +95,37 @@ export class BandejaAnalisis implements OnInit {
     estatus: []
   };
 
+  private readonly cambios$ = new Subject<void>();
+  private suscripcion?: Subscription;
+
   ngOnInit(): void {
+    this.suscripcion = this.cambios$
+      .pipe(
+        debounceTime(250),
+        switchMap(() => this.bandejaService.filtrar(this.construirFiltro()))
+      )
+      .subscribe({
+        next: (resultado) => {
+          this.expedientes.data = resultado;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.snackBar.open('No fue posible aplicar los filtros.', 'Cerrar', { duration: 3000 });
+        }
+      });
+
     this.cargarBandeja();
+  }
+
+  ngOnDestroy(): void {
+    this.suscripcion?.unsubscribe();
   }
 
   cargarBandeja(): void {
     this.bandejaService.obtenerBandeja().subscribe({
       next: (expedientes) => {
         this.expedientesOriginal = expedientes;
-        this.aplicarFiltros();
+        this.expedientes.data = expedientes;
         this.cdr.detectChanges();
       },
       error: () => {
@@ -123,11 +141,20 @@ export class BandejaAnalisis implements OnInit {
     });
   }
 
-  // Los estatus no son un catálogo fijo definido en el frontend (vienen
-  // del backend y pueden crecer), así que la lista de opciones del filtro
-  // se arma a partir de lo que realmente llegó, no de una lista inventada.
+  // Las opciones salen de los expedientes que realmente llegaron, no de
+  // catálogos escritos a mano (antes temas y escuelas eran listas fijas).
+  get temas(): string[] {
+    return this.valoresDe('tema');
+  }
+
+  get escuelas(): string[] {
+    return this.valoresDe('unidadAcademica');
+  }
+
   get estatusDisponibles(): string[] {
-    return Array.from(new Set(this.expedientesOriginal.map(e => e.estatus))).sort();
+    return Array.from(new Set(this.expedientesOriginal.map(e => e.estatusCodigo)))
+      .filter(Boolean)
+      .sort((a, b) => ORDEN_ESTATUS.indexOf(a) - ORDEN_ESTATUS.indexOf(b));
   }
 
   get totalFiltrosActivos(): number {
@@ -161,45 +188,7 @@ export class BandejaAnalisis implements OnInit {
   }
 
   aplicarFiltros(): void {
-    const texto = this.filtros.texto.trim().toLowerCase();
-
-    let resultado = this.expedientesOriginal.filter(expediente => {
-      const coincideTexto =
-        !texto ||
-        expediente.folio.toLowerCase().includes(texto) ||
-        expediente.nombreQuejoso.toLowerCase().includes(texto);
-
-      const coincidePrioridad =
-        this.filtros.prioridades.length === 0 ||
-        this.filtros.prioridades.includes(expediente.prioridad);
-
-      const coincideTema =
-        this.filtros.temas.length === 0 || this.filtros.temas.includes(expediente.tema);
-
-      const coincideEscuela =
-        this.filtros.escuelas.length === 0 ||
-        this.filtros.escuelas.includes(expediente.unidadAcademica);
-
-      const coincideEstatus =
-        this.filtros.estatus.length === 0 || this.filtros.estatus.includes(expediente.estatus);
-
-      return (
-        coincideTexto &&
-        coincidePrioridad &&
-        coincideTema &&
-        coincideEscuela &&
-        coincideEstatus
-      );
-    });
-
-    resultado = resultado.sort((a, b) => {
-      const fechaA = this.convertirFechaATimestamp(a.fechaRecepcion);
-      const fechaB = this.convertirFechaATimestamp(b.fechaRecepcion);
-
-      return this.filtros.orden === 'recientes' ? fechaB - fechaA : fechaA - fechaB;
-    });
-
-    this.expedientes.data = resultado;
+    this.cambios$.next();
   }
 
   limpiarFiltros(): void {
@@ -215,17 +204,26 @@ export class BandejaAnalisis implements OnInit {
     this.aplicarFiltros();
   }
 
-  private convertirFechaATimestamp(fecha: string): number {
-    if (!fecha) return 0;
-
-    const [dia, mes, anio] = fecha.split('/');
-    return new Date(Number(anio), Number(mes) - 1, Number(dia)).getTime();
-  }
-
   analizar(expediente: ExpedienteBandeja): void {
     this.router.navigate([
       '/expediente',
       expediente.folio
     ]);
+  }
+
+  private construirFiltro(): FiltroBandeja {
+    return {
+      texto: this.filtros.texto.trim() || undefined,
+      prioridades: this.filtros.prioridades.map(p => p.toUpperCase()),
+      estatusLista: this.filtros.estatus,
+      unidadesAcademicas: this.filtros.escuelas,
+      temas: this.filtros.temas,
+      orden: this.filtros.orden
+    };
+  }
+
+  private valoresDe(campo: 'tema' | 'unidadAcademica'): string[] {
+    return Array.from(new Set(this.expedientesOriginal.map(e => e[campo]).filter(Boolean)))
+      .sort((a, b) => a.localeCompare(b, 'es'));
   }
 }

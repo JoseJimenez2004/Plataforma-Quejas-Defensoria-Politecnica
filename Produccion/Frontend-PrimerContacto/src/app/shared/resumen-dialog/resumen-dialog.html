@@ -1,0 +1,81 @@
+<h2 mat-dialog-title>Resumen de la queja</h2>
+
+<mat-dialog-content>
+  <p class="encabezado">
+    <strong>{{ data.folio }}</strong>
+    @if (data.asunto) {
+      · {{ data.asunto }}
+    }
+  </p>
+
+  @if (!simulado.resumen) {
+    <p class="vacio">La queja no tiene narrativa para resumir.</p>
+  } @else if (cargando) {
+    <div class="generando">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <p>
+        <strong>Generando el resumen con el modelo…</strong>
+        Puede tardar hasta 2 minutos. Si cierras este cuadro, el resumen se seguirá generando y
+        aparecerá de inmediato la próxima vez.
+      </p>
+    </div>
+  } @else if (modelo) {
+    <div class="simulado revision">
+      <mat-icon>rate_review</mat-icon>
+      <span>
+        <strong>Borrador del modelo.</strong> Es una sugerencia para apoyar el análisis: revísalo
+        contra la narrativa antes de usarlo.
+      </span>
+    </div>
+
+    <section>
+      <span class="etiqueta">Resumen propuesto</span>
+      <p class="resumen">{{ modelo.resumen }}</p>
+    </section>
+
+    <section>
+      <span class="etiqueta">Fragmentos clave de la queja</span>
+      @if (modelo.fragmentos.length === 0) {
+        <p class="vacio">El modelo no devolvió fragmentos.</p>
+      } @else {
+        <ul class="frases">
+          @for (frase of modelo.fragmentos; track $index) {
+            <li><mat-icon>format_quote</mat-icon><span>{{ frase }}</span></li>
+          }
+        </ul>
+      }
+    </section>
+  } @else {
+    @if (sinModelo) {
+      <div class="simulado">
+        <mat-icon>science</mat-icon>
+        <span>
+          <strong>Simulado.</strong> El modelo de resumen no está disponible en este momento;
+          este resumen es una aproximación calculada en el navegador.
+        </span>
+      </div>
+    }
+
+    <section>
+      <span class="etiqueta">Resumen propuesto</span>
+      <p class="resumen">{{ simulado.resumen }}</p>
+    </section>
+
+    <section>
+      <span class="etiqueta">Frases de impacto</span>
+      @if (simulado.frasesImpacto.length === 0) {
+        <p class="vacio">No se identificaron frases de impacto en la narrativa.</p>
+      } @else {
+        <ul class="frases">
+          @for (frase of simulado.frasesImpacto; track $index) {
+            <li><mat-icon>format_quote</mat-icon><span>{{ frase }}</span></li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-flat-button class="primary-btn" mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

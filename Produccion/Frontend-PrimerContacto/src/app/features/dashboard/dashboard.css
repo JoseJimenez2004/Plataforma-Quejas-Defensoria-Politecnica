@@ -13,14 +13,14 @@
 
 .page-header h2 {
   margin: 0;
-  color: #6a1238; /* Guinda Institucional */
+  color: var(--guinda);
   font-size: 28px;
   font-weight: 800;
 }
 
 .page-header p.date-label {
   margin: var(--space-1) 0 0;
-  color: #6b7280;
+  color: var(--texto-suave);
   font-size: var(--font-size-base);
 }
 
@@ -46,7 +46,7 @@
 }
 
 .stat-card mat-icon {
-  color: #6a1238;
+  color: var(--guinda);
   font-size: 28px;
   width: 28px;
   height: 28px;
@@ -58,13 +58,13 @@
 }
 
 .stat-card span {
-  color: #6b7280;
+  color: var(--texto-suave);
   font-size: var(--font-size-sm);
   font-weight: 700;
 }
 
 .stat-card strong {
-  color: #111827;
+  color: var(--negro-inst);
   font-size: var(--font-size-2xl);
   font-weight: 900;
   line-height: var(--line-height-tight);
@@ -97,12 +97,12 @@
   margin: 0;
   font-size: var(--font-size-lg);
   font-weight: 900;
-  color: #111827;
+  color: var(--negro-inst);
 }
 
 .card-header-custom p {
   margin: var(--space-1) 0 0;
-  color: #6b7280;
+  color: var(--texto-suave);
   font-size: var(--font-size-sm);
 }
 
@@ -152,14 +152,14 @@
 .dashboard-list-item strong,
 .activity-title strong,
 .appointment-item strong {
-  color: #111827;
+  color: var(--negro-inst);
   font-weight: 800;
 }
 
 .dashboard-list-item span,
 .activity-item span,
 .appointment-item span {
-  color: #374151;
+  color: var(--texto);
   font-size: var(--font-size-sm);
 }
 
@@ -169,13 +169,13 @@
 }
 
 .appointment-item .hour {
-  color: #6a1238;
+  color: var(--guinda);
   font-weight: 800;
   font-size: var(--font-size-base);
 }
 
 .activity-icon {
-  color: #6a1238;
+  color: var(--guinda);
   margin-top: var(--space-1);
 }
 
@@ -187,7 +187,7 @@
 
 /* ---- Botones Homologados (Radio de 8px) ---- */
 .primary-btn {
-  background: #b91c1c !important; /* Rojo de acción unificado */
+  background: var(--guinda) !important;
   color: white !important;
   font-weight: 700;
   border-radius: 8px !important;
@@ -196,8 +196,8 @@
 }
 
 .outline-btn {
-  border-color: #6b7280 !important;
-  color: #374151 !important;
+  border-color: var(--texto-suave) !important;
+  color: var(--texto) !important;
   font-weight: 700;
   border-radius: 8px !important;
 }
@@ -208,18 +208,18 @@ mat-chip {
 }
 
 .priority-high {
-  background: #fee2e2 !important;
-  color: #991b1b !important;
+  background: #ffebee !important;
+  color: var(--peligro) !important;
 }
 
 .priority-medium {
-  background: #fef3c7 !important;
-  color: #92400e !important;
+  background: #fdf6e3 !important;
+  color: var(--advertencia) !important;
 }
 
 .status-chip-default {
-  background: #e5e7eb !important;
-  color: #374151 !important;
+  background: var(--borde) !important;
+  color: var(--texto) !important;
 }
 
 /* ---- Estados de Interacción (Hover y Clics) ---- */

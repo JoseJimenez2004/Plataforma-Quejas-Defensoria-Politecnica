@@ -1,8 +1,8 @@
 .toast-contenedor {
   position: fixed;
-  top: 16px;
+  top: 84px; /* debajo del encabezado fijo (72px) */
   right: 16px;
-  z-index: 500;
+  z-index: 1100;
   display: flex;
   flex-direction: column;
   gap: 10px;

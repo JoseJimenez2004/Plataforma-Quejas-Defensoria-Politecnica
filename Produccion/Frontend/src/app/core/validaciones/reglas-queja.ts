@@ -60,6 +60,8 @@ export function esFechaValida(iso: string | null | undefined): boolean {
 
 // ---- Descripción --------------------------------------------------------------------------
 export const DESCRIPCION_LONGITUD_MINIMA = 20;
+/** La descripción de la QUEJA no tiene máximo (decisión 2026-10-14). Este límite solo lo usa
+ * la respuesta del denunciado, que sigue validándose igual en denunciado-service. */
 export const DESCRIPCION_LONGITUD_MAXIMA = 4000;
 
 // ---- Identificación oficial ---------------------------------------------------------------

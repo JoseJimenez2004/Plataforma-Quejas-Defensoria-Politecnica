@@ -1,0 +1,67 @@
+<h2 mat-dialog-title>Respuesta del denunciado</h2>
+
+<mat-dialog-content>
+  <p class="encabezado">Queja <strong>{{ data.folioQueja }}</strong></p>
+
+  @for (r of data.respuestas; track r.id; let primera = $first) {
+    <article class="respuesta" [class.anterior]="!primera">
+      @if (!primera) {
+        <p class="etiqueta-anterior">Respuesta anterior</p>
+      }
+
+      <div class="detail-grid">
+        <div>
+          <span>Folio de la respuesta</span>
+          <strong>{{ r.folioRespuesta }}</strong>
+        </div>
+        <div>
+          <span>Fecha</span>
+          <strong>{{ r.fechaRegistro | date: 'dd/MM/yyyy HH:mm' }}</strong>
+        </div>
+        <div>
+          <span>Nombre</span>
+          <strong>{{ nombreCompleto(r) }}</strong>
+        </div>
+        <div>
+          <span>Identificación</span>
+          <strong>{{ identificacion(r) }}</strong>
+        </div>
+        <div>
+          <span>Unidad de procedencia</span>
+          <strong>{{ r.unidadProcedenciaClave }}</strong>
+        </div>
+      </div>
+
+      <div class="section">
+        <span>Su versión de los hechos</span>
+        <p class="hechos">{{ r.descripcionHechos }}</p>
+      </div>
+
+      <div class="section">
+        <span>Archivos ({{ r.archivos.length }})</span>
+        @if (r.archivos.length === 0) {
+          <p class="vacio">No adjuntó archivos.</p>
+        } @else {
+          <ul class="archivos">
+            @for (a of r.archivos; track a.id) {
+              <li>
+                <mat-icon>{{ a.tipo === 'IDENTIFICACION' ? 'badge' : 'attach_file' }}</mat-icon>
+                <span class="archivo-nombre">
+                  <strong>{{ a.nombreArchivo }}</strong>
+                  <small>{{ etiquetaArchivo(a) }} · {{ tamanio(a.tamanioBytes) }}</small>
+                </span>
+                <button mat-button (click)="abrir(a)">
+                  <mat-icon>open_in_new</mat-icon> Abrir
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </article>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-flat-button class="primary-btn" mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

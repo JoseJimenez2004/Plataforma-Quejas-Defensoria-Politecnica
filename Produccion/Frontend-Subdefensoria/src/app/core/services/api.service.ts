@@ -15,6 +15,11 @@ export class ApiService {
     return this.http.get<T>(`${this.apiUrl}${endpoint}`);
   }
 
+  /** Archivos (PDF): la respuesta llega como Blob. */
+  getBlob(endpoint: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}${endpoint}`, { responseType: 'blob' });
+  }
+
   post<T>(endpoint: string, body: unknown): Observable<T> {
     return this.http.post<T>(`${this.apiUrl}${endpoint}`, body);
   }

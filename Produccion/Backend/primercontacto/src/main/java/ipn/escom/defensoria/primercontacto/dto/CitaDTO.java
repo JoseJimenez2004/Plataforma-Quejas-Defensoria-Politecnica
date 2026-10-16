@@ -22,4 +22,20 @@ public class CitaDTO {
     private String motivo;
     private String estatus;
     private String fechaCreacion;
+
+    /* Último analista que confirmó, reagendó o canceló. */
+    private String actualizadoPorNombre;
+    private String fechaActualizacion;
+
+    /* Folio de la queja (FOL-...), el que conoce el quejoso. */
+    private String folioQueja;
+
+    /* Respuesta del quejoso a la cita. */
+    private String fechaLimiteRespuesta;
+    private String fechaRespuestaQuejoso;
+    private String motivoCancelacionQuejoso;
+    private String respuestaRegistradaPor;
+
+    /* Si sustituye a una cita reagendada, el id de la anterior. */
+    private Long citaAnteriorId;
 }

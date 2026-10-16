@@ -8,6 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ExpedienteResumenService } from '../../core/services/expediente-resumen.service';
+import { etiquetaEstatus } from '../../core/models/estatus-expediente';
 import { AlertaService } from '../../core/services/alerta.service';
 import { ExpedienteResumen } from '../../core/models/expediente-resumen';
 import { AlertaVencimiento } from '../../core/models/alerta-vencimiento';
@@ -56,12 +57,14 @@ export class Dashboard implements OnInit {
     });
   }
 
+  readonly etiquetaEstatus = etiquetaEstatus;
+
   get totalPorRedactar(): number {
-    return this.todos.filter(e => e.estatus === 'RECIBIDO' || (e.estatus === 'EN_ESPERA_OFICIO' && !e.oficioIdVigente)).length;
+    return this.todos.filter(e => !!e.siguienteFase).length;
   }
 
   get totalEnCurso(): number {
-    return this.todos.filter(e => e.estatus === 'EN_INVESTIGACION' || e.estatus === 'EN_ESPERA_OFICIO').length;
+    return this.todos.filter(e => e.estatus !== 'CONCLUIDO' && !e.siguienteFase).length;
   }
 
   get totalConcluidos(): number {
@@ -80,10 +83,10 @@ export class Dashboard implements OnInit {
   aplicarFiltro(): void {
     switch (this.indicadorSeleccionado) {
       case 'POR_REDACTAR':
-        this.listaFiltrada = this.todos.filter(e => e.estatus === 'RECIBIDO' || (e.estatus === 'EN_ESPERA_OFICIO' && !e.oficioIdVigente));
+        this.listaFiltrada = this.todos.filter(e => !!e.siguienteFase);
         break;
       case 'EN_CURSO':
-        this.listaFiltrada = this.todos.filter(e => e.estatus === 'EN_INVESTIGACION' || e.estatus === 'EN_ESPERA_OFICIO');
+        this.listaFiltrada = this.todos.filter(e => e.estatus !== 'CONCLUIDO' && !e.siguienteFase);
         break;
       case 'CONCLUIDOS':
         this.listaFiltrada = this.todos.filter(e => e.estatus === 'CONCLUIDO');

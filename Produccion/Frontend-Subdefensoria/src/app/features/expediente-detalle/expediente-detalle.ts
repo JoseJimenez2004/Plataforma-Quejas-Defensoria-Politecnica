@@ -15,16 +15,33 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ExpedienteService } from '../../core/services/expediente.service';
 import { OficioService } from '../../core/services/oficio.service';
 import { AcuerdoConclusionService } from '../../core/services/acuerdo-conclusion.service';
+import { RecordatorioService } from '../../core/services/recordatorio.service';
+import { DocumentoService, abrirBlob } from '../../core/services/documento.service';
+import { Recordatorio } from '../../core/models/recordatorio';
+import { RespuestaExterna } from '../../core/models/respuesta-externa';
+import { RespuestaExternaService } from '../../core/services/respuesta-externa.service';
+import { Observable } from 'rxjs';
 import { ExpedienteInvestigacion } from '../../core/models/expediente-investigacion';
 import { Oficio } from '../../core/models/oficio';
 import { AcuerdoConclusion } from '../../core/models/acuerdo-conclusion';
+import { ETIQUETAS_ESTATUS, PASOS_EXPEDIENTE, etiquetaEstatus } from '../../core/models/estatus-expediente';
 import { RecordatorioDialog, RecordatorioDialogData } from '../../shared/recordatorio-dialog/recordatorio-dialog';
+import { RedactarOficioDialog, RedactarOficioDialogData } from '../../shared/redactar-oficio-dialog/redactar-oficio-dialog';
 import { RespuestaExternaDialog, RespuestaExternaDialogData } from '../../shared/respuesta-externa-dialog/respuesta-externa-dialog';
 
-// El acuerdo ya no cierra el expediente: pasa por PENDIENTE_CONCLUSION mientras el quejoso
-// decide si lo acepta. Si lo rechaza, el expediente regresa a EN_INVESTIGACION.
-const PASOS = ['RECIBIDO', 'EN_INVESTIGACION', 'EN_ESPERA_OFICIO', 'ELABORO_ACUERDO',
-               'PENDIENTE_CONCLUSION', 'CONCLUIDO'];
+/** Íconos de la barra de pasos (mismo orden que PASOS_EXPEDIENTE). */
+const ICONOS_PASO: Record<string, string> = {
+  RECIBIDO: 'inbox',
+  EN_INVESTIGACION: 'search',
+  EN_ESPERA_OFICIO: 'hourglass_top',
+  ELABORO_ACUERDO: 'edit_document',
+  PENDIENTE_CONCILIACION: 'handshake',
+  PENDIENTE_CONCLUSION: 'gavel',
+  CONCLUIDO: 'task_alt'
+};
+
+/** Estatus en los que ya existe un acuerdo que mostrar. */
+const CON_ACUERDO = ['EN_INVESTIGACION', 'ELABORO_ACUERDO', 'PENDIENTE_CONCILIACION', 'PENDIENTE_CONCLUSION', 'CONCLUIDO'];
 
 @Component({
   selector: 'app-expediente-detalle',
@@ -49,17 +66,28 @@ export class ExpedienteDetalle implements OnInit {
   folio = '';
   expediente?: ExpedienteInvestigacion;
   oficios: Oficio[] = [];
+  /** Recordatorios enviados de cada oficio, por id de oficio. */
+  recordatorios: Record<number, Recordatorio[]> = {};
+  /** Respuesta registrada de cada oficio (con su archivo, si lo tiene), por id de oficio. */
+  respuestas: Record<number, RespuestaExterna | undefined> = {};
   acuerdo: AcuerdoConclusion | null = null;
   textoAcuerdo = '';
+  textoConclusion = '';
   guardando = false;
 
-  readonly pasos = PASOS;
+  readonly pasos = PASOS_EXPEDIENTE;
+  readonly etiquetas: Record<string, string> = ETIQUETAS_ESTATUS;
+  readonly iconos = ICONOS_PASO;
+  readonly etiquetaEstatus = etiquetaEstatus;
 
   constructor(
     private route: ActivatedRoute,
     private expedienteService: ExpedienteService,
     private oficioService: OficioService,
     private acuerdoConclusionService: AcuerdoConclusionService,
+    private recordatorioService: RecordatorioService,
+    private documentoService: DocumentoService,
+    private respuestaExternaService: RespuestaExternaService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef
@@ -72,13 +100,17 @@ export class ExpedienteDetalle implements OnInit {
     this.cargarExpediente();
   }
 
+  /**
+   * Abrir el detalle es "iniciar la investigación" (fila 14 del diagrama): un expediente
+   * RECIBIDO pasa a EN_INVESTIGACION; en otro estatus solo se devuelve.
+   */
   cargarExpediente(): void {
-    this.expedienteService.obtenerPorFolio(this.folio).subscribe({
+    this.expedienteService.iniciarInvestigacion(this.folio).subscribe({
       next: (expediente) => {
         this.expediente = expediente;
         this.cargarHistorial();
 
-        if (expediente.estatus === 'ELABORO_ACUERDO' || expediente.estatus === 'CONCLUIDO') {
+        if (CON_ACUERDO.includes(expediente.estatus)) {
           this.cargarAcuerdo(expediente.id);
         } else {
           this.cdr.detectChanges();
@@ -95,6 +127,22 @@ export class ExpedienteDetalle implements OnInit {
     this.oficioService.historialPorFolio(this.folio).subscribe({
       next: (oficios) => {
         this.oficios = oficios;
+        oficios.forEach(o => {
+          this.recordatorioService.porOficio(o.id).subscribe({
+            next: (lista) => {
+              this.recordatorios[o.id] = lista;
+              this.cdr.detectChanges();
+            }
+          });
+          if (o.estatus === 'RESPONDIDO') {
+            this.respuestaExternaService.porOficio(o.id).subscribe({
+              next: (lista) => {
+                this.respuestas[o.id] = lista[0];
+                this.cdr.detectChanges();
+              }
+            });
+          }
+        });
         this.cdr.detectChanges();
       }
     });
@@ -114,7 +162,7 @@ export class ExpedienteDetalle implements OnInit {
   }
 
   pasoIndice(paso: string): number {
-    return this.pasos.indexOf(paso);
+    return (this.pasos as string[]).indexOf(paso);
   }
 
   get pasoActualIndice(): number {
@@ -125,11 +173,119 @@ export class ExpedienteDetalle implements OnInit {
     this.guardarOConcluir(false);
   }
 
-  concluirExpediente(): void {
-    if (!confirm('¿Confirmas que deseas enviar el acuerdo al quejoso? El expediente quedará pendiente de su respuesta: si lo acepta se concluye, si lo rechaza regresa a investigación.')) {
+  enviarAcuerdo(): void {
+    if (!confirm('¿Enviar el acuerdo de conciliación al quejoso? El expediente quedará pendiente de su respuesta: si lo acepta, se elabora el acuerdo de conclusión; si lo rechaza, regresa a investigación.')) {
       return;
     }
     this.guardarOConcluir(true);
+  }
+
+  /** Fila 20: con el acuerdo de conciliación aceptado, el expediente se concluye. */
+  registrarConclusion(): void {
+    if (!this.expediente) return;
+    if (!this.textoConclusion.trim()) {
+      this.snackBar.open('Redacta el acuerdo de conclusión antes de continuar.', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    if (!confirm('¿Registrar el acuerdo de conclusión? El expediente se cerrará definitivamente.')) {
+      return;
+    }
+
+    this.guardando = true;
+    this.acuerdoConclusionService.registrarConclusion(this.expediente.id, this.textoConclusion.trim()).subscribe({
+      next: () => {
+        this.guardando = false;
+        this.snackBar.open('Expediente concluido.', 'Cerrar', { duration: 3000 });
+        this.cargarExpediente();
+      },
+      error: (err) => {
+        this.guardando = false;
+        this.snackBar.open(err?.error?.error ?? 'No fue posible registrar la conclusión.', 'Cerrar', { duration: 4000 });
+      }
+    });
+  }
+
+  /**
+   * Igual que el botón de la bandeja: se puede oficiar mientras el expediente esté en
+   * investigación y no haya un oficio esperando respuesta (el backend lo vuelve a validar).
+   */
+  get puedeSolicitarOficio(): boolean {
+    return this.expediente?.estatus === 'EN_INVESTIGACION'
+      && !this.oficios.some(o => o.estatus === 'EN_ESPERA' || o.estatus === 'VENCIDO');
+  }
+
+  solicitarOficio(): void {
+    if (!this.expediente) return;
+
+    const data: RedactarOficioDialogData = {
+      expedienteId: this.expediente.id,
+      folio: this.expediente.folio,
+      siguienteFase: 'SOLICITUD_INFORMACION',
+      unidadAcademica: this.expediente.unidadAcademica
+    };
+
+    this.dialog.open(RedactarOficioDialog, { width: '560px', data }).afterClosed().subscribe(resultado => {
+      if (resultado) {
+        this.snackBar.open('Oficio generado correctamente.', 'Cerrar', { duration: 3000 });
+        this.cargarExpediente();
+      }
+    });
+  }
+
+  /** El quejoso rechazó el último acuerdo y el expediente volvió a investigación. */
+  get acuerdoRechazado(): boolean {
+    return this.expediente?.estatus === 'EN_INVESTIGACION' && this.acuerdo?.respuestaQuejoso === 'RECHAZADO';
+  }
+
+  // ------------------------------------------------------------------ PDF
+
+  verPdfOficio(o: Oficio): void {
+    this.abrirPdf(this.documentoService.oficio(o.id));
+  }
+
+  verPdfRecordatorio(r: Recordatorio): void {
+    this.abrirPdf(this.documentoService.recordatorio(r.id));
+  }
+
+  verPdfAcuerdoConciliacion(): void {
+    if (this.expediente) this.abrirPdf(this.documentoService.acuerdoConciliacion(this.expediente.id));
+  }
+
+  verPdfAcuerdoConclusion(): void {
+    if (this.expediente) this.abrirPdf(this.documentoService.acuerdoConclusion(this.expediente.id));
+  }
+
+  verArchivoRespuesta(r: RespuestaExterna): void {
+    this.abrirPdf(this.respuestaExternaService.archivo(r.id));
+  }
+
+  /** Adjuntar (o reemplazar) el archivo de una respuesta ya registrada. */
+  adjuntarArchivoRespuesta(r: RespuestaExterna, evento: Event): void {
+    const entrada = evento.target as HTMLInputElement;
+    const archivo = entrada.files?.[0];
+    entrada.value = '';
+    if (!archivo) return;
+    if (archivo.size > 10 * 1024 * 1024) {
+      this.snackBar.open('El archivo excede el tamaño máximo de 10 MB.', 'Cerrar', { duration: 3500 });
+      return;
+    }
+    this.respuestaExternaService.adjuntarArchivo(r.id, archivo).subscribe({
+      next: (actualizada) => {
+        this.respuestas[actualizada.oficioId] = actualizada;
+        this.snackBar.open('Archivo adjuntado.', 'Cerrar', { duration: 3000 });
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.snackBar.open(err?.error?.error ?? 'No fue posible adjuntar el archivo.', 'Cerrar', { duration: 4000 });
+      }
+    });
+  }
+
+  private abrirPdf(peticion: Observable<Blob>): void {
+    peticion.subscribe({
+      next: (blob) => abrirBlob(blob),
+      error: () => this.snackBar.open('No fue posible generar el PDF.', 'Cerrar', { duration: 3000 })
+    });
   }
 
   esOficioActivo(o: Oficio): boolean {

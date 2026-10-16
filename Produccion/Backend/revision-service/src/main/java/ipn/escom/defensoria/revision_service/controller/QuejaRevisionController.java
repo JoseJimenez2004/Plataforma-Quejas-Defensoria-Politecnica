@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import ipn.escom.defensoria.revision_service.entity.Queja;
 import ipn.escom.defensoria.revision_service.entity.QuejaEvidencia;
 import ipn.escom.defensoria.revision_service.model.AntecedenteModel;
+import ipn.escom.defensoria.revision_service.model.CargaAbogadoModel;
 import ipn.escom.defensoria.revision_service.model.QuejaDetalleModel;
 import ipn.escom.defensoria.revision_service.model.RechazarQuejaRequest;
 import ipn.escom.defensoria.revision_service.model.TurnarQuejaRequest;
@@ -51,6 +52,12 @@ public class QuejaRevisionController {
         return ResponseEntity.ok(revisionService.antecedentes(folio));
     }
 
+    @GetMapping("/{folio}/abogados")
+    @Operation(summary = "Abogados con su carga de trabajo y la sugerencia de a quién turnar esta queja")
+    public ResponseEntity<List<CargaAbogadoModel>> abogados(@PathVariable String folio) {
+        return ResponseEntity.ok(revisionService.abogados(folio));
+    }
+
     @GetMapping("/evidencias/{id}")
     @Operation(summary = "Descarga un documento adjunto de la queja")
     public ResponseEntity<byte[]> descargarEvidencia(@PathVariable Long id) {
@@ -62,6 +69,20 @@ public class QuejaRevisionController {
                 .contentType(tipo)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + evidencia.getNombreArchivo() + "\"")
                 .body(evidencia.getContenido());
+    }
+
+    @PostMapping("/{folio}/liberar")
+    @Operation(summary = "Suelta una queja que la recepcionista tenía abierta y la regresa a la cola")
+    public ResponseEntity<Map<String, String>> liberar(@PathVariable String folio, Authentication authentication) {
+        revisionService.liberar(folio, authentication.getName());
+        return ResponseEntity.ok(Map.of("mensaje", "La queja regresó a la bandeja."));
+    }
+
+    @PostMapping("/{folio}/renovar")
+    @Operation(summary = "Mantiene la queja a nombre de la recepcionista mientras la sigue revisando")
+    public ResponseEntity<Map<String, String>> renovar(@PathVariable String folio, Authentication authentication) {
+        revisionService.renovar(folio, authentication.getName());
+        return ResponseEntity.ok(Map.of("mensaje", "ok"));
     }
 
     @PostMapping("/{folio}/rechazar")

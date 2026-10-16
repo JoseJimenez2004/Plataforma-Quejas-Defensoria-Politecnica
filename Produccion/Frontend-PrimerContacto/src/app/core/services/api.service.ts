@@ -15,6 +15,14 @@ export class ApiService {
     return this.http.get<T>(`${this.apiUrl}${endpoint}`);
   }
 
+  /**
+   * Archivos (evidencias, oficio PDF). Se piden por HttpClient y no con un <a href>
+   * porque el endpoint exige el JWT, que solo agrega el interceptor.
+   */
+  getBlob(endpoint: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}${endpoint}`, { responseType: 'blob' });
+  }
+
   post<T>(endpoint: string, body: unknown): Observable<T> {
     return this.http.post<T>(`${this.apiUrl}${endpoint}`, body);
   }

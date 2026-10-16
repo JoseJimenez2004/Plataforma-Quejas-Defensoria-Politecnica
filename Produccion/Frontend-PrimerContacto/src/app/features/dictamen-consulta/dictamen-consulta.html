@@ -1,0 +1,105 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Consulta de dictamen</h2>
+      <p>Expediente {{ folio }} · Resolución de Primer Contacto.</p>
+    </div>
+
+    <button mat-stroked-button (click)="volver()">
+      <mat-icon>arrow_back</mat-icon> Volver al expediente
+    </button>
+  </div>
+
+  @if (cargando) {
+    <mat-card class="card"><p class="muted">Cargando dictamen…</p></mat-card>
+  } @else if (sinDictamen) {
+    <mat-card class="card">
+      <p class="muted">
+        El expediente <strong>{{ folio }}</strong> todavía no tiene dictamen registrado.
+      </p>
+    </mat-card>
+  } @else if (dictamen) {
+
+    <mat-card class="card resultado" [class.competente]="esCompetente" [class.improcedente]="!esCompetente">
+      <mat-icon class="resultado-icon">{{ esCompetente ? 'verified' : 'block' }}</mat-icon>
+      <div>
+        <span class="eyebrow">Resultado del dictamen</span>
+        <h3>{{ esCompetente ? 'Competente · Procedente' : 'Improcedente' }}</h3>
+        <p>
+          Emitido por <strong>{{ dictamen.analistaNombre }}</strong>
+          el {{ formatearFechaHora(dictamen.fechaDictamen) }}.
+        </p>
+      </div>
+      @if (dictamen.estatusExpediente) {
+        <span [class]="'estatus-chip ' + claseEstatus(dictamen.estatusExpediente)">
+          Expediente: {{ etiquetaEstatus(dictamen.estatusExpediente) }}
+        </span>
+      }
+    </mat-card>
+
+    <div class="grid">
+      <mat-card class="card">
+        <h3>Justificación</h3>
+        <p class="texto">{{ dictamen.justificacion }}</p>
+
+        @if (dictamen.observaciones) {
+          <h3>Observaciones</h3>
+          <p class="texto">{{ dictamen.observaciones }}</p>
+        }
+      </mat-card>
+
+      <mat-card class="card">
+        <h3>Seguimiento</h3>
+
+        <div class="info-list">
+          <div>
+            <span>Folio del expediente</span>
+            <strong>{{ dictamen.folio }}</strong>
+          </div>
+
+          @if (esCompetente) {
+            <div>
+              <span>Área de turno</span>
+              <strong>{{ dictamen.areaTurno || 'Subdefensoría' }}</strong>
+            </div>
+            <div>
+              <span>Responsable</span>
+              <strong>{{ dictamen.responsableTurno || '—' }}</strong>
+            </div>
+            <div>
+              <span>Recepción en Subdefensoría</span>
+              @if (dictamen.folioSubdefensoria) {
+                <strong>Recibido · {{ dictamen.folioSubdefensoria }}</strong>
+              } @else {
+                <strong class="pendiente">Pendiente de confirmar</strong>
+              }
+            </div>
+          } @else {
+            <div>
+              <span>Siguiente paso</span>
+              <strong>
+                {{ dictamen.estatusExpediente === 'REMITIDA'
+                    ? 'Remisión enviada a la instancia competente'
+                    : 'Generar y enviar la remisión externa' }}
+              </strong>
+            </div>
+          }
+        </div>
+
+        <div class="acciones">
+          @if (pendienteSubdefensoria) {
+            <button mat-flat-button class="primary-btn" [disabled]="procesando" (click)="reenviar()">
+              <mat-icon>sync</mat-icon> Reintentar envío a Subdefensoría
+            </button>
+          }
+          @if (!esCompetente) {
+            <button mat-flat-button class="primary-btn" (click)="irARemision()">
+              <mat-icon>outgoing_mail</mat-icon>
+              {{ dictamen.estatusExpediente === 'REMITIDA' ? 'Ver remisión' : 'Continuar con la remisión' }}
+            </button>
+          }
+        </div>
+      </mat-card>
+    </div>
+  }
+</section>

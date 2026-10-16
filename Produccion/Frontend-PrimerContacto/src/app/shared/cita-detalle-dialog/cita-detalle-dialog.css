@@ -9,45 +9,89 @@
   display: grid;
   gap: 4px;
   padding: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--borde);
   border-radius: 12px;
   background: #fbfbfc;
 }
 
 span {
-  color: #6b7280;
+  color: var(--texto-suave);
   font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
 }
 
 strong {
-  color: #111827;
+  color: var(--negro-inst);
 }
 
 .section {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--borde);
   padding-top: 14px;
   margin-top: 14px;
 }
 
 .section p {
   margin: 6px 0 0;
-  color: #111827;
+  color: var(--negro-inst);
 }
 
 .muted p {
-  color: #6b7280;
+  color: var(--texto-suave);
 }
 
 .primary-btn {
-  background: #6a1238 !important;
+  background: var(--guinda) !important;
   color: white !important;
   border-radius: 999px !important;
   font-weight: 800;
 }
 
 .danger-outline {
-  color: #b91c1c !important;
-  border-color: #b91c1c !important;
+  color: var(--peligro) !important;
+  border-color: var(--peligro) !important;
+}
+.success-outline {
+  color: var(--exito) !important;
+  border-color: var(--exito) !important;
+}
+
+/* ---- Respuesta del quejoso ---- */
+.respuesta {
+  padding: 12px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: #fbfbfc;
+}
+
+.respuesta.alerta {
+  border-color: #f4c27a;
+  background: #fff8ed;
+}
+
+.respuesta.ok {
+  border-color: #b7e4c7;
+  background: #f1fbf4;
+}
+
+.motivo-quejoso {
+  display: flex;
+  gap: 6px;
+  font-style: italic;
+}
+
+.motivo-quejoso mat-icon {
+  color: var(--guinda);
+  flex-shrink: 0;
+}
+
+.campo-motivo {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.acciones-motivo {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
