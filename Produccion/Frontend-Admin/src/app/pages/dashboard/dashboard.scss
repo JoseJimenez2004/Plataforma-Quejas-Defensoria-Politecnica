@@ -1,228 +1,241 @@
-.bloque {
+.fila {
+  display: grid;
+  gap: 18px;
   margin-bottom: 18px;
 }
 
-/* ---- flujo por etapas ---- */
+.fila-a {
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+}
+
+.fila-b {
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+}
+
+@media (max-width: 1150px) {
+  .fila-a,
+  .fila-b {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.seg-panel-cabeza h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.burbuja {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #c62828;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.info {
+  display: inline-grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border: 1.5px solid #8a8f98;
+  border-radius: 50%;
+  color: #8a8f98;
+  font-size: 11px;
+  font-weight: 800;
+  font-style: normal;
+  cursor: help;
+}
+
+.seg-tabla.compacta td,
+.seg-tabla.compacta th {
+  padding: 9px 10px;
+}
+
+.seg-select-chico {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #dfe2e7;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+}
+
+/* ---- ¿Dónde están las quejas? ---- */
 .flujo-barra {
   display: flex;
-  height: 14px;
   gap: 3px;
-  margin-bottom: 14px;
+  height: 16px;
+  margin: 6px 0 14px;
   border-radius: 999px;
   overflow: hidden;
 
   span {
     min-width: 6px;
-    background: var(--acento);
   }
 }
 
-.flujo-etapas {
+.flujo-tarjetas {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
 }
 
-@media (max-width: 1100px) {
-  .flujo-etapas {
+@media (max-width: 700px) {
+  .flujo-tarjetas {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-.flujo-etapa {
-  padding: 10px 12px;
+.flujo-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid transparent;
   border-top: 4px solid var(--acento);
   border-radius: 10px;
   background: var(--suave);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 
-  ul {
-    list-style: none;
-    margin: 8px 0 0;
-    padding: 0;
-    display: grid;
-    gap: 2px;
-  }
-
-  li a {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 3px 6px;
-    border-radius: 6px;
-    color: var(--texto);
-    font-size: 12.5px;
-    text-decoration: none;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.7);
-    }
-  }
-
-  .vacio {
-    color: var(--texto-suave);
-    font-size: 12px;
-    padding: 3px 6px;
+  &:hover {
+    border-color: var(--acento);
+    border-top-width: 4px;
   }
 }
 
 .flujo-cabeza {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: baseline;
-  color: var(--texto-etapa);
-  text-decoration: none;
-
-  strong {
-    font-size: 26px;
-    font-weight: 900;
-  }
-
-  &:hover .flujo-nombre {
-    text-decoration: underline;
-  }
-}
-
-.flujo-nombre {
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.flujo-pct {
-  grid-column: 1 / -1;
-  font-size: 11.5px;
-  opacity: 0.8;
-}
-
-/* ---- meses ---- */
-.leyenda {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--texto-suave);
-  font-size: 12px;
-  white-space: nowrap;
-
-  i {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 2px;
-    margin-left: 6px;
-
-    &.recibidas {
-      background: var(--guinda);
-    }
-
-    &.atendidas {
-      background: #d7b3c4;
-    }
-  }
-}
-
-.meses {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 6px;
-  height: 210px;
-}
-
-.mes {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
-  color: var(--texto-suave);
-  text-decoration: none;
 
-  &:hover .mes-etiqueta {
-    color: var(--guinda);
+  b {
+    color: var(--texto-etapa);
+    font-size: 13.5px;
+    line-height: 1.2;
+  }
+
+  .flujo-cifra {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  small {
+    color: var(--texto-etapa);
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  strong {
+    color: var(--texto-etapa);
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+}
+
+.flujo-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12.5px;
+  color: #333;
+
+  > span {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .vacio {
+    color: #888;
+  }
+}
+
+.flujo-nota {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  color: var(--texto-suave);
+  font-size: 13px;
+
+  a {
+    color: #a32020;
     font-weight: 700;
   }
 }
 
-.mes-valor {
-  height: 16px;
-  color: var(--negro-inst);
-  font-size: 11.5px;
-  font-weight: 700;
+.punto {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 50%;
 }
 
-.mes-barras {
-  flex: 1;
-  width: 100%;
+.leyenda-centro {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  gap: 2px;
-  border-bottom: 1px solid #e4e6ea;
-
-  span {
-    width: 40%;
-    max-width: 16px;
-    min-height: 0;
-    border-radius: 3px 3px 0 0;
-
-    &.recibidas {
-      background: var(--guinda);
-    }
-
-    &.atendidas {
-      background: #d7b3c4;
-    }
-  }
+  gap: 8px;
+  margin: 4px 0 0;
+  color: var(--texto-suave);
+  font-size: 12.5px;
 }
 
-.mes-etiqueta {
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-/* ---- rankings (unidades, abogados) ---- */
-.ranking {
-  list-style: none;
+/* ---- Rankings ---- */
+.ranking,
+.motivos {
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 4px;
+  list-style: none;
 
-  a {
+  li a {
     display: grid;
-    grid-template-columns: minmax(110px, 0.9fr) minmax(80px, 1.4fr) auto;
+    grid-template-columns: minmax(110px, 0.9fr) minmax(0, 1.6fr) 72px;
     align-items: center;
-    gap: 12px;
-    padding: 7px 8px;
-    border-radius: 8px;
-    color: var(--texto);
+    gap: 14px;
+    padding: 6px 4px;
+    border-radius: 6px;
+    color: inherit;
     text-decoration: none;
 
     &:hover {
-      background: var(--guinda-suave);
+      background: #fcf7f9;
     }
   }
 
-  &.abogados a {
-    grid-template-columns: minmax(150px, 1fr) minmax(70px, 1fr) auto;
-  }
-
-  em {
-    color: var(--texto-suave);
-    font-style: normal;
-    font-size: 12px;
+  .seg-barra span {
+    background: #7a1f45;
   }
 }
 
 .ranking-nombre {
-  overflow: hidden;
-  font-size: 13.5px;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 14px;
   white-space: nowrap;
+  overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ranking-num {
+.ranking-num,
+.motivo-num {
   color: var(--texto-suave);
-  font-size: 12.5px;
+  font-size: 13px;
+  text-align: right;
   white-space: nowrap;
 
   b {
@@ -230,124 +243,112 @@
   }
 }
 
-.punto-activo {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 6px;
-  border-radius: 50%;
-  background: #2f6fed;
-}
-
-/* ---- motivos y rechazos ---- */
-.motivos {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-
-  li {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 90px 28px;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-  }
-
-  b {
-    text-align: right;
-  }
+.motivos li a {
+  grid-template-columns: minmax(150px, 1.2fr) minmax(0, 1.4fr) 76px;
 }
 
 .motivo-texto {
-  line-height: 1.35;
+  font-size: 13.5px;
 }
 
-.rechazos {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* ---- Ventana "Distribución por etapa" ---- */
+.dist {
   display: grid;
-  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+}
 
-  a {
-    display: block;
-    padding: 8px 10px;
-    border-left: 3px solid #e5a3a3;
-    border-radius: 0 8px 8px 0;
-    background: #fdf6f6;
-    color: var(--texto);
-    text-decoration: none;
-
-    &:hover {
-      background: #fbeaea;
-    }
+@media (max-width: 950px) {
+  .dist {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-.rechazo-cabeza {
-  display: block;
-  font-size: 13px;
-
-  .suave {
-    display: block;
-    color: var(--texto-suave);
-    font-size: 12px;
-  }
-}
-
-.rechazo-motivo {
-  display: block;
-  margin-top: 2px;
-  color: #8a2a2a;
-  font-size: 12.5px;
-}
-
-/* ---- accesos de administración ---- */
-.admin-accesos {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
-}
-
-.acceso {
+.dist-grafica {
   display: flex;
   align-items: center;
-  gap: 16px;
-  color: var(--texto);
-  text-decoration: none;
-  border: 1px solid transparent;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 28px;
+}
 
-  &:hover {
-    border-color: #e6c9d6;
+.dist-leyenda {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-size: 16px;
+
+  li {
+    display: grid;
+    grid-template-columns: 14px 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .punto {
+    width: 14px;
+    height: 14px;
   }
 
   b {
-    display: block;
-    color: var(--guinda);
-    font-size: 15px;
+    font-size: 18px;
+  }
+
+  small {
+    color: var(--texto-suave);
+    font-size: 14px;
   }
 }
 
-.acceso-num {
+.dist-tarjetas {
   display: grid;
-  place-items: center;
-  min-width: 56px;
-  height: 56px;
-  padding: 0 8px;
-  border-radius: 12px;
-  background: var(--guinda-suave);
-  color: var(--guinda);
-  font-size: 22px;
-  font-weight: 900;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 }
 
-.acceso-roles {
+.dist-tarjeta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  margin-top: 2px;
-  color: var(--texto-suave);
-  font-size: 12.5px;
+  flex-direction: column;
+  padding: 14px 16px;
+  border-top: 5px solid var(--acento);
+  border-radius: 12px;
+  background: var(--suave);
+
+  .dist-nombre {
+    color: var(--texto-etapa);
+    font-size: 15px;
+  }
+
+  strong {
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+
+  small {
+    color: var(--texto-etapa);
+    font-size: 13px;
+  }
+
+  ul {
+    flex: 1;
+    margin: 10px 0 12px;
+    padding: 0;
+    list-style: none;
+    font-size: 13.5px;
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+    }
+  }
+
+  .seg-btn {
+    justify-content: center;
+  }
 }

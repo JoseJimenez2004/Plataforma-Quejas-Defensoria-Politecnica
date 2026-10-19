@@ -1,0 +1,83 @@
+.seg-tarjetas.cuatro {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px) {
+  .seg-tarjetas.cuatro {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.graficas {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 1150px) {
+  .graficas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.dona-tipo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  min-height: 230px;
+}
+
+.leyenda {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 14px;
+
+  li {
+    display: grid;
+    grid-template-columns: 12px minmax(0, 1fr) auto 48px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  b {
+    text-align: right;
+  }
+
+  small {
+    color: var(--texto-suave);
+    font-size: 13px;
+  }
+}
+
+.punto {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.leyenda-linea {
+  display: flex;
+  gap: 14px;
+  color: var(--texto-suave);
+  font-size: 13px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  i {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+}

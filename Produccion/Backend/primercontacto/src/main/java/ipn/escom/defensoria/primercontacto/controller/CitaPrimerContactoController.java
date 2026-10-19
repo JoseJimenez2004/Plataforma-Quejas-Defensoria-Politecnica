@@ -70,6 +70,15 @@ public class CitaPrimerContactoController {
         return citaPrimerContactoService.obtenerAgendaDia(fecha);
     }
 
+    /** Agenda institucional entre dos fechas (AAAA-MM-DD, inclusivas): calendario y lista. */
+    @GetMapping("/rango")
+    public List<CitaDTO> citasEnRango(
+            @RequestParam String desde,
+            @RequestParam String hasta
+    ) {
+        return citaPrimerContactoService.citasEnRango(desde, hasta);
+    }
+
     @GetMapping("/mias")
     public List<CitaDTO> misProximasCitas(Authentication authentication) {
         return citaPrimerContactoService.proximasDelAnalista(

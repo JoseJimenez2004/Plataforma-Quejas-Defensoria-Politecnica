@@ -172,6 +172,7 @@ public class CitaPrimerContactoService {
                         .fechaCita(fechaCita)
                         .horaCita(horaCita)
                         .tipoCita(dto.getTipoCita())
+                        .categoria(normalizarCategoria(dto.getCategoria()))
                         .motivo(dto.getMotivo())
                         .estatus(PROGRAMADA)
                         .fechaCreacion(ahora)
@@ -303,6 +304,8 @@ public class CitaPrimerContactoService {
                 .horaCita(horaCita)
                 .tipoCita(dto.getTipoCita() != null && !dto.getTipoCita().isBlank()
                         ? dto.getTipoCita() : anterior.getTipoCita())
+                .categoria(dto.getCategoria() != null && !dto.getCategoria().isBlank()
+                        ? normalizarCategoria(dto.getCategoria()) : anterior.getCategoria())
                 .motivo(dto.getMotivo() != null && !dto.getMotivo().isBlank()
                         ? dto.getMotivo() : anterior.getMotivo())
                 .estatus(PROGRAMADA)
@@ -639,8 +642,43 @@ public class CitaPrimerContactoService {
 
     private String describir(CitaPrimerContacto cita) {
         String modalidad = "VIRTUAL".equalsIgnoreCase(cita.getTipoCita()) ? "virtual" : "presencial";
+        String tipo = switch (cita.getCategoria() == null ? "" : cita.getCategoria()) {
+            case "REVISION" -> "revisión de documentos, ";
+            case "SEGUIMIENTO" -> "seguimiento, ";
+            default -> "";
+        };
         return cita.getFechaCita().format(FECHA_AVISO) + " a las "
-                + cita.getHoraCita().toString().substring(0, 5) + " h, modalidad " + modalidad;
+                + cita.getHoraCita().toString().substring(0, 5) + " h, " + tipo + "modalidad " + modalidad;
+    }
+
+    /** Solo se aceptan los tres tipos del catálogo; cualquier otro valor se guarda como comparecencia. */
+    private static String normalizarCategoria(String categoria) {
+        if (categoria == null || categoria.isBlank()) {
+            return "COMPARECENCIA";
+        }
+        String c = categoria.trim().toUpperCase().replace("Ó", "O");
+        return java.util.Set.of("COMPARECENCIA", "REVISION", "SEGUIMIENTO").contains(c) ? c : "COMPARECENCIA";
+    }
+
+    /**
+     * Agenda institucional de un periodo (todas las personas analistas), para el calendario
+     * mensual y la "Lista de citas". Las reagendadas no se muestran: su lugar lo ocupa la nueva.
+     */
+    public List<CitaDTO> citasEnRango(String desde, String hasta) {
+        LocalDate inicio = LocalDate.parse(desde);
+        LocalDate fin = LocalDate.parse(hasta);
+        if (fin.isBefore(inicio)) {
+            throw new OperacionInvalidaException("La fecha final no puede ser anterior a la inicial.");
+        }
+        if (inicio.plusDays(400).isBefore(fin)) {
+            throw new OperacionInvalidaException("Consulta como máximo un año de citas a la vez.");
+        }
+        return citaPrimerContactoRepository
+                .findByFechaCitaBetweenOrderByFechaCitaAscHoraCitaAsc(inicio, fin)
+                .stream()
+                .filter(c -> !REAGENDADA.equals(c.getEstatus()))
+                .map(this::convertirADTO)
+                .toList();
     }
 
     private CitaDTO convertirADTO(CitaPrimerContacto cita) {
@@ -656,6 +694,7 @@ public class CitaPrimerContactoService {
                 .fechaCita(cita.getFechaCita() != null ? cita.getFechaCita().toString() : null)
                 .horaCita(cita.getHoraCita() != null ? cita.getHoraCita().toString() : null)
                 .tipoCita(cita.getTipoCita())
+                .categoria(cita.getCategoria() != null ? cita.getCategoria() : "COMPARECENCIA")
                 .motivo(cita.getMotivo())
                 .estatus(cita.getEstatus())
                 .fechaCreacion(cita.getFechaCreacion() != null ? cita.getFechaCreacion().toString() : null)

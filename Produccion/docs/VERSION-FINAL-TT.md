@@ -829,3 +829,144 @@ Sin cambios en base de datos, queja-service ni nginx.
 |---|---|---|
 | `admin-service` → `target/admin-service.jar` | backend `artifact/` | `bash podman-compose.sh up-container admin-service` |
 | `Frontend-Admin` → `dist/defensoria-admin/browser/*` | frontend `/apps/aplicaciones/defensoria/front-admin/dist/browser/` (vaciarla antes) | `bash podman-compose-front-admin.sh up` |
+
+---
+
+## 20. Panel de la Defensora con el diseño del PDF (páginas 1–9) — 2026-10-18
+
+Se rehicieron las vistas de la Defensora según `Primer_contacto_y_Defensora.pdf`.
+
+- **Menú:** *Supervisión y seguimiento* (Panel general, Quejas, Quejas por unidad, **Carga de trabajo**), *Administración institucional* (Personal, Dependencias y Unidades, Plantillas, Preguntas Frecuentes) y *Sistema* (Seguridad y Respaldos). En el encabezado va primero el rol ("Defensora") y abajo el nombre.
+- **Panel general:**
+  - Selector de periodo (7, 30 o 90 días, 12 meses o todo). "Quejas recibidas" se compara contra el periodo anterior del mismo tamaño (↑/↓ %).
+  - Seis indicadores con icono.
+  - **Casos que requieren atención** (top 5 y ventana con filtros).
+  - **¿Dónde están las quejas?** (barra, 4 tarjetas y ventana con dona).
+  - **Evolución de quejas** (6, 12 o 24 meses; clic en un mes abre sus quejas).
+  - **Unidades con más quejas**, **Carga de trabajo del personal** y **Motivos más frecuentes de rechazo**, cada uno con su ventana "Ver todas".
+- **Casos que requieren atención:** cada regla trae su descripción y se puede leer en la pantalla.
+
+  | Regla | Condición |
+  |---|---|
+  | Sin tomar | Más de 3 días en Recepción sin abrir |
+  | Corregida sin revisar | Más de 3 días |
+  | Validación detenida | Abierta hace más de 1 día |
+  | Observaciones pendientes | El quejoso no ha corregido en más de 5 días |
+  | Sin abogado | En Primer Contacto |
+  | Vencida (primer contacto) | Más de 10 días |
+  | Sin turnar a Subdefensoría | Procedente hace más de 15 días |
+  | Vencida (seguimiento) | Más de 60 días en Subdefensoría |
+
+  Los días en rojo marcan el doble del plazo. Los umbrales están en `PanelDefensoraService` (constantes `DIAS_*`).
+- **Quejas:**
+  - Filtros: texto, etapa, unidad, abogado, recepcionista, mes desde–hasta, **estado** (Sin atención / En trámite / Con el quejoso / Cerrada) y **prioridad**. La prioridad se toma de `expedientes_primer_contacto.prioridad`, si esa tabla existe.
+  - "Aplicar filtros", ordenar por, vista de lista o de tarjetas, selección con casillas y **Exportar** a CSV (las seleccionadas o todo el filtro).
+  - Menú ⋮ por fila y "+ Nueva queja", que abre el formulario del portal.
+- **Quejas por unidad:**
+  - Periodo y Exportar.
+  - Indicadores: unidades con queja, total de quejas, unidad con más quejas y promedio, con variación contra el periodo anterior.
+  - Gráficas: top 10 en barras y **distribución por tipo de unidad**. El tipo se deduce de `dependencias.categoria`: Escuela Superior, Unidad Profesional, Medio Superior, Centro de Investigación u otros.
+  - Listado con nombre oficial, siglas, tipo, % y última recepción, con filtros de tipo, estatus y fechas.
+- **Carga de trabajo** (pantalla nueva):
+  - Indicadores: personal activo, quejas en trámite, atendidas y **tiempo promedio de atención**, este último contra el periodo anterior.
+  - Barras apiladas por responsable y dona por etapa.
+  - Pestañas Recepcionistas / Personal jurídico.
+  - **Recepcionistas:** abiertas, en trámite, atendidas, turnadas, observaciones, última actividad, carga, % y nivel.
+  - **Abogados:** asignadas, en trámite, en Primer Contacto, en Subdefensoría y concluidas.
+  - **Nivel de carga** relativo al equipo:
+
+    | Nivel | Regla |
+    |---|---|
+    | Alta | Más de 1.5 × el promedio y 3 o más quejas |
+    | Baja | Menos de la mitad del promedio |
+    | Sin actividad | Sin carga ni actividad en el periodo |
+
+- **Personal de la Defensoría:**
+  - Indicadores: total con desglose por rol, activos, inactivos y roles.
+  - Filtros por rol, estatus y unidad; tabla con avatar, rol en color, unidad, estatus y último acceso.
+  - **Panel lateral "Detalles del usuario"** con tres pestañas: Información (datos y estadísticas de atención), Actividad (bitácora y movimientos sobre quejas) y Quejas asignadas.
+  - Alta y edición con **unidad de adscripción y teléfono**. Son dos columnas nuevas en `personal_administrativo` (`unidad_clave`, `telefono`) que admin-service crea solo al arrancar (`ALTER TABLE … ADD COLUMN IF NOT EXISTS`); la entidad JPA no se tocó.
+- **Backend (admin-service):**
+  - Clases nuevas: `PanelDefensoraService` y `PanelModels`.
+  - Cambios en `SeguimientoQuejasService`: `etapas()` y `porMes()` reutilizables, más filtros y orden en `quejas()`, tamaño de hasta 5000 para exportar. También en `SeguimientoController`.
+  - Endpoints nuevos bajo `/api/admin/seguimiento`: `tablero?dias&meses` (nuevo formato), `atencion`, `unidades/tabla`, `carga`, `motivos-rechazo`, `personal`, `personal/{id}`, `PUT personal/{id}/contacto`.
+- **Frontend-Admin:**
+  - Componentes compartidos en `shared/panel/`: paginador, ventana, dona, barras, CSV, tablas de atención, unidades, carga y motivos.
+  - Estilos globales nuevos en `styles.scss`: tarjetas, filtros, ventanas, pestañas e insignias.
+- **Probado:** con datos de prueba (195 quejas en 12 meses, 5 recepcionistas, 6 abogados) compila sin errores ni advertencias; además se revisaron capturas de las 5 pantallas y las 5 ventanas.
+- Respaldo de lo anterior: `_backups/claude/respaldo-antes-panel-defensora-2026-10-18.tgz`.
+
+### 20.1 Qué subir
+| Qué | Dónde | Después |
+|---|---|---|
+| `admin-service` → `mvn clean package -DskipTests` → `target/admin-service.jar` | backend `artifact/` | `bash podman-compose.sh up-container admin-service` |
+| `Frontend-Admin` → `npx ng build --configuration production` → `dist/…/browser/*` | frontend `/apps/aplicaciones/defensoria/front-admin/dist/browser/` (vaciarla antes) | `bash podman-compose-front-admin.sh up` |
+
+---
+
+## 21. Primer Contacto con el diseño del PDF (páginas 11–19) — 2026-10-18
+
+Se rehicieron el **Expediente** y la **Agenda de Citas** del módulo de Primer Contacto según `Primer_contacto_y_Defensora.pdf`, conservando todo lo que ya hacía el módulo: notas, citas, conciliación, versión del denunciado, dictamen, remisión y antecedentes.
+
+### Expediente con 4 pestañas
+La pestaña activa queda en la URL (`?tab=ia|gestion|resolucion`); "Expediente" es la de inicio.
+
+- **Análisis IA:**
+  - **Resumen de la queja**: borrador de resumen-service. Si el modelo no responde, se muestra el resumen simulado del navegador y la pantalla lo avisa.
+  - Botones "Copiar resumen" y "Ver narrativa completa".
+  - **Fragmentos clave**: los que elige el modelo, con una etiqueta por tema: Inicio del contexto, Hechos principales, Consecuencia, Trato recibido.
+  - **Antecedentes relacionados**: los 4 más parecidos, con el % de similitud y su detalle.
+  - **Visualización rápida**: barras de similitud, más "Ver análisis detallado de antecedentes" (la pantalla de antecedentes de siempre).
+- **Expediente:** narrativa con "Ver más", datos de la queja, datos del quejoso, persona denunciada, evidencias (descargar o abrir) e **Historial del expediente**. El historial es una línea de tiempo armada con la recepción, el inicio del análisis, las notas, las citas y sus respuestas, las solicitudes y respuestas del denunciado y las conciliaciones.
+- **Gestión:**
+  - Notas de análisis ("+ Nueva nota"; editar y borrar solo las propias).
+  - Versión del denunciado, con sus archivos adjuntos.
+  - Citas con el quejoso: "+ Agendar cita" abre la ventana nueva desde el propio expediente.
+  - Solicitud de versión del denunciado, en línea de tiempo: enviada → en espera → respuesta.
+  - Propuesta de conciliación.
+- **Resolución:**
+  - Tarjetas **Competente / Improcedente** con el formulario en la misma pantalla: justificación (1000 caracteres), observaciones y **Responsable en Subdefensoría**. El responsable se elige de una lista de abogados ordenada de menor a mayor carga.
+  - A la derecha: datos del expediente, antecedentes identificados e historial.
+  - La ruta vieja `/dictamen/:id` redirige a esta pestaña.
+  - Al declarar improcedente sigue la remisión de siempre; las observaciones se agregan a la justificación.
+
+### Agenda de Citas
+- Indicadores: citas de hoy, próximas, confirmadas y canceladas.
+- Pestañas **Calendario / Lista de citas**.
+- **Calendario institucional:** mes con un punto en los días con cita, "Hoy" y las citas del día elegido con "Detalles". A la derecha, "Mis próximas citas" y "Filtrar citas".
+- **Lista:**
+  - Filtros por estado, tipo, modalidad y fechas.
+  - Columnas ordenables y paginación de 10.
+  - **Exportar** a CSV.
+  - Menú ⋮ por cita: confirmar, reagendar, cancelar.
+- **Ventana "Programar Nueva Cita"** (`shared/nueva-cita`), que también usa el expediente:
+  - **Paso 1:** expediente, nombre del quejoso, **tipo de cita** (Comparecencia, Revisión de documentos o Seguimiento), modalidad (presencial o virtual) y motivo (500 caracteres).
+  - **Paso 2:** fecha en un calendario y horario de 09:00 a 16:00 cada 30 minutos.
+
+  | Estado del horario | Cuándo |
+  |---|---|
+  | Disponible | Libre |
+  | Ocupado | La persona analista ya tiene una cita a esa hora |
+  | No disponible | Ya pasó o cae en fin de semana |
+
+  Reagendar usa la misma ventana.
+
+### Backend (primercontacto)
+- **`CitaPrimerContacto.categoria`**: columna nueva `categoria_cita` (COMPARECENCIA, REVISION o SEGUIMIENTO). Hibernate la crea sola con `ddl-auto=update`; las citas viejas se muestran como Comparecencia. Se agregó a `CitaDTO`, `CrearCitaDTO` y `ReagendarCitaDTO`, y aparece en el correo al quejoso.
+- **`GET /api/primer-contacto/citas/rango?desde&hasta`**: agenda institucional de un periodo, de máximo un año; no incluye las reagendadas.
+- **`GET /api/primer-contacto/abogados`** (`AbogadosController`): abogados activos (SUBDEFENSOR y DEFENSOR) con sus quejas en trámite, de menor a mayor carga.
+
+### Carga más rápida
+Todas las pantallas se cargan bajo demanda (`loadComponent`). La carga inicial bajó de **1.19 MB a 361 KB** (101 KB comprimido).
+
+### Probado
+- El backend completo compila con Lombok (javac + `-proc:full`).
+- Se levantó primercontacto con la base de `dev-local/init` y se probó desde la pantalla: crear una cita de Seguimiento desde la ventana, registrar un dictamen Competente con el abogado elegido (expediente → PROCEDENTE) y agregar una nota.
+- Se revisaron capturas de las 4 pestañas y de la agenda.
+- Respaldo de lo anterior: `_backups/claude/respaldo-antes-primer-contacto-2026-10-18.tgz`.
+
+### 21.1 Qué subir
+| Qué | Dónde | Después |
+|---|---|---|
+| `Backend/primercontacto` → `mvn clean package -DskipTests` → `target/primer-contacto-service.jar` | backend `artifact/` | `bash podman-compose.sh up-container primer-contacto-service` |
+| `Frontend-PrimerContacto` → `npx ng build --configuration production` → `dist/frontend-primer-contacto/browser/*` | frontend `/apps/aplicaciones/defensoria/front-primer-contacto/dist/browser/` (vaciarla antes) | `bash podman-compose-front-primer-contacto.sh up` |

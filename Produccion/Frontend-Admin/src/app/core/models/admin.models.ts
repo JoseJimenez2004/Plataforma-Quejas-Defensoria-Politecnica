@@ -182,21 +182,6 @@ export interface EtapaSeg {
   estatus: ConteoSeg[];
 }
 
-export interface KpisSeg {
-  total: number;
-  ultimos30: number;
-  enRecepcion: number;
-  sinTomarMas3Dias: number;
-  conQuejoso: number;
-  rechazadasAlgunaVez: number;
-  enPrimerContacto: number;
-  enSubdefensoria: number;
-  cerradas: number;
-  atendidasRecepcion: number;
-  horasPromedioRecepcion?: number | null;
-  respuestasDenunciado: number;
-}
-
 export interface MesSeg {
   clave: string;
   etiqueta: string;
@@ -215,45 +200,6 @@ export interface UnidadSeg {
   ultimaQueja?: string | null;
 }
 
-export interface RecepcionistaSeg {
-  nombre: string;
-  correo: string;
-  abiertasAhora: number;
-  atendidas: number;
-  turnadas: number;
-  conObservaciones: number;
-  atendidasHoy: number;
-}
-
-export interface AbogadoSeg {
-  nombre: string;
-  rol: string;
-  enTramite: number;
-  total: number;
-  cerradas: number;
-}
-
-export interface RechazoSeg {
-  folio: string;
-  fecha?: string | null;
-  quejoso: string;
-  recepcionista?: string | null;
-  motivo?: string | null;
-  estatusActual: string;
-}
-
-export interface TableroSeg {
-  kpis: KpisSeg;
-  etapas: EtapaSeg[];
-  porMes: MesSeg[];
-  unidades: UnidadSeg[];
-  recepcion: RecepcionistaSeg[];
-  abogados: AbogadoSeg[];
-  motivosRechazo: ConteoSeg[];
-  rechazosRecientes: RechazoSeg[];
-  personal: { total: number; porRol: ConteoSeg[]; dependencias: number };
-}
-
 export interface FilaQuejaSeg {
   folio: string;
   fecha: string;
@@ -268,6 +214,10 @@ export interface FilaQuejaSeg {
   abogado?: string | null;
   folioPrimerContacto?: string | null;
   origen: string;
+  estado: string;
+  estadoEtiqueta: string;
+  prioridad?: string | null;
+  dias: number;
 }
 
 export interface PaginaQuejasSeg {
@@ -282,6 +232,7 @@ export interface FiltrosSeg {
   recepcionistas: { correo: string; nombre: string }[];
   abogados: string[];
   etapas: ConteoSeg[];
+  estados: ConteoSeg[];
 }
 
 export interface DetalleQuejaSeg {
@@ -326,5 +277,227 @@ export interface FiltroQuejasSeg {
   abogado?: string;
   recepcionista?: string;
   mes?: string;
+  desde?: string;
+  hasta?: string;
+  estado?: string;
+  prioridad?: string;
+  motivo?: string;
+  orden?: string;
   q?: string;
+}
+
+// ======================================================================================
+// Panel de la Defensora (diseño 2026-10-18)
+// ======================================================================================
+
+export interface PanelKpis {
+  total: number;
+  recibidasPeriodo: number;
+  recibidasAnterior: number;
+  enRecepcion: number;
+  sinTomarMas3Dias: number;
+  conQuejoso: number;
+  rechazadasAlgunaVez: number;
+  enPrimerContacto: number;
+  enSubdefensoria: number;
+  cerradas: number;
+}
+
+export interface ReglaCaso {
+  clave: string;
+  etiqueta: string;
+  descripcion: string;
+  umbralDias: number;
+}
+
+export interface CasoAtencion {
+  folio: string;
+  fecha?: string | null;
+  quejoso?: string | null;
+  motivo: string;
+  motivoEtiqueta: string;
+  dias: number;
+  severidad: 'ALTA' | 'MEDIA';
+  etapa: string;
+  estatus: string;
+  estatusEtiqueta: string;
+  unidadClave?: string | null;
+  unidadNombre?: string | null;
+  responsable?: string | null;
+}
+
+export interface PaginaCasos {
+  filas: CasoAtencion[];
+  pagina: number;
+  tamanio: number;
+  totalElementos: number;
+  totalPaginas: number;
+  reglas: ReglaCaso[];
+}
+
+export interface FiltroCasos {
+  q?: string;
+  motivo?: string;
+  etapa?: string;
+  unidad?: string;
+  responsable?: string;
+  diasMin?: number | null;
+  diasMax?: number | null;
+}
+
+export interface FilaUnidad {
+  posicion: number;
+  clave: string;
+  nombre?: string | null;
+  siglas: string;
+  tipo: string;
+  tipoEtiqueta: string;
+  total: number;
+  enTramite: number;
+  cerradas: number;
+  porcentaje: number;
+  ultima?: string | null;
+}
+
+export interface TablaUnidades {
+  filas: FilaUnidad[];
+  pagina: number;
+  tamanio: number;
+  totalElementos: number;
+  totalPaginas: number;
+  resumen: {
+    unidadesConQueja: number;
+    unidadesAnterior: number;
+    totalQuejas: number;
+    totalAnterior: number;
+    unidadTop?: string | null;
+    unidadTopTotal: number;
+    promedio: number;
+  };
+  porTipo: ConteoSeg[];
+  top: FilaUnidad[];
+}
+
+export interface FiltroUnidades {
+  q?: string;
+  tipo?: string;
+  estatus?: string;
+  desde?: string;
+  hasta?: string;
+}
+
+export interface MiembroCarga {
+  id: number;
+  nombre: string;
+  correo: string;
+  rol: string;
+  activo: boolean;
+  abiertas: number;
+  enTramite: number;
+  atendidas: number;
+  turnadas: number;
+  observaciones: number;
+  enPrimerContacto: number;
+  enSubdefensoria: number;
+  cerradas: number;
+  ultimaActividad?: string | null;
+  carga: number;
+  porcentaje: number;
+  nivel: 'ALTA' | 'NORMAL' | 'BAJA' | 'SIN_ACTIVIDAD';
+}
+
+export interface CargaTrabajo {
+  dias: number;
+  kpis: {
+    personalActivo: number;
+    recepcionistas: number;
+    abogados: number;
+    enTramite: number;
+    totalQuejas: number;
+    atendidas: number;
+    diasPromedio?: number | null;
+    diasPromedioAnterior?: number | null;
+  };
+  recepcionistas: MiembroCarga[];
+  abogados: MiembroCarga[];
+  etapas: EtapaSeg[];
+}
+
+export interface MotivoRechazo {
+  clave: string;
+  motivo: string;
+  categoria: string;
+  cantidad: number;
+  porcentaje: number;
+}
+
+export interface PanelDefensora {
+  dias: number;
+  kpis: PanelKpis;
+  etapas: EtapaSeg[];
+  porMes: MesSeg[];
+  unidades: FilaUnidad[];
+  atencion: PaginaCasos;
+  recepcion: MiembroCarga[];
+  motivos: MotivoRechazo[];
+}
+
+export interface MiembroPersonal {
+  id: number;
+  nombre: string;
+  numeroEmpleado?: string | null;
+  correo: string;
+  rol: RolStaff;
+  activo: boolean;
+  cuentaTemporal: boolean;
+  unidadClave?: string | null;
+  unidadNombre?: string | null;
+  telefono?: string | null;
+  fechaRegistro?: string | null;
+  ultimoAcceso?: string | null;
+  abiertas: number;
+  enTramite: number;
+  atendidas: number;
+  turnadas: number;
+  observaciones: number;
+}
+
+export interface DetallePersonal {
+  persona: MiembroPersonal;
+  actividad: { fecha?: string | null; titulo: string; detalle?: string | null }[];
+  quejas: { folio: string; fecha?: string | null; quejoso?: string | null; unidad?: string | null; etapa: string; estatusEtiqueta: string; relacion: string }[];
+}
+
+/** Periodos del selector "Últimos N días" (0 = todo el historial). */
+export const PERIODOS: { dias: number; etiqueta: string }[] = [
+  { dias: 7, etiqueta: 'Últimos 7 días' },
+  { dias: 30, etiqueta: 'Últimos 30 días' },
+  { dias: 90, etiqueta: 'Últimos 90 días' },
+  { dias: 365, etiqueta: 'Últimos 12 meses' },
+  { dias: 0, etiqueta: 'Todo el historial' },
+];
+
+export const ETIQUETA_NIVEL: Record<string, string> = {
+  ALTA: 'Alta',
+  NORMAL: 'Normal',
+  BAJA: 'Baja',
+  SIN_ACTIVIDAD: 'Sin actividad',
+};
+
+/** Variación porcentual contra el periodo anterior (null si no hay base para comparar). */
+export function variacion(actual: number, anterior: number): number | null {
+  if (!anterior) {
+    return null;
+  }
+  return Math.round(((actual - anterior) / anterior) * 100);
+}
+
+/** Etiqueta en femenino para el titular cuando así lo indica su nombre (Dra., Lic. …a). */
+export function etiquetaRolPersona(rol: string, nombre?: string | null): string {
+  const n = (nombre ?? '').trim().toLowerCase();
+  const femenino = n.startsWith('dra') || n.startsWith('mtra') || /\b(defensora|abogada)\b/.test(n);
+  if (rol === 'DEFENSOR') {
+    return femenino || n === 'defensora' ? 'Defensora' : 'Defensor';
+  }
+  return etiquetaRol(rol);
 }

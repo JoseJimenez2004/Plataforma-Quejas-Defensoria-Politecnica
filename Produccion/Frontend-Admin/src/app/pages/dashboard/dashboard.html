@@ -2,168 +2,200 @@
   <div class="seg-encabezado">
     <div>
       <h2>{{ titulo }}</h2>
-      <p class="seg-sub">{{ fechaHoy }} · Todo lo que pasa con las quejas, de Recepción a la conclusión.</p>
+      <p class="seg-sub">{{ fechaHoy }} · Resumen general del estado de las quejas y la operación de la Defensoría.</p>
     </div>
-    <a routerLink="/quejas" class="seg-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
-      Buscar una queja
-    </a>
+    <label class="seg-periodo" title="Periodo de los indicadores, las unidades, la carga y los motivos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>
+      <select [(ngModel)]="dias" (ngModelChange)="cargar()" aria-label="Periodo">
+        @for (p of periodos; track p.dias) { <option [ngValue]="p.dias">{{ p.etiqueta }}</option> }
+      </select>
+    </label>
   </div>
 
   @if (cargando) {
     <p class="seg-vacio">Cargando panel…</p>
-  } @else if (tablero; as t) {
-    <!-- ================= Indicadores ================= -->
-    <div class="seg-kpis">
-      <a class="seg-kpi clic" routerLink="/quejas">
-        <span class="titulo">Quejas recibidas</span>
-        <strong>{{ t.kpis.total }}</strong>
-        <span class="detalle">{{ t.kpis.ultimos30 }} en los últimos 30 días</span>
-      </a>
-      <a class="seg-kpi clic etapa-RECEPCION" [class.alerta]="t.kpis.sinTomarMas3Dias > 0"
-         routerLink="/quejas" [queryParams]="{ etapa: 'RECEPCION' }">
-        <span class="titulo">En Recepción</span>
-        <strong>{{ t.kpis.enRecepcion }}</strong>
-        <span class="detalle">{{ t.kpis.sinTomarMas3Dias }} sin tomar desde hace más de 3 días</span>
-      </a>
-      <a class="seg-kpi clic etapa-CON_QUEJOSO" routerLink="/quejas" [queryParams]="{ etapa: 'CON_QUEJOSO' }">
-        <span class="titulo">Con el quejoso</span>
-        <strong>{{ t.kpis.conQuejoso }}</strong>
-        <span class="detalle">esperando corrección · {{ t.kpis.rechazadasAlgunaVez }} rechazadas alguna vez</span>
-      </a>
-      <a class="seg-kpi clic etapa-PRIMER_CONTACTO" routerLink="/quejas" [queryParams]="{ etapa: 'PRIMER_CONTACTO' }">
-        <span class="titulo">En Primer Contacto</span>
-        <strong>{{ t.kpis.enPrimerContacto }}</strong>
-        <span class="detalle">turnadas, en análisis o procedentes</span>
-      </a>
-      <a class="seg-kpi clic etapa-SUBDEFENSORIA" routerLink="/quejas" [queryParams]="{ etapa: 'SUBDEFENSORIA' }">
-        <span class="titulo">En Subdefensoría</span>
-        <strong>{{ t.kpis.enSubdefensoria }}</strong>
-        <span class="detalle">en investigación, oficios o acuerdos</span>
-      </a>
-      <a class="seg-kpi clic etapa-CERRADA" routerLink="/quejas" [queryParams]="{ etapa: 'CERRADA' }">
-        <span class="titulo">Cerradas</span>
-        <strong>{{ t.kpis.cerradas }}</strong>
-        <span class="detalle">concluidas, improcedentes, remitidas o canceladas</span>
-      </a>
-      <div class="seg-kpi" title="Promedio de los últimos 30 días entre que llega la queja y Recepción la turna o la regresa">
-        <span class="titulo">Respuesta de Recepción</span>
-        <strong>{{ duracion(t.kpis.horasPromedioRecepcion) }}</strong>
-        <span class="detalle">{{ t.kpis.atendidasRecepcion }} atendidas · {{ t.kpis.respuestasDenunciado }} respuestas de denunciados</span>
-      </div>
-    </div>
-
-    <!-- ================= Dónde están ================= -->
-    <div class="seg-panel bloque">
-      <div class="seg-panel-cabeza">
-        <div>
-          <h3>¿Dónde están las quejas?</h3>
-          <p>Cada queja según el área que la tiene ahora. Haz clic en una etapa o en un estatus para ver cuáles son.</p>
-        </div>
-      </div>
-      <div class="flujo-barra" role="img" aria-label="Distribución de quejas por etapa">
-        @for (e of t.etapas; track e.clave) {
-          @if (e.total > 0) {
-            <span [class]="'etapa-' + e.clave" [style.flex-grow]="e.total" [title]="e.etiqueta + ': ' + e.total"></span>
-          }
-        }
-      </div>
-      <div class="flujo-etapas">
-        @for (e of t.etapas; track e.clave) {
-          <div [class]="'flujo-etapa etapa-' + e.clave">
-            <a class="flujo-cabeza" routerLink="/quejas" [queryParams]="{ etapa: e.clave }">
-              <span class="flujo-nombre">{{ e.etiqueta }}</span>
-              <strong>{{ e.total }}</strong>
-              <span class="flujo-pct">{{ pct(e.total, totalEtapas) }}%</span>
-            </a>
-            <ul>
-              @for (s of e.estatus; track s.clave) {
-                <li>
-                  <a routerLink="/quejas" [queryParams]="{ estatus: s.clave }">
-                    <span>{{ s.etiqueta }}</span><b>{{ s.total }}</b>
-                  </a>
-                </li>
-              } @empty {
-                <li class="vacio">Sin quejas</li>
-              }
-            </ul>
-          </div>
-        }
-      </div>
-    </div>
-
-    <!-- ================= Meses y unidades ================= -->
-    <div class="seg-grid-2">
-      <div class="seg-panel">
-        <div class="seg-panel-cabeza">
-          <div>
-            <h3>Quejas por mes</h3>
-            <p>Últimos 12 meses · clic en un mes para ver sus quejas</p>
-          </div>
-          <span class="leyenda"><i class="recibidas"></i>Recibidas <i class="atendidas"></i>Atendidas por Recepción</span>
-        </div>
-        <div class="meses">
-          @for (m of t.porMes; track m.clave) {
-            <a class="mes" routerLink="/quejas" [queryParams]="{ mes: m.clave }" [title]="m.etiqueta + ': ' + m.recibidas + ' recibidas, ' + m.atendidas + ' atendidas'">
-              <span class="mes-valor">{{ m.recibidas || '' }}</span>
-              <span class="mes-barras">
-                <span class="recibidas" [style.height.%]="pct(m.recibidas, maxMes)"></span>
-                <span class="atendidas" [style.height.%]="pct(m.atendidas, maxMes)"></span>
+  } @else if (panel; as t) {
+    <!-- ================= Indicadores principales ================= -->
+    <h3 class="seg-titulo-seccion">Indicadores principales</h3>
+    <div class="seg-tarjetas">
+      <button type="button" class="seg-tarjeta clic ac-guinda" (click)="irAQuejas({})">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></span>
+        <span>
+          <span class="titulo">Quejas recibidas</span>
+          <span class="cifra"><strong>{{ t.kpis.recibidasPeriodo }}</strong>
+            @if (delta !== null) {
+              <span class="seg-delta" [class.baja]="delta < 0" [class.neutra]="delta === 0" title="Contra el periodo anterior del mismo tamaño">
+                {{ delta > 0 ? '↑' : delta < 0 ? '↓' : '=' }} {{ delta < 0 ? -delta : delta }}%
               </span>
-              <span class="mes-etiqueta">{{ m.etiqueta }}</span>
-            </a>
-          }
+            }
+          </span>
+          <span class="detalle">{{ etiquetaPeriodo }} · {{ t.kpis.total }} en total</span>
+        </span>
+      </button>
+      <button type="button" class="seg-tarjeta clic ac-ambar" (click)="irAQuejas({ etapa: 'RECEPCION' })">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5V12h-4.2a1 1 0 0 0-.9.6l-.6 1.3a1 1 0 0 1-.9.6h-2.8a1 1 0 0 1-.9-.6l-.6-1.3a1 1 0 0 0-.9-.6H4z" opacity=".55"/><path d="M2 13.5a1 1 0 0 1 1-1h5.2l.9 1.9a1 1 0 0 0 .9.6h4a1 1 0 0 0 .9-.6l.9-1.9H21a1 1 0 0 1 1 1V19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/></svg></span>
+        <span>
+          <span class="titulo">En recepción</span>
+          <span class="cifra"><strong>{{ t.kpis.enRecepcion }}</strong></span>
+          <span class="detalle">{{ pctDe(t.kpis.enRecepcion) }}% del total</span>
+          <span class="detalle" [class.resaltado]="t.kpis.sinTomarMas3Dias > 0">{{ t.kpis.sinTomarMas3Dias }} sin tomar desde hace más de 3 días</span>
+        </span>
+      </button>
+      <button type="button" class="seg-tarjeta clic ac-rojo" (click)="irAQuejas({ etapa: 'CON_QUEJOSO' })">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 7v6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="16.8" r="1.4" fill="#fff"/></svg></span>
+        <span>
+          <span class="titulo">Con el quejoso</span>
+          <span class="cifra"><strong>{{ t.kpis.conQuejoso }}</strong></span>
+          <span class="detalle">esperando corrección · {{ t.kpis.rechazadasAlgunaVez }} rechazadas alguna vez</span>
+        </span>
+      </button>
+      <button type="button" class="seg-tarjeta clic ac-azul" (click)="irAQuejas({ etapa: 'PRIMER_CONTACTO' })">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7" r="3.2"/><path d="M6 20v-1.2A5.8 5.8 0 0 1 12 13a5.8 5.8 0 0 1 6 5.8V20z"/><circle cx="5" cy="9" r="2.2" opacity=".55"/><circle cx="19" cy="9" r="2.2" opacity=".55"/><path d="M1 19v-.6A4 4 0 0 1 5 14.5c.8 0 1.5.2 2.1.5A7.6 7.6 0 0 0 4.6 19zM23 19v-.6a4 4 0 0 0-4-3.9c-.8 0-1.5.2-2.1.5a7.6 7.6 0 0 1 2.5 4z" opacity=".55"/></svg></span>
+        <span>
+          <span class="titulo">En Primer Contacto</span>
+          <span class="cifra"><strong>{{ t.kpis.enPrimerContacto }}</strong></span>
+          <span class="detalle">turnadas, en análisis o procedentes</span>
+        </span>
+      </button>
+      <button type="button" class="seg-tarjeta clic ac-morado" (click)="irAQuejas({ etapa: 'SUBDEFENSORIA' })">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="7.5" r="3.5"/><path d="M2 20v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1z"/><circle cx="17" cy="8.5" r="2.6" opacity=".55"/><path d="M17.5 13.5A5 5 0 0 1 22 18.5V20h-4.4v-1a7.4 7.4 0 0 0-2.3-5.4c.7-.1 1.4-.1 2.2-.1z" opacity=".55"/></svg></span>
+        <span>
+          <span class="titulo">En Subdefensoría</span>
+          <span class="cifra"><strong>{{ t.kpis.enSubdefensoria }}</strong></span>
+          <span class="detalle">en investigación, oficios o acuerdos</span>
+        </span>
+      </button>
+      <button type="button" class="seg-tarjeta clic ac-verde" (click)="irAQuejas({ etapa: 'CERRADA' })">
+        <span class="icono"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="m7.5 12.3 3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span>
+          <span class="titulo">Cerradas</span>
+          <span class="cifra"><strong>{{ t.kpis.cerradas }}</strong></span>
+          <span class="detalle">concluidas, improcedentes, remitidas o canceladas</span>
+        </span>
+      </button>
+    </div>
+
+    <!-- ================= Casos y dónde están ================= -->
+    <div class="fila fila-a">
+      <div class="seg-panel">
+        <div class="seg-panel-cabeza">
+          <h3>Casos que requieren atención @if (t.atencion.totalElementos) { <span class="burbuja">{{ t.atencion.totalElementos }}</span> }</h3>
+          <button type="button" class="seg-link" (click)="abrir('atencion')">Ver todas →</button>
+        </div>
+        <div class="seg-tabla-envoltura">
+          <table class="seg-tabla compacta">
+            <thead><tr><th>Folio</th><th>Motivo</th><th class="num">Días</th><th>Estado</th><th>Unidad</th></tr></thead>
+            <tbody>
+              @for (c of t.atencion.filas; track c.folio) {
+                <tr class="clic" [routerLink]="['/quejas', c.folio]" [title]="'Ver la queja ' + c.folio">
+                  <td class="fuerte">{{ c.folio }}</td>
+                  <td>{{ c.motivoEtiqueta }}</td>
+                  <td class="num"><span class="seg-dias" [class.alta]="c.severidad === 'ALTA'">{{ c.dias }}</span></td>
+                  <td><span [class]="'seg-chip etapa-' + c.etapa">{{ c.estatusEtiqueta }}</span></td>
+                  <td>{{ c.unidadNombre || '—' }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="seg-vacio">No hay casos con retraso ni sin asignar. 👍</td></tr>
+              }
+            </tbody>
+          </table>
         </div>
       </div>
 
       <div class="seg-panel">
         <div class="seg-panel-cabeza">
-          <div>
-            <h3>Unidades con más quejas</h3>
-            <p>En trámite / total · clic para ver sus quejas</p>
-          </div>
-          <a routerLink="/unidades">Ver todas →</a>
+          <h3>¿Dónde están las quejas?</h3>
+          <button type="button" class="seg-link" (click)="abrir('etapas')">Ver detalle →</button>
         </div>
-        @if (t.unidades.length === 0) {
-          <p class="seg-vacio">Aún no hay quejas.</p>
+        <div class="flujo-barra" role="img" aria-label="Distribución de quejas por etapa">
+          @for (e of t.etapas; track e.clave) {
+            @if (e.total > 0) {
+              <span [style.background]="colorEtapa[e.clave]" [style.flex-grow]="e.total" [title]="etiquetaCorta[e.clave] + ': ' + e.total"></span>
+            }
+          }
+        </div>
+        <div class="flujo-tarjetas">
+          @for (e of etapasTarjeta; track e.clave) {
+            <button type="button" [class]="'flujo-tarjeta etapa-' + e.clave" (click)="irAQuejas({ etapa: e.clave })">
+              <span class="flujo-cabeza">
+                <b>{{ etiquetaCorta[e.clave] }}</b>
+                <span class="flujo-cifra"><strong>{{ e.total }}</strong><small>{{ pctTexto(e.total, totalEtapas) }}</small></span>
+              </span>
+              <span class="flujo-lista">
+                @for (s of e.estatus.slice(0, 3); track s.clave) {
+                  <span><span>{{ s.etiqueta }}</span><b>{{ s.total }}</b></span>
+                } @empty {
+                  <span class="vacio">Sin quejas</span>
+                }
+              </span>
+            </button>
+          }
+        </div>
+        @if (etapaQuejoso?.total) {
+          <p class="flujo-nota">
+            <span class="punto" [style.background]="colorEtapa['CON_QUEJOSO']"></span>
+            <a routerLink="/quejas" [queryParams]="{ etapa: 'CON_QUEJOSO' }">{{ etapaQuejoso?.total }} con el quejoso</a>, esperando que corrija sus observaciones.
+          </p>
         }
+      </div>
+    </div>
+
+    <!-- ================= Evolución y unidades ================= -->
+    <div class="fila fila-b">
+      <div class="seg-panel">
+        <div class="seg-panel-cabeza">
+          <h3>Evolución de quejas</h3>
+          <select class="seg-select-chico" [(ngModel)]="meses" (ngModelChange)="cambiarMeses()" aria-label="Meses de la gráfica">
+            <option [ngValue]="6">Últimos 6 meses</option>
+            <option [ngValue]="12">Últimos 12 meses</option>
+            <option [ngValue]="24">Últimos 24 meses</option>
+          </select>
+        </div>
+        <app-barras [etiquetas]="etiquetasMes" [series]="seriesMes" [resaltarUltima]="true" [clicable]="true"
+                    [alto]="250" descripcion="Quejas recibidas por mes" (seleccionar)="abrirMes($event)" />
+        <p class="leyenda-centro"><span class="punto" style="background:#7a1f45"></span> Quejas recibidas · clic en un mes para ver sus quejas</p>
+      </div>
+
+      <div class="seg-panel">
+        <div class="seg-panel-cabeza">
+          <h3>Unidades con más quejas</h3>
+          <button type="button" class="seg-link" (click)="abrir('unidades')">Ver todas →</button>
+        </div>
         <ul class="ranking">
           @for (u of t.unidades; track u.clave) {
             <li>
-              <a routerLink="/quejas" [queryParams]="{ unidad: u.clave }" [title]="u.nombre || u.clave">
-                <span class="ranking-nombre">{{ nombreUnidad(u) }}</span>
-                <span class="seg-barra"><span [style.width.%]="pct(u.total, maxUnidad)"></span></span>
+              <a routerLink="/quejas" [queryParams]="{ unidad: u.clave }" [title]="(u.nombre || u.clave) + ' · en trámite / total'">
+                <span class="ranking-nombre">{{ nombreCorto(u) }}</span>
+                <span class="seg-barra"><span [style.width.%]="(u.total / maxUnidad) * 100"></span></span>
                 <span class="ranking-num"><b>{{ u.enTramite }}</b> / {{ u.total }}</span>
               </a>
             </li>
+          } @empty {
+            <li class="seg-vacio">Sin quejas {{ etiquetaPeriodo }}.</li>
           }
         </ul>
       </div>
     </div>
 
-    <!-- ================= Personas ================= -->
-    <div class="seg-grid-2">
+    <!-- ================= Carga y motivos ================= -->
+    <div class="fila fila-b">
       <div class="seg-panel">
         <div class="seg-panel-cabeza">
-          <div>
-            <h3>Recepción</h3>
-            <p>Quién atiende qué · clic para ver las quejas de cada recepcionista</p>
-          </div>
+          <h3>Carga de trabajo del personal</h3>
+          <button type="button" class="seg-link" (click)="abrir('carga')">Ver todas →</button>
         </div>
         <div class="seg-tabla-envoltura">
-          <table class="seg-tabla">
-            <thead>
-              <tr><th>Recepcionista</th><th class="num">Abiertas</th><th class="num">Hoy</th><th class="num">Atendidas</th><th class="num">Turnadas</th><th class="num">Observ.</th></tr>
-            </thead>
+          <table class="seg-tabla compacta">
+            <thead><tr><th>Nombre</th><th class="num">Abiertas</th><th class="num">En trámite</th><th class="num">Atendidas</th><th class="num">Turnadas</th><th class="num">Observ.</th></tr></thead>
             <tbody>
-              @for (r of t.recepcion; track r.correo) {
-                <tr class="clic" [routerLink]="['/quejas']" [queryParams]="{ recepcionista: r.correo }">
+              @for (r of t.recepcion; track r.id) {
+                <tr class="clic" routerLink="/quejas" [queryParams]="{ recepcionista: r.correo }">
                   <td class="fuerte">{{ r.nombre }}</td>
-                  <td class="num">@if (r.abiertasAhora) { <span class="punto-activo"></span> }{{ r.abiertasAhora }}</td>
-                  <td class="num">{{ r.atendidasHoy }}</td>
-                  <td class="num"><b>{{ r.atendidas }}</b></td>
+                  <td class="num"><span [class.rojo]="r.abiertas > 1">{{ r.abiertas }}</span></td>
+                  <td class="num">{{ r.enTramite }}</td>
+                  <td class="num">{{ r.atendidas }}</td>
                   <td class="num">{{ r.turnadas }}</td>
-                  <td class="num">{{ r.conObservaciones }}</td>
+                  <td class="num">{{ r.observaciones }}</td>
                 </tr>
               } @empty {
                 <tr><td colspan="6" class="seg-vacio">No hay recepcionistas activas.</td></tr>
@@ -175,94 +207,83 @@
 
       <div class="seg-panel">
         <div class="seg-panel-cabeza">
-          <div>
-            <h3>Abogados</h3>
-            <p>Carga de trabajo · clic para ver las quejas de cada abogado</p>
-          </div>
-          <a routerLink="/quejas" [queryParams]="{ abogado: 'SIN_ASIGNAR', etapa: 'PRIMER_CONTACTO' }">Sin abogado →</a>
+          <h3>Motivos más frecuentes de rechazo
+            <span class="info" title="Motivos con los que Recepción regresó quejas al quejoso {{ etiquetaPeriodo }}. Una queja puede tener varios.">i</span></h3>
+          <button type="button" class="seg-link" (click)="abrir('motivos')">Ver todas →</button>
         </div>
-        <ul class="ranking abogados">
-          @for (a of t.abogados; track a.nombre) {
-            <li>
-              <a routerLink="/quejas" [queryParams]="{ abogado: a.nombre }">
-                <span class="ranking-nombre">{{ a.nombre }} @if (a.rol === 'DEFENSOR') { <em>· Titular</em> }</span>
-                <span class="seg-barra"><span [style.width.%]="pct(a.enTramite, maxAbogado)"></span></span>
-                <span class="ranking-num"><b>{{ a.enTramite }}</b> en trámite · {{ a.cerradas }} cerradas</span>
-              </a>
-            </li>
-          } @empty {
-            <li class="seg-vacio">No hay abogados dados de alta.</li>
-          }
-        </ul>
-      </div>
-    </div>
-
-    <!-- ================= Rechazos ================= -->
-    <div class="seg-grid-2">
-      <div class="seg-panel">
-        <div class="seg-panel-cabeza">
-          <div>
-            <h3>¿Por qué se rechazan?</h3>
-            <p>Motivos más frecuentes al regresar una queja con observaciones</p>
-          </div>
-        </div>
-        @if (t.motivosRechazo.length === 0) {
-          <p class="seg-vacio">Ninguna queja ha sido regresada con observaciones.</p>
-        }
         <ul class="motivos">
-          @for (m of t.motivosRechazo; track m.clave) {
+          @for (m of t.motivos.slice(0, 5); track m.clave) {
             <li>
-              <span class="motivo-texto">{{ m.etiqueta }}</span>
-              <span class="seg-barra etapa-CON_QUEJOSO"><span [style.width.%]="pct(m.total, maxMotivo)"></span></span>
-              <b>{{ m.total }}</b>
-            </li>
-          }
-        </ul>
-      </div>
-
-      <div class="seg-panel">
-        <div class="seg-panel-cabeza">
-          <div>
-            <h3>Esperando corrección del quejoso</h3>
-            <p>Las regresadas más recientes</p>
-          </div>
-          <a routerLink="/quejas" [queryParams]="{ etapa: 'CON_QUEJOSO' }">Ver todas →</a>
-        </div>
-        <ul class="rechazos">
-          @for (r of t.rechazosRecientes; track r.folio) {
-            <li>
-              <a [routerLink]="['/quejas', r.folio]">
-                <span class="rechazo-cabeza"><b>{{ r.folio }}</b> · {{ r.quejoso }}
-                  <span class="suave">{{ r.fecha | date: 'dd/MM/yy' }} · {{ r.recepcionista || '—' }}</span></span>
-                <span class="rechazo-motivo">{{ motivoCorto(r.motivo) }}</span>
+              <a routerLink="/quejas" [queryParams]="{ motivo: m.clave }">
+                <span class="motivo-texto">{{ m.motivo }}</span>
+                <span class="seg-barra"><span [style.width.%]="(m.cantidad / maxMotivo) * 100"></span></span>
+                <span class="motivo-num"><b>{{ m.cantidad }}</b> ({{ m.porcentaje }}%)</span>
               </a>
             </li>
-          } @empty {
-            <li class="seg-vacio">No hay quejas esperando corrección.</li>
           }
         </ul>
       </div>
-    </div>
-
-    <!-- ================= Administración ================= -->
-    <div class="admin-accesos">
-      <a class="seg-panel acceso" routerLink="/usuarios-roles">
-        <span class="acceso-num">{{ t.personal.total }}</span>
-        <span>
-          <b>Personal de la Defensoría</b>
-          <span class="acceso-roles">
-            @for (r of t.personal.porRol; track r.clave) { <span>{{ r.total }} {{ etiquetaRol(r.clave) }}</span> }
-          </span>
-        </span>
-      </a>
-      <a class="seg-panel acceso" routerLink="/catalogo-dependencias">
-        <span class="acceso-num">{{ t.personal.dependencias }}</span>
-        <span><b>Dependencias y Unidades Académicas</b><span class="acceso-roles"><span>Catálogo del IPN</span></span></span>
-      </a>
-      <a class="seg-panel acceso" routerLink="/chatbot">
-        <span class="acceso-num">?</span>
-        <span><b>Preguntas Frecuentes</b><span class="acceso-roles"><span>Las que responde el asistente del portal</span></span></span>
-      </a>
     </div>
   }
 </section>
+
+<!-- ================= Ventanas ================= -->
+@switch (ventana) {
+  @case ('atencion') {
+    <app-modal-panel titulo="Casos que requieren atención"
+                     subtitulo="Quejas con posibles retrasos, sin asignar o con incidencias que requieren seguimiento." (cerrar)="cerrar()">
+      <app-atencion-tabla />
+    </app-modal-panel>
+  }
+  @case ('etapas') {
+    <app-modal-panel titulo="Distribución de quejas por etapa"
+                     subtitulo="Consulta el estado actual de todas las quejas y accede a la lista de cada etapa." (cerrar)="cerrar()">
+      <div class="dist">
+        <div class="dist-grafica">
+          <app-dona [segmentos]="segmentosEtapas" etiquetaCentro="Quejas totales" [tam]="260" [grosor]="34" />
+          <ul class="dist-leyenda">
+            @for (s of segmentosEtapas; track s.etiqueta) {
+              <li><span class="punto" [style.background]="s.color"></span><span>{{ s.etiqueta }}</span><b>{{ s.valor }}</b><small>({{ pctTexto(s.valor, totalEtapas) }})</small></li>
+            }
+          </ul>
+        </div>
+        <div class="dist-tarjetas">
+          @for (e of panel?.etapas ?? []; track e.clave) {
+            <div [class]="'dist-tarjeta etapa-' + e.clave">
+              <b class="dist-nombre">{{ etiquetaCorta[e.clave] }}</b>
+              <strong>{{ e.total }}</strong>
+              <small>{{ pctTexto(e.total, totalEtapas) }} del total</small>
+              <ul>
+                @for (s of e.estatus; track s.clave) { <li><span>{{ s.etiqueta }}</span><b>{{ s.total }}</b></li> }
+                @empty { <li><span>Sin quejas</span><b>0</b></li> }
+              </ul>
+              <button type="button" class="seg-btn" (click)="verEtapa(e.clave)">Ver quejas</button>
+            </div>
+          }
+        </div>
+      </div>
+    </app-modal-panel>
+  }
+  @case ('unidades') {
+    <app-modal-panel titulo="Unidades con más quejas"
+                     subtitulo="Listado completo de dependencias y unidades académicas con el número de quejas registradas." (cerrar)="cerrar()">
+      <app-unidades-tabla [dias]="dias" />
+    </app-modal-panel>
+  }
+  @case ('carga') {
+    <app-modal-panel titulo="Carga de trabajo del personal"
+                     subtitulo="Distribución de quejas y estado de atención por recepcionistas y personal jurídico." (cerrar)="cerrar()">
+      <button acciones type="button" class="seg-btn-borde" (click)="tablaCarga.exportar()" [disabled]="!carga">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg>
+        Exportar
+      </button>
+      <app-carga-tabla #tablaCarga [datos]="carga" [tamanio]="5" />
+    </app-modal-panel>
+  }
+  @case ('motivos') {
+    <app-modal-panel titulo="Motivos más frecuentes de rechazo"
+                     subtitulo="Principales motivos por los que las quejas no son admitidas o se devuelven con observaciones." (cerrar)="cerrar()">
+      <app-motivos-tabla />
+    </app-modal-panel>
+  }
+}

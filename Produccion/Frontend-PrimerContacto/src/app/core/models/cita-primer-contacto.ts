@@ -12,7 +12,10 @@ export interface CitaPrimerContacto {
   fecha: string;
   hora: string;
 
+  /** Modalidad (en el backend: tipoCita PRESENCIAL / VIRTUAL). */
   tipo: 'Presencial' | 'Virtual';
+  /** Para qué es la cita: COMPARECENCIA, REVISION o SEGUIMIENTO. */
+  categoria?: string;
   motivo: string;
   estatus: string;
 
@@ -48,6 +51,7 @@ export interface ReagendarCitaPrimerContacto {
   fechaCita: string;
   horaCita: string;
   tipoCita?: string;
+  categoria?: string;
   motivo?: string;
 }
 
@@ -60,5 +64,23 @@ export interface CrearCitaPrimerContacto {
   fechaCita: string;
   horaCita: string;
   tipoCita: string;
+  categoria?: string;
   motivo: string;
 }
+
+/** Tipos de cita del diseño 2026-10-18 (columna categoria_cita). */
+export const CATEGORIAS_CITA: { clave: string; etiqueta: string }[] = [
+  { clave: 'COMPARECENCIA', etiqueta: 'Comparecencia' },
+  { clave: 'REVISION', etiqueta: 'Revisión de documentos' },
+  { clave: 'SEGUIMIENTO', etiqueta: 'Seguimiento' }
+];
+
+export function etiquetaCategoria(clave?: string | null): string {
+  return CATEGORIAS_CITA.find(c => c.clave === clave)?.etiqueta ?? 'Comparecencia';
+}
+
+/** Horarios de atención que ofrece la agenda (cada 30 minutos). */
+export const HORARIOS_CITA = [
+  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
+  '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00'
+];

@@ -20,52 +20,11 @@ public final class SeguimientoModels {
     public record Etapa(String clave, String etiqueta, long total, List<Conteo> estatus) {
     }
 
-    public record Kpis(
-            long total,
-            long ultimos30,
-            long enRecepcion,
-            long sinTomarMas3Dias,
-            long conQuejoso,
-            long rechazadasAlgunaVez,
-            long enPrimerContacto,
-            long enSubdefensoria,
-            long cerradas,
-            long atendidasRecepcion,
-            Double horasPromedioRecepcion,
-            long respuestasDenunciado) {
-    }
-
     public record Mes(String clave, String etiqueta, long recibidas, long atendidas) {
     }
 
     public record UnidadConteo(String clave, String nombre, String abreviatura, String tipo,
                                long total, long enTramite, long cerradas, LocalDateTime ultimaQueja) {
-    }
-
-    public record Recepcionista(String nombre, String correo, long abiertasAhora, long atendidas,
-                                long turnadas, long conObservaciones, long atendidasHoy) {
-    }
-
-    public record Abogado(String nombre, String rol, long enTramite, long total, long cerradas) {
-    }
-
-    public record RechazoReciente(String folio, LocalDateTime fecha, String quejoso, String recepcionista,
-                                  String motivo, String estatusActual) {
-    }
-
-    public record Personal(long total, List<Conteo> porRol, long dependencias) {
-    }
-
-    public record Tablero(
-            Kpis kpis,
-            List<Etapa> etapas,
-            List<Mes> porMes,
-            List<UnidadConteo> unidades,
-            List<Recepcionista> recepcion,
-            List<Abogado> abogados,
-            List<Conteo> motivosRechazo,
-            List<RechazoReciente> rechazosRecientes,
-            Personal personal) {
     }
 
     public record FilaQueja(
@@ -81,7 +40,11 @@ public final class SeguimientoModels {
             boolean atendiendoAhora,
             String abogado,
             String folioPrimerContacto,
-            String origen) {
+            String origen,
+            String estado,
+            String estadoEtiqueta,
+            String prioridad,
+            long dias) {
     }
 
     public record PaginaQuejas(List<FilaQueja> filas, int pagina, int tamanio, long totalElementos, int totalPaginas) {
@@ -90,7 +53,7 @@ public final class SeguimientoModels {
     public record Persona(String correo, String nombre) {
     }
 
-    public record Filtros(List<Persona> recepcionistas, List<String> abogados, List<Conteo> etapas) {
+    public record Filtros(List<Persona> recepcionistas, List<String> abogados, List<Conteo> etapas, List<Conteo> estados) {
     }
 
     public record Evidencia(Long id, String nombre, String tipoMime, String tipo, Long tamanio, LocalDateTime fecha) {

@@ -1,217 +1,215 @@
-<section class="page">
-  <div class="page-header">
-    <h2>Agenda de Citas</h2>
-    <p>Gestión de citas, comparecencias y seguimiento con personas quejosas.</p>
+<section class="page ag">
+  <div class="ag-cabeza">
+    <div>
+      <h2>Agenda de Citas</h2>
+      <p>Gestión de citas, comparecencias y seguimiento con personas quejosas.</p>
+    </div>
+    <button type="button" class="pc-btn grande" (click)="nuevaCita()"><mat-icon>add</mat-icon> Nueva cita</button>
   </div>
 
-  <div class="agenda-layout">
-    
-    <mat-card class="calendar-card">
-      <div class="calendar-top">
-        <h3>Calendario Institucional</h3>
+  <div class="pc-kpis">
+    <div class="pc-kpi"><span class="icono"><mat-icon>calendar_today</mat-icon></span><div><span>Citas de hoy</span><strong>{{ kpiHoy }}</strong></div></div>
+    <div class="pc-kpi"><span class="icono"><mat-icon>schedule</mat-icon></span><div><span>Próximas citas</span><strong>{{ kpiProximas }}</strong></div></div>
+    <div class="pc-kpi"><span class="icono"><mat-icon>check_circle_outline</mat-icon></span><div><span>Confirmadas</span><strong>{{ kpiConfirmadas }}</strong></div></div>
+    <div class="pc-kpi"><span class="icono"><mat-icon>highlight_off</mat-icon></span><div><span>Canceladas</span><strong>{{ kpiCanceladas }}</strong></div></div>
+  </div>
 
-        <div class="calendar-nav">
-          <button mat-icon-button type="button" (click)="mesAnterior()">
-            <mat-icon>chevron_left</mat-icon>
-          </button>
+  <div class="ag-tabs" role="tablist">
+    <button type="button" role="tab" [class.activa]="vista === 'calendario'" (click)="cambiarVista('calendario')"><mat-icon>calendar_month</mat-icon> Calendario</button>
+    <button type="button" role="tab" [class.activa]="vista === 'lista'" (click)="cambiarVista('lista')"><mat-icon>format_list_bulleted</mat-icon> Lista de citas</button>
+  </div>
 
-          <strong>{{ nombreMesSeleccionado }} {{ anioSeleccionado }}</strong>
-
-          <button mat-icon-button type="button" (click)="mesSiguiente()">
-            <mat-icon>chevron_right</mat-icon>
-          </button>
-
-          <button mat-stroked-button type="button" class="today-btn" (click)="irAHoy()">
-            Hoy
-          </button>
-        </div>
-      </div>
-
-      <div class="calendar">
-        @for (dia of diasSemana; track dia) {
-          <div class="weekday">{{ dia }}</div>
-        }
-
-        @for (espacio of espaciosIniciales; track espacio) {
-          <div class="calendar-empty"></div>
-        }
-
-        @for (dia of diasMes; track dia) {
-          <button
-            type="button"
-            class="calendar-day"
-            [class.today]="
-              dia === hoy.getDate() &&
-              mesSeleccionado === hoy.getMonth() + 1 &&
-              anioSeleccionado === hoy.getFullYear()
-            "
-            [class.selected]="dia === diaSeleccionado"
-            (click)="seleccionarDia(dia)">
-
-            <strong>{{ dia }}</strong>
-
-            @if (contarCitasPorDia(dia) > 0) {
-              <span class="day-dot"></span>
-            }
-          </button>
-        }
-      </div>
-
-      <div class="selected-day-panel">
-        <h3 class="card-title-custom">Citas del {{ fechaAgendaSeleccionada || 'día seleccionado' }}</h3>
-
-        @if (obtenerCitasDelDiaSeleccionado().length === 0) {
-          <p class="empty-state-text">No hay citas programadas para este día.</p>
-        }
-
-        @for (cita of obtenerCitasDelDiaSeleccionado(); track cita.id) {
-          <div class="day-appointment">
-            <strong>{{ cita.hora }} hrs</strong>
-            <span>{{ cita.folio }} · {{ cita.quejoso }}</span>
-
-            <mat-chip
-              [class.confirmed]="cita.estatus === 'Confirmada'"
-              [class.scheduled]="cita.estatus === 'Programada'"
-              [class.cancelled]="cita.estatus === 'Cancelada'"
-              [class.needs-action]="cita.estatusCodigo === 'CANCELADA_QUEJOSO' || cita.estatusCodigo === 'SIN_RESPUESTA'"
-              [class.rescheduled]="cita.estatusCodigo === 'REAGENDADA'">
-              {{ cita.estatus }}
-            </mat-chip>
+  @if (vista === 'calendario') {
+    <div class="ag-rejilla">
+      <div class="pc-card">
+        <div class="ag-cal-cabeza">
+          <h3>Calendario Institucional</h3>
+          <div class="ag-nav">
+            <button type="button" class="ico" (click)="mover(-1)" aria-label="Mes anterior"><mat-icon>chevron_left</mat-icon></button>
+            <b>{{ tituloMes }}</b>
+            <button type="button" class="ico" (click)="mover(1)" aria-label="Mes siguiente"><mat-icon>chevron_right</mat-icon></button>
+            <button type="button" class="pc-btn-borde chico" (click)="irAHoy()">Hoy</button>
           </div>
-        }
-      </div>
-    </mat-card>
+        </div>
 
-    <mat-card class="form-card">
-      <h3 class="card-title-custom">Programar Nueva Cita</h3>
-
-      <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Expediente pendiente</mat-label>
-          <mat-select
-            [(ngModel)]="citaNueva.folio"
-            (selectionChange)="seleccionarExpedientePendiente($event.value)">
-            @for (expediente of expedientesPendientesCita; track expediente.folio) {
-              <mat-option [value]="expediente.folio">
-                {{ expediente.folio }} · {{ expediente.nombreQuejoso }}
-              </mat-option>
+        <div class="ag-cal">
+          @for (d of diasSemana; track d) { <span class="ag-sem">{{ d }}</span> }
+          @for (c of celdas; track $index) {
+            @if (c === null) { <span class="ag-dia vacio"></span> }
+            @else {
+              <button type="button" class="ag-dia" [class.sel]="isoDe(c) === diaSel" [class.hoy]="isoDe(c) === hoyIso" (click)="diaSel = isoDe(c)">
+                {{ c }}
+                @if (tieneCitas(c)) { <i class="punto"></i> }
+              </button>
             }
-          </mat-select>
-        </mat-form-field>
+          }
+        </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Nombre del quejoso</mat-label>
-          <input matInput [(ngModel)]="citaNueva.quejoso" readonly>
-        </mat-form-field>
+        <h4 class="ag-dia-titulo">Citas del {{ tituloDia }}</h4>
+        <ul class="ag-dia-lista">
+          @for (c of citasDelDia; track c.id) {
+            <li [class.apagada]="!activa(c)">
+              <b class="hora">{{ c.hora }} hrs</b>
+              <span class="folio">{{ c.folio }}</span>
+              <span class="quien"><b>{{ c.quejoso || '—' }}</b><small>{{ etiquetaCategoria(c.categoria) }} {{ c.tipo.toLowerCase() }}</small></span>
+              <span [class]="'pc-chip ' + c.estatusCodigo">{{ c.estatus }}</span>
+              <button type="button" class="pc-btn-borde chico" (click)="abrirDetalle(c)"><mat-icon>visibility</mat-icon> Detalles</button>
+            </li>
+          } @empty {
+            <li class="vacio">No hay citas este día.
+              @if (diaSel >= hoyIso) { <button type="button" class="pc-link" (click)="nuevaCita()">Agendar una</button> }
+            </li>
+          }
+        </ul>
+      </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Tipo de cita</mat-label>
-          <mat-select [(ngModel)]="citaNueva.tipo">
-            <mat-option value="Presencial">Presencial</mat-option>
-            <mat-option value="Virtual">Virtual</mat-option>
-          </mat-select>
-        </mat-form-field>
+      <div class="col">
+        <div class="pc-card">
+          <div class="pc-card-cabeza">
+            <h3>Mis próximas citas</h3>
+            <button type="button" class="pc-link" (click)="cambiarVista('lista')">Ver todas <mat-icon>arrow_forward</mat-icon></button>
+          </div>
+          <ul class="ag-proximas">
+            @for (c of proximas.slice(0, 3); track c.id) {
+              <li>
+                <span class="fecha"><b>{{ diaCorto(c) }}</b><small>{{ mesCorto(c) }}</small></span>
+                <span class="datos"><b>{{ c.hora }} hrs</b><span>{{ c.folio }}</span><small>{{ c.quejoso }}</small><small>{{ c.tipo }}</small></span>
+                <span class="der">
+                  <span [class]="'pc-chip ' + c.estatusCodigo">{{ c.estatus }}</span>
+                  <button type="button" class="pc-btn-borde chico" (click)="abrirDetalle(c)"><mat-icon>visibility</mat-icon> Detalles</button>
+                </span>
+              </li>
+            } @empty {
+              <li class="vacio">No tienes citas próximas.</li>
+            }
+          </ul>
+        </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Fecha seleccionada</mat-label>
-          <input matInput [(ngModel)]="citaNueva.fecha" readonly>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Hora</mat-label>
-          <input
-            matInput
-            [(ngModel)]="citaNueva.hora"
-            placeholder="Ej. 09:30"
-            maxlength="5"
-            (blur)="formatearHora()">
-        </mat-form-field>
-
-        @if (citaNueva.hora && !horaValida()) {
-          <span class="error-hint">Formato de hora inválido (HH:mm).</span>
-        }
-        @if (citaNueva.fecha && citaNueva.hora && horaValida() && horaOcupada()) {
-          <span class="error-hint">El horario seleccionado se encuentra ocupado.</span>
-        }
-
-        @if (citaNueva.fecha) {
-          <div class="available-hours">
-            <h4>Horarios Sugeridos</h4>
-            <div class="hours-grid">
-              @for (hora of obtenerHorariosDisponibles(); track hora) {
-                <button
-                  type="button"
-                  class="hour-pill"
-                  [class.selected-hour]="citaNueva.hora === hora"
-                  (click)="seleccionarHora(hora)">
-                  {{ hora }}
-                </button>
-              }
+        <div class="pc-card">
+          <h3 class="ag-h3">Filtrar citas</h3>
+          <div class="ag-filtros-lado">
+            <label class="pc-campo">Estado
+              <select [(ngModel)]="filtro.estado">
+                <option value="">Todas</option>
+                <option value="PROGRAMADA">Programada</option>
+                <option value="CONFIRMADA">Confirmada</option>
+                <option value="SIN_RESPUESTA">Sin respuesta</option>
+                <option value="CANCELADA">Cancelada</option>
+              </select>
+            </label>
+            <label class="pc-campo">Tipo de cita
+              <select [(ngModel)]="filtro.categoria">
+                <option value="">Todos</option>
+                @for (c of categorias; track c.clave) { <option [value]="c.clave">{{ c.etiqueta }}</option> }
+              </select>
+            </label>
+            <div class="dos">
+              <label class="pc-campo">Fecha de inicio <input type="date" [(ngModel)]="filtro.desde" /></label>
+              <label class="pc-campo">Fecha de fin <input type="date" [(ngModel)]="filtro.hasta" /></label>
             </div>
+            <button type="button" class="pc-btn-borde ancho" (click)="aplicarFiltros()"><mat-icon>filter_alt</mat-icon> Aplicar filtros</button>
           </div>
-        }
-
-        <mat-form-field appearance="outline">
-          <mat-label>Motivo de comparecencia</mat-label>
-          <textarea matInput rows="3" [(ngModel)]="citaNueva.motivo"></textarea>
-        </mat-form-field>
-
-        <button mat-flat-button class="primary-btn" (click)="agendarCita()">
-          <mat-icon>event_available</mat-icon>
-          Agendar Cita
-        </button>
-      </div>
-    </mat-card>
-  </div>
-
-  <mat-card class="table-card">
-    <div style="padding: var(--space-4) var(--space-4) 0;">
-      <h3 class="card-title-custom">Mis Próximas Citas</h3>
-    </div>
-
-    @if (proximasCitas.length === 0) {
-      <p class="empty-state-text" style="padding: var(--space-5);">
-        No tienes próximas citas registradas.
-      </p>
-    }
-
-    <div class="appointments-list">
-      @for (cita of proximasCitas; track cita.id) {
-        <div class="appointment-row">
-          <div>
-            <strong>{{ cita.folio }}</strong>
-            <span>{{ cita.quejoso }}</span>
-          </div>
-
-          <div>
-            <strong>{{ cita.fecha }}</strong>
-            <span>{{ cita.hora }} hrs</span>
-          </div>
-
-          <div>
-            <mat-chip
-              [class.type-presencial]="cita.tipo === 'Presencial'"
-              [class.type-virtual]="cita.tipo === 'Virtual'">
-              {{ cita.tipo }}
-            </mat-chip>
-            <span style="margin-top: var(--space-1)">{{ cita.motivo }}</span>
-          </div>
-
-          <mat-chip
-            [class.confirmed]="cita.estatus === 'Confirmada'"
-            [class.scheduled]="cita.estatus === 'Programada'"
-            [class.cancelled]="cita.estatus === 'Cancelada'"
-            [class.needs-action]="cita.estatusCodigo === 'CANCELADA_QUEJOSO' || cita.estatusCodigo === 'SIN_RESPUESTA'"
-              [class.rescheduled]="cita.estatusCodigo === 'REAGENDADA'">
-            {{ cita.estatus }}
-          </mat-chip>
-
-          <button mat-stroked-button class="outline-btn" (click)="abrirDetalle(cita)">
-            <mat-icon>visibility</mat-icon>
-            Detalles
-          </button>
         </div>
-      }
+      </div>
     </div>
-  </mat-card>
+  } @else {
+    <div class="pc-card ag-filtros">
+      <label class="pc-campo">Estado
+        <select [(ngModel)]="filtro.estado" (ngModelChange)="pagina = 0">
+          <option value="">Todas</option>
+          <option value="PROGRAMADA">Programada</option>
+          <option value="CONFIRMADA">Confirmada</option>
+          <option value="SIN_RESPUESTA">Sin respuesta</option>
+          <option value="CANCELADA">Cancelada</option>
+        </select>
+      </label>
+      <label class="pc-campo">Tipo de cita
+        <select [(ngModel)]="filtro.categoria" (ngModelChange)="pagina = 0">
+          <option value="">Todos</option>
+          @for (c of categorias; track c.clave) { <option [value]="c.clave">{{ c.etiqueta }}</option> }
+        </select>
+      </label>
+      <label class="pc-campo">Modalidad
+        <select [(ngModel)]="filtro.modalidad" (ngModelChange)="pagina = 0">
+          <option value="">Todas</option>
+          <option value="PRESENCIAL">Presencial</option>
+          <option value="VIRTUAL">Virtual</option>
+        </select>
+      </label>
+      <label class="pc-campo">Fecha de inicio <input type="date" [(ngModel)]="filtro.desde" /></label>
+      <label class="pc-campo">Fecha de fin <input type="date" [(ngModel)]="filtro.hasta" /></label>
+      <button type="button" class="pc-btn-borde" (click)="aplicarFiltros()"><mat-icon>filter_alt</mat-icon> Aplicar filtros</button>
+    </div>
+
+    <div class="pc-card">
+      <div class="pc-card-cabeza">
+        <h3><mat-icon>description</mat-icon> Listado de citas</h3>
+        <button type="button" class="pc-btn-borde chico" (click)="exportar()" [disabled]="!filtradas.length"><mat-icon>download</mat-icon> Exportar</button>
+      </div>
+      <div class="ag-tabla-env" [class.recargando]="cargandoLista">
+        <table class="ag-tabla">
+          <thead>
+            <tr>
+              <th><button type="button" (click)="ordenarPor('fecha')">Fecha <mat-icon>{{ flecha('fecha') }}</mat-icon></button></th>
+              <th><button type="button" (click)="ordenarPor('hora')">Hora <mat-icon>{{ flecha('hora') }}</mat-icon></button></th>
+              <th><button type="button" (click)="ordenarPor('folio')">Expediente <mat-icon>{{ flecha('folio') }}</mat-icon></button></th>
+              <th><button type="button" (click)="ordenarPor('quejoso')">Persona citada <mat-icon>{{ flecha('quejoso') }}</mat-icon></button></th>
+              <th><button type="button" (click)="ordenarPor('categoria')">Tipo de cita <mat-icon>{{ flecha('categoria') }}</mat-icon></button></th>
+              <th><button type="button" (click)="ordenarPor('tipo')">Modalidad <mat-icon>{{ flecha('tipo') }}</mat-icon></button></th>
+              <th><button type="button" (click)="ordenarPor('estatus')">Estado <mat-icon>{{ flecha('estatus') }}</mat-icon></button></th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of visibles; track c.id) {
+              <tr>
+                <td>{{ c.fecha }}</td>
+                <td>{{ c.hora }}</td>
+                <td class="fuerte">{{ c.folio }}</td>
+                <td>{{ c.quejoso || '—' }}</td>
+                <td>{{ etiquetaCategoria(c.categoria) }}</td>
+                <td>{{ c.tipo }}</td>
+                <td><span [class]="'pc-chip ' + c.estatusCodigo">{{ c.estatus }}</span></td>
+                <td class="acciones">
+                  <button type="button" class="pc-btn-borde chico" (click)="abrirDetalle(c)"><mat-icon>visibility</mat-icon> Detalles</button>
+                  <span class="menu-fila">
+                    <button type="button" class="ico" (click)="alternarMenu(c.id, $event)" aria-label="Más acciones"><mat-icon>more_vert</mat-icon></button>
+                    @if (menuAbierto === c.id) {
+                      <span class="menu" (click)="$event.stopPropagation()">
+                        @if (puedeConfirmar(c)) { <button type="button" (click)="ejecutar('confirmar', c)">Confirmar asistencia</button> }
+                        @if (activa(c)) {
+                          <button type="button" (click)="ejecutar('reagendar', c)">Reagendar</button>
+                          <button type="button" class="peligro" (click)="ejecutar('cancelar', c)">Cancelar cita</button>
+                        }
+                        <button type="button" (click)="abrirDetalle(c)">Ver detalle y expediente</button>
+                      </span>
+                    }
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="8" class="vacio">{{ cargandoLista ? 'Cargando…' : 'No hay citas con estos filtros.' }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="ag-paginado">
+        <span>{{ rango }}</span>
+        @if (totalPaginas > 1) {
+          <nav>
+            <button type="button" (click)="pagina = pagina - 1" [disabled]="pagina === 0" aria-label="Anterior"><mat-icon>chevron_left</mat-icon></button>
+            @for (i of paginas; track i) {
+              <button type="button" [class.actual]="i === pagina" (click)="pagina = i">{{ i + 1 }}</button>
+            }
+            <button type="button" (click)="pagina = pagina + 1" [disabled]="pagina >= totalPaginas - 1" aria-label="Siguiente"><mat-icon>chevron_right</mat-icon></button>
+          </nav>
+        }
+      </div>
+    </div>
+  }
 </section>
+
+@if (mostrarNueva) {
+  <app-nueva-cita [folio]="folioNueva" [cita]="citaReagendar" [fechaInicial]="fechaParaNueva"
+                  (guardada)="citaGuardada()" (cerrar)="mostrarNueva = false; citaReagendar = undefined" />
+}

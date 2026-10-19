@@ -1,0 +1,72 @@
+<div class="seg-filtros">
+  <div class="seg-buscar ancho-2">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="search" [(ngModel)]="texto" (ngModelChange)="buscar()" placeholder="Buscar por folio, quejoso o palabra clave…" aria-label="Buscar casos" />
+  </div>
+  <label class="seg-campo">Motivo
+    <select [(ngModel)]="filtro.motivo" (ngModelChange)="aplicar()">
+      <option [ngValue]="undefined">Todos</option>
+      @for (r of reglas; track r.clave) { <option [ngValue]="r.clave">{{ r.etiqueta }}</option> }
+    </select>
+  </label>
+  <label class="seg-campo">Etapa
+    <select [(ngModel)]="filtro.etapa" (ngModelChange)="aplicar()">
+      <option [ngValue]="undefined">Todas</option>
+      @for (e of opciones?.etapas ?? []; track e.clave) { <option [ngValue]="e.clave">{{ e.etiqueta }}</option> }
+    </select>
+  </label>
+  <label class="seg-campo">Unidad
+    <select [(ngModel)]="filtro.unidad" (ngModelChange)="aplicar()">
+      <option [ngValue]="undefined">Todas</option>
+      @for (u of unidades; track u.clave) { <option [ngValue]="u.clave">{{ u.abreviatura || u.nombre || u.clave }}</option> }
+    </select>
+  </label>
+  <label class="seg-campo">Responsable
+    <select [(ngModel)]="filtro.responsable" (ngModelChange)="aplicar()">
+      <option [ngValue]="undefined">Todos</option>
+      <option ngValue="SIN_RESPONSABLE">Sin responsable</option>
+      @for (r of responsables; track r) { <option [ngValue]="r">{{ r }}</option> }
+    </select>
+  </label>
+  <label class="seg-campo">Días desde recepción
+    <select [(ngModel)]="rango" (ngModelChange)="aplicar()">
+      <option value="">Todos</option>
+      @for (r of rangos; track r.clave) { <option [value]="r.clave">{{ r.etiqueta }}</option> }
+    </select>
+  </label>
+  <button type="button" class="seg-btn-borde" (click)="limpiar()">Limpiar filtros</button>
+</div>
+
+<div class="seg-tabla-envoltura" [class.recargando]="cargando">
+  <table class="seg-tabla">
+    <thead>
+      <tr><th>Folio</th><th>Quejoso</th><th>Motivo</th><th class="num">Días</th><th>Estado</th><th>Unidad</th><th>Responsable</th><th>Acción</th></tr>
+    </thead>
+    <tbody>
+      @for (c of datos?.filas ?? []; track c.folio) {
+        <tr>
+          <td class="fuerte">{{ c.folio }}</td>
+          <td>{{ c.quejoso || '—' }}</td>
+          <td [title]="descripcion(c.motivo)">{{ c.motivoEtiqueta }}</td>
+          <td class="num"><span class="seg-dias" [class.alta]="c.severidad === 'ALTA'">{{ c.dias }}</span></td>
+          <td><span [class]="'seg-chip etapa-' + c.etapa">{{ c.estatusEtiqueta }}</span></td>
+          <td>{{ c.unidadNombre || '—' }}</td>
+          <td>{{ c.responsable || '—' }}</td>
+          <td><button type="button" class="seg-ver" (click)="ver(c)">Ver expediente</button></td>
+        </tr>
+      } @empty {
+        <tr><td colspan="8" class="seg-vacio">{{ cargando ? 'Cargando…' : 'No hay casos con estos filtros. ¡Todo al corriente!' }}</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+@if (datos) {
+  <app-paginador [pagina]="datos.pagina" [tamanio]="datos.tamanio" [totalElementos]="datos.totalElementos"
+                 [enPagina]="datos.filas.length" (cambiar)="irA($event)" />
+}
+<details class="seg-reglas">
+  <summary>¿Por qué aparece una queja aquí?</summary>
+  <ul>
+    @for (r of reglas; track r.clave) { <li><b>{{ r.etiqueta }}:</b> {{ r.descripcion }}</li> }
+  </ul>
+</details>

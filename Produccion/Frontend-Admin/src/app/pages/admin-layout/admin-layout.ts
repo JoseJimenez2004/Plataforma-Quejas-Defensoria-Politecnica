@@ -6,7 +6,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { AuthAdminService } from '../../core/services/auth-admin.service';
 import { PerfilService } from '../../core/services/perfil.service';
 import { ToastService } from '../../core/services/toast.service';
-import { CambiarPasswordRequest, etiquetaRol, iniciales } from '../../core/models/admin.models';
+import { CambiarPasswordRequest, etiquetaRol, etiquetaRolPersona, iniciales } from '../../core/models/admin.models';
 import { irALoginPersonal } from '../../core/sesion/sesion-personal';
 import { CampanaNotificaciones } from '../../shared/campana-notificaciones/campana-notificaciones';
 
@@ -60,7 +60,7 @@ export class AdminLayout implements OnInit {
 
   get rolUsuario(): string {
     const rol = this.authService.usuarioActual()?.rol;
-    return rol ? this.etiquetaRol(rol) : '';
+    return rol ? etiquetaRolPersona(rol, this.nombreUsuario) : '';
   }
 
   get inicialesUsuario(): string {

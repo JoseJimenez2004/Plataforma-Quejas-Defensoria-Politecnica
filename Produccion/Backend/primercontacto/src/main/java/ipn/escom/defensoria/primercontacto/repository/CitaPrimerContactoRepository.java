@@ -22,6 +22,12 @@ public interface CitaPrimerContactoRepository
     );
 
     List<CitaPrimerContacto>
+    findByFechaCitaBetweenOrderByFechaCitaAscHoraCitaAsc(
+            LocalDate desde,
+            LocalDate hasta
+    );
+
+    List<CitaPrimerContacto>
     findByFechaCitaOrderByHoraCitaAsc(
             LocalDate fechaCita
     );

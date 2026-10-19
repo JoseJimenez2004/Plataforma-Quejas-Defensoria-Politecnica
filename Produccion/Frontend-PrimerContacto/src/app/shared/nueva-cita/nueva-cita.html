@@ -1,0 +1,112 @@
+<div class="pc-modal-fondo" (click)="!guardando && cerrar.emit()">
+  <section class="pc-modal nueva-cita" role="dialog" aria-modal="true" aria-labelledby="titulo-cita" (click)="$event.stopPropagation()">
+    <header class="nc-cabeza">
+      <span class="nc-icono"><mat-icon>event</mat-icon></span>
+      <div>
+        <h2 id="titulo-cita">{{ reagendando ? 'Reagendar Cita' : 'Programar Nueva Cita' }}</h2>
+        <p>{{ reagendando ? 'Elige la nueva fecha y hora; la cita anterior queda en el historial.' : 'Registra una cita de comparecencia o seguimiento.' }}</p>
+      </div>
+      <button type="button" class="nc-cerrar" (click)="cerrar.emit()" aria-label="Cerrar"><mat-icon>close</mat-icon></button>
+    </header>
+
+    <div class="nc-cuerpo">
+      <!-- ============ Paso 1 ============ -->
+      <div class="nc-paso">
+        <h3><span class="nc-num">1</span> Datos de la cita</h3>
+
+        <label class="pc-campo">Expediente <b class="req">*</b>
+          @if (reagendando) {
+            <input type="text" [value]="folio" disabled />
+          } @else {
+            <select [ngModel]="folio" (ngModelChange)="elegirExpediente($event)" name="expediente">
+              <option value="" disabled>Selecciona un expediente</option>
+              @for (e of expedientes; track e.folio) {
+                <option [value]="e.folio">{{ e.folio }} · {{ e.nombreQuejoso }}</option>
+              }
+            </select>
+          }
+        </label>
+
+        <label class="pc-campo">Nombre del quejoso
+          <input type="text" [value]="nombreQuejoso" placeholder="Se mostrará al seleccionar un expediente" disabled />
+        </label>
+
+        <div class="nc-dos">
+          <label class="pc-campo">Tipo de cita <b class="req">*</b>
+            <select [(ngModel)]="categoria" name="categoria">
+              @for (c of categorias; track c.clave) { <option [value]="c.clave">{{ c.etiqueta }}</option> }
+            </select>
+          </label>
+          <label class="pc-campo">Modalidad <b class="req">*</b>
+            <select [(ngModel)]="modalidad" name="modalidad">
+              <option value="PRESENCIAL">Presencial (en las instalaciones)</option>
+              <option value="VIRTUAL">Virtual (videollamada)</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="pc-campo">Motivo de la cita <b class="req">*</b>
+          <textarea rows="4" maxlength="500" [(ngModel)]="motivo" name="motivo" placeholder="Describe el motivo de la cita…"></textarea>
+          <small class="contador">{{ motivo.length }}/500</small>
+        </label>
+
+        <div class="nc-info">
+          <mat-icon>info</mat-icon>
+          <div>
+            <b>Información</b>
+            <p>La persona quejosa recibirá una notificación con los detalles de la cita a través del correo registrado en el expediente, y tendrá 48 horas para confirmarla.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ Paso 2 ============ -->
+      <div class="nc-paso">
+        <h3><span class="nc-num">2</span> Fecha y hora</h3>
+
+        <label class="pc-campo">Fecha seleccionada <b class="req">*</b>
+          <input type="date" [min]="hoyIso" [ngModel]="fecha" (ngModelChange)="elegirFecha($event)" name="fecha" />
+        </label>
+
+        <div class="nc-cal">
+          <div class="nc-cal-cabeza">
+            <button type="button" (click)="mover(-1)" aria-label="Mes anterior"><mat-icon>chevron_left</mat-icon></button>
+            <b>{{ tituloMes }}</b>
+            <button type="button" (click)="mover(1)" aria-label="Mes siguiente"><mat-icon>chevron_right</mat-icon></button>
+          </div>
+          <div class="nc-cal-rejilla">
+            @for (d of diasSemana; track d) { <span class="nc-dia-sem">{{ d }}</span> }
+            @for (c of celdas; track $index) {
+              @if (c === null) { <span></span> }
+              @else {
+                <button type="button" class="nc-dia" [class.sel]="isoDe(c) === fecha" [class.hoy]="isoDe(c) === hoyIso"
+                        [disabled]="diaInhabil(c)" (click)="elegirFecha(isoDe(c))">{{ c }}</button>
+              }
+            }
+          </div>
+        </div>
+
+        <span class="pc-campo-titulo">Horarios disponibles <b class="req">*</b></span>
+        <div class="nc-horas">
+          @for (h of horarios; track h) {
+            <button type="button" [class]="'nc-hora ' + estadoHorario(h)" [class.sel]="hora === h"
+                    [disabled]="estadoHorario(h) !== 'libre'" (click)="hora = h"
+                    [title]="estadoHorario(h) === 'ocupado' ? 'Ya tienes una cita a esta hora' : estadoHorario(h) === 'no-disponible' ? 'Horario no disponible' : 'Disponible'">{{ h }}</button>
+          }
+        </div>
+        <div class="nc-leyenda">
+          <span><i class="libre"></i>Disponible</span>
+          <span><i class="ocupado"></i>Ocupado</span>
+          <span><i class="no-disponible"></i>No disponible</span>
+        </div>
+      </div>
+    </div>
+
+    <footer class="nc-pie">
+      <button type="button" class="pc-btn-borde" (click)="cerrar.emit()" [disabled]="guardando">Cancelar</button>
+      <button type="button" class="pc-btn" (click)="guardar()" [disabled]="guardando">
+        <mat-icon>event_available</mat-icon>
+        {{ guardando ? 'Guardando…' : reagendando ? 'Reagendar Cita' : 'Agendar Cita' }}
+      </button>
+    </footer>
+  </section>
+</div>

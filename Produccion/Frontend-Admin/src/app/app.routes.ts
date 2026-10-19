@@ -31,6 +31,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/unidades/unidades').then((m) => m.Unidades),
       },
       {
+        path: 'carga-trabajo',
+        loadComponent: () => import('./pages/carga-trabajo/carga-trabajo').then((m) => m.CargaTrabajoPagina),
+      },
+      {
         path: 'usuarios-roles',
         loadComponent: () =>
           import('./pages/usuarios-roles/usuarios-roles').then((m) => m.UsuariosRoles),

@@ -27,6 +27,9 @@ public class CrearCitaDTO {
     @NotBlank
     private String tipoCita;
 
+    /** COMPARECENCIA, REVISION o SEGUIMIENTO. */
+    private String categoria;
+
     @NotBlank
     private String motivo;
 }

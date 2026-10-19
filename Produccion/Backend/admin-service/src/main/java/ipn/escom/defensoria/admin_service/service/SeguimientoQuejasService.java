@@ -14,7 +14,6 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Abogado;
 import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Conteo;
 import ipn.escom.defensoria.admin_service.model.SeguimientoModels.DetalleQueja;
 import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Etapa;
@@ -22,14 +21,9 @@ import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Evento;
 import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Evidencia;
 import ipn.escom.defensoria.admin_service.model.SeguimientoModels.FilaQueja;
 import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Filtros;
-import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Kpis;
 import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Mes;
 import ipn.escom.defensoria.admin_service.model.SeguimientoModels.PaginaQuejas;
 import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Persona;
-import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Personal;
-import ipn.escom.defensoria.admin_service.model.SeguimientoModels.RechazoReciente;
-import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Recepcionista;
-import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Tablero;
 import ipn.escom.defensoria.admin_service.model.SeguimientoModels.UnidadConteo;
 
 /**
@@ -52,9 +46,6 @@ public class SeguimientoQuejasService {
               WHEN q.estatus IN ('CONCLUIDA','IMPROCEDENTE','REMITIDA','CANCELADA') THEN 'CERRADA'
               ELSE 'OTRA'
             END""";
-
-    /** Estatus que ya no están en trámite para un abogado. */
-    private static final String CERRADOS_SQL = "('CONCLUIDA','IMPROCEDENTE','REMITIDA','CANCELADA','RECHAZADA')";
 
     static final Map<String, String> ETAPAS = new LinkedHashMap<>();
     static final Map<String, String> ESTATUS = new LinkedHashMap<>();
@@ -96,34 +87,11 @@ public class SeguimientoQuejasService {
     }
 
     // ======================================================================================
-    // Tablero
+    // Etapas y meses (los usa el Panel general y la Carga de trabajo)
     // ======================================================================================
 
-    public Tablero tablero() {
-        Map<String, Object> k = jdbc.queryForMap("""
-                SELECT count(*)                                                                   AS total,
-                       count(*) FILTER (WHERE q.fecha_creacion >= now() - interval '30 days')      AS ultimos30,
-                       count(*) FILTER (WHERE %1$s = 'RECEPCION')                                  AS recepcion,
-                       count(*) FILTER (WHERE q.estatus IN ('RECIBIDA','CORREGIDA')
-                                          AND q.fecha_creacion < now() - interval '3 days')         AS sin_tomar,
-                       count(*) FILTER (WHERE %1$s = 'CON_QUEJOSO')                                AS con_quejoso,
-                       count(*) FILTER (WHERE q.motivo_rechazo IS NOT NULL AND q.motivo_rechazo <> '') AS rechazadas_alguna,
-                       count(*) FILTER (WHERE %1$s = 'PRIMER_CONTACTO')                            AS primer_contacto,
-                       count(*) FILTER (WHERE %1$s = 'SUBDEFENSORIA')                              AS subdefensoria,
-                       count(*) FILTER (WHERE %1$s = 'CERRADA')                                    AS cerradas,
-                       count(*) FILTER (WHERE q.fecha_validacion IS NOT NULL)                      AS atendidas,
-                       avg(EXTRACT(EPOCH FROM (q.fecha_validacion - q.fecha_creacion)) / 3600.0)
-                           FILTER (WHERE q.fecha_validacion >= now() - interval '30 days'
-                                     AND q.fecha_validacion >= q.fecha_creacion)                    AS horas
-                  FROM quejas q
-                """.formatted(ETAPA_SQL));
-        Object horas = k.get("horas");
-        Kpis kpis = new Kpis(n(k, "total"), n(k, "ultimos30"), n(k, "recepcion"), n(k, "sin_tomar"),
-                n(k, "con_quejoso"), n(k, "rechazadas_alguna"), n(k, "primer_contacto"), n(k, "subdefensoria"),
-                n(k, "cerradas"), n(k, "atendidas"), horas == null ? null : ((Number) horas).doubleValue(),
-                existeTabla("respuestas_denunciado") ? contar("SELECT count(*) FROM respuestas_denunciado") : 0);
-
-        // Etapas con el desglose por estatus
+    /** Quejas por etapa con su desglose por estatus (siempre las 5 etapas, aunque estén en 0). */
+    public List<Etapa> etapas() {
         Map<String, List<Conteo>> desglose = new LinkedHashMap<>();
         ETAPAS.keySet().forEach(e -> desglose.put(e, new ArrayList<>()));
         jdbc.query("SELECT %s AS etapa, coalesce(q.estatus,'RECIBIDA') AS estatus, count(*) AS total FROM quejas q GROUP BY 1, 2 ORDER BY 3 DESC"
@@ -139,91 +107,24 @@ public class SeguimientoQuejasService {
                 etapas.add(new Etapa(clave, ETAPAS.getOrDefault(clave, "Otras"), total, lista));
             }
         });
+        return etapas;
+    }
 
-        // Últimos 12 meses: recibidas y atendidas por Recepción
-        List<Mes> porMes = jdbc.query("""
+    /** Últimos {@code meses} meses (incluido el actual): recibidas y atendidas por Recepción. */
+    public List<Mes> porMes(int meses) {
+        return jdbc.query("""
                 SELECT to_char(m.mes, 'YYYY-MM') AS clave, extract(month FROM m.mes)::int AS mes_num,
                        extract(year FROM m.mes)::int AS anio,
                        (SELECT count(*) FROM quejas q WHERE date_trunc('month', q.fecha_creacion) = m.mes) AS recibidas,
                        (SELECT count(*) FROM quejas q WHERE date_trunc('month', q.fecha_validacion) = m.mes) AS atendidas
-                  FROM generate_series(date_trunc('month', now()) - interval '11 months', date_trunc('month', now()),
+                  FROM generate_series(date_trunc('month', now()) - (? * interval '1 month'), date_trunc('month', now()),
                                        interval '1 month') AS m(mes)
                  ORDER BY m.mes
                 """,
                 (rs, i) -> new Mes(rs.getString("clave"),
                         MESES[rs.getInt("mes_num") - 1] + " " + String.valueOf(rs.getInt("anio")).substring(2),
-                        rs.getLong("recibidas"), rs.getLong("atendidas")));
-
-        List<UnidadConteo> unidades = unidades(null, 8);
-
-        List<Recepcionista> recepcion = jdbc.query("""
-                SELECT p.nombre_completo, p.correo_institucional,
-                       count(q.id) FILTER (WHERE q.estatus = 'EN_VALIDACION'
-                                             AND lower(q.revisando_por) = lower(p.correo_institucional))      AS abiertas,
-                       count(q.id) FILTER (WHERE q.fecha_validacion IS NOT NULL
-                                             AND lower(q.validado_por) = lower(p.correo_institucional))       AS atendidas,
-                       count(q.id) FILTER (WHERE q.fecha_turnado IS NOT NULL
-                                             AND lower(q.validado_por) = lower(p.correo_institucional))       AS turnadas,
-                       count(q.id) FILTER (WHERE q.estatus = 'RECHAZADA'
-                                             AND lower(q.validado_por) = lower(p.correo_institucional))       AS observaciones,
-                       count(q.id) FILTER (WHERE q.fecha_validacion >= date_trunc('day', now())
-                                             AND lower(q.validado_por) = lower(p.correo_institucional))       AS hoy
-                  FROM personal_administrativo p
-                  LEFT JOIN quejas q ON lower(q.validado_por) = lower(p.correo_institucional)
-                                     OR lower(q.revisando_por) = lower(p.correo_institucional)
-                 WHERE p.rol = 'RECEPCIONISTA' AND p.activo = true
-                 GROUP BY p.nombre_completo, p.correo_institucional
-                 ORDER BY atendidas DESC, p.nombre_completo
-                """,
-                (rs, i) -> new Recepcionista(rs.getString(1), rs.getString(2), rs.getLong("abiertas"),
-                        rs.getLong("atendidas"), rs.getLong("turnadas"), rs.getLong("observaciones"), rs.getLong("hoy")));
-
-        List<Abogado> abogados = jdbc.query("""
-                SELECT p.nombre_completo, p.rol,
-                       count(q.id) FILTER (WHERE q.estatus NOT IN %1$s) AS en_tramite,
-                       count(q.id)                                       AS total,
-                       count(q.id) FILTER (WHERE q.estatus IN ('CONCLUIDA','IMPROCEDENTE','REMITIDA')) AS cerradas
-                  FROM personal_administrativo p
-                  LEFT JOIN quejas q ON lower(q.defensor_asignado) = lower(p.nombre_completo)
-                 WHERE p.rol IN ('SUBDEFENSOR','DEFENSOR') AND p.activo = true
-                 GROUP BY p.nombre_completo, p.rol
-                 ORDER BY en_tramite DESC, total DESC, p.nombre_completo
-                """.formatted(CERRADOS_SQL),
-                (rs, i) -> new Abogado(rs.getString(1), rs.getString(2), rs.getLong("en_tramite"),
-                        rs.getLong("total"), rs.getLong("cerradas")));
-
-        // Motivos de rechazo: la primera parte de motivo_rechazo (antes de la línea en blanco)
-        // trae los motivos estandarizados separados por "; ".
-        List<Conteo> motivos = jdbc.query("""
-                SELECT trim(m) AS motivo, count(*) AS total
-                  FROM quejas q,
-                       regexp_split_to_table(split_part(q.motivo_rechazo, E'\\n\\n', 1), ';\\s*') AS m
-                 WHERE q.motivo_rechazo IS NOT NULL AND trim(m) <> ''
-                 GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 6
-                """,
-                (rs, i) -> new Conteo(String.valueOf(i), rs.getString("motivo"), rs.getLong("total")));
-
-        List<RechazoReciente> rechazos = jdbc.query("""
-                SELECT q.numero_folio, q.fecha_validacion, %s AS quejoso,
-                       coalesce(p.nombre_completo, q.validado_por) AS recepcionista,
-                       split_part(q.motivo_rechazo, E'\\n\\n', 1) AS motivo, q.estatus
-                  FROM quejas q
-                  LEFT JOIN personal_administrativo p ON lower(p.correo_institucional) = lower(q.validado_por)
-                 WHERE q.estatus = 'RECHAZADA'
-                 ORDER BY q.fecha_validacion DESC NULLS LAST
-                 LIMIT 6
-                """.formatted(NOMBRE_QUEJOSO_SQL),
-                (rs, i) -> new RechazoReciente(rs.getString(1), ts(rs.getTimestamp(2)), rs.getString(3), rs.getString(4),
-                        rs.getString(5), etiquetaEstatus(rs.getString(6))));
-
-        List<Conteo> porRol = jdbc.query(
-                "SELECT rol, count(*) FROM personal_administrativo WHERE activo = true GROUP BY rol ORDER BY 2 DESC",
-                (rs, i) -> new Conteo(rs.getString(1), rs.getString(1), rs.getLong(2)));
-        long personal = porRol.stream().mapToLong(Conteo::total).sum();
-        long dependencias = existeTabla("dependencias") ? contar("SELECT count(*) FROM dependencias") : 0;
-
-        return new Tablero(kpis, etapas, porMes, unidades, recepcion, abogados, motivos, rechazos,
-                new Personal(personal, porRol, dependencias));
+                        rs.getLong("recibidas"), rs.getLong("atendidas")),
+                Math.max(0, meses - 1));
     }
 
     // ======================================================================================
@@ -266,19 +167,58 @@ public class SeguimientoQuejasService {
     private static final String NOMBRE_QUEJOSO_SQL =
             "trim(concat_ws(' ', q.nombre_quejoso, q.apellido1_quejoso, q.apellido2_quejoso))";
 
-    public PaginaQuejas quejas(String etapa, String estatus, String unidad, String abogado, String recepcionista,
-                               String mes, String texto, int pagina, int tamanio) {
+    /** Estado resumido de la queja para la Defensora (columna "Estado" del explorador). */
+    static final String ESTADO_SQL = """
+            CASE
+              WHEN q.estatus IS NULL OR q.estatus IN ('RECIBIDA','CORREGIDA') THEN 'SIN_ATENCION'
+              WHEN q.estatus = 'RECHAZADA' THEN 'CON_QUEJOSO'
+              WHEN q.estatus IN ('CONCLUIDA','IMPROCEDENTE','REMITIDA','CANCELADA') THEN 'CERRADA'
+              ELSE 'EN_TRAMITE'
+            END""";
+
+    static final Map<String, String> ESTADOS = new LinkedHashMap<>();
+
+    static {
+        ESTADOS.put("SIN_ATENCION", "Sin atención");
+        ESTADOS.put("EN_TRAMITE", "En trámite");
+        ESTADOS.put("CON_QUEJOSO", "Con el quejoso");
+        ESTADOS.put("CERRADA", "Cerrada");
+    }
+
+    /** Ordenes permitidos (la clave viene del front; nunca se concatena texto del usuario). */
+    private static final Map<String, String> ORDENES = Map.of(
+            "reciente", "q.fecha_creacion DESC, q.id DESC",
+            "antigua", "q.fecha_creacion ASC, q.id ASC",
+            "folio", "q.numero_folio ASC",
+            "unidad", "unidad_nombre ASC NULLS LAST, q.fecha_creacion DESC",
+            "quejoso", "quejoso ASC, q.fecha_creacion DESC");
+
+    /**
+     * Explorador de quejas. {@code desde}/{@code hasta} son meses (AAAA-MM, inclusivos);
+     * {@code mes} se conserva para los enlaces de la gráfica mensual. {@code tamanio} llega
+     * hasta 5000 para que "Exportar" pueda bajar todo el resultado de una vez.
+     */
+    public PaginaQuejas quejas(Map<String, String> f, int pagina, int tamanio) {
+        String etapa = f.get("etapa");
+        String estatus = f.get("estatus");
+        String unidad = f.get("unidad");
+        String abogado = f.get("abogado");
+        String recepcionista = f.get("recepcionista");
+        String mes = f.get("mes");
+        String texto = f.get("q");
         MapSqlParameterSource p = new MapSqlParameterSource();
         StringBuilder where = new StringBuilder(" WHERE 1=1 ");
-        if (vacio(etapa) == null) {
-            // sin filtro
-        } else {
+        if (vacio(etapa) != null) {
             where.append(" AND ").append(ETAPA_SQL).append(" = :etapa ");
             p.addValue("etapa", etapa.trim().toUpperCase());
         }
         if (vacio(estatus) != null) {
-            where.append(" AND q.estatus = :estatus ");
+            where.append(" AND coalesce(q.estatus,'RECIBIDA') = :estatus ");
             p.addValue("estatus", estatus.trim().toUpperCase());
+        }
+        if (vacio(f.get("estado")) != null) {
+            where.append(" AND ").append(ESTADO_SQL).append(" = :estado ");
+            p.addValue("estado", f.get("estado").trim().toUpperCase());
         }
         if (vacio(unidad) != null) {
             where.append(" AND q.unidad_academica_clave = :unidad ");
@@ -286,53 +226,92 @@ public class SeguimientoQuejasService {
         }
         if (vacio(abogado) != null) {
             if ("SIN_ASIGNAR".equalsIgnoreCase(abogado.trim())) {
-                where.append(" AND (q.defensor_asignado IS NULL OR q.defensor_asignado = '') ");
+                where.append(" AND (q.defensor_asignado IS NULL OR trim(q.defensor_asignado) = '') ");
             } else {
-                where.append(" AND lower(q.defensor_asignado) = lower(:abogado) ");
+                where.append(" AND lower(trim(q.defensor_asignado)) = lower(:abogado) ");
                 p.addValue("abogado", abogado.trim());
             }
         }
         if (vacio(recepcionista) != null) {
-            where.append(" AND (lower(q.revisando_por) = lower(:recep) OR lower(q.validado_por) = lower(:recep)) ");
-            p.addValue("recep", recepcionista.trim());
+            if ("NADIE".equalsIgnoreCase(recepcionista.trim())) {
+                where.append(" AND q.revisando_por IS NULL AND q.validado_por IS NULL ");
+            } else {
+                where.append(" AND (lower(q.revisando_por) = lower(:recep) OR lower(q.validado_por) = lower(:recep)) ");
+                p.addValue("recep", recepcionista.trim());
+            }
         }
         if (vacio(mes) != null) {
             where.append(" AND to_char(q.fecha_creacion, 'YYYY-MM') = :mes ");
             p.addValue("mes", mes.trim());
         }
+        if (vacio(f.get("desde")) != null) {
+            where.append(" AND to_char(q.fecha_creacion, 'YYYY-MM') >= :desde ");
+            p.addValue("desde", f.get("desde").trim().substring(0, Math.min(7, f.get("desde").trim().length())));
+        }
+        if (vacio(f.get("hasta")) != null) {
+            where.append(" AND to_char(q.fecha_creacion, 'YYYY-MM') <= :hasta ");
+            p.addValue("hasta", f.get("hasta").trim().substring(0, Math.min(7, f.get("hasta").trim().length())));
+        }
+        if (vacio(f.get("motivo")) != null) {
+            String condicion = PanelDefensoraService.condicionMotivo(f.get("motivo").trim().toUpperCase());
+            if (condicion != null) {
+                where.append(" AND (").append(condicion).append(") ");
+            }
+        }
         if (vacio(texto) != null) {
             where.append(" AND (lower(q.numero_folio) LIKE :t OR lower(").append(NOMBRE_QUEJOSO_SQL)
                     .append(") LIKE :t OR lower(coalesce(q.defensor_asignado,'')) LIKE :t"
-                            + " OR lower(trim(concat_ws(' ', q.nombre_denunciado, q.apellido1_denunciado))) LIKE :t) ");
+                            + " OR lower(trim(concat_ws(' ', q.nombre_denunciado, q.apellido1_denunciado))) LIKE :t"
+                            + " OR lower(coalesce(q.descripcion,'')) LIKE :t) ");
             p.addValue("t", "%" + texto.trim().toLowerCase().replace("%", "") + "%");
         }
 
-        int tam = Math.max(1, Math.min(tamanio <= 0 ? 20 : tamanio, 100));
+        // Prioridad: la asigna Primer Contacto en su expediente (si esa tabla existe en la base).
+        boolean conPrioridad = existeTabla("expedientes_primer_contacto");
+        String prioridadSql = conPrioridad ? "upper(epc.prioridad)" : "CAST(NULL AS varchar)";
+        if (vacio(f.get("prioridad")) != null) {
+            if (conPrioridad) {
+                where.append(" AND upper(coalesce(epc.prioridad,'SIN')) = :prioridad ");
+                p.addValue("prioridad", f.get("prioridad").trim().toUpperCase());
+            } else if (!"SIN".equalsIgnoreCase(f.get("prioridad").trim())) {
+                where.append(" AND 1=0 ");
+            }
+        }
+
+        int tam = Math.max(1, Math.min(tamanio <= 0 ? 20 : tamanio, 5000));
         int pag = Math.max(0, pagina);
         String from = """
                   FROM quejas q
                   LEFT JOIN dependencias d ON d.clave = q.unidad_academica_clave
                   LEFT JOIN personal_administrativo pr ON lower(pr.correo_institucional) = lower(q.revisando_por)
                   LEFT JOIN personal_administrativo pv ON lower(pv.correo_institucional) = lower(q.validado_por)
-                """;
+                """ + (conPrioridad
+                ? " LEFT JOIN expedientes_primer_contacto epc ON epc.folio_origen = q.numero_folio "
+                : "");
         Long total = named.queryForObject("SELECT count(*) " + from + where, p, Long.class);
         long totalElementos = total == null ? 0 : total;
 
+        String orden = ORDENES.getOrDefault(f.getOrDefault("orden", "reciente"), ORDENES.get("reciente"));
         p.addValue("limite", tam).addValue("desplazamiento", (long) pag * tam);
         List<FilaQueja> filas = named.query("""
                 SELECT q.numero_folio, q.fecha_creacion, %s AS quejoso, q.unidad_academica_clave,
-                       coalesce(d.abreviatura, d.nombre) AS unidad_nombre, %s AS etapa, coalesce(q.estatus,'RECIBIDA') AS estatus,
+                       coalesce(d.abreviatura, d.nombre, q.unidad_academica_clave) AS unidad_nombre, %s AS etapa,
+                       coalesce(q.estatus,'RECIBIDA') AS estatus,
                        CASE WHEN q.estatus = 'EN_VALIDACION'
                             THEN coalesce(pr.nombre_completo, q.revisando_por_nombre, q.revisando_por)
                             ELSE coalesce(pv.nombre_completo, q.validado_por) END AS recepcionista,
-                       q.defensor_asignado, q.folio_primer_contacto, q.origen_registro
-                """.formatted(NOMBRE_QUEJOSO_SQL, ETAPA_SQL) + from + where
-                        + " ORDER BY q.fecha_creacion DESC, q.id DESC LIMIT :limite OFFSET :desplazamiento",
+                       q.defensor_asignado, q.folio_primer_contacto, q.origen_registro,
+                       %s AS estado, %s AS prioridad,
+                       floor(extract(epoch FROM (now() - q.fecha_creacion)) / 86400)::bigint AS dias
+                """.formatted(NOMBRE_QUEJOSO_SQL, ETAPA_SQL, ESTADO_SQL, prioridadSql) + from + where
+                        + " ORDER BY " + orden + " LIMIT :limite OFFSET :desplazamiento",
                 p,
                 (rs, i) -> new FilaQueja(rs.getString(1), ts(rs.getTimestamp(2)), rs.getString(3), rs.getString(4),
                         rs.getString(5), rs.getString(6), rs.getString(7), etiquetaEstatus(rs.getString(7)),
                         rs.getString(8), "EN_VALIDACION".equals(rs.getString(7)), rs.getString(9), rs.getString(10),
-                        "MANUAL".equals(rs.getString(11)) ? "Ventanilla" : "Web"));
+                        "MANUAL".equals(rs.getString(11)) ? "Ventanilla" : "Web",
+                        rs.getString("estado"), ESTADOS.getOrDefault(rs.getString("estado"), rs.getString("estado")),
+                        rs.getString("prioridad"), rs.getLong("dias")));
 
         int totalPaginas = (int) Math.ceil(totalElementos / (double) tam);
         return new PaginaQuejas(filas, pag, tam, totalElementos, totalPaginas);
@@ -351,7 +330,9 @@ public class SeguimientoQuejasService {
                 """, String.class);
         List<Conteo> etapas = new ArrayList<>();
         ETAPAS.forEach((k, v) -> etapas.add(new Conteo(k, v, 0)));
-        return new Filtros(recep, abogados, etapas);
+        List<Conteo> estados = new ArrayList<>();
+        ESTADOS.forEach((k, v) -> estados.add(new Conteo(k, v, 0)));
+        return new Filtros(recep, abogados, etapas, estados);
     }
 
     // ======================================================================================

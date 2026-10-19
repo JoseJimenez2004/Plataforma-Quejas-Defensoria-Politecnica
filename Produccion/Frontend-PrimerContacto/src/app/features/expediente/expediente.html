@@ -1,470 +1,553 @@
-<section class="page">
+<section class="page exp">
   @if (cargando) {
-    <mat-card class="card">
-      <p style="color: #6b7280; text-align: center; padding: var(--space-4);">Cargando expediente…</p>
-    </mat-card>
+    <div class="pc-card"><p class="vacio">Cargando expediente…</p></div>
   } @else if (sinDatos) {
-    <mat-card class="card">
-      <p style="color: #6b7280; padding: var(--space-4);">
-        Aún no se ha recibido de Revisión ningún expediente con folio
-        <strong>{{ folio }}</strong>. En cuanto Revisión lo turne a Primer Contacto, aparecerá aquí.
+    <div class="pc-card">
+      <p class="vacio">
+        Aún no se ha recibido de Revisión ningún expediente con folio <strong>{{ folio }}</strong>.
+        En cuanto Revisión lo turne a Primer Contacto, aparecerá aquí.
       </p>
-    </mat-card>
+    </div>
   } @else {
 
-  <div class="page-header">
+  <!-- ============================ Encabezado ============================ -->
+  <button type="button" class="pc-link volver" (click)="volver()"><mat-icon>arrow_back</mat-icon> Volver a expedientes</button>
+
+  <div class="exp-cabeza">
     <div>
-      <h2>{{ expediente.folio }}</h2>
-      <p>
-        {{ expediente.asunto }} · Queja {{ expediente.folioOrigen }} · Ingreso: {{ expediente.fechaIngreso }}
-        · {{ expediente.quejoso.unidadAcademica }}
-      </p>
+      <h2>{{ expediente.folio }} <span [class]="'estatus-chip ' + claseEstatus(expediente.estatusCodigo)">{{ expediente.estatus }}</span></h2>
+      <p class="exp-sub">{{ expediente.asunto }} · Queja {{ expediente.folioOrigen }} · Ingreso: {{ expediente.fechaIngreso || expediente.datosQueja?.fechaRegistro || '—' }}</p>
       @if (expediente.analistaAnalisisNombre) {
-        <p class="analisis-meta">
-          <mat-icon>person_search</mat-icon>
-          En análisis por {{ expediente.analistaAnalisisNombre }}
-          desde {{ formatearFechaHora(expediente.fechaInicioAnalisis) }}
-        </p>
+        <p class="exp-meta"><mat-icon>person_search</mat-icon>
+          En análisis por {{ expediente.analistaAnalisisNombre }} desde {{ formatearFechaHora(expediente.fechaInicioAnalisis) }}</p>
       }
     </div>
-
-    <div class="hero-chips">
-      <mat-chip class="priority-chip">{{ expediente.prioridad }} prioridad</mat-chip>
-      <span class="estatus-chip" [class]="'estatus-chip ' + claseEstatus(expediente.estatusCodigo)">
-        {{ expediente.estatus }}
-      </span>
+    <div class="exp-chips">
+      <span class="pc-chip prioridad grande">{{ expediente.prioridad }} prioridad</span>
+      @if (expediente.quejoso.unidadAcademica) { <span class="pc-chip unidad grande">{{ expediente.quejoso.unidadAcademica }}</span> }
     </div>
   </div>
 
-  <!-- ============================ Antecedentes ============================ -->
-  <div class="antecedentes-aviso" [class.con-resultados]="(antecedentes?.total ?? 0) > 0">
-    <mat-icon>{{ (antecedentes?.total ?? 0) > 0 ? 'history' : 'manage_search' }}</mat-icon>
-    <div>
-      @if (!antecedentes) {
-        <strong>Buscando antecedentes…</strong>
-      } @else if (antecedentes.total === 0) {
-        <strong>Sin antecedentes detectados.</strong>
-        <span>No se encontraron otras quejas relacionadas con esta.</span>
-      } @else {
-        <strong>
-          {{ antecedentes.total }} posible{{ antecedentes.total === 1 ? '' : 's' }}
-          antecedente{{ antecedentes.total === 1 ? '' : 's' }}
-        </strong>
-        <span>
-          @if (antecedentes.mismoQuejoso > 0) {
-            {{ antecedentes.mismoQuejoso }} del mismo quejoso ·
-          }
-          similitud máxima {{ antecedentes.maxSimilitud }}%
-        </span>
-      }
-    </div>
-    <button mat-flat-button class="primary-btn" (click)="buscarAntecedentes()">
-      <mat-icon>manage_search</mat-icon> Buscar antecedentes
-    </button>
-  </div>
+  <nav class="exp-tabs" role="tablist">
+    <button type="button" role="tab" [class.activa]="pestana === 'ia'" (click)="irAPestana('ia')"><mat-icon>auto_awesome</mat-icon> Análisis IA</button>
+    <button type="button" role="tab" [class.activa]="pestana === 'expediente'" (click)="irAPestana('expediente')"><mat-icon>description</mat-icon> Expediente</button>
+    <button type="button" role="tab" [class.activa]="pestana === 'gestion'" (click)="irAPestana('gestion')"><mat-icon>event_note</mat-icon> Gestión</button>
+    <button type="button" role="tab" [class.activa]="pestana === 'resolucion'" (click)="irAPestana('resolucion')"><mat-icon>gavel</mat-icon> Resolución</button>
+  </nav>
 
-  <div class="expediente-grid">
+  @switch (pestana) {
 
-    <mat-card class="card">
-      <h3 class="card-title">Narrativa del Quejoso</h3>
-      <div class="document-box">
-        <p>{{ expediente.narrativa }}</p>
-      </div>
-    </mat-card>
-
-    @if (expediente.datosQueja; as q) {
-      <mat-card class="card">
-        <h3 class="card-title">Datos de la Queja</h3>
-        <div class="info-list">
-          <div>
-            <span>Fecha de registro</span>
-            <strong>{{ q.fechaRegistro || '—' }}</strong>
-          </div>
-          <div>
-            <span>Asunto</span>
-            <strong>{{ q.asunto || '—' }}</strong>
-          </div>
-          <div>
-            <span>Persona denunciada</span>
-            <strong>{{ q.denunciado || '—' }}</strong>
-          </div>
-          <div>
-            <span>Lugar de los hechos</span>
-            <strong>{{ q.unidadAcademicaClave || '—' }}</strong>
-          </div>
-          <div>
-            <span>Fecha de los hechos</span>
-            <strong>{{ q.fechaHechos || '—' }}</strong>
-          </div>
-        </div>
-      </mat-card>
-    }
-
-    <mat-card class="card">
-      <h3 class="card-title">Datos del Quejoso</h3>
-      <div class="info-list">
-        <div>
-          <span>Nombre</span>
-          <strong>{{ expediente.quejoso.nombre }}</strong>
-        </div>
-        <div>
-          <span>Tipo de usuario</span>
-          <strong>{{ expediente.quejoso.boleta || '—' }}</strong>
-        </div>
-        <div>
-          <span>Identificación</span>
-          <strong>
-            {{ expediente.datosQueja?.numeroIdentificacionQuejoso
-              ? (expediente.datosQueja?.tipoIdentificacionQuejoso ? expediente.datosQueja?.tipoIdentificacionQuejoso + ': ' : '')
-                + expediente.datosQueja?.numeroIdentificacionQuejoso
-              : '—' }}
-          </strong>
-        </div>
-        <div>
-          <span>Fecha de nacimiento</span>
-          <strong>{{ expediente.datosQueja?.fechaNacimientoQuejoso || '—' }}</strong>
-        </div>
-        <div>
-          <span>Correo electrónico</span>
-          <strong>{{ expediente.quejoso.correo }}</strong>
-        </div>
-        <div>
-          <span>Teléfono de contacto</span>
-          <strong>{{ expediente.quejoso.telefono || '—' }}</strong>
-        </div>
-        <div>
-          <span>Unidad académica</span>
-          <strong>{{ expediente.quejoso.unidadAcademica }}</strong>
-        </div>
-      </div>
-    </mat-card>
-
-    <mat-card class="card">
-      <h3 class="card-title">Evidencias</h3>
-      <div class="evidence-list">
-        @for (evidencia of expediente.evidencias; track evidencia.id) {
-          <div class="evidence-row">
-            <div class="evidence-file">
-              <mat-icon>description</mat-icon>
-              <div>
-                <strong>{{ evidencia.nombre }}</strong>
-                <span>{{ evidencia.tipo }}</span>
-              </div>
-            </div>
-            <div class="evidence-actions">
-              <button mat-button class="link-btn" (click)="abrirEvidencia(evidencia)">
-                <mat-icon>open_in_new</mat-icon> Abrir
-              </button>
-            </div>
-          </div>
-        }
-        <p class="evidence-count">{{ expediente.evidencias.length }} evidencias adjuntas</p>
-      </div>
-    </mat-card>
-
-    <mat-card class="card notes-card">
-      <h3 class="card-title">Notas de Análisis</h3>
-
-      <div class="timeline-notes">
-        @for (nota of expediente.notas; track nota.id) {
-          <div class="timeline-note" [class.own-note]="esNotaPropia(nota)">
-            <div class="note-meta">
-              <strong>{{ nota.analistaNombre }}</strong>
-              <span>
-                {{ formatearFechaHora(nota.fechaCreacion) }}
-                @if (nota.fechaActualizacion) { · editada }
+  <!-- ================================================================== ANÁLISIS IA -->
+  @case ('ia') {
+    <div class="exp-rejilla ia">
+      <div class="col">
+        <div class="pc-card">
+          <div class="pc-card-cabeza">
+            <h3><mat-icon>summarize</mat-icon> Resumen de la queja</h3>
+            @if (resumen) {
+              <span class="exp-etiqueta-ia">
+                <span class="pc-chip" [class.simulado]="resumenSimulado">{{ resumenSimulado ? 'Resumen simulado (sin modelo)' : 'Borrador generado por IA' }}</span>
+                <small>{{ formatearFechaHora(fechaResumen) }}</small>
               </span>
+            }
+          </div>
+          @if (cargandoResumen) {
+            <div class="exp-cargando"><span class="barra"></span>Generando el resumen con el modelo. Puede tardar hasta dos minutos…</div>
+          } @else if (resumen) {
+            <p class="exp-resumen">{{ resumen.resumen }}</p>
+            @if (resumenSimulado) {
+              <p class="exp-aviso">El modelo de resumen no respondió; esto es una aproximación hecha en el navegador. Revísalo antes de usarlo.</p>
+            }
+            <div class="acciones-der">
+              <button type="button" class="pc-btn-borde" (click)="verNarrativaCompleta()"><mat-icon>visibility</mat-icon> Ver narrativa completa</button>
+              <button type="button" class="pc-btn" (click)="copiarResumen()"><mat-icon>content_copy</mat-icon> Copiar resumen</button>
             </div>
+          } @else {
+            <p class="vacio">La queja no tiene narrativa para resumir.</p>
+          }
+        </div>
 
-            @if (notaEnEdicion === nota.id) {
-              <mat-form-field appearance="outline" class="note-input">
-                <textarea matInput rows="3" [(ngModel)]="textoEdicion"></textarea>
-              </mat-form-field>
-              <div class="note-actions">
-                <button mat-button (click)="cancelarEdicion()">Cancelar</button>
-                <button mat-flat-button class="primary-btn" (click)="guardarEdicion(nota)">Guardar</button>
+        <div class="pc-card">
+          <div class="pc-card-cabeza">
+            <div>
+              <h3><mat-icon>format_quote</mat-icon> Fragmentos clave de la queja</h3>
+              <p>Fragmentos relevantes identificados por el modelo. Sirven de apoyo para el análisis y la comparación con antecedentes.</p>
+            </div>
+            @if (fragmentos.length) { <span class="pc-chip unidad">{{ fragmentos.length }} fragmentos</span> }
+          </div>
+          <ul class="exp-fragmentos">
+            @for (f of fragmentos; track $index) {
+              <li><mat-icon>format_quote</mat-icon><q>{{ f.texto }}</q><span class="pc-chip prioridad">{{ f.etiqueta }}</span></li>
+            } @empty {
+              <li class="vacio">{{ cargandoResumen ? 'Esperando al modelo…' : 'Sin fragmentos.' }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="pc-card rosa">
+          <div class="pc-card-cabeza">
+            <h3><mat-icon>history</mat-icon> Antecedentes relacionados</h3>
+            @if (antecedentesLista.length) {
+              <button type="button" class="pc-link" (click)="buscarAntecedentes()">Ver todos ({{ antecedentesLista.length }}) <mat-icon>arrow_forward</mat-icon></button>
+            }
+          </div>
+          @if (!antecedentes) {
+            <p class="vacio">Buscando antecedentes…</p>
+          } @else if (antecedentesLista.length === 0) {
+            <p class="vacio">No se encontraron otras quejas relacionadas con esta.</p>
+          } @else {
+            <p class="exp-nota">Se encontraron {{ antecedentes.total }} expedientes con temas similares.<br />Similitud máxima: <b>{{ antecedentes.maxSimilitud }}%</b></p>
+            <ul class="exp-antecedentes">
+              @for (a of antecedentesLista.slice(0, 4); track a.folioQueja) {
+                <li>
+                  <button type="button" (click)="verAntecedente(a)">
+                    <mat-icon>description</mat-icon>
+                    <span class="texto"><b>{{ a.folioQueja }}</b><small>{{ a.asunto || a.extracto || 'Sin asunto' }}</small></span>
+                    <span [class]="'sim ' + claseSimilitud(a.similitud)">{{ a.similitud | number: '1.0-0' }}%</span>
+                    <mat-icon class="flecha">chevron_right</mat-icon>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="pc-card">
+          <div class="pc-card-cabeza">
+            <div>
+              <h3><mat-icon>bar_chart</mat-icon> Visualización rápida</h3>
+              <p>Comparación de similitud con antecedentes encontrados.</p>
+            </div>
+          </div>
+          <ul class="exp-barras">
+            @for (a of antecedentesLista.slice(0, 6); track a.folioQueja) {
+              <li><span>{{ a.folioQueja }}</span><span class="barra"><span [class]="claseSimilitud(a.similitud)" [style.width.%]="a.similitud"></span></span><b>{{ a.similitud | number: '1.0-0' }}%</b></li>
+            } @empty {
+              <li class="vacio">Sin antecedentes para comparar.</li>
+            }
+          </ul>
+          <button type="button" class="pc-btn-borde ancho" (click)="buscarAntecedentes()"><mat-icon>search</mat-icon> Ver análisis detallado de antecedentes</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================== EXPEDIENTE -->
+  @case ('expediente') {
+    <div class="exp-rejilla">
+      <div class="col">
+        <div class="pc-card">
+          <div class="pc-card-cabeza"><h3><mat-icon>description</mat-icon> Narrativa del quejoso</h3></div>
+          <div class="exp-narrativa" [class.completa]="narrativaCompleta">{{ expediente.narrativa }}</div>
+          @if (expediente.narrativa.length > 600) {
+            <button type="button" class="pc-link derecha" (click)="narrativaCompleta = !narrativaCompleta">
+              {{ narrativaCompleta ? 'Ver menos' : 'Ver más' }} <mat-icon>{{ narrativaCompleta ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+          }
+        </div>
+
+        <div class="pc-card">
+          <div class="pc-card-cabeza"><h3><mat-icon>person</mat-icon> Datos del quejoso</h3></div>
+          <div class="exp-datos dos">
+            <dl>
+              <div><dt><mat-icon>person</mat-icon> Nombre</dt><dd>{{ expediente.quejoso.nombre || '—' }}</dd></div>
+              <div><dt><mat-icon>badge</mat-icon> Tipo de usuario</dt><dd>{{ expediente.quejoso.boleta || '—' }}</dd></div>
+              <div><dt><mat-icon>bookmark_border</mat-icon> Identificación</dt>
+                <dd>{{ expediente.datosQueja?.numeroIdentificacionQuejoso
+                  ? (expediente.datosQueja?.tipoIdentificacionQuejoso ? expediente.datosQueja?.tipoIdentificacionQuejoso + ': ' : '') + expediente.datosQueja?.numeroIdentificacionQuejoso
+                  : '—' }}</dd></div>
+              <div><dt><mat-icon>cake</mat-icon> Fecha de nacimiento</dt><dd>{{ expediente.datosQueja?.fechaNacimientoQuejoso || '—' }}</dd></div>
+            </dl>
+            <dl>
+              <div><dt><mat-icon>mail_outline</mat-icon> Correo electrónico</dt><dd>{{ expediente.quejoso.correo || '—' }}</dd></div>
+              <div><dt><mat-icon>call</mat-icon> Teléfono de contacto</dt><dd>{{ expediente.quejoso.telefono || '—' }}</dd></div>
+              <div><dt><mat-icon>school</mat-icon> Unidad académica</dt><dd>{{ expediente.quejoso.unidadAcademica || '—' }}</dd></div>
+            </dl>
+          </div>
+        </div>
+
+        <div class="pc-card">
+          <div class="pc-card-cabeza"><h3><mat-icon>attach_file</mat-icon> Evidencias adjuntas</h3><span class="exp-cuenta">{{ expediente.evidencias.length }} archivos</span></div>
+          <ul class="exp-archivos">
+            @for (ev of expediente.evidencias; track ev.id) {
+              <li>
+                <mat-icon class="ico">description</mat-icon>
+                <span class="texto"><b>{{ ev.nombre }}</b><small>{{ ev.tipo }}</small></span>
+                <button type="button" class="ico-btn" (click)="descargarEvidencia(ev)" title="Descargar"><mat-icon>download</mat-icon></button>
+                <button type="button" class="ico-btn" (click)="abrirEvidencia(ev)" title="Abrir en otra pestaña"><mat-icon>open_in_new</mat-icon></button>
+              </li>
+            } @empty {
+              <li class="vacio">La queja no trae evidencias adjuntas.</li>
+            }
+          </ul>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="pc-card">
+          <div class="pc-card-cabeza"><h3><mat-icon>assignment</mat-icon> Datos de la queja</h3></div>
+          <dl class="exp-datos lista">
+            <div><dt><mat-icon>event</mat-icon> Fecha de registro</dt><dd>{{ expediente.datosQueja?.fechaRegistro || '—' }}</dd></div>
+            <div><dt><mat-icon>assignment</mat-icon> Asunto</dt><dd>{{ expediente.datosQueja?.asunto || expediente.asunto || '—' }}</dd></div>
+            <div><dt><mat-icon>place</mat-icon> Lugar de los hechos</dt><dd>{{ expediente.datosQueja?.unidadAcademicaClave || '—' }}</dd></div>
+            <div><dt><mat-icon>event</mat-icon> Fecha de los hechos</dt><dd>{{ expediente.datosQueja?.fechaHechos || '—' }}</dd></div>
+            <div><dt><mat-icon>send</mat-icon> Origen</dt><dd>Portal institucional</dd></div>
+            <div><dt><mat-icon>schedule</mat-icon> Estado actual</dt><dd><span [class]="'estatus-chip ' + claseEstatus(expediente.estatusCodigo)">{{ expediente.estatus }}</span></dd></div>
+            <div><dt><mat-icon>flag</mat-icon> Prioridad</dt><dd><span class="pc-chip prioridad">{{ expediente.prioridad }}</span></dd></div>
+          </dl>
+        </div>
+
+        <div class="pc-card">
+          <div class="pc-card-cabeza"><h3><mat-icon>group</mat-icon> Persona denunciada</h3></div>
+          <dl class="exp-datos lista">
+            <div><dt><mat-icon>person</mat-icon> Nombre</dt><dd>{{ expediente.datosQueja?.denunciado || '—' }}</dd></div>
+            <div><dt><mat-icon>school</mat-icon> Unidad académica</dt><dd>{{ expediente.datosQueja?.unidadAcademicaClave || '—' }}</dd></div>
+          </dl>
+        </div>
+
+        <div class="pc-card">
+          <div class="pc-card-cabeza"><h3><mat-icon>history</mat-icon> Historial del expediente</h3></div>
+          <ng-container *ngTemplateOutlet="tplHistorial" />
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================== GESTIÓN -->
+  @case ('gestion') {
+    <div class="exp-rejilla">
+      <div class="col">
+        <div class="pc-card">
+          <div class="pc-card-cabeza">
+            <h3><mat-icon>sticky_note_2</mat-icon> Notas de análisis</h3>
+            @if (abierto && !mostrarNuevaNota) {
+              <button type="button" class="pc-btn-borde chico" (click)="mostrarNuevaNota = true"><mat-icon>add</mat-icon> Nueva nota</button>
+            }
+          </div>
+
+          @if (mostrarNuevaNota) {
+            <div class="exp-nueva-nota">
+              <textarea rows="3" [(ngModel)]="nuevaNota" placeholder="Escribe la nota de análisis…" aria-label="Nueva nota"></textarea>
+              <div class="acciones-der">
+                <button type="button" class="pc-btn-borde chico" (click)="mostrarNuevaNota = false; nuevaNota = ''">Cancelar</button>
+                <button type="button" class="pc-btn chico" (click)="agregarNota(); mostrarNuevaNota = false">Guardar nota</button>
               </div>
-            } @else {
-              <p>{{ nota.contenido }}</p>
-              @if (esNotaPropia(nota)) {
-                <div class="note-actions">
-                  <button mat-icon-button matTooltip="Editar nota" (click)="editarNota(nota)">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button matTooltip="Eliminar nota" (click)="eliminarNota(nota)">
-                    <mat-icon>delete</mat-icon>
-                  </button>
+            </div>
+          }
+
+          <ul class="exp-notas">
+            @for (nota of expediente.notas; track nota.id) {
+              <li [class.propia]="esNotaPropia(nota)">
+                <div class="nota-cabeza"><b>{{ nota.analistaNombre }}</b><small>{{ formatearFechaHora(nota.fechaCreacion) }}@if (nota.fechaActualizacion) { · editada }</small></div>
+                @if (notaEnEdicion === nota.id) {
+                  <textarea rows="3" [(ngModel)]="textoEdicion" aria-label="Editar nota"></textarea>
+                  <div class="acciones-der">
+                    <button type="button" class="pc-btn-borde chico" (click)="cancelarEdicion()">Cancelar</button>
+                    <button type="button" class="pc-btn chico" (click)="guardarEdicion(nota)">Guardar</button>
+                  </div>
+                } @else {
+                  <p>{{ nota.contenido }}</p>
+                  @if (esNotaPropia(nota)) {
+                    <div class="nota-acciones">
+                      <button type="button" class="ico-btn" (click)="editarNota(nota)" title="Editar nota"><mat-icon>edit</mat-icon></button>
+                      <button type="button" class="ico-btn" (click)="eliminarNota(nota)" title="Eliminar nota"><mat-icon>delete</mat-icon></button>
+                    </div>
+                  }
+                }
+              </li>
+            } @empty {
+              <li class="vacio">Todavía no hay notas de análisis.</li>
+            }
+          </ul>
+        </div>
+
+        <div class="pc-card">
+          <div class="pc-card-cabeza"><h3><mat-icon>record_voice_over</mat-icon> Versión del denunciado</h3></div>
+          @if (respuestasDenunciado.length > 0) {
+            <div class="exp-respuesta">
+              <mat-icon class="ok">check_circle</mat-icon>
+              <div><b>Respuesta recibida</b><span>El denunciado respondió el {{ formatearFechaHora(respuestasDenunciado[0].fechaRegistro) }}.</span></div>
+              <button type="button" class="pc-btn-borde chico" (click)="verRespuestaDenunciado()"><mat-icon>visibility</mat-icon> Ver respuesta</button>
+            </div>
+            @if (respuestasDenunciado[0].archivos.length) {
+              <h4 class="exp-subtitulo">Archivos adjuntos ({{ respuestasDenunciado[0].archivos.length }})</h4>
+              <ul class="exp-archivos">
+                @for (a of respuestasDenunciado[0].archivos; track a.id) {
+                  <li>
+                    <mat-icon class="ico">description</mat-icon>
+                    <span class="texto"><b>{{ a.nombreArchivo }}</b><small>{{ a.tipoMime }} · {{ tamanio(a.tamanioBytes) }}</small></span>
+                    <button type="button" class="ico-btn" (click)="abrirArchivoDenunciado(a, true)" title="Descargar"><mat-icon>download</mat-icon></button>
+                    <button type="button" class="ico-btn" (click)="abrirArchivoDenunciado(a)" title="Abrir"><mat-icon>open_in_new</mat-icon></button>
+                  </li>
+                }
+              </ul>
+            }
+          } @else {
+            <div class="pc-vacio-caja"><mat-icon>hourglass_empty</mat-icon><div><b>Sin respuesta todavía</b><span>
+              {{ ultimaSolicitudDenunciado ? 'Ya se le pidió su versión; aún no responde.' : 'Aún no se le ha pedido al denunciado su versión de los hechos.' }}</span></div></div>
+          }
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="pc-card">
+          <div class="pc-card-cabeza">
+            <h3><mat-icon>event</mat-icon> Citas con el quejoso</h3>
+            @if (abierto && !citaActiva) {
+              <button type="button" class="pc-btn-borde chico" (click)="agendarCita()"><mat-icon>add</mat-icon> Agendar cita</button>
+            }
+          </div>
+          @if (citaActiva; as c) {
+            <div class="exp-cita">
+              <span class="exp-cita-fecha"><b>{{ c.fecha.slice(0, 2) }}</b><small>{{ c.fecha.slice(3, 5) }}/{{ c.fecha.slice(8) }}</small></span>
+              <div>
+                <b>{{ c.hora }} h · {{ etiquetaCategoria(c.categoria) }}</b>
+                <small>{{ c.tipo }} · Agendó {{ c.analistaNombre || '—' }}</small>
+                @if (c.estatusCodigo === 'CANCELADA_QUEJOSO') { <small class="rojo">Motivo del quejoso: “{{ c.motivoCancelacionQuejoso }}”</small> }
+                @if (c.estatusCodigo === 'SIN_RESPUESTA') { <small class="rojo">El quejoso no respondió en el plazo de 48 horas.</small> }
+              </div>
+              <span [class]="'pc-chip ' + c.estatusCodigo">{{ c.estatus }}</span>
+            </div>
+            <button type="button" class="pc-link" (click)="irAAgenda()">Confirmar, reagendar o cancelar en la Agenda <mat-icon>arrow_forward</mat-icon></button>
+          } @else {
+            <div class="pc-vacio-caja"><mat-icon>event</mat-icon><div><b>Sin citas activas</b><span>Agenda una cita si necesitas entrevistar al quejoso.</span></div></div>
+          }
+          @if (historialCitas.length > (citaActiva ? 1 : 0)) {
+            <details class="exp-mas">
+              <summary>Historial de citas ({{ historialCitas.length }})</summary>
+              <ul>
+                @for (cita of historialCitas; track cita.id) {
+                  <li><span>{{ cita.fecha }} · {{ cita.hora }} h · {{ etiquetaCategoria(cita.categoria) }}</span><span [class]="'pc-chip ' + cita.estatusCodigo">{{ cita.estatus }}</span></li>
+                }
+              </ul>
+            </details>
+          }
+        </div>
+
+        <div class="pc-card">
+          <div class="pc-card-cabeza">
+            <h3><mat-icon>outgoing_mail</mat-icon> Solicitud de versión del denunciado</h3>
+            @if (abierto) {
+              <button type="button" class="pc-btn-borde chico" [disabled]="enviandoSolicitudDenunciado" (click)="solicitarRespuestaDenunciado()">
+                <mat-icon>{{ ultimaSolicitudDenunciado ? 'refresh' : 'add' }}</mat-icon> {{ ultimaSolicitudDenunciado ? 'Reenviar' : 'Enviar solicitud' }}
+              </button>
+            }
+          </div>
+          @if (ultimaSolicitudDenunciado; as s) {
+            <ol class="pc-timeline">
+              <li><span class="punto lleno azul"></span><b>Solicitud enviada</b><small>{{ formatearFechaHora(s.fechaEnvio) }}</small>
+                <p>Solicitud enviada a {{ s.correoDenunciado }}@if (s.enviadoPorNombre) { por {{ s.enviadoPorNombre }}}.</p>
+                @if (!s.correoEnviado) { <p class="rojo">El correo no se pudo enviar. Revisa la dirección y reenvíalo.</p> }
+              </li>
+              <li><span class="punto" [class.lleno]="respuestasDenunciado.length > 0"></span><b>En espera de respuesta</b>
+                <p>{{ respuestasDenunciado.length ? 'Completado' : 'Pendiente · se espera la respuesta del denunciado.' }}</p></li>
+              @if (respuestasDenunciado.length > 0) {
+                <li><span class="punto lleno"></span><b>Respuesta recibida</b><small>{{ formatearFechaHora(respuestasDenunciado[0].fechaRegistro) }}</small>
+                  <p>Respondió al correo de seguimiento ({{ respuestasDenunciado[0].folioRespuesta }}).
+                    <button type="button" class="pc-link" (click)="verRespuestaDenunciado()"><mat-icon>visibility</mat-icon> Ver respuesta</button></p></li>
+              }
+            </ol>
+          } @else {
+            <div class="pc-vacio-caja"><mat-icon>mail_outline</mat-icon><div><b>Sin solicitudes enviadas</b><span>Envía al denunciado el enlace para que dé su versión de los hechos.</span></div></div>
+          }
+        </div>
+
+        <div class="pc-card">
+          <div class="pc-card-cabeza">
+            <h3><mat-icon>handshake</mat-icon> Propuesta de conciliación</h3>
+            @if (abierto && !conciliacionPendiente && !mostrarFormConciliacion) {
+              <button type="button" class="pc-btn-borde chico" (click)="mostrarFormConciliacion = true"><mat-icon>add</mat-icon> Proponer acuerdo</button>
+            }
+          </div>
+          @if (mostrarFormConciliacion) {
+            <div class="exp-form">
+              <label class="pc-campo">Asunto del acuerdo
+                <input type="text" maxlength="255" [(ngModel)]="conciliacion.asunto" placeholder="Ej. Revisión de la calificación y disculpa por escrito" />
+              </label>
+              <label class="pc-campo">Términos del acuerdo
+                <textarea rows="4" [(ngModel)]="conciliacion.terminos" placeholder="Qué se compromete a hacer cada parte y en qué plazo."></textarea>
+              </label>
+              <div class="acciones-der">
+                <button type="button" class="pc-btn-borde chico" (click)="mostrarFormConciliacion = false">Cancelar</button>
+                <button type="button" class="pc-btn chico" [disabled]="procesando" (click)="proponerConciliacion()"><mat-icon>send</mat-icon> Enviar al quejoso</button>
+              </div>
+            </div>
+          }
+          @for (acuerdo of acuerdos; track acuerdo.id) {
+            <div class="exp-acuerdo" [attr.data-estado]="acuerdo.estado">
+              <div class="nota-cabeza"><b>{{ acuerdo.asunto }}</b><span class="pc-chip" [class.CONFIRMADA]="acuerdo.estado === 'ACEPTADO'" [class.CANCELADA]="acuerdo.estado === 'RECHAZADO'" [class.PROGRAMADA]="acuerdo.estado === 'PENDIENTE'">{{ etiquetaAcuerdo(acuerdo.estado) }}</span></div>
+              <p>{{ acuerdo.terminos }}</p>
+              <small>Propuesto por {{ acuerdo.creadoPorNombre || acuerdo.creadoPor }} el {{ formatearFechaHora(acuerdo.fechaEmision) }}@if (acuerdo.fechaRespuesta) { · respondido el {{ formatearFechaHora(acuerdo.fechaRespuesta) }}}</small>
+              @if (acuerdo.comentarioQuejoso) { <p class="cita-quejoso">“{{ acuerdo.comentarioQuejoso }}”</p> }
+            </div>
+          } @empty {
+            @if (!mostrarFormConciliacion) {
+              <div class="pc-vacio-caja"><mat-icon>handshake</mat-icon><div><b>No se ha propuesto un acuerdo</b><span>Propón un acuerdo al quejoso. Si lo acepta, el expediente pasa a Subdefensoría.</span></div></div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================== RESOLUCIÓN -->
+  @case ('resolucion') {
+    <div class="exp-rejilla">
+      <div class="col">
+        <div class="pc-card">
+          @switch (expediente.estatusCodigo) {
+            @case ('PROCEDENTE') {
+              <div class="pc-card-cabeza"><h3><mat-icon>task_alt</mat-icon> Procedente · turnado a Subdefensoría</h3></div>
+              @if (expediente.folioSubdefensoria) {
+                <p>Subdefensoría lo recibió con folio <strong>{{ expediente.folioSubdefensoria }}</strong>.</p>
+              } @else {
+                <p class="rojo">El dictamen quedó registrado, pero Subdefensoría no confirmó la recepción. Reintenta el envío.</p>
+              }
+              <div class="acciones-der">
+                @if (!expediente.folioSubdefensoria) {
+                  <button type="button" class="pc-btn" [disabled]="procesando" (click)="reenviarASubdefensoria()"><mat-icon>sync</mat-icon> Reintentar envío</button>
+                }
+                <button type="button" class="pc-btn-borde" (click)="verDictamen()"><mat-icon>visibility</mat-icon> Ver dictamen</button>
+              </div>
+            }
+            @case ('IMPROCEDENTE') {
+              <div class="pc-card-cabeza"><h3><mat-icon>cancel</mat-icon> Improcedente · pendiente de remisión</h3></div>
+              <p>Genera el oficio y registra su envío a la instancia competente para cerrar el expediente.</p>
+              <div class="acciones-der">
+                <button type="button" class="pc-btn-borde" (click)="verDictamen()"><mat-icon>visibility</mat-icon> Ver dictamen</button>
+                <button type="button" class="pc-btn" (click)="irARemision()"><mat-icon>outgoing_mail</mat-icon> Continuar con la remisión</button>
+              </div>
+            }
+            @case ('REMITIDA') {
+              <div class="pc-card-cabeza"><h3><mat-icon>outgoing_mail</mat-icon> Remitido a otra instancia</h3></div>
+              <p>El oficio de remisión ya se registró como enviado.</p>
+              <div class="acciones-der">
+                <button type="button" class="pc-btn-borde" (click)="verDictamen()"><mat-icon>visibility</mat-icon> Ver dictamen</button>
+                <button type="button" class="pc-btn-borde" (click)="irARemision()"><mat-icon>description</mat-icon> Ver remisión</button>
+              </div>
+            }
+            @default {
+              <div class="pc-card-cabeza">
+                <div>
+                  <h3><mat-icon>description</mat-icon> Determinación del análisis</h3>
+                  <p>Seleccione si el asunto corresponde o no a la competencia de la Defensoría.</p>
+                </div>
+              </div>
+              @if (conciliacionPendiente) {
+                <p class="exp-aviso">Hay un acuerdo de conciliación esperando la respuesta del quejoso; espera su respuesta para dictaminar.</p>
+              }
+              <div class="exp-decision">
+                <button type="button" class="opcion competente" [class.sel]="decision === 'competente'" [disabled]="conciliacionPendiente || !abierto" (click)="decision = 'competente'">
+                  <span class="radio"></span>
+                  <span><b>Competente</b><small>El asunto corresponde a la competencia de la Defensoría.</small></span>
+                </button>
+                <button type="button" class="opcion improcedente" [class.sel]="decision === 'improcedente'" [disabled]="conciliacionPendiente || !abierto" (click)="decision = 'improcedente'">
+                  <span class="radio"></span>
+                  <span><b>Improcedente</b><small>El asunto no corresponde a la competencia de la Defensoría.</small></span>
+                </button>
+              </div>
+
+              @if (decision) {
+                <div class="exp-dictamen" [class.improcedente]="decision === 'improcedente'">
+                  <mat-icon>{{ decision === 'competente' ? 'check_circle' : 'cancel' }}</mat-icon>
+                  <div>
+                    <b>{{ decision === 'competente' ? 'Dictamen de Competencia' : 'Dictamen de Improcedencia' }}</b>
+                    <small>{{ decision === 'competente' ? 'Complete la información para turnar el expediente a Subdefensoría.' : 'Complete la justificación del dictamen.' }}</small>
+                  </div>
+                </div>
+                <div class="exp-form">
+                  <label class="pc-campo">Justificación del dictamen <b class="req">*</b>
+                    <textarea rows="4" maxlength="1000" [(ngModel)]="justificacion"
+                      [placeholder]="decision === 'competente' ? 'Describa los motivos por los cuales el asunto corresponde a la competencia de la Defensoría.' : 'Describa los motivos por los cuales la queja es improcedente.'"></textarea>
+                    <small class="contador">{{ justificacion.length }}/1000</small>
+                  </label>
+                  <label class="pc-campo">{{ decision === 'competente' ? 'Observaciones para Subdefensoría' : 'Observaciones (opcional)' }}
+                    <textarea rows="3" maxlength="1000" [(ngModel)]="observacionesDictamen" placeholder="Ingrese observaciones adicionales (opcional)."></textarea>
+                    <small class="contador">{{ observacionesDictamen.length }}/1000</small>
+                  </label>
+                  @if (decision === 'competente') {
+                    <label class="pc-campo">Responsable en Subdefensoría <b class="req">*</b>
+                      <select [(ngModel)]="responsableTurno">
+                        <option value="" disabled>Seleccione un responsable…</option>
+                        @for (a of abogados; track a.id) {
+                          <option [value]="a.nombre">{{ a.nombre }} · {{ a.enTramite }} {{ a.enTramite === 1 ? 'queja' : 'quejas' }} en trámite</option>
+                        }
+                      </select>
+                      @if (abogados.length) { <small class="contador izq">Ordenados de menor a mayor carga.</small> }
+                    </label>
+                  }
+                  <div class="acciones-der">
+                    <button type="button" class="pc-btn-borde" (click)="cancelarDecision()">Cancelar</button>
+                    <button type="button" class="pc-btn" [disabled]="procesando" (click)="registrarDictamen()">
+                      <mat-icon>{{ decision === 'competente' ? 'send' : 'close' }}</mat-icon>
+                      {{ procesando ? 'Guardando…' : decision === 'competente' ? 'Turnar a Subdefensoría' : 'Declarar improcedente' }}
+                    </button>
+                  </div>
                 </div>
               }
             }
+          }
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="pc-card">
+          <div class="pc-card-cabeza"><h3><mat-icon>description</mat-icon> Datos del expediente</h3></div>
+          <dl class="exp-datos tabla">
+            <div><dt>Folio</dt><dd>{{ expediente.folio }}</dd></div>
+            <div><dt>Asunto</dt><dd>{{ expediente.asunto }}</dd></div>
+            <div><dt>Quejoso</dt><dd>{{ expediente.quejoso.nombre }}</dd></div>
+            <div><dt>Persona denunciada</dt><dd>{{ expediente.datosQueja?.denunciado || '—' }}</dd></div>
+            <div><dt>Unidad académica</dt><dd>{{ expediente.quejoso.unidadAcademica || '—' }}</dd></div>
+            <div><dt>Fecha de ingreso</dt><dd>{{ expediente.fechaIngreso || expediente.datosQueja?.fechaRegistro || '—' }}</dd></div>
+            <div><dt>Prioridad</dt><dd><span class="pc-chip prioridad">{{ expediente.prioridad }}</span></dd></div>
+            <div><dt>Estado actual</dt><dd><span [class]="'estatus-chip ' + claseEstatus(expediente.estatusCodigo)">{{ expediente.estatus }}</span></dd></div>
+          </dl>
+        </div>
+
+        <div class="pc-card">
+          <div class="pc-card-cabeza">
+            <h3><mat-icon>history</mat-icon> Antecedentes identificados</h3>
+            <button type="button" class="pc-link" (click)="irAPestana('ia')">Ver análisis IA <mat-icon>arrow_forward</mat-icon></button>
           </div>
-        } @empty {
-          <p class="empty-hint">Todavía no hay notas de análisis.</p>
-        }
+          <div class="exp-ant-resumen">
+            <mat-icon>schedule</mat-icon>
+            @if (!antecedentes) { <span>Buscando antecedentes…</span> }
+            @else if (antecedentes.total === 0) { <span><b>Sin antecedentes</b></span> }
+            @else { <span><b>{{ antecedentes.total }} posible{{ antecedentes.total === 1 ? '' : 's' }} antecedente{{ antecedentes.total === 1 ? '' : 's' }}</b><small>Similitud máxima: {{ antecedentes.maxSimilitud }}%</small></span> }
+          </div>
+        </div>
+
+        <div class="pc-card">
+          <div class="pc-card-cabeza"><h3><mat-icon>history</mat-icon> Historial del expediente</h3></div>
+          <ng-container *ngTemplateOutlet="tplHistorial" />
+        </div>
       </div>
-
-      <mat-form-field appearance="outline" class="note-input">
-        <mat-label>Nueva nota de análisis</mat-label>
-        <textarea matInput rows="3" [(ngModel)]="nuevaNota"></textarea>
-      </mat-form-field>
-
-      <button mat-flat-button class="primary-btn" (click)="agregarNota()">
-        <mat-icon>add</mat-icon> Agregar nota
-      </button>
-    </mat-card>
-  </div>
-
-  <!-- ============================ Conciliación (CU-PC-10) ============================ -->
-  <mat-card class="card conciliacion-card">
-    <div class="section-head">
-      <div>
-        <span class="eyebrow-small">Solución por acuerdo</span>
-        <h3>Conciliación</h3>
-        <p>
-          Propón un acuerdo al quejoso. Si lo acepta desde su panel, el expediente pasa
-          automáticamente a Subdefensoría para elaborar el acuerdo de conclusión.
-        </p>
-      </div>
-
-      @if (abierto && !conciliacionPendiente && !mostrarFormConciliacion) {
-        <button mat-stroked-button class="outline-guinda" (click)="mostrarFormConciliacion = true">
-          <mat-icon>handshake</mat-icon> Proponer acuerdo
-        </button>
-      }
     </div>
-
-    @if (mostrarFormConciliacion) {
-      <div class="conciliacion-form">
-        <mat-form-field appearance="outline">
-          <mat-label>Asunto del acuerdo</mat-label>
-          <input matInput maxlength="255" [(ngModel)]="conciliacion.asunto"
-                 placeholder="Ej. Reembolso del cobro y disculpa por escrito">
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Términos del acuerdo</mat-label>
-          <textarea matInput rows="4" [(ngModel)]="conciliacion.terminos"
-                    placeholder="Qué se compromete a hacer cada parte y en qué plazo."></textarea>
-        </mat-form-field>
-
-        <div class="note-actions">
-          <button mat-button (click)="mostrarFormConciliacion = false">Cancelar</button>
-          <button mat-flat-button class="primary-btn" [disabled]="procesando" (click)="proponerConciliacion()">
-            <mat-icon>send</mat-icon> Enviar al quejoso
-          </button>
-        </div>
-      </div>
-    }
-
-    <div class="acuerdos-list">
-      @for (acuerdo of acuerdos; track acuerdo.id) {
-        <div class="acuerdo-row" [attr.data-estado]="acuerdo.estado">
-          <div class="acuerdo-head">
-            <strong>{{ acuerdo.asunto }}</strong>
-            <span class="acuerdo-estado">{{ etiquetaAcuerdo(acuerdo.estado) }}</span>
-          </div>
-          <p>{{ acuerdo.terminos }}</p>
-          <span class="acuerdo-meta">
-            Propuesto por {{ acuerdo.creadoPorNombre || acuerdo.creadoPor }}
-            el {{ formatearFechaHora(acuerdo.fechaEmision) }}
-            @if (acuerdo.fechaRespuesta) {
-              · Respondido el {{ formatearFechaHora(acuerdo.fechaRespuesta) }}
-            }
-          </span>
-          @if (acuerdo.comentarioQuejoso) {
-            <p class="acuerdo-comentario">“{{ acuerdo.comentarioQuejoso }}”</p>
-          }
-        </div>
-      } @empty {
-        @if (!mostrarFormConciliacion) {
-          <p class="empty-hint">No se ha propuesto ningún acuerdo de conciliación.</p>
-        }
-      }
-    </div>
-  </mat-card>
-
-  <!-- ============================ Citas (CU-PC-04) ============================ -->
-  @if (abierto) {
-    <mat-card class="actions-card">
-      <div>
-        <h3>Cita con el quejoso</h3>
-        @if (citaActiva) {
-          <p>
-            <mat-icon class="inline-icon">event</mat-icon>
-            {{ citaActiva.estatus }} · {{ citaActiva.fecha }} a las {{ citaActiva.hora }}
-            · {{ citaActiva.tipo }}. Confírmala, reagéndala o cancélala desde la Agenda.
-          </p>
-          @if (citaActiva.estatusCodigo === 'CANCELADA_QUEJOSO') {
-            <p class="aviso-cita">Motivo del quejoso: “{{ citaActiva.motivoCancelacionQuejoso }}”</p>
-          } @else if (citaActiva.estatusCodigo === 'SIN_RESPUESTA') {
-            <p class="aviso-cita">El quejoso no respondió en el plazo de 48 horas.</p>
-          }
-        } @else {
-          <p>Sin cita activa. Agenda una si necesitas entrevistar al quejoso.</p>
-        }
-      </div>
-
-      <div class="actions">
-        <button mat-flat-button class="primary-btn" (click)="agendarCita()">
-          <mat-icon>event</mat-icon>
-          {{ citaActiva ? 'Ir a la agenda' : 'Agendar cita' }}
-        </button>
-      </div>
-    </mat-card>
   }
-
-  <!-- Historial completo de citas: también las canceladas y las reagendadas -->
-  @if (historialCitas.length > 0) {
-    <mat-card class="actions-card historial-citas">
-      <div class="historial-contenido">
-        <h3>Historial de citas ({{ historialCitas.length }})</h3>
-        @for (cita of historialCitas; track cita.id) {
-          <div class="historial-cita">
-            <span class="historial-fecha">{{ cita.fecha }} · {{ cita.hora }} h · {{ cita.tipo }}</span>
-            <span class="historial-estatus" [attr.data-estatus]="cita.estatusCodigo">{{ cita.estatus }}</span>
-            <span class="historial-detalle">
-              {{ cita.motivo }}
-              @if (cita.motivoCancelacionQuejoso) {
-                — Motivo del quejoso: “{{ cita.motivoCancelacionQuejoso }}”
-              }
-              · Agendó {{ cita.analistaNombre || '—' }}
-            </span>
-          </div>
-        }
-      </div>
-    </mat-card>
   }
-
-  <!-- ============================ Versión del denunciado ============================ -->
-  @if (abierto || solicitudesDenunciado.length > 0 || respuestasDenunciado.length > 0) {
-    <mat-card class="actions-card">
-      <div>
-        <h3>Versión del denunciado</h3>
-        @if (respuestasDenunciado.length > 0) {
-          <p>
-            <mat-icon class="inline-icon">mark_email_read</mat-icon>
-            Respondió el {{ formatearFechaHora(respuestasDenunciado[0].fechaRegistro) }}
-            ({{ respuestasDenunciado[0].folioRespuesta }}).
-            @if (respuestasDenunciado.length > 1) {
-              Hay {{ respuestasDenunciado.length }} respuestas.
-            }
-          </p>
-        }
-        @if (ultimaSolicitudDenunciado; as s) {
-          <p>
-            <mat-icon class="inline-icon">outgoing_mail</mat-icon>
-            Solicitud enviada a {{ s.correoDenunciado }} el {{ formatearFechaHora(s.fechaEnvio) }}
-            @if (s.enviadoPorNombre) {
-              por {{ s.enviadoPorNombre }}
-            }.
-            @if (respuestasDenunciado.length === 0) {
-              Aún no responde.
-            }
-          </p>
-          @if (!s.correoEnviado) {
-            <p class="aviso-cita">El último correo no se pudo enviar. Revisa la dirección y reenvíalo.</p>
-          }
-        } @else if (respuestasDenunciado.length === 0) {
-          <p>Aún no se le ha pedido al denunciado su versión de los hechos.</p>
-        }
-      </div>
-
-      <div class="actions">
-        @if (respuestasDenunciado.length > 0) {
-          <button mat-stroked-button class="outline-btn" (click)="verRespuestaDenunciado()">
-            <mat-icon>visibility</mat-icon> Ver respuesta
-          </button>
-        }
-        @if (abierto) {
-          <button mat-flat-button class="primary-btn" [disabled]="enviandoSolicitudDenunciado"
-                  (click)="solicitarRespuestaDenunciado()">
-            <mat-icon>forward_to_inbox</mat-icon>
-            {{ ultimaSolicitudDenunciado ? 'Reenviar solicitud' : 'Solicitar respuesta del denunciado' }}
-          </button>
-        }
-      </div>
-    </mat-card>
-  }
-
-  <!-- ============================ Dictamen (CU-PC-06/07/08/09) ============================ -->
-  <mat-card class="decision-card">
-    @switch (expediente.estatusCodigo) {
-      @case ('PROCEDENTE') {
-        <div>
-          <span class="eyebrow-small">Dictamen registrado</span>
-          <h3>Procedente · turnado a Subdefensoría</h3>
-          @if (expediente.folioSubdefensoria) {
-            <p>Subdefensoría lo recibió con folio <strong>{{ expediente.folioSubdefensoria }}</strong>.</p>
-          } @else {
-            <p class="warning-text">
-              El dictamen quedó registrado, pero Subdefensoría no confirmó la recepción. Reintenta el envío.
-            </p>
-          }
-        </div>
-        <div class="decision-actions">
-          @if (!expediente.folioSubdefensoria) {
-            <button mat-flat-button class="primary-btn" [disabled]="procesando" (click)="reenviarASubdefensoria()">
-              <mat-icon>sync</mat-icon> Reintentar envío
-            </button>
-          }
-          <button mat-stroked-button (click)="verDictamen()">
-            <mat-icon>visibility</mat-icon> Ver dictamen
-          </button>
-        </div>
-      }
-      @case ('IMPROCEDENTE') {
-        <div>
-          <span class="eyebrow-small">Dictamen registrado</span>
-          <h3>Improcedente · pendiente de remisión</h3>
-          <p>Genera el oficio y registra su envío a la instancia competente para cerrar el expediente.</p>
-        </div>
-        <div class="decision-actions">
-          <button mat-stroked-button (click)="verDictamen()">
-            <mat-icon>visibility</mat-icon> Ver dictamen
-          </button>
-          <button mat-flat-button class="primary-btn" (click)="irARemision()">
-            <mat-icon>outgoing_mail</mat-icon> Continuar con la remisión
-          </button>
-        </div>
-      }
-      @case ('REMITIDA') {
-        <div>
-          <span class="eyebrow-small">Expediente cerrado</span>
-          <h3>Remitido a otra instancia</h3>
-          <p>El oficio de remisión ya se registró como enviado.</p>
-        </div>
-        <div class="decision-actions">
-          <button mat-stroked-button (click)="verDictamen()">
-            <mat-icon>visibility</mat-icon> Ver dictamen
-          </button>
-          <button mat-stroked-button (click)="irARemision()">
-            <mat-icon>description</mat-icon> Ver remisión
-          </button>
-        </div>
-      }
-      @default {
-        <div>
-          <span class="eyebrow-small">Resolución preliminar</span>
-          <h3>Determinación del análisis</h3>
-          @if (conciliacionPendiente) {
-            <p class="warning-text">
-              Hay un acuerdo de conciliación esperando la respuesta del quejoso; espera su respuesta para dictaminar.
-            </p>
-          } @else {
-            <p>Seleccione si el asunto corresponde o no a la competencia de la Defensoría.</p>
-          }
-        </div>
-
-        <div class="decision-actions">
-          <button mat-flat-button class="success-btn" [disabled]="conciliacionPendiente" (click)="marcarCompetente()">
-            <mat-icon>check_circle</mat-icon> Competente
-          </button>
-          <button mat-flat-button class="danger-btn" [disabled]="conciliacionPendiente" (click)="marcarImprocedente()">
-            <mat-icon>cancel</mat-icon> Improcedente
-          </button>
-        </div>
-      }
-    }
-  </mat-card>
   }
 </section>
+
+<ng-template #tplHistorial>
+  <ol class="pc-timeline">
+    @for (h of historial; track $index) {
+      <li>
+        <span class="punto" [class.lleno]="h.tipo === 'inicio'" [class.azul]="h.tipo === 'analisis'"></span>
+        <div class="caja" [class.resaltada]="h.tipo === 'analisis'">
+          <small>{{ formatearFechaHora(h.fecha) }}</small>
+          <b>{{ h.titulo }}</b>
+          <p>{{ h.detalle }}</p>
+        </div>
+      </li>
+    } @empty {
+      <li class="vacio">Sin movimientos registrados.</li>
+    }
+  </ol>
+</ng-template>
+
+@if (mostrarNuevaCita) {
+  <app-nueva-cita [folio]="folio" (guardada)="citaGuardada()" (cerrar)="mostrarNuevaCita = false" />
+}

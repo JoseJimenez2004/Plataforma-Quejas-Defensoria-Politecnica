@@ -1,0 +1,98 @@
+<section class="seg-pagina">
+  <p class="seg-migas"><a routerLink="/">Panel general</a><span>›</span>Carga de trabajo del personal</p>
+  <div class="seg-encabezado">
+    <div>
+      <h2>Carga de trabajo del personal</h2>
+      <p class="seg-sub">Distribución de quejas, estado de atención y tiempos de respuesta por cada integrante del equipo.</p>
+    </div>
+    <div class="seg-encabezado-acciones">
+      <button type="button" class="seg-btn-borde" (click)="exportar()" [disabled]="!datos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg>
+        Exportar reporte
+      </button>
+      <label class="seg-periodo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>
+        <select [(ngModel)]="dias" (ngModelChange)="cargar()" aria-label="Periodo">
+          @for (p of periodos; track p.dias) { <option [ngValue]="p.dias">{{ p.etiqueta }}</option> }
+        </select>
+      </label>
+    </div>
+  </div>
+
+  @if (cargando) {
+    <p class="seg-vacio">Cargando…</p>
+  } @else if (datos; as d) {
+    <div class="seg-tarjetas cuatro">
+      <div class="seg-tarjeta ac-morado">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1a5.5 5.5 0 0 1 5.5-5.5h2a5.5 5.5 0 0 1 5.5 5.5v1"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14a4.5 4.5 0 0 1 4 4.5V20"/></svg></span>
+        <span>
+          <span class="titulo">Total de personal activo</span>
+          <span class="cifra"><strong>{{ d.kpis.personalActivo }}</strong></span>
+          <span class="detalle">{{ d.kpis.recepcionistas }} recepcionistas • {{ d.kpis.abogados }} abogados</span>
+        </span>
+      </div>
+      <div class="seg-tarjeta ac-rojo">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></span>
+        <span>
+          <span class="titulo">Quejas en trámite</span>
+          <span class="cifra"><strong>{{ d.kpis.enTramite }}</strong></span>
+          <span class="detalle">{{ pctTramite }} del total</span>
+        </span>
+      </div>
+      <div class="seg-tarjeta ac-verde">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12.3 3 3 6-6.3"/></svg></span>
+        <span>
+          <span class="titulo">Quejas atendidas</span>
+          <span class="cifra"><strong>{{ d.kpis.atendidas }}</strong></span>
+          <span class="detalle" title="Turnadas o regresadas por Recepción en el periodo">{{ pctAtendidas }} del total</span>
+        </span>
+      </div>
+      <div class="seg-tarjeta ac-morado">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3 2"/></svg></span>
+        <span>
+          <span class="titulo">Tiempo promedio de atención</span>
+          <span class="cifra"><strong>{{ d.kpis.diasPromedio != null ? d.kpis.diasPromedio + ' días' : '—' }}</strong>
+            @if (deltaTiempo !== null) {
+              <span class="seg-delta" [class.baja]="deltaTiempo > 0" title="Bajar es bueno: se atiende más rápido">{{ deltaTiempo <= 0 ? '↓' : '↑' }} {{ deltaTiempo < 0 ? -deltaTiempo : deltaTiempo }}%</span>
+            }
+          </span>
+          <span class="detalle" title="De que llega la queja a que Recepción la turna o la regresa">
+            @if (d.kpis.diasPromedioAnterior != null) { vs. periodo anterior ({{ d.kpis.diasPromedioAnterior }} días) } @else { de la llegada a la respuesta de Recepción }
+          </span>
+        </span>
+      </div>
+    </div>
+
+    <div class="graficas">
+      <div class="seg-panel">
+        <div class="seg-panel-cabeza">
+          <h3>Distribución de quejas por responsable</h3>
+          <span class="leyenda-linea">
+            @for (s of seriesResp; track s.nombre) { <span><i [style.background]="s.color"></i>{{ s.nombre }}</span> }
+          </span>
+        </div>
+        @if (etiquetasResp.length) {
+          <app-barras [etiquetas]="etiquetasResp" [series]="seriesResp" [dosRenglones]="true" [alto]="250" [ancho]="760"
+                      descripcion="Quejas por responsable" />
+        } @else {
+          <p class="seg-vacio">Nadie tiene quejas en este periodo.</p>
+        }
+      </div>
+      <div class="seg-panel">
+        <div class="seg-panel-cabeza"><h3>Carga de trabajo por etapa</h3></div>
+        <div class="dona-tipo">
+          <app-dona [segmentos]="segmentosEtapa" etiquetaCentro="Quejas" [tam]="190" [grosor]="30" />
+          <ul class="leyenda">
+            @for (s of segmentosEtapa; track s.etiqueta) {
+              <li><span class="punto" [style.background]="s.color"></span><span>{{ s.etiqueta }}</span><b>{{ s.valor }}</b><small>({{ pctTexto(s.valor, totalEtapas) }})</small></li>
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="seg-panel">
+      <app-carga-tabla [datos]="d" [tamanio]="10" [completa]="true" />
+    </div>
+  }
+</section>
