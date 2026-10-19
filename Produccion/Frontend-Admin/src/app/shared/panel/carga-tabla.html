@@ -1,0 +1,105 @@
+<div class="seg-tabs" role="tablist">
+  <button type="button" role="tab" [class.activa]="pestana === 'recep'" (click)="cambiarPestana('recep')">
+    Recepcionistas @if (completa) { ({{ datos?.recepcionistas?.length ?? 0 }}) }
+  </button>
+  <button type="button" role="tab" [class.activa]="pestana === 'abog'" (click)="cambiarPestana('abog')">
+    Personal jurídico / Abogados @if (completa) { ({{ datos?.abogados?.length ?? 0 }}) }
+  </button>
+</div>
+
+<div class="seg-filtros">
+  <div class="seg-buscar ancho-2">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="search" [(ngModel)]="texto" (ngModelChange)="aplicar()" placeholder="Buscar por nombre o correo…" aria-label="Buscar persona" />
+  </div>
+  <label class="seg-campo">Estatus
+    <select [(ngModel)]="estatus" (ngModelChange)="aplicar()">
+      <option value="">Todos</option>
+      <option value="ACTIVO">Activos</option>
+      <option value="INACTIVO">Dados de baja</option>
+    </select>
+  </label>
+  <label class="seg-campo">Carga
+    <select [(ngModel)]="nivel" (ngModelChange)="aplicar()">
+      <option value="">Todas</option>
+      <option value="ALTA">Alta</option>
+      <option value="NORMAL">Normal</option>
+      <option value="BAJA">Baja</option>
+      <option value="SIN_ACTIVIDAD">Sin actividad</option>
+    </select>
+  </label>
+  <button type="button" class="seg-btn-borde" (click)="limpiar()">Limpiar filtros</button>
+</div>
+
+<div class="seg-tabla-envoltura">
+  <table class="seg-tabla" [class.oscura]="completa">
+    <thead>
+      @if (pestana === 'recep') {
+        <tr>
+          @if (completa) { <th>#</th> }
+          <th>{{ completa ? 'Nombre' : 'Recepcionista' }}</th>
+          <th class="num" title="Quejas que tiene abiertas en este momento">Abiertas</th>
+          <th class="num" title="Quejas que turnó y siguen en proceso">En trámite</th>
+          <th class="num" title="Quejas que turnó o regresó en el periodo">Atendidas</th>
+          <th class="num">Turnadas</th>
+          <th class="num" title="Regresadas al quejoso que siguen esperando corrección">Observ.</th>
+          <th>Última actividad</th>
+          <th title="Abiertas + atendidas en el periodo">{{ completa ? 'Carga total' : 'Carga' }}</th>
+          @if (completa) { <th class="num">% del total</th><th>Estatus</th> }
+          <th>Acción</th>
+        </tr>
+      } @else {
+        <tr>
+          @if (completa) { <th>#</th> }
+          <th>Abogado</th>
+          <th class="num" title="Quejas que le asignaron en el periodo">Asignadas</th>
+          <th class="num" title="Quejas a su cargo que no han concluido">En trámite</th>
+          <th class="num">En Primer Contacto</th>
+          <th class="num">En Subdefensoría</th>
+          <th class="num">Concluidas</th>
+          <th>Última actividad</th>
+          <th title="Quejas en trámite a su cargo">{{ completa ? 'Carga total' : 'Carga' }}</th>
+          @if (completa) { <th class="num">% del total</th><th>Estatus</th> }
+          <th>Acción</th>
+        </tr>
+      }
+    </thead>
+    <tbody>
+      @for (m of visibles; track m.id; let i = $index) {
+        <tr [class.inactivo]="!m.activo">
+          @if (completa) { <td>{{ pagina * tamanio + i + 1 }}</td> }
+          <td class="fuerte">{{ m.nombre }} @if (!m.activo) { <span class="seg-etiqueta-baja">Baja</span> }</td>
+          @if (pestana === 'recep') {
+            <td class="num"><span [class.rojo]="m.abiertas > 1">{{ m.abiertas }}</span></td>
+            <td class="num">{{ m.enTramite }}</td>
+            <td class="num">{{ m.atendidas }}</td>
+            <td class="num">{{ m.turnadas }}</td>
+            <td class="num">{{ m.observaciones }}</td>
+          } @else {
+            <td class="num">{{ m.abiertas }}</td>
+            <td class="num"><b>{{ m.enTramite }}</b></td>
+            <td class="num">{{ m.enPrimerContacto }}</td>
+            <td class="num">{{ m.enSubdefensoria }}</td>
+            <td class="num">{{ m.cerradas }}</td>
+          }
+          <td class="nowrap">{{ fechaHora(m.ultimaActividad) }}</td>
+          <td>
+            <span class="seg-carga">
+              <span class="seg-barra"><span [style.width.%]="(m.carga / maxCarga) * 100"></span></span>
+              <b>{{ m.carga }}</b>
+            </span>
+          </td>
+          @if (completa) {
+            <td class="num">{{ m.porcentaje }}%</td>
+            <td><span [class]="'seg-nivel ' + m.nivel">{{ etiquetaNivel[m.nivel] }}</span></td>
+          }
+          <td><button type="button" class="seg-ver" (click)="verQuejas(m)">Ver quejas</button></td>
+        </tr>
+      } @empty {
+        <tr><td [attr.colspan]="completa ? 12 : 10" class="seg-vacio">No hay personal con estos filtros.</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+<app-paginador [pagina]="pagina" [tamanio]="tamanio" [totalElementos]="filtradas.length" [enPagina]="visibles.length"
+               [sustantivo]="pestana === 'recep' ? 'recepcionistas' : 'abogados'" (cambiar)="pagina = $event" />

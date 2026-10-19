@@ -23,6 +23,7 @@ interface CitaBackendDTO {
   horaCita: string;
 
   tipoCita: string;
+  categoria?: string;
   motivo: string;
   estatus: string;
 
@@ -67,6 +68,15 @@ export class AgendaService {
           citas.map(cita => this.mapearCita(cita))
         )
       );
+  }
+
+  /** Agenda institucional entre dos fechas (AAAA-MM-DD): calendario mensual y lista. */
+  obtenerRango(desde: string, hasta: string): Observable<CitaPrimerContacto[]> {
+    return this.api
+      .get<CitaBackendDTO[]>(
+        `/citas/rango?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}`
+      )
+      .pipe(map(citas => citas.map(cita => this.mapearCita(cita))));
   }
 
   /** Citas vigentes del analista en sesión, de hoy en adelante (cualquier día). */
@@ -174,6 +184,8 @@ export class AgendaService {
         cita.tipoCita === 'VIRTUAL'
           ? 'Virtual'
           : 'Presencial',
+
+      categoria: cita.categoria ?? 'COMPARECENCIA',
 
       motivo: cita.motivo,
 

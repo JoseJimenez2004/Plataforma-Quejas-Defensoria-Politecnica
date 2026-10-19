@@ -1,0 +1,66 @@
+<div class="seg-filtros">
+  <div class="seg-buscar ancho-2">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="search" [(ngModel)]="filtro.q" (ngModelChange)="buscar()" [placeholder]="completa ? 'Buscar unidad (nombre o siglas)…' : 'Buscar por nombre o siglas…'" aria-label="Buscar unidad" />
+  </div>
+  <label class="seg-campo">{{ completa ? 'Tipo de unidad' : 'Tipo' }}
+    <select [(ngModel)]="filtro.tipo" (ngModelChange)="aplicar()">
+      <option [ngValue]="undefined">Todas</option>
+      @for (t of tipos; track t.clave) { <option [ngValue]="t.clave">{{ t.etiqueta }}</option> }
+    </select>
+  </label>
+  <label class="seg-campo">Estatus de quejas
+    <select [(ngModel)]="filtro.estatus" (ngModelChange)="aplicar()">
+      <option [ngValue]="undefined">Todas</option>
+      <option ngValue="EN_TRAMITE">Con quejas en trámite</option>
+      <option ngValue="CERRADAS">Con quejas cerradas</option>
+      <option ngValue="SOLO_CERRADAS">Sin pendientes</option>
+    </select>
+  </label>
+  <label class="seg-campo">Desde
+    <input type="date" [(ngModel)]="filtro.desde" (ngModelChange)="aplicar()" />
+  </label>
+  <label class="seg-campo">Hasta
+    <input type="date" [(ngModel)]="filtro.hasta" (ngModelChange)="aplicar()" />
+  </label>
+  <button type="button" class="seg-btn-borde" (click)="limpiar()">Limpiar filtros</button>
+</div>
+
+<div class="seg-tabla-envoltura" [class.recargando]="cargando">
+  <table class="seg-tabla" [class.oscura]="completa">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Unidad / Dependencia</th>
+        @if (completa) { <th>Siglas</th><th>Tipo de unidad</th> }
+        <th class="num">{{ completa ? 'Total de quejas' : 'Quejas' }}</th>
+        <th class="num">En trámite</th>
+        <th class="num">Cerradas</th>
+        <th class="num">% del total</th>
+        <th>Última recepción</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (u of datos?.filas ?? []; track u.clave) {
+        <tr>
+          <td>{{ u.posicion }}</td>
+          <td class="fuerte envolver" [title]="u.nombre || u.clave">{{ completa ? (u.nombre || u.clave) : (u.siglas === u.clave && u.nombre ? u.nombre : u.siglas) }}</td>
+          @if (completa) { <td>{{ u.siglas }}</td><td>{{ u.tipoEtiqueta }}</td> }
+          <td class="num"><b class="guinda">{{ u.total }}</b></td>
+          <td class="num">{{ u.enTramite }}</td>
+          <td class="num">{{ u.cerradas }}</td>
+          <td class="num">{{ u.porcentaje }}%</td>
+          <td>{{ fechaCorta(u.ultima) }}</td>
+          <td><button type="button" class="seg-ver" (click)="ver(u)">Ver quejas</button></td>
+        </tr>
+      } @empty {
+        <tr><td [attr.colspan]="completa ? 10 : 8" class="seg-vacio">{{ cargando ? 'Cargando…' : 'No hay unidades con quejas en este periodo.' }}</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+@if (datos) {
+  <app-paginador [pagina]="datos.pagina" [tamanio]="datos.tamanio" [totalElementos]="datos.totalElementos"
+                 [enPagina]="datos.filas.length" [sustantivo]="completa ? 'unidades' : 'resultados'" (cambiar)="irA($event)" />
+}

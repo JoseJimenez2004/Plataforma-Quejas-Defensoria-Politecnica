@@ -47,6 +47,14 @@ public class CitaPrimerContacto {
     @Column(name = "tipo_cita", nullable = false, length = 50)
     private String tipoCita;
 
+    /**
+     * Para qué es la cita (diseño 2026-10-18): COMPARECENCIA, REVISION (de documentos) o
+     * SEGUIMIENTO. tipoCita sigue siendo la modalidad (PRESENCIAL / VIRTUAL). Las citas
+     * anteriores a esta columna quedan en null y se muestran como Comparecencia.
+     */
+    @Column(name = "categoria_cita", length = 30)
+    private String categoria;
+
     @Column(name = "motivo", nullable = false, columnDefinition = "TEXT")
     private String motivo;
 

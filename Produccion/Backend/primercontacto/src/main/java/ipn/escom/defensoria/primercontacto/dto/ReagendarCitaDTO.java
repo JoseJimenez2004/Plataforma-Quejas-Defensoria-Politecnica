@@ -22,5 +22,8 @@ public class ReagendarCitaDTO {
 
     private String tipoCita;
 
+    /** COMPARECENCIA, REVISION o SEGUIMIENTO. */
+    private String categoria;
+
     private String motivo;
 }

@@ -2,115 +2,190 @@
   <div class="seg-encabezado">
     <div>
       <h2>Quejas</h2>
-      <p class="seg-sub">Todas las quejas del sistema, la más reciente arriba. Abre una para ver su expediente (solo lectura).</p>
+      <p class="seg-sub">Todas las quejas del sistema, la más reciente arriba. Selecciona una queja para ver su expediente.</p>
     </div>
-    <a routerLink="/" class="seg-btn sec">← Panel general</a>
+    <a class="seg-btn grande" href="/queja/registro" target="_blank" rel="noopener" title="Abre el formulario de queja del portal en otra pestaña">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nueva queja
+    </a>
   </div>
 
-  <div class="seg-panel">
-    <div class="filtros">
-      <div class="buscador">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
-        <input type="search" [(ngModel)]="texto" (ngModelChange)="buscar()" placeholder="Folio, quejoso, denunciado o abogado" aria-label="Buscar quejas" />
-      </div>
-
-      <label>Etapa
-        <select [ngModel]="filtro.etapa" (ngModelChange)="aplicar({ etapa: $event, estatus: '' })">
-          <option value="">Todas</option>
-          @for (e of opciones?.etapas ?? []; track e.clave) { <option [value]="e.clave">{{ e.etiqueta }}</option> }
-        </select>
-      </label>
-
-      <label>Unidad / dependencia
-        <select [ngModel]="filtro.unidad" (ngModelChange)="aplicar({ unidad: $event })">
-          <option value="">Todas</option>
-          @for (u of unidades; track u.clave) { <option [value]="u.clave">{{ u.abreviatura || u.nombre || u.clave }} ({{ u.total }})</option> }
-        </select>
-      </label>
-
-      <label>Abogado
-        <select [ngModel]="filtro.abogado" (ngModelChange)="aplicar({ abogado: $event })">
-          <option value="">Todos</option>
-          <option value="SIN_ASIGNAR">Sin abogado asignado</option>
-          @for (a of opciones?.abogados ?? []; track a) { <option [value]="a">{{ a }}</option> }
-        </select>
-      </label>
-
-      <label>Recepcionista
-        <select [ngModel]="filtro.recepcionista" (ngModelChange)="aplicar({ recepcionista: $event })">
-          <option value="">Todas</option>
-          @for (r of opciones?.recepcionistas ?? []; track r.correo) { <option [value]="r.correo">{{ r.nombre }}</option> }
-        </select>
-      </label>
-
-      <label>Mes de llegada
-        <input type="month" [ngModel]="filtro.mes" (ngModelChange)="aplicar({ mes: $event })" />
-      </label>
+  <!-- ================= Filtros ================= -->
+  <form class="seg-panel filtros" (ngSubmit)="aplicar()">
+    <div class="seg-buscar fila-buscar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="search" name="q" [(ngModel)]="borrador.q" placeholder="Buscar por folio, quejoso, palabra clave…" aria-label="Buscar quejas" />
     </div>
+    <label class="seg-campo">Etapa
+      <select name="etapa" [(ngModel)]="borrador.etapa">
+        <option [ngValue]="undefined">Todas</option>
+        @for (e of opciones?.etapas ?? []; track e.clave) { <option [ngValue]="e.clave">{{ e.etiqueta }}</option> }
+      </select>
+    </label>
+    <label class="seg-campo">Unidad / dependencia
+      <select name="unidad" [(ngModel)]="borrador.unidad">
+        <option [ngValue]="undefined">Todas</option>
+        @for (u of unidades; track u.clave) { <option [ngValue]="u.clave">{{ u.abreviatura || u.nombre || u.clave }}</option> }
+      </select>
+    </label>
+    <label class="seg-campo">Abogado responsable
+      <select name="abogado" [(ngModel)]="borrador.abogado">
+        <option [ngValue]="undefined">Todos</option>
+        <option ngValue="SIN_ASIGNAR">Sin abogado asignado</option>
+        @for (a of opciones?.abogados ?? []; track a) { <option [ngValue]="a">{{ a }}</option> }
+      </select>
+    </label>
+    <label class="seg-campo">Recepcionista
+      <select name="recepcionista" [(ngModel)]="borrador.recepcionista">
+        <option [ngValue]="undefined">Todas</option>
+        <option ngValue="NADIE">Nadie la ha tomado</option>
+        @for (r of opciones?.recepcionistas ?? []; track r.correo) { <option [ngValue]="r.correo">{{ r.nombre }}</option> }
+      </select>
+    </label>
+    <div class="seg-campo">Mes de llegada
+      <span class="rango">
+        <input type="month" name="desde" [(ngModel)]="borrador.desde" aria-label="Desde" />
+        <span>—</span>
+        <input type="month" name="hasta" [(ngModel)]="borrador.hasta" aria-label="Hasta" />
+      </span>
+    </div>
+    <label class="seg-campo">Estado
+      <select name="estado" [(ngModel)]="borrador.estado">
+        <option [ngValue]="undefined">Todos</option>
+        @for (e of opciones?.estados ?? []; track e.clave) { <option [ngValue]="e.clave">{{ e.etiqueta }}</option> }
+      </select>
+    </label>
+    <label class="seg-campo" title="La asigna Primer Contacto al analizar la queja">Prioridad
+      <select name="prioridad" [(ngModel)]="borrador.prioridad">
+        <option [ngValue]="undefined">Todas</option>
+        <option ngValue="ALTA">Alta</option>
+        <option ngValue="MEDIA">Media</option>
+        <option ngValue="BAJA">Baja</option>
+        <option ngValue="SIN">Sin prioridad asignada</option>
+      </select>
+    </label>
+    <div class="botones">
+      <button type="button" class="seg-btn-borde" (click)="limpiar()">Limpiar filtros</button>
+      <button type="submit" class="seg-btn">Aplicar filtros</button>
+    </div>
+  </form>
 
-    @if (hayFiltros) {
-      <div class="activos">
-        @if (filtro.estatus) {
-          <button type="button" class="activo" (click)="aplicar({ estatus: '' })">Estatus: {{ etiquetaEstatus }} ×</button>
+  <!-- ================= Resultados ================= -->
+  <div class="seg-panel resultados">
+    <div class="barra-resultados">
+      <h3><b>{{ datos?.totalElementos ?? 0 }}</b> quejas encontradas
+        @for (c of chips; track c.clave) {
+          <button type="button" class="chip-filtro" (click)="quitar(c.clave)" title="Quitar este filtro">{{ c.texto }} ×</button>
         }
-        <button type="button" class="limpiar" (click)="limpiar()">Quitar todos los filtros</button>
+      </h3>
+      <div class="herramientas">
+        <label class="ordenar">Ordenar por:
+          <select [ngModel]="filtro.orden || 'reciente'" (ngModelChange)="ordenar($event)">
+            <option value="reciente">Fecha de llegada (más reciente)</option>
+            <option value="antigua">Fecha de llegada (más antigua)</option>
+            <option value="folio">Folio</option>
+            <option value="unidad">Unidad / dependencia</option>
+            <option value="quejoso">Quejoso</option>
+          </select>
+        </label>
+        <span class="vistas" role="group" aria-label="Vista">
+          <button type="button" [class.activa]="vista === 'lista'" (click)="cambiarVista('lista')" title="Ver como lista" aria-label="Ver como lista">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
+          </button>
+          <button type="button" [class.activa]="vista === 'tarjetas'" (click)="cambiarVista('tarjetas')" title="Ver como tarjetas" aria-label="Ver como tarjetas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1"/></svg>
+          </button>
+        </span>
+        <button type="button" class="seg-btn-borde" (click)="exportar()" [disabled]="exportando || !datos?.totalElementos"
+                [title]="seleccion.size ? 'Exporta las ' + seleccion.size + ' quejas seleccionadas' : 'Exporta todas las quejas con estos filtros'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg>
+          {{ exportando ? 'Exportando…' : seleccion.size ? 'Exportar (' + seleccion.size + ')' : 'Exportar' }}
+        </button>
       </div>
-    }
+    </div>
 
     @if (cargando && !datos) {
       <p class="seg-vacio">Cargando quejas…</p>
     } @else if (datos && datos.filas.length === 0) {
-      <p class="seg-vacio">No hay quejas con estos filtros.</p>
+      <p class="seg-vacio">No hay quejas con estos filtros.@if (hayFiltros) { <button type="button" class="seg-link" (click)="limpiar()">Quitar filtros</button> }</p>
     } @else if (datos) {
-      <div class="seg-tabla-envoltura" [class.recargando]="cargando">
-        <table class="seg-tabla">
-          <thead>
-            <tr>
-              <th>Folio</th>
-              <th>Llegó</th>
-              <th>Quejoso</th>
-              <th>Unidad</th>
-              <th>Dónde va</th>
-              <th>Recepcionista</th>
-              <th>Abogado</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (f of datos.filas; track f.folio) {
-              <tr class="clic" (click)="abrir(f.folio)" [title]="'Ver la queja ' + f.folio">
-                <td>
-                  <span class="fuerte">{{ f.folio }}</span>
-                  @if (f.origen === 'Ventanilla') { <span class="suave">Ventanilla</span> }
-                </td>
-                <td class="nowrap">{{ f.fecha | date: 'dd/MM/yy' }}<span class="suave">{{ f.fecha | date: 'HH:mm' }}</span></td>
-                <td>{{ f.quejoso }}</td>
-                <td>{{ f.unidadNombre || f.unidadClave || '—' }}</td>
-                <td><span [class]="'seg-chip etapa-' + f.etapa" [title]="f.estatusEtiqueta">{{ f.estatusEtiqueta }}</span></td>
-                <td>
-                  @if (f.recepcionista) {
-                    @if (f.atendiendoAhora) { <span class="punto-activo" title="La está atendiendo ahora"></span> }
-                    {{ f.recepcionista }}
-                  } @else if (f.etapa === 'RECEPCION') { <span class="suave">Nadie la ha tomado</span> } @else { — }
-                </td>
-                <td>{{ f.abogado || '—' }}</td>
+      @if (vista === 'lista') {
+        <div class="seg-tabla-envoltura" [class.recargando]="cargando">
+          <table class="seg-tabla oscura tabla-quejas">
+            <thead>
+              <tr>
+                <th class="col-check"><input type="checkbox" [checked]="todasMarcadas" (change)="marcarTodas($any($event.target).checked)" aria-label="Seleccionar todas" /></th>
+                <th>Folio</th>
+                <th>Fecha de<br />llegada</th>
+                <th>Quejoso</th>
+                <th>Unidad / dependencia</th>
+                <th>Etapa</th>
+                <th>Estado</th>
+                <th>Abogado<br />responsable</th>
+                <th>Recepcionista</th>
+                <th>Acciones</th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <div class="seg-paginado">
-        <span>{{ rango }}</span>
-        @if (datos.totalPaginas > 1) {
-          <nav>
-            <button type="button" (click)="irAPagina(pagina - 1)" [disabled]="pagina === 0" aria-label="Anterior">‹</button>
-            @for (p of paginasVisibles; track $index) {
-              @if (p === null) { <span>…</span> }
-              @else { <button type="button" [class.actual]="p === pagina" (click)="irAPagina(p)">{{ p + 1 }}</button> }
-            }
-            <button type="button" (click)="irAPagina(pagina + 1)" [disabled]="pagina >= datos.totalPaginas - 1" aria-label="Siguiente">›</button>
-          </nav>
-        }
-      </div>
+            </thead>
+            <tbody>
+              @for (f of datos.filas; track f.folio) {
+                <tr [class.seleccionada]="seleccion.has(f.folio)">
+                  <td class="col-check"><input type="checkbox" [checked]="seleccion.has(f.folio)" (change)="marcar(f.folio, $any($event.target).checked)" [attr.aria-label]="'Seleccionar ' + f.folio" /></td>
+                  <td class="fuerte">{{ f.folio }}
+                    @if (f.origen === 'Ventanilla') { <span class="suave">Ventanilla</span> }
+                  </td>
+                  <td class="nowrap">{{ fechaCorta(f.fecha) }}<span class="suave">{{ fechaHora(f.fecha).slice(11) }}</span></td>
+                  <td>{{ f.quejoso || '—' }}</td>
+                  <td>{{ f.unidadNombre || f.unidadClave || '—' }}</td>
+                  <td><span [class]="'seg-chip etapa-' + f.etapa" [title]="f.estatusEtiqueta">{{ f.estatusEtiqueta }}</span></td>
+                  <td>
+                    <span [class]="'seg-estado ' + f.estado">{{ f.estadoEtiqueta }}</span>
+                    @if (f.prioridad) { <span [class]="'seg-prioridad suave ' + f.prioridad">Prioridad {{ f.prioridad.toLowerCase() }}</span> }
+                  </td>
+                  <td>{{ f.abogado || '—' }}</td>
+                  <td>
+                    @if (f.atendiendoAhora) { <span class="punto-activo" title="La está atendiendo ahora"></span> }
+                    <span [class.suave-inline]="!f.recepcionista">{{ recepcionistaDe(f) }}</span>
+                  </td>
+                  <td class="acciones">
+                    <button type="button" class="seg-ver" (click)="abrir(f.folio)">Ver</button>
+                    <span class="menu-fila">
+                      <button type="button" class="tres-puntos" (click)="alternarMenu(f.folio, $event)" [attr.aria-expanded]="menuAbierto === f.folio" aria-label="Más acciones">⋮</button>
+                      @if (menuAbierto === f.folio) {
+                        <span class="menu" (click)="$event.stopPropagation()">
+                          <button type="button" (click)="abrir(f.folio)">Ver expediente</button>
+                          <button type="button" (click)="copiarFolio(f.folio)">Copiar folio</button>
+                          @if (f.unidadClave) { <button type="button" (click)="filtrarPor({ unidad: f.unidadClave })">Quejas de {{ f.unidadNombre || f.unidadClave }}</button> }
+                          @if (f.abogado) { <button type="button" (click)="filtrarPor({ abogado: f.abogado })">Quejas de {{ f.abogado }}</button> }
+                        </span>
+                      }
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="tarjetas" [class.recargando]="cargando">
+          @for (f of datos.filas; track f.folio) {
+            <article class="tarjeta-queja" (click)="abrir(f.folio)" tabindex="0" (keydown.enter)="abrir(f.folio)">
+              <header>
+                <b>{{ f.folio }}</b>
+                <span [class]="'seg-estado ' + f.estado">{{ f.estadoEtiqueta }}</span>
+              </header>
+              <p class="quien">{{ f.quejoso || '—' }}</p>
+              <p class="suave">{{ f.unidadNombre || f.unidadClave || '—' }} · {{ fechaHora(f.fecha) }}</p>
+              <span [class]="'seg-chip etapa-' + f.etapa">{{ f.estatusEtiqueta }}</span>
+              <dl>
+                <dt>Abogado</dt><dd>{{ f.abogado || '—' }}</dd>
+                <dt>Recepcionista</dt><dd>{{ recepcionistaDe(f) }}</dd>
+              </dl>
+            </article>
+          }
+        </div>
+      }
+      <app-paginador [pagina]="datos.pagina" [tamanio]="datos.tamanio" [totalElementos]="datos.totalElementos"
+                     [enPagina]="datos.filas.length" (cambiar)="irAPagina($event)" />
     }
   </div>
 </section>

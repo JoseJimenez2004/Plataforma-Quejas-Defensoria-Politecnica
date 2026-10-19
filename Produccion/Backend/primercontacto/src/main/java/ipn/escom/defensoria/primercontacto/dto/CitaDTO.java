@@ -19,6 +19,9 @@ public class CitaDTO {
     private String fechaCita;
     private String horaCita;
     private String tipoCita;
+
+    /** COMPARECENCIA, REVISION o SEGUIMIENTO. */
+    private String categoria;
     private String motivo;
     private String estatus;
     private String fechaCreacion;

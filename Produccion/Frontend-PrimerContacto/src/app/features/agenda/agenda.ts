@@ -1,523 +1,401 @@
-import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Observable } from 'rxjs';
 
-import { Subject, of } from 'rxjs';
-import { catchError, switchMap, map } from 'rxjs/operators';
-
-import { BandejaService } from '../../core/services/bandeja.service';
-import { ExpedienteBandeja } from '../../core/models/expediente-bandeja';
-import { ExpedienteService } from '../../core/services/expediente.service';
-import { ExpedientePrimerContacto } from '../../core/models/expediente-primer-contacto';
 import { AgendaService } from '../../core/services/agenda.service';
 import { CitaDetalleDialog } from '../../shared/cita-detalle-dialog/cita-detalle-dialog';
-import { estaAbierto } from '../../core/utils/estatus-expediente';
+import { NuevaCita } from '../../shared/nueva-cita/nueva-cita';
 import { mensajeDeError } from '../../core/utils/archivos';
-
 import {
+  CATEGORIAS_CITA,
   CitaPrimerContacto,
-  CrearCitaPrimerContacto, citaOcupaHorario } from '../../core/models/cita-primer-contacto';
+  citaOcupaHorario,
+  etiquetaCategoria
+} from '../../core/models/cita-primer-contacto';
 
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre',
+  'octubre', 'noviembre', 'diciembre'];
+const TAMANIO = 10;
+
+interface FiltroCitas {
+  estado: string;
+  categoria: string;
+  modalidad: string;
+  desde: string;
+  hasta: string;
+}
+
+type CampoOrden = 'fecha' | 'hora' | 'folio' | 'quejoso' | 'categoria' | 'tipo' | 'estatus';
+
+/**
+ * Agenda de Citas (diseño 2026-10-18): indicadores, calendario institucional del mes con las
+ * citas del día elegido, "Mis próximas citas", filtros, lista ordenable con exportar a CSV y la
+ * ventana "Programar Nueva Cita". Confirmar, reagendar y cancelar siguen en el detalle de la cita.
+ */
 @Component({
   selector: 'app-agenda',
-  imports: [
-    FormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatChipsModule,
-    MatSnackBarModule,
-    MatDialogModule
-  ],
+  imports: [FormsModule, MatIconModule, MatSnackBarModule, MatDialogModule, NuevaCita],
   templateUrl: './agenda.html',
   styleUrl: './agenda.css'
 })
 export class Agenda implements OnInit {
-  diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  readonly diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  readonly categorias = CATEGORIAS_CITA;
+  readonly etiquetaCategoria = etiquetaCategoria;
 
-  meses = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-  ];
+  vista: 'calendario' | 'lista' = 'calendario';
 
-  hoy = new Date();
+  // calendario
+  anio = new Date().getFullYear();
+  mes = new Date().getMonth();
+  diaSel = iso(new Date());
+  citasMes: CitaPrimerContacto[] = [];
+  proximas: CitaPrimerContacto[] = [];
 
-  anioSeleccionado = this.hoy.getFullYear();
-  mesSeleccionado = this.hoy.getMonth() + 1;
-  diaSeleccionado = this.hoy.getDate();
+  // indicadores (de hace 30 días a 90 días adelante)
+  citasVentana: CitaPrimerContacto[] = [];
 
-  diasMes: number[] = [];
-  espaciosIniciales: number[] = [];
-  fechaAgendaSeleccionada = '';
+  // lista
+  filtro: FiltroCitas = { estado: '', categoria: '', modalidad: '', desde: '', hasta: '' };
+  citasLista: CitaPrimerContacto[] = [];
+  cargandoLista = false;
+  orden: { campo: CampoOrden; asc: boolean } = { campo: 'fecha', asc: true };
+  pagina = 0;
+  menuAbierto: number | null = null;
 
-  expedienteActual?: ExpedientePrimerContacto;
-  expedientesPendientesCita: ExpedienteBandeja[] = [];
-
-  // Si tiene valor, agendarCita() está reagendando esta cita (se cancela la
-  // original antes de crear la nueva) en vez de dar de alta una cita normal.
-  citaIdEnReagenda: number | null = null;
-
-  citaNueva: CitaPrimerContacto = {
-    folio: '',
-    quejoso: '',
-    fecha: '',
-    hora: '',
-    tipo: 'Presencial',
-    motivo: '',
-    estatus: 'Programada'
-  };
-
-  citasDelDia: CitaPrimerContacto[] = [];
-
-  // Todas las citas vigentes del analista, de cualquier día (lista de abajo).
-  proximasCitas: CitaPrimerContacto[] = [];
-
-  private fechaAgendaSubject = new Subject<string>();
-
-  horariosSugeridos = [
-    '09:00', '09:30',
-    '10:00', '10:30',
-    '11:00', '11:30',
-    '12:00', '12:30',
-    '13:00', '13:30',
-    '15:00', '15:30',
-    '16:00', '16:30',
-    '17:00'
-  ];
+  // ventana de nueva cita
+  mostrarNueva = false;
+  folioNueva = '';
+  citaReagendar?: CitaPrimerContacto;
 
   constructor(
-    private snackBar: MatSnackBar,
+    private agenda: AgendaService,
     private dialog: MatDialog,
-    private expedienteService: ExpedienteService,
-    private agendaService: AgendaService,
-    private bandejaService: BandejaService,
-    private cdr: ChangeDetectorRef,
-    private zone: NgZone
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {
+    // Desde un expediente: abrir directo la ventana con ese folio.
     const folio = history.state?.folio;
-
     if (folio) {
-      this.citaNueva.folio = folio;
-      this.cargarExpediente(folio);
+      this.folioNueva = folio;
+      this.mostrarNueva = true;
     }
   }
 
-ngOnInit(): void {
-  this.fechaAgendaSubject.pipe(
-    switchMap((fechaVista) => {
-      const fechaBackend = this.convertirFechaBackend(fechaVista);
-
-      return this.agendaService.obtenerAgendaDia(fechaBackend).pipe(
-        map((citas) => ({
-          fechaVista,
-          citas
-        })),
-        catchError(() => {
-          this.snackBar.open('No fue posible cargar la agenda del día.', 'Cerrar', {
-            duration: 3000
-          });
-
-          return of({
-            fechaVista,
-            citas: []
-          });
-        })
-      );
-    })
-  ).subscribe(({ fechaVista, citas }) => {
-  if (fechaVista !== this.fechaAgendaSeleccionada) return;
-
-  this.zone.run(() => {
-    this.citasDelDia = [...citas];
-    this.cdr.detectChanges();
-  });
-});
-
-  this.generarCalendario();
-  this.seleccionarDia(this.diaSeleccionado);
-  this.cargarExpedientesPendientes();
-}
-
-  get nombreMesSeleccionado(): string {
-    return this.meses[this.mesSeleccionado - 1];
+  ngOnInit(): void {
+    this.recargarTodo();
   }
 
-  generarCalendario(): void {
-    const totalDias = new Date(
-      this.anioSeleccionado,
-      this.mesSeleccionado,
-      0
-    ).getDate();
-
-    const primerDiaSemana = new Date(
-      this.anioSeleccionado,
-      this.mesSeleccionado - 1,
-      1
-    ).getDay();
-
-    this.diasMes = Array.from({ length: totalDias }, (_, i) => i + 1);
-    this.espaciosIniciales = Array.from({ length: primerDiaSemana }, (_, i) => i);
+  @HostListener('document:click')
+  cerrarMenu(): void {
+    this.menuAbierto = null;
   }
 
-  mesAnterior(): void {
-    if (this.mesSeleccionado === 1) {
-      this.mesSeleccionado = 12;
-      this.anioSeleccionado--;
-    } else {
-      this.mesSeleccionado--;
+  private recargarTodo(): void {
+    this.cargarMes();
+    this.cargarVentana();
+    this.agenda.obtenerMisProximasCitas().subscribe({
+      next: (c) => { this.proximas = c; this.cdr.detectChanges(); }
+    });
+    if (this.vista === 'lista') {
+      this.cargarLista();
     }
-
-    this.diaSeleccionado = 1;
-    this.generarCalendario();
-    this.seleccionarDia(1);
   }
 
-  mesSiguiente(): void {
-    if (this.mesSeleccionado === 12) {
-      this.mesSeleccionado = 1;
-      this.anioSeleccionado++;
-    } else {
-      this.mesSeleccionado++;
-    }
+  // ------------------------------------------------------------------ indicadores
 
-    this.diaSeleccionado = 1;
-    this.generarCalendario();
-    this.seleccionarDia(1);
+  private cargarVentana(): void {
+    const hoy = new Date();
+    this.agenda.obtenerRango(iso(sumarDias(hoy, -30)), iso(sumarDias(hoy, 90))).subscribe({
+      next: (c) => { this.citasVentana = c; this.cdr.detectChanges(); }
+    });
+  }
+
+  get hoyIso(): string {
+    return iso(new Date());
+  }
+
+  get kpiHoy(): number {
+    return this.citasVentana.filter(c => isoDeVista(c.fecha) === this.hoyIso && citaOcupaHorario(c)).length;
+  }
+
+  get kpiProximas(): number {
+    const ahora = Date.now();
+    return this.citasVentana.filter(c => citaOcupaHorario(c) && fechaHora(c) > ahora).length;
+  }
+
+  get kpiConfirmadas(): number {
+    const ahora = Date.now();
+    return this.citasVentana.filter(c => c.estatusCodigo === 'CONFIRMADA' && fechaHora(c) > ahora).length;
+  }
+
+  get kpiCanceladas(): number {
+    return this.citasVentana.filter(c => c.estatusCodigo === 'CANCELADA' || c.estatusCodigo === 'CANCELADA_QUEJOSO').length;
+  }
+
+  // ------------------------------------------------------------------ calendario
+
+  get tituloMes(): string {
+    const m = MESES[this.mes];
+    return `${m.charAt(0).toUpperCase() + m.slice(1)} ${this.anio}`;
+  }
+
+  get celdas(): (number | null)[] {
+    const primero = new Date(this.anio, this.mes, 1).getDay();
+    const dias = new Date(this.anio, this.mes + 1, 0).getDate();
+    const r: (number | null)[] = [...Array(primero).fill(null), ...Array.from({ length: dias }, (_, i) => i + 1)];
+    while (r.length % 7) r.push(null);
+    return r;
+  }
+
+  isoDe(dia: number): string {
+    return iso(new Date(this.anio, this.mes, dia));
+  }
+
+  citasDe(fechaIso: string): CitaPrimerContacto[] {
+    return this.citasMes.filter(c => isoDeVista(c.fecha) === fechaIso);
+  }
+
+  /** Para el punto del calendario: solo citas que siguen en pie. */
+  tieneCitas(dia: number): boolean {
+    return this.citasDe(this.isoDe(dia)).some(c => citaOcupaHorario(c));
+  }
+
+  get citasDelDia(): CitaPrimerContacto[] {
+    return this.citasDe(this.diaSel);
+  }
+
+  get tituloDia(): string {
+    const [a, m, d] = this.diaSel.split('-').map(Number);
+    return `${d} de ${MESES[m - 1]} de ${a}`;
+  }
+
+  mover(delta: number): void {
+    const d = new Date(this.anio, this.mes + delta, 1);
+    this.anio = d.getFullYear();
+    this.mes = d.getMonth();
+    this.diaSel = iso(d);
+    this.cargarMes();
   }
 
   irAHoy(): void {
-    this.hoy = new Date();
-
-    this.anioSeleccionado = this.hoy.getFullYear();
-    this.mesSeleccionado = this.hoy.getMonth() + 1;
-    this.diaSeleccionado = this.hoy.getDate();
-
-    this.generarCalendario();
-    this.seleccionarDia(this.diaSeleccionado);
+    const hoy = new Date();
+    this.anio = hoy.getFullYear();
+    this.mes = hoy.getMonth();
+    this.diaSel = iso(hoy);
+    this.cargarMes();
   }
 
-  seleccionarDia(dia: number): void {
-    this.diaSeleccionado = dia;
-
-    const diaFormateado = dia.toString().padStart(2, '0');
-    const mesFormateado = this.mesSeleccionado.toString().padStart(2, '0');
-
-    this.fechaAgendaSeleccionada =
-      `${diaFormateado}/${mesFormateado}/${this.anioSeleccionado}`;
-
-    this.citaNueva.fecha = this.fechaAgendaSeleccionada;
-
-    this.cargarAgendaPorFecha(this.fechaAgendaSeleccionada);
-  }
-
-cargarAgendaPorFecha(fechaVista: string): void {
-  if (!fechaVista) return;
-
-  this.zone.run(() => {
-    this.citasDelDia = [];
-    this.cdr.detectChanges();
-  });
-
-  this.fechaAgendaSubject.next(fechaVista);
-  this.cargarProximasCitas();
-}
-
-  cargarProximasCitas(): void {
-    this.agendaService.obtenerMisProximasCitas().subscribe({
-      next: (citas) => {
-        this.zone.run(() => {
-          this.proximasCitas = [...citas];
-          this.cdr.detectChanges();
-        });
-      },
-      error: () => {
-        this.snackBar.open('No fue posible cargar tus próximas citas.', 'Cerrar', {
-          duration: 3000
-        });
-      }
+  private cargarMes(): void {
+    const desde = iso(new Date(this.anio, this.mes, 1));
+    const hasta = iso(new Date(this.anio, this.mes + 1, 0));
+    this.agenda.obtenerRango(desde, hasta).subscribe({
+      next: (c) => { this.citasMes = c; this.cdr.detectChanges(); },
+      error: () => this.snackBar.open('No fue posible cargar la agenda del mes.', 'Cerrar', { duration: 3000 })
     });
   }
-  cargarExpedientesPendientes(): void {
-    this.bandejaService.obtenerBandeja().subscribe({
-      next: (expedientes) => {
-        this.expedientesPendientesCita = expedientes.filter(
-          // Antes comparaba contra 'Pendiente', etiqueta que ya no existía, y la lista
-          // salía siempre vacía. Se puede citar mientras el expediente siga abierto y no
-          // tenga ya una cita activa.
-          expediente => estaAbierto(expediente.estatusCodigo) && !expediente.tieneCitaActiva
-        );
-      },
-      error: () => {
-        this.snackBar.open('No fue posible cargar los expedientes pendientes.', 'Cerrar', {
-          duration: 3000
-        });
+
+  // ------------------------------------------------------------------ lista
+
+  cambiarVista(v: 'calendario' | 'lista'): void {
+    this.vista = v;
+    if (v === 'lista') {
+      this.cargarLista();
+    }
+  }
+
+  /** "Aplicar filtros" (desde el calendario o la lista) abre la lista ya filtrada. */
+  aplicarFiltros(): void {
+    if (this.filtro.desde && this.filtro.hasta && this.filtro.hasta < this.filtro.desde) {
+      this.snackBar.open('La fecha de fin no puede ser anterior a la de inicio.', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    this.pagina = 0;
+    this.cambiarVista('lista');
+  }
+
+  limpiarFiltros(): void {
+    this.filtro = { estado: '', categoria: '', modalidad: '', desde: '', hasta: '' };
+    this.aplicarFiltros();
+  }
+
+  private cargarLista(): void {
+    const hoy = new Date();
+    const desde = this.filtro.desde || iso(sumarDias(hoy, -30));
+    const hasta = this.filtro.hasta || iso(sumarDias(new Date(desde + 'T00:00:00'), 120));
+    this.cargandoLista = true;
+    this.agenda.obtenerRango(desde, hasta).subscribe({
+      next: (c) => { this.citasLista = c; this.cargandoLista = false; this.cdr.detectChanges(); },
+      error: (e) => {
+        this.cargandoLista = false;
+        this.snackBar.open(mensajeDeError(e, 'No fue posible cargar las citas.'), 'Cerrar', { duration: 3500 });
+        this.cdr.detectChanges();
       }
     });
   }
 
-  seleccionarExpedientePendiente(folio: string): void {
-    this.cargarExpediente(folio);
-  }
-
-  cargarExpediente(folio: string): void {
-    this.expedienteService.obtenerPorFolio(folio).subscribe({
-      next: (expediente) => {
-        this.expedienteActual = expediente;
-        this.citaNueva.folio = expediente.folio;
-        this.citaNueva.quejoso = expediente.quejoso.nombreCompleto;
-        this.citaNueva.motivo = expediente.descripcionHechos;
-      },
-      error: () => {
-        this.snackBar.open('No fue posible cargar los datos del expediente.', 'Cerrar', {
-          duration: 3000
-        });
+  get filtradas(): CitaPrimerContacto[] {
+    const f = this.filtro;
+    const lista = this.citasLista.filter(c =>
+      (!f.estado || (f.estado === 'CANCELADA' ? c.estatusCodigo?.startsWith('CANCELADA') : c.estatusCodigo === f.estado))
+      && (!f.categoria || (c.categoria ?? 'COMPARECENCIA') === f.categoria)
+      && (!f.modalidad || c.tipo.toUpperCase() === f.modalidad));
+    const valor = (c: CitaPrimerContacto): string => {
+      switch (this.orden.campo) {
+        case 'fecha': return isoDeVista(c.fecha) + c.hora;
+        case 'hora': return c.hora;
+        case 'folio': return c.folio;
+        case 'quejoso': return c.quejoso ?? '';
+        case 'categoria': return etiquetaCategoria(c.categoria);
+        case 'tipo': return c.tipo;
+        default: return c.estatus;
       }
-    });
-  }
-
-  contarCitasPorDia(dia: number): number {
-    if (dia !== this.diaSeleccionado) return 0;
-    return this.citasDelDia.length;
-  }
-
-  obtenerCitasDelDiaSeleccionado(): CitaPrimerContacto[] {
-    return this.citasDelDia;
-  }
-
-  agendarCita(): void {
-    this.formatearHora();
-
-    if (!this.citaNueva.folio || !this.citaNueva.fecha || !this.citaNueva.hora || !this.citaNueva.motivo) {
-      this.snackBar.open('Completa los campos obligatorios.', 'Cerrar', {
-        duration: 3000
-      });
-      return;
-    }
-
-    if (!this.horaValida()) {
-      this.snackBar.open('La hora debe estar en formato 24 horas. Ejemplo: 09:30 o 14:15.', 'Cerrar', {
-        duration: 3500
-      });
-      return;
-    }
-
-    if (this.horaOcupada()) {
-      this.snackBar.open('Ya existe una cita programada para esa fecha y hora.', 'Cerrar', {
-        duration: 3500
-      });
-      return;
-    }
-
-    if (!this.expedienteActual) {
-      this.snackBar.open('No hay expediente cargado para agendar la cita.', 'Cerrar', {
-        duration: 3000
-      });
-      return;
-    }
-
-    const fechaSeleccionada = this.fechaAgendaSeleccionada;
-
-    const dto: CrearCitaPrimerContacto = {
-      folio: this.expedienteActual.folio,
-      quejosoId: this.expedienteActual.quejoso.id,
-      quejosoNombre: this.expedienteActual.quejoso.nombreCompleto,
-      fechaCita: this.convertirFechaBackend(fechaSeleccionada),
-      horaCita: this.citaNueva.hora,
-      tipoCita: this.citaNueva.tipo === 'Virtual' ? 'VIRTUAL' : 'PRESENCIAL',
-      motivo: this.citaNueva.motivo
     };
+    return [...lista].sort((a, b) => valor(a).localeCompare(valor(b)) * (this.orden.asc ? 1 : -1));
+  }
 
-    const idAReagendar = this.citaIdEnReagenda;
+  get visibles(): CitaPrimerContacto[] {
+    return this.filtradas.slice(this.pagina * TAMANIO, (this.pagina + 1) * TAMANIO);
+  }
 
-    /*
-     * Reagendar mueve la MISMA cita (PUT /citas/{id}/reagendar). Antes se
-     * cancelaba la original y se creaba otra; si el segundo paso fallaba,
-     * el quejoso se quedaba sin cita.
-     */
-    const operacion = idAReagendar
-      ? this.agendaService.reagendarCita(idAReagendar, {
-          fechaCita: dto.fechaCita,
-          horaCita: dto.horaCita,
-          tipoCita: dto.tipoCita,
-          motivo: dto.motivo
-        })
-      : this.agendaService.crearCita(dto);
+  get totalPaginas(): number {
+    return Math.max(1, Math.ceil(this.filtradas.length / TAMANIO));
+  }
 
-    operacion.subscribe({
-      next: () => {
-        this.expedienteActual = undefined;
-        this.citaIdEnReagenda = null;
+  get paginas(): number[] {
+    return Array.from({ length: this.totalPaginas }, (_, i) => i);
+  }
 
-        this.citaNueva = {
-          folio: '',
-          quejoso: '',
-          fecha: fechaSeleccionada,
-          hora: '',
-          tipo: 'Presencial',
-          motivo: '',
-          estatus: 'Programada'
-        };
+  get rango(): string {
+    const total = this.filtradas.length;
+    if (!total) return 'Sin citas';
+    const desde = this.pagina * TAMANIO + 1;
+    return `Mostrando ${desde} a ${desde + this.visibles.length - 1} de ${total} citas`;
+  }
 
-        this.cargarAgendaPorFecha(fechaSeleccionada);
-        this.cargarExpedientesPendientes();
+  ordenarPor(campo: CampoOrden): void {
+    this.orden = { campo, asc: this.orden.campo === campo ? !this.orden.asc : true };
+  }
 
-        const mensaje = idAReagendar
-          ? 'Cita reagendada. Se avisó al quejoso.'
-          : 'Cita agendada. Se avisó al quejoso.';
-        this.snackBar.open(mensaje, 'Cerrar', { duration: 3000 });
-      },
-      error: (error) => {
-        const mensaje = mensajeDeError(
-          error,
-          idAReagendar ? 'No fue posible reagendar la cita.' : 'No fue posible registrar la cita.'
-        );
-        this.snackBar.open(mensaje, 'Cerrar', { duration: 4000 });
-      }
-    });
+  flecha(campo: CampoOrden): string {
+    return this.orden.campo !== campo ? 'unfold_more' : this.orden.asc ? 'expand_less' : 'expand_more';
+  }
+
+  exportar(): void {
+    const filas = this.filtradas;
+    const celda = (v: string | number | undefined | null) => `"${String(v ?? '').replace(/"/g, '""').replace(/\r?\n/g, ' ')}"`;
+    const lineas = [['Fecha', 'Hora', 'Expediente', 'Persona citada', 'Tipo de cita', 'Modalidad', 'Estado', 'Motivo', 'Agendó']]
+      .concat(filas.map(c => [c.fecha, c.hora, c.folio, c.quejoso, etiquetaCategoria(c.categoria), c.tipo, c.estatus, c.motivo, c.analistaNombre ?? '']))
+      .map(f => f.map(celda).join(';')).join('\r\n');
+    const url = URL.createObjectURL(new Blob(['﻿' + lineas], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `citas-${this.hoyIso}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+
+  alternarMenu(id: number | undefined, e: Event): void {
+    e.stopPropagation();
+    this.menuAbierto = this.menuAbierto === id ? null : id ?? null;
+  }
+
+  // ------------------------------------------------------------------ acciones
+
+  nuevaCita(): void {
+    this.citaReagendar = undefined;
+    this.folioNueva = '';
+    this.mostrarNueva = true;
+  }
+
+  get fechaParaNueva(): string {
+    return this.diaSel >= this.hoyIso ? this.diaSel : '';
+  }
+
+  citaGuardada(): void {
+    this.mostrarNueva = false;
+    this.citaReagendar = undefined;
+    this.recargarTodo();
   }
 
   abrirDetalle(cita: CitaPrimerContacto): void {
-    const dialogRef = this.dialog.open(CitaDetalleDialog, {
-      width: '720px',
-      data: cita
-    });
-
-    dialogRef.afterClosed().subscribe(resultado => {
-      if (!resultado) return;
-
-      if (resultado.accion === 'reagendar') {
-        // Bug 1: antes no se recargaba el expediente, así que expedienteActual
-        // quedaba vacío y agendarCita() fallaba con "No hay expediente cargado".
-        this.cargarExpediente(resultado.cita.folio);
-
-        // Con el id, agendarCita() reagenda esa misma cita en vez de crear otra.
-        this.citaIdEnReagenda = resultado.cita.id ?? null;
-
-        this.citaNueva = {
-          ...resultado.cita,
-          fecha: this.fechaAgendaSeleccionada,
-          hora: ''
-        };
-
-        this.snackBar.open('Elige nueva fecha/hora y confirma para reagendar.', 'Cerrar', {
-          duration: 3500
-        });
-      }
-
-      if (resultado.accion === 'confirmar') {
-        if (!resultado.cita.id) return;
-
-        this.agendaService.confirmarCita(resultado.cita.id).subscribe({
-          next: () => {
-            this.cargarAgendaPorFecha(this.fechaAgendaSeleccionada);
-
-            this.snackBar.open('Cita confirmada. Se avisó al quejoso.', 'Cerrar', {
-              duration: 3000
-            });
-          },
-          error: (error) => {
-            this.snackBar.open(mensajeDeError(error, 'No fue posible confirmar la cita.'), 'Cerrar', {
-              duration: 3500
-            });
-          }
-        });
-      }
-
-      if (resultado.accion === 'cancelacion-quejoso') {
-        if (!resultado.cita.id) return;
-
-        this.agendaService.registrarCancelacionQuejoso(resultado.cita.id, resultado.motivo).subscribe({
-          next: () => {
-            this.cargarAgendaPorFecha(this.fechaAgendaSeleccionada);
-
-            this.snackBar.open('Cancelación del quejoso registrada. Reagenda o cancela la cita.', 'Cerrar', {
-              duration: 3500
-            });
-          },
-          error: (error) => {
-            this.snackBar.open(mensajeDeError(error, 'No fue posible registrar la cancelación.'), 'Cerrar', {
-              duration: 3500
-            });
-          }
-        });
-      }
-
-      if (resultado.accion === 'cancelar') {
-        if (!resultado.cita.id) return;
-
-        if (!confirm('¿Cancelar la cita? Se le avisará al quejoso.')) return;
-
-        this.agendaService.cancelarCita(resultado.cita.id).subscribe({
-          next: () => {
-            this.cargarAgendaPorFecha(this.fechaAgendaSeleccionada);
-            this.cargarExpedientesPendientes();
-
-            this.snackBar.open('Cita cancelada. Se avisó al quejoso.', 'Cerrar', {
-              duration: 3000
-            });
-          },
-          error: (error) => {
-            this.snackBar.open(mensajeDeError(error, 'No fue posible cancelar la cita.'), 'Cerrar', {
-              duration: 3500
-            });
-          }
-        });
+    this.menuAbierto = null;
+    this.dialog.open(CitaDetalleDialog, { width: '720px', data: cita }).afterClosed().subscribe(resultado => {
+      if (resultado) {
+        this.ejecutar(resultado.accion, resultado.cita, resultado.motivo);
       }
     });
   }
 
-  convertirFechaBackend(fecha: string): string {
-    const [day, month, year] = fecha.split('/');
-    return `${year}-${month}-${day}`;
-  }
-
-  formatearHora(): void {
-    let hora = this.citaNueva.hora.trim();
-    hora = hora.replace('.', ':');
-
-    const partes = hora.split(':');
-
-    if (partes.length === 2) {
-      const horas = partes[0].padStart(2, '0');
-      const minutos = partes[1].padStart(2, '0');
-      this.citaNueva.hora = `${horas}:${minutos}`;
+  /** Mismas acciones que el detalle, también desde el menú ⋮ de la lista. */
+  ejecutar(accion: string, cita: CitaPrimerContacto, motivo?: string): void {
+    this.menuAbierto = null;
+    if (!cita.id) return;
+    if (accion === 'reagendar') {
+      this.citaReagendar = cita;
+      this.mostrarNueva = true;
+      return;
     }
+    let operacion: Observable<unknown>;
+    let mensaje: string;
+    if (accion === 'confirmar') {
+      operacion = this.agenda.confirmarCita(cita.id);
+      mensaje = 'Cita confirmada. Se avisó al quejoso.';
+    } else if (accion === 'cancelacion-quejoso' && motivo) {
+      operacion = this.agenda.registrarCancelacionQuejoso(cita.id, motivo);
+      mensaje = 'Cancelación del quejoso registrada. Reagenda o cancela la cita.';
+    } else if (accion === 'cancelar') {
+      if (!confirm('¿Cancelar la cita? Se le avisará al quejoso.')) return;
+      operacion = this.agenda.cancelarCita(cita.id);
+      mensaje = 'Cita cancelada. Se avisó al quejoso.';
+    } else {
+      return;
+    }
+    operacion.subscribe({
+      next: () => {
+        this.snackBar.open(mensaje, 'Cerrar', { duration: 3000 });
+        this.recargarTodo();
+      },
+      error: (e) => this.snackBar.open(mensajeDeError(e, 'No fue posible completar la acción.'), 'Cerrar', { duration: 3500 })
+    });
   }
 
-  horaValida(): boolean {
-    return /^([01]\d|2[0-3]):[0-5]\d$/.test(this.citaNueva.hora);
+  puedeConfirmar(c: CitaPrimerContacto): boolean {
+    return c.estatusCodigo === 'PROGRAMADA' || c.estatusCodigo === 'SIN_RESPUESTA';
   }
 
-  horaOcupada(): boolean {
-    return this.citasDelDia.some(cita =>
-      cita.fecha === this.fechaAgendaSeleccionada &&
-      cita.hora === this.citaNueva.hora &&
-      citaOcupaHorario(cita)
-    );
+  activa(c: CitaPrimerContacto): boolean {
+    return citaOcupaHorario(c) || c.estatusCodigo === 'CANCELADA_QUEJOSO';
   }
 
-  obtenerHorariosDisponibles(): string[] {
-    return this.horariosSugeridos.filter(hora =>
-      !this.citasDelDia.some(cita =>
-        cita.fecha === this.fechaAgendaSeleccionada &&
-        cita.hora === hora &&
-        citaOcupaHorario(cita)
-      )
-    );
+  diaCorto(c: CitaPrimerContacto): string {
+    return c.fecha.slice(0, 2);
   }
 
-  seleccionarHora(hora: string): void {
-    this.citaNueva.hora = hora;
+  mesCorto(c: CitaPrimerContacto): string {
+    return MESES[Number(c.fecha.slice(3, 5)) - 1]?.slice(0, 3).toUpperCase() ?? '';
   }
+}
+
+function iso(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function sumarDias(d: Date, n: number): Date {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+
+/** 'dd/MM/yyyy' (formato de la vista) -> 'yyyy-MM-dd'. */
+function isoDeVista(fecha: string): string {
+  const [d, m, a] = fecha.split('/');
+  return `${a}-${m}-${d}`;
+}
+
+function fechaHora(c: CitaPrimerContacto): number {
+  return new Date(`${isoDeVista(c.fecha)}T${c.hora || '00:00'}:00`).getTime();
 }

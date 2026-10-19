@@ -1,152 +1,329 @@
-<div class="page-header">
-  <div>
-    <h2>Personal de la Defensoría</h2>
-    <p class="page-header-subtitulo">{{ lista.length }} cuentas registradas en el sistema.</p>
+<div class="contenedor" [class.con-detalle]="seleccionado">
+<section class="seg-pagina principal">
+  <p class="seg-migas"><a routerLink="/">Panel general</a><span>›</span>Personal de la Defensoría</p>
+  <div class="seg-encabezado">
+    <div>
+      <h2>Personal de la Defensoría</h2>
+      <p class="seg-sub">Consulta, administra y da seguimiento al personal que participa en la atención de las quejas.</p>
+    </div>
+    <button type="button" class="seg-btn grande" (click)="abrirCrear()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Agregar Nuevo Usuario
+    </button>
   </div>
-  <button class="btn-primary" (click)="abrirCrear()">+ Agregar Nuevo Usuario</button>
+
+  @if (cargando) {
+    <p class="seg-vacio">Cargando personal…</p>
+  } @else {
+    <div class="seg-tarjetas cuatro">
+      <div class="seg-tarjeta ac-morado">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1a5.5 5.5 0 0 1 5.5-5.5h2a5.5 5.5 0 0 1 5.5 5.5v1"/><circle cx="17" cy="9" r="2.5"/><path d="M17.5 14a4.5 4.5 0 0 1 4 4.5V20"/></svg></span>
+        <span>
+          <span class="titulo">Total de personal</span>
+          <span class="cifra"><strong>{{ lista.length }}</strong></span>
+          <span class="detalle">{{ desgloseRoles }}</span>
+        </span>
+      </div>
+      <div class="seg-tarjeta ac-verde">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4 6v6c0 4.5 3.4 8 8 9.5 4.6-1.5 8-5 8-9.5V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span>
+        <span>
+          <span class="titulo">Activos</span>
+          <span class="cifra"><strong>{{ activos }}</strong></span>
+          <span class="detalle">{{ pct(activos) }}% del total</span>
+        </span>
+      </div>
+      <div class="seg-tarjeta ac-rojo">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 11-5.7M16 17h6"/></svg></span>
+        <span>
+          <span class="titulo">Inactivos</span>
+          <span class="cifra"><strong>{{ inactivos }}</strong></span>
+          <span class="detalle">{{ pct(inactivos) }}% del total</span>
+        </span>
+      </div>
+      <div class="seg-tarjeta ac-morado">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a4 4 0 0 1 0 8M7 13a4 4 0 0 1 0 8"/><path d="M3 7h10M11 17h10"/><path d="m10 4 3 3-3 3M14 14l-3 3 3 3"/></svg></span>
+        <span>
+          <span class="titulo">Roles en el sistema</span>
+          <span class="cifra"><strong>{{ rolesEnUso.length }}</strong></span>
+          <span class="detalle">@for (r of rolesEnUso; track r; let ultimo = $last) { {{ etiquetaRolForm(r) }}{{ ultimo ? '' : ', ' }} }</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="seg-filtros">
+      <div class="seg-buscar ancho-2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" [(ngModel)]="texto" (ngModelChange)="aplicar()" placeholder="Buscar por nombre, correo o boleta…" aria-label="Buscar personal" />
+      </div>
+      <label class="seg-campo">Rol
+        <select [(ngModel)]="rol" (ngModelChange)="aplicar()">
+          <option value="">Todos</option>
+          @for (r of roles; track r) { <option [value]="r">{{ etiquetaRolForm(r) }}</option> }
+        </select>
+      </label>
+      <label class="seg-campo">Estatus
+        <select [(ngModel)]="estatus" (ngModelChange)="aplicar()">
+          <option value="">Todos</option>
+          <option value="ACTIVO">Activo</option>
+          <option value="INACTIVO">Inactivo</option>
+        </select>
+      </label>
+      <label class="seg-campo">Unidad / Dependencia
+        <select [(ngModel)]="unidad" (ngModelChange)="aplicar()">
+          <option value="">Todas</option>
+          @for (a of areas; track a) { <option [value]="a">{{ a }}</option> }
+        </select>
+      </label>
+      <button type="button" class="seg-btn-borde" (click)="limpiar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
+        Limpiar filtros
+      </button>
+    </div>
+
+    <div class="seg-panel sin-relleno">
+      <div class="seg-tabla-envoltura">
+        <table class="seg-tabla oscura tabla-personal">
+          <thead>
+            <tr>
+              <th>#</th><th>Nombre</th><th>Usuario/Boleta</th><th>Correo</th><th>Rol asignado</th>
+              <th>Unidad / Dependencia</th><th>Estatus</th><th>Último acceso</th><th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of visibles; track m.id; let i = $index) {
+              <tr class="clic" [class.seleccionada]="seleccionado?.id === m.id" [class.inactivo]="!m.activo" (click)="verDetalle(m)">
+                <td>{{ pagina * tamanio + i + 1 }}</td>
+                <td>
+                  <span class="fila-nombre">
+                    <span [class]="'avatar-rol ' + m.rol">{{ iniciales(m.nombre) }}</span>
+                    <b>{{ m.nombre }}</b>
+                  </span>
+                </td>
+                <td class="nowrap">{{ m.numeroEmpleado || '—' }}</td>
+                <td>{{ m.correo }}</td>
+                <td><span [class]="'rol ' + m.rol">{{ rolDe(m) }}</span></td>
+                <td>{{ area(m) }}</td>
+                <td>
+                  <span class="estatus" [class.activo]="m.activo">{{ m.activo ? 'Activo' : 'Inactivo' }}</span>
+                  @if (m.cuentaTemporal) { <span class="suave">Contraseña temporal</span> }
+                </td>
+                <td class="nowrap">{{ fechaCorta(m.ultimoAcceso) }}<span class="suave">{{ m.ultimoAcceso ? fechaHora(m.ultimoAcceso).slice(11) : 'Nunca' }}</span></td>
+                <td class="acciones" (click)="$event.stopPropagation()">
+                  <button type="button" class="btn-editar" (click)="abrirEditar(m)">Editar</button>
+                  <span class="menu-fila">
+                    <button type="button" class="tres-puntos" (click)="alternarMenu(m.id, $event)" aria-label="Más acciones">⋯</button>
+                    @if (menuAbierto === m.id) {
+                      <span class="menu">
+                        <button type="button" (click)="verDetalle(m); menuAbierto = null">Ver detalles</button>
+                        <button type="button" (click)="verQuejasDe(m)">Ver sus quejas</button>
+                        <button type="button" (click)="resetearPassword(m)">Restablecer contraseña</button>
+                        @if (m.activo) {
+                          <button type="button" class="peligro" (click)="darDeBaja(m)">Desactivar usuario</button>
+                        } @else {
+                          <button type="button" (click)="reactivar(m)">Reactivar usuario</button>
+                        }
+                      </span>
+                    }
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="9" class="seg-vacio">Ningún usuario coincide con los filtros.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="pie-tabla">
+        <app-paginador [pagina]="pagina" [tamanio]="tamanio" [totalElementos]="filtradas.length" [enPagina]="visibles.length"
+                       sustantivo="usuarios" (cambiar)="pagina = $event" />
+      </div>
+    </div>
+  }
+</section>
+
+<!-- ================= Detalles del usuario ================= -->
+@if (seleccionado; as s) {
+  <aside class="panel-detalle" aria-label="Detalles del usuario">
+    <header class="detalle-cabeza">
+      <h3>Detalles del usuario</h3>
+      <button type="button" class="cerrar" (click)="cerrarDetalle()" aria-label="Cerrar detalles">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+
+    <div class="detalle-persona">
+      <span [class]="'avatar-rol grande ' + s.rol">{{ iniciales(s.nombre) }}</span>
+      <div>
+        <b>{{ s.nombre }}</b>
+        <span class="estatus" [class.activo]="s.activo">{{ s.activo ? 'Activo' : 'Inactivo' }}</span>
+        <small>{{ rolDe(s) }} · {{ s.numeroEmpleado || 'sin número' }}</small>
+      </div>
+    </div>
+
+    <div class="detalle-tabs" role="tablist">
+      <button type="button" [class.activa]="pestana === 'info'" (click)="pestana = 'info'">Información</button>
+      <button type="button" [class.activa]="pestana === 'actividad'" (click)="pestana = 'actividad'">Actividad</button>
+      <button type="button" [class.activa]="pestana === 'quejas'" (click)="pestana = 'quejas'">Quejas asignadas</button>
+    </div>
+
+    @switch (pestana) {
+      @case ('info') {
+        <section class="detalle-caja">
+          <h4>Datos personales</h4>
+          <dl class="datos">
+            <div><dt>Nombre completo</dt><dd>{{ s.nombre }}</dd></div>
+            <div><dt>Correo institucional</dt><dd>{{ s.correo }}</dd></div>
+            <div><dt>Usuario / Boleta</dt><dd>{{ s.numeroEmpleado || '—' }}</dd></div>
+            <div><dt>Rol asignado</dt><dd><span [class]="'rol ' + s.rol">{{ rolDe(s) }}</span></dd></div>
+            <div><dt>Unidad / Dependencia</dt><dd>{{ area(s) }}</dd></div>
+            <div><dt>Teléfono (opcional)</dt><dd>{{ s.telefono || '—' }}</dd></div>
+            <div><dt>Fecha de registro</dt><dd>{{ fechaCorta(s.fechaRegistro) }}</dd></div>
+            <div><dt>Último acceso</dt><dd>{{ s.ultimoAcceso ? fechaHora(s.ultimoAcceso) : 'Nunca ha entrado' }}</dd></div>
+          </dl>
+        </section>
+        <section class="detalle-caja">
+          <h4>Estadísticas de atención</h4>
+          @if (esAbogado(s)) {
+            <ul class="stats">
+              <li><span class="i ambar">●</span>Quejas asignadas<b>{{ s.abiertas }}</b></li>
+              <li><span class="i azul">●</span>En trámite<b>{{ s.enTramite }}</b></li>
+              <li><span class="i morado">●</span>En Subdefensoría<b>{{ s.turnadas }}</b></li>
+              <li><span class="i verde">●</span>Concluidas<b>{{ s.atendidas }}</b></li>
+            </ul>
+          } @else if (s.rol === 'RECEPCIONISTA') {
+            <ul class="stats">
+              <li><span class="i ambar">●</span>Quejas abiertas<b>{{ s.abiertas }}</b></li>
+              <li><span class="i azul">●</span>Quejas en trámite<b>{{ s.enTramite }}</b></li>
+              <li><span class="i verde">●</span>Quejas atendidas<b>{{ s.atendidas }}</b></li>
+              <li><span class="i morado">●</span>Quejas turnadas<b>{{ s.turnadas }}</b></li>
+              <li><span class="i rojo">●</span>Observaciones<b>{{ s.observaciones }}</b></li>
+            </ul>
+          } @else {
+            <p class="suave">Este rol no atiende quejas directamente.</p>
+          }
+        </section>
+      }
+      @case ('actividad') {
+        <section class="detalle-caja">
+          @if (!detalle) {
+            <p class="suave">Cargando…</p>
+          } @else {
+            <ol class="linea">
+              @for (a of detalle.actividad; track $index) {
+                <li><small>{{ fechaHora(a.fecha) }} · {{ a.detalle }}</small><span>{{ a.titulo }}</span></li>
+              } @empty {
+                <li class="suave">Sin actividad registrada.</li>
+              }
+            </ol>
+          }
+        </section>
+      }
+      @case ('quejas') {
+        <section class="detalle-caja">
+          @if (!detalle) {
+            <p class="suave">Cargando…</p>
+          } @else {
+            <ul class="quejas-persona">
+              @for (q of detalle.quejas; track q.folio) {
+                <li>
+                  <a [routerLink]="['/quejas', q.folio]">
+                    <b>{{ q.folio }}</b>
+                    <span [class]="'seg-chip etapa-' + q.etapa">{{ q.estatusEtiqueta }}</span>
+                    <small>{{ q.quejoso || '—' }} · {{ q.unidad || '—' }} · {{ fechaCorta(q.fecha) }}</small>
+                    <small class="relacion">{{ q.relacion }}</small>
+                  </a>
+                </li>
+              } @empty {
+                <li class="suave">No tiene quejas a su cargo.</li>
+              }
+            </ul>
+            @if (detalle.quejas.length) {
+              <button type="button" class="seg-btn-borde bloque" (click)="verQuejasDe(s)">Ver todas en Quejas</button>
+            }
+          }
+        </section>
+      }
+    }
+
+    <footer class="detalle-pie">
+      <button type="button" class="seg-btn-borde" (click)="abrirEditar(s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        Editar usuario
+      </button>
+      @if (s.activo) {
+        <button type="button" class="seg-btn-borde peligro" (click)="darDeBaja(s)">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3h6l1 2h4v2H4V5h4zM6 9h12l-1 12H7z"/></svg>
+          Desactivar usuario
+        </button>
+      } @else {
+        <button type="button" class="seg-btn-borde" (click)="reactivar(s)">Reactivar usuario</button>
+      }
+    </footer>
+  </aside>
+}
 </div>
 
-@if (cargando) {
-  <p class="cargando">Cargando personal…</p>
-} @else {
-  <div class="card">
-    <div class="buscador">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" [(ngModel)]="busqueda" name="busqueda" placeholder="Buscar por nombre, correo, boleta o rol…" />
-    </div>
-
-    @if (listaFiltrada.length === 0) {
-      <div class="estado-vacio">
-        <svg class="estado-vacio-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-        <p>{{ busqueda ? 'Ningún usuario coincide con tu búsqueda.' : 'Aún no hay personal registrado.' }}</p>
-      </div>
-    } @else {
-      <table class="tabla-admin tabla-usuarios">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Usuario/Boleta</th>
-            <th>Correo</th>
-            <th>Rol Asignado</th>
-            <th>Estatus</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (persona of listaFiltrada; track persona.id) {
-            <tr>
-              <td>
-                <div class="fila-nombre">
-                  <span class="avatar chico">{{ iniciales(persona.nombreCompleto) }}</span>
-                  {{ persona.nombreCompleto }}
-                </div>
-              </td>
-              <td>{{ persona.numeroEmpleado }}</td>
-              <td>{{ persona.correoInstitucional }}</td>
-              <td>{{ etiquetaRol(persona.rol) }}</td>
-              <td>
-                <span class="badge" [class.activo]="persona.activo" [class.inactivo]="!persona.activo">
-                  {{ persona.activo ? 'Activo' : 'Inactivo' }}
-                </span>
-                @if (persona.cuentaTemporal) {
-                  <span class="badge temporal">Temporal</span>
-                }
-              </td>
-              <td class="acciones">
-                <button class="btn-texto" (click)="abrirEditar(persona)">Editar</button>
-                <button class="btn-texto" (click)="resetearPassword(persona)">Reset. contraseña</button>
-                @if (persona.activo) {
-                  <button class="btn-texto peligro" (click)="darDeBaja(persona)">Baja</button>
-                } @else {
-                  <button class="btn-texto" (click)="reactivar(persona)">Reactivar</button>
-                }
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    }
-  </div>
-}
-
-@if (mostrarModalCrear) {
-  <div class="modal-overlay" (click)="cerrarCrear()">
+<!-- ================= Alta ================= -->
+@if (mostrarModalCrear || mostrarModalEditar) {
+  <div class="modal-overlay" (click)="mostrarModalCrear = false; mostrarModalEditar = false">
     <div class="modal card" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Registro de Nuevo Personal Administrativo</h3>
-        <button class="modal-cerrar" (click)="cerrarCrear()" aria-label="Cerrar">✕</button>
+        <h3>{{ mostrarModalCrear ? 'Registro de nuevo personal' : 'Editar usuario' }}</h3>
+        <button class="modal-cerrar" (click)="mostrarModalCrear = false; mostrarModalEditar = false" aria-label="Cerrar">✕</button>
       </div>
 
       <div class="input-group">
-        <label>Nombre Completo:</label>
+        <label>Nombre completo</label>
         <input type="text" [(ngModel)]="formulario.nombreCompleto" name="nombreCompleto" />
       </div>
+      @if (mostrarModalCrear) {
+        <div class="input-group">
+          <label>Número de empleado / usuario</label>
+          <input type="text" [(ngModel)]="formulario.numeroEmpleado" name="numeroEmpleado" />
+        </div>
+      }
       <div class="input-group">
-        <label>Número de Empleado / Boleta:</label>
-        <input type="text" [(ngModel)]="formulario.numeroEmpleado" name="numeroEmpleado" />
-      </div>
-      <div class="input-group">
-        <label>Correo Electrónico Institucional:</label>
+        <label>Correo electrónico institucional</label>
         <input type="email" [(ngModel)]="formulario.correoInstitucional" name="correoInstitucional" />
       </div>
+      <div class="dos-columnas">
+        <div class="input-group">
+          <label>Rol en el sistema</label>
+          <select [(ngModel)]="formulario.rol" name="rol">
+            @for (r of roles; track r) { <option [value]="r">{{ etiquetaRolForm(r) }}</option> }
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Teléfono (opcional)</label>
+          <input type="tel" [(ngModel)]="formulario.telefono" name="telefono" placeholder="55 5729 6000 ext. 1234" />
+        </div>
+      </div>
       <div class="input-group">
-        <label>Asignar Rol de Sistema:</label>
-        <select [(ngModel)]="formulario.rol" name="rol">
-          @for (rol of roles; track rol) {
-            <option [value]="rol">{{ etiquetaRol(rol) }}</option>
-          }
+        <label>Unidad / dependencia de adscripción (opcional)</label>
+        <select [(ngModel)]="formulario.unidadClave" name="unidadClave">
+          <option value="">Según su rol (Recepción, Subdefensoría…)</option>
+          @for (d of dependencias; track d.clave) { <option [value]="d.clave">{{ d.abreviatura ? d.abreviatura + ' — ' + d.nombre : d.nombre }}</option> }
         </select>
       </div>
-      <div class="input-group">
-        <label>Contraseña Temporal (opcional, se genera una si la dejas vacía):</label>
-        <input type="text" [(ngModel)]="formulario.passwordTemporal" name="passwordTemporal" />
-      </div>
+      @if (mostrarModalCrear) {
+        <div class="input-group">
+          <label>Contraseña temporal (opcional, se genera una si la dejas vacía)</label>
+          <input type="text" [(ngModel)]="formulario.passwordTemporal" name="passwordTemporal" />
+        </div>
+      } @else {
+        <label class="opcion-check">
+          <input type="checkbox" [(ngModel)]="formulario.restablecerPassword" name="restablecerPassword" />
+          Pedirle cambiar la contraseña en su próximo inicio de sesión
+        </label>
+      }
 
       <div class="modal-acciones">
-        <button class="btn-primary" (click)="guardarNuevo()">Guardar y Activar Usuario</button>
-        <button class="btn-secondary" (click)="cerrarCrear()">Cancelar</button>
-      </div>
-    </div>
-  </div>
-}
-
-@if (mostrarModalEditar) {
-  <div class="modal-overlay" (click)="cerrarEditar()">
-    <div class="modal card" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>Editar Perfil de Usuario</h3>
-        <button class="modal-cerrar" (click)="cerrarEditar()" aria-label="Cerrar">✕</button>
-      </div>
-
-      <div class="input-group">
-        <label>Nombre Completo:</label>
-        <input type="text" [(ngModel)]="formulario.nombreCompleto" name="nombreCompletoEdit" />
-      </div>
-      <div class="input-group">
-        <label>Correo Electrónico Institucional:</label>
-        <input type="email" [(ngModel)]="formulario.correoInstitucional" name="correoInstitucionalEdit" />
-      </div>
-      <div class="input-group">
-        <label>Asignar Rol de Sistema:</label>
-        <select [(ngModel)]="formulario.rol" name="rolEdit">
-          @for (rol of roles; track rol) {
-            <option [value]="rol">{{ etiquetaRol(rol) }}</option>
-          }
-        </select>
-      </div>
-
-      <label class="opcion-check">
-        <input type="checkbox" [(ngModel)]="formulario.restablecerPassword" name="restablecerPassword" />
-        Restablecer contraseña en el próximo inicio de sesión
-      </label>
-      <label class="opcion-check">
-        <input type="checkbox" [(ngModel)]="formulario.desactivarTemporalmente" name="desactivarTemporalmente" />
-        Desactivar cuenta temporalmente
-      </label>
-
-      <div class="modal-acciones">
-        <button class="btn-primary" (click)="guardarEdicion()">Actualizar Información</button>
-        <button class="btn-secondary" (click)="cerrarEditar()">Volver a la Lista</button>
+        @if (mostrarModalCrear) {
+          <button class="btn-primary" (click)="guardarNuevo()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar y activar usuario' }}</button>
+        } @else {
+          <button class="btn-primary" (click)="guardarEdicion()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar cambios' }}</button>
+        }
+        <button class="btn-secondary" (click)="mostrarModalCrear = false; mostrarModalEditar = false">Cancelar</button>
       </div>
     </div>
   </div>
@@ -160,8 +337,7 @@
         <button class="modal-cerrar" (click)="cerrarModalPassword()" aria-label="Cerrar">✕</button>
       </div>
       <p class="aviso-inline">
-        Comparte estos datos de forma segura con <strong>{{ correoGenerado }}</strong>. Esta
-        contraseña solo se muestra esta vez.
+        Comparte estos datos de forma segura con <strong>{{ correoGenerado }}</strong>. Esta contraseña solo se muestra esta vez.
       </p>
       <div class="password-generada">{{ passwordGenerada }}</div>
       <div class="modal-acciones">

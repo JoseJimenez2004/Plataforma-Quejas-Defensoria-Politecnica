@@ -1,50 +1,92 @@
 <section class="seg-pagina">
+  <p class="seg-migas"><a routerLink="/">Panel general</a><span>›</span>Quejas por unidad</p>
   <div class="seg-encabezado">
     <div>
-      <h2>Quejas por dependencia o unidad académica</h2>
-      <p class="seg-sub">Dónde ocurrieron los hechos. Haz clic en una para ver sus quejas.</p>
+      <h2>Quejas por unidad</h2>
+      <p class="seg-sub">Consulta el número de quejas registradas por dependencia o unidad académica.</p>
     </div>
-    <a routerLink="/catalogo-dependencias" class="seg-btn sec">Catálogo de dependencias</a>
+    <div class="seg-encabezado-acciones">
+      <button type="button" class="seg-btn-borde" (click)="exportar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg>
+        Exportar
+      </button>
+      <label class="seg-periodo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>
+        <select [(ngModel)]="dias" (ngModelChange)="cargar()" aria-label="Periodo">
+          @for (p of periodos; track p.dias) { <option [ngValue]="p.dias">{{ p.etiqueta }}</option> }
+        </select>
+      </label>
+    </div>
   </div>
 
-  <div class="seg-panel">
-    <div class="cabeza">
-      <div class="buscador">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
-        <input type="search" [(ngModel)]="texto" (ngModelChange)="buscar()" placeholder="Nombre o siglas (ej. ESCOM)" aria-label="Buscar unidad" />
+  @if (cargando) {
+    <p class="seg-vacio">Cargando…</p>
+  } @else if (resumen; as r) {
+    <div class="seg-tarjetas cuatro">
+      <div class="seg-tarjeta ac-azul">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 21V5l7-2v18M11 8h8v13M4 21h17M7 8h1M7 12h1M7 16h1M14 12h2M14 16h2"/></svg></span>
+        <span>
+          <span class="titulo">Total de unidades</span>
+          <span class="cifra"><strong>{{ r.resumen.unidadesConQueja }}</strong>
+            @if (deltaUnidades !== null) { <span class="seg-delta" [class.baja]="deltaUnidades < 0">{{ deltaUnidades >= 0 ? '↑' : '↓' }} {{ deltaUnidades < 0 ? -deltaUnidades : deltaUnidades }}%</span> }
+          </span>
+          <span class="detalle">con al menos una queja</span>
+        </span>
       </div>
-      <span class="resumen">{{ unidades.length }} con quejas · {{ totalQuejas }} quejas</span>
+      <div class="seg-tarjeta ac-guinda">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></span>
+        <span>
+          <span class="titulo">Total de quejas</span>
+          <span class="cifra"><strong>{{ r.resumen.totalQuejas }}</strong>
+            @if (deltaQuejas !== null) { <span class="seg-delta" [class.baja]="deltaQuejas < 0">{{ deltaQuejas >= 0 ? '↑' : '↓' }} {{ deltaQuejas < 0 ? -deltaQuejas : deltaQuejas }}%</span> }
+          </span>
+          <span class="detalle">{{ etiquetaPeriodo }}</span>
+        </span>
+      </div>
+      <div class="seg-tarjeta ac-morado">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 21V5l7-2v18M11 8h8v13M4 21h17M7 8h1M7 12h1M7 16h1M14 12h2M14 16h2"/></svg></span>
+        <span>
+          <span class="titulo">Unidad con más quejas</span>
+          <span class="cifra texto"><strong>{{ r.resumen.unidadTop || '—' }}</strong></span>
+          <span class="detalle">{{ r.resumen.unidadTopTotal }} quejas ({{ pctTexto(r.resumen.unidadTopTotal, r.resumen.totalQuejas) }} del total)</span>
+        </span>
+      </div>
+      <div class="seg-tarjeta ac-morado">
+        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>
+        <span>
+          <span class="titulo">Promedio por unidad</span>
+          <span class="cifra"><strong>{{ r.resumen.promedio }}</strong></span>
+          <span class="detalle">quejas por unidad</span>
+        </span>
+      </div>
     </div>
 
-    @if (cargando && unidades.length === 0) {
-      <p class="seg-vacio">Cargando…</p>
-    } @else if (unidades.length === 0) {
-      <p class="seg-vacio">No hay quejas registradas{{ texto ? ' para "' + texto + '"' : '' }}.</p>
-    } @else {
-      <div class="seg-tabla-envoltura">
-        <table class="seg-tabla">
-          <thead>
-            <tr><th>Dependencia / unidad académica</th><th>Quejas</th><th class="num">En trámite</th><th class="num">Cerradas</th><th class="num">Última</th></tr>
-          </thead>
-          <tbody>
-            @for (u of unidades; track u.clave) {
-              <tr class="clic" (click)="abrir(u)">
-                <td>
-                  <span class="fuerte">{{ u.abreviatura || u.clave }}</span>
-                  <span class="suave">{{ u.nombre || 'Clave sin registrar en el catálogo' }}{{ u.tipo ? ' · ' + u.tipo : '' }}</span>
-                </td>
-                <td class="col-barra">
-                  <span class="seg-barra"><span [style.width.%]="pct(u.total)"></span></span>
-                  <b>{{ u.total }}</b>
-                </td>
-                <td class="num">{{ u.enTramite }}</td>
-                <td class="num">{{ u.cerradas }}</td>
-                <td class="num">{{ u.ultimaQueja | date: 'dd/MM/yy' }}</td>
-              </tr>
+    <div class="graficas">
+      <div class="seg-panel">
+        <div class="seg-panel-cabeza"><div><h3>Unidades con más quejas</h3><p>Top 10 de unidades · clic en una barra para ver sus quejas</p></div></div>
+        @if (r.top.length) {
+          <app-barras [etiquetas]="etiquetasTop" [series]="seriesTop" [degradado]="true" [dosRenglones]="true" [clicable]="true"
+                      [alto]="260" [ancho]="760" descripcion="Top 10 de unidades con más quejas" (seleccionar)="abrirTop($event)" />
+        } @else {
+          <p class="seg-vacio">Sin quejas {{ etiquetaPeriodo }}.</p>
+        }
+      </div>
+      <div class="seg-panel">
+        <div class="seg-panel-cabeza"><h3>Distribución de quejas por tipo de unidad</h3></div>
+        <div class="dona-tipo">
+          <app-dona [segmentos]="segmentosTipo" etiquetaCentro="Quejas" [tam]="190" [grosor]="30" />
+          <ul class="leyenda">
+            @for (s of segmentosTipo; track s.etiqueta) {
+              <li><span class="punto" [style.background]="s.color"></span><span>{{ s.etiqueta }}</span><b>{{ s.valor }}</b><small>({{ pctTexto(s.valor, r.resumen.totalQuejas) }})</small></li>
             }
-          </tbody>
-        </table>
+          </ul>
+        </div>
       </div>
-    }
-  </div>
+    </div>
+
+    <div class="seg-panel">
+      <div class="seg-panel-cabeza"><div><h3>Listado de unidades</h3><p>Haz clic en "Ver quejas" para ver las quejas de cada unidad.</p></div></div>
+      <app-unidades-tabla [dias]="dias" [completa]="true" [tamanio]="10" />
+    </div>
+  }
 </section>

@@ -2,16 +2,6 @@ import { Routes } from '@angular/router';
 
 import { MainLayout } from './layout/main-layout/main-layout';
 
-import { Dashboard } from './features/dashboard/dashboard';
-import { BandejaAnalisis } from './features/bandeja-analisis/bandeja-analisis';
-import { Expediente } from './features/expediente/expediente';
-import { Antecedentes } from './features/antecedentes/antecedentes';
-import { Agenda } from './features/agenda/agenda';
-import { Perfil } from './features/perfil/perfil';
-import { Remision } from './features/remision/remision';
-import { Dictamen } from './features/dictamen/dictamen';
-import { DictamenConsulta } from './features/dictamen-consulta/dictamen-consulta';
-
 import { authPrimerContactoGuard } from './core/guards/auth-primer-contacto.guard';
 
 export const routes: Routes = [
@@ -29,49 +19,53 @@ export const routes: Routes = [
 
       {
         path: 'dashboard',
-        component: Dashboard
+        loadComponent: () => import('./features/dashboard/dashboard').then(m => m.Dashboard)
       },
 
       {
         path: 'bandeja',
-        component: BandejaAnalisis
+        loadComponent: () => import('./features/bandeja-analisis/bandeja-analisis').then(m => m.BandejaAnalisis)
       },
 
       {
         path: 'expediente/:id',
-        component: Expediente
+        loadComponent: () => import('./features/expediente/expediente').then(m => m.Expediente)
       },
 
       // Búsqueda de antecedentes de la queja (modelo de búsqueda).
       {
         path: 'expediente/:id/antecedentes',
-        component: Antecedentes
+        loadComponent: () => import('./features/antecedentes/antecedentes').then(m => m.Antecedentes)
       },
 
       {
         path: 'agenda',
-        component: Agenda
+        loadComponent: () => import('./features/agenda/agenda').then(m => m.Agenda)
       },
 
       {
         path: 'perfil',
-        component: Perfil
+        loadComponent: () => import('./features/perfil/perfil').then(m => m.Perfil)
       },
 
+      // El dictamen ahora se registra en la pestaña "Resolución" del expediente (diseño
+      // 2026-10-18); la ruta vieja lleva ahí con la decisión ya elegida.
       {
         path: 'dictamen/:id',
-        component: Dictamen
+        pathMatch: 'full',
+        redirectTo: ({ params, queryParams }) =>
+          `/expediente/${params['id']}?tab=resolucion&decision=${queryParams['tipo'] === 'improcedente' ? 'improcedente' : 'competente'}`
       },
 
       // CU-PC-08: consulta del dictamen ya registrado.
       {
         path: 'dictamen/:id/consulta',
-        component: DictamenConsulta
+        loadComponent: () => import('./features/dictamen-consulta/dictamen-consulta').then(m => m.DictamenConsulta)
       },
 
       {
         path: 'remision/:id',
-        component: Remision
+        loadComponent: () => import('./features/remision/remision').then(m => m.Remision)
       }
     ]
   }

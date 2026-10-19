@@ -92,3 +92,369 @@ h1, h2, h3, h4 {
   width: 16px;
   height: 16px;
 }
+
+/* =====================================================================================
+   Diseño 2026-10-18 (Expediente con pestañas y Agenda de Citas). Clases "pc-" globales que
+   comparten el expediente, la agenda y la ventana "Programar Nueva Cita".
+   ===================================================================================== */
+.pc-card {
+  background: #fff;
+  border: 1px solid #eceef1;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  padding: 18px 20px;
+  min-width: 0;
+}
+
+.pc-card-cabeza {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.pc-card-cabeza h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--negro-inst);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.pc-card-cabeza h3 mat-icon {
+  color: var(--guinda);
+}
+
+.pc-card-cabeza p {
+  margin: 2px 0 0;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.pc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  color: var(--guinda-vivo);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pc-link mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.pc-btn,
+.pc-btn-borde {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border: 1.5px solid var(--guinda);
+  border-radius: 8px;
+  background: var(--guinda);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.pc-btn:hover:not(:disabled) {
+  background: var(--guinda-oscuro);
+}
+
+.pc-btn-borde {
+  background: #fff;
+  color: var(--guinda-vivo);
+  border-color: #e3bccb;
+}
+
+.pc-btn-borde:hover:not(:disabled) {
+  background: var(--guinda-suave);
+}
+
+.pc-btn:disabled,
+.pc-btn-borde:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pc-btn mat-icon,
+.pc-btn-borde mat-icon {
+  font-size: 19px;
+  width: 19px;
+  height: 19px;
+}
+
+.pc-btn.chico,
+.pc-btn-borde.chico {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.pc-campo {
+  display: block;
+  color: #2b2f36;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.pc-campo-titulo {
+  color: #2b2f36;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.pc-campo .req,
+.pc-campo-titulo .req {
+  color: #c62828;
+}
+
+.pc-campo > input,
+.pc-campo > select,
+.pc-campo > textarea {
+  display: block;
+  margin-top: 6px;
+}
+
+.pc-campo > small {
+  display: block;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.pc-campo input,
+.pc-campo select,
+.pc-campo textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #d5d8de;
+  border-radius: 8px;
+  background: #fff;
+  color: #222;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.pc-campo input,
+.pc-campo select {
+  height: 42px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.pc-campo textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.pc-campo input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.pc-campo input:focus,
+.pc-campo select:focus,
+.pc-campo textarea:focus {
+  outline: none;
+  border-color: var(--guinda-vivo);
+  box-shadow: 0 0 0 3px var(--guinda-suave);
+}
+
+.pc-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pc-chip.PROGRAMADA { background: #fff4dc; color: #9a6a00; }
+.pc-chip.CONFIRMADA { background: #e3f6e8; color: #1d6b3a; }
+.pc-chip.CANCELADA,
+.pc-chip.CANCELADA_QUEJOSO { background: #fde8e8; color: #b42318; }
+.pc-chip.SIN_RESPUESTA { background: #eef0f3; color: #555; }
+.pc-chip.REAGENDADA { background: #eef0f3; color: #555; }
+.pc-chip.prioridad { background: #fde8ee; color: #9d2449; }
+.pc-chip.unidad { background: #eef2ff; color: #3730a3; }
+
+.pc-modal-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 20px;
+  background: rgba(17, 20, 28, 0.55);
+  overflow-y: auto;
+}
+
+.pc-modal {
+  width: min(880px, 100%);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+}
+
+.pc-vacio-caja {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #f1f6fd;
+  color: #2b2f36;
+}
+
+.pc-vacio-caja mat-icon {
+  color: #2f6fed;
+}
+
+.pc-vacio-caja b {
+  display: block;
+}
+
+.pc-vacio-caja span {
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.pc-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.pc-kpi {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid #eceef1;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.pc-kpi .icono {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #fbf0f4;
+  color: var(--guinda);
+}
+
+.pc-kpi span {
+  display: block;
+  color: #444;
+  font-size: 14px;
+}
+
+.pc-kpi strong {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+@media (max-width: 1000px) {
+  .pc-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pc-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  position: relative;
+}
+
+.pc-timeline li {
+  position: relative;
+  padding: 0 0 12px 28px;
+}
+
+.pc-timeline li::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 14px;
+  bottom: -4px;
+  width: 2px;
+  background: #f0d3dd;
+}
+
+.pc-timeline li:last-child::before {
+  display: none;
+}
+
+.pc-timeline .punto {
+  position: absolute;
+  left: 2px;
+  top: 6px;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2.5px solid var(--guinda-vivo);
+  border-radius: 50%;
+  background: #fff;
+}
+
+.pc-timeline .punto.lleno {
+  background: var(--guinda-vivo);
+}
+
+.pc-timeline .punto.azul {
+  border-color: #2f6fed;
+}
+
+.pc-timeline .caja {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f6f7f9;
+}
+
+.pc-timeline .caja.resaltada {
+  background: #eaf2fd;
+}
+
+.pc-timeline small {
+  display: block;
+  color: var(--texto-suave);
+  font-size: 11.5px;
+}
+
+.pc-timeline b {
+  font-size: 13.5px;
+}
+
+.pc-timeline p {
+  margin: 2px 0 0;
+  color: #555;
+  font-size: 12.5px;
+}
