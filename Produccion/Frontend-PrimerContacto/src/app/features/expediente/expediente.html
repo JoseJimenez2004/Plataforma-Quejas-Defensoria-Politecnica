@@ -221,18 +221,28 @@
       <div class="col">
         <div class="pc-card">
           <div class="pc-card-cabeza">
-            <h3><mat-icon>sticky_note_2</mat-icon> Notas de análisis</h3>
-            @if (abierto && !mostrarNuevaNota) {
-              <button type="button" class="pc-btn-borde chico" (click)="mostrarNuevaNota = true"><mat-icon>add</mat-icon> Nueva nota</button>
+            <h3><mat-icon>description</mat-icon> Oficios</h3>
+            @if (abierto && !mostrarNuevoOficio) {
+              <button type="button" class="pc-btn-borde chico" (click)="mostrarNuevoOficio = true"><mat-icon>add</mat-icon> Nuevo oficio</button>
             }
           </div>
 
-          @if (mostrarNuevaNota) {
-            <div class="exp-nueva-nota">
-              <textarea rows="3" [(ngModel)]="nuevaNota" placeholder="Escribe la nota de análisis…" aria-label="Nueva nota"></textarea>
+          @if (mostrarNuevoOficio) {
+            <div class="exp-nueva-nota exp-oficio-form">
+              <p class="exp-oficio-ayuda">El número de oficio, la fecha y hora, tu nombre y los datos de la queja se agregan solos al PDF.</p>
+              <label class="pc-campo">
+                <span class="pc-campo-titulo">Asunto <span class="req">*</span></span>
+                <input type="text" maxlength="200" [(ngModel)]="nuevoOficioAsunto" placeholder="Ej. Constancia de llamada con el quejoso" />
+              </label>
+              <label class="pc-campo">
+                <span class="pc-campo-titulo">Contenido del oficio <span class="req">*</span></span>
+                <textarea rows="7" [(ngModel)]="nuevoOficioTexto" placeholder="Por medio del presente se hace constar que…"></textarea>
+              </label>
               <div class="acciones-der">
-                <button type="button" class="pc-btn-borde chico" (click)="mostrarNuevaNota = false; nuevaNota = ''">Cancelar</button>
-                <button type="button" class="pc-btn chico" (click)="agregarNota(); mostrarNuevaNota = false">Guardar nota</button>
+                <button type="button" class="pc-btn-borde chico" (click)="cancelarNuevoOficio()">Cancelar</button>
+                <button type="button" class="pc-btn chico" [disabled]="!nuevoOficioAsunto.trim() || !nuevoOficioTexto.trim() || guardandoOficio" (click)="agregarOficio()">
+                  <mat-icon>picture_as_pdf</mat-icon> {{ guardandoOficio ? 'Guardando…' : 'Guardar y ver PDF' }}
+                </button>
               </div>
             </div>
           }
@@ -240,25 +250,35 @@
           <ul class="exp-notas">
             @for (nota of expediente.notas; track nota.id) {
               <li [class.propia]="esNotaPropia(nota)">
-                <div class="nota-cabeza"><b>{{ nota.analistaNombre }}</b><small>{{ formatearFechaHora(nota.fechaCreacion) }}@if (nota.fechaActualizacion) { · editada }</small></div>
+                <div class="nota-cabeza">
+                  <span class="oficio-numero">{{ nota.numeroOficio }}</span>
+                  <small>{{ formatearFechaHora(nota.fechaCreacion) }}@if (nota.fechaActualizacion) { · editado }</small>
+                </div>
                 @if (notaEnEdicion === nota.id) {
-                  <textarea rows="3" [(ngModel)]="textoEdicion" aria-label="Editar nota"></textarea>
+                  <label class="pc-campo">
+                    <span class="pc-campo-titulo">Asunto <span class="req">*</span></span>
+                    <input type="text" maxlength="200" [(ngModel)]="asuntoEdicion" aria-label="Asunto del oficio" />
+                  </label>
+                  <textarea rows="6" [(ngModel)]="textoEdicion" aria-label="Contenido del oficio"></textarea>
                   <div class="acciones-der">
                     <button type="button" class="pc-btn-borde chico" (click)="cancelarEdicion()">Cancelar</button>
-                    <button type="button" class="pc-btn chico" (click)="guardarEdicion(nota)">Guardar</button>
+                    <button type="button" class="pc-btn chico" [disabled]="!asuntoEdicion.trim() || !textoEdicion.trim()" (click)="guardarEdicion(nota)">Guardar</button>
                   </div>
                 } @else {
-                  <p>{{ nota.contenido }}</p>
-                  @if (esNotaPropia(nota)) {
-                    <div class="nota-acciones">
-                      <button type="button" class="ico-btn" (click)="editarNota(nota)" title="Editar nota"><mat-icon>edit</mat-icon></button>
-                      <button type="button" class="ico-btn" (click)="eliminarNota(nota)" title="Eliminar nota"><mat-icon>delete</mat-icon></button>
-                    </div>
-                  }
+                  <b class="oficio-asunto">{{ nota.asunto || 'Nota de análisis' }}</b>
+                  <p class="oficio-texto">{{ nota.contenido }}</p>
+                  <div class="nota-acciones">
+                    <span class="oficio-autor">{{ nota.analistaNombre }}</span>
+                    <button type="button" class="pc-btn-borde chico" (click)="verOficio(nota)"><mat-icon>picture_as_pdf</mat-icon> Ver PDF</button>
+                    @if (esNotaPropia(nota)) {
+                      <button type="button" class="ico-btn" (click)="editarNota(nota)" title="Editar oficio"><mat-icon>edit</mat-icon></button>
+                      <button type="button" class="ico-btn" (click)="eliminarNota(nota)" title="Eliminar oficio"><mat-icon>delete</mat-icon></button>
+                    }
+                  </div>
                 }
               </li>
             } @empty {
-              <li class="vacio">Todavía no hay notas de análisis.</li>
+              <li class="vacio">Todavía no hay oficios en este expediente.</li>
             }
           </ul>
         </div>

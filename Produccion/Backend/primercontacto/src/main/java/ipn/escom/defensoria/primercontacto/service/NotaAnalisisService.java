@@ -20,14 +20,20 @@ public class NotaAnalisisService {
 
     private final NotaAnalisisRepository notaAnalisisRepository;
     private final ExpedientePrimerContactoRepository expedienteRepository;
+    private final OficioAnalisisPdfService oficioPdfService;
 
     public NotaAnalisisService(
             NotaAnalisisRepository notaAnalisisRepository,
-            ExpedientePrimerContactoRepository expedienteRepository
+            ExpedientePrimerContactoRepository expedienteRepository,
+            OficioAnalisisPdfService oficioPdfService
     ) {
         this.notaAnalisisRepository = notaAnalisisRepository;
         this.expedienteRepository = expedienteRepository;
+        this.oficioPdfService = oficioPdfService;
     }
+
+    /** Contenido y nombre de archivo del oficio en PDF. */
+    public record OficioPdf(String nombreArchivo, byte[] contenido) {}
 
     public NotaAnalisisDTO crearNota(
             CrearNotaAnalisisDTO dto,
@@ -51,6 +57,7 @@ public class NotaAnalisisService {
                 .folio(expediente.getFolio())
                 .analistaId(analista.getId())
                 .analistaNombre(analista.getNombreCompleto())
+                .asunto(dto.getAsunto().trim())
                 .contenido(dto.getContenido())
                 .fechaCreacion(LocalDateTime.now())
                 .build();
@@ -69,7 +76,7 @@ public class NotaAnalisisService {
                         expedienteId
                 )
                 .stream()
-                .map(this::convertirADTO)
+                .map(NotaAnalisisService::convertirADTO)
                 .toList();
     }
 
@@ -77,7 +84,7 @@ public class NotaAnalisisService {
         return notaAnalisisRepository
                 .findByFolioOrderByFechaCreacionDesc(folio)
                 .stream()
-                .map(this::convertirADTO)
+                .map(NotaAnalisisService::convertirADTO)
                 .toList();
     }
 
@@ -89,6 +96,7 @@ public class NotaAnalisisService {
 
         NotaAnalisis nota = obtenerPropia(id, analista, "editar");
 
+        nota.setAsunto(dto.getAsunto().trim());
         nota.setContenido(dto.getContenido());
         nota.setFechaActualizacion(LocalDateTime.now());
 
@@ -102,6 +110,26 @@ public class NotaAnalisisService {
         NotaAnalisis nota = obtenerPropia(id, analista, "eliminar");
 
         notaAnalisisRepository.delete(nota);
+    }
+
+    /*
+     * El oficio en PDF se arma al vuelo con los datos guardados: si el autor lo edita, el
+     * PDF siguiente ya sale con el cambio (y con la fecha de edición).
+     */
+    public OficioPdf generarPdf(Long id) {
+
+        NotaAnalisis nota = notaAnalisisRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Oficio no encontrado"));
+
+        ExpedientePrimerContacto expediente = expedienteRepository.findById(nota.getExpedienteId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Expediente del oficio no encontrado"));
+
+        String numero = numeroOficio(nota);
+
+        return new OficioPdf(
+                "oficio-" + numero.replace('/', '-') + ".pdf",
+                oficioPdfService.generar(nota, numero, expediente)
+        );
     }
 
     /*
@@ -127,7 +155,16 @@ public class NotaAnalisisService {
         return nota;
     }
 
-    private NotaAnalisisDTO convertirADTO(NotaAnalisis nota) {
+    /** Número del oficio: DDP/PC/OF/año de creación/id (mismo formato que la remisión). */
+    public static String numeroOficio(NotaAnalisis nota) {
+        int anio = nota.getFechaCreacion() != null
+                ? nota.getFechaCreacion().getYear()
+                : LocalDateTime.now().getYear();
+        return "DDP/PC/OF/" + anio + "/" + nota.getId();
+    }
+
+    /** También lo usa ExpedienteAnalisisService al armar el detalle del expediente. */
+    public static NotaAnalisisDTO convertirADTO(NotaAnalisis nota) {
 
         return NotaAnalisisDTO.builder()
                 .id(nota.getId())
@@ -135,6 +172,8 @@ public class NotaAnalisisService {
                 .folio(nota.getFolio())
                 .analistaId(nota.getAnalistaId())
                 .analistaNombre(nota.getAnalistaNombre())
+                .numeroOficio(numeroOficio(nota))
+                .asunto(nota.getAsunto())
                 .contenido(nota.getContenido())
                 .fechaCreacion(
                         nota.getFechaCreacion() != null

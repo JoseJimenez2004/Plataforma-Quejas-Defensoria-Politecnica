@@ -1,229 +1,373 @@
-<section class="page" *ngIf="expediente as e">
-  <div class="page-header">
-    <div>
-      <h2>Expediente {{ e.folio }}</h2>
-      <p>{{ e.asunto }} · {{ e.unidadAcademica }}</p>
+@if (expediente; as e) {
+<section class="sd-page">
+  <a class="volver" (click)="router.navigate(['/bandeja'])"><mat-icon>arrow_back</mat-icon> Mis expedientes</a>
+
+  <div class="sd-titulo">
+    <h2>{{ e.folio }}</h2>
+    <span class="sd-chip" [class]="'sd-chip chip-' + e.estatus.toLowerCase().replace('_', '-').replace('_', '-')">{{ etiquetaEstatus(e.estatus) }}</span>
+    <div class="der">
+      @if (pc?.expediente?.prioridad) { <span class="sd-chip chip-venc">Prioridad {{ pc!.expediente.prioridad!.toLowerCase() }}</span> }
+      <span class="sd-chip chip-pc">{{ e.unidadAcademica }}</span>
     </div>
   </div>
+  <p class="sd-sub encabezado">
+    {{ e.asunto }}
+    @if (e.folioQueja) { · Queja {{ e.folioQueja }} }
+    · Expediente PC {{ e.folioOrigen }} · Admitido el {{ formatearFecha(e.fechaAdmision) }}
+    @if (e.abogadoAsesorNombre) { · Responsable: {{ e.abogadoAsesorNombre }} }
+  </p>
 
-  <div class="flow-card">
-    @for (paso of pasos; track paso; let ultimo = $last) {
-      <div class="step"
-           [class.done]="pasoIndice(paso) < pasoActualIndice || (paso === 'CONCLUIDO' && e.estatus === 'CONCLUIDO')"
-           [class.active]="e.estatus === paso && paso !== 'CONCLUIDO'">
-        <mat-icon>{{ iconos[paso] }}</mat-icon><span>{{ etiquetas[paso] }}</span>
+  <div class="pasos">
+    @for (paso of pasos; track paso; let i = $index) {
+      <div class="paso"
+           [class.hecho]="i < pasoActualIndice || e.estatus === 'CONCLUIDO'"
+           [class.actual]="e.estatus === paso && paso !== 'CONCLUIDO'">
+        <i>@if (i < pasoActualIndice || e.estatus === 'CONCLUIDO') { <mat-icon>check</mat-icon> } @else { {{ i + 1 }} }</i>
+        <span>{{ etiquetas[paso] }}</span>
       </div>
-      @if (!ultimo) {
-        <div class="line"></div>
-      }
     }
   </div>
 
-  <div class="grid">
-    <mat-card class="card">
-      <h3>Datos del expediente</h3>
-      <div class="info-list">
-        <div><span>Folio</span><strong>{{ e.folio }}</strong></div>
-        @if (e.folioQueja) {
-          <div><span>Folio de la queja</span><strong>{{ e.folioQueja }}</strong></div>
-        }
-        <div><span>Quejoso</span><strong>{{ e.quejosoNombre }}</strong></div>
-        <div><span>Asunto</span><strong>{{ e.asunto }}</strong></div>
-        <div><span>Unidad académica</span><strong>{{ e.unidadAcademica }}</strong></div>
-        <div><span>Fecha de admisión</span><strong>{{ e.fechaAdmision }}</strong></div>
-        <div><span>Descripción de hechos</span><strong>{{ e.descripcionHechos }}</strong></div>
-        @if (e.observacionesAnalista) {
-          <div><span>Observaciones del analista</span><strong>{{ e.observacionesAnalista }}</strong></div>
-        }
-        <div><span>Estatus</span><strong>{{ etiquetaEstatus(e.estatus) }}</strong></div>
+  @if (siguientePaso; as sp) {
+    <div class="siguiente" [class.hecho]="sp.hecho">
+      <mat-icon>{{ sp.hecho ? 'task_alt' : 'arrow_forward' }}</mat-icon>
+      <div>
+        <b>{{ sp.hecho ? '' : 'Siguiente paso: ' }}</b>{{ sp.texto }}
+        @if (sp.detalle) { <span class="sd-muted"> {{ sp.detalle }}</span> }
       </div>
-    </mat-card>
+      @if (sp.secundario) { <button type="button" class="sd-btn-borde" (click)="sp.accionSecundaria?.()">{{ sp.secundario }}</button> }
+      @if (sp.boton) { <button type="button" class="sd-btn" (click)="sp.accion?.()">{{ sp.boton }}</button> }
+    </div>
+  }
 
-    <div class="right-column">
-      <mat-card class="card">
-        <h3>Historial de Oficios Enviados</h3>
+  <div class="sd-pestanas" role="tablist">
+    <button type="button" role="tab" [class.on]="pestana === 'resumen'" (click)="cambiarPestana('resumen')"><mat-icon>description</mat-icon> Resumen</button>
+    <button type="button" role="tab" [class.on]="pestana === 'primer-contacto'" (click)="cambiarPestana('primer-contacto')"><mat-icon>assignment_ind</mat-icon> Primer Contacto</button>
+    <button type="button" role="tab" [class.on]="pestana === 'investigacion'" (click)="cambiarPestana('investigacion')"><mat-icon>mail</mat-icon> Investigación</button>
+    <button type="button" role="tab" [class.on]="pestana === 'acuerdos'" (click)="cambiarPestana('acuerdos')"><mat-icon>handshake</mat-icon> Acuerdos</button>
+    <button type="button" role="tab" [class.on]="pestana === 'historial'" (click)="cambiarPestana('historial')"><mat-icon>history</mat-icon> Historial</button>
+  </div>
 
-        @if (oficios.length === 0) {
-          <p class="empty-state">Aún no se ha generado ningún oficio para este expediente.</p>
-        }
+  @switch (pestana) {
 
-        <mat-accordion multi>
-          @for (o of oficios; track o.id) {
-            <mat-expansion-panel>
-              <mat-expansion-panel-header>
-                <mat-panel-title>{{ o.numeroOficio }} · {{ o.destinatarioNombre }}</mat-panel-title>
-                <mat-panel-description>
-                  {{ o.fase === 'GESTION_DIRECTOR' ? 'Gestión con el Director' : 'Solicitud de Información' }}
-                  <mat-chip [class.chip-vencido]="o.estatus === 'VENCIDO'" [class.chip-espera]="o.estatus === 'EN_ESPERA'" [class.chip-respondido]="o.estatus === 'RESPONDIDO'">
-                    {{ o.estatus }}
-                  </mat-chip>
-                </mat-panel-description>
-              </mat-expansion-panel-header>
-
-              <p><strong>Enviado:</strong> {{ o.fechaEnvio }} · <strong>Plazo:</strong> {{ o.fechaLimite }}</p>
-              <p><strong>Correo:</strong> {{ o.destinatarioCorreo }}</p>
-              <p class="contenido">{{ o.contenidoRedactado }}</p>
-
-              @if (recordatorios[o.id]?.length) {
-                <p><strong>Recordatorios enviados:</strong></p>
-                <ul class="recordatorios">
-                  @for (r of recordatorios[o.id]; track r.id; let i = $index) {
-                    <li>
-                      {{ r.fechaEnvio | date:'d/MM/yyyy' }} · {{ r.mensaje }}
-                      <button mat-button type="button" (click)="verPdfRecordatorio(r)">
-                        <mat-icon>picture_as_pdf</mat-icon> PDF
-                      </button>
-                    </li>
-                  }
-                </ul>
-              }
-
-              @if (respuestas[o.id]; as resp) {
-                <div class="respuesta">
-                  <p><strong>Respuesta recibida:</strong> {{ resp.fechaRecepcion | date:'d/MM/yyyy HH:mm' }}
-                    · {{ resp.canalRecepcion }}
-                    @if (resp.numeroOficioRespuestaUA) { · Oficio {{ resp.numeroOficioRespuestaUA }} }
-                  </p>
-                  <p class="contenido">{{ resp.resumen }}</p>
-                  <input #archivoRespuesta type="file" hidden accept=".pdf,.jpg,.jpeg,.png"
-                         (change)="adjuntarArchivoRespuesta(resp, $event)">
-                  @if (resp.tieneArchivo) {
-                    <button mat-button type="button" (click)="verArchivoRespuesta(resp)">
-                      <mat-icon>attach_file</mat-icon> {{ resp.archivoNombre }}
-                    </button>
-                    <button mat-button type="button" (click)="archivoRespuesta.click()">Reemplazar archivo</button>
-                  } @else {
-                    <button mat-button type="button" (click)="archivoRespuesta.click()">
-                      <mat-icon>upload_file</mat-icon> Adjuntar archivo de la respuesta
-                    </button>
-                  }
-                </div>
-              }
-
-              <div class="oficio-actions">
-                <button mat-stroked-button class="outline-btn" (click)="verPdfOficio(o)">
-                  <mat-icon>picture_as_pdf</mat-icon>
-                  Ver oficio (PDF)
-                </button>
-              </div>
-
-              @if (esOficioActivo(o)) {
-                <div class="oficio-actions">
-                  <button mat-stroked-button class="outline-btn" (click)="abrirRecordatorio(o)">
-                    <mat-icon>notifications</mat-icon>
-                    Enviar Recordatorio
-                  </button>
-                  <button mat-flat-button class="primary-btn" (click)="abrirRespuestaExterna(o)">
-                    <mat-icon>upload_file</mat-icon>
-                    Registrar Respuesta
-                  </button>
-                </div>
-              }
-            </mat-expansion-panel>
+  <!-- ============================================================ RESUMEN -->
+  @case ('resumen') {
+    <div class="sd-rejilla">
+      <div class="col">
+        <div class="sd-card">
+          <div class="sd-card-cabeza"><h3><mat-icon>article</mat-icon> Narrativa de los hechos</h3></div>
+          <p class="sd-texto hechos" [class.recortado]="!hechosCompletos">{{ e.descripcionHechos || pc?.expediente?.descripcionHechos || 'Sin descripción registrada.' }}</p>
+          @if ((e.descripcionHechos || '').length > 500) {
+            <button type="button" class="sd-btn-borde chico ver-mas" (click)="hechosCompletos = !hechosCompletos">{{ hechosCompletos ? 'Ver menos' : 'Ver más' }}</button>
           }
-        </mat-accordion>
+        </div>
 
-        @if (puedeSolicitarOficio) {
-          <div class="oficio-actions">
-            <button mat-flat-button class="primary-btn" (click)="solicitarOficio()">
-              <mat-icon>send</mat-icon>
-              Solicitar Oficio
-            </button>
+        @if (e.observacionesAnalista) {
+          <div class="sd-card">
+            <div class="sd-card-cabeza"><h3><mat-icon>sticky_note_2</mat-icon> Observaciones de Primer Contacto</h3></div>
+            <p class="sd-texto">{{ e.observacionesAnalista }}</p>
           </div>
         }
-      </mat-card>
 
-      @if (acuerdoRechazado && acuerdo) {
-        <mat-card class="card">
-          <h3>El quejoso rechazó el acuerdo de conciliación</h3>
-          <p class="contenido">{{ acuerdo.textoAcuerdo }}</p>
-          @if (acuerdo.comentarioQuejoso) {
-            <p class="meta">Motivo del quejoso: {{ acuerdo.comentarioQuejoso }}</p>
+        <div class="sd-card">
+          <div class="sd-card-cabeza"><h3><mat-icon>attach_file</mat-icon> Evidencias de la queja</h3></div>
+          @for (ev of pc?.expediente?.evidencias ?? []; track ev.id) {
+            <div class="fila-archivo">
+              <mat-icon>{{ (ev.tipoArchivo || '').includes('pdf') ? 'picture_as_pdf' : 'image' }}</mat-icon>
+              <span>{{ ev.nombreArchivo }}</span>
+              <button type="button" class="sd-btn-borde chico" (click)="verEvidencia(ev.id)">Abrir</button>
+            </div>
+          } @empty {
+            <p class="sd-vacio">{{ pcError || (pc ? 'La queja no tiene evidencias.' : 'Cargando…') }}</p>
           }
-          <p class="meta">Emite un nuevo oficio de gestión con el director para buscar otro acuerdo.</p>
-        </mat-card>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="sd-card">
+          <div class="sd-card-cabeza"><h3><mat-icon>person</mat-icon> Persona quejosa</h3></div>
+          <dl class="sd-dl">
+            <dt>Nombre</dt><dd>{{ e.quejosoNombre }}</dd>
+            @if (pc?.expediente?.quejoso?.correo) { <dt>Correo</dt><dd>{{ pc!.expediente.quejoso!.correo }}</dd> }
+            @if (pc?.expediente?.quejoso?.telefono) { <dt>Teléfono</dt><dd>{{ pc!.expediente.quejoso!.telefono }}</dd> }
+            @if (pc?.expediente?.datosQueja?.tipoIdentificacionQuejoso) {
+              <dt>Identificación</dt><dd>{{ pc!.expediente.datosQueja!.tipoIdentificacionQuejoso }} {{ pc!.expediente.datosQueja!.numeroIdentificacionQuejoso }}</dd>
+            }
+            <dt>Unidad académica</dt><dd>{{ e.unidadAcademica }}</dd>
+          </dl>
+        </div>
+        <div class="sd-card">
+          <div class="sd-card-cabeza"><h3><mat-icon>person_off</mat-icon> Persona señalada y hechos</h3></div>
+          <dl class="sd-dl">
+            <dt>Denunciado</dt><dd>{{ pc?.expediente?.datosQueja?.denunciado || 'No registrado' }}</dd>
+            <dt>Fecha de los hechos</dt><dd>{{ formatearFecha(pc?.expediente?.datosQueja?.fechaHechos) }}</dd>
+            <dt>Queja registrada</dt><dd>{{ formatearFecha(pc?.expediente?.datosQueja?.fechaRegistro) }}</dd>
+            <dt>Asunto</dt><dd>{{ e.asunto }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ============================================================ PRIMER CONTACTO -->
+  @case ('primer-contacto') {
+    @if (pcError) {
+      <div class="sd-card"><p class="sd-vacio">{{ pcError }}</p></div>
+    } @else if (!pc) {
+      <div class="sd-card"><p class="sd-vacio">Cargando lo que trabajó Primer Contacto…</p></div>
+    } @else {
+      <div class="sd-rejilla">
+        <div class="col">
+          <div class="sd-card">
+            <div class="sd-card-cabeza">
+              <h3><mat-icon>description</mat-icon> Oficios de Primer Contacto</h3>
+              <small>Solo lectura</small>
+            </div>
+            <div class="sd-linea">
+              @for (n of pc.expediente.notas; track n.id) {
+                <div class="sd-evento">
+                  <i class="pc"></i>
+                  <div>
+                    <b><span class="sd-mono">{{ n.numeroOficio }}</span> · {{ n.asunto || 'Nota de análisis' }}</b>
+                    <p class="sd-texto recorte">{{ n.contenido }}</p>
+                    <small>{{ n.analistaNombre }} · {{ formatearFecha(n.fechaCreacion, true) }}@if (n.fechaActualizacion) { · editado }</small>
+                    <div><button type="button" class="sd-btn-borde chico" (click)="verOficioPc(n.id)"><mat-icon>picture_as_pdf</mat-icon> Ver PDF</button></div>
+                  </div>
+                </div>
+              } @empty {
+                <p class="sd-vacio">Primer Contacto no registró oficios en este expediente.</p>
+              }
+            </div>
+          </div>
+
+          <div class="sd-card">
+            <div class="sd-card-cabeza"><h3><mat-icon>event</mat-icon> Citas con el quejoso</h3></div>
+            @for (c of pc.citas; track c.id) {
+              <div class="fila-cita">
+                <div><b>{{ formatearFecha(c.fechaCita) }} · {{ c.horaCita }}</b><small class="sd-muted">{{ c.tipoCita }} · {{ c.analistaNombre }}</small></div>
+                <span class="sd-chip" [class]="c.estatus === 'CONFIRMADA' ? 'sd-chip chip-concluido' : c.estatus.startsWith('CANCELADA') || c.estatus === 'SIN_RESPUESTA' ? 'sd-chip chip-venc' : 'sd-chip chip-pc'">{{ etiquetaCita(c.estatus) }}</span>
+                @if (c.motivoCancelacionQuejoso) { <small class="sd-muted motivo">Motivo del quejoso: {{ c.motivoCancelacionQuejoso }}</small> }
+              </div>
+            } @empty {
+              <p class="sd-vacio">No se agendaron citas.</p>
+            }
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="sd-card">
+            <div class="sd-card-cabeza"><h3><mat-icon>gavel</mat-icon> Dictamen</h3></div>
+            @if (pc.dictamen; as d) {
+              <dl class="sd-dl">
+                <dt>Resultado</dt><dd>{{ d.resultado === 'COMPETENTE' ? 'Competente (procedente)' : d.resultado }}</dd>
+                <dt>Dictaminó</dt><dd>{{ d.analistaNombre }}</dd>
+                <dt>Fecha</dt><dd>{{ formatearFecha(d.fechaDictamen, true) }}</dd>
+                @if (d.responsableTurno) { <dt>Responsable asignado</dt><dd>{{ d.responsableTurno }}</dd> }
+              </dl>
+              <h4 class="subtitulo">Justificación</h4>
+              <p class="sd-texto">{{ d.justificacion }}</p>
+              @if (d.observaciones) {
+                <h4 class="subtitulo">Observaciones</h4>
+                <p class="sd-texto">{{ d.observaciones }}</p>
+              }
+            } @else {
+              <p class="sd-vacio">Sin dictamen registrado.</p>
+            }
+          </div>
+          <div class="sd-card">
+            <div class="sd-card-cabeza"><h3><mat-icon>badge</mat-icon> Análisis</h3></div>
+            <dl class="sd-dl">
+              <dt>Expediente PC</dt><dd>{{ pc.expediente.folio }}</dd>
+              <dt>Analista</dt><dd>{{ pc.expediente.analistaAnalisisNombre || '—' }}</dd>
+              <dt>Inicio del análisis</dt><dd>{{ formatearFecha(pc.expediente.fechaInicioAnalisis, true) }}</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- ============================================================ INVESTIGACIÓN -->
+  @case ('investigacion') {
+    <div class="sd-card">
+      <div class="sd-card-cabeza">
+        <h3><mat-icon>mail</mat-icon> Oficios de Subdefensoría</h3>
+        @if (puedeSolicitarOficio) {
+          <button type="button" class="sd-btn" (click)="solicitarOficio()"><mat-icon>send</mat-icon> Solicitar oficio</button>
+        }
+      </div>
+
+      @if (oficios.length === 0) {
+        <p class="sd-vacio">Aún no se ha generado ningún oficio para este expediente.</p>
+      }
+
+      <mat-accordion multi>
+        @for (o of oficios; track o.id) {
+          <mat-expansion-panel [expanded]="esOficioActivo(o)">
+            <mat-expansion-panel-header>
+              <mat-panel-title><span class="sd-mono">{{ o.numeroOficio }}</span>&nbsp;· {{ o.destinatarioNombre }}</mat-panel-title>
+              <mat-panel-description>
+                {{ o.fase === 'GESTION_DIRECTOR' ? 'Gestión con el director' : 'Solicitud de información' }}
+                <span class="sd-chip" [class]="o.estatus === 'VENCIDO' ? 'sd-chip chip-venc' : o.estatus === 'RESPONDIDO' ? 'sd-chip chip-concluido' : 'sd-chip chip-en-espera-oficio'">
+                  {{ o.estatus === 'EN_ESPERA' ? 'En espera' : o.estatus === 'VENCIDO' ? 'Vencido' : 'Respondido' }}
+                </span>
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <dl class="sd-dl">
+              <dt>Enviado</dt><dd>{{ formatearFecha(o.fechaEnvio) }}</dd>
+              <dt>Fecha límite</dt><dd>{{ formatearFecha(o.fechaLimite) }}</dd>
+              <dt>Correo</dt><dd>{{ o.destinatarioCorreo }}</dd>
+            </dl>
+            <p class="sd-texto contenido">{{ o.contenidoRedactado }}</p>
+
+            @if (recordatorios[o.id]?.length) {
+              <h4 class="subtitulo">Recordatorios enviados</h4>
+              <ul class="recordatorios">
+                @for (r of recordatorios[o.id]; track r.id) {
+                  <li>
+                    <span>{{ formatearFecha(r.fechaEnvio) }} · {{ r.mensaje }}</span>
+                    <button type="button" class="sd-btn-borde chico" (click)="verPdfRecordatorio(r)"><mat-icon>picture_as_pdf</mat-icon> PDF</button>
+                  </li>
+                }
+              </ul>
+            }
+
+            @if (respuestas[o.id]; as resp) {
+              <div class="respuesta">
+                <h4 class="subtitulo">Respuesta recibida</h4>
+                <p class="sd-muted">{{ formatearFecha(resp.fechaRecepcion, true) }} · {{ resp.canalRecepcion }}
+                  @if (resp.numeroOficioRespuestaUA) { · Oficio {{ resp.numeroOficioRespuestaUA }} }
+                </p>
+                <p class="sd-texto">{{ resp.resumen }}</p>
+                <input #archivoRespuesta type="file" hidden accept=".pdf,.jpg,.jpeg,.png" (change)="adjuntarArchivoRespuesta(resp, $event)">
+                <div class="acciones">
+                  @if (resp.tieneArchivo) {
+                    <button type="button" class="sd-btn-borde chico" (click)="verArchivoRespuesta(resp)"><mat-icon>attach_file</mat-icon> {{ resp.archivoNombre }}</button>
+                    <button type="button" class="sd-btn-borde chico" (click)="archivoRespuesta.click()">Reemplazar archivo</button>
+                  } @else {
+                    <button type="button" class="sd-btn-borde chico" (click)="archivoRespuesta.click()"><mat-icon>upload_file</mat-icon> Adjuntar archivo de la respuesta</button>
+                  }
+                </div>
+              </div>
+            }
+
+            <div class="acciones">
+              <button type="button" class="sd-btn-borde chico" (click)="verPdfOficio(o)"><mat-icon>picture_as_pdf</mat-icon> Ver oficio (PDF)</button>
+              @if (esOficioActivo(o)) {
+                <button type="button" class="sd-btn-borde chico" (click)="abrirRecordatorio(o)"><mat-icon>notifications</mat-icon> Enviar recordatorio</button>
+                <button type="button" class="sd-btn chico" (click)="abrirRespuestaExterna(o)"><mat-icon>upload_file</mat-icon> Registrar respuesta</button>
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+      </mat-accordion>
+    </div>
+  }
+
+  <!-- ============================================================ ACUERDOS -->
+  @case ('acuerdos') {
+    <div class="acuerdos">
+      @if (acuerdoRechazado && acuerdo) {
+        <div class="sd-card aviso">
+          <div class="sd-card-cabeza"><h3><mat-icon>block</mat-icon> El quejoso rechazó el acuerdo de conciliación</h3></div>
+          <p class="sd-texto">{{ acuerdo.textoAcuerdo }}</p>
+          @if (acuerdo.comentarioQuejoso) { <p class="sd-muted">Motivo del quejoso: {{ acuerdo.comentarioQuejoso }}</p> }
+          <p class="sd-muted">Emite un nuevo oficio de gestión con el director para buscar otro acuerdo.</p>
+        </div>
       }
 
       @if (e.estatus === 'ELABORO_ACUERDO') {
-        <mat-card class="card form-card">
-          <h3>Acuerdo de conciliación</h3>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Propuesta de acuerdo para el quejoso</mat-label>
-            <textarea matInput rows="7" [(ngModel)]="textoAcuerdo"></textarea>
-          </mat-form-field>
-
-          <div class="actions">
-            <button mat-stroked-button class="outline-btn" [disabled]="guardando" (click)="guardarBorrador()">
-              <mat-icon>save</mat-icon>
-              Guardar Borrador
-            </button>
-            <button mat-flat-button class="primary-btn" [disabled]="guardando" (click)="enviarAcuerdo()">
-              <mat-icon>send</mat-icon>
-              Enviar acuerdo al quejoso
-            </button>
+        <div class="sd-card">
+          <div class="sd-card-cabeza"><h3><mat-icon>edit_document</mat-icon> Acuerdo de conciliación</h3></div>
+          <label class="campo" for="textoAcuerdo">Propuesta de acuerdo para el quejoso</label>
+          <textarea id="textoAcuerdo" rows="8" [(ngModel)]="textoAcuerdo"></textarea>
+          <div class="acciones">
+            <button type="button" class="sd-btn-borde" [disabled]="guardando" (click)="guardarBorrador()"><mat-icon>save</mat-icon> Guardar borrador</button>
+            <button type="button" class="sd-btn" [disabled]="guardando" (click)="enviarAcuerdo()"><mat-icon>send</mat-icon> Enviar acuerdo al quejoso</button>
           </div>
-        </mat-card>
+        </div>
       }
 
       @if (e.estatus === 'PENDIENTE_CONCILIACION' && acuerdo) {
-        <mat-card class="card">
-          <h3>Acuerdo de conciliación enviado</h3>
-          <p class="contenido">{{ acuerdo.textoAcuerdo }}</p>
-          <p class="meta">Enviado al quejoso: {{ acuerdo.fechaEnvioSecretarial | date:'d/MM/yyyy HH:mm' }} · Esperando su respuesta.</p>
-          <div class="actions">
-            <button mat-stroked-button class="outline-btn" (click)="verPdfAcuerdoConciliacion()">
-              <mat-icon>picture_as_pdf</mat-icon> Ver acuerdo (PDF)
-            </button>
+        <div class="sd-card">
+          <div class="sd-card-cabeza">
+            <h3><mat-icon>hourglass_top</mat-icon> Pendiente de acuerdo de conciliación</h3>
+            <button type="button" class="sd-btn-borde chico" (click)="verPdfAcuerdoConciliacion()"><mat-icon>picture_as_pdf</mat-icon> Ver acuerdo (PDF)</button>
           </div>
-        </mat-card>
+          <p class="sd-texto">{{ acuerdo.textoAcuerdo }}</p>
+          <p class="sd-muted">Enviado al quejoso el {{ formatearFecha(acuerdo.fechaEnvioSecretarial, true) }}. Falta que lo acepte o lo rechace.</p>
+        </div>
       }
 
       @if (e.estatus === 'PENDIENTE_CONCLUSION' && acuerdo) {
-        <mat-card class="card">
-          <h3>Acuerdo de conciliación aceptado</h3>
-          <p class="contenido">{{ acuerdo.textoAcuerdo }}</p>
-          <p class="meta">El quejoso lo aceptó el {{ acuerdo.fechaRespuestaQuejoso | date:'d/MM/yyyy HH:mm' }}.</p>
-          <div class="actions">
-            <button mat-stroked-button class="outline-btn" (click)="verPdfAcuerdoConciliacion()">
-              <mat-icon>picture_as_pdf</mat-icon> Ver acuerdo (PDF)
-            </button>
+        <div class="sd-card">
+          <div class="sd-card-cabeza">
+            <h3><mat-icon>check_circle</mat-icon> Acuerdo de conciliación aceptado</h3>
+            <button type="button" class="sd-btn-borde chico" (click)="verPdfAcuerdoConciliacion()"><mat-icon>picture_as_pdf</mat-icon> Ver acuerdo (PDF)</button>
           </div>
-        </mat-card>
-
-        <mat-card class="card form-card">
-          <h3>Acuerdo de conclusión</h3>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Texto del acuerdo de conclusión</mat-label>
-            <textarea matInput rows="7" [(ngModel)]="textoConclusion"></textarea>
-          </mat-form-field>
-
-          <div class="actions">
-            <button mat-flat-button class="primary-btn" [disabled]="guardando" (click)="registrarConclusion()">
-              <mat-icon>task_alt</mat-icon>
-              Registrar acuerdo de conclusión
-            </button>
+          <p class="sd-texto">{{ acuerdo.textoAcuerdo }}</p>
+          <p class="sd-muted">El quejoso lo aceptó el {{ formatearFecha(acuerdo.fechaRespuestaQuejoso, true) }}.</p>
+        </div>
+        <div class="sd-card">
+          <div class="sd-card-cabeza"><h3><mat-icon>gavel</mat-icon> Acuerdo de conclusión</h3></div>
+          <label class="campo" for="textoConclusion">Texto del acuerdo de conclusión</label>
+          <textarea id="textoConclusion" rows="8" [(ngModel)]="textoConclusion"></textarea>
+          <div class="acciones">
+            <button type="button" class="sd-btn" [disabled]="guardando" (click)="registrarConclusion()"><mat-icon>task_alt</mat-icon> Registrar acuerdo de conclusión</button>
           </div>
-        </mat-card>
+        </div>
       }
 
       @if (e.estatus === 'CONCLUIDO' && acuerdo) {
-        <mat-card class="card">
-          <h3>Acuerdo de conclusión</h3>
-          <p class="contenido">{{ acuerdo.textoConclusion }}</p>
-          <p class="meta">Concluido el {{ acuerdo.fechaConclusion | date:'d/MM/yyyy HH:mm' }}</p>
-          <div class="actions">
-            <button mat-flat-button class="primary-btn" (click)="verPdfAcuerdoConclusion()">
-              <mat-icon>picture_as_pdf</mat-icon> Ver acuerdo de conclusión (PDF)
-            </button>
+        <div class="sd-card">
+          <div class="sd-card-cabeza">
+            <h3><mat-icon>task_alt</mat-icon> Acuerdo de conclusión</h3>
+            <button type="button" class="sd-btn chico" (click)="verPdfAcuerdoConclusion()"><mat-icon>picture_as_pdf</mat-icon> Ver PDF</button>
           </div>
-        </mat-card>
-        <mat-card class="card">
-          <h3>Acuerdo de conciliación (aceptado)</h3>
-          <p class="contenido">{{ acuerdo.textoAcuerdo }}</p>
-        </mat-card>
+          <p class="sd-texto">{{ acuerdo.textoConclusion }}</p>
+          <p class="sd-muted">Concluido el {{ formatearFecha(acuerdo.fechaConclusion, true) }}.</p>
+        </div>
+        <div class="sd-card">
+          <div class="sd-card-cabeza">
+            <h3><mat-icon>handshake</mat-icon> Acuerdo de conciliación (aceptado)</h3>
+            <button type="button" class="sd-btn-borde chico" (click)="verPdfAcuerdoConciliacion()"><mat-icon>picture_as_pdf</mat-icon> Ver PDF</button>
+          </div>
+          <p class="sd-texto">{{ acuerdo.textoAcuerdo }}</p>
+        </div>
+      }
+
+      @if (['RECIBIDO', 'EN_INVESTIGACION', 'EN_ESPERA_OFICIO'].includes(e.estatus) && !acuerdoRechazado) {
+        <div class="sd-card">
+          <p class="sd-vacio">El acuerdo de conciliación se redacta cuando la unidad académica responda el oficio.</p>
+        </div>
       }
     </div>
-  </div>
+  }
+
+  <!-- ============================================================ HISTORIAL -->
+  @case ('historial') {
+    <div class="sd-card">
+      <div class="sd-card-cabeza">
+        <h3><mat-icon>history</mat-icon> Historial del expediente</h3>
+        <small><span class="punto pc"></span> Primer Contacto · <span class="punto sd"></span> Subdefensoría</small>
+      </div>
+      <div class="sd-linea">
+        @for (ev of historial; track $index) {
+          <div class="sd-evento">
+            <i [class]="ev.tipo"></i>
+            <div>
+              <b>{{ ev.titulo }}</b>
+              @if (ev.detalle) { <span>{{ ev.detalle }}</span> }
+              <small>{{ formatearFecha(ev.fecha, ev.fecha.length > 10) }}</small>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+  }
 </section>
+} @else {
+  <section class="sd-page"><p class="sd-vacio">Cargando expediente…</p></section>
+}

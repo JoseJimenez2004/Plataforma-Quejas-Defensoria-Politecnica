@@ -99,7 +99,7 @@ export class Expediente implements OnInit, OnDestroy {
   /** Pestaña visible; por defecto "Expediente", como en el diseño. */
   pestana: PestanaExpediente = 'expediente';
   narrativaCompleta = false;
-  mostrarNuevaNota = false;
+  mostrarNuevoOficio = false;
   mostrarNuevaCita = false;
 
   // ---- Análisis IA
@@ -118,10 +118,14 @@ export class Expediente implements OnInit, OnDestroy {
   abogados: AbogadoSubdefensoria[] = [];
   readonly etiquetaCategoria = etiquetaCategoria;
 
-  nuevaNota = '';
+  // ---- Oficios (la nota de análisis es el oficio del expediente)
+  nuevoOficioAsunto = '';
+  nuevoOficioTexto = '';
+  guardandoOficio = false;
 
-  /** Nota que se está editando en línea (solo notas propias). */
+  /** Oficio que se está editando en línea (solo los propios). */
   notaEnEdicion: number | null = null;
+  asuntoEdicion = '';
   textoEdicion = '';
 
   expediente: ExpedienteDetalle = {
@@ -310,16 +314,24 @@ export class Expediente implements OnInit, OnDestroy {
     });
   }
 
-  // ---------------------------------------------------------------- Notas (CU-05)
+  // ---------------------------------------------------------------- Oficios (CU-05)
 
   esNotaPropia(nota: NotaAnalisis): boolean {
     return this.analistaActualId !== undefined && nota.analistaId === this.analistaActualId;
   }
 
-  agregarNota(): void {
-    const nota = this.nuevaNota.trim();
+  cancelarNuevoOficio(): void {
+    this.mostrarNuevoOficio = false;
+    this.nuevoOficioAsunto = '';
+    this.nuevoOficioTexto = '';
+  }
 
-    if (!nota) return;
+  /** Guarda el oficio y abre su PDF. */
+  agregarOficio(): void {
+    const asunto = this.nuevoOficioAsunto.trim();
+    const contenido = this.nuevoOficioTexto.trim();
+
+    if (!asunto || !contenido || this.guardandoOficio) return;
 
     if (!this.expediente.folio) {
       this.snackBar.open('No fue posible identificar el expediente.', 'Cerrar', {
@@ -328,19 +340,36 @@ export class Expediente implements OnInit, OnDestroy {
       return;
     }
 
+    this.guardandoOficio = true;
     this.notaAnalisisService.crearNota({
       folio: this.expediente.folio,
-      contenido: nota
+      asunto,
+      contenido
     }).subscribe({
-      next: (notaGuardada) => {
-        this.expediente.notas = [notaGuardada, ...this.expediente.notas];
-        this.nuevaNota = '';
+      next: (oficio) => {
+        this.expediente.notas = [oficio, ...this.expediente.notas];
+        this.guardandoOficio = false;
+        this.cancelarNuevoOficio();
         this.cdr.detectChanges();
+        this.snackBar.open(`Oficio ${oficio.numeroOficio} guardado.`, 'Cerrar', { duration: 3000 });
+        this.verOficio(oficio);
       },
       error: (error) => {
+        this.guardandoOficio = false;
         this.cdr.detectChanges();
-        this.snackBar.open(mensajeDeError(error, 'No fue posible guardar la nota.'), 'Cerrar', {
+        this.snackBar.open(mensajeDeError(error, 'No fue posible guardar el oficio.'), 'Cerrar', {
           duration: 3000
+        });
+      }
+    });
+  }
+
+  verOficio(nota: NotaAnalisis): void {
+    this.notaAnalisisService.obtenerPdf(nota.id).subscribe({
+      next: (pdf) => abrirBlob(pdf),
+      error: (error) => {
+        this.snackBar.open(mensajeDeError(error, 'No fue posible generar el PDF del oficio.'), 'Cerrar', {
+          duration: 3500
         });
       }
     });
@@ -348,20 +377,24 @@ export class Expediente implements OnInit, OnDestroy {
 
   editarNota(nota: NotaAnalisis): void {
     this.notaEnEdicion = nota.id;
+    this.asuntoEdicion = nota.asunto ?? '';
     this.textoEdicion = nota.contenido;
   }
 
   cancelarEdicion(): void {
     this.notaEnEdicion = null;
+    this.asuntoEdicion = '';
     this.textoEdicion = '';
   }
 
   guardarEdicion(nota: NotaAnalisis): void {
+    const asunto = this.asuntoEdicion.trim();
     const contenido = this.textoEdicion.trim();
-    if (!contenido) return;
+    if (!asunto || !contenido) return;
 
     this.notaAnalisisService.actualizarNota(nota.id, {
       folio: this.expediente.folio,
+      asunto,
       contenido
     }).subscribe({
       next: (actualizada) => {
@@ -370,7 +403,7 @@ export class Expediente implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        this.snackBar.open(mensajeDeError(error, 'No fue posible editar la nota.'), 'Cerrar', {
+        this.snackBar.open(mensajeDeError(error, 'No fue posible editar el oficio.'), 'Cerrar', {
           duration: 3500
         });
       }
@@ -378,7 +411,7 @@ export class Expediente implements OnInit, OnDestroy {
   }
 
   eliminarNota(nota: NotaAnalisis): void {
-    if (!confirm('¿Eliminar esta nota de análisis? Esta acción no se puede deshacer.')) return;
+    if (!confirm(`¿Eliminar el oficio ${nota.numeroOficio}? Esta acción no se puede deshacer.`)) return;
 
     this.notaAnalisisService.eliminarNota(nota.id).subscribe({
       next: () => {
@@ -386,7 +419,7 @@ export class Expediente implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        this.snackBar.open(mensajeDeError(error, 'No fue posible eliminar la nota.'), 'Cerrar', {
+        this.snackBar.open(mensajeDeError(error, 'No fue posible eliminar el oficio.'), 'Cerrar', {
           duration: 3500
         });
       }
@@ -560,7 +593,7 @@ export class Expediente implements OnInit, OnDestroy {
       eventos.push({ fecha: e.fechaInicioAnalisis, titulo: 'En análisis', detalle: 'Asignado a ' + (e.analistaAnalisisNombre || 'Primer Contacto') + '.', tipo: 'analisis' });
     }
     for (const n of e.notas) {
-      eventos.push({ fecha: n.fechaCreacion, titulo: 'Nota de análisis', detalle: n.analistaNombre + ': ' + recortar(n.contenido, 90), tipo: 'normal' });
+      eventos.push({ fecha: n.fechaCreacion, titulo: 'Oficio ' + n.numeroOficio, detalle: n.analistaNombre + ': ' + (n.asunto ? n.asunto + ' — ' : '') + recortar(n.contenido, 90), tipo: 'normal' });
     }
     for (const c of this.historialCitas) {
       if (c.fechaCreacion) {

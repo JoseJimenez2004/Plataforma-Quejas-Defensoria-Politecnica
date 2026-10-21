@@ -86,6 +86,20 @@ public class SecurityConfig {
                         ).authenticated()
 
                         /*
+                         * Subdefensoría consulta (solo lectura) lo que trabajó
+                         * Primer Contacto: expediente, oficios en PDF y evidencias.
+                         */
+                        .requestMatchers(
+                                "/api/primer-contacto/consulta/**"
+                        ).hasAnyRole("ANALISTA_PRIMER_CONTACTO", "SUBDEFENSOR", "DEFENSOR")
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/primer-contacto/notas/*/pdf",
+                                "/api/primer-contacto/evidencias/*"
+                        ).hasAnyRole("ANALISTA_PRIMER_CONTACTO", "SUBDEFENSOR", "DEFENSOR")
+
+                        /*
                          * Todas las operaciones normales de
                          * Primer Contacto requieren un JWT
                          * con rol ANALISTA_PRIMER_CONTACTO.

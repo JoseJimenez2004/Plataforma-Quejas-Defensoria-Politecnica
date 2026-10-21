@@ -1,151 +1,94 @@
-<section class="page">
-  <div class="page-header">
-    <div>
-      <h2>Bandeja de Expedientes</h2>
-      <p>Todos los expedientes en investigación, sin importar su etapa.</p>
+<section class="sd-page">
+  <div class="sd-titulo">
+    <h2>Mis expedientes</h2>
+    <div class="der">
+      <button type="button" class="sd-btn-borde" (click)="exportarCsv()" [disabled]="!filtrados.length">Exportar CSV</button>
     </div>
   </div>
 
-  <div class="layout">
-    <aside class="filters-panel">
-      <h3>Filtros</h3>
+  <div class="sd-tabs" role="tablist">
+    @for (g of grupos; track g.id) {
+      <button type="button" role="tab" [class.on]="grupo === g.id" (click)="elegirGrupo(g.id)">
+        {{ g.etiqueta }}<em>{{ conteo[g.id] }}</em>
+      </button>
+    }
+  </div>
 
-      <mat-expansion-panel expanded class="facet-panel">
-        <mat-expansion-panel-header>Estatus</mat-expansion-panel-header>
-        @for (f of facetasEstatus; track f.valor) {
-          <div class="facet-row">
-            <mat-checkbox [checked]="estatusSeleccionados.has(f.valor)" (change)="toggleFacet(estatusSeleccionados, f.valor)">
-              {{ f.etiqueta }}
-            </mat-checkbox>
-            <span class="facet-count">{{ f.total }}</span>
-          </div>
-        }
-      </mat-expansion-panel>
+  <div class="sd-toolbar">
+    <input type="search" id="busqueda" [(ngModel)]="busqueda" (ngModelChange)="aplicarFiltros()"
+           placeholder="Buscar por folio, quejoso, asunto, unidad u oficio…" aria-label="Buscar expedientes">
+    <select id="unidad" [(ngModel)]="unidad" (ngModelChange)="aplicarFiltros()" aria-label="Unidad">
+      <option value="">Unidad: todas</option>
+      @for (u of unidades; track u) { <option [value]="u">{{ u }}</option> }
+    </select>
+    <select id="plazo" [(ngModel)]="plazo" (ngModelChange)="aplicarFiltros()" aria-label="Plazo">
+      <option value="">Plazo: todos</option>
+      <option value="vencidos">Oficio vencido</option>
+      <option value="por-vencer">Vence en 3 días o menos</option>
+      <option value="sin-oficio">Sin oficio vigente</option>
+    </select>
+    <select id="orden" [(ngModel)]="orden" (ngModelChange)="aplicarFiltros()" aria-label="Orden">
+      <option value="urgencia">Más urgentes primero</option>
+      <option value="recientes">Más recientes</option>
+      <option value="antiguos">Más antiguos</option>
+    </select>
+  </div>
 
-      <mat-expansion-panel class="facet-panel">
-        <mat-expansion-panel-header>Asunto</mat-expansion-panel-header>
-        @for (f of facetasAsunto; track f.valor) {
-          <div class="facet-row">
-            <mat-checkbox [checked]="asuntosSeleccionados.has(f.valor)" (change)="toggleFacet(asuntosSeleccionados, f.valor)">
-              {{ f.etiqueta }}
-            </mat-checkbox>
-            <span class="facet-count">{{ f.total }}</span>
-          </div>
-        }
-      </mat-expansion-panel>
-
-      <mat-expansion-panel class="facet-panel">
-        <mat-expansion-panel-header>Unidad Académica</mat-expansion-panel-header>
-        @for (f of facetasUnidad; track f.valor) {
-          <div class="facet-row">
-            <mat-checkbox [checked]="unidadesSeleccionadas.has(f.valor)" (change)="toggleFacet(unidadesSeleccionadas, f.valor)">
-              {{ f.etiqueta }}
-            </mat-checkbox>
-            <span class="facet-count">{{ f.total }}</span>
-          </div>
-        }
-      </mat-expansion-panel>
-    </aside>
-
-    <div class="main-content">
-      <div class="toolbar">
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Buscar por folio, quejoso o asunto</mat-label>
-          <input matInput [(ngModel)]="busqueda" (ngModelChange)="aplicarFiltros()">
-          <mat-icon matPrefix>search</mat-icon>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="sort-field">
-          <mat-label>Ordenar por</mat-label>
-          <mat-select [(ngModel)]="orden" (ngModelChange)="aplicarFiltros()">
-            <mat-option value="recientes">Más recientes</mat-option>
-            <mat-option value="antiguos">Más antiguos</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <p class="resultados-count">{{ filtrados.length }} expedientes encontrados</p>
-
-      <mat-card class="table-card">
-        <table mat-table [dataSource]="filtrados" class="mat-elevation-z0">
-
-          <ng-container matColumnDef="folio">
-            <th mat-header-cell *matHeaderCellDef>Folio</th>
-            <td mat-cell *matCellDef="let e" class="folio-celda">{{ e.folio }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="fechaAdmision">
-            <th mat-header-cell *matHeaderCellDef>Admisión</th>
-            <td mat-cell *matCellDef="let e">{{ e.fechaAdmision }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="quejosoNombre">
-            <th mat-header-cell *matHeaderCellDef>Quejoso</th>
-            <td mat-cell *matCellDef="let e">{{ e.quejosoNombre }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="asunto">
-            <th mat-header-cell *matHeaderCellDef>Asunto</th>
-            <td mat-cell *matCellDef="let e">{{ e.asunto }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="unidadAcademica">
-            <th mat-header-cell *matHeaderCellDef>UA</th>
-            <td mat-cell *matCellDef="let e">{{ e.unidadAcademica }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="estatus">
-            <th mat-header-cell *matHeaderCellDef>Estatus</th>
-            <td mat-cell *matCellDef="let e">
-              <span class="status" [ngClass]="'status-' + e.estatus.toLowerCase()">
-                {{ etiquetaEstatus(e.estatus) }}
-              </span>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="progreso">
-            <th mat-header-cell *matHeaderCellDef>Progreso</th>
-            <td mat-cell *matCellDef="let e">
-              @if (e.numeroOficioVigente) {
-                <span [class.progreso-vencido]="e.estatusOficioVigente === 'VENCIDO'">
-                  {{ e.diasTranscurridos }} de {{ e.diasLimite }} días
-                </span>
-              } @else {
-                <span class="sin-progreso">—</span>
-              }
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="acciones">
-            <th mat-header-cell *matHeaderCellDef>Acciones</th>
-            <td mat-cell *matCellDef="let e">
-              <div class="acciones-celda">
-              @if (etiquetaAccionPrincipal(e); as etiqueta) {
-                <button mat-flat-button class="action-btn" (click)="accionPrincipal(e)">{{ etiqueta }}</button>
-              }
-              @if (e.oficioIdVigente) {
-                <button mat-icon-button (click)="abrirRecordatorio(e)" matTooltip="Enviar recordatorio">
-                  <mat-icon>notifications</mat-icon>
-                </button>
-                <button mat-icon-button (click)="abrirRespuestaExterna(e)" matTooltip="Registrar respuesta">
-                  <mat-icon>upload_file</mat-icon>
-                </button>
-              }
-              <button mat-icon-button (click)="verDetalle(e)" matTooltip="Ver expediente">
-                <mat-icon>visibility</mat-icon>
-              </button>
-              </div>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-
-        @if (filtrados.length === 0) {
-          <p class="empty-state">No hay expedientes que coincidan con los filtros.</p>
-        }
-      </mat-card>
+  <div class="sd-card tabla-card">
+    <div class="sd-tabla-wrap">
+      <table class="sd-tabla">
+        <thead>
+          <tr><th>Expediente</th><th>Unidad</th><th>Admisión</th><th>Etapa</th><th>Oficio vigente · plazo</th><th>Siguiente paso</th></tr>
+        </thead>
+        <tbody>
+          @for (e of visibles; track e.expedienteId) {
+            <tr (click)="abrir(e)">
+              <td><b>{{ e.folio }}</b><small>{{ e.quejosoNombre }} · {{ e.asunto }}</small></td>
+              <td>{{ e.unidadAcademica }}</td>
+              <td class="sd-muted">{{ formatearFecha(e.fechaAdmision) }}</td>
+              <td><span class="sd-chip" [class]="'sd-chip ' + claseEtapa(e)">{{ etiquetaEtapa(e) }}</span></td>
+              <td>
+                @if (e.numeroOficioVigente) {
+                  <div class="sd-plazo">
+                    <span class="sd-mono">{{ e.numeroOficioVigente }}</span>
+                    <div class="barra"><i [style.width.%]="porcentajePlazo(e)" [style.background]="colorPlazo(e)"></i></div>
+                    <small [style.color]="e.estatusOficioVigente === 'VENCIDO' ? 'var(--peligro)' : null">{{ e.diasTranscurridos }} de {{ e.diasLimite }} días</small>
+                  </div>
+                } @else {
+                  <span class="sd-muted">Sin oficio vigente</span>
+                }
+              </td>
+              <td>
+                @if (paso(e).nivel !== 'fin') {
+                  <button type="button" [class]="paso(e).nivel === 'crit' || paso(e).nivel === 'warn' ? 'sd-btn chico' : 'sd-btn-borde chico'"
+                          (click)="hacer(e, $event)">{{ paso(e).boton }}</button>
+                } @else {
+                  <span class="sd-muted">Concluido</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
+    @if (!cargando && !filtrados.length) {
+      <p class="sd-vacio">No hay expedientes con estos filtros.</p>
+    }
+    @if (cargando) {
+      <p class="sd-vacio">Cargando…</p>
+    }
+  </div>
+
+  <div class="sd-paginador">
+    <span>{{ rango }}</span>
+    @if (paginas.length > 1) {
+      <div>
+        <button type="button" [disabled]="pagina === 0" (click)="pagina = pagina - 1" aria-label="Página anterior">‹</button>
+        @for (p of paginas; track p) {
+          <button type="button" [class.on]="p === pagina" (click)="pagina = p">{{ p + 1 }}</button>
+        }
+        <button type="button" [disabled]="pagina === paginas.length - 1" (click)="pagina = pagina + 1" aria-label="Página siguiente">›</button>
+      </div>
+    }
   </div>
 </section>

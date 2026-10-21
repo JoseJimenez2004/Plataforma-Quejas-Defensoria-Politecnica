@@ -1,7 +1,7 @@
 // Prueba E2E LOCAL de las observaciones del 2026-10-08 (39 comprobaciones contra la API):
 // antecedentes (manual, modelo, guardados) y citas con respuesta del quejoso (48 h).
 //
-// Requisitos (ver CONTEXTO-CHAT-PRIMER-CONTACTO-2026-09.md, sección 13):
+// Requisitos (ver SEGUIMIENTO-PRIMER-CONTACTO-SUBDEFENSORIA.md, sección 13):
 //   - base local arriba (docker compose de dev-local) con 04-busqueda-manual-prueba.sql cargado;
 //   - antecedentes-service local en 8093 (Modelo-Java);
 //   - primercontacto en 8082 con --primer-contacto.citas.revision-ms=10000 (para que el

@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -21,6 +21,8 @@ import { Recordatorio } from '../../core/models/recordatorio';
 import { RespuestaExterna } from '../../core/models/respuesta-externa';
 import { RespuestaExternaService } from '../../core/services/respuesta-externa.service';
 import { Observable } from 'rxjs';
+import { ConsultaPrimerContacto, PrimerContactoService } from '../../core/services/primer-contacto.service';
+import { formatearFecha } from '../../core/utils/etapas';
 import { ExpedienteInvestigacion } from '../../core/models/expediente-investigacion';
 import { Oficio } from '../../core/models/oficio';
 import { AcuerdoConclusion } from '../../core/models/acuerdo-conclusion';
@@ -39,6 +41,27 @@ const ICONOS_PASO: Record<string, string> = {
   PENDIENTE_CONCLUSION: 'gavel',
   CONCLUIDO: 'task_alt'
 };
+
+type Pestana = 'resumen' | 'primer-contacto' | 'investigacion' | 'acuerdos' | 'historial';
+const PESTANAS: Pestana[] = ['resumen', 'primer-contacto', 'investigacion', 'acuerdos', 'historial'];
+
+/** Recuadro "Siguiente paso": qué toca hacer según el estatus. */
+interface SiguientePasoDetalle {
+  texto: string;
+  detalle?: string;
+  boton?: string;
+  accion?: () => void;
+  secundario?: string;
+  accionSecundaria?: () => void;
+  hecho?: boolean;
+}
+
+interface EventoHistorial {
+  fecha: string;
+  titulo: string;
+  detalle: string;
+  tipo: 'sd' | 'pc' | 'ok' | 'gris';
+}
 
 /** Estatus en los que ya existe un acuerdo que mostrar. */
 const CON_ACUERDO = ['EN_INVESTIGACION', 'ELABORO_ACUERDO', 'PENDIENTE_CONCILIACION', 'PENDIENTE_CONCLUSION', 'CONCLUIDO'];
@@ -79,9 +102,19 @@ export class ExpedienteDetalle implements OnInit {
   readonly etiquetas: Record<string, string> = ETIQUETAS_ESTATUS;
   readonly iconos = ICONOS_PASO;
   readonly etiquetaEstatus = etiquetaEstatus;
+  readonly formatearFecha = formatearFecha;
+
+  pestana: Pestana = 'resumen';
+  hechosCompletos = false;
+
+  /** Lo que trabajó Primer Contacto (solo lectura); null mientras carga o si falló. */
+  pc: ConsultaPrimerContacto | null = null;
+  pcError = '';
 
   constructor(
     private route: ActivatedRoute,
+    public router: Router,
+    private primerContactoService: PrimerContactoService,
     private expedienteService: ExpedienteService,
     private oficioService: OficioService,
     private acuerdoConclusionService: AcuerdoConclusionService,
@@ -93,6 +126,147 @@ export class ExpedienteDetalle implements OnInit {
     private cdr: ChangeDetectorRef
   ) {
     this.folio = this.route.snapshot.paramMap.get('folio') ?? '';
+    const tab = this.route.snapshot.queryParamMap.get('tab') as Pestana | null;
+    if (tab && PESTANAS.includes(tab)) this.pestana = tab;
+  }
+
+  cambiarPestana(pestana: Pestana): void {
+    this.pestana = pestana;
+    this.router.navigate([], { queryParams: { tab: pestana === 'resumen' ? null : pestana }, replaceUrl: true });
+  }
+
+  // ------------------------------------------------------------ Primer Contacto (solo lectura)
+
+  cargarPrimerContacto(folioPc: string): void {
+    if (!folioPc || this.pc) return;
+    this.primerContactoService.consultar(folioPc).subscribe({
+      next: (consulta) => {
+        this.pc = consulta;
+        this.pcError = '';
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.pcError = err?.status === 403
+          ? 'Tu cuenta no tiene permiso para consultar Primer Contacto.'
+          : 'No fue posible cargar la información de Primer Contacto.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  verOficioPc(id: number): void {
+    this.abrirPdf(this.primerContactoService.pdfOficio(id));
+  }
+
+  verEvidencia(id: number): void {
+    this.abrirPdf(this.primerContactoService.evidencia(id));
+  }
+
+  /** Misma etiqueta de cita que en Primer Contacto. */
+  etiquetaCita(estatus: string): string {
+    const etiquetas: Record<string, string> = {
+      PROGRAMADA: 'Programada', CONFIRMADA: 'Confirmada', CANCELADA: 'Cancelada',
+      CANCELADA_QUEJOSO: 'Cancelada por el quejoso', SIN_RESPUESTA: 'Sin respuesta', REAGENDADA: 'Reagendada'
+    };
+    return etiquetas[estatus] ?? estatus;
+  }
+
+  // ------------------------------------------------------------ Siguiente paso
+
+  get oficioActivo(): Oficio | undefined {
+    return this.oficios.find(o => this.esOficioActivo(o));
+  }
+
+  get siguientePaso(): SiguientePasoDetalle | null {
+    const e = this.expediente;
+    if (!e) return null;
+    const activo = this.oficioActivo;
+
+    switch (e.estatus) {
+      case 'EN_INVESTIGACION':
+        if (this.puedeSolicitarOficio) {
+          return {
+            texto: this.acuerdoRechazado
+              ? 'El quejoso rechazó el acuerdo: emite un nuevo oficio de gestión con el director.'
+              : 'Solicita el oficio a la unidad académica.',
+            boton: 'Solicitar oficio', accion: () => this.solicitarOficio()
+          };
+        }
+        return { texto: 'Expediente en investigación.' };
+      case 'EN_ESPERA_OFICIO':
+        if (activo) {
+          return {
+            texto: `Registra la respuesta de ${activo.destinatarioNombre} al oficio ${activo.numeroOficio}.`,
+            detalle: activo.estatus === 'VENCIDO'
+              ? `El plazo venció el ${formatearFecha(activo.fechaLimite)}.`
+              : `Vence el ${formatearFecha(activo.fechaLimite)}.`,
+            boton: 'Registrar respuesta', accion: () => this.abrirRespuestaExterna(activo),
+            secundario: 'Enviar recordatorio', accionSecundaria: () => this.abrirRecordatorio(activo)
+          };
+        }
+        return { texto: 'Esperando la respuesta de la unidad académica.' };
+      case 'ELABORO_ACUERDO':
+        return { texto: 'La unidad respondió. Redacta el acuerdo de conciliación para el quejoso.', boton: 'Redactar acuerdo', accion: () => this.cambiarPestana('acuerdos') };
+      case 'PENDIENTE_CONCILIACION':
+        return { texto: 'Acuerdo de conciliación enviado. Falta que el quejoso lo acepte o lo rechace.', detalle: 'El expediente avanza solo cuando responda.', secundario: 'Ver acuerdo (PDF)', accionSecundaria: () => this.verPdfAcuerdoConciliacion() };
+      case 'PENDIENTE_CONCLUSION':
+        return { texto: 'El quejoso aceptó el acuerdo de conciliación. Redacta el acuerdo de conclusión.', boton: 'Redactar conclusión', accion: () => this.cambiarPestana('acuerdos') };
+      case 'CONCLUIDO':
+        return { texto: 'Expediente concluido.', hecho: true, secundario: 'Ver acuerdo de conclusión (PDF)', accionSecundaria: () => this.verPdfAcuerdoConclusion() };
+      default:
+        return null;
+    }
+  }
+
+  // ------------------------------------------------------------ Historial
+
+  get historial(): EventoHistorial[] {
+    const eventos: EventoHistorial[] = [];
+    const e = this.expediente;
+    if (!e) return eventos;
+
+    const pcExp = this.pc?.expediente;
+    if (pcExp?.datosQueja?.fechaRegistro) {
+      eventos.push({ fecha: pcExp.datosQueja.fechaRegistro, titulo: 'Queja registrada', detalle: 'El quejoso presentó la queja.', tipo: 'gris' });
+    }
+    if (pcExp?.fechaInicioAnalisis) {
+      eventos.push({ fecha: pcExp.fechaInicioAnalisis, titulo: 'Análisis en Primer Contacto', detalle: 'Lo tomó ' + (pcExp.analistaAnalisisNombre ?? 'Primer Contacto') + '.', tipo: 'pc' });
+    }
+    for (const n of pcExp?.notas ?? []) {
+      eventos.push({ fecha: n.fechaCreacion, titulo: 'Oficio ' + n.numeroOficio + ' (Primer Contacto)', detalle: (n.asunto ?? 'Nota de análisis') + ' · ' + n.analistaNombre, tipo: 'pc' });
+    }
+    for (const c of this.pc?.citas ?? []) {
+      eventos.push({ fecha: c.fechaCreacion, titulo: 'Cita con el quejoso', detalle: `${formatearFecha(c.fechaCita)} ${c.horaCita ?? ''} · ${this.etiquetaCita(c.estatus)}`, tipo: 'pc' });
+    }
+    if (this.pc?.dictamen) {
+      eventos.push({ fecha: this.pc.dictamen.fechaDictamen, titulo: 'Dictamen de Primer Contacto', detalle: this.pc.dictamen.resultado + ' · ' + this.pc.dictamen.analistaNombre, tipo: 'pc' });
+    }
+    eventos.push({ fecha: e.fechaAdmision, titulo: 'Recibido en Subdefensoría', detalle: 'Expediente ' + e.folio + '.', tipo: 'sd' });
+
+    for (const o of this.oficios) {
+      eventos.push({ fecha: o.fechaEnvio, titulo: 'Oficio ' + o.numeroOficio, detalle: `${o.fase === 'GESTION_DIRECTOR' ? 'Gestión con el director' : 'Solicitud de información'} · ${o.destinatarioNombre}`, tipo: 'sd' });
+      for (const rec of this.recordatorios[o.id] ?? []) {
+        eventos.push({ fecha: rec.fechaEnvio, titulo: 'Recordatorio del oficio ' + o.numeroOficio, detalle: 'Nueva fecha límite: ' + formatearFecha(rec.nuevaFechaLimite), tipo: 'sd' });
+      }
+      const resp = this.respuestas[o.id];
+      if (resp) {
+        eventos.push({ fecha: resp.fechaRecepcion, titulo: 'Respuesta al oficio ' + o.numeroOficio, detalle: resp.canalRecepcion + (resp.numeroOficioRespuestaUA ? ' · Oficio ' + resp.numeroOficioRespuestaUA : ''), tipo: 'ok' });
+      }
+    }
+    const a = this.acuerdo;
+    if (a?.fechaEnvioSecretarial) {
+      eventos.push({ fecha: a.fechaEnvioSecretarial, titulo: 'Acuerdo de conciliación enviado', detalle: 'Se envió al quejoso para su respuesta.', tipo: 'sd' });
+    }
+    if (a?.fechaRespuestaQuejoso) {
+      eventos.push({ fecha: a.fechaRespuestaQuejoso, titulo: a.respuestaQuejoso === 'ACEPTADO' ? 'El quejoso aceptó el acuerdo' : 'El quejoso rechazó el acuerdo', detalle: a.comentarioQuejoso ?? '', tipo: a.respuestaQuejoso === 'ACEPTADO' ? 'ok' : 'gris' });
+    }
+    if (a?.fechaConclusion) {
+      eventos.push({ fecha: a.fechaConclusion, titulo: 'Expediente concluido', detalle: 'Se registró el acuerdo de conclusión.', tipo: 'ok' });
+    }
+
+    return eventos
+      .filter(ev => !!ev.fecha)
+      .sort((x, y) => new Date(y.fecha).getTime() - new Date(x.fecha).getTime());
   }
 
   ngOnInit(): void {
@@ -109,6 +283,7 @@ export class ExpedienteDetalle implements OnInit {
       next: (expediente) => {
         this.expediente = expediente;
         this.cargarHistorial();
+        this.cargarPrimerContacto(expediente.folioOrigen);
 
         if (CON_ACUERDO.includes(expediente.estatus)) {
           this.cargarAcuerdo(expediente.id);

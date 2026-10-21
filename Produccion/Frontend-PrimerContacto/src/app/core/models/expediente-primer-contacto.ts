@@ -50,6 +50,8 @@ export interface ExpedientePrimerContacto {
     folio: string;
     analistaId: number;
     analistaNombre: string;
+    numeroOficio: string;
+    asunto?: string | null;
     contenido: string;
     fechaCreacion: string;
     fechaActualizacion?: string;

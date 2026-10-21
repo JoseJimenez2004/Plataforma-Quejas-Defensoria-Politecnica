@@ -1,28 +1,41 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { AlertaService } from '../../core/services/alerta.service';
-import { AlertaVencimiento } from '../../core/models/alerta-vencimiento';
-import { RecordatorioDialog, RecordatorioDialogData } from '../../shared/recordatorio-dialog/recordatorio-dialog';
+import { forkJoin } from 'rxjs';
 
+import { AlertaVencimiento } from '../../core/models/alerta-vencimiento';
+import { ExpedienteResumen } from '../../core/models/expediente-resumen';
+import { AlertaService } from '../../core/services/alerta.service';
+import { ExpedienteResumenService } from '../../core/services/expediente-resumen.service';
+import { AccionesExpedienteService } from '../../core/services/acciones-expediente.service';
+import { colorPlazo, diasRestantes, formatearFecha, porVencer, porcentajePlazo } from '../../core/utils/etapas';
+
+type Pestana = 'vencidos' | 'por-vencer' | 'espera';
+
+/** Plazos y oficios: "¿Quién no me ha contestado?" */
 @Component({
   selector: 'app-alertas',
-  imports: [MatCardModule, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule, MatDialogModule, MatSnackBarModule],
+  imports: [MatDialogModule, MatSnackBarModule],
   templateUrl: './alertas.html',
   styleUrl: './alertas.css'
 })
 export class Alertas implements OnInit {
-  displayedColumns = ['folio', 'unidadAcademica', 'fechaLimite', 'diasRetraso', 'accion'];
+  readonly formatearFecha = formatearFecha;
+  readonly diasRestantes = diasRestantes;
+  readonly porcentajePlazo = porcentajePlazo;
+  readonly colorPlazo = colorPlazo;
+
+  pestana: Pestana = 'vencidos';
+  cargando = true;
+
   vencidos: AlertaVencimiento[] = [];
+  enEspera: ExpedienteResumen[] = [];
+  private porFolio = new Map<string, ExpedienteResumen>();
 
   constructor(
     private alertaService: AlertaService,
-    private dialog: MatDialog,
+    private expedienteResumenService: ExpedienteResumenService,
+    private acciones: AccionesExpedienteService,
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef
   ) {}
@@ -32,30 +45,49 @@ export class Alertas implements OnInit {
   }
 
   cargar(): void {
-    this.alertaService.obtenerVencidos().subscribe({
-      next: (items) => {
-        this.vencidos = items;
+    forkJoin({
+      vencidos: this.alertaService.obtenerVencidos(),
+      expedientes: this.expedienteResumenService.listarTodos()
+    }).subscribe({
+      next: ({ vencidos, expedientes }) => {
+        this.vencidos = [...vencidos].sort((a, b) => b.diasRetraso - a.diasRetraso);
+        this.porFolio = new Map(expedientes.map(e => [e.folio, e]));
+        this.enEspera = expedientes
+          .filter(e => e.estatusOficioVigente === 'EN_ESPERA')
+          .sort((a, b) => (diasRestantes(a) ?? 0) - (diasRestantes(b) ?? 0));
+        if (!this.vencidos.length && this.porVencer.length) this.pestana = 'por-vencer';
+        this.cargando = false;
         this.cdr.detectChanges();
       },
       error: () => {
+        this.cargando = false;
         this.cdr.detectChanges();
-        this.snackBar.open('No fue posible cargar el panel de alertas.', 'Cerrar', { duration: 3000 });
+        this.snackBar.open('No fue posible cargar los plazos.', 'Cerrar', { duration: 3000 });
       }
     });
   }
 
-  atender(alerta: AlertaVencimiento): void {
-    const data: RecordatorioDialogData = {
-      oficioId: alerta.oficioId,
-      numeroOficio: alerta.numeroOficio,
-      fase: alerta.fase
-    };
+  get porVencer(): ExpedienteResumen[] {
+    return this.enEspera.filter(porVencer);
+  }
 
-    this.dialog.open(RecordatorioDialog, { width: '520px', data }).afterClosed().subscribe(resultado => {
-      if (resultado) {
-        this.snackBar.open('Recordatorio registrado correctamente.', 'Cerrar', { duration: 3000 });
-        this.cargar();
-      }
-    });
+  get listaEspera(): ExpedienteResumen[] {
+    return this.pestana === 'por-vencer' ? this.porVencer : this.enEspera;
+  }
+
+  expedienteDe(a: AlertaVencimiento): ExpedienteResumen | undefined {
+    return this.porFolio.get(a.folio);
+  }
+
+  recordatorio(e: ExpedienteResumen | undefined): void {
+    if (e) this.acciones.ejecutar(e, 'recordatorio').subscribe(c => { if (c) this.cargar(); });
+  }
+
+  respuesta(e: ExpedienteResumen | undefined): void {
+    if (e) this.acciones.ejecutar(e, 'respuesta').subscribe(c => { if (c) this.cargar(); });
+  }
+
+  abrir(e: ExpedienteResumen | undefined): void {
+    if (e) this.acciones.abrir(e);
   }
 }

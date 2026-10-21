@@ -1,82 +1,64 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ActivatedRoute } from '@angular/router';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { ExpedienteResumenService } from '../../core/services/expediente-resumen.service';
+
 import { ExpedienteResumen } from '../../core/models/expediente-resumen';
-import { ETIQUETAS_ESTATUS } from '../../core/models/estatus-expediente';
-import { RedactarOficioDialog, RedactarOficioDialogData } from '../../shared/redactar-oficio-dialog/redactar-oficio-dialog';
-import { RecordatorioDialog, RecordatorioDialogData } from '../../shared/recordatorio-dialog/recordatorio-dialog';
-import { RespuestaExternaDialog, RespuestaExternaDialogData } from '../../shared/respuesta-externa-dialog/respuesta-externa-dialog';
+import { etiquetaEstatus } from '../../core/models/estatus-expediente';
+import { ExpedienteResumenService } from '../../core/services/expediente-resumen.service';
+import { AccionesExpedienteService } from '../../core/services/acciones-expediente.service';
+import {
+  GRUPOS, GrupoExpediente, ORDEN_NIVEL, SiguientePaso, claseEtapa, colorPlazo, enGrupo,
+  formatearFecha, oficioVencido, porVencer, porcentajePlazo, siguientePaso
+} from '../../core/utils/etapas';
 
+type FiltroPlazo = '' | 'vencidos' | 'por-vencer' | 'sin-oficio';
+type Orden = 'urgencia' | 'recientes' | 'antiguos';
 
-interface Faceta {
-  valor: string;
-  etiqueta: string;
-  total: number;
-}
+const POR_PAGINA = 10;
 
+/** Mis expedientes: "¿Dónde va cada caso?" */
 @Component({
   selector: 'app-bandeja',
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatCardModule,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCheckboxModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatExpansionModule,
-    MatTooltipModule,
-    MatDialogModule,
-    MatSnackBarModule
-  ],
+  imports: [FormsModule, MatDialogModule, MatSnackBarModule],
   templateUrl: './bandeja.html',
   styleUrl: './bandeja.css'
 })
 export class Bandeja implements OnInit {
-  displayedColumns = ['folio', 'fechaAdmision', 'quejosoNombre', 'asunto', 'unidadAcademica', 'estatus', 'progreso', 'acciones'];
+  readonly grupos = GRUPOS;
+  readonly claseEtapa = claseEtapa;
+  readonly colorPlazo = colorPlazo;
+  readonly porcentajePlazo = porcentajePlazo;
+  readonly formatearFecha = formatearFecha;
 
   todos: ExpedienteResumen[] = [];
   filtrados: ExpedienteResumen[] = [];
+  pasos = new Map<number, SiguientePaso>();
+  conteo: Record<GrupoExpediente, number> = { tramite: 0, atender: 0, ua: 0, conciliacion: 0, concluidos: 0 };
+  unidades: string[] = [];
 
+  grupo: GrupoExpediente = 'tramite';
   busqueda = '';
-  orden: 'recientes' | 'antiguos' = 'recientes';
-
-  facetasEstatus: Faceta[] = [];
-  facetasAsunto: Faceta[] = [];
-  facetasUnidad: Faceta[] = [];
-
-  estatusSeleccionados = new Set<string>();
-  asuntosSeleccionados = new Set<string>();
-  unidadesSeleccionadas = new Set<string>();
-
-  readonly etiquetasEstatus: Record<string, string> = ETIQUETAS_ESTATUS;
+  unidad = '';
+  plazo: FiltroPlazo = '';
+  orden: Orden = 'urgencia';
+  pagina = 0;
+  cargando = true;
 
   constructor(
     private expedienteResumenService: ExpedienteResumenService,
-    private dialog: MatDialog,
+    private acciones: AccionesExpedienteService,
+    private route: ActivatedRoute,
     private snackBar: MatSnackBar,
-    private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    const q = this.route.snapshot.queryParamMap;
+    const grupo = q.get('grupo') as GrupoExpediente | null;
+    if (grupo && GRUPOS.some(g => g.id === grupo)) this.grupo = grupo;
+    this.plazo = (q.get('plazo') as FiltroPlazo) ?? '';
     this.cargar();
   }
 
@@ -84,135 +66,98 @@ export class Bandeja implements OnInit {
     this.expedienteResumenService.listarTodos().subscribe({
       next: (items) => {
         this.todos = items;
-        this.construirFacetas();
+        this.pasos = new Map(items.map(e => [e.expedienteId, siguientePaso(e)]));
+        for (const g of GRUPOS) this.conteo[g.id] = items.filter(e => enGrupo(e, g.id)).length;
+        this.unidades = [...new Set(items.map(e => e.unidadAcademica).filter(Boolean))].sort();
+        this.cargando = false;
         this.aplicarFiltros();
         this.cdr.detectChanges();
       },
       error: () => {
+        this.cargando = false;
         this.cdr.detectChanges();
-        this.snackBar.open('No fue posible cargar la bandeja de expedientes.', 'Cerrar', { duration: 3000 });
+        this.snackBar.open('No fue posible cargar tus expedientes.', 'Cerrar', { duration: 3000 });
       }
     });
   }
 
-  private construirFacetas(): void {
-    this.facetasEstatus = Object.keys(ETIQUETAS_ESTATUS).map(valor => ({
-      valor,
-      etiqueta: this.etiquetasEstatus[valor],
-      total: this.todos.filter(e => e.estatus === valor).length
-    }));
-
-    const asuntos = [...new Set(this.todos.map(e => e.asunto).filter(Boolean))].sort();
-    this.facetasAsunto = asuntos.map(valor => ({
-      valor,
-      etiqueta: valor,
-      total: this.todos.filter(e => e.asunto === valor).length
-    }));
-
-    const unidades = [...new Set(this.todos.map(e => e.unidadAcademica).filter(Boolean))].sort();
-    this.facetasUnidad = unidades.map(valor => ({
-      valor,
-      etiqueta: valor,
-      total: this.todos.filter(e => e.unidadAcademica === valor).length
-    }));
-  }
-
-  toggleFacet(set: Set<string>, valor: string): void {
-    if (set.has(valor)) {
-      set.delete(valor);
-    } else {
-      set.add(valor);
-    }
+  elegirGrupo(grupo: GrupoExpediente): void {
+    this.grupo = grupo;
     this.aplicarFiltros();
   }
 
   aplicarFiltros(): void {
     const texto = this.busqueda.trim().toLowerCase();
 
-    let resultado = this.todos.filter(e => {
-      const pasaEstatus = this.estatusSeleccionados.size === 0 || this.estatusSeleccionados.has(e.estatus);
-      const pasaAsunto = this.asuntosSeleccionados.size === 0 || this.asuntosSeleccionados.has(e.asunto);
-      const pasaUnidad = this.unidadesSeleccionadas.size === 0 || this.unidadesSeleccionadas.has(e.unidadAcademica);
-      const pasaTexto = !texto
-        || e.folio.toLowerCase().includes(texto)
-        || (e.quejosoNombre ?? '').toLowerCase().includes(texto)
-        || (e.asunto ?? '').toLowerCase().includes(texto);
-
-      return pasaEstatus && pasaAsunto && pasaUnidad && pasaTexto;
-    });
-
-    resultado = resultado.sort((a, b) => {
-      const fechaA = new Date(a.fechaAdmision).getTime();
-      const fechaB = new Date(b.fechaAdmision).getTime();
-      return this.orden === 'recientes' ? fechaB - fechaA : fechaA - fechaB;
-    });
-
-    this.filtrados = resultado;
-  }
-
-  etiquetaEstatus(estatus: string): string {
-    return this.etiquetasEstatus[estatus] ?? estatus;
-  }
-
-  /** El backend indica qué oficio toca (siguienteFase) solo cuando hay que emitir uno. */
-  etiquetaAccionPrincipal(e: ExpedienteResumen): string | null {
-    return e.siguienteFase ? 'Solicitar Oficio' : null;
-  }
-
-  accionPrincipal(e: ExpedienteResumen): void {
-    if (!e.siguienteFase) return;
-    const siguienteFase = e.siguienteFase;
-
-    const data: RedactarOficioDialogData = {
-      expedienteId: e.expedienteId,
-      folio: e.folio,
-      siguienteFase,
-      unidadAcademica: e.unidadAcademica
-    };
-
-    this.dialog.open(RedactarOficioDialog, { width: '560px', data }).afterClosed().subscribe(resultado => {
-      if (resultado) {
-        this.snackBar.open('Oficio generado correctamente.', 'Cerrar', { duration: 3000 });
-        this.cargar();
+    this.filtrados = this.todos.filter(e => {
+      if (!enGrupo(e, this.grupo)) return false;
+      if (this.unidad && e.unidadAcademica !== this.unidad) return false;
+      if (this.plazo === 'vencidos' && !oficioVencido(e)) return false;
+      if (this.plazo === 'por-vencer' && !porVencer(e)) return false;
+      if (this.plazo === 'sin-oficio' && e.numeroOficioVigente) return false;
+      return !texto || [e.folio, e.quejosoNombre, e.asunto, e.unidadAcademica, e.numeroOficioVigente]
+        .some(v => (v ?? '').toLowerCase().includes(texto));
+    }).sort((a, b) => {
+      if (this.orden === 'urgencia') {
+        const diferencia = ORDEN_NIVEL[this.paso(a).nivel] - ORDEN_NIVEL[this.paso(b).nivel];
+        if (diferencia) return diferencia;
       }
+      const fa = a.fechaAdmision ?? '';
+      const fb = b.fechaAdmision ?? '';
+      return this.orden === 'recientes' ? fb.localeCompare(fa) : fa.localeCompare(fb);
+    });
+
+    this.pagina = 0;
+  }
+
+  paso(e: ExpedienteResumen): SiguientePaso {
+    return this.pasos.get(e.expedienteId) ?? siguientePaso(e);
+  }
+
+  etiquetaEtapa(e: ExpedienteResumen): string {
+    return oficioVencido(e) ? 'Oficio vencido' : etiquetaEstatus(e.estatus);
+  }
+
+  get visibles(): ExpedienteResumen[] {
+    return this.filtrados.slice(this.pagina * POR_PAGINA, (this.pagina + 1) * POR_PAGINA);
+  }
+
+  get paginas(): number[] {
+    return Array.from({ length: Math.ceil(this.filtrados.length / POR_PAGINA) }, (_, i) => i);
+  }
+
+  get rango(): string {
+    if (!this.filtrados.length) return 'Sin resultados';
+    const desde = this.pagina * POR_PAGINA + 1;
+    return `Mostrando ${desde}–${Math.min(desde + POR_PAGINA - 1, this.filtrados.length)} de ${this.filtrados.length}`;
+  }
+
+  hacer(e: ExpedienteResumen, evento: Event): void {
+    evento.stopPropagation();
+    this.acciones.ejecutar(e, this.paso(e).accion).subscribe(cambio => {
+      if (cambio) this.cargar();
     });
   }
 
-  abrirRecordatorio(e: ExpedienteResumen): void {
-    if (!e.oficioIdVigente || !e.numeroOficioVigente || !e.faseOficioVigente) return;
-
-    const data: RecordatorioDialogData = {
-      oficioId: e.oficioIdVigente,
-      numeroOficio: e.numeroOficioVigente,
-      fase: e.faseOficioVigente
-    };
-
-    this.dialog.open(RecordatorioDialog, { width: '520px', data }).afterClosed().subscribe(resultado => {
-      if (resultado) {
-        this.snackBar.open('Recordatorio registrado correctamente.', 'Cerrar', { duration: 3000 });
-        this.cargar();
-      }
-    });
+  abrir(e: ExpedienteResumen): void {
+    this.acciones.abrir(e);
   }
 
-  abrirRespuestaExterna(e: ExpedienteResumen): void {
-    if (!e.oficioIdVigente || !e.numeroOficioVigente) return;
+  exportarCsv(): void {
+    const columnas = ['Folio', 'Quejoso', 'Asunto', 'Unidad', 'Admisión', 'Etapa', 'Oficio vigente', 'Días transcurridos', 'Días de plazo', 'Siguiente paso'];
+    const filas = this.filtrados.map(e => [
+      e.folio, e.quejosoNombre, e.asunto, e.unidadAcademica, e.fechaAdmision, this.etiquetaEtapa(e),
+      e.numeroOficioVigente ?? '', e.diasTranscurridos ?? '', e.diasLimite ?? '', this.paso(e).descripcion
+    ]);
+    const csv = [columnas, ...filas]
+      .map(f => f.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\r\n');
 
-    const data: RespuestaExternaDialogData = {
-      oficioId: e.oficioIdVigente,
-      numeroOficio: e.numeroOficioVigente,
-      destinatarioNombre: e.destinatarioNombreVigente ?? e.unidadAcademica
-    };
-
-    this.dialog.open(RespuestaExternaDialog, { width: '560px', data }).afterClosed().subscribe(resultado => {
-      if (resultado) {
-        this.snackBar.open('Respuesta registrada correctamente.', 'Cerrar', { duration: 3000 });
-        this.cargar();
-      }
-    });
-  }
-
-  verDetalle(e: ExpedienteResumen): void {
-    this.router.navigate(['/expediente', e.folio]);
+    const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `expedientes-subdefensoria-${new Date().toISOString().slice(0, 10)}.csv`;
+    enlace.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
   }
 }

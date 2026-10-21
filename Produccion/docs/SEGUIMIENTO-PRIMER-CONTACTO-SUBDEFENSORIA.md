@@ -1,8 +1,9 @@
-# Contexto: Validación y corrección del módulo Primer Contacto
+# Seguimiento de cambios: Primer Contacto y Subdefensoría
 
-> Resumen de una conversación previa, escrito para darle contexto a un chat nuevo.
-> Repo: `Plataforma-Quejas-Defensoria-Politecnica`, rama de trabajo `Pre-Produccion2`.
-> Fecha del resumen: 2026-09-27 (actualizado 2026-10-08: ver sección 13, lo más reciente).
+> Bitácora de decisiones, cambios y despliegues de los módulos Primer Contacto y
+> Subdefensoría. Repo: `Plataforma-Quejas-Defensoria-Politecnica`, rama de trabajo
+> `Pre-Produccion2`. Iniciado el 2026-09-27; lo más reciente está al final (sección 17).
+> Los cambios de los demás módulos los documenta el compañero en `VERSION-FINAL-TT.md`.
 
 ## 1. Objetivo original
 
@@ -1007,3 +1008,123 @@ de `datasource:` (estaba dentro de `application:`), igual que en el servidor.
 5. Avisar al compañero de los cambios en revision-service, admin-service, el portal **y
    notificaciones-service** (adjuntos opcionales en `/enviar`).
 6. Confirmar la observación 1 (búsqueda manual) con los logs del servidor.
+
+## 16. 2026-10-21: cambios del compañero (16 al 19 de octubre) traídos a la rama
+
+`Pre-Produccion2` se actualizó por fast-forward a `a12c67c` (= `origin/Produccion` =
+`origin/Pre-Produccion`; `main` tiene el mismo contenido). Detalle completo en
+`VERSION-FINAL-TT.md`, secciones 15 a 21. Resumen:
+
+- **Revisión (recepción)**: una queja = una recepcionista (bloqueo al abrir, "Soltar",
+  renovación cada 4 min), bandeja paginada con indicadores, historial nuevo, registro en
+  ventanilla con el formulario del portal, requisitos con redacción jurídica, y en el turnado
+  la **carga de trabajo de los abogados** con sugerencia del de menor carga
+  (`GET /api/revision/quejas/{folio}/abogados`).
+- **Admin (Panel de la Defensora)**: panel general, explorador de quejas, quejas por unidad,
+  carga de trabajo, personal con detalle; `PanelDefensoraService` y `SeguimientoQuejasService`.
+  Componentes reutilizables en `Frontend-Admin/src/app/shared/panel/`.
+- **Portal**: carga diferida, redacción sin límite de caracteres; carga masiva
+  (`Backend/carga-masiva/`); nginx con gzip y caché (la propuesta de la sección 15.10 ya la
+  incorporó el compañero en `nginx/config/defensoria.conf`).
+- **Primer Contacto rediseñado** (según `Primer_contacto_y_Defensora.pdf`, que no está en el
+  repo): expediente con 4 pestañas (Análisis IA, Expediente, Gestión, Resolución), agenda
+  con calendario/lista y ventana "Programar Nueva Cita" (`shared/nueva-cita`), estilos
+  globales `pc-card`, `pc-btn`, `pc-campo` en `styles.css`. Backend: `categoria_cita`,
+  `GET /citas/rango`, `GET /abogados`. El dictamen Competente elige el **Responsable en
+  Subdefensoría** y viaja a SD como `abogadoAsesorNombre` (sin id).
+- **Subdefensoría**: no se tocó.
+
+### 16.1 Asignación por abogado (observación 3 de la sección 13.2): sigue sin hacerse
+- **Primer Contacto**: `BandejaAnalisisService` hace `findAll()`; todo analista ve todos los
+  expedientes. El abogado que elige Recepción (`quejas.defensor_asignado`, solo nombre) no
+  llega a PC.
+- **Subdefensoría**: `GET /api/subdefensoria/expedientes` lista todos. Ya recibe
+  `abogadoAsesorNombre` desde el dictamen, pero no filtra por él (y sin id, habría que
+  comparar por nombre o resolverlo contra `personal_administrativo`).
+
+### 16.2 Rediseño de Subdefensoría (pendiente, se revisa el 2026-10-22)
+- `Primer_contacto_y_Defensora.pdf` (el diseño que usó el compañero) **no está en ninguna
+  rama ni en el historial de git**; hay que pedírselo.
+- Los mockups viejos de junio (`Documentacion/Anexos 6.0.0/Mockups.tex` y
+  `Anexo-Mockups.pdf`, borrados en `fbd381f`; se recuperan con
+  `git show f0faf7c:"Documentacion/Anexos 6.0.0/Anexo-Mockups.pdf"`) llegan hasta Primer
+  Contacto (MA-08 a MA-12). **No hay mockups de Subdefensoría**: su `mockups.tex` está vacío.
+- Referencia a seguir: el rediseño de Primer Contacto (`Frontend-PrimerContacto/src/styles.css`,
+  expediente con pestañas, agenda, `shared/nueva-cita`) y `Frontend-Admin/src/app/shared/panel/`.
+- **Hecho el mismo día:** ver sección 17.
+
+## 17. 2026-10-21 (tarde): oficios de Primer Contacto + rediseño de Subdefensoría — DESPLEGADO
+
+> Lo más reciente. Todo está en vivo y lo revisó el usuario ("los veo bien de momento"); quedan
+> detalles de Subdefensoría por pulir (17.5). Propuesta visual que se usó como guía:
+> https://claude.ai/artifact/Mku6GYZK9s8ZEoVnuynqyZ (maquetas de los 4 menús).
+
+### 17.1 Las notas de análisis ahora son OFICIOS (Primer Contacto)
+Decisión del usuario: las notas se usaban como oficios dentro de la queja; se formalizan sin
+crear otra tabla. El analista escribe **asunto + texto**; el autor puede editar/borrar (como antes).
+- **Backend:** `NotaAnalisis.asunto` (columna nueva `asunto`, la creó Hibernate al arrancar;
+  notas viejas quedan con null → se muestran como "Nota de análisis"). `CrearNotaAnalisisDTO.asunto`
+  obligatorio (máx. 200). `NotaAnalisisDTO.numeroOficio` = `DDP/PC/OF/{año}/{id}`, **calculado, no
+  se guarda**. `NotaAnalisisService.convertirADTO` es estático y lo reusa `ExpedienteAnalisisService`.
+- **PDF:** `service/OficioAnalisisPdfService` (OpenPDF, mismo estilo que el de remisión): membrete,
+  número, folio de la queja, expediente PC, asunto, lugar/fecha/hora, recuadro con quejoso, unidad,
+  asunto de la queja y prioridad, el texto (respeta párrafos), firma del analista y "Elaborado
+  por … el … a las … / Última modificación". Se arma al vuelo con lo guardado:
+  `GET /api/primer-contacto/notas/{id}/pdf` (inline).
+- **Front:** tarjeta "Oficios" en Gestión, botón "+ Nuevo oficio" → recuadro (asunto + contenido)
+  → "Guardar y ver PDF". Lista con número, asunto, 3 líneas del texto, autor y "Ver PDF". En el
+  historial del expediente y en dictamen dice "Oficio". Por dentro sigue llamándose "nota"
+  (endpoints `/notas`).
+
+### 17.2 Subdefensoría ve lo de Primer Contacto (solo lectura)
+- PC `controller/ConsultaSubdefensoriaController`: `GET /api/primer-contacto/consulta/expedientes/{folioPC}`
+  → `{expediente (datos, quejoso, datosQueja con denunciado, evidencias, notas/oficios), dictamen
+  (null si no hay), citas}`. No llama a iniciar-analisis.
+- `SecurityConfig` de PC: `/consulta/**` y los GET `/notas/*/pdf` y `/evidencias/*` abiertos a
+  `ANALISTA_PRIMER_CONTACTO`, `SUBDEFENSOR` y `DEFENSOR` (el filtro JWT ya pone `ROLE_` al rol).
+- Front SD: `core/services/primer-contacto.service.ts` (`environment.primerContactoUrl`), y el
+  interceptor ahora también firma `/api/primer-contacto`. nginx ya tenía la ruta: no se tocó.
+
+### 17.3 Rediseño de Subdefensoría (solo front, sin cambios de backend en SD)
+Lógica común en `core/utils/etapas.ts` (grupos, siguiente paso, nivel de urgencia, plazo) y
+`core/services/acciones-expediente.service.ts` (abre el diálogo que toca: oficio, recordatorio,
+respuesta, o lleva al expediente). Estilos `sd-*` globales en `src/styles.css`.
+- **Inicio** (`features/dashboard`): saludo, 5 indicadores que abren Mis expedientes filtrado,
+  "Pendientes de hoy" (ordenados crit → warn → info, con botón), "Vencen pronto", barra por etapa.
+- **Mis expedientes** (`features/bandeja`, ruta `/bandeja?grupo=&plazo=`): pestañas En trámite /
+  Por atender / Esperando a la unidad / Pendiente de acuerdo de conciliación / Concluidos;
+  búsqueda, unidad, plazo, orden; barra de plazo (verde, ámbar ≥ 70 %, rojo vencido); botón de
+  siguiente paso; paginación de 10; exportar CSV.
+- **Expediente** (`features/expediente-detalle`, `?tab=`): encabezado, barra de 7 pasos, recuadro
+  "Siguiente paso", pestañas Resumen (hechos, observaciones de PC, evidencias, quejoso, denunciado)
+  / Primer Contacto (oficios con PDF, citas, dictamen) / Investigación (oficios SD, recordatorios,
+  respuesta y archivo) / Acuerdos / Historial (línea de tiempo PC + SD armada en el navegador).
+- **Plazos y oficios** (`features/alertas`, ruta `/alertas`): Vencidos / Por vencer (≤ 3 días) /
+  En espera.
+- Etiqueta: `PENDIENTE_CONCILIACION` = **"Pendiente de acuerdo de conciliación"** (antes "Con el
+  quejoso" en la propuesta; pedido del usuario). Menú: "Mis expedientes", "Plazos y oficios".
+- Los días del plazo son los que manda `GET /expedientes` (`diasTranscurridos`/`diasLimite`).
+
+### 17.4 Despliegue (2026-10-21 ~16:15)
+Antes se revisó: sin commits nuevos en remoto (`Produccion` = `a12c67c`) y las fechas del servidor
+(front PC 19-oct 08:00 UTC, anterior al commit `a12c67c` que ya va incluido; front SD 14-oct).
+Respaldos en `/apps/utiles/respaldos/2026-10-21/` de cada servidor (`primer-contacto-service.jar`
+viejo en back; `pc-dist-antes.tgz` y `sd-dist-antes.tgz` en front). Subido: jar de PC
+(57 739 258 bytes) + fronts de PC y SD (archivos temporales en `/tmp` y
+`C:\Users\leish\despliegue-1021`). Verificado: `Started PrimercontactoApplication`, sin errores; el
+dominio sirve `main-OKSPFXQO.js` (SD) y `main-MTQMI43Z.js` (PC), iguales a los compilados;
+`/consulta` y `/notas/*/pdf` responden 403 sin token.
+
+### 17.5 Pendiente (siguiente chat)
+1. **Detalles de Subdefensoría** que el usuario vio en la revisión (pidió verlos después).
+2. **Asignación por analista/abogado** (observación 3): esperando al equipo. Hoy Recepción elige
+   un **abogado** (SUBDEFENSOR/DEFENSOR, solo nombre en `quejas.defensor_asignado`) que no viaja a
+   PC; los analistas de PC no aparecen en ese combo. Opciones planteadas: (1) Recepción elige
+   analista de PC y el abogado se elige en el dictamen; (2) el abogado lleva todo el proceso. En
+   ambos casos en PC hay que guardar el asignado y filtrar bandeja/dashboard/agenda por el JWT.
+   "Mis expedientes" de SD muestra todos hasta entonces.
+3. Del diseño propuesto quedó fuera (necesita backend): pestaña "Respondidos" y "Unidades que más
+   tardan" en Plazos; "último movimiento" con fecha en los pendientes; versión del denunciado en la
+   pestaña Primer Contacto de SD (vive en denunciado-service).
+4. Limpieza: `C:\Users\leish\despliegue-1021` y `/tmp/primer-contacto-service.jar`,
+   `/tmp/pc-front.tgz`, `/tmp/sd-front.tgz` en los servidores. Siguen los de la sección 15.10.

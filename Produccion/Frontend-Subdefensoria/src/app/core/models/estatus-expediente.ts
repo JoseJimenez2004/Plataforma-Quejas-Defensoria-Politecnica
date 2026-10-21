@@ -34,7 +34,7 @@ export const ETIQUETAS_ESTATUS: Record<EstatusExpediente, string> = {
   EN_INVESTIGACION: 'En investigación',
   EN_ESPERA_OFICIO: 'En espera de oficio',
   ELABORO_ACUERDO: 'Elaboró acuerdo',
-  PENDIENTE_CONCILIACION: 'Pendiente de conciliación',
+  PENDIENTE_CONCILIACION: 'Pendiente de acuerdo de conciliación',
   PENDIENTE_CONCLUSION: 'Pendiente de conclusión',
   CONCLUIDO: 'Concluido'
 };
