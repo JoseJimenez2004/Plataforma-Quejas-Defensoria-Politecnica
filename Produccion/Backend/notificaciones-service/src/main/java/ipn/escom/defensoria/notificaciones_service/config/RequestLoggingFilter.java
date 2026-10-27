@@ -31,10 +31,22 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             long duracionMs = System.currentTimeMillis() - inicio;
             log.info("{} {} -> {} ({} ms) [{}]",
                     request.getMethod(),
-                    request.getRequestURI() + (request.getQueryString() != null ? "?" + request.getQueryString() : ""),
+                    request.getRequestURI() + nombresDeParametros(request),
                     response.getStatus(),
                     duracionMs,
                     request.getRemoteAddr());
         }
+    }
+
+    /**
+     * Antes se imprimía getQueryString() completo (Kiuwan: "Avoid getQueryString()"). Ahora solo
+     * se registran los NOMBRES de los parámetros, así no quedan en el log valores sensibles
+     * (correos, tokens, folios).
+     */
+    private static String nombresDeParametros(HttpServletRequest request) {
+        if (request.getParameterMap().isEmpty()) {
+            return "";
+        }
+        return "?" + String.join("&", request.getParameterMap().keySet());
     }
 }

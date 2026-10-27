@@ -970,3 +970,38 @@ Todas las pantallas se cargan bajo demanda (`loadComponent`). La carga inicial b
 |---|---|---|
 | `Backend/primercontacto` → `mvn clean package -DskipTests` → `target/primer-contacto-service.jar` | backend `artifact/` | `bash podman-compose.sh up-container primer-contacto-service` |
 | `Frontend-PrimerContacto` → `npx ng build --configuration production` → `dist/frontend-primer-contacto/browser/*` | frontend `/apps/aplicaciones/defensoria/front-primer-contacto/dist/browser/` (vaciarla antes) | `bash podman-compose-front-primer-contacto.sh up` |
+
+---
+
+## 22. Pruebas unitarias de los 10 microservicios Java — 2026-10-27
+
+Se agregaron pruebas unitarias **JUnit 5 + Mockito** (sin `@SpringBootTest`, sin BD ni red), con particiones de equivalencia, valores de borde, patrón AAA y mensajes en cada aserción. **364 pruebas, todas en verde.**
+
+| Servicio | Pruebas | Lo más importante que cubren |
+|---|---:|---|
+| queja-service | 112 | Validadores del formulario público (correo en dos niveles, fechas, nombres, boleta, archivos por firma binaria), edición/corrección/cancelación, conciliación |
+| primercontacto | 55 | Citas (empalmes, plazo de 48 h, token, rango de 400 días), dictamen (Subdefensoría caída no pierde el dictamen), sincronización de estatus, motor de antecedentes |
+| admin-service | 36 | Cuentas del personal (nunca quedarse sin administrador), bitácora con IP real, plantillas, respaldos (carpeta temporal), tablero |
+| auth-service | 36 | Login, recuperación con código (5 intentos, 10 min), reglas de contraseña, activación, JWT |
+| revision-service | 36 | Toma atómica entre recepcionistas, rechazo, turnado idempotente, ventanilla, historial, RNF-R04 |
+| denunciado-service | 29 | Todas las reglas del registro de la versión del denunciado |
+| subdefensoria | 24 | Días hábiles (10/5), semáforo y alertas de vencimiento, archivo de respuesta |
+| notificaciones-service | 20 | Centro de notificaciones e inyección de cabeceras en el correo (CWE-93) |
+| catalogo-service | 8 | Alta/edición e importación de Excel tolerante a errores |
+| chatbot-service | 8 | Menú agrupado y CRUD |
+
+- **pom.xml de los 10:** `spring-boot-starter-test` (faltaba en 5), Surefire excluye el grupo `integracion`, y perfil `cobertura` con **JaCoCo 0.8.12** activo por defecto (`target/site/jacoco/index.html`; se apaga con `-DsinCobertura`).
+- **`PrimercontactoApplicationTests.contextLoads`** ahora es `@Tag("integracion")`: ya no rompe `mvn test` (necesita BD). Se corre con `mvn test -Dgrupos.excluidos=none`.
+- **Swagger** en primercontacto y subdefensoria (no lo tenían): `OpenApiConfig` + springdoc **2.6.0** (la línea compatible con Spring Boot 3.3) y rutas `/swagger-ui.html` y `/v3/api-docs`. Los otros 8 ya lo tenían.
+- **README.md** en cada microservicio con la estrategia, la tabla de qué se prueba, lo que queda para integración y los comandos.
+- **Verificación:** se corrieron sin red con las librerías de tu `.m2`. Dos salvedades: en notificaciones-service tu `.m2` no tiene `owasp encoder 1.3.1` (lo baja Maven al compilar), y springdoc 2.6.0 de primercontacto/subdefensoria no se pudo descargar: se comprobó que `OpenApiConfig` compila y que las pruebas pasan, pero el Swagger de esos dos se ve hasta que lo compiles con internet.
+- **Hallazgo (bajo):** `RespaldoService.restaurar()` y `obtenerArchivo()` no impiden `../` en el nombre del archivo; solo afecta a cuentas con rol de administración. Conviene validar que la ruta final quede dentro de `respaldos.directorio`.
+- Respaldo de lo anterior: `_backups/claude/respaldo-antes-pruebas-unitarias-2026-10-27.tgz`.
+
+### 22.1 Cómo correrlas
+```bash
+cd Backend/<servicio>
+mvn clean test                     # unitarias + reporte JaCoCo
+mvn clean package -DskipTests      # empaquetar igual que antes
+```
+No cambia nada del despliegue: los jars se generan igual.

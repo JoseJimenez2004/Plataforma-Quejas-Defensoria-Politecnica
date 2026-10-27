@@ -1,0 +1,115 @@
+% Código fuente del proyecto
+\subsection{Código fuente del proyecto}\label{sec:4_1_codigo_fuente}
+El código fuente de la plataforma se encuentra en GitHub, en la rama \texttt{Produccion} del repositorio:
+\begin{center}
+\url{https://github.com/JoseJimenez2004/Plataforma-Quejas-Defensoria-Politecnica}
+\end{center}
+Todo lo que se instala está dentro de la carpeta \texttt{Produccion} de esa rama.
+
+\paragraph{Descarga del repositorio.} En el equipo de desarrollo se clona únicamente la rama de producción y se entra a la carpeta:
+\begin{lstlisting}
+$ git clone --branch Produccion https://github.com/JoseJimenez2004/Plataforma-Quejas-Defensoria-Politecnica.git
+$ cd Plataforma-Quejas-Defensoria-Politecnica/Produccion
+$ git log -1 --format='%H %cd %s'
+\end{lstlisting}
+El último comando muestra el \emph{hash} del commit descargado. Ese identificador se anota en la bitácora de la instalación, porque indica con exactitud qué versión del código se puso en producción. Si el repositorio ya estaba clonado, en lugar de clonar se actualiza con \texttt{git pull origin Produccion}.
+\captura{comp-01-git-clone}{Clonado de la rama Produccion y hash del commit descargado}
+
+\subsubsection{Estructura de la carpeta Produccion}
+\begin{table}[H]
+\centering
+\caption{Contenido de la carpeta Produccion}
+\small
+\begin{tabular}{p{4.8cm}p{9.6cm}}
+\toprule
+\textbf{Carpeta o archivo} & \textbf{Contenido} \\
+\midrule
+\nolinkurl{Backend/auth-service}, \nolinkurl{queja-service}, \nolinkurl{notificaciones-service}, \nolinkurl{catalogo-service}, \nolinkurl{admin-service}, \nolinkurl{revision-service}, \nolinkurl{chatbot-service}, \nolinkurl{denunciado-service}, \nolinkurl{primercontacto}, \nolinkurl{subdefensoria} & Código fuente de los 10 microservicios (proyectos Maven, cada uno con su \texttt{pom.xml} y su carpeta \texttt{src}) \\
+\nolinkurl{Backend/config-files} & Configuración de producción de cada microservicio (sección \ref{sec:4_1_2_config}) \\
+\nolinkurl{Backend/database-scripts} & \texttt{init/00-init.sql} y los scripts semilla \texttt{seeds/01..05-*.sql} \\
+\nolinkurl{Backend/Dockerfile}, \nolinkurl{Backend/admin-service/Dockerfile} & Dockerfile de los microservicios \\
+\nolinkurl{Backend/podman-compose.sh}, \nolinkurl{podman-compose-bd.sh}, \nolinkurl{firewall-backend.sh} & Scripts de despliegue del Backend y de la Base de Datos \\
+\nolinkurl{Backend/carga-masiva} & Scripts de carga masiva de quejas \\
+\nolinkurl{Modelo-Java} & Modelo de IA (\texttt{antecedentes-service}): código, corpus \texttt{Dataset/}, \texttt{pruebas/} y su script \texttt{podman-compose-modelo.sh} \\
+\nolinkurl{Frontend}, \nolinkurl{Frontend-Admin}, \nolinkurl{Frontend-Revision}, \nolinkurl{Frontend-PrimerContacto}, \nolinkurl{Frontend-Subdefensoria} & Los 5 proyectos Angular, cada uno con su \texttt{Dockerfile}, su configuración de nginx y su script \texttt{podman-compose-front*.sh} \\
+\nolinkurl{nginx/config/defensoria.conf} & Configuración de \texttt{router-nginx} \\
+\nolinkurl{docs} & Documentación técnica del proyecto \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El repositorio solo contiene código fuente. Las carpetas de compilación (\texttt{target/} de Maven, \texttt{dist/} y \texttt{node\_modules/} de Angular) están excluidas en \texttt{.gitignore} y se generan en la sección \ref{sec:4_2_compilacion_local}.
+\captura{comp-02-estructura}{Estructura de la carpeta Produccion}
+
+\subsubsection{Revisión de los archivos de configuración de producción (config-files)}\label{sec:4_1_2_config}
+Los JAR de los microservicios no llevan la configuración de producción. Cada servicio tiene un archivo YAML en \texttt{Backend/config-files/<servicio>/config/<servicio>.yml} que se copia al VPS Backend y se monta en el contenedor en \texttt{/app/config}; Spring Boot lo lee al arrancar gracias a las variables \texttt{SPRING\_CONFIG\_ADDITIONAL\_LOCATION} y \texttt{SPRING\_CONFIG\_NAME} que define \texttt{podman-compose.sh}. De esta forma un mismo JAR sirve para cualquier ambiente y solo cambia su archivo de configuración.
+
+\paragraph{Secciones de un config-file.} Todos los archivos comparten la misma estructura base:
+\begin{table}[H]
+\centering
+\caption{Secciones comunes de los config-files}
+\small
+\begin{tabular}{p{5.3cm}p{9.1cm}}
+\toprule
+\textbf{Sección} & \textbf{Para qué sirve} \\
+\midrule
+\texttt{server.port} & Puerto interno del contenedor. Siempre \texttt{8080}; el puerto externo (8082--8094) lo asigna \texttt{podman-compose.sh}. \\
+\texttt{spring.datasource} & Conexión a PostgreSQL: URL \nolinkurl{jdbc:postgresql://169.58.62.99:5432/defensoria_db}, usuario y contraseña. \\
+\texttt{spring.jpa.hibernate}\linebreak\texttt{.ddl-auto} & En \texttt{update}: al arrancar, el servicio crea o actualiza sus tablas. \\
+\texttt{spring.servlet.multipart} & Tamaño máximo de archivos (evidencias y credenciales). \\
+\texttt{spring.mail} & Servidor SMTP (Gmail) para enviar correos; solo en \texttt{auth-service}, \texttt{notificaciones-service} y \texttt{subdefensoria-service}. \\
+\texttt{jwt.secret} & Secreto con el que se firman y validan los tokens de sesión. Debe ser \textbf{idéntico} en todos los servicios. \\
+\texttt{<servicio>.url} & Direcciones de los otros microservicios a los que llama, por ejemplo \texttt{notificaciones.service.url: http://156.67.26.73:8085}. \\
+\texttt{springdoc} & Ruta de la documentación Swagger (\texttt{/swagger-ui.html}). \\
+\texttt{logging} & Formato de los mensajes del log. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Secciones particulares.}
+\begin{itemize}
+  \item \texttt{antecedentes-service}: sección \texttt{ia} con las rutas del corpus (\texttt{/app/data/*.json}), el umbral de similitud, el número de antecedentes y de oraciones del resumen. No usa base de datos.
+  \item \texttt{admin-service}: secciones \texttt{respaldos} (carpeta \texttt{/app/respaldos}) y \texttt{db} (datos de conexión que usa \texttt{pg\_dump} para los respaldos del Panel de la Defensora).
+  \item \texttt{primer-contacto-service}: URLs de Subdefensoría, notificaciones y del modelo de IA; \texttt{cors}; y \texttt{historico.datasource.url}, que se deja vacía porque la base histórica ya no forma parte de la plataforma.
+  \item \texttt{subdefensoria-service}: \texttt{plazos} y \texttt{correo} para los avisos de la Subdefensoría.
+  \item \texttt{historico-service}: su carpeta existe en el repositorio pero no se instala.
+\end{itemize}
+
+\paragraph{Ejemplo: quejas-service.yml.} Con los valores sensibles reemplazados por \texttt{<...>}:
+\begin{lstlisting}
+server:
+  port: 8080                       # puerto interno (afuera: 8084)
+spring:
+  application:
+    name: quejas-service
+  datasource:
+    url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
+    username: postgres
+    password: <CONTRASENA_BD>      # igual a POSTGRES_PASSWORD
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update             # crea/actualiza sus tablas al arrancar
+  servlet:
+    multipart:
+      max-file-size: 30MB          # por archivo
+      max-request-size: 100MB      # por queja completa
+jwt:
+  secret: <SECRETO_JWT>            # el mismo en todos los servicios
+notificaciones:
+  service:
+    url: http://156.67.26.73:8085  # notificaciones-service
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+\end{lstlisting}
+\captura{comp-03-config-file}{Contenido de un config-file de ejemplo (quejas-service.yml, con contraseña y secreto ocultos)}
+
+\paragraph{Validación antes de compilar.} Se comprueba que todos los servicios apunten a la misma base de datos y compartan un único secreto JWT:
+\begin{lstlisting}
+$ grep -rh "jdbc:postgresql" Backend/config-files | sort | uniq -c
+$ grep -rh -A1 "^jwt:" Backend/config-files | grep secret | sort | uniq -c
+\end{lstlisting}
+Todas las URL deben ser \texttt{169.58.62.99:5432/defensoria\_db} y debe aparecer un solo valor de \texttt{secret}.
+
+\nota{Los config-files contienen la contraseña de la base de datos, la contraseña de aplicación de Gmail y el secreto JWT. En el repositorio público deben ir con valores de ejemplo; los valores reales se colocan solo en el VPS Backend, donde la carpeta \texttt{config-files} tiene permisos 750/640 (sección \ref{sec:2_3_directorios_permisos}).}

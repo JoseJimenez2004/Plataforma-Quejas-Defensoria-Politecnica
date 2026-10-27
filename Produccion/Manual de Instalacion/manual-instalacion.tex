@@ -1,0 +1,63 @@
+\documentclass[12pt]{article}
+
+% =========================
+% PREAMBULO (el mismo de la tesis)
+% =========================
+\input{preambulo}
+
+% ---- Ajustes propios del manual ----
+% Marca visible de "texto por redactar" (se ve en el PDF en gris cursiva)
+\newcommand{\pendiente}[1]{\textcolor{gray}{\textit{[Por redactar: #1]}}}
+% Estilo para comandos de consola y archivos de configuracion
+\lstdefinestyle{consola}{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{gray!10},
+  frame=single, rulecolor=\color{lineblue},
+  breaklines=true, columns=fullflexible,
+  showstringspaces=false, keepspaces=true,
+  upquote=true                 % comillas rectas ' y ` (se pueden copiar a la terminal)
+}
+\lstset{style=consola}
+% Espacio para captura de pantalla.
+%   \captura{archivo}{descripcion}
+% Si existe images/capturas/<archivo>.png se inserta la imagen; si no, se dibuja un
+% recuadro gris con el nombre que debe llevar la captura. Basta con guardar el PNG con ese
+% nombre y volver a compilar.
+\newcommand{\captura}[2]{%
+  \begin{figure}[H]
+  \centering
+  \IfFileExists{images/capturas/#1.png}%
+    {\includegraphics[width=0.92\textwidth,keepaspectratio,height=0.42\textheight]{images/capturas/#1.png}}%
+    {\fcolorbox{lineblue}{gray!5}{\parbox[c][4.2cm][c]{0.86\textwidth}{\centering
+      \color{gray}\textbf{ESPACIO PARA CAPTURA}\\[6pt]
+      \texttt{images/capturas/#1.png}\\[6pt]\small #2}}}
+  \caption{#2}\label{fig:#1}
+  \end{figure}}
+% Nota destacada
+\newcommand{\nota}[1]{\par\noindent\fcolorbox{lineblue}{rowblue!25}{\parbox{0.96\textwidth}{\small\textbf{Nota: }#1}}\par\medskip}
+
+\begin{document}
+\sloppy
+
+% =========================
+% PRELIMINARES
+% =========================
+%% Portadas (institucional y con resumen) -- las mismas de la tesis
+\input{sections/00_portadas}
+
+%% Indice general, de figuras y de tablas
+\input{sections/02_indices}
+
+% =========================
+% CONTENIDO DEL MANUAL
+% (un capitulo por carpeta en capitulos/; la version anterior queda en sections/manual)
+% =========================
+\input{capitulos/01_introduccion_arquitectura/01_introduccion_arquitectura}
+\input{capitulos/02_preparacion_nodos/02_preparacion_nodos}
+\input{capitulos/03_seguridad_red_firewall/03_seguridad_red_firewall}
+\input{capitulos/04_compilacion_empaquetado/04_compilacion_empaquetado}
+\input{capitulos/05_despliegue_base_datos/05_despliegue_base_datos}
+\input{capitulos/06_despliegue_backend/06_despliegue_backend}
+\input{capitulos/07_despliegue_frontend_nginx/07_despliegue_frontend_nginx}
+
+\end{document}

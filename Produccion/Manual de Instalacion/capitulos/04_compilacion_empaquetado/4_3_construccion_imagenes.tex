@@ -1,0 +1,73 @@
+% Construcción de imágenes con Podman
+\subsection{Construcción de imágenes con Podman}\label{sec:4_3_construccion_imagenes}
+Una imagen es la plantilla a partir de la cual Podman crea un contenedor; se describe en un archivo \texttt{Dockerfile}. La plataforma usa tres Dockerfile. Las imágenes \textbf{no} se construyen en el equipo de desarrollo: se construyen en cada VPS con sus scripts (sección \ref{sec:4_3_4_build}), a partir de los artefactos que se transfieren en la sección \ref{sec:4_4_transferencia_vps}.
+
+\subsubsection{Dockerfile de los microservicios (eclipse-temurin:21-jre-jammy)}
+\texttt{Backend/Dockerfile} es común a todos los microservicios y al modelo de IA:
+\begin{lstlisting}
+FROM docker.io/library/eclipse-temurin:21-jre-jammy
+WORKDIR /app
+ARG JAR_FILE
+ARG SERVICE_PORT=8080
+COPY ${JAR_FILE} app.jar
+EXPOSE ${SERVICE_PORT}
+ENTRYPOINT ["java", "-jar", "app.jar"]
+\end{lstlisting}
+\begin{itemize}
+  \item \texttt{FROM}: parte de una imagen oficial que solo trae el entorno de ejecución de Java 21 (JRE), más ligera que un JDK completo.
+  \item \texttt{ARG JAR\_FILE}: el JAR se recibe como parámetro al construir, por eso un solo Dockerfile sirve para los once servicios.
+  \item \texttt{COPY}: copia el JAR dentro de la imagen como \texttt{/app/app.jar}.
+  \item \texttt{ENTRYPOINT}: al arrancar el contenedor ejecuta \texttt{java -jar app.jar}.
+\end{itemize}
+
+\subsubsection{Dockerfile de admin-service (cliente pg\_dump 16)}
+\texttt{admin-service} genera y restaura los respaldos del Panel de la Defensora con \texttt{pg\_dump} y \texttt{psql}, así que su imagen necesita además el cliente de PostgreSQL. Ubuntu Jammy (la base de \texttt{eclipse-temurin}) trae la versión 14 y \texttt{pg\_dump} 14 se niega a respaldar un servidor PostgreSQL 16, por lo que \texttt{Backend/admin-service/Dockerfile} instala la versión 16 desde el repositorio oficial de PostgreSQL:
+\begin{lstlisting}
+FROM docker.io/library/eclipse-temurin:21-jre-jammy
+WORKDIR /app
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl ca-certificates \
+ && (se agrega el repositorio apt.postgresql.org con su llave) \
+ && apt-get install -y --no-install-recommends postgresql-client-16 \
+ && rm -rf /var/lib/apt/lists/* && pg_dump --version
+ARG JAR_FILE
+COPY ${JAR_FILE} app.jar
+RUN mkdir -p /app/respaldos
+ENTRYPOINT ["java", "-jar", "app.jar"]
+\end{lstlisting}
+La carpeta \texttt{/app/respaldos} se monta como volumen (\nolinkurl{/apps/utiles/respaldos}) para que los respaldos sobrevivan a la reconstrucción del contenedor.
+
+\subsubsection{Dockerfile de los frontends (nginx:alpine)}
+Los frontends se sirven con un nginx mínimo que solo entrega los archivos estáticos:
+\begin{lstlisting}
+FROM docker.io/library/nginx:alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY dist/browser /usr/share/nginx/html
+EXPOSE 80
+\end{lstlisting}
+La configuración interna de nginx de cada frontend contiene \texttt{try\_files \$uri \$uri/ /index.html}, para que al recargar una página interna de Angular (por ejemplo \texttt{/admin/personal}) se devuelva \texttt{index.html} y Angular resuelva la ruta. El portal (\texttt{Frontend}) usa la misma estructura con su archivo \texttt{config/static.conf} y escucha en el 8090 en lugar del 80.
+
+\captura{comp-09-dockerfiles}{Contenido de los Dockerfile de microservicios y frontends}
+
+\subsubsection{Construcción de las imágenes en el servidor con los scripts podman-compose}\label{sec:4_3_4_build}
+Cada script construye la imagen con \texttt{podman build} y crea el contenedor con \texttt{podman run}. Por ejemplo, para \texttt{quejas-service}, \texttt{podman-compose.sh} ejecuta:
+\begin{lstlisting}
+podman build -f Dockerfile --build-arg JAR_FILE=artifact/quejas-service.jar \
+             -t defensoria-quejas-service .
+\end{lstlisting}
+\begin{table}[H]
+\centering
+\caption{Imágenes que construye cada script}
+\small
+\begin{tabular}{p{2.2cm}p{4.6cm}p{7.6cm}}
+\toprule
+\textbf{VPS} & \textbf{Script} & \textbf{Imágenes} \\
+\midrule
+Backend & \texttt{podman-compose.sh} & \texttt{defensoria-<servicio>} (una por microservicio) \\
+Backend & \texttt{podman-compose-modelo.sh} & \texttt{defensoria-antecedentes-service} \\
+Frontend & \texttt{podman-compose-front*.sh} & \texttt{defensoria-front-img}, \texttt{defensoria-admin-img}, \texttt{defensoria-revision-img}, \texttt{defensoria-primer-contacto-img}, \texttt{defensoria-subdefensoria-img} \\
+Base de datos & \texttt{podman-compose-bd.sh} & No construye: usa directamente \texttt{postgres:16-alpine} \\
+\bottomrule
+\end{tabular}
+\end{table}
+La ejecución de cada script se describe en los capítulos 5, 6 y 7.

@@ -1,0 +1,79 @@
+% Instalación y aprovisionamiento de Podman
+\subsection{Instalación y aprovisionamiento de Podman}\label{sec:2_2_instalacion_podman}
+Todos los componentes de la plataforma (base de datos, microservicios, modelo de IA, frontends y nginx) se ejecutan en contenedores. Como motor de contenedores se usa Podman, que es compatible con las imágenes y los Dockerfile de Docker pero no necesita un proceso servidor (\emph{daemon}) permanente: cada contenedor es un proceso más del sistema, lo que reduce el consumo de memoria en VPS pequeñas.
+
+\subsubsection{Instalación de Podman y utilerías (podman, curl, iptables, python3, certbot)}
+En las \textbf{tres} VPS se instalan Podman y las utilerías que usan los scripts de la plataforma:
+\begin{lstlisting}
+# apt install -y podman curl iptables
+# podman --version
+\end{lstlisting}
+\begin{itemize}
+  \item \texttt{podman}: motor de contenedores. Ubuntu 24.04 instala la versión 4.9.
+  \item \texttt{curl}: pruebas de los servicios desde la terminal (\texttt{curl http://127.0.0.1:<puerto>}).
+  \item \texttt{iptables}: reglas de firewall que aplican los scripts de la plataforma (capítulo \ref{cap:03_seguridad_red_firewall}).
+\end{itemize}
+
+Además, según el servidor:
+\begin{lstlisting}
+# apt install -y python3            # solo VPS Backend
+# apt install -y certbot            # solo VPS Frontend
+\end{lstlisting}
+\begin{itemize}
+  \item \texttt{python3} (Backend): lo usa el generador de la carga masiva de quejas (\texttt{generar-csv.py}).
+  \item \texttt{certbot} (Frontend): emisión y renovación del certificado HTTPS (sección \ref{sec:7_3_certificados_certbot}).
+\end{itemize}
+
+\captura{prep-12-podman-frontend}{Instalación de Podman y versión en el VPS Frontend}
+\captura{prep-13-podman-backend}{Instalación de Podman y versión en el VPS Backend}
+\captura{prep-14-podman-bd}{Instalación de Podman y versión en el VPS Base de Datos}
+
+\subsubsection{Imágenes base con nombre completo (docker.io/library/...)}
+Podman puede buscar una imagen en varios registros cuando se le da un nombre corto (por ejemplo \texttt{postgres}); en ese caso pregunta de forma interactiva de cuál registro descargarla, lo que detiene un script. Para evitarlo, todos los scripts y Dockerfile de la plataforma usan el nombre completo de la imagen, con registro incluido, por lo que no es necesario modificar \texttt{/etc/containers/registries.conf}:
+
+\begin{table}[H]
+\centering
+\caption{Imágenes base de la plataforma}
+\footnotesize
+\begin{tabular}{p{8.7cm}p{2.0cm}p{3.6cm}}
+\toprule
+\textbf{Imagen} & \textbf{VPS} & \textbf{Uso} \\
+\midrule
+\texttt{docker.io/library/postgres:16-alpine} & Base de datos & \texttt{defensoria-db} \\
+\texttt{docker.io/library/eclipse-temurin:21-jre-jammy} & Backend & Microservicios y modelo de IA \\
+\texttt{docker.io/library/nginx:alpine} & Frontend & \texttt{router-nginx} y los 5 frontends \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Para comprobar que la VPS puede descargar imágenes de Docker Hub, se descarga la imagen que le corresponde:
+\begin{lstlisting}
+# podman pull docker.io/library/nginx:alpine                  # Frontend
+# podman pull docker.io/library/eclipse-temurin:21-jre-jammy  # Backend
+# podman pull docker.io/library/postgres:16-alpine            # BD
+# podman images
+\end{lstlisting}
+\captura{prep-15-podman-images}{Imagen base descargada en cada VPS (salida de podman images)}
+
+\subsubsection{Contenedores ejecutados como root con podman run}
+Los contenedores de la plataforma se crean como \texttt{root} (modo \emph{rootful}) con el comando \texttt{podman run}, que los scripts de cada servidor ejecutan con todos sus parámetros (nombre, puertos, memoria, volúmenes y variables). Se eligió este modo porque:
+\begin{itemize}
+  \item \texttt{router-nginx} necesita escuchar en los puertos 80 y 443, que en Linux están reservados para \texttt{root}.
+  \item Los volúmenes montados (datos de PostgreSQL, configuración, respaldos) pertenecen a \texttt{root}, igual que el resto de \texttt{/apps}.
+  \item Todos los contenedores, imágenes y reglas de firewall quedan administrados desde la misma cuenta con la que se conecta Termius.
+\end{itemize}
+En modo \emph{rootful}, Podman guarda las imágenes y contenedores en \texttt{/var/lib/containers/storage}. Se verifica con:
+\begin{lstlisting}
+# podman info --format '{{.Store.GraphRoot}}'
+# podman ps -a
+\end{lstlisting}
+La primera línea debe mostrar \texttt{/var/lib/containers/storage}; \texttt{podman ps -a} aparece vacío hasta que se levanten los componentes en los capítulos 5 a 7.
+
+\subsubsection{Arranque automático de contenedores (podman-restart.service)}
+Como Podman no tiene un \emph{daemon}, los contenedores no vuelven a arrancar solos después de reiniciar la VPS. Para lograrlo, Podman incluye el servicio de systemd \texttt{podman-restart}, que al encender el servidor levanta todos los contenedores creados con la política \texttt{-{}-restart always}. Se habilita en las tres VPS:
+\begin{lstlisting}
+# systemctl enable --now podman-restart.service
+# systemctl is-enabled podman-restart.service
+\end{lstlisting}
+La salida debe ser \texttt{enabled}. Los scripts de la plataforma crean cada contenedor con \texttt{-{}-restart always}, por lo que este servicio es el que garantiza que la plataforma se recupere sola tras un reinicio.
+\captura{prep-16-podman-restart}{Servicio podman-restart habilitado}

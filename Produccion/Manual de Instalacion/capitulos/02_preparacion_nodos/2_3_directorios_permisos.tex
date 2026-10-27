@@ -1,0 +1,139 @@
+% Estructura de directorios y gestión de permisos
+\subsection{Estructura de directorios y gestión de permisos}\label{sec:2_3_directorios_permisos}
+Todos los archivos de la plataforma viven bajo \texttt{/apps} en cada VPS. Las carpetas se crean en este paso, vacías y con sus permisos; los archivos (scripts, JAR, configuración, frontends) se colocan en ellas en los capítulos 5 a 7.
+
+\subsubsection{Árbol de carpetas en /apps (aplicaciones/defensoria, data/postgresql, respaldos, utiles/respaldos)}
+\begin{table}[H]
+\centering
+\caption{Carpetas principales}
+\small
+\begin{tabular}{p{6.2cm}p{8.3cm}}
+\toprule
+\textbf{Carpeta} & \textbf{Contenido} \\
+\midrule
+\nolinkurl{/apps/aplicaciones/defensoria} & Scripts, configuración y artefactos de la plataforma (las tres VPS) \\
+\nolinkurl{/apps/data/postgresql} & Datos de PostgreSQL (solo VPS Base de Datos) \\
+\nolinkurl{/apps/respaldos/bd} & Respaldos de la base generados por \texttt{podman-compose-bd.sh backup} (VPS Base de Datos) \\
+\nolinkurl{/apps/utiles/respaldos} & Respaldos generados desde el Panel de la Defensora (VPS Backend) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{VPS Base de Datos (169.58.62.99).}
+\begin{lstlisting}
+/apps/
+|-- aplicaciones/defensoria/
+|   |-- database/              podman-compose-bd.sh
+|   `-- database-scripts/
+|       |-- init/              00-init.sql (se ejecuta al crear la base)
+|       `-- seeds/             01..05-*.sql (datos semilla)
+|-- data/postgresql/           defensoria_db/ (la crea el script)
+`-- respaldos/bd/              respaldos .sql.gz
+\end{lstlisting}
+
+\paragraph{VPS Backend (156.67.26.73).}
+\begin{lstlisting}
+/apps/
+|-- aplicaciones/defensoria/back/
+|   |-- Dockerfile, podman-compose.sh, podman-compose-modelo.sh, firewall-backend.sh
+|   |-- artifact/              11 archivos .jar
+|   |-- admin-service/         Dockerfile propio de admin-service
+|   |-- config-files/          <servicio>/config/<servicio>.yml
+|   |-- modelo/Dataset/        corpus JSON del modelo de IA
+|   |-- modelo/pruebas/        peticiones de prueba del modelo
+|   `-- carga-masiva/          cargar-quejas.sh, generar-csv.py
+`-- utiles/respaldos/          respaldos del Panel de la Defensora
+\end{lstlisting}
+
+\paragraph{VPS Frontend (169.58.62.111).}
+\begin{lstlisting}
+/apps/aplicaciones/defensoria/
+|-- front/                     defensoria-web (portal)
+|   |-- config/                static.conf
+|   `-- dist/browser/          archivos compilados de Angular
+|-- front-admin/dist/browser/            admin-web
+|-- front-revision/dist/browser/         revision-web
+|-- front-primer-contacto/dist/browser/  primer-contacto-web
+|-- front-subdefensoria/dist/browser/    subdefensoria-web
+`-- router/
+    |-- config/                defensoria.conf (router-nginx)
+    `-- certbot-webroot/       reto HTTP-01 de Let's Encrypt
+\end{lstlisting}
+
+\paragraph{Creación de las carpetas.} En el VPS Base de Datos:
+\begin{lstlisting}
+# A=/apps/aplicaciones/defensoria
+# mkdir -p $A/database $A/database-scripts/init $A/database-scripts/seeds \
+           /apps/data/postgresql /apps/respaldos/bd
+\end{lstlisting}
+En el VPS Backend:
+\begin{lstlisting}
+# B=/apps/aplicaciones/defensoria/back
+# mkdir -p $B/artifact $B/admin-service $B/config-files \
+           $B/modelo/Dataset $B/modelo/pruebas $B/carga-masiva \
+           /apps/utiles/respaldos
+\end{lstlisting}
+En el VPS Frontend:
+\begin{lstlisting}
+# F=/apps/aplicaciones/defensoria
+# mkdir -p $F/front/config $F/front/dist/browser \
+           $F/front-admin/dist/browser $F/front-revision/dist/browser \
+           $F/front-primer-contacto/dist/browser $F/front-subdefensoria/dist/browser \
+           $F/router/config $F/router/certbot-webroot
+\end{lstlisting}
+
+\subsubsection{Políticas de propiedad y permisos (root:root, 755 carpetas, 750 scripts, 750/640 config-files, 700 respaldos)}
+Todo \texttt{/apps} pertenece a \texttt{root:root}, porque los contenedores se ejecutan como \texttt{root} (sección \ref{sec:2_2_instalacion_podman}). Los permisos se asignan según lo que contiene cada carpeta o archivo:
+
+\begin{table}[H]
+\centering
+\caption{Política de permisos}
+\small
+\begin{tabular}{p{5.4cm}cp{7.2cm}}
+\toprule
+\textbf{Carpeta o archivo} & \textbf{Permiso} & \textbf{Motivo} \\
+\midrule
+Carpetas generales & 755 & Cualquiera puede recorrerlas y leerlas; solo \texttt{root} escribe \\
+Scripts \texttt{.sh} & 750 & Solo \texttt{root} los ejecuta \\
+\texttt{config-files/} (carpetas / archivos) & 750 / 640 & Contienen la contraseña de la BD, el secreto JWT y la contraseña SMTP \\
+\texttt{podman-compose-bd.sh} y su carpeta & 700 & El script contiene la contraseña de PostgreSQL \\
+JAR, Dockerfile, SQL, JSON, archivos web & 644 & Solo lectura; se copian dentro de las imágenes \\
+Carpetas de respaldos & 700 & Contienen copias completas de la base de datos \\
+\texttt{database-scripts/init} & 755 / 644 & PostgreSQL ejecuta \texttt{00-init.sql} con su propio usuario dentro del contenedor y necesita leerlo \\
+\nolinkurl{/apps/data/postgresql/*} & -- & No se modifica a mano: el contenedor asigna su propio dueño a la carpeta de datos \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+En el VPS Base de Datos:
+\begin{lstlisting}
+# chown -R root:root /apps
+# chmod 755 /apps /apps/aplicaciones /apps/aplicaciones/defensoria /apps/data /apps/data/postgresql
+# chmod 755 $A/database-scripts $A/database-scripts/init $A/database-scripts/seeds
+# chmod 700 $A/database
+# chmod 755 /apps/respaldos && chmod 700 /apps/respaldos/bd
+\end{lstlisting}
+En el VPS Backend:
+\begin{lstlisting}
+# chown -R root:root /apps
+# chmod 755 /apps /apps/aplicaciones /apps/aplicaciones/defensoria $B \
+            $B/artifact $B/admin-service $B/modelo $B/modelo/Dataset \
+            $B/modelo/pruebas $B/carga-masiva /apps/utiles
+# chmod 750 $B/config-files
+# chmod 700 /apps/utiles/respaldos
+\end{lstlisting}
+En el VPS Frontend:
+\begin{lstlisting}
+# chown -R root:root /apps
+# find /apps -type d -exec chmod 755 {} +
+\end{lstlisting}
+Los permisos de los archivos (750 para scripts, 640 para configuración, 644 para el resto) se aplican cuando se colocan en los capítulos 5 a 7.
+
+\paragraph{Verificación.} En cada VPS se listan las carpetas con su dueño y permisos:
+\begin{lstlisting}
+# find /apps -type d -printf "%M %u %g %p\n"
+\end{lstlisting}
+La salida muestra, por cada carpeta, sus permisos (\texttt{\%M}, por ejemplo \texttt{drwxr-xr-x} = 755), su dueño (\texttt{\%u}), su grupo (\texttt{\%g}) y su ruta (\texttt{\%p}). Cada carpeta debe aparecer con dueño \texttt{root root} y con el permiso de la tabla anterior.
+\captura{prep-17-permisos-frontend}{Dueño y permisos de las carpetas en el VPS Frontend}
+\captura{prep-18-permisos-backend}{Dueño y permisos de las carpetas en el VPS Backend}
+\captura{prep-19-permisos-bd}{Dueño y permisos de las carpetas en el VPS Base de Datos}

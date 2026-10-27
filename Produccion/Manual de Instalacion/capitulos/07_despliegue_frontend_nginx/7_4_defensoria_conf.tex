@@ -1,0 +1,120 @@
+% Configuración de producción de Nginx (defensoria.conf)
+\subsection{Configuración de producción de Nginx (defensoria.conf)}\label{sec:7_4_defensoria_conf}
+\texttt{defensoria.conf} define todo el comportamiento de \texttt{router-nginx}. Se compone de dos bloques \texttt{server}: uno para el puerto 80 y otro para el 443. Esta sección explica cada parte.
+
+\subsubsection{Bloque de redirección forzada de HTTP (80) a HTTPS (443)}
+\begin{lstlisting}
+server {
+    listen 80;
+    server_name defensoria-escom.ddns.net;
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+\end{lstlisting}
+El puerto 80 solo hace dos cosas: entrega los archivos del reto de Let's Encrypt (necesarios para renovar el certificado) y responde a cualquier otra petición con una redirección permanente (\texttt{301}) a la misma dirección con \texttt{https://}. Así ningún usuario navega sin cifrado.
+
+\subsubsection{Bloque 443 y certificados TLS}
+\begin{lstlisting}
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name defensoria-escom.ddns.net;
+    ssl_certificate     /etc/letsencrypt/live/defensoria-escom.ddns.net/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/defensoria-escom.ddns.net/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ...
+}
+\end{lstlisting}
+\begin{itemize}
+  \item \texttt{listen 443 ssl} y \texttt{http2 on}: atiende HTTPS con el protocolo HTTP/2, que carga los archivos de las páginas en paralelo por una sola conexión.
+  \item \texttt{ssl\_certificate} / \texttt{ssl\_certificate\_key}: certificado y llave emitidos por Certbot (sección \ref{sec:7_3_certificados_certbot}).
+  \item \texttt{ssl\_protocols TLSv1.2 TLSv1.3}: solo se aceptan versiones seguras de TLS.
+\end{itemize}
+Dentro del mismo bloque se agregan las cabeceras que nginx envía a los servicios para que conozcan al cliente real:
+\begin{lstlisting}
+proxy_set_header Host              $host;
+proxy_set_header X-Real-IP         $remote_addr;
+proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+\end{lstlisting}
+
+\subsubsection{Rutas hacia los frontends}
+\begin{lstlisting}
+location /                 { proxy_pass http://127.0.0.1:8090;  }   # defensoria-web
+location /admin/           { proxy_pass http://127.0.0.1:8091/; }   # admin-web
+location /revision/        { proxy_pass http://127.0.0.1:8092/; }   # revision-web
+location /primer-contacto/ { proxy_pass http://127.0.0.1:8094/; }   # primer-contacto-web
+location /subdefensoria/   { proxy_pass http://127.0.0.1:8095/; }   # subdefensoria-web
+\end{lstlisting}
+Cuando \texttt{proxy\_pass} termina en \texttt{/}, nginx quita el prefijo de la ruta antes de reenviar: una petición a \texttt{/admin/login} llega al contenedor \texttt{admin-web} como \texttt{/login}. Por eso cada frontend se compila con su \texttt{baseHref} (sección \ref{sec:4_2_compilacion_local}): el navegador pide los archivos con el prefijo y nginx lo quita al entregarlos.
+
+\subsubsection{Reverse proxy: location /api/ hacia el VPS Backend}
+\begin{lstlisting}
+location /api/auth/            { proxy_pass http://156.67.26.73:8083; }
+location /api/quejoso/         { proxy_pass http://156.67.26.73:8084; }
+location /api/notificaciones/  { proxy_pass http://156.67.26.73:8085; }
+location /api/catalogos/       { proxy_pass http://156.67.26.73:8086; }
+location /api/admin/           { proxy_pass http://156.67.26.73:8087; }
+location /api/revision/        { proxy_pass http://156.67.26.73:8088; }
+location /api/chatbot/         { proxy_pass http://156.67.26.73:8089; }
+location /api/denunciado/      { proxy_pass http://156.67.26.73:8094; }
+location /api/primer-contacto/ { proxy_pass http://156.67.26.73:8082; }
+location /api/subdefensoria/   { proxy_pass http://156.67.26.73:8091; }
+\end{lstlisting}
+Aquí \texttt{proxy\_pass} no termina en \texttt{/}, así que la ruta llega completa al microservicio: \texttt{/api/quejoso/registro} llega a \texttt{quejas-service} como \texttt{/api/quejoso/registro}. Las peticiones salen de la IP del VPS Frontend, la única que el firewall del Backend acepta.
+
+\subsubsection{Rutas bloqueadas, tamaño máximo de carga y tiempos de espera}
+\begin{lstlisting}
+location = /api/notificaciones/enviar    { return 403; }
+location = /api/notificaciones/registrar { return 403; }
+location /api/primer-contacto/ingesta/   { return 403; }
+location /api/subdefensoria/ingesta/     { return 403; }
+location /api/subdefensoria/acuerdos-conclusion/interno/ { return 403; }
+
+client_max_body_size 100M;
+proxy_read_timeout 120s;
+proxy_send_timeout 120s;
+\end{lstlisting}
+\begin{itemize}
+  \item Las rutas internas responden \texttt{403} desde Internet (sección \ref{sec:3_2_reglas_perimetrales}). Las rutas exactas (\texttt{location =}) y más específicas tienen prioridad sobre las \texttt{/api/} generales.
+  \item \texttt{client\_max\_body\_size 100M}: una queja puede incluir credencial y varias evidencias; sin este valor, nginx rechaza cualquier petición mayor a 1 MB con el error \texttt{413}.
+  \item \texttt{proxy\_read\_timeout} / \texttt{proxy\_send\_timeout}: espera hasta 120 segundos la respuesta del Backend, para cargas de archivos grandes o conexiones lentas.
+\end{itemize}
+
+\subsubsection{Compresión gzip y caché de estáticos}
+\begin{lstlisting}
+gzip on;
+gzip_comp_level 5;
+gzip_min_length 1024;
+gzip_types text/css application/javascript image/svg+xml;
+
+map $uri $cache_estaticos {
+    "~-[A-Z0-9]{8}\.(js|css)$"  "public, max-age=31536000, immutable";
+    default                    "no-cache";
+}
+add_header Cache-Control $cache_estaticos;
+\end{lstlisting}
+\begin{itemize}
+  \item \textbf{gzip}: comprime los archivos CSS, JavaScript y SVG, que pesan unas cuatro veces menos al viajar. A propósito no se comprimen las respuestas JSON de la API, porque contienen tokens y datos de las quejas, y comprimir respuestas con secretos facilita el ataque BREACH.
+  \item \textbf{Caché}: Angular genera archivos con un \emph{hash} en el nombre (por ejemplo \texttt{main-AB12CD34.js}) que nunca cambian de contenido; el navegador los guarda un año. Todo lo demás (\texttt{index.html} y la API) se marca \texttt{no-cache}, para que cada despliegue nuevo se vea de inmediato sin limpiar la caché del navegador.
+\end{itemize}
+
+\paragraph{Aplicar cambios en defensoria.conf.} Después de editar el archivo, se valida y se recarga nginx sin cortar las conexiones activas:
+\begin{lstlisting}
+# podman exec router-nginx nginx -t
+# podman exec router-nginx nginx -s reload
+\end{lstlisting}
+Si \texttt{nginx -t} marca un error, no se recarga: el contenedor sigue funcionando con la configuración anterior.
+
+\paragraph{Verificación.} Desde el equipo de administración:
+\begin{lstlisting}
+$ curl -I http://defensoria-escom.ddns.net/        # 301 Moved Permanently -> https
+$ curl -I https://defensoria-escom.ddns.net/       # HTTP/2 200
+$ curl -s -o /dev/null -w "%{http_code}\n" -X POST \
+    https://defensoria-escom.ddns.net/api/notificaciones/enviar     # 403
+\end{lstlisting}
+\captura{front-09-curl-https}{Redirección HTTP a HTTPS, respuesta 200 por HTTPS y ruta interna bloqueada}

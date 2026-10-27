@@ -1,0 +1,40 @@
+% Construcción de las imágenes del Backend
+\subsection{Construcción de las imágenes del Backend}\label{sec:6_1_imagenes_microservicios}
+
+\subsubsection{Ubicación de los JAR en artifact/}
+Los scripts buscan cada JAR en \nolinkurl{/apps/aplicaciones/defensoria/back/artifact/} con el nombre exacto \texttt{<servicio>.jar}; si falta alguno, se detienen con el mensaje \texttt{Error: No se encontro el archivo artifact/<servicio>.jar}. Antes de construir se confirma que estén los once:
+\begin{lstlisting}
+# cd /apps/aplicaciones/defensoria/back
+# ls -lh artifact/
+\end{lstlisting}
+Deben aparecer \texttt{admin-service.jar}, \texttt{antecedentes-service.jar}, \texttt{auth-service.jar}, \texttt{catalogo-service.jar}, \texttt{chatbot-service.jar}, \texttt{denunciado-service.jar}, \texttt{notificaciones-service.jar}, \texttt{primer-contacto-service.jar}, \texttt{quejas-service.jar}, \texttt{revision-service.jar} y \texttt{subdefensoria-service.jar}.
+\captura{back-01-artifact}{Los 11 JAR en la carpeta artifact del VPS Backend}
+
+\subsubsection{Construcción de las imágenes con podman-compose.sh}
+\texttt{podman-compose.sh} administra los diez microservicios. Para cada servicio realiza tres pasos:
+\begin{enumerate}
+  \item \textbf{Elimina} el contenedor anterior, si existe (\texttt{podman stop} y \texttt{podman rm}).
+  \item \textbf{Construye} la imagen \texttt{defensoria-<servicio>} con el Dockerfile común, o con \texttt{admin-service/Dockerfile} en el caso de \texttt{admin-service} (sección \ref{sec:4_3_construccion_imagenes}):
+\begin{lstlisting}
+podman build -q -f Dockerfile --build-arg JAR_FILE=artifact/<servicio>.jar \
+             --build-arg SERVICE_PORT=8080 -t defensoria-<servicio> .
+\end{lstlisting}
+  \item \textbf{Crea} el contenedor con \texttt{podman run} y sus parámetros (sección \ref{sec:6_3_contenedor_backend}).
+\end{enumerate}
+
+\begin{table}[H]
+\centering
+\caption{Comandos de podman-compose.sh}
+\small
+\begin{tabular}{p{5.6cm}p{8.8cm}}
+\toprule
+\textbf{Comando} & \textbf{Qué hace} \\
+\midrule
+\texttt{up} & Construye y levanta los diez microservicios, uno tras otro \\
+\texttt{up-container <servicio>} & Construye y levanta solo un microservicio \\
+\texttt{delete} & Detiene y elimina los diez contenedores (las imágenes se conservan) \\
+\texttt{delete-container <servicio>} & Detiene y elimina un contenedor \\
+\bottomrule
+\end{tabular}
+\end{table}
+El modelo de IA tiene su propio script, \texttt{podman-compose-modelo.sh} (sección \ref{sec:6_3_contenedor_backend}). La primera construcción tarda varios minutos porque descarga la imagen base y la de \texttt{admin-service} instala además el cliente de PostgreSQL; las siguientes reutilizan las capas ya descargadas.

@@ -1,0 +1,190 @@
+% Reglas perimetrales por nodo
+\subsection{Reglas perimetrales por nodo}\label{sec:3_2_reglas_perimetrales}
+
+\begin{table}[H]
+\centering
+\caption{Resumen de la protección por VPS}
+\small
+\begin{tabular}{p{2.3cm}p{2.3cm}p{5.2cm}p{4.6cm}}
+\toprule
+\textbf{VPS} & \textbf{ufw} & \textbf{Permitido} & \textbf{Regla raw} \\
+\midrule
+Base de datos & Activo & 22 desde cualquiera; 5432 solo desde 156.67.26.73 & 5432 solo desde 156.67.26.73 \\
+Backend & Activo & 22 desde cualquiera; puertos de los microservicios solo desde 169.58.62.111 & 8082--8094 solo desde 169.58.62.111 \\
+Frontend & Inactivo & Todo (solo \texttt{router-nginx} debe atender en 80/443) & Ninguna \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------
+\subsubsection{VPS Base de Datos: puerto 5432 exclusivamente desde la IP del VPS Backend}
+\paragraph{ufw.} En el VPS Base de Datos (169.58.62.99):
+\begin{lstlisting}
+# ufw default deny incoming
+# ufw default allow outgoing
+# ufw allow 22/tcp
+# ufw allow from 156.67.26.73 to any port 5432 proto tcp
+# ufw route allow from 156.67.26.73 to any port 5432 proto tcp
+# ufw enable
+\end{lstlisting}
+\begin{table}[H]
+\centering
+\caption{Reglas de ufw del VPS Base de Datos}
+\small
+\begin{tabular}{p{5.6cm}p{2cm}p{6.8cm}}
+\toprule
+\textbf{Regla} & \textbf{Tipo} & \textbf{Motivo} \\
+\midrule
+\texttt{22/tcp} desde cualquiera & IN & Administración por SSH con Termius. Se agrega \textbf{antes} de \texttt{ufw enable} para no perder la conexión. \\
+\texttt{5432/tcp} desde 156.67.26.73 & IN & Permite al Backend llegar al puerto publicado de PostgreSQL. \\
+\texttt{5432/tcp} desde 156.67.26.73 & FWD & Permite que esa conexión se reenvíe al contenedor \texttt{defensoria-db}. Sin esta regla el Backend no puede conectarse. \\
+Todo lo demás & -- & Rechazado por la política \texttt{deny incoming}. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Regla raw.} La aplica el script de la base de datos (capítulo \ref{cap:05_despliegue_base_datos}):
+\begin{lstlisting}
+# cd /apps/aplicaciones/defensoria/database
+# bash podman-compose-bd.sh firewall        # aplica la regla
+# bash podman-compose-bd.sh firewall-boot   # la reaplica en cada reinicio
+\end{lstlisting}
+El script descarta en la tabla raw todo lo que llegue a 5432 (y a 5433, puerto de la antigua base histórica) desde una IP distinta del Backend.
+
+% ------------------------------------------------------------
+\subsubsection{VPS Backend: puertos de los microservicios exclusivamente desde la IP del VPS Frontend}
+\paragraph{ufw.} En el VPS Backend (156.67.26.73):
+\begin{lstlisting}
+# ufw default deny incoming
+# ufw default allow outgoing
+# ufw allow 22/tcp
+# for p in 8082 8083 8084 8085 8086 8087 8088 8089 8091 8094; do
+    ufw allow from 169.58.62.111 to any port $p proto tcp
+  done
+# ufw route allow in on eth0 out on podman0
+# ufw route allow in on podman0 out on eth0
+# ufw route allow in on eth0 out on podman1
+# ufw route allow in on podman1 out on eth0
+# ufw enable
+\end{lstlisting}
+\begin{table}[H]
+\centering
+\caption{Reglas de ufw del VPS Backend}
+\small
+\begin{tabular}{p{5.2cm}p{1.4cm}p{7.8cm}}
+\toprule
+\textbf{Regla} & \textbf{Tipo} & \textbf{Motivo} \\
+\midrule
+\texttt{22/tcp} desde cualquiera & IN & Administración por SSH. \\
+8082--8089, 8091, 8094 desde 169.58.62.111 & IN & Un puerto por microservicio con ruta pública: Primer Contacto (8082), auth (8083), quejas (8084), notificaciones (8085), catálogo (8086), admin (8087), revisión (8088), chatbot (8089), Subdefensoría (8091) y denunciado (8094). \\
+\texttt{eth0} $\rightarrow$ \texttt{podman0} & FWD & Permite que el tráfico que llega por la interfaz pública se reenvíe a la red de los contenedores. \\
+\texttt{podman0} $\rightarrow$ \texttt{eth0} & FWD & Permite que los contenedores salgan a Internet y a otras VPS: conexión a la base de datos (169.58.62.99:5432) y envío de correos por SMTP. \\
+\texttt{eth0} $\leftrightarrow$ \texttt{podman1} & FWD & Lo mismo para la segunda red de Podman (\texttt{10.89.0.0/24}). \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\nota{Las reglas de reenvío \texttt{eth0 $\rightarrow$ podman0/podman1} permiten llegar a \textbf{cualquier} puerto de los contenedores desde cualquier origen. Por eso, en el Backend, quien realmente limita los microservicios al VPS Frontend es la regla raw del siguiente párrafo; las reglas de entrada por puerto documentan qué puertos son públicos para el Frontend.}
+
+\paragraph{Regla raw.} La aplica \texttt{firewall-backend.sh} (capítulo \ref{cap:06_despliegue_backend}):
+\begin{lstlisting}
+# cd /apps/aplicaciones/defensoria/back
+# bash firewall-backend.sh          # aplica la regla
+# bash firewall-backend.sh boot     # la reaplica en cada reinicio
+\end{lstlisting}
+Descarta todo lo que llegue por \texttt{eth0} a los puertos 8082--8094 desde una IP distinta del Frontend. Se limita a \texttt{eth0} a propósito: los microservicios se llaman entre sí por la IP pública (por ejemplo \texttt{156.67.26.73:8085}), pero ese tráfico entra por la red de Podman; una regla sin \texttt{-i eth0} lo bloquearía y las peticiones quedarían colgadas.
+
+\begin{table}[H]
+\centering
+\caption{Puertos del VPS Backend}
+\small
+\begin{tabular}{p{1.4cm}p{4.2cm}p{3.2cm}p{5.4cm}}
+\toprule
+\textbf{Puerto} & \textbf{Servicio} & \textbf{Quién puede entrar} & \textbf{Ruta en nginx} \\
+\midrule
+22 & SSH & Cualquiera & -- \\
+8082 & primer-contacto-service & 169.58.62.111 & \texttt{/api/primer-contacto/} \\
+8083 & auth-service & 169.58.62.111 & \texttt{/api/auth/} \\
+8084 & quejas-service & 169.58.62.111 & \texttt{/api/quejoso/} \\
+8085 & notificaciones-service & 169.58.62.111 & \texttt{/api/notificaciones/} \\
+8086 & catalogo-service & 169.58.62.111 & \texttt{/api/catalogos/} \\
+8087 & admin-service & 169.58.62.111 & \texttt{/api/admin/} \\
+8088 & revision-service & 169.58.62.111 & \texttt{/api/revision/} \\
+8089 & chatbot-service & 169.58.62.111 & \texttt{/api/chatbot/} \\
+8091 & subdefensoria-service & 169.58.62.111 & \texttt{/api/subdefensoria/} \\
+8093 & antecedentes-service (IA) & Solo otros microservicios & Sin ruta pública \\
+8094 & denunciado-service & 169.58.62.111 & \texttt{/api/denunciado/} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------
+\subsubsection{VPS Frontend: tráfico público 80 (HTTP) y 443 (HTTPS)}
+En el VPS Frontend (169.58.62.111) ufw está \textbf{inactivo} y no hay regla raw:
+\begin{lstlisting}
+# ufw status
+Status: inactive
+\end{lstlisting}
+Es la única VPS que debe atender a Internet: \texttt{router-nginx} recibe a los usuarios en los puertos 80 y 443, y los cinco frontends (8090--8095) solo deben consumirse a través de él por \texttt{127.0.0.1}.
+
+\paragraph{Configuración recomendada.} Para dejar abiertos únicamente SSH, HTTP y HTTPS, y cerrar a Internet los puertos de los frontends:
+\begin{lstlisting}
+# ufw default deny incoming
+# ufw default allow outgoing
+# ufw allow 22/tcp
+# ufw allow 80/tcp
+# ufw allow 443/tcp
+# ufw enable
+# IFACE=$(ip route show default | awk '{print $5; exit}')
+# iptables -t raw -I PREROUTING -i $IFACE -p tcp --dport 8090:8095 -j DROP
+\end{lstlisting}
+\texttt{router-nginx} usa la red del host y llega a los frontends por la interfaz local \texttt{lo}, así que ninguna de estas reglas le afecta. La regla raw no sobrevive a un reinicio; para hacerla permanente se agrega a un servicio de systemd como los que crean los scripts del Backend y la Base de Datos.
+
+% ------------------------------------------------------------
+\subsubsection{Rutas internas bloqueadas en nginx (403)}
+Además del firewall, \texttt{router-nginx} niega desde Internet los endpoints que solo deben usarse entre microservicios. Estas líneas forman parte de \texttt{defensoria.conf} (sección \ref{sec:7_4_defensoria_conf}):
+\begin{lstlisting}
+location = /api/notificaciones/enviar    { return 403; }
+location = /api/notificaciones/registrar { return 403; }
+location /api/primer-contacto/ingesta/   { return 403; }
+location /api/subdefensoria/ingesta/     { return 403; }
+location /api/subdefensoria/acuerdos-conclusion/interno/ { return 403; }
+\end{lstlisting}
+Los microservicios siguen pudiendo usarlos porque se llaman directamente por \texttt{156.67.26.73:<puerto>}, sin pasar por nginx.
+
+% ------------------------------------------------------------
+\subsubsection{Persistencia de las reglas tras reiniciar}
+\begin{itemize}
+  \item \textbf{ufw}: al ejecutar \texttt{ufw enable} queda habilitado el servicio \texttt{ufw.service}, que carga las reglas guardadas en cada arranque. No requiere nada adicional.
+  \item \textbf{Regla raw}: iptables no la guarda por sí mismo. Los comandos \texttt{firewall-boot} (BD) y \texttt{boot} (Backend) de los scripts crean un servicio de systemd que la vuelve a aplicar al encender la VPS:
+\end{itemize}
+\begin{table}[H]
+\centering
+\caption{Servicios de systemd del firewall}
+\footnotesize
+\begin{tabular}{p{2.2cm}p{5.6cm}p{6.4cm}}
+\toprule
+\textbf{VPS} & \textbf{Servicio} & \textbf{Lo crea} \\
+\midrule
+Base de datos & \texttt{ufw.service}, \texttt{defensoria-bd-firewall.service} & \texttt{ufw enable}, \texttt{podman-compose-bd.sh firewall-boot} \\
+Backend & \texttt{ufw.service}, \texttt{defensoria-backend-firewall.service} & \texttt{ufw enable}, \texttt{firewall-backend.sh boot} \\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{lstlisting}
+# systemctl is-enabled ufw defensoria-bd-firewall        # VPS Base de Datos
+# systemctl is-enabled ufw defensoria-backend-firewall   # VPS Backend
+\end{lstlisting}
+
+\paragraph{Verificación de las reglas de cada VPS.} En cada VPS se listan las reglas de ufw numeradas y la regla raw:
+\begin{lstlisting}
+# ufw status numbered
+# iptables -t raw -L PREROUTING -n -v --line-numbers
+\end{lstlisting}
+\begin{itemize}
+  \item \texttt{ufw status numbered}: lista cada regla con su número, el puerto (\texttt{To}), la acción (\texttt{ALLOW IN} o \texttt{ALLOW FWD}) y el origen (\texttt{From}). El número sirve para borrar una regla con \texttt{ufw delete <número>}.
+  \item \texttt{iptables -t raw -L PREROUTING -n -v}: muestra la regla raw y sus contadores \texttt{pkts}/\texttt{bytes}, que indican cuántos paquetes no autorizados ha descartado.
+\end{itemize}
+\captura{red-01-firewall-bd}{Reglas de ufw y regla raw del VPS Base de Datos}
+\captura{red-02-firewall-backend}{Reglas de ufw y regla raw del VPS Backend}
+\captura{red-03-firewall-frontend}{Estado del firewall del VPS Frontend}

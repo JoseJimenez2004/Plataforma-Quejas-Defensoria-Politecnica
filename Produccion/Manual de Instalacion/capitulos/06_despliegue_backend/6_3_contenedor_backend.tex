@@ -1,0 +1,97 @@
+% Creación y ejecución de los contenedores del Backend
+\subsection{Creación y ejecución de los contenedores del Backend}\label{sec:6_3_contenedor_backend}
+
+\subsubsection{Límites de memoria y heap de la JVM}
+Cada contenedor tiene un límite de memoria (\texttt{-m}) y la máquina virtual de Java un tamaño máximo de \emph{heap} (\texttt{-Xmx}) menor que ese límite, porque la JVM usa memoria adicional fuera del heap. Si el contenedor supera su límite, el kernel lo termina (código de salida 137).
+\begin{lstlisting}
+-m 512m
+-e JAVA_TOOL_OPTIONS="-Xmx320m -Xms64m -XX:+ExitOnOutOfMemoryError"
+\end{lstlisting}
+\begin{itemize}
+  \item \texttt{-Xmx320m}: heap máximo de 320 MB (aproximadamente el 60\,\% del límite del contenedor).
+  \item \texttt{-Xms64m}: heap inicial pequeño; crece solo si se necesita.
+  \item \texttt{-XX:+ExitOnOutOfMemoryError}: si la JVM se queda sin memoria, el proceso termina en lugar de quedar colgado, y \texttt{-{}-restart always} lo vuelve a levantar.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\caption{Recursos asignados a cada contenedor del Backend}
+\footnotesize
+\begin{tabular}{lcccl}
+\toprule
+\textbf{Contenedor} & \textbf{Puerto} & \textbf{Límite} & \textbf{Heap} & \textbf{Motivo} \\
+\midrule
+quejas-service & 8084 & 1 GB & 640 MB & Recibe evidencias de hasta 100 MB \\
+denunciado-service & 8094 & 1 GB & 640 MB & Recibe credencial y evidencias \\
+auth, notificaciones, catálogo & 8083, 8085, 8086 & 512 MB & 320 MB & Carga normal \\
+admin, revisión, chatbot & 8087, 8088, 8089 & 512 MB & 320 MB & Carga normal \\
+primer-contacto-service & 8082 & 512 MB & 320 MB & Carga normal \\
+subdefensoria-service & 8091 & 512 MB & 320 MB & Carga normal \\
+antecedentes-service (IA) & 8093 & 250 MB & 150 MB & Índice del corpus en memoria \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Microservicios de la plataforma}
+\texttt{podman-compose.sh up} levanta en un solo paso los diez microservicios: los ocho de la plataforma y los de Primer Contacto y Subdefensoría.
+\begin{lstlisting}
+# cd /apps/aplicaciones/defensoria/back
+# bash podman-compose.sh up
+\end{lstlisting}
+Por cada servicio se muestra \texttt{Construyendo/Actualizando imagen defensoria-<servicio>...}, \texttt{Imagen ... actualizada exitosamente} y \texttt{Contenedor <servicio> iniciado.}
+\captura{back-03-podman-compose-up}{Construcción y arranque de los microservicios con podman-compose.sh up}
+
+Un servicio tarda entre 20 y 60 segundos en terminar de arrancar (conectarse a la base y crear sus tablas). Se confirma en su log con el mensaje \texttt{Started ... in X seconds}:
+\begin{lstlisting}
+# podman logs --tail 20 quejas-service | grep -i started
+\end{lstlisting}
+
+\subsubsection{Primer Contacto y Subdefensoría}
+\texttt{primer-contacto-service} (8082) y \texttt{subdefensoria-service} (8091) se levantan con el mismo \texttt{up}. Si se necesita levantarlos o reconstruirlos por separado:
+\begin{lstlisting}
+# bash podman-compose.sh up-container primer-contacto-service
+# bash podman-compose.sh up-container subdefensoria-service
+\end{lstlisting}
+Ambos usan la base \texttt{defensoria\_db}. En \texttt{primer-contacto-service.yml}, la URL de la base histórica (\texttt{historico.datasource.url}) se deja vacía, porque esa base ya no forma parte de la plataforma; así el servicio busca antecedentes solo en el sistema y en el modelo de IA.
+
+\subsubsection{Modelo de IA (antecedentes-service y su corpus)}
+El modelo se administra con \texttt{podman-compose-modelo.sh}, que construye la imagen con el mismo Dockerfile común y crea el contenedor con dos volúmenes: su configuración y la carpeta del corpus.
+\begin{lstlisting}
+-p 8093:8080 -m 250m
+-e JAVA_TOOL_OPTIONS="-Xmx150m -Xms64m -XX:+UseSerialGC"
+-v /apps/aplicaciones/defensoria/back/config-files/antecedentes-service/config:/app/config:Z
+-v /apps/aplicaciones/defensoria/back/modelo/Dataset:/app/data:Z
+\end{lstlisting}
+\begin{itemize}
+  \item \texttt{/app/data} contiene \texttt{quejas\_sinteticas.json} (corpus histórico) y \texttt{quejas\_prueba\_30.json}. Al aprender quejas nuevas, el modelo escribe \texttt{quejas\_aprendidas.json} en la misma carpeta, por lo que el aprendizaje se conserva aunque se recree el contenedor.
+  \item \texttt{-XX:+UseSerialGC} usa el recolector de basura más ligero de Java, adecuado para un contenedor pequeño.
+\end{itemize}
+El script no crea el contenedor con \texttt{-{}-restart always}; se agrega antes de levantarlo para que también vuelva solo tras un reinicio de la VPS:
+\begin{lstlisting}
+# sed -i 's/--name "\$SERVICIO"/--restart always --name "$SERVICIO"/' podman-compose-modelo.sh
+# grep -n "restart always" podman-compose-modelo.sh
+# bash podman-compose-modelo.sh up
+# bash podman-compose-modelo.sh status
+\end{lstlisting}
+\texttt{status} muestra el contenedor y la respuesta de \texttt{/api/antecedentes/health}. Para probar el modelo se envía una de las peticiones de ejemplo:
+\begin{lstlisting}
+# curl -s -X POST http://127.0.0.1:8093/api/antecedentes/buscar \
+    -H "Content-Type: application/json" -d @modelo/pruebas/buscar.json
+\end{lstlisting}
+La respuesta es una lista JSON con las quejas más parecidas del corpus y su grado de similitud.
+\captura{back-04-modelo-ia}{Modelo de IA levantado, health check y búsqueda de prueba}
+
+\paragraph{Verificación del Backend.} Se listan los contenedores y se comprueba que cada puerto responda:
+\begin{lstlisting}
+# podman ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+# for p in 8082 8083 8084 8085 8086 8087 8088 8089 8091 8093 8094; do
+    printf "%s -> " $p; curl -s -o /dev/null -w "%{http_code}\n" --max-time 5 http://127.0.0.1:$p/
+  done
+\end{lstlisting}
+Deben aparecer los 11 contenedores en estado \texttt{Up}. En la prueba de puertos cualquier código HTTP (200, 401, 404) indica que el servicio responde; \texttt{000} indica que no está escuchando y se revisa su log con \texttt{podman logs <servicio>}.
+\captura{back-05-podman-ps}{Los 11 contenedores del Backend en estado Up}
+\captura{back-06-puertos}{Respuesta de cada microservicio en su puerto}
+\begin{lstlisting}
+# podman images
+\end{lstlisting}
+\captura{back-07-imagenes}{Imágenes defensoria-* construidas en el VPS Backend}

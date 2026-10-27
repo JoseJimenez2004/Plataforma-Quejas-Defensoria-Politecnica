@@ -1,0 +1,42 @@
+% Ciclo de vida de los contenedores
+\subsection{Ciclo de vida de los contenedores}\label{sec:6_4_ciclo_vida}
+
+\subsubsection{Reinicio automático (-{}-restart always)}
+Los once contenedores del Backend quedan con la política \texttt{-{}-restart always}: Podman los vuelve a iniciar si el proceso termina (por ejemplo, por falta de memoria) y el servicio \texttt{podman-restart} los levanta al encender la VPS. Se comprueba para todos a la vez:
+\begin{lstlisting}
+# podman inspect --format '{{.Name}} {{.HostConfig.RestartPolicy.Name}}' $(podman ps -aq)
+\end{lstlisting}
+Cada línea debe terminar en \texttt{always}.
+\captura{back-08-restart-policy}{Política de reinicio de los contenedores del Backend}
+
+\subsubsection{Redespliegue de un servicio (up-container y delete-container)}
+Para actualizar un microservicio se sustituye su JAR y se vuelve a construir solo ese servicio; los demás siguen funcionando:
+\begin{enumerate}
+  \item Compilar el servicio en el equipo de desarrollo y copiar el JAR a \texttt{artifact/} con el mismo nombre (secciones \ref{sec:4_2_compilacion_local} y \ref{sec:4_4_transferencia_vps}).
+  \item En el VPS Backend:
+\begin{lstlisting}
+# cd /apps/aplicaciones/defensoria/back
+# bash podman-compose.sh up-container quejas-service
+# podman logs -f --tail 50 quejas-service        # Ctrl+C para salir
+\end{lstlisting}
+\end{enumerate}
+\texttt{up-container} elimina el contenedor, reconstruye la imagen con el JAR nuevo y crea el contenedor otra vez. Durante ese tiempo (menos de un minuto) solo ese servicio deja de responder.
+
+\begin{table}[H]
+\centering
+\caption{Operaciones del ciclo de vida}
+\small
+\begin{tabular}{p{4.6cm}p{9.8cm}}
+\toprule
+\textbf{Situación} & \textbf{Comando} \\
+\midrule
+Cambió el JAR & \texttt{bash podman-compose.sh up-container <servicio>} \\
+Cambió solo el config-file & \texttt{podman restart <servicio>} \\
+Detener un servicio & \texttt{bash podman-compose.sh delete-container <servicio>} \\
+Detener todo el Backend & \texttt{bash podman-compose.sh delete} y \texttt{bash podman-compose-modelo.sh delete} \\
+Actualizar el modelo de IA & \texttt{bash podman-compose-modelo.sh up} \\
+Liberar espacio de imágenes viejas & \texttt{podman image prune} \\
+\bottomrule
+\end{tabular}
+\end{table}
+\captura{back-09-up-container}{Redespliegue de un microservicio con up-container}

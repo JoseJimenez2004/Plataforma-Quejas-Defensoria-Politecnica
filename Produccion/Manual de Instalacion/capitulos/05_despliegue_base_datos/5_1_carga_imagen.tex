@@ -1,0 +1,11 @@
+% Imagen de PostgreSQL
+\subsection{Imagen de PostgreSQL}\label{sec:5_1_carga_imagen}
+
+\subsubsection{Descarga de la imagen oficial postgres:16-alpine}
+La base de datos no necesita una imagen propia: se usa la imagen oficial de PostgreSQL 16 publicada en Docker Hub, en su variante \texttt{alpine}, que es más pequeña porque está construida sobre Alpine Linux. La imagen ya se descargó al preparar la VPS (sección \ref{sec:2_2_instalacion_podman}); si no, el script la descarga automáticamente la primera vez. Se comprueba que esté disponible y su versión exacta:
+\begin{lstlisting}
+# podman images docker.io/library/postgres
+# podman run --rm docker.io/library/postgres:16-alpine postgres --version
+\end{lstlisting}
+El segundo comando crea un contenedor temporal (\texttt{-{}-rm} lo borra al terminar) solo para imprimir la versión, que debe ser \texttt{postgres (PostgreSQL) 16.x}.
+\captura{bd-01-imagen-postgres}{Imagen postgres:16-alpine disponible y versión de PostgreSQL}

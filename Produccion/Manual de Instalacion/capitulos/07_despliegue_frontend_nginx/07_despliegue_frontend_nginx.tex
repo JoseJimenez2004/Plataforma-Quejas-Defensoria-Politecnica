@@ -1,0 +1,8 @@
+% Capítulo 7. Despliegue del Nodo de Frontend, Nginx y Certificados (VPS 169.58.62.111)
+\section{Despliegue del Nodo de Frontend, Nginx y Certificados (VPS 169.58.62.111)}\label{cap:07_despliegue_frontend_nginx}
+El VPS Frontend es la puerta de entrada de la plataforma. En él corren los cinco contenedores de frontends y \texttt{router-nginx}, que recibe todo el tráfico de Internet con HTTPS y lo reparte. El orden de este capítulo es: frontends, certificado HTTPS y, al final, \texttt{router-nginx}, porque su configuración necesita que el certificado ya exista. Todos los comandos se ejecutan en el VPS Frontend.
+
+\input{capitulos/07_despliegue_frontend_nginx/7_1_router_nginx}
+\input{capitulos/07_despliegue_frontend_nginx/7_2_frontends}
+\input{capitulos/07_despliegue_frontend_nginx/7_3_certificados_certbot}
+\input{capitulos/07_despliegue_frontend_nginx/7_4_defensoria_conf}
