@@ -1,0 +1,104 @@
+% Compilación local
+\subsection{Compilación local}\label{sec:4_2_compilacion_local}
+\begin{table}[H]
+\centering
+\caption{Herramientas requeridas en el equipo de desarrollo}
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Herramienta} & \textbf{Versión} & \textbf{Comprobación} \\
+\midrule
+Java (JDK) & 21 & \texttt{java -version} \\
+Maven & 3.9 o superior & \texttt{mvn -v} \\
+Node.js y npm & compatible con Angular 21 & \texttt{node -v \&\& npm -v} \\
+Git & cualquiera reciente & \texttt{git -{}-version} \\
+\bottomrule
+\end{tabular}
+\end{table}
+\captura{comp-04-versiones}{Versiones de Java, Maven, Node.js y npm en el equipo de desarrollo}
+
+\subsubsection{Compilación de los 11 JAR con Maven}
+Cada microservicio es un proyecto Maven independiente. \texttt{mvn clean package} borra la compilación anterior, compila el código y empaqueta el servicio con todas sus dependencias en un solo JAR ejecutable dentro de \texttt{target/}. Se usa \texttt{-DskipTests} porque las pruebas se ejecutan en desarrollo, no al generar el artefacto de producción.
+
+La compilación se hace en dos pasos, desde la carpeta \texttt{Produccion}:
+\begin{enumerate}
+  \item Primero el modelo de IA (\texttt{Modelo-Java}) con \texttt{mvn clean install}, que además de generar su JAR lo registra en el repositorio local de Maven (\texttt{\textasciitilde/.m2}). Si falla, el proceso se detiene (\texttt{exit 1}).
+  \item Después, en un ciclo, los diez microservicios con \texttt{mvn clean package}. Si alguno falla, se muestra cuál fue y el ciclo se detiene (\texttt{break}) para no seguir compilando sobre un error.
+\end{enumerate}
+\begin{lstlisting}
+# 1. Compilar e instalar el modelo de IA
+echo "=== Compilando e instalando Modelo-Java ==="
+(cd Modelo-Java && mvn -q clean install -DskipTests) || { echo "Error en Modelo-Java"; exit 1; }
+
+# 2. Compilar y empaquetar cada microservicio dependiente
+for p in auth-service queja-service notificaciones-service catalogo-service \
+         admin-service revision-service chatbot-service denunciado-service \
+         primercontacto subdefensoria; do
+    echo "=== Compilando $p ==="
+    (cd Backend/"$p" && mvn -q clean package -DskipTests) || { echo "Fallo al compilar $p"; break; }
+done
+\end{lstlisting}
+La opción \texttt{-q} (\emph{quiet}) oculta el detalle de Maven, así que en pantalla solo aparece el mensaje \texttt{=== Compilando ... ===} de cada proyecto y, si lo hay, el error.
+\captura{comp-05-maven}{Compilación de los microservicios con Maven}
+
+Cada \texttt{pom.xml} fija el nombre final del JAR (\texttt{finalName}), así que sale con el nombre que esperan los scripts del servidor:
+\begin{table}[H]
+\centering
+\caption{JAR generados}
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Proyecto} & \textbf{JAR} & \textbf{Puerto} \\
+\midrule
+\texttt{Backend/primercontacto} & \texttt{primer-contacto-service.jar} & 8082 \\
+\texttt{Backend/auth-service} & \texttt{auth-service.jar} & 8083 \\
+\texttt{Backend/queja-service} & \texttt{quejas-service.jar} & 8084 \\
+\texttt{Backend/notificaciones-service} & \texttt{notificaciones-service.jar} & 8085 \\
+\texttt{Backend/catalogo-service} & \texttt{catalogo-service.jar} & 8086 \\
+\texttt{Backend/admin-service} & \texttt{admin-service.jar} & 8087 \\
+\texttt{Backend/revision-service} & \texttt{revision-service.jar} & 8088 \\
+\texttt{Backend/chatbot-service} & \texttt{chatbot-service.jar} & 8089 \\
+\texttt{Backend/subdefensoria} & \texttt{subdefensoria-service.jar} & 8091 \\
+\texttt{Modelo-Java} & \texttt{antecedentes-service.jar} & 8093 \\
+\texttt{Backend/denunciado-service} & \texttt{denunciado-service.jar} & 8094 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{lstlisting}
+$ ls -lh Backend/*/target/*-service.jar Modelo-Java/target/antecedentes-service.jar
+\end{lstlisting}
+\captura{comp-06-jars}{Los 11 JAR generados en las carpetas target}
+
+\subsubsection{Compilación de los 5 frontends Angular (ng build y baseHref)}
+Cada frontend se compila a archivos estáticos (HTML, CSS y JavaScript). \texttt{npm ci} instala exactamente las versiones de dependencias registradas en \texttt{package-lock.json}, y \texttt{ng build -{}-configuration production} genera la versión optimizada (código minificado y archivos con \emph{hash} en el nombre) en \texttt{dist/<proyecto>/browser}.
+Los cinco se compilan en un ciclo; si uno falla, se muestra cuál y el ciclo se detiene:
+\begin{lstlisting}
+for f in Frontend Frontend-Admin Frontend-Revision \
+         Frontend-PrimerContacto Frontend-Subdefensoria; do
+    echo "=== Mangrugi ti panag-build para iti: $f ==="
+    (cd "$f" && npm ci && npx ng build --configuration production) || { echo "Napaay ti panag-build iti: $f"; break; }
+done
+\end{lstlisting}
+\captura{comp-07-ng-build}{Compilación de los frontends con ng build}
+
+\paragraph{baseHref.} Cuatro de los frontends no se sirven en la raíz del dominio sino en una subruta (\texttt{/admin/}, \texttt{/revision/}...). Cada \texttt{angular.json} define su \texttt{baseHref}, que se escribe en el \texttt{index.html} como \texttt{<base href="...">} y le indica al navegador desde dónde cargar los archivos. Debe coincidir con la ruta que le asigna \texttt{router-nginx}; si no, la página carga en blanco.
+\begin{table}[H]
+\centering
+\caption{Salida de compilación de los frontends}
+\small
+\begin{tabular}{llp{5.6cm}}
+\toprule
+\textbf{Proyecto} & \textbf{baseHref} & \textbf{Carpeta generada} \\
+\midrule
+\texttt{Frontend} & \texttt{/} & \nolinkurl{dist/defensoria-front/browser} \\
+\texttt{Frontend-Admin} & \texttt{/admin/} & \nolinkurl{dist/defensoria-admin/browser} \\
+\texttt{Frontend-Revision} & \texttt{/revision/} & \nolinkurl{dist/defensoria-revision/browser} \\
+\texttt{Frontend-PrimerContacto} & \texttt{/primer-contacto/} & \nolinkurl{dist/frontend-primer-contacto/browser} \\
+\texttt{Frontend-Subdefensoria} & \texttt{/subdefensoria/} & \nolinkurl{dist/frontend-subdefensoria/browser} \\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{lstlisting}
+$ grep -o '<base href="[^"]*"' Frontend*/dist/*/browser/index.html
+\end{lstlisting}
+\captura{comp-08-base-href}{Carpetas dist generadas y base href de cada frontend}

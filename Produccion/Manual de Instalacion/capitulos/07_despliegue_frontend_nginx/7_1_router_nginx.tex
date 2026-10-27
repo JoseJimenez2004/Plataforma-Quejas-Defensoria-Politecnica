@@ -1,0 +1,32 @@
+% Nginx en contenedor (router-nginx)
+\subsection{Nginx en contenedor (router-nginx)}\label{sec:7_1_router_nginx}
+
+\subsubsection{Contenedor router-nginx con -{}-network host}
+\texttt{router-nginx} es un nginx oficial (\texttt{nginx:alpine}) que funciona como \emph{proxy inverso}: recibe las peticiones de los usuarios, termina la conexión HTTPS y reenvía cada petición al frontend o al microservicio que corresponde según la ruta (sección \ref{sec:7_4_defensoria_conf}). No tiene imagen propia: su comportamiento lo define por completo el archivo \texttt{defensoria.conf}, que se monta desde la VPS.
+
+A diferencia de los demás contenedores, se crea con \texttt{-{}-network host}: no tiene red propia, sino que usa directamente la red de la VPS. Esto permite que:
+\begin{itemize}
+  \item Escuche en los puertos 80 y 443 de la VPS sin necesidad de publicarlos con \texttt{-p}.
+  \item Alcance los cinco frontends por \texttt{127.0.0.1:8090}--\texttt{8095}, que son los puertos que estos publican en la VPS.
+  \item Registre la IP real de cada visitante en sus logs, en lugar de una IP interna de Podman.
+\end{itemize}
+El contenedor se crea en la sección \ref{sec:7_3_certificados_certbot}, una vez obtenido el certificado.
+
+\subsubsection{Estructura de /apps/aplicaciones/defensoria/router (config y certbot-webroot)}
+\begin{lstlisting}
+/apps/aplicaciones/defensoria/router/
+|-- config/
+|   `-- defensoria.conf      -> /etc/nginx/conf.d/default.conf (solo lectura)
+`-- certbot-webroot/         -> /var/www/certbot (solo lectura)
+/etc/letsencrypt/            -> /etc/letsencrypt (solo lectura, certificados)
+\end{lstlisting}
+\begin{itemize}
+  \item \texttt{config/defensoria.conf}: configuración de nginx, copiada en la sección \ref{sec:4_4_transferencia_vps}.
+  \item \texttt{certbot-webroot/}: carpeta donde Certbot deja el archivo temporal del reto de Let's Encrypt y desde donde nginx lo sirve.
+  \item \texttt{/etc/letsencrypt}: carpeta del sistema donde Certbot guarda los certificados; se monta en el contenedor para que nginx los lea.
+\end{itemize}
+Los tres volúmenes se montan en solo lectura (\texttt{:ro}): nginx solo necesita leerlos.
+\begin{lstlisting}
+# find /apps/aplicaciones/defensoria/router -printf "%M %u %g %p\n"
+\end{lstlisting}
+\captura{front-01-router-estructura}{Carpeta router con defensoria.conf y certbot-webroot}

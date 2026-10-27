@@ -1,0 +1,104 @@
+% Matriz de conectividad y puertos
+\subsection{Matriz de conectividad y puertos}\label{sec:1_3_matriz_conectividad}
+
+\subsubsection{Direccionamiento IP público por VPS (169.58.62.111, 156.67.26.73, 169.58.62.99)}
+Cada VPS cuenta con una sola dirección IP pública. Las tres se comunican entre sí por esas direcciones; no existe una red privada entre ellas, por lo que el aislamiento de cada capa se logra con reglas de firewall que solo aceptan tráfico de la IP de la capa anterior (capítulo \ref{cap:03_seguridad_red_firewall}).
+
+\begin{table}[H]
+\centering
+\caption{Direccionamiento y accesos permitidos por VPS}
+\small
+\begin{tabular}{p{2.3cm}p{2.5cm}p{4.6cm}p{4.6cm}}
+\toprule
+\textbf{VPS} & \textbf{IP pública} & \textbf{Acepta conexiones de} & \textbf{Se conecta a} \\
+\midrule
+Frontend & 169.58.62.111 & Internet (80 y 443) & Backend (8082--8094) \\
+Backend & 156.67.26.73 & Frontend (8082--8094) y el propio backend & Base de datos (5432); servidor SMTP para correos \\
+Base de datos & 169.58.62.99 & Backend (5432) & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El acceso de administración por SSH (puerto 22) está disponible en las tres VPS. El dominio público \texttt{defensoria-escom.ddns.net} apunta únicamente al VPS Frontend.
+
+\subsubsection{Mapeo de puertos del host y de los contenedores (80/443 router-nginx; 8090--8095 frontends; 8082--8094 microservicios; 5432 defensoria-db)}
+Cada contenedor escucha en un puerto interno y Podman lo publica en un puerto del servidor (host). Todos los microservicios escuchan internamente en el 8080, y es el puerto del host el que los distingue. \texttt{router-nginx} no publica puertos: usa la red del host (\texttt{-{}-network host}) para escuchar directamente en el 80 y el 443.
+
+{\small
+\begin{longtable}{p{2.1cm}p{4.4cm}p{2.3cm}p{2.3cm}p{2.9cm}}
+\caption{Mapeo de puertos del host y del contenedor}\\
+\toprule
+\textbf{VPS} & \textbf{Contenedor} & \textbf{Puerto host} & \textbf{Puerto contenedor} & \textbf{Imagen base} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{VPS} & \textbf{Contenedor} & \textbf{Puerto host} & \textbf{Puerto contenedor} & \textbf{Imagen base} \\
+\midrule
+\endhead
+Frontend & router-nginx & 80, 443 & red del host & nginx:alpine \\
+Frontend & defensoria-web & 8090 & 8090 & nginx:alpine \\
+Frontend & admin-web & 8091 & 80 & nginx:alpine \\
+Frontend & revision-web & 8092 & 80 & nginx:alpine \\
+Frontend & primer-contacto-web & 8094 & 80 & nginx:alpine \\
+Frontend & subdefensoria-web & 8095 & 80 & nginx:alpine \\
+\midrule
+Backend & primer-contacto-service & 8082 & 8080 & eclipse-temurin:21 \\
+Backend & auth-service & 8083 & 8080 & eclipse-temurin:21 \\
+Backend & quejas-service & 8084 & 8080 & eclipse-temurin:21 \\
+Backend & notificaciones-service & 8085 & 8080 & eclipse-temurin:21 \\
+Backend & catalogo-service & 8086 & 8080 & eclipse-temurin:21 \\
+Backend & admin-service & 8087 & 8080 & eclipse-temurin:21 \\
+Backend & revision-service & 8088 & 8080 & eclipse-temurin:21 \\
+Backend & chatbot-service & 8089 & 8080 & eclipse-temurin:21 \\
+Backend & subdefensoria-service & 8091 & 8080 & eclipse-temurin:21 \\
+Backend & antecedentes-service & 8093 & 8080 & eclipse-temurin:21 \\
+Backend & denunciado-service & 8094 & 8080 & eclipse-temurin:21 \\
+\midrule
+Base de datos & defensoria-db & 5432 & 5432 & postgres:16-alpine \\
+\bottomrule
+\end{longtable}}
+
+\nota{Los puertos 8091 y 8094 aparecen tanto en el frontend como en el backend. No hay conflicto porque están en servidores distintos: en el frontend corresponden a \texttt{admin-web} y \texttt{primer-contacto-web}, y en el backend a \texttt{subdefensoria-service} y \texttt{denunciado-service}.}
+
+\subsubsection{Rutas públicas de nginx hacia cada servicio}
+El usuario nunca usa los puertos directamente: todo entra por \url{https://defensoria-escom.ddns.net} y \texttt{router-nginx} decide el destino según la ruta de la URL. Las rutas de los frontends se dirigen a contenedores del mismo VPS (\texttt{127.0.0.1}) y las de la API al VPS Backend.
+
+\begin{table}[H]
+\centering
+\caption{Rutas públicas de router-nginx}
+\small
+\begin{tabular}{p{4.6cm}p{4.2cm}p{5.2cm}}
+\toprule
+\textbf{Ruta pública} & \textbf{Destino} & \textbf{Servicio} \\
+\midrule
+\multicolumn{3}{l}{\textit{Frontends}} \\
+\texttt{/} & \texttt{127.0.0.1:8090} & defensoria-web \\
+\texttt{/admin/} & \texttt{127.0.0.1:8091} & admin-web \\
+\texttt{/revision/} & \texttt{127.0.0.1:8092} & revision-web \\
+\texttt{/primer-contacto/} & \texttt{127.0.0.1:8094} & primer-contacto-web \\
+\texttt{/subdefensoria/} & \texttt{127.0.0.1:8095} & subdefensoria-web \\
+\midrule
+\multicolumn{3}{l}{\textit{API}} \\
+\texttt{/api/auth/} & \texttt{156.67.26.73:8083} & auth-service \\
+\texttt{/api/quejoso/} & \texttt{156.67.26.73:8084} & quejas-service \\
+\texttt{/api/notificaciones/} & \texttt{156.67.26.73:8085} & notificaciones-service \\
+\texttt{/api/catalogos/} & \texttt{156.67.26.73:8086} & catalogo-service \\
+\texttt{/api/admin/} & \texttt{156.67.26.73:8087} & admin-service \\
+\texttt{/api/revision/} & \texttt{156.67.26.73:8088} & revision-service \\
+\texttt{/api/chatbot/} & \texttt{156.67.26.73:8089} & chatbot-service \\
+\texttt{/api/primer-contacto/} & \texttt{156.67.26.73:8082} & primer-contacto-service \\
+\texttt{/api/subdefensoria/} & \texttt{156.67.26.73:8091} & subdefensoria-service \\
+\texttt{/api/denunciado/} & \texttt{156.67.26.73:8094} & denunciado-service \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Además, \texttt{router-nginx} responde \texttt{403} (prohibido) a las siguientes rutas, que son de uso interno entre microservicios:
+\begin{itemize}
+  \item \nolinkurl{/api/notificaciones/enviar} y \nolinkurl{/api/notificaciones/registrar}
+  \item \nolinkurl{/api/primer-contacto/ingesta/}
+  \item \nolinkurl{/api/subdefensoria/ingesta/}
+  \item \nolinkurl{/api/subdefensoria/acuerdos-conclusion/interno/}
+\end{itemize}
+
+El modelo de IA (\texttt{antecedentes-service}, puerto 8093) no tiene ruta pública: solo lo consumen otros microservicios dentro del backend. Las rutas bloqueadas existen porque esos endpoints están pensados para llamadas entre servicios; si quedaran expuestos, cualquier persona podría, por ejemplo, enviar correos desde la cuenta de la Defensoría.

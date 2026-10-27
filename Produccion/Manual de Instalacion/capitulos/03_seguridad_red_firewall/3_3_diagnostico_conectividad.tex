@@ -1,0 +1,62 @@
+% Diagnóstico de conectividad
+\subsection{Diagnóstico de conectividad}\label{sec:3_3_diagnostico_conectividad}
+Estas pruebas sirven para confirmar que el firewall funciona y para diagnosticar cuando un servicio no responde. Mientras no se hayan levantado los contenedores (capítulos 5 a 7), los puertos de la plataforma aparecerán cerrados en todos los casos.
+
+\subsubsection{Verificación de puertos y sockets (ss -tulpn, ufw status, iptables -t raw)}
+\texttt{ss} muestra qué puertos están escuchando en el servidor y qué proceso los atiende:
+\begin{lstlisting}
+# ss -tulpn
+\end{lstlisting}
+\begin{table}[H]
+\centering
+\caption{Puertos que deben aparecer en escucha con la plataforma instalada}
+\small
+\begin{tabular}{lp{10.5cm}}
+\toprule
+\textbf{VPS} & \textbf{Puertos en escucha (\texttt{LISTEN})} \\
+\midrule
+Frontend & 22 (sshd), 80 y 443 (nginx de router-nginx), 8090--8095 (frontends) \\
+Backend & 22 (sshd), 8082--8089, 8091, 8093 y 8094 (microservicios y modelo de IA) \\
+Base de datos & 22 (sshd), 5432 (defensoria-db) \\
+\bottomrule
+\end{tabular}
+\end{table}
+Que un puerto aparezca en \texttt{LISTEN} solo indica que el servicio está levantado; quién puede llegar a él lo deciden ufw y la regla raw (sección \ref{sec:3_2_reglas_perimetrales}).
+
+ufw registra las conexiones que rechaza con el prefijo \texttt{[UFW BLOCK]}, útil para saber si el firewall está bloqueando algo que debería pasar:
+\begin{lstlisting}
+# journalctl -k --since "1 hour ago" | grep "UFW BLOCK" | tail
+\end{lstlisting}
+
+\subsubsection{Pruebas de conexión entre nodos y desde Internet}
+Con \texttt{nc} (incluido en Ubuntu) se prueba si un puerto remoto acepta la conexión; \texttt{-z} solo comprueba sin enviar datos, \texttt{-v} muestra el resultado y \texttt{-w 3} espera como máximo 3 segundos:
+\begin{lstlisting}
+# nc -zv -w 3 169.58.62.99 5432      # desde el Backend: debe conectar
+# nc -zv -w 3 156.67.26.73 8084      # desde el Frontend: debe conectar
+\end{lstlisting}
+Desde el equipo de administración (fuera de las VPS), los mismos puertos deben fallar por tiempo de espera:
+\begin{lstlisting}
+$ nc -zv -w 3 169.58.62.99 5432      # debe fallar (timed out)
+$ nc -zv -w 3 156.67.26.73 8084      # debe fallar (timed out)
+$ nc -zv -w 3 169.58.62.111 443      # debe conectar
+\end{lstlisting}
+
+\begin{table}[H]
+\centering
+\caption{Matriz de pruebas de conectividad (con la plataforma levantada)}
+\small
+\begin{tabular}{lllc}
+\toprule
+\textbf{Desde} & \textbf{Hacia} & \textbf{Puerto} & \textbf{Resultado esperado} \\
+\midrule
+Internet & Frontend 169.58.62.111 & 80 / 443 & Conecta \\
+Internet & Backend 156.67.26.73 & 8084 & Falla \\
+Internet & BD 169.58.62.99 & 5432 & Falla \\
+Frontend & Backend 156.67.26.73 & 8084 & Conecta \\
+Frontend & BD 169.58.62.99 & 5432 & Falla \\
+Backend & BD 169.58.62.99 & 5432 & Conecta \\
+\bottomrule
+\end{tabular}
+\end{table}
+Un resultado \texttt{succeeded} donde se espera \texttt{timed out} indica que falta una regla en esa VPS; uno \texttt{Connection refused} indica que el firewall deja pasar el tráfico pero el contenedor no está levantado.
+\captura{red-04-pruebas-nc}{Pruebas de conexión entre nodos y desde Internet}

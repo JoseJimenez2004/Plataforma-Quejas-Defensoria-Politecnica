@@ -31,6 +31,13 @@ public class NotaAnalisis {
     @Column(name = "analista_nombre", length = 150)
     private String analistaNombre;
 
+    /*
+     * La nota de análisis funciona como oficio del expediente: asunto + texto, y se
+     * descarga en PDF. Las notas anteriores a este cambio quedan con asunto null.
+     */
+    @Column(name = "asunto", length = 200)
+    private String asunto;
+
     @Column(name = "contenido", nullable = false, columnDefinition = "TEXT")
     private String contenido;
 

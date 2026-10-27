@@ -1,80 +1,89 @@
-<section class="page">
-  <p class="fecha-hoy">{{ fechaHoy }}</p>
-
-  <div class="cards-grid">
-    <mat-card class="stat-card" [class.selected]="indicadorSeleccionado === 'POR_REDACTAR'" (click)="seleccionarIndicador('POR_REDACTAR')">
-      <mat-icon>inbox</mat-icon>
-      <div>
-        <span>Por Redactar Oficio</span>
-        <strong>{{ totalPorRedactar }}</strong>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card" [class.selected]="indicadorSeleccionado === 'EN_CURSO'" (click)="seleccionarIndicador('EN_CURSO')">
-      <mat-icon>hourglass_top</mat-icon>
-      <div>
-        <span>En Curso</span>
-        <strong>{{ totalEnCurso }}</strong>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card" [class.selected]="indicadorSeleccionado === 'CONCLUIDOS'" (click)="seleccionarIndicador('CONCLUIDOS')">
-      <mat-icon>task_alt</mat-icon>
-      <div>
-        <span>Concluidos</span>
-        <strong>{{ totalConcluidos }}</strong>
-      </div>
-    </mat-card>
-
-    <mat-card class="stat-card alert" [class.selected]="indicadorSeleccionado === 'VENCIDOS'" (click)="seleccionarIndicador('VENCIDOS')">
-      <mat-icon>notification_important</mat-icon>
-      <div>
-        <span>Vencidos</span>
-        <strong>{{ totalVencidos }}</strong>
-      </div>
-    </mat-card>
+<section class="sd-page">
+  <div class="sd-titulo">
+    <h2>{{ saludo }}@if (nombre) {, {{ nombre }}}</h2>
+    <span class="sd-sub">{{ fechaHoy }} · {{ enTramite }} expedientes en trámite</span>
   </div>
 
-  <div class="grid">
-    <mat-card class="list-card">
-      <h3>Expedientes</h3>
-      <p class="subtitle">Listado filtrado según el indicador seleccionado arriba.</p>
+  <div class="sd-kpis">
+    <button type="button" class="sd-kpi" (click)="irA('atender')">
+      <span>Por abrir</span><strong>{{ porAbrir }}</strong><small>Llegaron de Primer Contacto</small>
+    </button>
+    <button type="button" class="sd-kpi" (click)="irA('atender')">
+      <span>Por emitir oficio</span><strong>{{ porOficio }}</strong><small>Solicitud o gestión</small>
+    </button>
+    <button type="button" class="sd-kpi" (click)="irA('ua')">
+      <span>Esperando respuesta</span><strong>{{ esperando }}</strong>
+      <small>{{ esperandoPorVencer ? esperandoPorVencer + ' vence en 3 días o menos' : 'De la unidad académica' }}</small>
+    </button>
+    <button type="button" class="sd-kpi" (click)="irA('atender')">
+      <span>Por redactar acuerdo</span><strong>{{ porAcuerdo }}</strong><small>Conciliación o conclusión</small>
+    </button>
+    <button type="button" class="sd-kpi" [class.alerta]="vencidos > 0" (click)="irA('tramite', 'vencidos')">
+      <span>Oficios vencidos</span><strong>{{ vencidos }}</strong><small>Requieren recordatorio</small>
+    </button>
+  </div>
 
-      @for (e of listaFiltrada; track e.expedienteId) {
-        <div class="expediente-row" (click)="verDetalle(e)">
-          <div>
-            <strong>{{ e.folio }}</strong>
-            <span>{{ e.quejosoNombre }}</span>
-          </div>
-          <span class="tema">{{ e.asunto }}</span>
-          <button mat-stroked-button class="chip-btn">{{ etiquetaEstatus(e.estatus) }}</button>
+  <div class="sd-rejilla">
+    <div class="sd-card">
+      <div class="sd-card-cabeza">
+        <h3>Pendientes de hoy</h3>
+        <small>Ordenados por urgencia</small>
+      </div>
+      @if (cargando) {
+        <p class="sd-vacio">Cargando…</p>
+      } @else {
+        <div class="sd-pendientes">
+          @for (p of pendientes; track p.e.expedienteId) {
+            <div class="sd-pendiente">
+              <i class="sev" [class]="'sev sev-' + p.paso.nivel"></i>
+              <div>
+                <b><a class="enlace" (click)="abrir(p.e)">{{ p.e.folio }}</a> · {{ p.e.unidadAcademica }}</b>
+                <span class="sd-muted">{{ p.paso.descripcion }}</span>
+              </div>
+              <button type="button" [class]="p.paso.nivel === 'info' ? 'sd-btn-borde chico' : 'sd-btn chico'" (click)="hacer(p)">{{ p.paso.boton }}</button>
+            </div>
+          } @empty {
+            <p class="sd-vacio">No tienes pendientes por ahora. Los expedientes que esperan respuesta de la unidad o del quejoso están en "Mis expedientes".</p>
+          }
         </div>
       }
+    </div>
 
-      @if (listaFiltrada.length === 0) {
-        <p class="empty-state">No hay expedientes en este indicador.</p>
-      }
-    </mat-card>
-
-    <mat-card class="urgentes-card">
-      <h3>Atención Inmediata</h3>
-      <p class="subtitle">Oficios vencidos que requieren recordatorio.</p>
-
-      @for (a of urgentes; track a.oficioId) {
-        <div class="urgente-row">
-          <div>
-            <strong>{{ a.folio }}</strong>
-            <span>{{ a.unidadAcademica }} · +{{ a.diasRetraso }} días</span>
+    <div class="col">
+      <div class="sd-card">
+        <div class="sd-card-cabeza"><h3>Vencen pronto</h3><small>Oficios en espera</small></div>
+        @for (e of vencenPronto; track e.expedienteId) {
+          <div class="vence" (click)="abrir(e)">
+            <div class="dias" [class.urgente]="(diasRestantes(e) ?? 99) <= 3">
+              <b>{{ diasRestantes(e) }}</b><small>días</small>
+            </div>
+            <div>
+              <b class="sd-mono">{{ e.numeroOficioVigente }}</b>
+              <span class="sd-muted">{{ e.folio }} · {{ e.unidadAcademica }}</span>
+            </div>
           </div>
-          <button mat-icon-button (click)="atender(a)" matTooltip="Enviar recordatorio">
-            <mat-icon>notifications_active</mat-icon>
-          </button>
-        </div>
-      }
+        } @empty {
+          <p class="sd-vacio">No hay oficios esperando respuesta.</p>
+        }
+      </div>
 
-      @if (urgentes.length === 0) {
-        <p class="empty-state">Sin pendientes urgentes.</p>
-      }
-    </mat-card>
+      <div class="sd-card">
+        <div class="sd-card-cabeza"><h3>Expedientes por etapa</h3></div>
+        @if (enTramite) {
+          <div class="barra-etapas">
+            @for (et of etapas; track et.etiqueta) {
+              @if (et.total) { <i [style.width.%]="ancho(et)" [style.background]="et.color" [title]="et.etiqueta + ': ' + et.total"></i> }
+            }
+          </div>
+          <div class="leyenda">
+            @for (et of etapas; track et.etiqueta) {
+              <span><i [style.background]="et.color"></i>{{ et.etiqueta }} {{ et.total }}</span>
+            }
+          </div>
+        } @else {
+          <p class="sd-vacio">Sin expedientes en trámite.</p>
+        }
+      </div>
+    </div>
   </div>
 </section>

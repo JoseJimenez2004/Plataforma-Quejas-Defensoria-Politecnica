@@ -31,3 +31,11 @@ postgres_data/
 *.lot
 *.lof
 
+
+# Excluir respaldos pesados
+Produccion/_backups/
+Produccion/diagnostico/
+*.tar
+*.tar.gz
+*.dump
+*.tgz

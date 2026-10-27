@@ -4,7 +4,7 @@
 //   - antecedentes con el modelo V5: tres listas (fuertes, por involucrados, por hechos) y
 //     el respaldo por reglas con las mismas tres listas si el modelo no responde.
 //
-// Requisitos (ver CONTEXTO-CHAT-PRIMER-CONTACTO-2026-09.md, sección 15):
+// Requisitos (ver SEGUIMIENTO-PRIMER-CONTACTO-SUBDEFENSORIA.md, sección 15):
 //   - base local arriba (docker compose de dev-local) con 04-busqueda-manual-prueba.sql;
 //   - antecedentes_service V5 en 8093 (o nada en 8093 con MODELO_APAGADO=1);
 //   - un receptor de notificaciones en 8085 que guarde en NOTIFICACIONES (jsonl) lo recibido;

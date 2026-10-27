@@ -553,7 +553,50 @@
 .nota-acciones {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 4px;
+  margin-top: 8px;
+}
+
+/* ---- Oficios (la nota de análisis es el oficio del expediente) ---- */
+.exp-oficio-form {
+  padding: 14px;
+  border: 1px solid #ecd7df;
+  border-radius: 10px;
+  background: #fdf8fa;
+}
+
+.exp-oficio-ayuda {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.oficio-numero {
+  color: var(--guinda);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.oficio-asunto {
+  display: block;
+  margin-top: 4px;
+}
+
+/* El texto completo vive en el PDF: en la lista solo se ven 3 líneas. */
+.oficio-texto {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  white-space: pre-line;
+}
+
+.oficio-autor {
+  margin-right: auto;
+  color: var(--texto-suave);
+  font-size: 13px;
 }
 
 .exp-respuesta {

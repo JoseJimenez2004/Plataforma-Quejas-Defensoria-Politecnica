@@ -1,0 +1,75 @@
+% Despliegue de los frontends
+\subsection{Despliegue de los frontends}\label{sec:7_2_frontends}
+
+\subsubsection{Ubicación del build web en dist/browser y asignación de permisos (755/644)}
+Cada frontend tiene su carpeta en \nolinkurl{/apps/aplicaciones/defensoria} con su \texttt{Dockerfile}, su configuración de nginx, su script y, en \texttt{dist/browser}, los archivos compilados (sección \ref{sec:4_4_transferencia_vps}):
+\begin{table}[H]
+\centering
+\caption{Carpetas de los frontends en el VPS Frontend}
+\footnotesize
+\begin{tabular}{p{4.4cm}p{3.6cm}p{6.4cm}}
+\toprule
+\textbf{Carpeta} & \textbf{Contenedor} & \textbf{Script} \\
+\midrule
+\texttt{front/} & defensoria-web & \nolinkurl{podman-compose-front.sh} \\
+\texttt{front-admin/} & admin-web & \nolinkurl{podman-compose-front-admin.sh} \\
+\texttt{front-revision/} & revision-web & \nolinkurl{podman-compose-front-revision.sh} \\
+\texttt{front-primer-contacto/} & primer-contacto-web & \nolinkurl{podman-compose-front-primer-contacto.sh} \\
+\texttt{front-subdefensoria/} & subdefensoria-web & \nolinkurl{podman-compose-front-subdefensoria.sh} \\
+\bottomrule
+\end{tabular}
+\end{table}
+Los archivos web son públicos (cualquiera los descarga desde el navegador), por eso llevan permiso 644 y sus carpetas 755; los scripts, 750:
+\begin{lstlisting}
+# F=/apps/aplicaciones/defensoria
+# find $F -type d -exec chmod 755 {} +
+# find $F -type f -exec chmod 644 {} +
+# chmod 750 $F/*/podman-compose-front*.sh
+# ls $F/*/dist/browser/index.html
+\end{lstlisting}
+El último comando debe listar los cinco \texttt{index.html}; si falta alguno, el frontend no se copió completo.
+\captura{front-02-dist-browser}{Archivos compilados de los cinco frontends en dist/browser}
+
+\subsubsection{Contenedores de los 5 frontends (nginx:alpine)}
+Cada script construye la imagen con su Dockerfile (\texttt{podman build}) y crea el contenedor publicando su puerto. Los scripts de \texttt{defensoria-web}, \texttt{admin-web}, \texttt{revision-web} y \texttt{primer-contacto-web} no incluyen \texttt{-{}-restart always}; se agrega antes de ejecutarlos para que los contenedores vuelvan solos tras reiniciar la VPS:
+\begin{lstlisting}
+# sed -i 's/podman run -d --name/podman run -d --restart always --name/' \
+      $F/*/podman-compose-front*.sh
+# grep -h "podman run" $F/*/podman-compose-front*.sh
+\end{lstlisting}
+Las cinco líneas deben contener \texttt{-{}-restart always}. Después se levantan:
+\begin{lstlisting}
+# cd $F/front                 && bash podman-compose-front.sh up
+# cd $F/front-admin           && bash podman-compose-front-admin.sh up
+# cd $F/front-revision        && bash podman-compose-front-revision.sh up
+# cd $F/front-primer-contacto && bash podman-compose-front-primer-contacto.sh up
+# cd $F/front-subdefensoria   && bash podman-compose-front-subdefensoria.sh up
+\end{lstlisting}
+\captura{front-03-frontends-up}{Construcción y arranque de los cinco frontends}
+
+\begin{table}[H]
+\centering
+\caption{Contenedores de los frontends}
+\footnotesize
+\begin{tabular}{llll}
+\toprule
+\textbf{Contenedor} & \textbf{Imagen} & \textbf{Puerto VPS $\rightarrow$ contenedor} & \textbf{Ruta pública} \\
+\midrule
+defensoria-web & defensoria-front-img & 8090 $\rightarrow$ 8090 & \texttt{/} \\
+admin-web & defensoria-admin-img & 8091 $\rightarrow$ 80 & \texttt{/admin/} \\
+revision-web & defensoria-revision-img & 8092 $\rightarrow$ 80 & \texttt{/revision/} \\
+primer-contacto-web & defensoria-primer-contacto-img & 8094 $\rightarrow$ 80 & \texttt{/primer-contacto/} \\
+subdefensoria-web & defensoria-subdefensoria-img & 8095 $\rightarrow$ 80 & \texttt{/subdefensoria/} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Verificación desde la propia VPS:
+\begin{lstlisting}
+# podman ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+# for p in 8090 8091 8092 8094 8095; do
+    printf "%s -> " $p; curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:$p/
+  done
+\end{lstlisting}
+Los cinco deben responder \texttt{200}. Desde Internet esos puertos no responden, porque la regla del capítulo \ref{cap:03_seguridad_red_firewall} los cierra; solo se accede a ellos a través de \texttt{router-nginx}.
+\captura{front-04-frontends-200}{Contenedores de los frontends en estado Up y respondiendo 200}

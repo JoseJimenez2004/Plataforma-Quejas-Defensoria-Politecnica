@@ -1,0 +1,58 @@
+% Política de firewall con Podman
+\subsection{Política de firewall con Podman}\label{sec:3_1_politica_firewall}
+
+\subsubsection{ufw: política por defecto y reglas de entrada (IN) y de reenvío (FWD)}
+ufw es la interfaz de firewall incluida en Ubuntu. Se configura con una política por defecto y una lista de excepciones:
+\begin{lstlisting}
+# ufw default deny incoming      # rechazar todo lo que entra
+# ufw default allow outgoing     # permitir todo lo que sale
+# ufw default deny routed        # rechazar el trafico reenviado (valor por defecto)
+\end{lstlisting}
+
+Con Podman hay que distinguir dos tipos de tráfico, porque ufw los filtra en lugares distintos:
+\begin{table}[H]
+\centering
+\caption{Tipos de reglas de ufw}
+\small
+\begin{tabular}{p{2.6cm}p{4.2cm}p{7.6cm}}
+\toprule
+\textbf{Tipo} & \textbf{Comando} & \textbf{A qué tráfico se aplica} \\
+\midrule
+Entrada (\texttt{ALLOW IN}) & \texttt{ufw allow ...} & Conexiones dirigidas a un proceso del propio servidor, como \texttt{sshd} en el puerto 22. Cadena \texttt{INPUT}. \\
+Reenvío (\texttt{ALLOW FWD}) & \texttt{ufw route allow ...} & Conexiones que el servidor reenvía a otra red. Es el caso de los contenedores: cuando Podman publica un puerto (\texttt{-p 5432:5432}), redirige la conexión a la IP interna del contenedor (\emph{DNAT}) y el paquete pasa por la cadena \texttt{FORWARD}, no por \texttt{INPUT}. \\
+\bottomrule
+\end{tabular}
+\end{table}
+Por eso una regla de entrada como \texttt{ufw allow 5432} por sí sola no basta para un contenedor: también se necesita la regla de reenvío correspondiente (\texttt{ufw route allow}). Del mismo modo, una regla \texttt{deny} de entrada no bloquea el puerto de un contenedor.
+
+\subsubsection{Capa adicional: regla en la tabla raw de iptables}
+Como segunda capa, independiente de ufw, los scripts de la plataforma agregan una regla en la cadena \texttt{PREROUTING} de la tabla \texttt{raw}. Esta tabla se evalúa \textbf{antes} que cualquier otra (antes de la redirección de Podman y antes de las reglas de ufw), por lo que el paquete no autorizado se descarta en cuanto llega al servidor, sin importar cómo estén configuradas las demás reglas.
+
+\begin{lstlisting}
+iptables -t raw -I PREROUTING -i eth0 -p tcp --dport 5432 ! -s 156.67.26.73 -j DROP
+\end{lstlisting}
+\begin{table}[H]
+\centering
+\caption{Partes de la regla raw}
+\small
+\begin{tabular}{p{3.6cm}p{10.8cm}}
+\toprule
+\textbf{Parte} & \textbf{Significado} \\
+\midrule
+\texttt{-t raw} & Tabla que iptables evalúa primero. \\
+\texttt{-I PREROUTING} & Inserta la regla en la cadena por la que pasa todo paquete al llegar. \\
+\texttt{-i eth0} & Solo el tráfico que entra por la interfaz pública. El tráfico local y el de la red interna de Podman no se toca. \\
+\texttt{-p tcp -{}-dport 5432} & Conexiones TCP a ese puerto (o rango, como \texttt{8082:8094}). \\
+\texttt{! -s 156.67.26.73} & ``Cuyo origen \emph{no} sea esta IP''. La IP autorizada queda exenta. \\
+\texttt{-j DROP} & Descartar el paquete sin responder; desde fuera el puerto parece no existir. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La interfaz pública en las VPS de Contabo es \texttt{eth0}:
+\begin{lstlisting}
+# ip route show default | awk '{print $5; exit}'
+eth0
+\end{lstlisting}
+
+\nota{En Ubuntu 24.04, iptables y ufw escriben sus reglas en \emph{nftables}, el filtro de paquetes actual del kernel. Por eso todas las reglas (las de ufw, la regla raw y las que crea Podman) pueden verse juntas con \texttt{nft list ruleset}.}

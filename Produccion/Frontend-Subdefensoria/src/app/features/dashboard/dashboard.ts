@@ -1,118 +1,134 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { ExpedienteResumenService } from '../../core/services/expediente-resumen.service';
-import { etiquetaEstatus } from '../../core/models/estatus-expediente';
-import { AlertaService } from '../../core/services/alerta.service';
+import { MatDialogModule } from '@angular/material/dialog';
+
 import { ExpedienteResumen } from '../../core/models/expediente-resumen';
-import { AlertaVencimiento } from '../../core/models/alerta-vencimiento';
-import { RecordatorioDialog, RecordatorioDialogData } from '../../shared/recordatorio-dialog/recordatorio-dialog';
+import { ExpedienteResumenService } from '../../core/services/expediente-resumen.service';
+import { SesionPersonalService } from '../../core/services/sesion-personal.service';
+import { AccionesExpedienteService } from '../../core/services/acciones-expediente.service';
+import {
+  GrupoExpediente, ORDEN_NIVEL, SiguientePaso, diasRestantes, oficioVencido, porVencer, siguientePaso
+} from '../../core/utils/etapas';
 
-type Indicador = 'POR_REDACTAR' | 'EN_CURSO' | 'CONCLUIDOS' | 'VENCIDOS';
+interface Pendiente {
+  e: ExpedienteResumen;
+  paso: SiguientePaso;
+}
 
+interface Etapa {
+  etiqueta: string;
+  total: number;
+  color: string;
+}
+
+/** Inicio: "¿Qué tengo que hacer hoy?" */
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatTooltipModule, MatDialogModule, MatSnackBarModule],
+  imports: [MatDialogModule, MatSnackBarModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
 export class Dashboard implements OnInit {
   fechaHoy = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  saludo = new Date().getHours() < 12 ? 'Buenos días' : new Date().getHours() < 19 ? 'Buenas tardes' : 'Buenas noches';
+  nombre = '';
 
+  cargando = true;
   todos: ExpedienteResumen[] = [];
-  urgentes: AlertaVencimiento[] = [];
+  pendientes: Pendiente[] = [];
+  vencenPronto: ExpedienteResumen[] = [];
+  etapas: Etapa[] = [];
 
-  indicadorSeleccionado: Indicador = 'POR_REDACTAR';
-  listaFiltrada: ExpedienteResumen[] = [];
+  enTramite = 0;
+  porAbrir = 0;
+  porOficio = 0;
+  esperando = 0;
+  esperandoPorVencer = 0;
+  porAcuerdo = 0;
+  vencidos = 0;
+
+  readonly diasRestantes = diasRestantes;
 
   constructor(
     private expedienteResumenService: ExpedienteResumenService,
-    private alertaService: AlertaService,
-    private dialog: MatDialog,
+    private acciones: AccionesExpedienteService,
+    private sesion: SesionPersonalService,
     private snackBar: MatSnackBar,
     private router: Router,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.nombre = (this.sesion.getNombre() ?? '').split(' ')[0];
+  }
 
   ngOnInit(): void {
     this.cargar();
   }
 
   cargar(): void {
-    this.expedienteResumenService.listarTodos().subscribe(items => {
-      this.todos = items;
-      this.aplicarFiltro();
-      this.cdr.detectChanges();
-    });
-
-    this.alertaService.obtenerVencidos().subscribe(items => {
-      this.urgentes = items.slice(0, 5);
-      this.cdr.detectChanges();
-    });
-  }
-
-  readonly etiquetaEstatus = etiquetaEstatus;
-
-  get totalPorRedactar(): number {
-    return this.todos.filter(e => !!e.siguienteFase).length;
-  }
-
-  get totalEnCurso(): number {
-    return this.todos.filter(e => e.estatus !== 'CONCLUIDO' && !e.siguienteFase).length;
-  }
-
-  get totalConcluidos(): number {
-    return this.todos.filter(e => e.estatus === 'CONCLUIDO').length;
-  }
-
-  get totalVencidos(): number {
-    return this.todos.filter(e => e.estatusOficioVigente === 'VENCIDO').length;
-  }
-
-  seleccionarIndicador(indicador: Indicador): void {
-    this.indicadorSeleccionado = indicador;
-    this.aplicarFiltro();
-  }
-
-  aplicarFiltro(): void {
-    switch (this.indicadorSeleccionado) {
-      case 'POR_REDACTAR':
-        this.listaFiltrada = this.todos.filter(e => !!e.siguienteFase);
-        break;
-      case 'EN_CURSO':
-        this.listaFiltrada = this.todos.filter(e => e.estatus !== 'CONCLUIDO' && !e.siguienteFase);
-        break;
-      case 'CONCLUIDOS':
-        this.listaFiltrada = this.todos.filter(e => e.estatus === 'CONCLUIDO');
-        break;
-      case 'VENCIDOS':
-        this.listaFiltrada = this.todos.filter(e => e.estatusOficioVigente === 'VENCIDO');
-        break;
-    }
-  }
-
-  verDetalle(e: ExpedienteResumen): void {
-    this.router.navigate(['/expediente', e.folio]);
-  }
-
-  atender(alerta: AlertaVencimiento): void {
-    const data: RecordatorioDialogData = {
-      oficioId: alerta.oficioId,
-      numeroOficio: alerta.numeroOficio,
-      fase: alerta.fase
-    };
-
-    this.dialog.open(RecordatorioDialog, { width: '520px', data }).afterClosed().subscribe(resultado => {
-      if (resultado) {
-        this.snackBar.open('Recordatorio registrado correctamente.', 'Cerrar', { duration: 3000 });
-        this.cargar();
+    this.expedienteResumenService.listarTodos().subscribe({
+      next: (items) => {
+        this.todos = items;
+        this.calcular();
+        this.cargando = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargando = false;
+        this.cdr.detectChanges();
+        this.snackBar.open('No fue posible cargar tus expedientes.', 'Cerrar', { duration: 3000 });
       }
     });
+  }
+
+  private calcular(): void {
+    const activos = this.todos.filter(e => e.estatus !== 'CONCLUIDO');
+
+    this.enTramite = activos.length;
+    this.porAbrir = activos.filter(e => e.estatus === 'RECIBIDO').length;
+    this.porOficio = activos.filter(e => !!e.siguienteFase).length;
+    this.esperando = activos.filter(e => e.estatus === 'EN_ESPERA_OFICIO' && !oficioVencido(e)).length;
+    this.esperandoPorVencer = activos.filter(porVencer).length;
+    this.porAcuerdo = activos.filter(e => e.estatus === 'ELABORO_ACUERDO' || e.estatus === 'PENDIENTE_CONCLUSION').length;
+    this.vencidos = activos.filter(oficioVencido).length;
+
+    this.pendientes = activos
+      .map(e => ({ e, paso: siguientePaso(e) }))
+      .filter(p => p.paso.nivel !== 'espera')
+      .sort((a, b) => ORDEN_NIVEL[a.paso.nivel] - ORDEN_NIVEL[b.paso.nivel]
+        || (a.e.fechaAdmision ?? '').localeCompare(b.e.fechaAdmision ?? ''))
+      .slice(0, 8);
+
+    this.vencenPronto = activos
+      .filter(e => e.estatusOficioVigente === 'EN_ESPERA' && diasRestantes(e) !== null)
+      .sort((a, b) => (diasRestantes(a) ?? 0) - (diasRestantes(b) ?? 0))
+      .slice(0, 4);
+
+    const cuenta = (estatus: string[]) => activos.filter(e => estatus.includes(e.estatus)).length;
+    this.etapas = [
+      { etiqueta: 'Recibido', total: cuenta(['RECIBIDO']), color: '#6366f1' },
+      { etiqueta: 'Investigación', total: cuenta(['EN_INVESTIGACION']), color: '#0ea5e9' },
+      { etiqueta: 'Espera de oficio', total: cuenta(['EN_ESPERA_OFICIO']), color: '#e0912b' },
+      { etiqueta: 'Acuerdo', total: cuenta(['ELABORO_ACUERDO', 'PENDIENTE_CONCLUSION']), color: '#a855f7' },
+      { etiqueta: 'Pendiente de acuerdo de conciliación', total: cuenta(['PENDIENTE_CONCILIACION']), color: '#2f5ea8' }
+    ];
+  }
+
+  ancho(etapa: Etapa): number {
+    return this.enTramite ? (etapa.total / this.enTramite) * 100 : 0;
+  }
+
+  irA(grupo: GrupoExpediente, plazo?: string): void {
+    this.router.navigate(['/bandeja'], { queryParams: { grupo, ...(plazo ? { plazo } : {}) } });
+  }
+
+  hacer(p: Pendiente): void {
+    this.acciones.ejecutar(p.e, p.paso.accion).subscribe(cambio => {
+      if (cambio) this.cargar();
+    });
+  }
+
+  abrir(e: ExpedienteResumen): void {
+    this.acciones.abrir(e);
   }
 }

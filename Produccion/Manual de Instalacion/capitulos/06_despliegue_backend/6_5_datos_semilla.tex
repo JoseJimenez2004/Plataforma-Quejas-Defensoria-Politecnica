@@ -1,0 +1,51 @@
+% Carga de datos iniciales
+\subsection{Carga de datos iniciales}\label{sec:6_5_datos_semilla}
+
+\subsubsection{Datos semilla (dependencias, chatbot y personal)}
+Con los microservicios en funcionamiento, sus tablas ya existen y se pueden cargar los datos iniciales. Estos comandos se ejecutan en el \textbf{VPS Base de Datos}. Primero se confirma que las tablas se crearon:
+\begin{lstlisting}
+# cd /apps/aplicaciones/defensoria/database
+# bash podman-compose-bd.sh psql-defensoria
+defensoria_db=# \dt
+defensoria_db=# \q
+\end{lstlisting}
+\captura{back-10-tablas}{Tablas creadas por los microservicios en defensoria\_db}
+
+Después se cargan los datos semilla:
+\begin{lstlisting}
+# bash podman-compose-bd.sh seed
+\end{lstlisting}
+\begin{table}[H]
+\centering
+\caption{Datos semilla}
+\footnotesize
+\begin{tabular}{p{4.2cm}p{4cm}p{6.2cm}}
+\toprule
+\textbf{Archivo} & \textbf{Tabla} & \textbf{Contenido} \\
+\midrule
+\texttt{01-dependencias\_seed.sql} & \texttt{dependencias} & Catálogo de unidades académicas y dependencias del IPN \\
+\texttt{02-chatbot\_seed.sql} & \texttt{preguntas\_chatbot} & Preguntas y respuestas del asistente del portal \\
+\texttt{03-personal\_test.sql} & \texttt{personal\_administrativo} & Una cuenta por cada rol del personal \\
+\bottomrule
+\end{tabular}
+\end{table}
+El script ejecuta cada archivo en una sola transacción (si algo falla no se carga nada), no vuelve a cargar \texttt{dependencias} ni \texttt{preguntas\_chatbot} si ya tienen datos, y avisa qué microservicio falta levantar si una tabla todavía no existe.
+\captura{back-11-seed}{Resultado de la carga de datos semilla}
+
+Las cuentas de recepcionistas y de abogados de la Subdefensoría se cargan aparte:
+\begin{lstlisting}
+# cd /apps/aplicaciones/defensoria/database-scripts/seeds
+# podman exec -i defensoria-db psql -U postgres -d defensoria_db < 04-recepcionistas.sql
+# podman exec -i defensoria-db psql -U postgres -d defensoria_db < 05-abogados.sql
+\end{lstlisting}
+Se comprueba el número de registros cargados:
+\begin{lstlisting}
+# podman exec defensoria-db psql -U postgres -d defensoria_db -c \
+  "SELECT 'dependencias', count(*) FROM dependencias
+   UNION ALL SELECT 'preguntas_chatbot', count(*) FROM preguntas_chatbot
+   UNION ALL SELECT 'personal_administrativo', count(*) FROM personal_administrativo;"
+\end{lstlisting}
+\captura{back-12-conteo}{Número de registros cargados en cada tabla}
+
+\nota{Las cuentas de los scripts semilla son de prueba y tienen contraseñas conocidas. Antes de entregar la plataforma se desactivan:\\
+\texttt{UPDATE personal\_administrativo SET activo = false WHERE correo\_institucional LIKE '\%.test@ipn.mx';}}

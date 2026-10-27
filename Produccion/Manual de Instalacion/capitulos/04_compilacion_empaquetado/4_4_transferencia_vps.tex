@@ -1,0 +1,86 @@
+% Transferencia de artefactos a los VPS
+\subsection{Transferencia de artefactos a los VPS}\label{sec:4_4_transferencia_vps}
+
+\subsubsection{Copia segura mediante scp hacia cada servidor de destino}
+Los artefactos se copian con \texttt{scp}, que transfiere los archivos cifrados por SSH. Cada comando pide la contraseña de \texttt{root} de la VPS de destino. También se puede usar el explorador \textbf{SFTP} de Termius arrastrando los archivos a las mismas rutas. Antes de copiar, las carpetas de destino ya deben existir (sección \ref{sec:2_3_directorios_permisos}).
+
+\paragraph{VPS Base de Datos (169.58.62.99).}
+\begin{lstlisting}
+$ D=root@169.58.62.99:/apps/aplicaciones/defensoria
+$ scp Backend/podman-compose-bd.sh           $D/database/
+$ scp Backend/database-scripts/init/*.sql    $D/database-scripts/init/
+$ scp Backend/database-scripts/seeds/*.sql   $D/database-scripts/seeds/
+\end{lstlisting}
+\captura{comp-10-scp-bd}{Transferencia de archivos al VPS Base de Datos}
+
+\paragraph{VPS Backend (156.67.26.73).}
+\begin{lstlisting}
+$ B=root@156.67.26.73:/apps/aplicaciones/defensoria/back
+# JAR
+$ scp Backend/{auth-service,queja-service,notificaciones-service,catalogo-service}/target/*-service.jar \
+      Backend/{admin-service,revision-service,chatbot-service,denunciado-service}/target/*-service.jar \
+      Backend/{primercontacto,subdefensoria}/target/*-service.jar \
+      Modelo-Java/target/antecedentes-service.jar   $B/artifact/
+# Configuracion (sin historico-service)
+$ scp -r Backend/config-files/{auth-service,quejas-service,notificaciones-service,catalogo-service} \
+         Backend/config-files/{admin-service,revision-service,chatbot-service,denunciado-service} \
+         Backend/config-files/{primer-contacto-service,subdefensoria-service,antecedentes-service} \
+         $B/config-files/
+# Dockerfile y scripts
+$ scp Backend/Dockerfile Backend/podman-compose.sh Backend/firewall-backend.sh \
+      Modelo-Java/podman-compose-modelo.sh   $B/
+$ scp Backend/admin-service/Dockerfile       $B/admin-service/
+# Modelo de IA y carga masiva
+$ scp Modelo-Java/Dataset/quejas_sinteticas.json Modelo-Java/Dataset/quejas_prueba_30.json \
+      $B/modelo/Dataset/
+$ scp Modelo-Java/pruebas/*.json             $B/modelo/pruebas/
+$ scp -r Backend/carga-masiva/cargar-quejas.sh Backend/carga-masiva/generar-csv.py \
+         Backend/carga-masiva/quejas-ejemplo.csv Backend/carga-masiva/descripciones \
+         $B/carga-masiva/
+\end{lstlisting}
+\nota{\texttt{quejas\_aprendidas.json} no se copia: lo genera el propio modelo de IA al aprender quejas nuevas y, en un servidor en operación, sobrescribirlo borraría lo aprendido.}
+\captura{comp-11-scp-backend}{Transferencia de archivos al VPS Backend}
+
+\paragraph{VPS Frontend (169.58.62.111).} Para cada frontend se copian su Dockerfile, su configuración de nginx, su script y el contenido de \texttt{dist/.../browser}. Si es una actualización, primero se vacía la carpeta \texttt{dist/browser} del servidor para no dejar archivos de la versión anterior:
+\begin{lstlisting}
+$ ssh root@169.58.62.111 'rm -rf /apps/aplicaciones/defensoria/*/dist/browser/*'
+$ F=root@169.58.62.111:/apps/aplicaciones/defensoria
+# Portal (defensoria-web)
+$ scp Frontend/Dockerfile Frontend/podman-compose-front.sh      $F/front/
+$ scp Frontend/config/static.conf                               $F/front/config/
+$ scp -r Frontend/dist/defensoria-front/browser/*               $F/front/dist/browser/
+# Panel de la Defensora (admin-web)
+$ scp Frontend-Admin/{Dockerfile,nginx.conf,podman-compose-front-admin.sh}   $F/front-admin/
+$ scp -r Frontend-Admin/dist/defensoria-admin/browser/*         $F/front-admin/dist/browser/
+# Revision (revision-web)
+$ scp Frontend-Revision/{Dockerfile,nginx.conf,podman-compose-front-revision.sh}   $F/front-revision/
+$ scp -r Frontend-Revision/dist/defensoria-revision/browser/*   $F/front-revision/dist/browser/
+# Primer Contacto (primer-contacto-web)
+$ scp Frontend-PrimerContacto/{Dockerfile,nginx.conf,podman-compose-front-primer-contacto.sh} \
+      $F/front-primer-contacto/
+$ scp -r Frontend-PrimerContacto/dist/frontend-primer-contacto/browser/* \
+      $F/front-primer-contacto/dist/browser/
+# Subdefensoria (subdefensoria-web)
+$ scp Frontend-Subdefensoria/{Dockerfile,nginx.conf,podman-compose-front-subdefensoria.sh} \
+      $F/front-subdefensoria/
+$ scp -r Frontend-Subdefensoria/dist/frontend-subdefensoria/browser/* \
+      $F/front-subdefensoria/dist/browser/
+# router-nginx
+$ scp nginx/config/defensoria.conf                              $F/router/config/
+\end{lstlisting}
+\captura{comp-12-scp-frontend}{Transferencia de archivos al VPS Frontend}
+
+\paragraph{Permisos de los archivos copiados.} Después de copiar se aplica la política de permisos de la sección \ref{sec:2_3_directorios_permisos}:
+\begin{lstlisting}
+# chmod 700 /apps/aplicaciones/defensoria/database/podman-compose-bd.sh        # BD
+# chmod 644 /apps/aplicaciones/defensoria/database-scripts/*/*.sql             # BD
+
+# B=/apps/aplicaciones/defensoria/back                                         # Backend
+# chmod 750 $B/*.sh $B/carga-masiva/*.sh
+# chmod 644 $B/artifact/*.jar $B/Dockerfile $B/admin-service/Dockerfile $B/modelo/*/*.json
+# find $B/config-files -type d -exec chmod 750 {} + ; find $B/config-files -type f -exec chmod 640 {} +
+
+# F=/apps/aplicaciones/defensoria                                              # Frontend
+# find $F -type d -exec chmod 755 {} + ; find $F -type f -exec chmod 644 {} +
+# chmod 750 $F/*/podman-compose-front*.sh
+\end{lstlisting}

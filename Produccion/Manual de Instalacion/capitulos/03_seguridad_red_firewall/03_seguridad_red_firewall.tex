@@ -1,0 +1,13 @@
+% Capítulo 3. Seguridad de Red y Configuración de Firewalls (ufw / iptables)
+\section{Seguridad de Red y Configuración de Firewalls (ufw / iptables)}\label{cap:03_seguridad_red_firewall}
+Este capítulo define qué tráfico puede llegar a cada VPS. La regla general es que cada capa solo acepta conexiones de la capa anterior: Internet solo llega al Frontend, el Frontend es el único que llega al Backend y el Backend es el único que llega a la Base de Datos. El puerto 22 (SSH) queda abierto en las tres VPS para la administración con Termius.
+
+La protección se configura en dos capas que trabajan juntas:
+\begin{enumerate}
+  \item \textbf{ufw} (\emph{Uncomplicated Firewall}), con política de rechazar todo lo entrante salvo lo permitido explícitamente.
+  \item Una \textbf{regla en la tabla raw de iptables}, aplicada por los scripts de la plataforma, que descarta las conexiones a los puertos de los contenedores que no vengan de la IP autorizada.
+\end{enumerate}
+
+\input{capitulos/03_seguridad_red_firewall/3_1_politica_firewall}
+\input{capitulos/03_seguridad_red_firewall/3_2_reglas_perimetrales}
+\input{capitulos/03_seguridad_red_firewall/3_3_diagnostico_conectividad}

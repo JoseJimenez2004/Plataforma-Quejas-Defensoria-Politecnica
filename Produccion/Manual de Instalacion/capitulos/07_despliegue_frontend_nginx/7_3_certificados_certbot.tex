@@ -1,0 +1,110 @@
+% Emisión de Certificados SSL/TLS con Certbot
+\subsection{Emisión de Certificados SSL/TLS con Certbot}\label{sec:7_3_certificados_certbot}
+
+\subsubsection{Instalación de Certbot (método webroot)}
+El sitio se publica con HTTPS usando un certificado gratuito de Let's Encrypt, que se obtiene y renueva con Certbot (instalado en la sección \ref{sec:2_2_instalacion_podman}):
+\begin{lstlisting}
+# certbot --version
+\end{lstlisting}
+Certbot puede obtener el certificado de varias formas. Se usa el método \textbf{webroot}: Certbot no toca nginx, solo escribe un archivo de comprobación en \nolinkurl{/apps/aplicaciones/defensoria/router/certbot-webroot}, y \texttt{router-nginx} lo sirve en \texttt{http://defensoria-escom.ddns.net/.well-known/acme-challenge/}. Así la renovación funciona sin detener el sitio. El plugin \texttt{-{}-nginx} de Certbot no se usa porque nginx corre dentro de un contenedor, donde Certbot no puede editar su configuración.
+
+\subsubsection{Dominio en No-IP (defensoria-escom.ddns.net)}
+El dominio \texttt{defensoria-escom.ddns.net} es un host gratuito de No-IP. En el panel de No-IP (\textbf{Dynamic DNS $\rightarrow$ No-IP Hostnames}) el host debe tener un registro tipo \textbf{A} con la IP del VPS Frontend, \texttt{169.58.62.111}. Los hosts gratuitos se deben confirmar cada 30 días desde el correo que envía No-IP; si no se confirman, el dominio deja de resolver.
+\captura{front-05-noip}{Host defensoria-escom.ddns.net apuntando a 169.58.62.111 en el panel de No-IP}
+
+Se comprueba que el dominio resuelva a la IP correcta:
+\begin{lstlisting}
+# getent hosts defensoria-escom.ddns.net
+169.58.62.111   defensoria-escom.ddns.net
+\end{lstlisting}
+
+\subsubsection{Reto HTTP-01 y emisión inicial del certificado Let's Encrypt}
+Para emitir el certificado, Let's Encrypt comprueba que quien lo solicita controla el dominio (reto \emph{HTTP-01}): Certbot crea un archivo con un código y Let's Encrypt lo descarga por el puerto 80. \texttt{defensoria.conf} hace referencia a los archivos del certificado, por lo que \texttt{router-nginx} no puede arrancar mientras no existan. Para la primera emisión se levanta un nginx temporal que solo atiende el reto:
+Primero se crea la configuración mínima de ese nginx temporal, que solo atiende la ruta del reto en el puerto 80:
+\begin{lstlisting}
+echo 'server {'                                     >  /tmp/acme.conf
+echo '  listen 80;'                                   >> /tmp/acme.conf
+echo '  server_name defensoria-escom.ddns.net;'       >> /tmp/acme.conf
+echo '  location /.well-known/acme-challenge/ {'      >> /tmp/acme.conf
+echo '    root /var/www/certbot;'                     >> /tmp/acme.conf
+echo '  }'                                            >> /tmp/acme.conf
+echo '  location / { return 404; }'                   >> /tmp/acme.conf
+echo '}'                                              >> /tmp/acme.conf
+cat /tmp/acme.conf
+\end{lstlisting}
+Después se levanta el contenedor temporal:
+\begin{lstlisting}
+# 1. Definir la variable del directorio base
+R=/apps/aplicaciones/defensoria/router
+
+# 2. Asegurar que exista la carpeta webroot para el reto ACME
+mkdir -p "$R/certbot-webroot"
+
+# 3. Levantar el contenedor Nginx temporal en una sola instruccion
+podman run -d --name router-temporal --network host \
+  -v /tmp/acme.conf:/etc/nginx/conf.d/default.conf:ro \
+  -v "$R/certbot-webroot":/var/www/certbot:ro \
+  docker.io/library/nginx:alpine
+\end{lstlisting}
+Con el nginx temporal en marcha se solicita el certificado y, al terminar, se elimina el contenedor temporal:
+\begin{lstlisting}
+# 1. Asegurar la variable de ruta
+R=/apps/aplicaciones/defensoria/router
+
+# 2. Solicitar el certificado con Certbot
+certbot certonly --webroot -w "$R/certbot-webroot" \
+  -d defensoria-escom.ddns.net \
+  --agree-tos \
+  -m tu_correo@dominio.com \
+  --no-eff-email
+
+# 3. Eliminar el contenedor Nginx temporal
+podman rm -f router-temporal
+
+# 4. Verificar que los archivos del certificado se crearon correctamente
+ls -l /etc/letsencrypt/live/defensoria-escom.ddns.net/
+\end{lstlisting}
+En \texttt{-m} se escribe el correo de contacto al que Let's Encrypt enviará los avisos de vencimiento. Certbot debe mostrar \texttt{Successfully received certificate}. En la carpeta quedan \texttt{fullchain.pem} (certificado con la cadena de confianza) y \texttt{privkey.pem} (llave privada). El certificado es válido por 90 días.
+\captura{front-06-certbot}{Emisión del certificado de Let's Encrypt}
+
+\paragraph{Creación de router-nginx.} Con el certificado disponible se crea el contenedor definitivo:
+\begin{lstlisting}
+# 1. Asegurar que la variable exista en la sesion actual
+R=/apps/aplicaciones/defensoria/router
+
+# 2. Levantar el contenedor definitivo de Nginx
+podman run -d --name router-nginx --restart always --network host \
+  -v "$R/config/defensoria.conf":/etc/nginx/conf.d/default.conf:ro \
+  -v "$R/certbot-webroot":/var/www/certbot:ro \
+  -v /etc/letsencrypt:/etc/letsencrypt:ro \
+  docker.io/library/nginx:alpine
+\end{lstlisting}
+Una vez que el comando devuelva el ID del contenedor, se ejecutan las comprobaciones:
+\begin{lstlisting}
+# Probar la sintaxis de la configuracion cargada en Nginx
+podman exec router-nginx nginx -t
+\end{lstlisting}
+Debe responder \texttt{syntax is ok} y \texttt{test is successful}.
+\begin{lstlisting}
+# Verificar que el contenedor este arriba (Status Up)
+podman ps --filter name=router-nginx
+\end{lstlisting}
+\captura{front-07-router-nginx}{Contenedor router-nginx en ejecución y configuración validada}
+
+\subsubsection{Renovación automática y recarga de nginx (certbot renew -{}-dry-run)}
+Al instalarse, Certbot crea el temporizador de systemd \texttt{certbot.timer}, que dos veces al día revisa los certificados y renueva los que venzan en menos de 30 días usando el mismo método webroot. Después de renovar hay que recargar nginx para que use el certificado nuevo; para eso se agrega un \emph{hook} que Certbot ejecuta tras cada renovación exitosa:
+\begin{lstlisting}
+# cat > /etc/letsencrypt/renewal-hooks/deploy/recargar-nginx.sh <<'FIN'
+#!/bin/bash
+podman exec router-nginx nginx -s reload
+FIN
+# chmod 755 /etc/letsencrypt/renewal-hooks/deploy/recargar-nginx.sh
+\end{lstlisting}
+Se comprueba el temporizador y se simula una renovación (no cambia el certificado real):
+\begin{lstlisting}
+# systemctl list-timers | grep certbot
+# certbot renew --dry-run
+# certbot certificates
+\end{lstlisting}
+\texttt{-{}-dry-run} debe terminar con \texttt{Congratulations, all simulated renewals succeeded}, y \texttt{certbot certificates} muestra la fecha de vencimiento del certificado.
+\captura{front-08-renovacion}{Prueba de renovación del certificado y fecha de vencimiento}

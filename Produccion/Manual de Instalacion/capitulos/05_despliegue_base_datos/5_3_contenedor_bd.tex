@@ -1,0 +1,96 @@
+% Creación y ejecución del contenedor de BD
+\subsection{Creación y ejecución del contenedor de BD}\label{sec:5_3_contenedor_bd}
+
+\subsubsection{El script podman-compose-bd.sh}
+\texttt{podman-compose-bd.sh} reúne en un solo archivo todas las operaciones sobre la base de datos. Se ejecuta como \texttt{root} con \texttt{bash podman-compose-bd.sh <comando>}; sin comando muestra la ayuda.
+
+\begin{table}[H]
+\centering
+\caption{Comandos de podman-compose-bd.sh usados en la plataforma}
+\small
+\begin{tabular}{p{4.2cm}p{10.2cm}}
+\toprule
+\textbf{Comando} & \textbf{Qué hace} \\
+\midrule
+\texttt{up-defensoria} & Crea (o recrea) el contenedor \texttt{defensoria-db} y espera a que acepte conexiones \\
+\texttt{status} & Muestra el estado del contenedor y sus puertos \\
+\texttt{logs defensoria-db} & Muestra el log de PostgreSQL en vivo \\
+\texttt{psql-defensoria} & Abre la consola SQL dentro de la base \texttt{defensoria\_db} \\
+\texttt{seed} & Carga los datos semilla (sección \ref{sec:6_5_datos_semilla}) \\
+\texttt{backup} / \texttt{restore <archivo>} & Respaldo de la base en \nolinkurl{/apps/respaldos/bd} y restauración a partir de un respaldo \\
+\texttt{firewall} / \texttt{firewall-boot} & Aplican la regla raw que limita el puerto 5432 al Backend y la hacen permanente (sección \ref{sec:5_4_arranque_respaldos}) \\
+\texttt{down} & Elimina el contenedor conservando los datos \\
+\texttt{reset} & Elimina contenedor \textbf{y datos} y crea la base vacía (pide confirmación) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\nota{El script también contiene los comandos \texttt{up}, \texttt{up-historico} y \texttt{psql-historico} para la base histórica (\texttt{historico-db}, puerto 5433). Esa base ya no forma parte de la plataforma, por lo que se usa \texttt{up-defensoria} en lugar de \texttt{up}.}
+
+\subsubsection{Creación de defensoria-db (puerto 5432, límite de memoria)}
+\begin{lstlisting}
+# cd /apps/aplicaciones/defensoria/database
+# bash podman-compose-bd.sh up-defensoria
+\end{lstlisting}
+Internamente el script ejecuta:
+\begin{lstlisting}
+podman run -d \
+  --name defensoria-db \
+  --restart always \
+  -p 5432:5432 \
+  -m 1g \
+  -e TZ=America/Mexico_City \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=<CONTRASENA_BD> \
+  -e POSTGRES_DB=defensoria_db \
+  -v /apps/data/postgresql/defensoria_db:/var/lib/postgresql/data:Z \
+  -v /apps/aplicaciones/defensoria/database-scripts/init:/docker-entrypoint-initdb.d:ro,Z \
+  docker.io/library/postgres:16-alpine
+\end{lstlisting}
+\begin{table}[H]
+\centering
+\caption{Parámetros del contenedor defensoria-db}
+\footnotesize
+\begin{tabular}{p{4.6cm}p{9.8cm}}
+\toprule
+\textbf{Parámetro} & \textbf{Significado} \\
+\midrule
+\texttt{-{}-name defensoria-db} & Nombre fijo con el que se administra el contenedor \\
+\texttt{-{}-restart always} & Se reinicia si se detiene y al encender la VPS (sección \ref{sec:5_4_arranque_respaldos}) \\
+\texttt{-p 5432:5432} & Publica el puerto de PostgreSQL en la VPS; el firewall lo limita al Backend \\
+\texttt{-m 1g} & Límite de 1 GB de memoria para el contenedor \\
+\texttt{-e TZ=...} & Zona horaria del contenedor (fechas de los logs) \\
+\texttt{-e POSTGRES\_USER}, \texttt{\_PASSWORD}, \texttt{\_DB} & Usuario, contraseña y base que PostgreSQL crea la primera vez \\
+\nolinkurl{-v .../defensoria_db:...} & Volumen persistente de datos (sección \ref{sec:5_2_volumenes_variables}) \\
+\nolinkurl{-v .../init:/docker-entrypoint-initdb.d:ro} & Scripts que se ejecutan al crear la base, montados en solo lectura \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El script espera hasta 60 segundos a que PostgreSQL acepte conexiones (\texttt{pg\_isready}) y muestra \texttt{defensoria-db -> :5432 / defensoria\_db}. Después se revisa el estado:
+\begin{lstlisting}
+# bash podman-compose-bd.sh status
+NAMES          STATUS         PORTS
+defensoria-db  Up 2 minutes   0.0.0.0:5432->5432/tcp
+\end{lstlisting}
+\captura{bd-04-up-defensoria}{Creación de defensoria-db y estado del contenedor}
+
+\subsubsection{Verificación de la base defensoria\_db}
+Se abre la consola SQL y se comprueba que la base, la extensión y la zona horaria estén configuradas:
+\begin{lstlisting}
+# bash podman-compose-bd.sh psql-defensoria
+defensoria_db=# \l                 -- lista de bases: debe aparecer defensoria_db
+defensoria_db=# \dx                -- extensiones: debe aparecer uuid-ossp
+defensoria_db=# SHOW timezone;     -- America/Mexico_City
+defensoria_db=# \q
+\end{lstlisting}
+En este momento la base está vacía (\texttt{\textbackslash dt} no muestra tablas); las tablas aparecen cuando arrancan los microservicios en el capítulo \ref{cap:06_despliegue_backend}.
+\captura{bd-05-psql}{Base defensoria\_db, extensión uuid-ossp y zona horaria}
+
+Por último se confirma que el puerto está escuchando y que el firewall del capítulo \ref{cap:03_seguridad_red_firewall} lo protege: ufw debe permitir el 5432 solo desde 156.67.26.73, como entrada (\texttt{ALLOW IN}) y como reenvío al contenedor (\texttt{ALLOW FWD}):
+\begin{lstlisting}
+# ss -tlnp | grep 5432
+# ufw status numbered
+# iptables -t raw -L PREROUTING -n -v --line-numbers
+\end{lstlisting}
+\captura{bd-06-puerto-firewall}{Puerto 5432 en escucha y protegido por la regla de firewall}

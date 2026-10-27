@@ -1,0 +1,29 @@
+% Arranque automático y respaldos
+\subsection{Arranque automático y respaldos}\label{sec:5_4_arranque_respaldos}
+
+\subsubsection{Política -{}-restart always y podman-restart.service}
+\texttt{defensoria-db} se crea con \texttt{-{}-restart always}: si PostgreSQL termina inesperadamente, Podman lo vuelve a iniciar, y al encender la VPS lo levanta el servicio \texttt{podman-restart} habilitado en la sección \ref{sec:2_2_instalacion_podman}. Se comprueban ambos:
+\begin{lstlisting}
+# podman inspect --format '{{.HostConfig.RestartPolicy.Name}}' defensoria-db   # always
+# systemctl is-enabled podman-restart.service                                  # enabled
+\end{lstlisting}
+\captura{bd-07-restart-policy}{Política de reinicio de defensoria-db y servicio podman-restart}
+
+\subsubsection{Servicio systemd del firewall (firewall-boot)}
+El VPS Base de Datos queda protegido por las dos capas descritas en el capítulo \ref{cap:03_seguridad_red_firewall}: ufw y la regla raw. ufw recarga sus reglas solo en cada arranque (\texttt{ufw.service}); la regla raw, en cambio, se pierde al reiniciar si no se instala su servicio. El script de la base la aplica y la deja permanente:
+\begin{lstlisting}
+# cd /apps/aplicaciones/defensoria/database
+# bash podman-compose-bd.sh firewall
+# bash podman-compose-bd.sh firewall-boot
+\end{lstlisting}
+\begin{itemize}
+  \item \texttt{firewall}: detecta la interfaz pública y agrega en la tabla raw la regla que descarta todo lo que llegue a los puertos 5432 y 5433 desde una IP distinta de 156.67.26.73. Antes de agregarla comprueba si ya existe, así que se puede ejecutar varias veces sin duplicarla.
+  \item \texttt{firewall-boot}: crea el servicio \nolinkurl{/etc/systemd/system/defensoria-bd-firewall.service}, que ejecuta \texttt{podman-compose-bd.sh firewall} en cada arranque, y lo habilita.
+\end{itemize}
+Se comprueba que ambos servicios estén habilitados y que la regla esté cargada:
+\begin{lstlisting}
+# systemctl is-enabled ufw defensoria-bd-firewall
+# systemctl status defensoria-bd-firewall --no-pager
+# iptables -t raw -L PREROUTING -n -v --line-numbers
+\end{lstlisting}
+\captura{bd-08-servicio-firewall}{Servicios ufw y defensoria-bd-firewall habilitados y regla raw cargada}

@@ -42,6 +42,11 @@ export class NotaAnalisisService {
     return this.api.put<NotaAnalisis>(`/notas/${id}`, dto);
   }
 
+  /** Oficio en PDF, armado con los datos guardados. */
+  obtenerPdf(id: number): Observable<Blob> {
+    return this.api.getBlob(`/notas/${id}/pdf`);
+  }
+
   /** Solo el autor de la nota puede eliminarla (el backend responde 403 si no). */
   eliminarNota(id: number): Observable<void> {
     return this.api.delete<void>(`/notas/${id}`);

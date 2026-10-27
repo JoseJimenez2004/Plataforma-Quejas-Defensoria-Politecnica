@@ -1,0 +1,64 @@
+% Configuración de producción (config-files)
+\subsection{Configuración de producción (config-files)}\label{sec:6_2_configuracion}
+
+\subsubsection{Montaje de la configuración en /app/config}
+Cada microservicio lee su configuración desde un archivo externo, no desde el JAR. \texttt{podman-compose.sh} monta la carpeta del servicio y le indica a Spring Boot dónde buscarla y cómo se llama el archivo:
+\begin{lstlisting}
+-v /apps/aplicaciones/defensoria/back/config-files/quejas-service/config:/app/config:Z
+-e SPRING_CONFIG_ADDITIONAL_LOCATION=optional:file:/app/config/
+-e SPRING_CONFIG_NAME=quejas-service
+\end{lstlisting}
+Con esto Spring Boot carga \texttt{/app/config/quejas-service.yml}. Como el archivo vive fuera de la imagen, un cambio de configuración \textbf{no requiere recompilar ni reconstruir}: basta con editar el YAML y reiniciar el contenedor (\texttt{podman restart quejas-service}).
+\begin{lstlisting}
+# find /apps/aplicaciones/defensoria/back/config-files -type f -printf "%M %u %g %p\n"
+\end{lstlisting}
+Cada archivo debe tener permiso \verb|-rw-r-----| (640) y dueño \texttt{root}, porque contiene contraseñas (sección \ref{sec:2_3_directorios_permisos}).
+\captura{back-02-config-files}{Archivos de configuración en el VPS Backend con sus permisos}
+
+\subsubsection{Conexión a la base de datos (169.58.62.99:5432)}
+Todos los microservicios, excepto el modelo de IA, se conectan a la misma base:
+\begin{lstlisting}
+spring:
+  datasource:
+    url: jdbc:postgresql://169.58.62.99:5432/defensoria_db
+    username: postgres
+    password: <CONTRASENA_BD>
+  jpa:
+    hibernate:
+      ddl-auto: update
+\end{lstlisting}
+Al arrancar, cada servicio crea o actualiza sus propias tablas (\texttt{ddl-auto: update}). Si la contraseña no coincide con la de la base o el firewall del VPS Base de Datos no permite la IP del Backend, el servicio se detiene al iniciar con un error de conexión (\texttt{Connection refused} o \texttt{password authentication failed}) visible en su log.
+
+Se puede probar la conexión desde el Backend antes de levantar los servicios:
+\begin{lstlisting}
+# nc -zv -w 3 169.58.62.99 5432
+\end{lstlisting}
+
+\subsubsection{Secreto JWT compartido}
+Cuando un usuario del personal inicia sesión, \texttt{auth-service} genera un token JWT firmado con \texttt{jwt.secret}. El navegador envía ese token en cada petición y cada microservicio verifica la firma con su propio \texttt{jwt.secret}. Por eso el valor debe ser \textbf{exactamente el mismo} en todos los config-files; si uno es distinto, ese servicio rechaza todas las peticiones con \texttt{401}. Se comprueba que haya un solo valor:
+\begin{lstlisting}
+# grep -rh -A1 "^jwt:" config-files | grep secret | sort | uniq -c
+\end{lstlisting}
+
+\subsubsection{Correo SMTP y URLs entre microservicios}
+\paragraph{Correo.} \texttt{auth-service} (activación de cuentas y recuperación de contraseña) y \texttt{notificaciones-service} (avisos) envían correos por el SMTP de Gmail (\texttt{smtp.gmail.com}, puerto 587) con una contraseña de aplicación de la cuenta de la Defensoría, configurada en la sección \texttt{spring.mail}.
+
+\paragraph{Llamadas entre microservicios.} Los servicios se llaman entre sí por la IP del Backend y el puerto publicado de cada uno. Estas direcciones están en los config-files:
+\begin{table}[H]
+\centering
+\caption{Dependencias entre microservicios}
+\small
+\begin{tabular}{p{4.2cm}p{10.2cm}}
+\toprule
+\textbf{Servicio} & \textbf{Llama a} \\
+\midrule
+\texttt{auth-service} & \texttt{quejas-service} (8084), \texttt{notificaciones-service} (8085) \\
+\texttt{quejas-service} & \texttt{notificaciones-service} (8085) \\
+\texttt{admin-service} & \texttt{catalogo-service} (8086) \\
+\texttt{revision-service} & \texttt{primer-contacto-service} (8082), \texttt{notificaciones-service} (8085), \texttt{catalogo-service} (8086) \\
+\texttt{primer-contacto-service} & \texttt{notificaciones-service} (8085), \texttt{subdefensoria-service} (8091), \texttt{antecedentes-service} (8093) \\
+\texttt{subdefensoria-service} & \texttt{primer-contacto-service} (8082), \texttt{notificaciones-service} (8085) \\
+\bottomrule
+\end{tabular}
+\end{table}
+Este tráfico sale de un contenedor y entra por la red de Podman, no por \texttt{eth0}, así que el firewall del Backend no lo bloquea (sección \ref{sec:3_1_politica_firewall}).

@@ -256,35 +256,7 @@ public class ExpedienteAnalisisService {
     private NotaAnalisisDTO convertirNotaDTO(
             NotaAnalisis nota
     ) {
-
-        return NotaAnalisisDTO.builder()
-                .id(nota.getId())
-                .expedienteId(
-                        nota.getExpedienteId()
-                )
-                .folio(
-                        nota.getFolio()
-                )
-                .analistaId(
-                        nota.getAnalistaId()
-                )
-                .analistaNombre(
-                        nota.getAnalistaNombre()
-                )
-                .contenido(
-                        nota.getContenido()
-                )
-                .fechaCreacion(
-                        nota.getFechaCreacion() != null
-                                ? nota.getFechaCreacion().toString()
-                                : null
-                )
-                .fechaActualizacion(
-                        nota.getFechaActualizacion() != null
-                                ? nota.getFechaActualizacion().toString()
-                                : null
-                )
-                .build();
+        return NotaAnalisisService.convertirADTO(nota);
     }
 
     private EvidenciaDTO convertirEvidenciaDTO(

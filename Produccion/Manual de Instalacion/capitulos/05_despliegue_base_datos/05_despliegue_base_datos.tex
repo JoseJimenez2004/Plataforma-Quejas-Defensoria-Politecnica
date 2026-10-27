@@ -1,0 +1,8 @@
+% Capítulo 5. Despliegue del Nodo de Base de Datos (VPS 169.58.62.99)
+\section{Despliegue del Nodo de Base de Datos (VPS 169.58.62.99)}\label{cap:05_despliegue_base_datos}
+La base de datos es la primera capa que se levanta, porque los microservicios necesitan conectarse a ella al arrancar. Todos los comandos de este capítulo se ejecutan en el VPS Base de Datos, en la carpeta \nolinkurl{/apps/aplicaciones/defensoria/database}, donde quedó el script \texttt{podman-compose-bd.sh} (sección \ref{sec:4_4_transferencia_vps}).
+
+\input{capitulos/05_despliegue_base_datos/5_1_carga_imagen}
+\input{capitulos/05_despliegue_base_datos/5_2_volumenes_variables}
+\input{capitulos/05_despliegue_base_datos/5_3_contenedor_bd}
+\input{capitulos/05_despliegue_base_datos/5_4_arranque_respaldos}

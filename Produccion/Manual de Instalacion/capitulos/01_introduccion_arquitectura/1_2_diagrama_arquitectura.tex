@@ -1,0 +1,67 @@
+% Diagrama de arquitectura en 3 capas
+\subsection{Diagrama de arquitectura en 3 capas}\label{sec:1_2_diagrama_arquitectura}
+
+\subsubsection{Relación entre VPS Frontend (router-nginx y frontends), VPS Backend (microservicios y modelo de IA) y VPS Base de Datos (PostgreSQL)}
+La plataforma sigue una arquitectura de tres capas en la que cada capa vive en su propia VPS y solo se comunica con la capa contigua (Figura \ref{fig:arquitectura-3-capas}).
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  vps/.style={draw=headerblue, thick, rounded corners, fill=rowblue!15, minimum width=4.6cm, minimum height=6.9cm, anchor=north},
+  comp/.style={draw=headerblue, fill=white, rounded corners, align=center, minimum width=3.9cm, minimum height=0.62cm, font=\scriptsize},
+  user/.style={draw=headerblue, fill=rowblue!40, rounded corners, align=center, minimum width=2.4cm, minimum height=1.2cm, font=\small},
+  flecha/.style={-latex, thick, headerblue}]
+  % Usuario
+  \node[user] (u) at (-4.2,-4.1) {Usuario\\(navegador)};
+  % VPS Frontend
+  \node[vps] (f) at (0.6,0) {};
+  \node[font=\small\bfseries, align=center] at (0.6,-0.45) {VPS Frontend\\[-2pt]\scriptsize 169.58.62.111};
+  \node[comp, fill=rowblue!40] (rn) at (0.6,-1.6) {\textbf{router-nginx} (80/443)\\HTTPS, proxy inverso};
+  \node[comp] at (0.6,-2.9) {defensoria-web (8090)};
+  \node[comp] at (0.6,-3.65) {admin-web (8091)};
+  \node[comp] at (0.6,-4.4) {revision-web (8092)};
+  \node[comp] at (0.6,-5.15) {primer-contacto-web (8094)};
+  \node[comp] at (0.6,-5.9) {subdefensoria-web (8095)};
+  % VPS Backend
+  \node[vps] (b) at (6.6,0) {};
+  \node[font=\small\bfseries, align=center] at (6.6,-0.45) {VPS Backend\\[-2pt]\scriptsize 156.67.26.73};
+  \node[comp] at (6.6,-1.4) {auth (8083) \quad quejas (8084)};
+  \node[comp] at (6.6,-2.15) {notificaciones (8085) \quad catálogo (8086)};
+  \node[comp] at (6.6,-2.9) {admin (8087) \quad revisión (8088)};
+  \node[comp] at (6.6,-3.65) {chatbot (8089) \quad denunciado (8094)};
+  \node[comp] at (6.6,-4.4) {primer contacto (8082)};
+  \node[comp] at (6.6,-5.15) {subdefensoría (8091)};
+  \node[comp, fill=rowblue!40] (ia) at (6.6,-6.1) {\textbf{antecedentes-service} (8093)\\modelo de IA};
+  % VPS BD
+  \node[vps, minimum height=4.2cm] (d) at (12.6,-2) {};
+  \node[font=\small\bfseries, align=center] at (12.6,-2.45) {VPS Base de Datos\\[-2pt]\scriptsize 169.58.62.99};
+  \node[comp, fill=rowblue!40, minimum height=1.2cm] (db) at (12.6,-4.1) {\textbf{defensoria-db}\\PostgreSQL 16 (5432)\\\texttt{defensoria\_db}};
+  % Flechas
+  \draw[flecha] (u) -- node[below, font=\scriptsize, yshift=-12pt]{HTTPS 443} (-1.7,-4.1);
+  \draw[flecha] (2.9,-4.1) -- node[above, font=\scriptsize, align=center]{/api/*\\8082--8094} (4.3,-4.1);
+  \draw[flecha] (8.9,-4.1) -- node[above, font=\scriptsize, align=center]{JDBC\\5432} (10.3,-4.1);
+\end{tikzpicture}}
+\caption{Arquitectura de la plataforma en 3 capas}\label{fig:arquitectura-3-capas}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{VPS Frontend.} Es la única capa visible desde Internet. El contenedor \texttt{router-nginx} recibe todo el tráfico en los puertos 80 y 443, termina la conexión cifrada (HTTPS) con el certificado de Let's Encrypt y decide a dónde enviar cada petición: las páginas se las pide a uno de los cinco contenedores de frontend que corren en el mismo servidor, y las llamadas que empiezan con \texttt{/api/} las reenvía al backend.
+  \item \textbf{VPS Backend.} Ejecuta los diez microservicios y el modelo de IA, cada uno en su contenedor. Recibe peticiones solo del frontend. Los microservicios también se llaman entre sí; por ejemplo, \texttt{quejas-service} avisa a \texttt{notificaciones-service} cuando se registra una queja, y \texttt{primer-contacto-service} consulta a \texttt{antecedentes-service} para buscar antecedentes de una queja.
+  \item \textbf{VPS Base de Datos.} Ejecuta PostgreSQL 16 en el contenedor \texttt{defensoria-db}, con la base \texttt{defensoria\_db}. Solo acepta conexiones del backend. Las tablas las crea cada microservicio al arrancar (Hibernate).
+\end{itemize}
+
+\subsubsection{Flujo de una petición del usuario}
+Como ejemplo, se sigue el recorrido completo cuando una persona registra una queja desde el portal:
+
+\begin{enumerate}
+  \item El usuario abre \url{https://defensoria-escom.ddns.net}. El dominio de No-IP resuelve a la IP del VPS Frontend (169.58.62.111).
+  \item \texttt{router-nginx} recibe la petición en el puerto 443, establece la conexión HTTPS y, como la ruta es \texttt{/}, la envía a \texttt{defensoria-web} (\texttt{127.0.0.1:8090}), que devuelve la aplicación Angular del portal.
+  \item El usuario llena el formulario y lo envía. El navegador hace una petición \texttt{POST} a \texttt{/api/quejoso/...} con los datos de la queja, su credencial y sus evidencias.
+  \item \texttt{router-nginx} identifica la ruta \texttt{/api/quejoso/} y reenvía la petición al VPS Backend, a \texttt{156.67.26.73:8084} (\texttt{quejas-service}). El firewall del backend la acepta porque proviene de la IP del frontend.
+  \item \texttt{quejas-service} valida la información, genera el folio y guarda la queja y sus archivos en \texttt{defensoria\_db} a través de JDBC hacia \texttt{169.58.62.99:5432}. El firewall de la base la acepta porque proviene de la IP del backend.
+  \item \texttt{quejas-service} llama a \texttt{notificaciones-service} (puerto 8085) para registrar el aviso correspondiente.
+  \item La respuesta con el folio regresa por el mismo camino: backend $\rightarrow$ \texttt{router-nginx} $\rightarrow$ navegador, y el portal muestra el folio al usuario.
+\end{enumerate}
+
+Las peticiones del personal siguen el mismo patrón; la diferencia es que incluyen el token JWT emitido por \texttt{auth-service}, que cada microservicio valida con el secreto compartido antes de responder.

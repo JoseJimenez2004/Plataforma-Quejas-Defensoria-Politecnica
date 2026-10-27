@@ -11,8 +11,9 @@ export const jwtSubdefensoriaInterceptor: HttpInterceptorFn = (
   const sesion = inject(SesionPersonalService);
   const token = sesion.getToken();
 
+  // También firma la consulta a Primer Contacto (pestaña "Primer Contacto" del expediente).
   const esPeticionSubdefensoria =
-    req.url.includes('/api/subdefensoria');
+    req.url.includes('/api/subdefensoria') || req.url.includes('/api/primer-contacto');
 
   if (!token || !esPeticionSubdefensoria) {
     return next(req);

@@ -1,0 +1,78 @@
+% Resumen de la solución
+\subsection{Resumen de la solución}\label{sec:1_1_resumen_solucion}
+
+\subsubsection{Descripción general de la plataforma (microservicios Spring Boot, frontends Angular y modelo de IA)}
+La Plataforma de Quejas de la Defensoría de los Derechos Politécnicos (DDP) es un sistema web que permite a la comunidad del Instituto Politécnico Nacional presentar quejas y darles seguimiento, y al personal de la Defensoría recibirlas, revisarlas, turnarlas y atenderlas. Está construida con una arquitectura de microservicios y se compone de tres tipos de piezas:
+
+\begin{itemize}
+  \item \textbf{Microservicios (backend).} Diez servicios independientes desarrollados en Java 21 con Spring Boot. Cada uno resuelve una parte del negocio, expone una API REST y se ejecuta en su propio contenedor de Podman.
+  \item \textbf{Frontends (interfaz web).} Cinco aplicaciones Angular, una por cada tipo de usuario. Se compilan a archivos estáticos (HTML, CSS y JavaScript) y cada una se sirve desde su propio contenedor de nginx.
+  \item \textbf{Modelo de inteligencia artificial.} El servicio \texttt{antecedentes-service}, también en Java, busca quejas parecidas en el histórico mediante TF-IDF y similitud coseno, y genera un resumen extractivo de cada queja con TextRank. No requiere GPU ni servicios externos.
+\end{itemize}
+
+Todos los servicios guardan su información en una sola base de datos PostgreSQL 16 (\texttt{defensoria\_db}).
+
+\begin{table}[H]
+\centering
+\caption{Microservicios de la plataforma}
+\small
+\begin{tabular}{p{4.3cm}p{10.2cm}}
+\toprule
+\textbf{Servicio} & \textbf{Función} \\
+\midrule
+\texttt{auth-service} & Inicio de sesión, emisión de tokens JWT, activación de cuentas y recuperación de contraseña \\
+\texttt{quejas-service} & Registro y consulta de quejas, folios, credenciales y evidencias \\
+\texttt{notificaciones-service} & Avisos dentro de la plataforma y envío de correos \\
+\texttt{catalogo-service} & Catálogo de dependencias (unidades académicas) del IPN \\
+\texttt{admin-service} & Panel de la Defensora: indicadores, personal, configuración y respaldos \\
+\texttt{revision-service} & Validación por la recepcionista y turnado de quejas \\
+\texttt{chatbot-service} & Preguntas frecuentes del asistente del portal \\
+\texttt{denunciado-service} & Registro de la respuesta y evidencias de la persona denunciada \\
+\texttt{primer-contacto-service} & Módulo de Primer Contacto (atención inicial y citas) \\
+\texttt{subdefensoria-service} & Módulo de la Subdefensoría (atención de quejas turnadas) \\
+\texttt{antecedentes-service} & Modelo de IA: búsqueda de antecedentes y resumen de quejas \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Frontends de la plataforma}
+\small
+\begin{tabular}{p{4.3cm}p{3.4cm}p{6.5cm}}
+\toprule
+\textbf{Frontend} & \textbf{Ruta pública} & \textbf{Usuarios} \\
+\midrule
+Portal (\texttt{defensoria-web}) & \texttt{/} & Quejosos y personas denunciadas \\
+Revisión (\texttt{revision-web}) & \texttt{/revision/} & Login unificado del personal y recepcionistas \\
+Administración (\texttt{admin-web}) & \texttt{/admin/} & Defensora y administración del sistema \\
+Primer Contacto (\texttt{primer-contacto-web}) & \texttt{/primer-contacto/} & Analistas de Primer Contacto \\
+Subdefensoría (\texttt{subdefensoria-web}) & \texttt{/subdefensoria/} & Abogados de la Subdefensoría \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Objetivo del despliegue en 3 VPS}
+El objetivo del despliegue es dejar la plataforma completa en producción y accesible en \url{https://defensoria-escom.ddns.net}, separando sus componentes en tres servidores virtuales, uno por capa:
+
+\begin{itemize}
+  \item \textbf{Seguridad.} Solo el servidor frontend queda expuesto a Internet. El backend acepta conexiones únicamente del frontend, y la base de datos únicamente del backend, de modo que los datos de las quejas nunca quedan directamente al alcance de un atacante externo.
+  \item \textbf{Aislamiento de recursos.} La base de datos, los microservicios y los portales no compiten por la misma memoria y CPU; si un servicio consume más de lo previsto, no afecta a las otras capas.
+  \item \textbf{Mantenimiento independiente.} Cada capa se puede actualizar, reiniciar o respaldar sin detener a las demás.
+  \item \textbf{Reproducibilidad.} Todos los componentes se ejecutan en contenedores Podman creados con scripts, por lo que la instalación se puede repetir de la misma forma en servidores nuevos.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\caption{Servidores del despliegue}
+\small
+\begin{tabular}{llll}
+\toprule
+\textbf{Capa} & \textbf{Hostname} & \textbf{IP pública} & \textbf{Contenido} \\
+\midrule
+Frontend & vmi3633026 & 169.58.62.111 & router-nginx y 5 frontends \\
+Backend & vmi3633021 & 156.67.26.73 & 10 microservicios y modelo de IA \\
+Base de datos & vmi3633025 & 169.58.62.99 & PostgreSQL 16 (\texttt{defensoria-db}) \\
+\bottomrule
+\end{tabular}
+\end{table}

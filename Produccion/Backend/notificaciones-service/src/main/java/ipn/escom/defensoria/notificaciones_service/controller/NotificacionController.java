@@ -3,7 +3,9 @@ package ipn.escom.defensoria.notificaciones_service.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.owasp.encoder.Encode;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -55,10 +57,10 @@ public class NotificacionController {
 
     // Público (ver WebConfig): lo llaman otros microservicios (auth-service, queja-service,
     // revision-service) para dejar un aviso -- no manda correo, solo persiste.
-    @PostMapping("/registrar")
+    @PostMapping(value = "/registrar", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registra una notificación persistida para un usuario (llamada interna entre microservicios)")
     public ResponseEntity<Notificacion> registrar(@RequestBody RegistrarNotificacionRequest datos) {
-        return ResponseEntity.ok(notificacionService.registrar(datos));
+        return ResponseEntity.ok(escaparHtml(notificacionService.registrar(datos)));
     }
 
     // Protegido: el correo sale del JWT verificado (auth-service para quejosos).
@@ -76,10 +78,35 @@ public class NotificacionController {
         return ResponseEntity.ok(Map.of("noLeidas", notificacionService.contarNoLeidas(correo)));
     }
 
-    @PutMapping("/{id}/leida")
+    @PutMapping(value = "/{id}/leida", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Marca una notificación propia como leída (requiere JWT)")
     public ResponseEntity<Notificacion> marcarLeida(@PathVariable Long id) {
         String correo = SecurityContextHolder.getContext().getAuthentication().getName();
-        return ResponseEntity.ok(notificacionService.marcarLeida(id, correo));
+        return ResponseEntity.ok(escaparHtml(notificacionService.marcarLeida(id, correo)));
+    }
+
+    /**
+     * Mitigación XSS (Kiuwan CWE-79): copia la notificación con sus textos codificados para HTML
+     * antes de devolverla. Se usa en /registrar (eco del body recibido) y en /{id}/leida (dato
+     * leído de BD). Es una copia: no toca lo guardado en la base. Ninguno de los dos consumidores
+     * muestra estos textos (los microservicios ignoran la respuesta de /registrar y el panel solo
+     * lee "leida" de /{id}/leida), así que no hay doble codificación visible.
+     */
+    private Notificacion escaparHtml(Notificacion original) {
+        Notificacion copia = new Notificacion();
+        copia.setId(original.getId());
+        copia.setCorreoDestino(html(original.getCorreoDestino()));
+        copia.setTipo(html(original.getTipo()));
+        copia.setTitulo(html(original.getTitulo()));
+        copia.setMensaje(html(original.getMensaje()));
+        copia.setEnlace(html(original.getEnlace()));
+        copia.setLeida(original.isLeida());
+        copia.setFechaCreacion(original.getFechaCreacion());
+        return copia;
+    }
+
+    /** Encode.forHtml(null) devuelve el texto "null"; aquí se conserva el null original. */
+    private static String html(String valor) {
+        return valor == null ? null : Encode.forHtml(valor);
     }
 }

@@ -1,0 +1,46 @@
+% Volúmenes persistentes y variables
+\subsection{Volúmenes persistentes y variables}\label{sec:5_2_volumenes_variables}
+
+\subsubsection{Volumen de datos en /apps/data/postgresql/defensoria\_db}
+Un contenedor se puede borrar y volver a crear en cualquier momento; si los datos vivieran dentro de él, se perderían. Por eso la carpeta donde PostgreSQL guarda la base (\texttt{/var/lib/postgresql/data} dentro del contenedor) se monta desde el disco de la VPS:
+\begin{lstlisting}
+-v /apps/data/postgresql/defensoria_db:/var/lib/postgresql/data:Z
+\end{lstlisting}
+\begin{itemize}
+  \item La carpeta del host la crea el script la primera vez; al iniciar, PostgreSQL le asigna su propio usuario (\texttt{postgres}, UID 70), por eso no se modifica a mano (sección \ref{sec:2_3_directorios_permisos}).
+  \item Detener, borrar o recrear el contenedor (\texttt{down} / \texttt{up-defensoria}) \textbf{conserva} todos los datos.
+  \item Solo el comando \texttt{reset} del script borra esta carpeta, y pide escribir \texttt{BORRAR} para confirmarlo.
+  \item La opción \texttt{:Z} ajusta la etiqueta de seguridad del volumen para sistemas con SELinux; en Ubuntu no tiene efecto, pero se conserva para que el script funcione igual en otras distribuciones.
+\end{itemize}
+
+\subsubsection{Script de inicialización 00-init.sql y scripts semilla}
+La carpeta \nolinkurl{/apps/aplicaciones/defensoria/database-scripts} tiene dos subcarpetas con propósitos distintos:
+
+\begin{table}[H]
+\centering
+\caption{Scripts SQL de la base de datos}
+\small
+\begin{tabular}{p{2.2cm}p{4.6cm}p{7.6cm}}
+\toprule
+\textbf{Carpeta} & \textbf{Archivos} & \textbf{Cuándo se ejecutan} \\
+\midrule
+\texttt{init/} & \texttt{00-init.sql} & Solo una vez, automáticamente, cuando el contenedor se crea con la carpeta de datos vacía. Se monta en \texttt{/docker-entrypoint-initdb.d} (solo lectura). \\
+\texttt{seeds/} & \texttt{01-dependencias\_seed.sql}, \texttt{02-chatbot\_seed.sql}, \texttt{03-personal\_test.sql}, \texttt{04-recepcionistas.sql}, \texttt{05-abogados.sql} & A mano, después de levantar los microservicios, porque necesitan que las tablas ya existan (sección \ref{sec:6_5_datos_semilla}). \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\texttt{00-init.sql} solo configura la base; no crea tablas, porque las crea cada microservicio al arrancar (Hibernate con \texttt{ddl-auto: update}):
+\begin{lstlisting}
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+ALTER DATABASE defensoria_db SET timezone TO 'America/Mexico_City';
+\end{lstlisting}
+\begin{itemize}
+  \item \texttt{uuid-ossp}: extensión que genera identificadores únicos (UUID) que usan algunas tablas.
+  \item \texttt{timezone}: todas las fechas que guarda la base quedan en hora del centro de México.
+\end{itemize}
+\begin{lstlisting}
+# ls -l /apps/aplicaciones/defensoria/database-scripts/*
+# cat /apps/aplicaciones/defensoria/database-scripts/init/00-init.sql
+\end{lstlisting}
+\captura{bd-02-scripts-sql}{Scripts de inicialización y semilla en el VPS Base de Datos}
