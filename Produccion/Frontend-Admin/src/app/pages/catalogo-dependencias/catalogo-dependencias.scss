@@ -6,6 +6,14 @@
   }
 }
 
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .cargando {
   color: var(--texto-suave);
 }
@@ -22,4 +30,223 @@
   align-items: center;
   cursor: pointer;
   text-align: center;
+}
+
+/* ---- Pestañas ---- */
+.pestanas {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 14px;
+  border-bottom: 1px solid var(--borde);
+
+  button {
+    padding: 10px 16px;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: none;
+    color: var(--texto-suave);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--guinda);
+    }
+
+    &.activa {
+      border-bottom-color: var(--guinda);
+      color: var(--guinda);
+    }
+  }
+}
+
+/* ---- Filtros ---- */
+.filtros-catalogo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+
+  .buscador {
+    flex: 1 1 360px;
+    margin-bottom: 0;
+  }
+
+  select {
+    max-width: 380px;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font: inherit;
+  }
+}
+
+.casilla {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+
+  &.alta {
+    max-height: 52vh;
+    overflow-y: auto;
+  }
+}
+
+.fuerte {
+  font-weight: 700;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.tenue {
+  color: var(--texto-suave);
+}
+
+.aviso-dir {
+  display: block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border: 1px solid #f0d7a6;
+  border-radius: 999px;
+  background: #fff8eb;
+  color: #8a5a0a;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #d8920f;
+  }
+}
+
+/* ---- Directorio IPN ---- */
+.nota-directorio {
+  margin: 0 0 12px;
+  color: var(--texto-suave);
+  font-size: 13px;
+
+  a {
+    color: var(--guinda);
+    font-weight: 700;
+  }
+}
+
+.directorio {
+  display: grid;
+  gap: 8px;
+}
+
+.dir-seccion {
+  border: 1px solid #eceef1;
+  border-radius: 10px;
+  background: #fff;
+
+  &[open] {
+    border-color: #e6c9d6;
+  }
+
+  summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) auto minmax(0, 1fr) 36px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &:hover {
+      background: #fcf7f9;
+    }
+  }
+
+  .tabla-admin {
+    margin: 0 0 8px;
+  }
+}
+
+.dir-nombre {
+  font-weight: 800;
+  color: var(--negro-inst);
+}
+
+.dir-clave {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--guinda-suave);
+  color: var(--guinda);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.dir-titular {
+  color: var(--texto-suave);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dir-cuenta {
+  justify-self: end;
+  color: var(--texto-suave);
+  font-size: 12px;
+}
+
+.dir-direccion {
+  margin: 0;
+  padding: 0 14px 8px;
+  color: var(--texto-suave);
+  font-size: 12px;
+}
+
+.compacta td,
+.compacta th {
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+.modal-ancho {
+  width: min(960px, 94vw);
+  max-width: none;
+}
+
+.etq-cambio {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: #e8eefc;
+  color: #2f55b3;
+
+  &.nueva {
+    background: #e3f3e8;
+    color: #1d6b3a;
+  }
+}
+
+@media (max-width: 800px) {
+  .dir-seccion summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    .dir-titular,
+    .dir-cuenta {
+      display: none;
+    }
+  }
 }

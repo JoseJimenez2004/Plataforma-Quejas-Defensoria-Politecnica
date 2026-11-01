@@ -1,283 +1,618 @@
-<section class="seg-pagina">
+<!-- ===== Foco de ayuda reutilizable: botón 💡 + globo con explicación ===== -->
+<ng-template #foco let-id="id">
+  <span class="foco" (click)="detener($event)">
+    <button type="button" class="foco-btn" [class.abierto]="ayudaAbierta === id" (click)="alternarAyuda(id, $event)"
+            [attr.aria-label]="'Ayuda: ' + textoAyuda(id).titulo" [attr.aria-expanded]="ayudaAbierta === id">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>
+    </button>
+    @if (ayudaAbierta === id) {
+      <span class="foco-globo" role="dialog">
+        <b>{{ textoAyuda(id).titulo }}</b>
+        <span><em>Qué muestra:</em> {{ textoAyuda(id).queMuestra }}</span>
+        <span><em>Cómo usarlo:</em> {{ textoAyuda(id).comoUsar }}</span>
+        <span class="decidir"><em>Te ayuda a decidir:</em> {{ textoAyuda(id).paraDecidir }}</span>
+      </span>
+    }
+  </span>
+</ng-template>
+
+<ng-template #ayudaFija let-id="id">
+  @if (modoAyuda) {
+    <p class="ayuda-fija"><b>💡 {{ textoAyuda(id).comoUsar }}</b> {{ textoAyuda(id).paraDecidir }}</p>
+  }
+</ng-template>
+
+<section class="seg-pagina" [class.personalizando]="personalizando">
   <div class="seg-encabezado">
     <div>
       <h2>{{ titulo }}</h2>
-      <p class="seg-sub">{{ fechaHoy }} · Resumen general del estado de las quejas y la operación de la Defensoría.</p>
+      <p class="seg-sub">{{ fechaHoy }} · Haz clic en cualquier tarjeta, barra o celda para cruzar la información; Ctrl + clic suma valores.</p>
     </div>
-    <label class="seg-periodo" title="Periodo de los indicadores, las unidades, la carga y los motivos">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>
-      <select [(ngModel)]="dias" (ngModelChange)="cargar()" aria-label="Periodo">
-        @for (p of periodos; track p.dias) { <option [ngValue]="p.dias">{{ p.etiqueta }}</option> }
-      </select>
-    </label>
+    <div class="acciones-encabezado">
+      <span class="menu-envoltura" (click)="detener($event)">
+        <button type="button" id="btn-ayuda" class="seg-btn-borde" [class.tour-activo]="enRecorrido('btn-ayuda')" (click)="menuAyuda = !menuAyuda; menuVistas = false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4.5M12 17.5h.01"/></svg>
+          Ayuda
+        </button>
+        @if (menuAyuda) {
+          <span class="menu">
+            <button type="button" (click)="modoAyuda = !modoAyuda; menuAyuda = false">{{ modoAyuda ? 'Ocultar' : 'Mostrar' }} todos los focos de ayuda</button>
+            <button type="button" (click)="iniciarRecorrido()">Recorrido guiado (1 minuto)</button>
+          </span>
+        }
+      </span>
+      <button type="button" id="btn-personalizar" class="seg-btn-borde" [class.activo]="personalizando" [class.tour-activo]="enRecorrido('btn-personalizar')"
+              (click)="personalizando = !personalizando" title="Ordenar u ocultar secciones del panel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M17.5 14v7M14 17.5h7"/></svg>
+        {{ personalizando ? 'Listo' : 'Personalizar' }}
+      </button>
+      <button type="button" class="seg-btn-borde" (click)="exportar()" [disabled]="!vista.length" title="Descargar la selección actual en CSV (Excel)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg>
+        Exportar
+      </button>
+      <label class="seg-periodo" title="Periodo de todo el panel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>
+        <select [(ngModel)]="dias" (ngModelChange)="cambiarPeriodo()" aria-label="Periodo">
+          @for (p of periodos; track p.dias) { <option [ngValue]="p.dias">{{ p.etiqueta }}</option> }
+        </select>
+      </label>
+      @if (dias === PERSONALIZADO) {
+        <span class="rango">
+          <input type="date" [(ngModel)]="desde" (ngModelChange)="cambiarPeriodo()" aria-label="Desde" [max]="hasta || null" />
+          <span>a</span>
+          <input type="date" [(ngModel)]="hasta" (ngModelChange)="cambiarPeriodo()" aria-label="Hasta" [min]="desde || null" />
+        </span>
+      }
+    </div>
   </div>
 
   @if (cargando) {
     <p class="seg-vacio">Cargando panel…</p>
   } @else if (panel; as t) {
-    <!-- ================= Indicadores principales ================= -->
-    <h3 class="seg-titulo-seccion">Indicadores principales</h3>
-    <div class="seg-tarjetas">
-      <button type="button" class="seg-tarjeta clic ac-guinda" (click)="irAQuejas({})">
-        <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></span>
-        <span>
-          <span class="titulo">Quejas recibidas</span>
-          <span class="cifra"><strong>{{ t.kpis.recibidasPeriodo }}</strong>
-            @if (delta !== null) {
-              <span class="seg-delta" [class.baja]="delta < 0" [class.neutra]="delta === 0" title="Contra el periodo anterior del mismo tamaño">
-                {{ delta > 0 ? '↑' : delta < 0 ? '↓' : '=' }} {{ delta < 0 ? -delta : delta }}%
-              </span>
-            }
-          </span>
-          <span class="detalle">{{ etiquetaPeriodo }} · {{ t.kpis.total }} en total</span>
-        </span>
-      </button>
-      <button type="button" class="seg-tarjeta clic ac-ambar" (click)="irAQuejas({ etapa: 'RECEPCION' })">
-        <span class="icono"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5V12h-4.2a1 1 0 0 0-.9.6l-.6 1.3a1 1 0 0 1-.9.6h-2.8a1 1 0 0 1-.9-.6l-.6-1.3a1 1 0 0 0-.9-.6H4z" opacity=".55"/><path d="M2 13.5a1 1 0 0 1 1-1h5.2l.9 1.9a1 1 0 0 0 .9.6h4a1 1 0 0 0 .9-.6l.9-1.9H21a1 1 0 0 1 1 1V19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/></svg></span>
-        <span>
-          <span class="titulo">En recepción</span>
-          <span class="cifra"><strong>{{ t.kpis.enRecepcion }}</strong></span>
-          <span class="detalle">{{ pctDe(t.kpis.enRecepcion) }}% del total</span>
-          <span class="detalle" [class.resaltado]="t.kpis.sinTomarMas3Dias > 0">{{ t.kpis.sinTomarMas3Dias }} sin tomar desde hace más de 3 días</span>
-        </span>
-      </button>
-      <button type="button" class="seg-tarjeta clic ac-rojo" (click)="irAQuejas({ etapa: 'CON_QUEJOSO' })">
-        <span class="icono"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 7v6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="16.8" r="1.4" fill="#fff"/></svg></span>
-        <span>
-          <span class="titulo">Con el quejoso</span>
-          <span class="cifra"><strong>{{ t.kpis.conQuejoso }}</strong></span>
-          <span class="detalle">esperando corrección · {{ t.kpis.rechazadasAlgunaVez }} rechazadas alguna vez</span>
-        </span>
-      </button>
-      <button type="button" class="seg-tarjeta clic ac-azul" (click)="irAQuejas({ etapa: 'PRIMER_CONTACTO' })">
-        <span class="icono"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7" r="3.2"/><path d="M6 20v-1.2A5.8 5.8 0 0 1 12 13a5.8 5.8 0 0 1 6 5.8V20z"/><circle cx="5" cy="9" r="2.2" opacity=".55"/><circle cx="19" cy="9" r="2.2" opacity=".55"/><path d="M1 19v-.6A4 4 0 0 1 5 14.5c.8 0 1.5.2 2.1.5A7.6 7.6 0 0 0 4.6 19zM23 19v-.6a4 4 0 0 0-4-3.9c-.8 0-1.5.2-2.1.5a7.6 7.6 0 0 1 2.5 4z" opacity=".55"/></svg></span>
-        <span>
-          <span class="titulo">En Primer Contacto</span>
-          <span class="cifra"><strong>{{ t.kpis.enPrimerContacto }}</strong></span>
-          <span class="detalle">turnadas, en análisis o procedentes</span>
-        </span>
-      </button>
-      <button type="button" class="seg-tarjeta clic ac-morado" (click)="irAQuejas({ etapa: 'SUBDEFENSORIA' })">
-        <span class="icono"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="7.5" r="3.5"/><path d="M2 20v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1z"/><circle cx="17" cy="8.5" r="2.6" opacity=".55"/><path d="M17.5 13.5A5 5 0 0 1 22 18.5V20h-4.4v-1a7.4 7.4 0 0 0-2.3-5.4c.7-.1 1.4-.1 2.2-.1z" opacity=".55"/></svg></span>
-        <span>
-          <span class="titulo">En Subdefensoría</span>
-          <span class="cifra"><strong>{{ t.kpis.enSubdefensoria }}</strong></span>
-          <span class="detalle">en investigación, oficios o acuerdos</span>
-        </span>
-      </button>
-      <button type="button" class="seg-tarjeta clic ac-verde" (click)="irAQuejas({ etapa: 'CERRADA' })">
-        <span class="icono"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="m7.5 12.3 3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span>
-          <span class="titulo">Cerradas</span>
-          <span class="cifra"><strong>{{ t.kpis.cerradas }}</strong></span>
-          <span class="detalle">concluidas, improcedentes, remitidas o canceladas</span>
-        </span>
-      </button>
-    </div>
 
-    <!-- ================= Casos y dónde están ================= -->
-    <div class="fila fila-a">
-      <div class="seg-panel">
-        <div class="seg-panel-cabeza">
-          <h3>Casos que requieren atención @if (t.atencion.totalElementos) { <span class="burbuja">{{ t.atencion.totalElementos }}</span> }</h3>
-          <button type="button" class="seg-link" (click)="abrir('atencion')">Ver todas →</button>
-        </div>
-        <div class="seg-tabla-envoltura">
-          <table class="seg-tabla compacta">
-            <thead><tr><th>Folio</th><th>Motivo</th><th class="num">Días</th><th>Estado</th><th>Unidad</th></tr></thead>
-            <tbody>
-              @for (c of t.atencion.filas; track c.folio) {
-                <tr class="clic" [routerLink]="['/quejas', c.folio]" [title]="'Ver la queja ' + c.folio">
-                  <td class="fuerte">{{ c.folio }}</td>
-                  <td>{{ c.motivoEtiqueta }}</td>
-                  <td class="num"><span class="seg-dias" [class.alta]="c.severidad === 'ALTA'">{{ c.dias }}</span></td>
-                  <td><span [class]="'seg-chip etapa-' + c.etapa">{{ c.estatusEtiqueta }}</span></td>
-                  <td>{{ c.unidadNombre || '—' }}</td>
-                </tr>
-              } @empty {
-                <tr><td colspan="5" class="seg-vacio">No hay casos con retraso ni sin asignar. 👍</td></tr>
+    <!-- ================= Barra de filtros (fija al hacer scroll) ================= -->
+    <div class="barra-filtros" id="barra-filtros" [class.con-filtros]="hayFiltros" [class.tour-activo]="enRecorrido('barra-filtros')">
+      <div class="barra-fila">
+        <span class="conteo"><strong>{{ vista.length }}</strong> de {{ basePeriodo.length }} quejas {{ etiquetaPeriodo }}</span>
+
+        <span class="buscar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="search" [(ngModel)]="q" (ngModelChange)="cambiarTexto()" placeholder="Folio, quejoso, unidad…" aria-label="Buscar en el panel" />
+        </span>
+
+        <button type="button" class="btn-barra" [class.activo]="panelFiltros" (click)="panelFiltros = !panelFiltros" [attr.aria-expanded]="panelFiltros">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
+          Filtros @if (numFiltros) { <span class="num-filtros">{{ numFiltros }}</span> }
+        </button>
+
+        <label class="interruptor" title="Cada clic suma valores en lugar de reemplazarlos (igual que Ctrl + clic)">
+          <input type="checkbox" [(ngModel)]="multiple" />
+          <span class="pista-switch"></span> Selección múltiple
+        </label>
+
+        <span class="menu-envoltura" (click)="detener($event)">
+          <button type="button" class="btn-barra" (click)="menuVistas = !menuVistas; menuAyuda = false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            Mis vistas
+          </button>
+          @if (menuVistas) {
+            <span class="menu menu-vistas">
+              <span class="menu-titulo">Guardar la selección actual</span>
+              <span class="guardar-vista">
+                <input type="text" [(ngModel)]="nombreVista" placeholder="Nombre, p. ej. «ESCOM rezago»" (keydown.enter)="guardarVista()" />
+                <button type="button" class="seg-btn" (click)="guardarVista()">Guardar</button>
+              </span>
+              @if (vistas.length) {
+                <span class="menu-titulo">Mis vistas</span>
+                @for (v of vistas; track v.nombre) {
+                  <button type="button" class="vista" (click)="abrirVista(v)">
+                    <span><b>{{ v.nombre }}</b><small>{{ resumenVista(v) }}</small></span>
+                    <span class="borrar" (click)="borrarVista(v, $event)" title="Borrar vista" role="button">×</span>
+                  </button>
+                }
               }
-            </tbody>
-          </table>
-        </div>
+              <span class="menu-titulo">Sugeridas</span>
+              @for (v of vistasSugeridas; track v.nombre) {
+                <button type="button" class="vista" (click)="abrirVista(v)"><span><b>{{ v.nombre }}</b><small>{{ resumenVista(v) }}</small></span></button>
+              }
+              <button type="button" class="seg-link enlace" (click)="copiarEnlace()">Copiar enlace de esta vista para compartir</button>
+            </span>
+          }
+        </span>
+
+        @if (hayFiltros) {
+          <button type="button" class="seg-link" (click)="limpiar()">Limpiar</button>
+          <button type="button" class="seg-link" (click)="verEnQuejas()">Ver estas quejas →</button>
+        }
+        <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'filtros' }" />
       </div>
 
-      <div class="seg-panel">
-        <div class="seg-panel-cabeza">
-          <h3>¿Dónde están las quejas?</h3>
-          <button type="button" class="seg-link" (click)="abrir('etapas')">Ver detalle →</button>
-        </div>
-        <div class="flujo-barra" role="img" aria-label="Distribución de quejas por etapa">
-          @for (e of t.etapas; track e.clave) {
-            @if (e.total > 0) {
-              <span [style.background]="colorEtapa[e.clave]" [style.flex-grow]="e.total" [title]="etiquetaCorta[e.clave] + ': ' + e.total"></span>
-            }
-          }
-        </div>
-        <div class="flujo-tarjetas">
-          @for (e of etapasTarjeta; track e.clave) {
-            <button type="button" [class]="'flujo-tarjeta etapa-' + e.clave" (click)="irAQuejas({ etapa: e.clave })">
-              <span class="flujo-cabeza">
-                <b>{{ etiquetaCorta[e.clave] }}</b>
-                <span class="flujo-cifra"><strong>{{ e.total }}</strong><small>{{ pctTexto(e.total, totalEtapas) }}</small></span>
-              </span>
-              <span class="flujo-lista">
-                @for (s of e.estatus.slice(0, 3); track s.clave) {
-                  <span><span>{{ s.etiqueta }}</span><b>{{ s.total }}</b></span>
-                } @empty {
-                  <span class="vacio">Sin quejas</span>
-                }
-              </span>
+      @if (chips.length) {
+        <div class="chips">
+          @for (c of chips; track c.dim + c.clave) {
+            <button type="button" class="chip" (click)="quitarValor(c.dim, c.clave)" [title]="'Quitar ' + c.valor">
+              <small>{{ c.etiqueta }}:</small> {{ c.valor }} <span aria-hidden="true">×</span>
             </button>
           }
         </div>
-        @if (etapaQuejoso?.total) {
-          <p class="flujo-nota">
-            <span class="punto" [style.background]="colorEtapa['CON_QUEJOSO']"></span>
-            <a routerLink="/quejas" [queryParams]="{ etapa: 'CON_QUEJOSO' }">{{ etapaQuejoso?.total }} con el quejoso</a>, esperando que corrija sus observaciones.
-          </p>
-        }
-      </div>
-    </div>
+      }
 
-    <!-- ================= Evolución y unidades ================= -->
-    <div class="fila fila-b">
-      <div class="seg-panel">
-        <div class="seg-panel-cabeza">
-          <h3>Evolución de quejas</h3>
-          <select class="seg-select-chico" [(ngModel)]="meses" (ngModelChange)="cambiarMeses()" aria-label="Meses de la gráfica">
-            <option [ngValue]="6">Últimos 6 meses</option>
-            <option [ngValue]="12">Últimos 12 meses</option>
-            <option [ngValue]="24">Últimos 24 meses</option>
-          </select>
-        </div>
-        <app-barras [etiquetas]="etiquetasMes" [series]="seriesMes" [resaltarUltima]="true" [clicable]="true"
-                    [alto]="250" descripcion="Quejas recibidas por mes" (seleccionar)="abrirMes($event)" />
-        <p class="leyenda-centro"><span class="punto" style="background:#7a1f45"></span> Quejas recibidas · clic en un mes para ver sus quejas</p>
-      </div>
-
-      <div class="seg-panel">
-        <div class="seg-panel-cabeza">
-          <h3>Unidades con más quejas</h3>
-          <button type="button" class="seg-link" (click)="abrir('unidades')">Ver todas →</button>
-        </div>
-        <ul class="ranking">
-          @for (u of t.unidades; track u.clave) {
-            <li>
-              <a routerLink="/quejas" [queryParams]="{ unidad: u.clave }" [title]="(u.nombre || u.clave) + ' · en trámite / total'">
-                <span class="ranking-nombre">{{ nombreCorto(u) }}</span>
-                <span class="seg-barra"><span [style.width.%]="(u.total / maxUnidad) * 100"></span></span>
-                <span class="ranking-num"><b>{{ u.enTramite }}</b> / {{ u.total }}</span>
-              </a>
-            </li>
-          } @empty {
-            <li class="seg-vacio">Sin quejas {{ etiquetaPeriodo }}.</li>
-          }
-        </ul>
-      </div>
-    </div>
-
-    <!-- ================= Carga y motivos ================= -->
-    <div class="fila fila-b">
-      <div class="seg-panel">
-        <div class="seg-panel-cabeza">
-          <h3>Carga de trabajo del personal</h3>
-          <button type="button" class="seg-link" (click)="abrir('carga')">Ver todas →</button>
-        </div>
-        <div class="seg-tabla-envoltura">
-          <table class="seg-tabla compacta">
-            <thead><tr><th>Nombre</th><th class="num">Abiertas</th><th class="num">En trámite</th><th class="num">Atendidas</th><th class="num">Turnadas</th><th class="num">Observ.</th></tr></thead>
-            <tbody>
-              @for (r of t.recepcion; track r.id) {
-                <tr class="clic" routerLink="/quejas" [queryParams]="{ recepcionista: r.correo }">
-                  <td class="fuerte">{{ r.nombre }}</td>
-                  <td class="num"><span [class.rojo]="r.abiertas > 1">{{ r.abiertas }}</span></td>
-                  <td class="num">{{ r.enTramite }}</td>
-                  <td class="num">{{ r.atendidas }}</td>
-                  <td class="num">{{ r.turnadas }}</td>
-                  <td class="num">{{ r.observaciones }}</td>
-                </tr>
-              } @empty {
-                <tr><td colspan="6" class="seg-vacio">No hay recepcionistas activas.</td></tr>
+      <!-- Panel de filtros con listas: elige valores a tu antojo -->
+      @if (panelFiltros) {
+        <div class="panel-filtros">
+          @for (d of dims; track d) {
+            <div class="caja-filtro" [class.con-seleccion]="filtros[d]?.length">
+              <div class="caja-cabeza">
+                <b>{{ etiquetaDim[d] }}</b>
+                @if (filtros[d]?.length) {
+                  <button type="button" class="seg-link" (click)="quitar(d)">Ninguno</button>
+                } @else {
+                  <button type="button" class="seg-link" (click)="todasOpciones(d)">Todos</button>
+                }
+              </div>
+              @if ((opciones[d]?.length ?? 0) > 8) {
+                <input type="search" class="buscar-opcion" [(ngModel)]="buscaOpcion[d]" [placeholder]="'Buscar ' + etiquetaDim[d].toLowerCase() + '…'" />
               }
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="seg-panel">
-        <div class="seg-panel-cabeza">
-          <h3>Motivos más frecuentes de rechazo
-            <span class="info" title="Motivos con los que Recepción regresó quejas al quejoso {{ etiquetaPeriodo }}. Una queja puede tener varios.">i</span></h3>
-          <button type="button" class="seg-link" (click)="abrir('motivos')">Ver todas →</button>
-        </div>
-        <ul class="motivos">
-          @for (m of t.motivos.slice(0, 5); track m.clave) {
-            <li>
-              <a routerLink="/quejas" [queryParams]="{ motivo: m.clave }">
-                <span class="motivo-texto">{{ m.motivo }}</span>
-                <span class="seg-barra"><span [style.width.%]="(m.cantidad / maxMotivo) * 100"></span></span>
-                <span class="motivo-num"><b>{{ m.cantidad }}</b> ({{ m.porcentaje }}%)</span>
-              </a>
-            </li>
+              <div class="opciones">
+                @for (o of opcionesVisibles(d); track o.clave) {
+                  <label class="opcion" [class.sin-datos]="!o.total">
+                    <input type="checkbox" [checked]="activo(d, o.clave)" (change)="alternarOpcion(d, o.clave)" />
+                    <span class="op-etq">{{ o.etiqueta }}</span>
+                    <span class="op-num">{{ o.total }}</span>
+                  </label>
+                } @empty {
+                  <span class="vacio">Sin valores</span>
+                }
+              </div>
+            </div>
           }
-        </ul>
+          <p class="nota-filtros">Dentro de una misma caja los valores se suman (ESCOM <i>o</i> ESIME); entre cajas se combinan (ESCOM <i>y</i> Recepción). El número indica cuántas quejas quedarían.</p>
+        </div>
+      }
+    </div>
+
+    @if (personalizando) {
+      <div class="aviso-personalizar">
+        <span><b>Modo personalizar:</b> arrastra cada sección desde <span class="asa-mini">⠿</span> (o usa ↑ ↓) para cambiar el orden, y el ojo para ocultarla. Se guarda en este navegador.</span>
+        <button type="button" class="seg-link" (click)="restablecerDiseno()">Restablecer</button>
+        <button type="button" class="seg-btn" (click)="personalizando = false">Listo</button>
       </div>
+    }
+
+    <!-- ================= Secciones (se pueden arrastrar u ocultar) ================= -->
+    <div class="secciones" cdkDropList [cdkDropListData]="orden" [cdkDropListDisabled]="!personalizando" (cdkDropListDropped)="soltar($event)">
+      @for (s of seccionesVisibles; track s) {
+        <div class="seccion" cdkDrag [cdkDragDisabled]="!personalizando" [id]="'sec-' + s"
+             [class.oculta]="ocultas.has(s)" [class.tour-activo]="enRecorrido('sec-' + s)">
+          @if (personalizando) {
+            <div class="barra-seccion">
+              <span class="asa" cdkDragHandle title="Arrastra para mover">⠿</span>
+              <b>{{ nombreSeccion[s] }}</b>
+              <span class="espacio"></span>
+              <button type="button" (click)="mover(s, -1)" title="Subir" aria-label="Subir sección">↑</button>
+              <button type="button" (click)="mover(s, 1)" title="Bajar" aria-label="Bajar sección">↓</button>
+              <button type="button" (click)="alternarOculta(s)" [title]="ocultas.has(s) ? 'Mostrar' : 'Ocultar'">{{ ocultas.has(s) ? 'Mostrar' : 'Ocultar' }}</button>
+            </div>
+            <div class="sombra-seccion" *cdkDragPlaceholder></div>
+          }
+
+          @switch (s) {
+            <!-- ---------- Indicadores ---------- -->
+            @case ('kpis') {
+              <div class="seg-tarjetas kpis">
+                <button type="button" class="seg-tarjeta clic ac-guinda" [class.seleccionada]="!filtros.etapa?.length" (click)="quitar('etapa')">
+                  <span class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></span>
+                  <span>
+                    <span class="titulo">Quejas <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'kpis' }" /></span>
+                    <span class="cifra"><strong>{{ vista.length }}</strong>
+                      @if (delta !== null) {
+                        <span class="seg-delta" [class.baja]="delta < 0" [class.neutra]="delta === 0" title="Contra el periodo anterior del mismo tamaño">
+                          {{ delta > 0 ? '↑' : delta < 0 ? '↓' : '=' }} {{ delta < 0 ? -delta : delta }}%
+                        </span>
+                      }
+                    </span>
+                    <span class="detalle">{{ abiertasVista }} abiertas · mediana {{ medianaAbiertas }} días</span>
+                  </span>
+                </button>
+                @for (e of etapas; track e) {
+                  <button type="button" [class]="'seg-tarjeta clic kpi-' + e" [class.seleccionada]="activo('etapa', e)"
+                          [class.atenuada]="atenuado('etapa', e)" (click)="alternar('etapa', e, $event)" [attr.aria-pressed]="activo('etapa', e)">
+                    <span class="punto-etapa" [style.background]="colorEtapa[e]"></span>
+                    <span>
+                      <span class="titulo">{{ etiquetaEtapa[e] }}</span>
+                      <span class="cifra"><strong>{{ totalEtapa(e) }}</strong> <small>{{ pct(totalEtapa(e), vista.length) }}</small></span>
+                      @if (e === 'RECEPCION') {
+                        <span class="detalle" [class.resaltado]="sinTomarViejas > 0">{{ sinTomarViejas }} sin tomar &gt; 3 días</span>
+                      }
+                    </span>
+                  </button>
+                }
+              </div>
+              <ng-container [ngTemplateOutlet]="ayudaFija" [ngTemplateOutletContext]="{ id: 'kpis' }" />
+            }
+
+            <!-- ---------- Hallazgos ---------- -->
+            @case ('hallazgos') {
+              @if (hallazgos.length) {
+                <div class="hallazgos">
+                  <span class="hallazgos-titulo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>
+                    Lo más relevante de la selección
+                    <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'hallazgos' }" />
+                  </span>
+                  <ul>
+                    @for (h of hallazgos; track h.texto) { <li [class]="'h-' + h.tipo">{{ h.texto }}</li> }
+                  </ul>
+                </div>
+              }
+            }
+
+            <!-- ---------- Unidades × etapa + ficha ---------- -->
+            @case ('unidades') {
+              <div class="fila fila-a">
+                <div class="seg-panel">
+                  <div class="seg-panel-cabeza">
+                    <h3>Unidades con más quejas, por etapa <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'unidades' }" /></h3>
+                    <span class="nota-cabeza">Clic en unidad, etapa o celda</span>
+                  </div>
+                  <ng-container [ngTemplateOutlet]="ayudaFija" [ngTemplateOutletContext]="{ id: 'unidades' }" />
+                  @if (calorUnidades.length) {
+                    <div class="calor calor-unidades" role="table" aria-label="Quejas por unidad y etapa">
+                      <div class="calor-fila cabeza" role="row">
+                        <span role="columnheader"></span>
+                        @for (e of etapas; track e) {
+                          <button type="button" role="columnheader" class="calor-col" [class.sel]="activo('etapa', e)"
+                                  (click)="alternar('etapa', e, $event)" [title]="'Filtrar por ' + etiquetaEtapa[e]">
+                            <span class="punto" [style.background]="colorEtapa[e]"></span>{{ etiquetaEtapa[e] }}
+                          </button>
+                        }
+                        <span role="columnheader" class="num">Total</span>
+                        <span role="columnheader" class="num" title="Contra el periodo anterior del mismo tamaño">vs ant.</span>
+                      </div>
+                      @for (u of calorUnidades; track u.clave) {
+                        <div class="calor-fila" role="row" [class.sel]="activo('unidad', u.clave)" [class.atenuada]="atenuado('unidad', u.clave)">
+                          <button type="button" role="rowheader" class="calor-etq" (click)="alternar('unidad', u.clave, $event)" [title]="'Filtrar por ' + u.etiqueta">{{ u.etiqueta }}</button>
+                          @for (c of u.celdas; track c.clave) {
+                            <button type="button" role="cell" class="calor-celda" [class.sel]="activo('unidad', u.clave) && activo('etapa', c.clave)"
+                                    [style.background]="intensidad(c.valor, maxCalorUnidad)" [style.color]="colorTexto(c.valor, maxCalorUnidad)"
+                                    (click)="seleccionarCelda('unidad', u.clave, 'etapa', c.clave, $event)"
+                                    [title]="u.etiqueta + ' · ' + etiquetaEtapa[c.clave] + ': ' + c.valor">{{ c.valor || '' }}</button>
+                          }
+                          <span role="cell" class="num total">{{ u.total }}</span>
+                          @if (tendencia(u.total, u.anterior); as tz) {
+                            <span role="cell" [class]="'num tendencia ' + tz.clase" [title]="'Periodo anterior: ' + u.anterior">{{ tz.texto }}</span>
+                          } @else {
+                            <span role="cell" class="num tendencia">—</span>
+                          }
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <p class="seg-vacio">Sin quejas en la selección.</p>
+                  }
+                </div>
+
+                <div class="seg-panel ficha">
+                  @if (ficha; as f) {
+                    <div class="seg-panel-cabeza">
+                      <h3>{{ f.nombre }} <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'ficha' }" /></h3>
+                      <button type="button" class="seg-link" (click)="quitar('unidad')">Quitar ×</button>
+                    </div>
+                    @if (f.titular; as ti) {
+                      <div class="titular">
+                        <span class="avatar-titular">{{ iniciales(ti.titular) }}</span>
+                        <div>
+                          <b>{{ ti.titular || 'Puesto vacante en el directorio' }}</b>
+                          <small>{{ ti.cargo }}</small>
+                          <span class="contacto">
+                            @if (ti.correo) { <a [href]="mailto(ti, f.nombre)" [title]="'Escribir a ' + ti.correo">{{ ti.correo }}</a> }
+                            @if (ti.extension) { <span>Ext. {{ ti.extension }}</span> }
+                            @if (ti.conmutador) { <span>Tel. {{ ti.conmutador }}</span> }
+                          </span>
+                        </div>
+                      </div>
+                      <p class="fuente">Directorio de Servidores Públicos del IPN, consultado el {{ fechaDirectorio }}.</p>
+                    } @else {
+                      <p class="fuente">Esta unidad no aparece en el Directorio del IPN; revisa el catálogo de dependencias.</p>
+                    }
+                    <div class="ficha-cifras">
+                      <div><strong>{{ f.total }}</strong><small>quejas
+                        @if (tendencia(f.total, f.anterior); as tz) { <span [class]="'tendencia ' + tz.clase">{{ tz.texto }}</span> }</small></div>
+                      <div><strong>{{ f.abiertas }}</strong><small>abiertas</small></div>
+                      <div><strong>{{ f.pctPeriodo }}%</strong><small>del periodo</small></div>
+                      <div><strong>{{ f.lugar }}°</strong><small>de {{ f.deUnidades }} unidades</small></div>
+                      <div [class.peor]="f.mediana > f.medianaGeneral"><strong>{{ f.mediana }}</strong><small>días de espera (general {{ f.medianaGeneral }})</small></div>
+                    </div>
+                    <div class="flujo-barra" role="img" aria-label="Quejas de la unidad por etapa">
+                      @for (e of f.etapas; track e.clave) {
+                        @if (e.total > 0) { <span [style.background]="colorEtapa[e.clave]" [style.flex-grow]="e.total" [title]="etiquetaEtapa[e.clave] + ': ' + e.total"></span> }
+                      }
+                    </div>
+                    <div class="ficha-acciones">
+                      <button type="button" class="seg-btn" (click)="verEnQuejas()">Ver sus quejas</button>
+                      @if (f.titular?.correo) {
+                        <a class="seg-btn-borde" [href]="mailto(f.titular!, f.nombre)">Escribir al titular</a>
+                      }
+                    </div>
+                  } @else {
+                    <div class="seg-panel-cabeza">
+                      <h3>¿Dónde están las quejas? <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'kpis' }" /></h3>
+                    </div>
+                    <div class="flujo-barra" role="img" aria-label="Distribución de quejas por etapa">
+                      @for (e of porEtapa; track e.clave) {
+                        @if (e.total > 0) { <span [style.background]="colorEtapa[e.clave]" [style.flex-grow]="e.total" [title]="etiquetaEtapa[e.clave] + ': ' + e.total"></span> }
+                      }
+                    </div>
+                    <div class="flujo-lista-etapas">
+                      @for (e of porEtapa; track e.clave) {
+                        <button type="button" class="flujo-etapa" [class.sel]="activo('etapa', e.clave)" [class.atenuada]="atenuado('etapa', e.clave)" (click)="alternar('etapa', e.clave, $event)">
+                          <span class="flujo-etapa-cabeza">
+                            <span class="punto" [style.background]="colorEtapa[e.clave]"></span>
+                            <b>{{ etiquetaEtapa[e.clave] }}</b>
+                            <strong>{{ e.total }}</strong>
+                            <small>{{ pct(e.total, totalEtapas) }}</small>
+                          </span>
+                          <span class="flujo-etapa-estatus">
+                            @for (st of e.estatus.slice(0, 3); track st.etiqueta) { <span>{{ st.etiqueta }} <b>{{ st.total }}</b></span> }
+                          </span>
+                        </button>
+                      }
+                    </div>
+                    <p class="fuente">Selecciona <b>una</b> unidad para ver a su titular (directorio del IPN) y sus indicadores.</p>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- ---------- Evolución y antigüedad ---------- -->
+            @case ('tiempo') {
+              <div class="fila fila-b">
+                <div class="seg-panel">
+                  <div class="seg-panel-cabeza">
+                    <h3>Evolución mensual por etapa <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'evolucion' }" /></h3>
+                    <span class="nota-cabeza">Últimos 12 meses · clic en un mes</span>
+                  </div>
+                  <ng-container [ngTemplateOutlet]="ayudaFija" [ngTemplateOutletContext]="{ id: 'evolucion' }" />
+                  <app-barras [etiquetas]="etiquetasMes" [series]="seriesMes" [clicable]="true" [alto]="240"
+                              descripcion="Quejas por mes y etapa" (seleccionar)="seleccionarMes($event)" />
+                  <div class="leyenda">
+                    @for (e of etapas; track e) { <span><span class="punto" [style.background]="colorEtapa[e]"></span>{{ etiquetaEtapa[e] }}</span> }
+                    @if (filtros.mes?.length) { <b class="leyenda-sel">Seleccionado: {{ mesesSeleccionados }}</b> }
+                  </div>
+                </div>
+
+                <div class="seg-panel">
+                  <div class="seg-panel-cabeza">
+                    <h3>Antigüedad de las quejas abiertas <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'antiguedad' }" /></h3>
+                    <span class="nota-cabeza">Días desde que llegó · clic en un rango</span>
+                  </div>
+                  <ng-container [ngTemplateOutlet]="ayudaFija" [ngTemplateOutletContext]="{ id: 'antiguedad' }" />
+                  <app-barras [etiquetas]="etiquetasEdad" [series]="seriesEdad" [clicable]="true" [alto]="240"
+                              descripcion="Quejas abiertas por antigüedad y etapa" (seleccionar)="seleccionarEdad($event)" />
+                  <div class="leyenda">
+                    @for (e of etapasAbiertas; track e) { <span><span class="punto" [style.background]="colorEtapa[e]"></span>{{ etiquetaEtapa[e] }}</span> }
+                    @if (filtros.edad?.length) { <b class="leyenda-sel">Seleccionado: {{ edadesSeleccionadas }}</b> }
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- ---------- Nivel, rama, día-hora, origen ---------- -->
+            @case ('perfil') {
+              <div class="fila fila-c">
+                <div class="seg-panel">
+                  <div class="seg-panel-cabeza"><h3>Nivel educativo <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'nivel' }" /></h3></div>
+                  <ng-container [ngTemplateOutlet]="ayudaFija" [ngTemplateOutletContext]="{ id: 'nivel' }" />
+                  <ul class="barras-h">
+                    @for (n of niveles; track n.clave) {
+                      <li>
+                        <button type="button" [class.sel]="activo('nivel', n.clave)" [class.atenuada]="atenuado('nivel', n.clave)" (click)="alternar('nivel', n.clave, $event)">
+                          <span class="bh-etq">{{ n.etiqueta }}</span>
+                          <span class="seg-barra"><span [style.width.%]="ancho(n.total, niveles)"></span></span>
+                          <span class="bh-num"><b>{{ n.total }}</b> <small>{{ pct(n.total, vista.length) }}</small></span>
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                  <div class="seg-panel-cabeza sub"><h3>Rama del conocimiento</h3></div>
+                  <ul class="barras-h">
+                    @for (r of ramas; track r.clave) {
+                      <li>
+                        <button type="button" [class.sel]="activo('rama', r.clave)" [class.atenuada]="atenuado('rama', r.clave)" (click)="alternar('rama', r.clave, $event)">
+                          <span class="bh-etq">{{ r.etiqueta }}</span>
+                          <span class="seg-barra"><span [style.width.%]="ancho(r.total, ramas)"></span></span>
+                          <span class="bh-num"><b>{{ r.total }}</b></span>
+                        </button>
+                      </li>
+                    } @empty {
+                      <li class="seg-vacio">Sin unidades académicas en la selección.</li>
+                    }
+                  </ul>
+                </div>
+
+                <div class="seg-panel">
+                  <div class="seg-panel-cabeza">
+                    <h3>¿Cuándo llegan las quejas? <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'horario' }" /></h3>
+                    <span class="nota-cabeza">Día de la semana × hora</span>
+                  </div>
+                  <ng-container [ngTemplateOutlet]="ayudaFija" [ngTemplateOutletContext]="{ id: 'horario' }" />
+                  <div class="calor calor-dias" role="table" aria-label="Quejas por día y hora de llegada">
+                    <div class="calor-fila cabeza" role="row">
+                      <span role="columnheader"></span>
+                      @for (h of horas; track h) {
+                        <button type="button" role="columnheader" class="calor-col hora" [class.sel]="activo('hora', h)" (click)="alternar('hora', h, $event)" [title]="h + ':00 a ' + finHora(h) + ':00'">{{ h }}</button>
+                      }
+                      <span role="columnheader" class="num">Total</span>
+                    </div>
+                    @for (d of calorDias; track d.clave) {
+                      <div class="calor-fila" role="row" [class.sel]="activo('dia', d.clave)" [class.atenuada]="atenuado('dia', d.clave)">
+                        <button type="button" role="rowheader" class="calor-etq" (click)="alternar('dia', d.clave, $event)">{{ d.etiqueta }}</button>
+                        @for (c of d.celdas; track c.clave) {
+                          <button type="button" role="cell" class="calor-celda" [class.sel]="activo('dia', d.clave) && activo('hora', c.clave)"
+                                  [style.background]="intensidad(c.valor, maxCalorDia)" [style.color]="colorTexto(c.valor, maxCalorDia)"
+                                  (click)="seleccionarCelda('dia', d.clave, 'hora', c.clave, $event)"
+                                  [title]="d.etiqueta + ' ' + c.clave + ':00 · ' + c.valor + ' quejas'">{{ c.valor || '' }}</button>
+                        }
+                        <span role="cell" class="num total">{{ d.total }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <div class="seg-panel">
+                  <div class="seg-panel-cabeza"><h3>Origen del registro <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'origen' }" /></h3></div>
+                  <ng-container [ngTemplateOutlet]="ayudaFija" [ngTemplateOutletContext]="{ id: 'origen' }" />
+                  <ul class="barras-h">
+                    @for (o of origenes; track o.clave) {
+                      <li>
+                        <button type="button" [class.sel]="activo('origen', o.clave)" [class.atenuada]="atenuado('origen', o.clave)" (click)="alternar('origen', o.clave, $event)">
+                          <span class="bh-etq">{{ o.etiqueta === 'Web' ? 'En línea' : o.etiqueta }}</span>
+                          <span class="seg-barra"><span [style.width.%]="ancho(o.total, origenes)"></span></span>
+                          <span class="bh-num"><b>{{ o.total }}</b> <small>{{ pct(o.total, vista.length) }}</small></span>
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                  <div class="seg-panel-cabeza sub"><h3>Prioridad (Primer Contacto)</h3></div>
+                  <ul class="barras-h">
+                    @for (p of prioridades; track p.clave) {
+                      <li>
+                        <button type="button" [class.sel]="activo('prioridad', p.clave)" [class.atenuada]="atenuado('prioridad', p.clave)" (click)="alternar('prioridad', p.clave, $event)">
+                          <span class="bh-etq">{{ p.etiqueta }}</span>
+                          <span class="seg-barra"><span [style.width.%]="ancho(p.total, prioridades)"></span></span>
+                          <span class="bh-num"><b>{{ p.total }}</b></span>
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              </div>
+            }
+
+            <!-- ---------- Responsables ---------- -->
+            @case ('responsables') {
+              <div class="fila fila-b">
+                @for (grupo of [{ titulo: 'Recepcionistas', dim: 'recepcionista', lista: recepcionistas, vacio: 'Nadie la ha tomado' }, { titulo: 'Abogados responsables', dim: 'abogado', lista: abogados, vacio: 'Sin asignar' }]; track grupo.dim) {
+                  <div class="seg-panel">
+                    <div class="seg-panel-cabeza">
+                      <h3>{{ grupo.titulo }} <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'responsables' }" /></h3>
+                      <span class="nota-cabeza">Total / abiertas en la selección</span>
+                    </div>
+                    <ng-container [ngTemplateOutlet]="ayudaFija" [ngTemplateOutletContext]="{ id: 'responsables' }" />
+                    <ul class="barras-h">
+                      @for (r of grupo.lista; track r.clave) {
+                        <li>
+                          <button type="button" [class.sel]="activo($any(grupo.dim), r.clave)" [class.atenuada]="atenuado($any(grupo.dim), r.clave)" (click)="alternar($any(grupo.dim), r.clave, $event)">
+                            <span class="bh-etq" [class.cursiva]="r.clave === grupo.vacio">{{ r.etiqueta }}</span>
+                            <span class="seg-barra"><span [style.width.%]="ancho(r.total, grupo.lista)"></span></span>
+                            <span class="bh-num"><b>{{ r.total }}</b> / {{ r.abiertas }}</span>
+                          </button>
+                        </li>
+                      } @empty {
+                        <li class="seg-vacio">Sin datos en la selección.</li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- ---------- Detalle ---------- -->
+            @case ('detalle') {
+              <div class="fila fila-b">
+                <div class="seg-panel">
+                  <div class="seg-panel-cabeza">
+                    <h3>Quejas abiertas más antiguas <ng-container [ngTemplateOutlet]="foco" [ngTemplateOutletContext]="{ id: 'detalle' }" /></h3>
+                    <button type="button" class="seg-link" (click)="verEnQuejas()">Ver todas →</button>
+                  </div>
+                  <div class="seg-tabla-envoltura">
+                    <table class="seg-tabla compacta">
+                      <thead><tr><th>Folio</th><th>Unidad</th><th>Estado</th><th>Responsable</th><th class="num">Días</th></tr></thead>
+                      <tbody>
+                        @for (q of antiguas; track q.folio) {
+                          <tr class="clic" [routerLink]="['/quejas', q.folio]" [title]="'Ver la queja ' + q.folio">
+                            <td class="fuerte">{{ q.folio }}</td>
+                            <td>{{ q.unidadNombre || '—' }}</td>
+                            <td><span [class]="'seg-chip etapa-' + q.etapa">{{ q.estatusEtiqueta }}</span></td>
+                            <td>{{ q.abogado || q.recepcionista || '—' }}</td>
+                            <td class="num"><span class="seg-dias" [class.alta]="q.dias > 15">{{ q.dias }}</span></td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="5" class="seg-vacio">No hay quejas abiertas en la selección.</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="seg-panel">
+                  <div class="seg-panel-cabeza">
+                    <h3>Casos que requieren atención @if (t.atencion.totalElementos) { <span class="burbuja">{{ t.atencion.totalElementos }}</span> }</h3>
+                    <button type="button" class="seg-link" (click)="abrir('atencion')">Ver todas →</button>
+                  </div>
+                  <div class="seg-tabla-envoltura">
+                    <table class="seg-tabla compacta">
+                      <thead><tr><th>Folio</th><th>Motivo</th><th class="num">Días</th><th>Unidad</th></tr></thead>
+                      <tbody>
+                        @for (c of t.atencion.filas.slice(0, 5); track c.folio) {
+                          <tr class="clic" [routerLink]="['/quejas', c.folio]">
+                            <td class="fuerte">{{ c.folio }}</td>
+                            <td>{{ c.motivoEtiqueta }}</td>
+                            <td class="num"><span class="seg-dias" [class.alta]="c.severidad === 'ALTA'">{{ c.dias }}</span></td>
+                            <td>{{ c.unidadNombre || '—' }}</td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="4" class="seg-vacio">No hay casos con retraso ni sin asignar. 👍</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="seg-panel-cabeza sub">
+                    <h3>Motivos de rechazo <span class="info" title="Motivos con los que Recepción regresó quejas {{ etiquetaPeriodo }}. Una queja puede tener varios.">i</span></h3>
+                    <button type="button" class="seg-link" (click)="abrir('motivos')">Ver todos →</button>
+                  </div>
+                  <ul class="motivos">
+                    @for (m of t.motivos.slice(0, 4); track m.clave) {
+                      <li>
+                        <a routerLink="/quejas" [queryParams]="{ motivo: m.clave }">
+                          <span class="motivo-texto">{{ m.motivo }}</span>
+                          <span class="seg-barra"><span [style.width.%]="(m.cantidad / maxMotivo) * 100"></span></span>
+                          <span class="motivo-num"><b>{{ m.cantidad }}</b> ({{ m.porcentaje }}%)</span>
+                        </a>
+                      </li>
+                    } @empty {
+                      <li class="seg-vacio">Sin rechazos {{ etiquetaPeriodo }}.</li>
+                    }
+                  </ul>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      }
     </div>
   }
 </section>
 
-<!-- ================= Ventanas ================= -->
+<!-- ================= Recorrido guiado ================= -->
+@if (paso !== null) {
+  <div class="recorrido" role="dialog" aria-live="polite" (click)="detener($event)">
+    <b>{{ pasos[paso].titulo }}</b>
+    <p>{{ pasos[paso].texto }}</p>
+    <div class="recorrido-pie">
+      <span class="puntos">@for (x of pasos; track $index; let i = $index) { <span [class.actual]="i === paso"></span> }</span>
+      <button type="button" class="seg-link" (click)="terminarRecorrido()">Saltar</button>
+      @if (paso > 0) { <button type="button" class="seg-btn-borde" (click)="irAPaso(paso - 1)">Anterior</button> }
+      <button type="button" class="seg-btn" (click)="irAPaso(paso + 1)">{{ paso === pasos.length - 1 ? 'Terminar' : 'Siguiente' }}</button>
+    </div>
+  </div>
+}
+
 @switch (ventana) {
   @case ('atencion') {
     <app-modal-panel titulo="Casos que requieren atención"
                      subtitulo="Quejas con posibles retrasos, sin asignar o con incidencias que requieren seguimiento." (cerrar)="cerrar()">
       <app-atencion-tabla />
-    </app-modal-panel>
-  }
-  @case ('etapas') {
-    <app-modal-panel titulo="Distribución de quejas por etapa"
-                     subtitulo="Consulta el estado actual de todas las quejas y accede a la lista de cada etapa." (cerrar)="cerrar()">
-      <div class="dist">
-        <div class="dist-grafica">
-          <app-dona [segmentos]="segmentosEtapas" etiquetaCentro="Quejas totales" [tam]="260" [grosor]="34" />
-          <ul class="dist-leyenda">
-            @for (s of segmentosEtapas; track s.etiqueta) {
-              <li><span class="punto" [style.background]="s.color"></span><span>{{ s.etiqueta }}</span><b>{{ s.valor }}</b><small>({{ pctTexto(s.valor, totalEtapas) }})</small></li>
-            }
-          </ul>
-        </div>
-        <div class="dist-tarjetas">
-          @for (e of panel?.etapas ?? []; track e.clave) {
-            <div [class]="'dist-tarjeta etapa-' + e.clave">
-              <b class="dist-nombre">{{ etiquetaCorta[e.clave] }}</b>
-              <strong>{{ e.total }}</strong>
-              <small>{{ pctTexto(e.total, totalEtapas) }} del total</small>
-              <ul>
-                @for (s of e.estatus; track s.clave) { <li><span>{{ s.etiqueta }}</span><b>{{ s.total }}</b></li> }
-                @empty { <li><span>Sin quejas</span><b>0</b></li> }
-              </ul>
-              <button type="button" class="seg-btn" (click)="verEtapa(e.clave)">Ver quejas</button>
-            </div>
-          }
-        </div>
-      </div>
-    </app-modal-panel>
-  }
-  @case ('unidades') {
-    <app-modal-panel titulo="Unidades con más quejas"
-                     subtitulo="Listado completo de dependencias y unidades académicas con el número de quejas registradas." (cerrar)="cerrar()">
-      <app-unidades-tabla [dias]="dias" />
-    </app-modal-panel>
-  }
-  @case ('carga') {
-    <app-modal-panel titulo="Carga de trabajo del personal"
-                     subtitulo="Distribución de quejas y estado de atención por recepcionistas y personal jurídico." (cerrar)="cerrar()">
-      <button acciones type="button" class="seg-btn-borde" (click)="tablaCarga.exportar()" [disabled]="!carga">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg>
-        Exportar
-      </button>
-      <app-carga-tabla #tablaCarga [datos]="carga" [tamanio]="5" />
     </app-modal-panel>
   }
   @case ('motivos') {

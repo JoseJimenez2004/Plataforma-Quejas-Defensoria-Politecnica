@@ -1,0 +1,365 @@
+# ==============================================================================
+# Pipeline de pruebas de requerimientos NO funcionales
+# Plataforma de Quejas — Defensoría de los Derechos Politécnicos (TT 2026-B009)
+#
+# Va en la RAÍZ del repositorio:  .github/workflows/pruebas-rnf.yml
+# (GitHub solo lee workflows de ahí; el código vive en la carpeta Produccion/).
+#
+# Etapas (ISO/IEC 25010) y cuándo corren:
+#   push / pull_request  -> 1 Mantenibilidad · 2 Funcionalidad · 3 Seguridad estática
+#   manual (Run workflow) o semanal, contra el ENTORNO DE PRUEBAS
+#                        -> 4 Seguridad dinámica · 5 Confidencialidad · 6 Capacidad
+#                           7 Fiabilidad · 8 Usabilidad (por definir)
+#   siempre al final     -> 9 Informe (resumen por RNF en la pestaña "Summary")
+#
+# Secretos (Settings > Secrets and variables > Actions):
+#   CRED_QUEJOSO, CRED_RECEPCIONISTA, CRED_ANALISTA_PRIMER_CONTACTO, CRED_SUBDEFENSOR,
+#   CRED_DEFENSOR, CRED_ADMIN_SISTEMAS   -> "correo:password" de cuentas DE PRUEBA
+# Variables:
+#   URL_PRUEBAS   -> https://... del entorno de pruebas (nunca producción)
+#   DOMINIO_TLS   -> dominio para la prueba pasiva de TLS (puede ser producción)
+# ==============================================================================
+name: Pruebas RNF
+
+on:
+  push:
+    branches: [Produccion]
+    paths: ["Produccion/**", ".github/workflows/pruebas-rnf.yml"]
+  pull_request:
+    branches: [Produccion]
+  schedule:
+    - cron: "0 9 * * 1"   # lunes 03:00 hora de la CDMX
+  workflow_dispatch:
+    inputs:
+      dinamicas:
+        description: "Correr también las pruebas dinámicas contra el entorno de pruebas"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pruebas-rnf-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RNF: Produccion/pruebas/rnf
+  CHECKSTYLE_VERSION: "10.21.4"
+  UMBRAL_COBERTURA: "70"
+
+jobs:
+  # ============================================================================
+  # 1. MANTENIBILIDAD — prueba estática (no ejecuta el sistema)
+  #    Coding style (Google Java Style + desviaciones D1-D4) y métricas de complejidad.
+  # ============================================================================
+  mantenibilidad:
+    name: "1 · Mantenibilidad (${{ matrix.servicio }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        servicio: [auth-service, queja-service, revision-service, admin-service,
+                   catalogo-service, notificaciones-service, chatbot-service, denunciado-service]
+        include:
+          # Servicios que se instalan pero no mantiene el equipo: se miden, no bloquean.
+          - servicio: primercontacto
+            informativo: true
+          - servicio: subdefensoria
+            informativo: true
+    continue-on-error: ${{ matrix.informativo == true }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - name: Descargar Checkstyle ${{ env.CHECKSTYLE_VERSION }}
+        run: |
+          curl -sSL -o checkstyle.jar \
+            "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-${CHECKSTYLE_VERSION}/checkstyle-${CHECKSTYLE_VERSION}-all.jar"
+      - name: Checkstyle (reglas obligatorias rompen; recomendadas = deuda)
+        run: |
+          set +e
+          java -jar checkstyle.jar -c "$RNF/estilo/checkstyle-defensoria.xml" -f xml \
+            -o "checkstyle-${{ matrix.servicio }}.xml" "Produccion/Backend/${{ matrix.servicio }}/src/main/java"
+          errores=$?
+          avisos=$(grep -c 'severity="warning"' "checkstyle-${{ matrix.servicio }}.xml")
+          {
+            echo "### Mantenibilidad · ${{ matrix.servicio }}"
+            echo "| Indicador | Valor |"; echo "|---|---|"
+            echo "| Violaciones a reglas obligatorias | **$errores** |"
+            echo "| Deuda técnica (reglas recomendadas) | $avisos |"
+            echo ""
+            echo "| Regla | Severidad | Violaciones |"; echo "|---|---|---|"
+            grep -o 'severity="[a-z]*" message="[^"]*" source="[^"]*"' "checkstyle-${{ matrix.servicio }}.xml" \
+              | sed -E 's/severity="([a-z]+)".*source="[^"]*\.([A-Za-z]+)Check"/\2 \1/' \
+              | sort | uniq -c | sort -rn | awk '{print "| "$2" | "$3" | "$1" |"}'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $errores
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: checkstyle-${{ matrix.servicio }}
+          path: checkstyle-${{ matrix.servicio }}.xml
+
+  # ============================================================================
+  # 2. FUNCIONALIDAD — pruebas dinámicas de componente (JUnit 5 + Mockito)
+  #    Incluye las de Fiabilidad a nivel unitario (RNF-Q04, RNF-R04, RNF-A04) y la
+  #    compuerta de cobertura JaCoCo >= 70 % en paquetes de reglas y servicios.
+  # ============================================================================
+  funcionalidad-backend:
+    name: "2 · Funcionalidad backend (${{ matrix.servicio }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        servicio: [auth-service, queja-service, revision-service, admin-service,
+                   catalogo-service, notificaciones-service, chatbot-service, denunciado-service]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: defensoria_test
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/defensoria_test
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      JWT_SECRET: clave-de-pruebas-ci-solo-para-github-actions-0123456789
+    defaults:
+      run:
+        working-directory: Produccion/Backend/${{ matrix.servicio }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21", cache: maven }
+      - name: mvn verify (perfil cobertura)
+        run: mvn -B -ntp verify -Pcobertura
+      - name: Compuerta de cobertura (>= ${{ env.UMBRAL_COBERTURA }} %)
+        if: always()
+        working-directory: Produccion
+        run: |
+          python3 pruebas/rnf/mantenibilidad/cobertura.py "$UMBRAL_COBERTURA" "Backend/${{ matrix.servicio }}" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: junit-jacoco-${{ matrix.servicio }}
+          path: |
+            Produccion/Backend/${{ matrix.servicio }}/target/surefire-reports/
+            Produccion/Backend/${{ matrix.servicio }}/target/site/jacoco/
+
+  funcionalidad-frontend:
+    name: "2 · Funcionalidad front (${{ matrix.front }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        front: [Frontend, Frontend-Revision, Frontend-Admin]
+    defaults:
+      run:
+        working-directory: Produccion/${{ matrix.front }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: Produccion/${{ matrix.front }}/package-lock.json
+      - run: npm ci
+      - name: Build de producción (presupuestos de tamaño de Angular)
+        run: npx ng build --configuration production
+      - name: Pruebas unitarias (specs)
+        run: npx ng test --watch=false
+        continue-on-error: true   # hoy los *.spec.ts son los generados por Angular
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.front }}
+          path: Produccion/${{ matrix.front }}/dist/
+          retention-days: 3
+
+  # ============================================================================
+  # 3. SEGURIDAD — pruebas estáticas
+  #    SEG-01 estático (matriz rol x endpoint vs. RNF), SEG-04 dependencias,
+  #    SEG-05 secretos en el repositorio.
+  # ============================================================================
+  seguridad-estatica:
+    name: "3 · Seguridad estática"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: SEG-01 Matriz rol x endpoint desde el código vs. RNF-A06 / RN-R02 / RNF-Q02
+        working-directory: ${{ env.RNF }}/seguridad
+        run: |
+          python3 extraer_endpoints.py ../../../Backend matriz-endpoints.csv
+          python3 verificar_autorizacion.py matriz-endpoints.csv reglas-autorizacion.csv \
+            | tee resultado.txt
+          { echo '### Seguridad · autorización (estática)'; echo '```'; cat resultado.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: SEG-05 Secretos en el repositorio (gitleaks)
+        if: always()
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: true
+      - name: SEG-04 Dependencias con vulnerabilidades altas/críticas (Trivy)
+        if: always()
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: Produccion
+          scanners: vuln
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: matriz-endpoints
+          path: ${{ env.RNF }}/seguridad/matriz-endpoints.csv
+
+  # ============================================================================
+  # Pruebas DINÁMICAS contra el entorno de pruebas (manual o semanal).
+  # ============================================================================
+  seguridad-dinamica:
+    name: "4 · Seguridad dinámica"
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.dinamicas)
+    needs: [seguridad-estatica]
+    runs-on: ubuntu-latest
+    environment: pruebas
+    env:
+      BASE_URL: ${{ vars.URL_PRUEBAS }}
+      CRED_QUEJOSO: ${{ secrets.CRED_QUEJOSO }}
+      CRED_RECEPCIONISTA: ${{ secrets.CRED_RECEPCIONISTA }}
+      CRED_ANALISTA_PRIMER_CONTACTO: ${{ secrets.CRED_ANALISTA_PRIMER_CONTACTO }}
+      CRED_SUBDEFENSOR: ${{ secrets.CRED_SUBDEFENSOR }}
+      CRED_DEFENSOR: ${{ secrets.CRED_DEFENSOR }}
+      CRED_ADMIN_SISTEMAS: ${{ secrets.CRED_ADMIN_SISTEMAS }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: SEG-01 / RNF-Q06 / RNF-A03 Matriz rol x endpoint en vivo
+        run: REPORTE=matriz-roles-resultado.csv bash "$RNF/seguridad/matriz-roles.sh"
+      - name: SEG-02 / SEG-03 Escaneo pasivo OWASP ZAP (portal del quejoso)
+        if: always()
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: ${{ vars.URL_PRUEBAS }}
+          allow_issue_writing: false
+          fail_action: false
+          cmd_options: "-a"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: seguridad-dinamica
+          path: |
+            matriz-roles-resultado.csv
+            report_html.html
+
+  confidencialidad:
+    name: "5 · Confidencialidad (RNF-Q02)"
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.dinamicas)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TLS, HSTS, BREACH, endpoints internos, token Bearer
+        run: DOMINIO="${{ vars.DOMINIO_TLS }}" bash "$RNF/confidencialidad/confidencialidad.sh" | tee conf.txt
+      - if: always()
+        run: |
+          { echo "### Confidencialidad"; echo '```'; cat conf.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+  capacidad:
+    name: "6 · Capacidad (RNF-Q03 + usuarios concurrentes)"
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.dinamicas)
+    runs-on: ubuntu-latest
+    environment: pruebas
+    steps:
+      - uses: actions/checkout@v4
+      - name: RNF-Q03 Tamaño máximo de petición multiparte
+        env:
+          BASE_URL: ${{ vars.URL_PRUEBAS }}
+          LIMITE_PROXY_MB: "100"
+        run: bash "$RNF/capacidad/capacidad.sh"
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@v1
+      - name: Carga con 50 usuarios virtuales (p95 < 1 s, errores < 1 %)
+        run: k6 run -e BASE_URL="${{ vars.URL_PRUEBAS }}" --summary-export k6-resumen.json "$RNF/capacidad/carga.k6.js"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: capacidad-k6, path: k6-resumen.json }
+
+  fiabilidad:
+    name: "7 · Fiabilidad (FIA-03 respaldo restaurable)"
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.dinamicas)
+    runs-on: ubuntu-latest
+    environment: pruebas
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Respaldo -> descarga -> restauración en base desechable
+        env:
+          BASE_URL: ${{ vars.URL_PRUEBAS }}
+          CRED_ADMIN_SISTEMAS: ${{ secrets.CRED_ADMIN_SISTEMAS }}
+        run: bash "$RNF/fiabilidad/respaldo-restaurable.sh"
+
+  usabilidad:
+    name: "8 · Usabilidad (por definir — informativa)"
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.dinamicas)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: USA-03 Lighthouse (accesibilidad >= 85) en los portales
+        run: |
+          npm install -g @lhci/cli@0.14.0
+          lhci autorun --config="$RNF/usabilidad/lighthouserc.json" \
+            --collect.url="${{ vars.URL_PRUEBAS }}/" \
+            --collect.url="${{ vars.URL_PRUEBAS }}/revision/" \
+            --collect.url="${{ vars.URL_PRUEBAS }}/admin/"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: lighthouse, path: reporte-lighthouse/ }
+
+  # ============================================================================
+  # 9. INFORME — una línea por RNF con el resultado de su etapa
+  # ============================================================================
+  informe:
+    name: "9 · Informe de RNF"
+    if: always()
+    needs: [mantenibilidad, funcionalidad-backend, funcionalidad-frontend, seguridad-estatica,
+            seguridad-dinamica, confidencialidad, capacidad, fiabilidad, usabilidad]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resumen por característica ISO 25010
+        env:
+          R: ${{ toJSON(needs) }}
+        run: |
+          estado() { echo "$R" | jq -r --arg j "$1" '.[$j].result' | sed 's/success/✅ Aprobada/;s/failure/❌ Fallida/;s/skipped/⏭️ No ejecutada/;s/cancelled/⛔ Cancelada/'; }
+          {
+            echo "## Resultado de las pruebas de requerimientos no funcionales"
+            echo "| Característica | Requerimientos | Tipo de prueba | Resultado |"
+            echo "|---|---|---|---|"
+            echo "| Mantenibilidad | Coding style, complejidad (EST-01) | Estática | $(estado mantenibilidad) |"
+            echo "| Funcionalidad | RF/RN por servicio, cobertura >= ${UMBRAL_COBERTURA} % | Dinámica, caja blanca | $(estado funcionalidad-backend) / front $(estado funcionalidad-frontend) |"
+            echo "| Fiabilidad (unitaria) | RNF-Q04, RNF-R04, RNF-A04 | Dinámica, caja blanca | $(estado funcionalidad-backend) |"
+            echo "| Seguridad (estática) | RNF-A06, RN-R02, RNF-R02, SEG-04, SEG-05 | Estática | $(estado seguridad-estatica) |"
+            echo "| Seguridad (dinámica) | SEG-01, RNF-Q06, RNF-A03, SEG-02/03 | Dinámica, caja negra | $(estado seguridad-dinamica) |"
+            echo "| Confidencialidad | RNF-Q02 | Dinámica, caja negra | $(estado confidencialidad) |"
+            echo "| Capacidad | RNF-Q03, REN-01 | Dinámica, caja negra | $(estado capacidad) |"
+            echo "| Fiabilidad (sistema) | FIA-03 | Dinámica, caja negra | $(estado fiabilidad) |"
+            echo "| Usabilidad | RNF-Q05, RNF-Q07, RNF-A05 (por definir) | Dinámica + SUS manual | $(estado usabilidad) |"
+          } >> "$GITHUB_STEP_SUMMARY"

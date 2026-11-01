@@ -1,252 +1,293 @@
 	\section{Módulos de la Plataforma}
 	\label{cap:modulos}
-	Este capítulo recorre los módulos entregados desde la perspectiva de quien los usa. Mientras el
-	Capítulo~\ref{cap:implementacion} describe cómo se construyó el sistema por capas técnicas, aquí
-	se describe qué hace cada aplicación, pantalla por pantalla, y cómo esas pantallas se
-	corresponden con los casos de uso definidos en la Sección~\ref{sec:casos_uso}. El orden sigue el
-	recorrido natural de la información dentro de la institución: entra por el portal del quejoso,
-	se procesa en el panel de revisión y se sostiene desde la consola de administración.
-	
+	Este capítulo presenta el recorrido funcional de cada aplicación de la plataforma tal como la usa
+	cada actor. Mientras el Capítulo~\ref{cap:analisis_diseno} describe qué debe hacer el sistema y el
+	Capítulo~\ref{cap:implementacion} cómo se construyó, aquí se describe qué encuentra cada persona al
+	entrar y cómo avanza una queja de un módulo al siguiente. Los módulos se presentan en el orden del
+	procedimiento: el portal del quejoso, la respuesta de la persona señalada, Recepción, Primer
+	Contacto, Subdefensoría y el panel de la Defensora. La última sección relaciona cada módulo con los
+	casos de uso que implementa.
+
 	\subsection{Portal del quejoso}
 	\label{sec:modulo_quejoso}
-	El portal del quejoso es la única aplicación de acceso público y, por lo tanto, la que define la
-	experiencia que la comunidad politécnica tiene de la Defensoría en línea. Su diseño parte de una
-	premisa que condicionó todo lo demás: la persona que necesita presentar una queja no debería
-	tener que crear una cuenta antes de poder hacerlo.
-	
+	El portal se publica en la raíz del dominio y es la única aplicación dirigida al público. Tiene un
+	área pública, que no requiere cuenta, y un panel autenticado para quien activa una cuenta de
+	seguimiento.
+
 	\subsubsection{Área pública}
-	El área pública es accesible sin credenciales y agrupa cuatro funciones.
-	
-	La \textbf{página de inicio} presenta la identidad institucional y tres accesos directos:
-	presentar una queja, consultar el estado de una queja existente e iniciar sesión. Incorpora
-	además una sección de servicios en línea que replica los accesos de referencia del sitio
-	institucional de la Defensoría, de modo que el portal se perciba como continuación del servicio
-	existente y no como un sistema desconectado.
-	
-	El \textbf{formulario de registro de queja} implementa el caso de uso CU-Q01 y es la pantalla más
-	compleja del portal. Está organizada en secciones numeradas: datos del quejoso, datos de la
-	queja, evidencias y, cuando corresponde, datos del tutor. Tres decisiones de diseño merecen
-	mención. La unidad académica donde ocurrieron los hechos se selecciona del catálogo institucional
-	en lugar de capturarse como texto libre, lo que hace el dato comparable entre expedientes. Las
-	evidencias admiten varios archivos con lista previa de lo seleccionado y opción de retirar
-	alguno antes de enviar. Y el aviso normativo sobre el plazo para presentar una queja se presenta
-	en un elemento flotante consultable en cualquier momento, en lugar de un bloque fijo que
-	compitiera por el espacio del formulario.
-	
-	El \textbf{tratamiento de menores de edad} se resuelve dentro del mismo formulario. Cuando la
-	fecha de nacimiento indica que el quejoso es menor, el sistema exige los datos de un tutor o
-	adulto responsable antes de permitir el envío, conforme a la regla RN-Q01. Una vez capturados, el
-	formulario muestra un aviso persistente que confirma que ya se registraron y ofrece editarlos,
-	porque en una versión previa no existía ninguna señal visual de que ese paso se hubiera
-	completado y los usuarios volvían a abrir el diálogo por duda.
-	
-	La \textbf{consulta por folio} implementa el caso de uso CU-Q02 y permite conocer el estado de un
-	expediente con el folio y el correo con que se presentó, sin necesidad de cuenta. Es la
-	funcionalidad que resuelve de forma más directa el problema de trazabilidad que motivó el
-	proyecto.
-	
-	Completa el área pública un \textbf{menú de preguntas frecuentes} sobre la Defensoría y el
-	proceso de queja, cuyo contenido administra el personal de sistemas sin intervención del equipo
-	de desarrollo.
-	
-	\subsubsection{Panel autenticado}
-	Tras activar una cuenta con el folio de una queja previa, el quejoso accede a un panel con seis
-	secciones.
-	
 	\begin{itemize}
-		\item \textbf{Resumen.} Conteo de las quejas propias agrupadas por estatus, como vista de
-		entrada al panel.
-	
-		\item \textbf{Mis Quejas.} Listado con filtros por estatus y por texto, y detalle de cada
-		expediente con su línea de tiempo. Desde el detalle se editan los campos habilitados, pero
-		únicamente mientras la queja no haya iniciado su validación: al pasar a validación los campos
-		se bloquean, y el servidor rechaza la modificación aunque se intente por otra vía.
-	
-		\item \textbf{Nueva Queja.} Registro de una queja adicional sin volver a capturar la
-		identidad, que se toma de la sesión.
-	
-		\item \textbf{Acuerdos de Conciliación.} Consulta de los acuerdos propuestos por la
-		Defensoría, con la posibilidad de aceptarlos o rechazarlos y añadir un comentario.
-	
-		\item \textbf{Notificaciones.} Historial persistente de avisos ---accesos, quejas creadas,
-		cambios de estatus, acuerdos--- con contador de no leídas que se actualiza al marcarlas.
-	
-		\item \textbf{Perfil.} Edición de los datos de contacto. El nombre, el correo institucional y
-		la boleta o número de empleado se muestran en modo de solo lectura, porque provienen de la
-		activación de la cuenta y modificarlos rompería la correspondencia con las quejas ya
-		presentadas.
+		\item \textbf{Inicio.} Presenta la Defensoría, sus atribuciones y los accesos a presentar una queja,
+		consultarla y entrar al panel. El asistente de preguntas frecuentes flota en todas las páginas y
+		muestra las preguntas agrupadas por categoría (CU-QJ-06).
+		\item \textbf{Presentar una queja} (\texttt{/queja/registro}). Formulario en pasos numerados:
+		datos de la persona quejosa, datos de la unidad y de los hechos, persona señalada, narración y
+		archivos. La unidad se elige con un autocompletado sobre el catálogo institucional; la fecha de
+		nacimiento determina si se abre la sección del tutor; los archivos se previsualizan antes de
+		enviar y cada campo muestra el mensaje de la regla que incumple. Al final se acepta el aviso de
+		privacidad y se envía; el acuse muestra el folio y ofrece crear la cuenta de seguimiento
+		(CU-QJ-07).
+		\item \textbf{Consultar mi queja} (\texttt{/queja/consultar}). Con el folio y el correo muestra el
+		estatus y el detalle de la queja (CU-QJ-11).
+		\item \textbf{Crear o activar cuenta} (\texttt{/cuenta/crear}, \texttt{/cuenta/activar}). Solicita
+		el folio, el correo y una contraseña que cumpla la política (CU-QJ-02).
+		\item \textbf{Iniciar sesión y recuperar contraseña} (\texttt{/portal/login},
+		\texttt{/portal/recuperar}). La recuperación se hace en dos pasos: solicitar el código y capturarlo
+		con la nueva contraseña (CU-QJ-01, CU-QJ-03, CU-QJ-04).
+		\item \textbf{Responder una cita o un acuerdo} (\texttt{/cita/responder},
+		\texttt{/acuerdo/responder}). Páginas a las que llevan los enlaces enviados por correo: muestran la
+		cita de Primer Contacto o el acuerdo de Subdefensoría y permiten confirmarla, cancelarla, aceptarlo
+		o rechazarlo sin iniciar sesión (CU-QJ-14, CU-PC-04).
 	\end{itemize}
-	
-	\subsection{Panel de revisión}
+
+	\subsubsection{Panel autenticado}
+	El panel (\texttt{/panel}) tiene un menú lateral con las siguientes vistas:
+
+	\begin{itemize}
+		\item \textbf{Resumen.} Conteo de quejas propias por estatus.
+		\item \textbf{Mis quejas.} Lista con filtros por estatus y texto. El detalle de cada queja muestra
+		sus datos, sus evidencias ---que pueden verse o descargarse---, la línea de tiempo de estatus y, si
+		Recepción la regresó, las observaciones. Mientras la queja está en \texttt{RECIBIDA}, el detalle
+		permite editarla, agregar o quitar evidencias y cancelarla; si está \texttt{RECHAZADA}, permite
+		corregirla y reenviarla (CU-QJ-08 a CU-QJ-10, CU-QJ-12, CU-QJ-15).
+		\item \textbf{Nueva queja.} El mismo formulario del área pública sin la sección de identidad, que se
+		toma de la sesión.
+		\item \textbf{Conciliación.} Acuerdos dirigidos al quejoso con su asunto, términos y estado; los
+		pendientes pueden aceptarse o rechazarse con un comentario (CU-QJ-13, CU-QJ-14).
+		\item \textbf{Notificaciones.} Centro de avisos con el contador de no leídas que también se muestra
+		en el menú (CU-NOT-01).
+		\item \textbf{Perfil.} Datos de solo lectura de la cuenta y datos de contacto editables (CU-QJ-05).
+	\end{itemize}
+
+	\subsection{Respuesta de la persona señalada}
+	\label{sec:modulo_denunciado}
+	La página \texttt{/denunciado/respuesta} forma parte del portal pero está dirigida a la persona a
+	quien se atribuyen los hechos. Muestra en la parte superior el folio de la queja a la que responde
+	---recibido en el enlace---, y solicita su identidad, unidad de procedencia, tipo y número de
+	identificación, su versión de los hechos, una o dos imágenes de su credencial y sus evidencias. Antes
+	de enviar debe aceptar un aviso de privacidad propio, redactado para su situación. El acuse muestra el
+	folio de respuesta \texttt{RD-XXXXXXXX} (RF-D01). El personal consulta las respuestas desde el
+	expediente correspondiente.
+
+	\subsection{Panel de Recepción}
 	\label{sec:modulo_revision}
-	El panel de revisión es la herramienta de trabajo diario del personal de recepción y el punto
-	donde una queja deja de ser un formulario recibido para convertirse en un expediente en trámite.
-	Su diseño se organiza alrededor de una secuencia fija: revisar, decidir, registrar.
-	
-	\subsubsection{Bandeja de entrada}
-	La bandeja es la pantalla de inicio y presenta contadores de quejas pendientes, en proceso y
-	turnadas en el día, junto con la lista de expedientes por trabajar. La elección de encabezar con
-	contadores responde a una necesidad expresada en las sesiones de levantamiento: el personal
-	necesita saber de un vistazo cuánta carga tiene antes de empezar a abrir expedientes.
-	
-	\subsubsection{Detalle y validación}
-	Al abrir un expediente, el personal accede al resumen completo de la queja y a sus documentos
-	adjuntos, que puede previsualizar o descargar. La pantalla incorpora además una \textbf{búsqueda
-	de antecedentes}: otras quejas previas de la misma persona. Esta función atiende un problema real
-	del proceso, la duplicidad de expedientes cuando alguien presenta la misma queja por distintos
-	canales, y su ubicación en la pantalla de decisión es deliberada: el dato debe estar disponible
-	en el momento de decidir, no en un módulo separado que haya que consultar por iniciativa propia.
-	
-	Desde esta pantalla el personal toma una de dos decisiones excluyentes.
-	
-	El \textbf{rechazo} exige seleccionar al menos un motivo y admite observaciones libres. Al
-	confirmarlo, el expediente pasa a estado rechazado y el sistema envía de forma automática el
-	correo correspondiente al quejoso. La regla RN-R03 hace que el rechazo nunca sea una acción
-	silenciosa: no es posible descartar un expediente sin que su autor se entere ni sin dejar
-	registrado el motivo.
-	
-	El \textbf{turnado} exige elegir el área o dependencia ---tomada del catálogo institucional--- y
-	el defensor o subdefensor responsable, tomado del catálogo de personal activo con esos roles.
-	Admite comentarios y genera el folio oficial de turnado, distinto del folio de seguimiento que
-	conoce el quejoso.
-	
-	En ambos casos el sistema registra quién procesó el expediente y cuándo, sin excepción, conforme
-	al requerimiento RNF-R01.
-	
-	\subsubsection{Registro manual de quejas en papel}
-	Una parte del volumen que recibe la Defensoría llega en papel. El módulo de registro manual
-	permite incorporar esos expedientes al mismo flujo digital, capturando la identidad del quejoso,
-	la dependencia, el número de oficio, la fecha de recepción física, el tipo de documento, la
-	descripción, la ubicación física del expediente y, de forma opcional, el archivo digitalizado.
-	
-	Este módulo tiene una particularidad de diseño: admite que no se conozca la boleta o el número de
-	empleado del quejoso, situación que el registro propio no permite. La razón es que un documento
-	en papel puede provenir de una persona externa o llegar sin esos datos, y rechazarlo por ello
-	significaría dejar fuera del sistema quejas que la institución sí recibió. El expediente queda
-	marcado con origen manual, de modo que su procedencia siempre es identificable.
-	
-	\subsubsection{Historial y exportación}
-	El historial reúne los expedientes ya procesados ---turnados o rechazados--- con filtros por
-	texto, estatus y fecha. Su función principal no es la consulta puntual, que ya resuelve la
-	búsqueda de antecedentes, sino la generación de reportes: el resultado filtrado se exporta a un
-	archivo de hoja de cálculo que se abre directamente en las herramientas ofimáticas que el
-	personal ya usa, sin conversión previa.
-	
-	\subsubsection{Emisión de acuerdos de conciliación}
-	El personal puede emitir un acuerdo de conciliación dirigido al quejoso de un expediente,
-	capturando asunto y términos. El acuerdo queda en estado pendiente y aparece de inmediato en el
-	panel del quejoso, que puede aceptarlo o rechazarlo. Este módulo es el punto donde el flujo de la
-	plataforma se conecta con las etapas del procedimiento que aún no tienen interfaz propia.
-	
-	\subsection{Consola de administración}
+	El panel se publica en \texttt{/revision/} y su pantalla de inicio de sesión es la entrada única del
+	personal: tras autenticarse, cada persona es dirigida al panel de su rol (CU-ADM-07).
+
+	\subsubsection{Bandeja}
+	La bandeja muestra en la parte superior los indicadores del día ---por atender, en atención, atendidas
+	hoy, espera más larga, resaltada en ámbar desde los tres días, y tiempo de respuesta promedio de los
+	últimos 30 días--- y debajo la cola paginada, con la queja más reciente primero, filtros por pestaña
+	(todas, disponibles, mías, corregidas, en atención) y búsqueda. Cada fila indica el folio, la persona
+	quejosa, la unidad, la antigüedad, si llegó por ventanilla y si otra recepcionista la está atendiendo.
+	El recuadro ``Equipo de Recepción'' muestra la actividad de cada recepcionista en el día (CU-REC-01).
+
+	\subsubsection{Validación de requisitos}
+	Al abrir una queja, esta queda a nombre de quien la abrió (CU-REC-02) y se muestra la pantalla de
+	validación. A la izquierda aparecen los datos de la queja y los documentos, que se abren en el
+	navegador (CU-REC-03); a la derecha, la lista de verificación con los cinco requisitos de admisión,
+	cada uno con su fundamento y su criterio de cotejo:
+
+	\begin{enumerate}
+		\item Identidad de la persona quejosa: nombre y apellidos completos, con la aclaración de que hay
+		personas con un solo apellido.
+		\item Documentación de identidad: se muestra el catálogo agrupado de documentos aceptados
+		---identificación oficial, identificación institucional del IPN y documentos de representación---
+		para elegir el que se exhibió.
+		\item Matrícula institucional, en dos pasos: primero la boleta y, si no aplica, el número de
+		empleado, ambos con la opción ``no aplica''.
+		\item Oportunidad: el sistema muestra la fecha de los hechos, la de presentación y los días
+		transcurridos, con la leyenda ``en término'' o ``término fenecido'' según el plazo de 90 días.
+		\item Identificación de la persona señalada.
+	\end{enumerate}
+
+	Cada requisito se responde con ``sí'', ``no'' o, cuando corresponde, ``no aplica''; un ``no'' exige una
+	observación. El botón ``Turnar'' solo se habilita con los cinco requisitos satisfechos; con al menos
+	uno no satisfecho, el botón disponible es ``Regresar al quejoso'', que arma los motivos con la misma
+	redacción de los requisitos y envía el correo (CU-REC-04). La recepcionista puede soltar la queja para
+	que otra la atienda.
+
+	\subsubsection{Turnado}
+	La pantalla de turnado muestra los antecedentes de la queja como tarjetas ---folio, fecha, unidad,
+	estado actual, abogado que la lleva y si se trata de la misma persona quejosa o de la misma persona
+	señalada--- y la lista de abogados ordenada por su carga en trámite, con el sugerido preseleccionado.
+	Si se elige a alguien con más carga, aparece un aviso. Al confirmar, la queja sale de la cola y se crea
+	el expediente en Primer Contacto (CU-REC-05).
+
+	\subsubsection{Registro en ventanilla e historial}
+	El registro en ventanilla reutiliza el formulario del portal y agrega la sección ``Recepción en
+	ventanilla'' con el documento recibido, la fecha de recepción física, el número de oficio y la
+	ubicación del expediente; la queja aparece en la cola con la etiqueta ``Ventanilla'' (CU-REC-08). El
+	historial muestra los totales de lo atendido, filtros por resultado, por recepcionista y por rango de
+	fechas, y una lista paginada con la columna ``Dónde va'', que indica el estado actual de la queja en
+	las etapas posteriores; la vista filtrada puede exportarse a Excel (CU-REC-07).
+
+	\subsection{Panel de Primer Contacto}
+	\label{sec:modulo_primer_contacto}
+	El panel se publica en \texttt{/primer-contacto/} y su menú contiene el tablero de inicio, la bandeja
+	de análisis, la agenda de citas y el perfil.
+
+	\subsubsection{Bandeja y expediente}
+	La bandeja lista los expedientes turnados con su prioridad, unidad, tema, antigüedad y estatus, con
+	filtros que resuelve el servidor (CU-PC-02). Al abrir un expediente, este pasa a
+	\texttt{EN\_ANALISIS} (CU-PC-03) y se presenta en cuatro pestañas, cuya selección queda en la URL:
+
+	\begin{itemize}
+		\item \textbf{Análisis IA.} Borrador de resumen con botones para copiarlo y ver la narración
+		completa; fragmentos clave etiquetados por tema ---inicio del contexto, hechos principales,
+		consecuencia, trato recibido---; los cuatro antecedentes más parecidos con su porcentaje de
+		similitud y una gráfica de barras; y el acceso al análisis detallado de antecedentes, donde pueden
+		guardarse o buscarse manualmente. Si el componente no responde, la pestaña lo indica.
+		\item \textbf{Expediente.} Narración, datos de la queja, de la persona quejosa y de la persona
+		señalada, evidencias e historial del expediente como línea de tiempo: recepción, inicio del
+		análisis, oficios, citas y sus respuestas, solicitudes a la persona señalada y conciliaciones.
+		\item \textbf{Gestión.} Oficios de análisis con número, asunto, autor y PDF (CU-PC-05); versión de
+		la persona señalada con sus archivos y la línea de tiempo de la solicitud (enviada, en espera,
+		respuesta); citas con el quejoso; y propuesta de conciliación (CU-PC-10).
+		\item \textbf{Resolución.} Tarjetas ``Competente'' e ``Improcedente'' con el formulario en la misma
+		pantalla: justificación, observaciones y, para el dictamen competente, el responsable en
+		Subdefensoría elegido de una lista ordenada por carga (CU-PC-06, CU-PC-07). Una vez dictaminada, la
+		pestaña muestra el dictamen (CU-PC-08) y, si es improcedente, la remisión a la autoridad
+		competente con su oficio en PDF (CU-PC-09).
+	\end{itemize}
+
+	\subsubsection{Agenda de citas}
+	La agenda muestra los indicadores de citas de hoy, próximas, confirmadas y canceladas, y dos vistas:
+	un calendario mensual que marca los días con cita y lista las del día elegido, y una lista con filtros
+	por estado, tipo, modalidad y fechas, columnas ordenables y exportación. La ventana ``Programar nueva
+	cita'' se usa también desde el expediente: en el primer paso se captura el tipo de cita, la modalidad
+	y el motivo; en el segundo se elige la fecha en un calendario y el horario, que se muestra como
+	disponible, ocupado ---si la persona analista ya tiene una cita a esa hora--- o no disponible ---si ya
+	pasó o cae en fin de semana---. Cada cita puede confirmarse, reagendarse con la misma ventana o
+	cancelarse, y cada cambio se notifica al quejoso (CU-PC-04).
+
+	\subsection{Panel de Subdefensoría}
+	\label{sec:modulo_subdefensoria}
+	El panel se publica en \texttt{/subdefensoria/} y se organiza alrededor del siguiente paso de cada
+	expediente.
+
+	\begin{itemize}
+		\item \textbf{Inicio.} Saludo, cinco indicadores que abren la lista filtrada, ``Pendientes de hoy''
+		ordenados por urgencia, ``Vencen pronto'' y una barra con la distribución por etapa (CU-SD-02).
+		\item \textbf{Mis expedientes.} Pestañas en trámite, por atender, esperando a la unidad, pendiente
+		de acuerdo de conciliación y concluidos; búsqueda y filtros por unidad y plazo; una barra de plazo
+		por expediente ---verde, ámbar desde el 70~\% del plazo y roja si venció---; el botón del siguiente
+		paso; paginación y exportación (CU-SD-02, CU-SD-03).
+		\item \textbf{Expediente.} Encabezado con una barra de siete pasos y un recuadro ``Siguiente
+		paso'', y pestañas Resumen (hechos, observaciones de Primer Contacto, evidencias, quejoso y persona
+		señalada), Primer Contacto (oficios con PDF, citas y dictamen, en solo lectura), Investigación
+		(oficios, recordatorios, respuesta y archivo), Acuerdos e Historial. Abrir el expediente inicia la
+		investigación (CU-SD-05); desde él se envían la solicitud de información y los recordatorios, se
+		registra la respuesta de la unidad y se elaboran los acuerdos (CU-SD-06 a CU-SD-09).
+		\item \textbf{Plazos y oficios.} Oficios vencidos, por vencer en tres días o menos y en espera
+		(CU-SD-04).
+	\end{itemize}
+
+	\subsection{Panel de la Defensora}
 	\label{sec:modulo_admin}
-	La consola de administración es la que hace que la plataforma sea operable a largo plazo sin
-	intervención del equipo de desarrollo. Agrupa cuatro frentes independientes entre sí.
-	
-	\subsubsection{Usuarios y roles}
-	Ciclo de vida completo de las cuentas del personal: alta con contraseña temporal generada por el
-	sistema, edición, restablecimiento de contraseña, baja y reactivación, para cualquiera de los
-	cinco roles.
-	
-	Dos decisiones de diseño de este módulo tienen consecuencias de seguridad. La primera es que las
-	cuentas nuevas se crean siempre como temporales y con obligación de cambiar la contraseña en el
-	primer acceso, de modo que la contraseña generada por el sistema nunca sea la contraseña
-	permanente de nadie. La segunda es que dar de baja una cuenta la desactiva en lugar de
-	eliminarla: si se eliminara, las acciones que esa cuenta registró en la bitácora quedarían sin
-	autor identificable, lo que anularía el propósito de la auditoría.
-	
-	\subsubsection{Catálogo de unidades académicas}
-	Administración del catálogo institucional que consumen el formulario público de quejas y el
-	turnado del panel de revisión. Permite el alta y la edición individual, y la importación masiva
-	desde un archivo de hoja de cálculo con el formato institucional.
-	
-	La importación masiva se diseñó para ser tolerante a errores: en lugar de rechazar el archivo
-	completo cuando una fila está mal formada, procesa lo que puede y devuelve un resumen de filas
-	procesadas, creadas, actualizadas y con error. El criterio detrás de esa decisión es que un
-	archivo de doscientos registros con un error tipográfico en uno de ellos no debería obligar a
-	repetir toda la carga.
-	
-	\subsubsection{Plantillas de documentos oficiales}
-	Administración del contenido reutilizable de los oficios que genera el procedimiento. Cada
-	plantilla admite marcadores que el sistema sustituye por los datos del expediente al generar el
-	documento, y la consola permite consultar qué marcadores están disponibles, previsualizar el
-	resultado con datos de ejemplo y publicar los cambios.
-	
-	Cada plantilla se identifica por una clave estable de negocio y no por su identificador
-	autogenerado, de modo que el resto del sistema pueda referenciarla sin depender del orden en que
-	se hayan creado. Cada actualización registra quién la hizo y cuándo.
-	
-	\subsubsection{Seguridad y respaldos}
-	Este módulo agrupa la operación más sensible de la plataforma. Permite listar los respaldos
-	existentes, ejecutar un respaldo bajo demanda, descargar uno específico y restaurar la base de
-	datos a partir de él.
-	
-	La restauración es la única operación destructiva de todo el sistema y recibe un tratamiento
-	diferenciado: exige una confirmación explícita en el cuerpo de la petición, de modo que no pueda
-	dispararse por accidente con una sola acción de la interfaz. Además, la capacidad de generar,
-	descargar y restaurar respaldos está reservada al rol de administración de sistemas, que es el
-	único que dispone de esos puntos de acceso.
-	
-	El módulo incluye también la \textbf{bitácora de acciones críticas}, que registra las altas,
-	bajas, ediciones y reactivaciones de cuentas, los restablecimientos de contraseña, las
-	actualizaciones de plantillas, los respaldos manuales, las restauraciones y los inicios de
-	sesión, con el usuario que los ejecutó, la dirección de origen y la fecha. Esta bitácora es el
-	mecanismo que hace verificable el requerimiento RNF-A02 y, junto con la regla de que las cuentas
-	se desactivan en lugar de eliminarse, constituye el soporte de auditoría de la plataforma.
-	
-	\subsubsection{Administración de preguntas frecuentes}
-	Alta, edición y eliminación del contenido del menú de preguntas del portal público. Los cambios
-	se reflejan de inmediato en el portal, sin necesidad de recompilar ni redesplegar la aplicación
-	del quejoso, lo que traslada el mantenimiento de ese contenido del equipo de desarrollo al
-	personal de la institución.
-	
+	El panel se publica en \texttt{/admin/}. Su subtítulo dice ``Panel de la Defensora'' para el rol
+	\texttt{DEFENSOR} y ``Panel de Administración'' para la cuenta técnica. El menú se divide en tres
+	secciones.
+
+	\subsubsection{Supervisión y seguimiento}
+	\begin{itemize}
+		\item \textbf{Panel general.} Selector de periodo (7, 30 o 90 días, 12 meses o todo) y seis
+		indicadores con su variación contra el periodo anterior; ``Casos que requieren atención'', que
+		aplica las reglas de la Tabla~\ref{tab:reglas_atencion}; ``¿Dónde están las quejas?''; evolución
+		mensual con acceso a las quejas de cada mes; unidades con más quejas; carga del personal y motivos
+		de rechazo más frecuentes. Cada número abre la lista filtrada que lo explica (CU-ADM-03).
+		\item \textbf{Quejas.} Explorador con filtros por texto, etapa, unidad, abogado, recepcionista,
+		periodo, estado y prioridad, orden, vista de lista o de tarjetas, selección y exportación a CSV;
+		el detalle de solo lectura muestra la queja, sus archivos, su seguimiento y su línea de tiempo
+		(CU-ADM-03).
+		\item \textbf{Quejas por unidad.} Indicadores, el top 10 de unidades, la distribución por tipo de
+		unidad y el listado con nombre oficial, siglas, porcentaje y última recepción (CU-ADM-03).
+		\item \textbf{Carga de trabajo.} Indicadores de personal activo, quejas en trámite y tiempo
+		promedio de atención; barras por responsable y pestañas para recepcionistas y personal jurídico con
+		su nivel de carga relativo al equipo (CU-ADM-03).
+	\end{itemize}
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{5.0cm}|p{9.5cm}|}
+		\caption{Reglas de ``Casos que requieren atención''}
+		\label{tab:reglas_atencion} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Regla} & \headercell{Condición} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Regla} & \headercell{Condición} \\
+		\hline
+		\endhead
+		Sin tomar & Más de 3 días en Recepción sin abrirse \\ \hline
+		Corregida sin revisar & Más de 3 días desde la corrección \\ \hline
+		Validación detenida & Abierta por una recepcionista hace más de 1 día \\ \hline
+		Observaciones pendientes & El quejoso no ha corregido en más de 5 días \\ \hline
+		Sin abogado & En Primer Contacto sin abogado asignado \\ \hline
+		Vencida (Primer Contacto) & Más de 10 días en Primer Contacto \\ \hline
+		Sin turnar a Subdefensoría & Procedente hace más de 15 días \\ \hline
+		Vencida (seguimiento) & Más de 60 días en Subdefensoría \\ \hline
+	\end{longtable}
+	\normalsize
+
+	Los días se muestran en rojo cuando alcanzan el doble del plazo de la regla.
+
+	\subsubsection{Administración institucional y sistema}
+	\begin{itemize}
+		\item \textbf{Personal de la Defensoría.} Indicadores por rol y estatus, filtros, y una tabla con
+		rol, unidad de adscripción, estatus y último acceso. El panel lateral de cada persona muestra su
+		información, su actividad en la bitácora y las quejas que tiene asignadas. Permite dar de alta,
+		editar, desactivar, reactivar y restablecer la contraseña (CU-ADM-01, CU-ADM-02).
+		\item \textbf{Dependencias y unidades académicas.} Alta, edición e importación desde Excel con un
+		resumen del resultado (CU-ADM-06).
+		\item \textbf{Plantillas oficiales.} Edición con la lista de marcadores disponibles y
+		previsualización con datos de ejemplo (CU-ADM-04).
+		\item \textbf{Preguntas frecuentes.} Búsqueda, filtros por categoría y visibilidad, alta y edición en
+		ventana, y eliminación con confirmación (CU-BOT-01).
+		\item \textbf{Seguridad y respaldos.} Lista de respaldos con su descarga, generación manual,
+		restauración con confirmación explícita y la bitácora de acciones críticas (CU-ADM-05).
+	\end{itemize}
+
 	\subsection{Relación entre módulos y casos de uso}
 	\label{sec:trazabilidad_modulos}
-	La Tabla~\ref{tab:trazabilidad} presenta la correspondencia entre los módulos entregados y los
-	casos de uso especificados en la Sección~\ref{sec:casos_uso}. Su función es de trazabilidad:
-	permite verificar que cada caso de uso especificado tiene un módulo que lo realiza, y que ningún
-	módulo se construyó sin un caso de uso que lo justifique.
-	
+	La Tabla~\ref{tab:trazabilidad} relaciona cada módulo con los casos de uso que implementa y con los
+	servicios que consume. Junto con la matriz de pruebas del Capítulo~\ref{cap:pruebas}, permite rastrear
+	cada requerimiento desde su especificación hasta la pantalla que lo materializa y la prueba que lo
+	verifica.
+
 	\rowcolors{2}{rowblue}{white}
-	
 	\small
-	\renewcommand{\arraystretch}{1.25}
+	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
-	
-	\begin{longtable}{|p{4.6cm}|p{4.4cm}|p{5.0cm}|}
-		\caption{Correspondencia entre módulos entregados y casos de uso}
+	\begin{longtable}{|p{3.2cm}|p{5.9cm}|p{5.4cm}|}
+		\caption{Relación entre módulos, casos de uso y servicios}
 		\label{tab:trazabilidad} \\
 		\hline
 		\rowcolor{headerblue}
-		\headercell{Módulo} & \headercell{Casos de uso} & \headercell{Requerimientos} \\
+		\headercell{Módulo} & \headercell{Casos de uso} & \headercell{Servicios que consume} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
-		\headercell{Módulo} & \headercell{Casos de uso} & \headercell{Requerimientos} \\
+		\headercell{Módulo} & \headercell{Casos de uso} & \headercell{Servicios que consume} \\
 		\hline
 		\endhead
-	
-		Registro público de quejas & CU-Q01 & RF-Q02, RF-Q03, RF-Q15 \\ \hline
-		Consulta por folio & CU-Q02 & RF-Q01 \\ \hline
-		Activación de cuenta y acceso & CU-Q03, CU-Q04, CU-Q05 & RF-Q04, RF-Q05, RF-Q06 \\ \hline
-		Panel del quejoso & CU-Q06, CU-Q07, CU-Q09, CU-Q10 & RF-Q07 a RF-Q11, RF-Q13, RF-Q14
-		\\ \hline
-		Acuerdos de conciliación (quejoso) & CU-Q08 & RF-Q12 \\ \hline
-		Preguntas frecuentes & --- & RF-Q16 \\ \hline
-		Bandeja de entrada & CU-R02 & RF-R02 \\ \hline
-		Detalle, rechazo y turnado & CU-R03, CU-R04 & RF-R03 a RF-R07, RF-R12 \\ \hline
-		Registro manual & CU-R05 & RF-R08 \\ \hline
-		Historial y exportación & CU-R06 & RF-R09, RF-R10 \\ \hline
-		Emisión de acuerdos & CU-R07 & RF-R11 \\ \hline
-		Usuarios y roles & CU-A02, CU-A03, CU-A04 & RF-A03 \\ \hline
-		Catálogo institucional & CU-A05 & RF-A04 \\ \hline
-		Plantillas de documentos & CU-A06 & RF-A05 \\ \hline
-		Seguridad y respaldos & CU-A07, CU-A08, CU-A09 & RF-A06, RF-A07 \\ \hline
-		Administración de preguntas & CU-A10 & RF-A08 \\ \hline
+		Portal del quejoso & CU-QJ-01 a CU-QJ-15, respuesta a citas de CU-PC-04, CU-NOT-01, CU-CAT-01 & \texttt{auth}, \texttt{quejas},
+		\texttt{notificaciones}, \texttt{catalogo}, \texttt{chatbot}, \texttt{primer-contacto},
+		\texttt{subdefensoria} \\ \hline
+		Respuesta de la persona señalada & RF-D01, RF-D02 (sin caso de uso formal) & \texttt{denunciado}, \texttt{catalogo} \\ \hline
+		Panel de Recepción & CU-ADM-07, CU-ADM-08, CU-REC-01 a CU-REC-08, CU-NOT-01
+		& \texttt{admin}, \texttt{revision}, \texttt{quejas}, \texttt{catalogo}, \texttt{notificaciones} \\ \hline
+		Panel de Primer Contacto & CU-PC-01 a CU-PC-10, CU-NOT-01 & \texttt{primer-contacto},
+		\texttt{denunciado}, \texttt{notificaciones}; indirectamente \texttt{antecedentes} y
+		\texttt{resumen} \\ \hline
+		Panel de Subdefensoría & CU-SD-01 a CU-SD-09, CU-NOT-01 & \texttt{subdefensoria},
+		\texttt{primer-contacto} (solo lectura), \texttt{notificaciones} \\ \hline
+		Panel de la Defensora & CU-ADM-01 a CU-ADM-08, CU-BOT-01, CU-NOT-01 &
+		\texttt{admin}, \texttt{catalogo}, \texttt{chatbot}, \texttt{notificaciones} \\ \hline
 	\end{longtable}
-	
 	\normalsize
-	\setlength{\tabcolsep}{6pt}
-	\renewcommand{\arraystretch}{1}
