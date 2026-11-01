@@ -1,55 +1,153 @@
 <div class="page-header">
   <div>
     <h2>Dependencias y Unidades Académicas</h2>
-    <p class="page-header-subtitulo">{{ lista.length }} dependencias registradas.</p>
+    <p class="page-header-subtitulo">
+      {{ lista.length }} dependencias en el catálogo · {{ conTitular }} con titular registrado ·
+      directorio del IPN consultado el {{ fechaDirectorio }}.
+    </p>
   </div>
+  <button type="button" class="btn-primary" (click)="abrirSincronizar()" [disabled]="cargando">
+    Sincronizar con el directorio del IPN
+  </button>
 </div>
 
-@if (cargando) {
-  <p class="cargando">Cargando catálogo…</p>
+<div class="pestanas" role="tablist">
+  <button type="button" role="tab" [class.activa]="pestana === 'catalogo'" [attr.aria-selected]="pestana === 'catalogo'" (click)="cambiarPestana('catalogo')">
+    Catálogo del sistema
+  </button>
+  <button type="button" role="tab" [class.activa]="pestana === 'directorio'" [attr.aria-selected]="pestana === 'directorio'" (click)="cambiarPestana('directorio')">
+    Directorio de funcionarios del IPN
+  </button>
+</div>
+
+@if (pestana === 'catalogo') {
+  @if (cargando) {
+    <p class="cargando">Cargando catálogo…</p>
+  } @else {
+    <div class="card">
+      <div class="filtros-catalogo">
+        <div class="buscador">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" [(ngModel)]="busqueda" name="busqueda" placeholder="Buscar por clave, nombre, titular o correo…" />
+        </div>
+        <label class="casilla">
+          <input type="checkbox" [(ngModel)]="soloSinTitular" name="soloSinTitular" /> Solo sin titular
+        </label>
+      </div>
+
+      @if (listaFiltrada.length === 0) {
+        <div class="estado-vacio">
+          <svg class="estado-vacio-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V7l7-4 7 4v14"></path><path d="M3 21h18"></path></svg>
+          <p>{{ busqueda ? 'Ninguna dependencia coincide con tu búsqueda.' : 'Aún no hay dependencias registradas.' }}</p>
+        </div>
+      } @else {
+        <div class="tabla-scroll">
+          <table class="tabla-admin">
+            <thead>
+              <tr>
+                <th>Abreviatura</th>
+                <th>Nombre oficial</th>
+                <th>Titular</th>
+                <th>Correo de contacto</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (dep of listaFiltrada; track dep.clave) {
+                <tr>
+                  <td class="fuerte">{{ dep.abreviatura || dep.clave }}</td>
+                  <td>{{ dep.nombre }}</td>
+                  <td>
+                    {{ dep.nombreTitular || '—' }}
+                    @if (desactualizada(dep); as t) {
+                      <button type="button" class="aviso-dir" (click)="usarDirectorio(dep, t)"
+                              [title]="'Según el directorio del IPN: ' + (t.titular || 'vacante') + ' · ' + t.correo">
+                        Actualizar con directorio
+                      </button>
+                    }
+                  </td>
+                  <td>
+                    @if (dep.correoContacto) {
+                      <button type="button" class="btn-texto" (click)="copiar(dep.correoContacto)" title="Copiar correo">{{ dep.correoContacto }}</button>
+                    } @else { — }
+                  </td>
+                  <td><button class="btn-texto" (click)="abrirEditar(dep)">Editar</button></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <div class="pie-tabla">
+        <button class="btn-primary" (click)="abrirCrear()">Agregar Academia o Dependencia</button>
+
+        <label class="btn-secondary boton-archivo">
+          {{ importando ? 'Importando…' : 'Importar Directorio desde Excel (SIA/IPN)' }}
+          <input type="file" accept=".xlsx,.xls" (change)="onArchivoSeleccionado($event)" [disabled]="importando" hidden />
+        </label>
+      </div>
+    </div>
+  }
 } @else {
   <div class="card">
-    <div class="buscador">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" [(ngModel)]="busqueda" name="busqueda" placeholder="Buscar por clave, nombre o correo…" />
-    </div>
-
-    @if (listaFiltrada.length === 0) {
-      <div class="estado-vacio">
-        <svg class="estado-vacio-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V7l7-4 7 4v14"></path><path d="M3 21h18"></path></svg>
-        <p>{{ busqueda ? 'Ninguna dependencia coincide con tu búsqueda.' : 'Aún no hay dependencias registradas.' }}</p>
+    @if (cargandoDirectorio) {
+      <p class="cargando">Cargando directorio del IPN…</p>
+    } @else if (directorio) {
+      <p class="nota-directorio">
+        {{ directorio.secciones.length }} áreas y {{ totalPersonas }} servidores públicos de mando, tomados del
+        <a [href]="directorio.fuente" target="_blank" rel="noopener">Directorio de Servidores Públicos del IPN</a>
+        el {{ fechaDirectorio }}. Clic en un correo para copiarlo.
+      </p>
+      <div class="filtros-catalogo">
+        <div class="buscador">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" [(ngModel)]="busquedaDir" name="busquedaDir" placeholder="Buscar persona, cargo, unidad o correo (p. ej. «ESCOM», «subdirector académico»)…" />
+        </div>
+        <select [(ngModel)]="areaDir" name="areaDir" aria-label="Área">
+          <option value="">Todas las áreas</option>
+          @for (a of areasDir; track a) { <option [value]="a">{{ a }}</option> }
+        </select>
       </div>
-    } @else {
-      <table class="tabla-admin">
-        <thead>
-          <tr>
-            <th>Abreviatura</th>
-            <th>Nombre Oficial de la Dependencia</th>
-            <th>Correo de Contacto Oficial</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (dep of listaFiltrada; track dep.clave) {
-            <tr>
-              <td>{{ dep.abreviatura || dep.clave }}</td>
-              <td>{{ dep.nombre }}</td>
-              <td>{{ dep.correoContacto || '—' }}</td>
-              <td><button class="btn-texto" (click)="abrirEditar(dep)">Editar</button></td>
-            </tr>
-          }
-        </tbody>
-      </table>
+
+      <div class="directorio">
+        @for (s of seccionesFiltradas; track s.seccion) {
+          <details class="dir-seccion" [open]="!!busquedaDir || seccionesFiltradas.length <= 3">
+            <summary>
+              <span class="dir-nombre">{{ s.seccion }}</span>
+              @if (s.clave) { <span class="dir-clave" title="Clave en el catálogo">{{ s.clave }}</span> }
+              <span class="dir-titular">{{ s.personas[0]?.grado }} {{ s.personas[0]?.nombre || 'Vacante' }}</span>
+              <span class="dir-cuenta">{{ s.personas.length }}</span>
+            </summary>
+            @if (s.direccion || s.conmutador) {
+              <p class="dir-direccion">{{ s.direccion }} @if (s.conmutador) { · Conmutador {{ s.conmutador }} }</p>
+            }
+            <table class="tabla-admin compacta">
+              <thead><tr><th>Nombre</th><th>Cargo</th><th>Correo</th><th>Ext.</th></tr></thead>
+              <tbody>
+                @for (p of s.personas; track $index) {
+                  <tr>
+                    <td class="fuerte">{{ p.grado }} {{ p.nombre || '(vacante)' }}</td>
+                    <td>{{ p.cargo }}</td>
+                    <td>
+                      @for (c of p.correo.split('; '); track c) {
+                        @if (c) { <button type="button" class="btn-texto" (click)="copiar(c)">{{ c }}</button> }
+                      }
+                    </td>
+                    <td class="nowrap">{{ p.extension }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </details>
+        } @empty {
+          <p class="cargando">Nada coincide con «{{ busquedaDir }}».</p>
+        }
+        @if (seccionesFiltradas.length === 60) {
+          <p class="cargando">Se muestran las primeras 60 áreas; afina la búsqueda para ver más.</p>
+        }
+      </div>
     }
-
-    <div class="pie-tabla">
-      <button class="btn-primary" (click)="abrirCrear()">Agregar Academia o Dependencia</button>
-
-      <label class="btn-secondary boton-archivo">
-        {{ importando ? 'Importando…' : 'Importar Directorio desde Excel (SIA/IPN)' }}
-        <input type="file" accept=".xlsx,.xls" (change)="onArchivoSeleccionado($event)" [disabled]="importando" hidden />
-      </label>
-    </div>
   </div>
 }
 
@@ -76,6 +174,9 @@
       <div class="input-group">
         <label>Tipo:</label>
         <select [(ngModel)]="formulario.tipo" name="tipo">
+          @if (tipoFueraDeLista) {
+            <option [value]="formulario.tipo">{{ formulario.tipo }}</option>
+          }
           <option value="UNIDAD_ACADEMICA">Unidad Académica</option>
           <option value="AREA_CENTRAL">Área Central</option>
           <option value="SECRETARIA">Secretaría</option>
@@ -94,6 +195,45 @@
       <div class="modal-acciones">
         <button class="btn-primary" (click)="guardar()">Guardar Dependencia</button>
         <button class="btn-secondary" (click)="cerrarModal()">Cancelar y Volver</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (mostrarSincronizar) {
+  <div class="modal-overlay" (click)="cerrarSincronizar()">
+    <div class="modal card modal-ancho" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Sincronizar con el directorio del IPN</h3>
+        <button class="modal-cerrar" (click)="cerrarSincronizar()" [disabled]="sincronizando" aria-label="Cerrar">✕</button>
+      </div>
+      @if (!cambios.length) {
+        <p>El catálogo ya está al día con el directorio del {{ fechaDirectorio }}. 👍</p>
+      } @else {
+        <p>Se aplicarán <b>{{ cambios.length }}</b> cambios (titular y correo de contacto; las unidades nuevas se dan de alta):</p>
+        <div class="tabla-scroll alta">
+          <table class="tabla-admin compacta">
+            <thead><tr><th>Unidad</th><th>Cambio</th><th>Actual</th><th>Directorio IPN</th></tr></thead>
+            <tbody>
+              @for (c of cambios; track c.clave) {
+                <tr>
+                  <td class="fuerte">{{ c.nombre }}</td>
+                  <td><span [class]="'etq-cambio ' + c.tipo">{{ c.tipo === 'nueva' ? 'Alta' : c.tipo === 'ambos' ? 'Titular y correo' : c.tipo === 'titular' ? 'Titular' : 'Correo' }}</span></td>
+                  <td class="tenue">{{ c.antes }}</td>
+                  <td>{{ c.despues }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <div class="modal-acciones">
+        @if (cambios.length) {
+          <button class="btn-primary" (click)="aplicarSincronizacion()" [disabled]="sincronizando">
+            {{ sincronizando ? 'Aplicando…' : 'Aplicar ' + cambios.length + ' cambios' }}
+          </button>
+        }
+        <button class="btn-secondary" (click)="cerrarSincronizar()" [disabled]="sincronizando">Cerrar</button>
       </div>
     </div>
   </div>

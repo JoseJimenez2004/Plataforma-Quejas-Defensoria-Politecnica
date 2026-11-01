@@ -1,71 +1,95 @@
 	\section{Análisis y Diseño}
 	\label{cap:analisis_diseno}
-	Este capítulo documenta el análisis y el diseño de la plataforma tal como quedó definida al
-	cierre de esta etapa del Trabajo Terminal. Su propósito es dejar constancia de \emph{qué} se
-	construyó y, sobre todo, de \emph{por qué} se construyó de esa manera: los requerimientos que
-	se levantaron con la Defensoría, los actores que intervienen, los casos de uso que delimitan
-	el alcance funcional, la arquitectura que soporta la solución y el modelo de datos que la
-	sustenta. La construcción concreta de cada componente ---el código, el despliegue y las
-	pruebas--- se documenta en el Capítulo~\ref{cap:implementacion}, y el recorrido funcional de
-	cada módulo entregado en el Capítulo~\ref{cap:modulos}.
-	
-	Los artefactos que aquí se presentan siguen el orden en que fueron producidos: primero el
-	levantamiento de requerimientos con el cliente, del que se derivaron los casos de uso; después
-	el modelo de estados del expediente, que ordena el flujo de trabajo; sobre esa base la
-	arquitectura de componentes y el modelo de datos; y por último las decisiones de diseño con
-	las alternativas que se descartaron en cada punto. Este orden no es una convención editorial:
-	cada artefacto es insumo del siguiente, y esa dependencia es la que sostiene la coherencia
-	técnica del sistema.
-	
+	Este capítulo documenta el análisis y el diseño de la plataforma tal como quedó construida al
+	cierre del Trabajo Terminal. Su propósito es dejar constancia de \emph{qué} se construyó y, sobre
+	todo, de \emph{por qué} se construyó de esa manera: los requerimientos que se levantaron con la
+	Defensoría, los actores que intervienen, los casos de uso que delimitan el alcance funcional, el
+	ciclo de vida de la queja, la arquitectura que soporta la solución y el modelo de datos que la
+	sustenta. La construcción concreta de cada componente se documenta en el
+	Capítulo~\ref{cap:implementacion}, el recorrido funcional de cada módulo en el
+	Capítulo~\ref{cap:modulos} y la verificación de los requerimientos en el
+	Capítulo~\ref{cap:pruebas}.
+
+	Los artefactos se presentan en el orden en que fueron producidos: primero el levantamiento de
+	requerimientos con el cliente, del que se derivaron los casos de uso; después el modelo de estados
+	de la queja, que ordena el flujo de trabajo entre áreas; sobre esa base la arquitectura de
+	componentes y el modelo de datos; y por último las decisiones de diseño con las alternativas que se
+	descartaron. Cada artefacto es insumo del siguiente, y esa dependencia es la que sostiene la
+	coherencia técnica del sistema.
+
 	\subsection{Descripción general de la solución}
 	\label{sec:descripcion_solucion}
-	La solución es una plataforma web para la gestión digital de quejas y denuncias ante la
-	Defensoría de los Derechos Politécnicos. Permite a cualquier integrante de la comunidad
-	politécnica presentar una queja y darle seguimiento ---con o sin cuenta de usuario--- y provee
-	al personal de la Defensoría las herramientas para recibirla, validarla, canalizarla y
-	administrar la operación técnica del sistema.
-	
-	Al cierre de esta etapa la plataforma está compuesta por siete microservicios independientes
-	desarrollados con Spring Boot que comparten una única base de datos PostgreSQL, tres
-	aplicaciones web independientes desarrolladas con Angular ---una por tipo de usuario--- y
-	cuatro contenedores de Nginx que actúan como proxy inverso público y como servidores de
-	archivos estáticos. Todo el conjunto se ejecuta en contenedores sobre dos servidores virtuales
-	privados, con acceso público cifrado mediante TLS y certificado renovado de forma automática.
-	
+	La solución es una plataforma web para la gestión digital de quejas ante la Defensoría de los
+	Derechos Politécnicos que cubre el procedimiento completo, desde que una persona de la comunidad
+	politécnica presenta su queja hasta que el expediente se concluye. Permite presentar una queja y
+	darle seguimiento con o sin cuenta de usuario; da a la persona señalada un medio para presentar su
+	versión de los hechos; y provee a cada área de la Defensoría ---Recepción, Primer Contacto,
+	Subdefensoría y la titular de la Defensoría--- un panel propio con las herramientas que su etapa del
+	procedimiento requiere.
+
+	Al cierre del proyecto la plataforma está compuesta por:
+
+	\begin{itemize}
+		\item \textbf{Once microservicios} desarrollados con Spring Boot sobre Java~21: autenticación de
+		quejosos, quejas, notificaciones, catálogo institucional, administración, revisión (Recepción),
+		chatbot de preguntas frecuentes, respuesta de la persona señalada, Primer Contacto, Subdefensoría
+		y el servicio de búsqueda de antecedentes.
+		\item \textbf{Un servicio de resúmenes} en Python que genera borradores narrativos de la queja
+		para apoyo del personal de Primer Contacto.
+		\item \textbf{Cinco aplicaciones web} independientes desarrolladas con Angular~21, una por tipo de
+		usuario: portal del quejoso, panel de Recepción, panel de Primer Contacto, panel de Subdefensoría y
+		panel de la Defensora y administración.
+		\item \textbf{Una base de datos PostgreSQL~16} compartida por los microservicios, con una tabla
+		dueña identificada para cada servicio.
+		\item \textbf{Un proxy inverso Nginx} que publica las cinco aplicaciones y la API bajo un único
+		dominio con HTTPS.
+	\end{itemize}
+
+	Todo el conjunto se ejecuta en contenedores Podman distribuidos en tres servidores virtuales
+	privados ---uno para la publicación y las interfaces, uno para los microservicios y uno para la base
+	de datos---, con acceso público cifrado mediante TLS y certificado renovado de forma automática.
+
 	\subsection{Actores del sistema}
 	\label{sec:actores}
-	El análisis identificó tres actores con necesidades, permisos e interfaces claramente
-	diferenciadas. Esta separación es la que después justifica que existan tres aplicaciones web
-	distintas en lugar de una sola con vistas condicionadas por rol: cada actor tiene un perfil de
-	uso, un nivel de confianza y una superficie de exposición distintos, y mantenerlos en
-	aplicaciones separadas reduce el riesgo de que un defecto en una interfaz exponga
-	funcionalidad de otra.
-	
+	El análisis identificó siete actores humanos con necesidades, permisos e interfaces diferenciadas,
+	además de dos actores no humanos con los que el sistema interactúa. La separación de los actores de
+	personal en paneles distintos no es solo una cuestión de organización: cada área tiene un nivel de
+	confianza y una superficie de exposición diferente, y mantenerlas en aplicaciones separadas reduce
+	el riesgo de que un defecto en una interfaz exponga funcionalidad de otra.
+
 	\begin{itemize}
-		\item \textbf{Quejoso.} Cualquier integrante de la comunidad politécnica ---estudiante,
-		personal académico o administrativo--- que presenta una queja o le da seguimiento. Es el
-		único actor externo y el único que puede operar sin credenciales previas.
-	
-		\item \textbf{Personal de recepción.} Personal de la Defensoría encargado de recibir,
-		validar y canalizar las quejas que llegan por el portal público o en papel.
-	
-		\item \textbf{Administrador de tecnologías de la información.} Responsable de la operación
-		técnica y administrativa de la plataforma: cuentas del resto del personal, catálogo
-		institucional, plantillas de documentos oficiales, respaldos de la base de datos y bitácora
-		de seguridad.
+		\item \textbf{Quejoso.} Cualquier integrante de la comunidad politécnica ---estudiante, personal
+		académico o administrativo--- que presenta una queja o le da seguimiento. Puede operar sin cuenta o
+		activar una cuenta de seguimiento a partir de su primera queja.
+		\item \textbf{Persona señalada.} Persona a quien se atribuyen los hechos. No tiene cuenta: presenta
+		su versión mediante un formulario público cuando la Defensoría se la solicita.
+		\item \textbf{Personal de recepción.} Recibe las quejas que llegan por el portal o en ventanilla,
+		verifica los requisitos de admisión y las turna a Primer Contacto o las regresa al quejoso con
+		observaciones.
+		\item \textbf{Analista de Primer Contacto.} Analiza la queja, cita al quejoso, elabora oficios y
+		emite el dictamen de competencia o de improcedencia.
+		\item \textbf{Subdefensor o abogado asesor.} Investiga los expedientes procedentes: solicita
+		información a las unidades, controla los plazos, propone el acuerdo de conciliación y concluye el
+		expediente.
+		\item \textbf{Defensora.} Titular de la Defensoría. Supervisa el estado de todas las quejas y la
+		carga de trabajo del personal, y administra las cuentas, catálogos y plantillas institucionales.
+		\item \textbf{Administrador de sistemas.} Cuenta técnica con las mismas facultades de administración
+		que la Defensora, destinada a la operación técnica: respaldos, bitácora y alta inicial del personal.
+		\item \textbf{Servicio de correo electrónico} (actor no humano). Entrega los avisos que el sistema
+		envía: códigos de recuperación, observaciones, citas y acuerdos.
+		\item \textbf{Componentes de inteligencia artificial} (actor no humano). Proveen la búsqueda de
+		antecedentes y el borrador de resumen que consume Primer Contacto.
 	\end{itemize}
-	
-	El sistema define además cinco roles de personal, de los cuales solo dos cuentan con interfaz
-	propia al cierre de esta etapa. La Tabla~\ref{tab:actores_roles} resume la correspondencia
-	entre actores, roles e interfaces.
-	
+
+	La Tabla~\ref{tab:actores_roles} resume la correspondencia entre actores, roles del sistema e
+	interfaces. Los roles de personal se definen en la enumeración \texttt{RolStaff} y viajan como
+	afirmación del token de sesión.
+
 	\rowcolors{2}{rowblue}{white}
-	
 	\small
 	\renewcommand{\arraystretch}{1.25}
 	\setlength{\tabcolsep}{4pt}
-	
-	\begin{longtable}{|p{2.7cm}|p{4.3cm}|p{3.8cm}|p{3.8cm}|}
+	\begin{longtable}{|p{2.8cm}|p{4.1cm}|p{3.9cm}|p{3.8cm}|}
 		\caption{Actores, roles e interfaces del sistema}
 		\label{tab:actores_roles} \\
 		\hline
@@ -74,1140 +98,1341 @@
 		\headercell{Interfaz} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
 		\headercell{Actor} & \headercell{Rol en el sistema} & \headercell{Responsabilidad} &
 		\headercell{Interfaz} \\
 		\hline
 		\endhead
-	
-		Quejoso & ---\ (usuario externo) & Presentar quejas y darles seguimiento &
-		Portal público del quejoso \\ \hline
-	
-		Personal de recepción & \texttt{RECEPCIONISTA} & Recibir, validar, rechazar y turnar quejas &
-		Panel de revisión \\ \hline
-	
-		Administrador de TI & \texttt{ADMIN\_SISTEMAS} & Operación técnica, cuentas, catálogos,
-		respaldos y auditoría & Consola de administración \\ \hline
-	
-		Analista de primer contacto & \texttt{ANALISTA\_\allowbreak PRIMER\_\allowbreak CONTACTO} & Evaluación jurídica de
-		competencia & Sin interfaz propia en esta etapa \\ \hline
-	
-		Subdefensor & \texttt{SUBDEFENSOR} & Solicitud de investigación y conciliación &
-		Sin interfaz propia en esta etapa \\ \hline
-	
-		Defensor & \texttt{DEFENSOR} & Resolución y cierre del expediente &
-		Sin interfaz propia en esta etapa \\ \hline
+		Quejoso & Usuario externo (token de \texttt{auth-service}) & Presentar quejas y darles
+		seguimiento & Portal del quejoso (\texttt{/}) \\ \hline
+		Persona señalada & Sin cuenta & Presentar su versión de los hechos & Formulario público
+		(\texttt{/denunciado/respuesta}) \\ \hline
+		Personal de recepción & \texttt{RECEPCIONISTA} & Validar requisitos, turnar o regresar con
+		observaciones & Panel de Recepción (\texttt{/revision/}) \\ \hline
+		Analista de Primer Contacto & \texttt{ANALISTA\_\allowbreak PRIMER\_\allowbreak CONTACTO} &
+		Análisis, citas, oficios y dictamen & Panel de Primer Contacto (\texttt{/primer-contacto/}) \\ \hline
+		Subdefensor / abogado & \texttt{SUBDEFENSOR} & Investigación, oficios, plazos, conciliación y
+		conclusión & Panel de Subdefensoría (\texttt{/subdefensoria/}) \\ \hline
+		Defensora & \texttt{DEFENSOR} & Supervisión y administración institucional & Panel de la
+		Defensora (\texttt{/admin/}) \\ \hline
+		Administrador de sistemas & \texttt{ADMIN\_SISTEMAS} & Operación técnica, respaldos y
+		bitácora & Panel de la Defensora (\texttt{/admin/}) \\ \hline
 	\end{longtable}
-	
 	\normalsize
 	\setlength{\tabcolsep}{6pt}
 	\renewcommand{\arraystretch}{1}
-	
-	Los tres roles sin interfaz propia no son un descuido del diseño: existen como cuentas
-	capturables desde la consola de administración y el sistema los emplea como catálogo de
-	personal disponible al momento de turnar una queja. Lo que no tienen todavía es un panel con
-	permisos propios, y esa limitación se declara de forma explícita en el alcance de esta etapa
-	(Sección~\ref{sec:limitaciones}).
-	
+
+	Todo el personal inicia sesión en un único punto (\texttt{/revision/login}) y el sistema lo dirige
+	al panel que corresponde a su rol. El rol \texttt{DEFENSOR} tiene, por decisión de diseño, las mismas
+	facultades de administración que \texttt{ADMIN\_SISTEMAS}; este último se conserva para la cuenta
+	técnica inicial con la que se da de alta al resto del personal.
+
 	\subsection{Especificación de requerimientos}
 	\label{sec:requerimientos}
 	El levantamiento de requerimientos no se limitó a la lectura de la documentación oficial de la
-	Defensoría, porque la operación real de una organización rara vez coincide por completo con lo
-	que sus documentos formales describen. El equipo sostuvo una serie de reuniones con el personal
-	de la institución que evolucionaron de forma iterativa: cada sesión aclaró aspectos que la
-	anterior había dejado abiertos, y cada avance técnico intermedio se convirtió en insumo de la
+	Defensoría ---la Ley Orgánica, el Reglamento Interno, el Manual de Organización y el Manual de
+	Procedimientos de la DDP \cite{ipn_ley_organica, ipn_manual_organizacion_ddp,
+	ipn_manual_procedimientos_ddp}---, porque la operación real de una organización rara vez coincide por
+	completo con lo que sus documentos formales describen. El equipo sostuvo una serie de reuniones con
+	el personal de la institución que evolucionaron de forma iterativa: cada sesión aclaró aspectos que
+	la anterior había dejado abiertos, y cada avance técnico intermedio se convirtió en insumo de la
 	siguiente reunión.
-	
-	La primera sesión tuvo como objetivo comprender el contexto operativo e identificar las áreas
-	que intervienen en la gestión de una queja. Con ese contexto el equipo elaboró un diagrama de
-	proceso en notación BPMN a partir de los documentos oficiales, que se presentó en una segunda
-	sesión como base de discusión. El resultado fue el hallazgo más valioso de todo el
-	levantamiento: el personal de la Defensoría señaló que varias etapas del procedimiento formal
-	no se ejecutaban en la práctica, de modo que se depuraron en conjunto hasta obtener un diagrama
-	que refleja el flujo operativo real y no el prescrito. Validado ese diagrama, se establecieron
-	sesiones por área para traducir las actividades de cada rol en casos de uso y vistas concretas,
-	con sesiones de revisión intermedias para confirmar que los artefactos reflejaran lo acordado.
-	
-	El resultado acumulado se organizó en tres categorías ---requerimientos funcionales, no
-	funcionales y reglas de negocio--- y se estructuró por actor, de modo que cada requerimiento
-	tiene un dueño identificable. La nomenclatura empleada codifica el actor en el identificador:
-	\texttt{RF-Q} para los requerimientos funcionales del quejoso, \texttt{RF-R} para los del
-	personal de recepción y \texttt{RF-A} para los de administración, y de forma análoga
-	\texttt{RNF-} y \texttt{RN-} para los no funcionales y las reglas de negocio. Esta convención
-	permite rastrear cualquier elemento del diseño hasta el actor que lo motivó.
-	
-	\subsubsection{Requerimientos funcionales del quejoso}
-	Los requerimientos del quejoso se agrupan en cinco bloques: operación sin cuenta, gestión de la
-	cuenta, gestión de las quejas propias, seguimiento y servicios de apoyo. El primer bloque es el
-	más determinante para el diseño, porque exige que el sistema acepte quejas de personas que no
-	tienen ---ni necesariamente quieren tener--- una cuenta, lo que obliga a un punto de acceso
-	público sin autenticación y a un mecanismo de identificación posterior basado en el folio.
-	
+
+	La primera sesión tuvo como objetivo comprender el contexto operativo e identificar las áreas que
+	intervienen en la gestión de una queja. Con ese contexto se elaboró un diagrama de proceso en
+	notación BPMN a partir de los documentos oficiales, que se presentó en una segunda sesión como base
+	de discusión. El resultado fue el hallazgo más valioso de todo el levantamiento: el personal señaló
+	que varias etapas del procedimiento formal no se ejecutaban en la práctica, de modo que se depuraron
+	en conjunto hasta obtener un diagrama que refleja el flujo operativo real. Validado ese diagrama, se
+	establecieron sesiones por área para traducir las actividades de cada rol en casos de uso y vistas
+	concretas, y sesiones de revisión de los módulos ya construidos en las que se ajustaron, por ejemplo,
+	la redacción jurídica de los requisitos de admisión, la lista de documentos de identidad aceptados y
+	los umbrales de los indicadores de seguimiento.
+
+	El resultado se organizó en cuatro categorías ---requerimientos funcionales, no funcionales,
+	técnicos y reglas de negocio--- y se estructuró por actor, de modo que cada requerimiento tiene un
+	dueño identificable. La nomenclatura codifica el actor en el identificador: \texttt{Q} para el
+	quejoso, \texttt{D} para la persona señalada, \texttt{R} para Recepción, \texttt{PC} para Primer
+	Contacto, \texttt{SD} para Subdefensoría, \texttt{A} para la Defensora y la administración, y
+	\texttt{G} para los requerimientos generales de la plataforma. Así, \texttt{RF-R04} es el cuarto
+	requerimiento funcional de Recepción y \texttt{RNF-G02} el segundo requerimiento no funcional
+	general.
+
+	\subsubsection{Requerimientos funcionales del quejoso y de la persona señalada}
+	La Tabla~\ref{tab:rf_quejoso} reúne los requerimientos del quejoso, el actor con la mayor superficie
+	funcional porque es el único que interactúa con todas las etapas del procedimiento: presenta la
+	queja, corrige lo que Recepción le observa, acude a las citas de Primer Contacto y responde el
+	acuerdo de conciliación de Subdefensoría.
+
+	\rowcolors{2}{rowblue}{white}
 	\small
 	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
-	
-	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.0cm}|}
-		\caption{Requerimientos funcionales del actor Quejoso}
+	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.4cm}|}
+		\caption{Requerimientos funcionales del quejoso y de la persona señalada}
 		\label{tab:rf_quejoso} \\
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Requerimiento} & \headercell{Descripción} \\
+		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Requerimiento} & \headercell{Descripción} \\
+		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
 		\hline
 		\endhead
-	
-		RF-Q01 & Consultar una queja sin cuenta & Dado un folio y el correo con que se presentó,
-		mostrar el detalle de la queja: motivo, descripción, estatus y fecha. \\ \hline
-	
-		RF-Q02 & Registrar una queja sin cuenta & Capturar la identidad completa del quejoso,
-		unidad académica, fecha de los hechos, datos del denunciado, descripción libre y varios
-		archivos de evidencia en una sola petición; generar un folio de seguimiento. \\ \hline
-	
-		RF-Q03 & Capturar datos del tutor & Si la fecha de nacimiento indica que el quejoso es menor
-		de edad, exigir los datos de un tutor o adulto responsable antes de permitir el envío.
+		RF-Q01 & Registrar queja sin cuenta & Capturar la identidad del quejoso (nombre, uno o dos
+		apellidos, correo, teléfono, fecha de nacimiento, tipo y número de identificación), la unidad
+		académica desde el catálogo institucional, la fecha de los hechos, los datos de la persona
+		señalada y la narración libre de los hechos, junto con una o dos imágenes de la identificación y
+		las evidencias; exigir la aceptación del aviso de privacidad y devolver un folio de seguimiento con
+		formato \texttt{FOL-XXXXXXXX}. \\ \hline
+		RF-Q02 & Datos del tutor & Si la fecha de nacimiento corresponde a una persona menor de 18 años,
+		exigir los datos de un tutor o adulto responsable y avisarle por correo del registro. \\ \hline
+		RF-Q03 & Consultar por folio & Consultar el estatus y el detalle de una queja con el folio y el
+		correo con que se registró, sin iniciar sesión. \\ \hline
+		RF-Q04 & Activar cuenta & Crear la cuenta de seguimiento definiendo una contraseña, a partir de un
+		par folio--correo de una queja existente. \\ \hline
+		RF-Q05 & Iniciar sesión & Autenticarse con correo y contraseña y obtener una sesión de una hora.
 		\\ \hline
-	
-		RF-Q04 & Activar una cuenta de seguimiento & A partir de un folio y correo ya registrados en
-		una queja existente, definir una contraseña y activar la cuenta. \\ \hline
-	
-		RF-Q05 & Iniciar sesión & Autenticarse con correo institucional y contraseña, obteniendo un
-		token de sesión con vigencia limitada. \\ \hline
-	
-		RF-Q06 & Recuperar la contraseña & Restablecer la contraseña mediante un código de
-		verificación de seis dígitos enviado por correo electrónico. \\ \hline
-	
-		RF-Q07 & Consultar un resumen de actividad & Mostrar al entrar al panel el conteo de quejas
-		propias agrupadas por estatus. \\ \hline
-	
-		RF-Q08 & Listar y consultar las quejas propias & Listar las quejas del usuario con filtros
-		por estatus y texto, y mostrar el detalle completo de cada una con su línea de tiempo de
-		estatus. \\ \hline
-	
-		RF-Q09 & Editar una queja propia & Modificar descripción, unidad académica, fecha de hechos
-		y datos del denunciado, únicamente mientras la queja no haya iniciado su validación.
-		\\ \hline
-	
-		RF-Q10 & Registrar una queja autenticado & Presentar una queja nueva desde el panel sin
-		volver a capturar la identidad, que se toma del token de sesión. \\ \hline
-	
-		RF-Q11 & Consultar las evidencias propias & Previsualizar y descargar los archivos adjuntos
-		a una queja propia. \\ \hline
-	
-		RF-Q12 & Responder acuerdos de conciliación & Consultar los acuerdos propuestos por la
-		Defensoría y aceptarlos o rechazarlos, con comentario opcional. \\ \hline
-	
-		RF-Q13 & Consultar el centro de notificaciones & Consultar un historial persistente de
-		avisos con contador de no leídas y marcado individual como leída. \\ \hline
-	
-		RF-Q14 & Consultar y editar el perfil & Editar correo personal, teléfono, unidad académica y
-		domicilio; consultar en modo de solo lectura el nombre, el correo institucional y la boleta o
-		número de empleado. \\ \hline
-	
-		RF-Q15 & Consultar el catálogo institucional & Seleccionar la dependencia o unidad académica
-		involucrada desde el catálogo del Instituto, en lugar de capturarla como texto libre.
-		\\ \hline
-	
-		RF-Q16 & Consultar preguntas frecuentes & Consultar sin sesión un menú fijo de preguntas y
-		respuestas sobre la Defensoría y el proceso de queja. \\ \hline
-	
-		RF-Q17 & Recibir avisos por correo & Recibir confirmación de creación de cuenta, confirmación
-		de restablecimiento de contraseña y, en el caso de menores de edad, aviso al tutor.
-		\\ \hline
+		RF-Q06 & Recuperar contraseña & Solicitar un código de seis dígitos por correo y restablecer la
+		contraseña con él. \\ \hline
+		RF-Q07 & Consultar mis quejas & Ver un resumen por estatus, listar las quejas propias con filtros
+		por estatus y texto, y ver el detalle de cada una con su línea de tiempo. \\ \hline
+		RF-Q08 & Registrar queja con sesión & Presentar una nueva queja desde el panel sin volver a capturar
+		los datos de identidad. \\ \hline
+		RF-Q09 & Editar mi queja & Modificar la narración, la unidad, la fecha de los hechos y los datos de
+		la persona señalada, y agregar o quitar evidencias, mientras la queja no haya sido tomada por
+		Recepción. \\ \hline
+		RF-Q10 & Consultar evidencias & Ver y descargar las evidencias adjuntas a una queja propia. \\ \hline
+		RF-Q11 & Corregir y reenviar & Atender las observaciones de Recepción sobre una queja regresada y
+		reenviarla para una nueva revisión. \\ \hline
+		RF-Q12 & Cancelar mi queja & Desistir de una queja propia mientras no haya sido tomada por Recepción;
+		la queja queda registrada como cancelada sin eliminarse. \\ \hline
+		RF-Q13 & Responder conciliación & Consultar los acuerdos de conciliación dirigidos al quejoso y
+		aceptarlos o rechazarlos, desde el panel o desde el enlace recibido por correo. \\ \hline
+		RF-Q14 & Responder citas & Consultar las citas programadas por Primer Contacto y confirmarlas o
+		cancelarlas, desde el panel o desde el enlace recibido por correo. \\ \hline
+		RF-Q15 & Notificaciones & Consultar un centro de notificaciones persistente con contador de no
+		leídas y marcado individual como leída. \\ \hline
+		RF-Q16 & Perfil & Consultar los datos de la cuenta y editar correo personal, teléfono, unidad
+		académica y domicilio. \\ \hline
+		RF-Q17 & Preguntas frecuentes & Consultar, sin sesión, un asistente de preguntas frecuentes sobre la
+		Defensoría y el proceso de queja. \\ \hline
+		RF-Q18 & Avisos por correo & Recibir por correo el código de recuperación, la confirmación de
+		cambio de contraseña, las observaciones de Recepción, las citas y los acuerdos. \\ \hline
+		RF-D01 & Presentar versión de los hechos & Permitir a la persona señalada capturar su identidad, su
+		unidad de procedencia, su número de boleta o de empleado y su versión de los hechos, con una o dos
+		imágenes de su credencial y hasta diez evidencias, asociadas al folio de la queja; devolver un
+		folio de respuesta \texttt{RD-XXXXXXXX}. \\ \hline
+		RF-D02 & Aviso de privacidad propio & Presentar y exigir un aviso de privacidad específico para la
+		persona señalada, distinto del del quejoso. \\ \hline
 	\end{longtable}
-	
 	\normalsize
-	
+
 	\subsubsection{Requerimientos funcionales del personal de recepción}
-	El diseño de este bloque partió de una restricción que el propio personal planteó en las
-	sesiones de levantamiento: no todas las quejas llegan por el portal. Una parte del volumen
-	ingresa en papel, y el sistema debía poder incorporarlas al mismo flujo digital sin obligar al
-	quejoso a capturarlas de nuevo. De ahí el requerimiento de registro manual (RF-R08), que es la
-	razón por la que el modelo de datos distingue el origen de cada queja.
-	
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	
-	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.0cm}|}
-		\caption{Requerimientos funcionales del actor Personal de recepción}
-		\label{tab:rf_recepcion} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Requerimiento} & \headercell{Descripción} \\
-		\hline
-		\endfirsthead
-	
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Requerimiento} & \headercell{Descripción} \\
-		\hline
-		\endhead
-	
-		RF-R01 & Iniciar sesión & Autenticarse con las credenciales de personal administrativo desde
-		el panel de revisión. \\ \hline
-	
-		RF-R02 & Consultar la bandeja de entrada & Consultar la lista de quejas por trabajar, con
-		contadores de pendientes, en proceso y turnadas en el día. \\ \hline
-	
-		RF-R03 & Consultar el detalle de una queja & Consultar el resumen completo del expediente y
-		los documentos adjuntos, para su validación. \\ \hline
-	
-		RF-R04 & Buscar antecedentes & Consultar otras quejas previas de la misma persona, para
-		detectar posibles duplicados antes de turnar. \\ \hline
-	
-		RF-R05 & Consultar los documentos adjuntos & Previsualizar y descargar las evidencias
-		asociadas a una queja. \\ \hline
-	
-		RF-R06 & Rechazar una queja & Rechazar una queja por documentación incompleta, indicando
-		motivos y observaciones, con notificación automática al quejoso. \\ \hline
-	
-		RF-R07 & Turnar una queja & Canalizar la queja a un área o dependencia y a un defensor o
-		subdefensor específico, con comentarios, generando el folio oficial de turnado. \\ \hline
-	
-		RF-R08 & Registrar una queja recibida en papel & Dar de alta manualmente una queja física
-		con la identidad del quejoso, dependencia, número de oficio, fecha de recepción, tipo de
-		documento, descripción, ubicación física del expediente y un archivo digitalizado opcional.
-		\\ \hline
-	
-		RF-R09 & Consultar el historial de trámites & Consultar los trámites ya procesados, con
-		filtros por texto, estatus y fecha. \\ \hline
-	
-		RF-R10 & Exportar el historial & Exportar el historial filtrado a un archivo de hoja de
-		cálculo. \\ \hline
-	
-		RF-R11 & Emitir un acuerdo de conciliación & Emitir un acuerdo dirigido al quejoso de una
-		queja, con asunto y términos. \\ \hline
-	
-		RF-R12 & Consultar catálogos de apoyo & Consultar la lista de dependencias y la de personal
-		disponible para turnado. \\ \hline
-	
-		RF-R13 & Cambiar la propia contraseña & Modificar la contraseña de la cuenta propia desde el
-		panel. \\ \hline
-	\end{longtable}
-	
-	\normalsize
-	
-	\subsubsection{Requerimientos funcionales del administrador de TI}
-	Este bloque concentra las funciones que hacen operable la plataforma a largo plazo sin
-	intervención del equipo de desarrollo. Su requerimiento más sensible es el de respaldo y
-	restauración (RF-A06), porque incluye la única operación destructiva de todo el sistema y por
-	ello recibe un tratamiento de seguridad diferenciado.
-	
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	
-	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.0cm}|}
-		\caption{Requerimientos funcionales del actor Administrador de TI}
-		\label{tab:rf_admin} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Requerimiento} & \headercell{Descripción} \\
-		\hline
-		\endfirsthead
-	
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Requerimiento} & \headercell{Descripción} \\
-		\hline
-		\endhead
-	
-		RF-A01 & Iniciar sesión & Autenticarse como personal administrativo. \\ \hline
-	
-		RF-A02 & Consultar el tablero general & Consultar un resumen del estado del sistema al
-		entrar a la consola. \\ \hline
-	
-		RF-A03 & Gestionar cuentas de personal & Listar, crear con contraseña temporal, editar,
-		restablecer contraseña, dar de baja y reactivar cuentas de cualquiera de los cinco roles.
-		\\ \hline
-	
-		RF-A04 & Administrar el catálogo institucional & Listar, crear y editar dependencias, e
-		importar o actualizar el catálogo de forma masiva desde un archivo de hoja de cálculo.
-		\\ \hline
-	
-		RF-A05 & Administrar plantillas de documentos & Listar plantillas, consultar los marcadores
-		disponibles, previsualizar con datos de ejemplo y editar o publicar su contenido. \\ \hline
-	
-		RF-A06 & Gestionar respaldos de la base de datos & Listar los respaldos existentes, ejecutar
-		un respaldo bajo demanda, descargar un respaldo y restaurar la base de datos a partir de uno
-		de ellos. \\ \hline
-	
-		RF-A07 & Consultar la bitácora de acciones críticas & Consultar el registro de acciones
-		administrativas con usuario, acción, dirección de origen y fecha. \\ \hline
-	
-		RF-A08 & Administrar el contenido de preguntas frecuentes & Listar, crear, editar y eliminar
-		las preguntas del portal público. \\ \hline
-	
-		RF-A09 & Cambiar la propia contraseña & Modificar la contraseña de la cuenta propia desde la
-		consola. \\ \hline
-	\end{longtable}
-	
-	\normalsize
-	\setlength{\tabcolsep}{6pt}
-	\renewcommand{\arraystretch}{1}
-	
-	\subsubsection{Requerimientos no funcionales}
-	Los requerimientos no funcionales expresan atributos de calidad y no funciones. Se agruparon
-	por la categoría del atributo que abordan ---disponibilidad, confidencialidad, resiliencia,
-	usabilidad y trazabilidad--- porque esa clasificación es la que permite verificarlos: cada
-	categoría se comprueba con un tipo distinto de prueba. La Tabla~\ref{tab:rnf} los concentra.
-	
+	Recepción es la puerta de entrada del procedimiento: su tarea es verificar que la queja reúna los
+	requisitos de admisión antes de que consuma tiempo del área jurídica. Con varias recepcionistas
+	trabajando sobre la misma cola, los requerimientos de la Tabla~\ref{tab:rf_recepcion} incluyen
+	también la coordinación entre ellas.
+
 	\rowcolors{2}{rowblue}{white}
-	
 	\small
 	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
-	
-	\begin{longtable}{|p{1.7cm}|p{2.7cm}|p{9.7cm}|}
+	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.4cm}|}
+		\caption{Requerimientos funcionales del personal de recepción}
+		\label{tab:rf_recepcion} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
+		\hline
+		\endhead
+		RF-R01 & Inicio de sesión del personal & Autenticar a todo el personal en un único punto y dirigir
+		a cada persona al panel de su rol. \\ \hline
+		RF-R02 & Bandeja de recepción & Mostrar la cola de quejas paginada (diez por página, la más
+		reciente primero) con filtros (todas, disponibles, mías, corregidas, en atención), búsqueda por
+		folio, nombre o unidad, e indicadores: por atender, en atención, atendidas hoy, espera más larga
+		y tiempo de respuesta promedio. \\ \hline
+		RF-R03 & Equipo de recepción & Mostrar, por recepcionista, las quejas abiertas y atendidas en el
+		día. \\ \hline
+		RF-R04 & Tomar una queja & Asignar la queja a la recepcionista que la abre, de forma exclusiva;
+		permitir soltarla y renovarla mientras se revisa, y liberarla automáticamente tras 20 minutos de
+		inactividad. \\ \hline
+		RF-R05 & Validar requisitos de admisión & Presentar una lista de verificación de cinco requisitos
+		---identidad de la persona quejosa, documentación de identidad, matrícula institucional,
+		oportunidad dentro de 90 días naturales e identificación de la persona señalada--- con su
+		criterio de cotejo, el cómputo automático de los días transcurridos y una observación obligatoria
+		por cada requisito no satisfecho. \\ \hline
+		RF-R06 & Ver evidencias & Abrir en el navegador los documentos e identificaciones adjuntos. \\ \hline
+		RF-R07 & Regresar con observaciones & Regresar la queja al quejoso con los motivos derivados de los
+		requisitos no satisfechos y observaciones generales, y avisarle por correo. \\ \hline
+		RF-R08 & Turnar a Primer Contacto & Turnar la queja admitida, mostrando sus antecedentes y la carga
+		de trabajo de cada abogado, sugiriendo al de menor carga o a quien ya lleva un antecedente de la
+		misma queja. \\ \hline
+		RF-R09 & Registro en ventanilla & Registrar una queja recibida en papel con el mismo formulario del
+		portal, más los datos de la recepción física (documento recibido, fecha, oficio y ubicación del
+		expediente). \\ \hline
+		RF-R10 & Historial y exportación & Consultar las quejas atendidas con totales, filtros y paginación,
+		y exportar el historial filtrado a una hoja de cálculo. \\ \hline
+		RF-R11 & Cuenta y avisos & Cambiar la contraseña propia y consultar las notificaciones del
+		personal. \\ \hline
+	\end{longtable}
+	\normalsize
+
+	\subsubsection{Requerimientos funcionales de Primer Contacto}
+	Primer Contacto es la etapa en la que se decide si la Defensoría es competente para conocer la
+	queja. La Tabla~\ref{tab:rf_pc} reúne sus requerimientos; los relacionados con los componentes de
+	inteligencia artificial (RF-PC04) son de apoyo: su resultado es una sugerencia que el analista
+	valora, nunca una decisión automática.
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.4cm}|}
+		\caption{Requerimientos funcionales de Primer Contacto}
+		\label{tab:rf_pc} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
+		\hline
+		\endhead
+		RF-PC01 & Recibir quejas turnadas & Crear el expediente de análisis cuando Recepción turna una
+		queja, con su prioridad, quejoso, narración y evidencias. \\ \hline
+		RF-PC02 & Bandeja de análisis & Listar los expedientes con filtros por folio, prioridad y estatus,
+		e indicadores en un tablero de inicio. \\ \hline
+		RF-PC03 & Abrir expediente & Iniciar el análisis al abrir el expediente y presentar la narración,
+		los datos de la queja, del quejoso y de la persona señalada, las evidencias y el historial del
+		expediente. \\ \hline
+		RF-PC04 & Análisis asistido & Mostrar un borrador de resumen de la queja, sus fragmentos clave y los
+		antecedentes más parecidos con su porcentaje de similitud; permitir guardar antecedentes y buscar
+		de forma manual. \\ \hline
+		RF-PC05 & Agenda de citas & Programar citas con el quejoso (comparecencia, revisión de documentos o
+		seguimiento; presencial o virtual) en horarios de 09:00 a 16:00 cada 30 minutos, sin empalmes ni
+		fines de semana; confirmarlas, reagendarlas o cancelarlas, y avisar al quejoso con un enlace para
+		responder. \\ \hline
+		RF-PC06 & Oficios de análisis & Redactar oficios con asunto y contenido, numerados
+		\texttt{DDP/PC/OF/año/id}, generarlos en PDF, y editarlos o eliminarlos solo por su autor. \\ \hline
+		RF-PC07 & Solicitar versión de la persona señalada & Registrar la solicitud de la versión de la
+		persona señalada y consultar su respuesta y archivos. \\ \hline
+		RF-PC08 & Dictamen de competencia & Declarar la queja procedente con justificación y observaciones,
+		elegir al responsable en Subdefensoría de una lista ordenada por carga, y turnar el expediente;
+		permitir reenviarlo si Subdefensoría no lo recibió. \\ \hline
+		RF-PC09 & Dictamen de improcedencia y remisión & Declarar la queja improcedente con justificación y
+		elaborar la remisión a la autoridad competente, con sugerencia al quejoso y oficio en PDF. \\ \hline
+		RF-PC10 & Propuesta de conciliación & Registrar una propuesta de conciliación desde el expediente.
+		\\ \hline
+	\end{longtable}
+	\normalsize
+
+	\subsubsection{Requerimientos funcionales de Subdefensoría}
+	La Subdefensoría investiga los expedientes procedentes. Sus requerimientos
+	(Tabla~\ref{tab:rf_sd}) están dominados por los plazos que fija el Manual de Procedimientos de la
+	DDP: diez días hábiles para que una unidad responda la primera solicitud de información y cinco para
+	cada recordatorio \cite{ipn_manual_procedimientos_ddp}.
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.4cm}|}
+		\caption{Requerimientos funcionales de Subdefensoría}
+		\label{tab:rf_sd} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
+		\hline
+		\endhead
+		RF-SD01 & Recibir expediente & Crear el expediente de investigación cuando Primer Contacto dictamina
+		la queja como procedente. \\ \hline
+		RF-SD02 & Inicio y pendientes & Mostrar indicadores, pendientes del día ordenados por urgencia,
+		expedientes que vencen pronto y su distribución por etapa. \\ \hline
+		RF-SD03 & Mis expedientes & Listar los expedientes por etapa (en trámite, por atender, esperando a
+		la unidad, pendiente de acuerdo de conciliación, concluidos) con búsqueda, barra de plazo, siguiente
+		paso sugerido y exportación. \\ \hline
+		RF-SD04 & Abrir expediente & Iniciar la investigación y consultar, en modo de solo lectura, lo
+		actuado en Primer Contacto: oficios, citas y dictamen. \\ \hline
+		RF-SD05 & Solicitud de información & Redactar y enviar a la unidad académica el oficio de solicitud
+		de información, con PDF y plazo de diez días hábiles. \\ \hline
+		RF-SD06 & Recordatorio de urgencia & Enviar un recordatorio a la unidad que no respondió, con plazo
+		de cinco días hábiles. \\ \hline
+		RF-SD07 & Registrar respuesta & Registrar la respuesta de la unidad con su canal de recepción,
+		resumen y archivo. \\ \hline
+		RF-SD08 & Acuerdo de conciliación & Elaborar el acuerdo de conciliación y enviarlo al quejoso, quien
+		lo acepta o rechaza mediante un enlace. \\ \hline
+		RF-SD09 & Acuerdo de conclusión & Elaborar y enviar el acuerdo de conclusión y cerrar el
+		expediente. \\ \hline
+		RF-SD10 & Control de plazos & Mostrar el semáforo de plazos y las alertas de oficios vencidos o por
+		vencer en tres días o menos. \\ \hline
+	\end{longtable}
+	\normalsize
+
+	\subsubsection{Requerimientos funcionales de la Defensora y de la administración}
+	El panel de la Defensora combina dos responsabilidades: la supervisión del procedimiento completo
+	---dónde está cada queja, quién la atiende y qué casos se están retrasando--- y la administración de
+	los datos de referencia que usa el resto del sistema. La Tabla~\ref{tab:rf_admin} las reúne.
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.4cm}|}
+		\caption{Requerimientos funcionales de la Defensora y de la administración}
+		\label{tab:rf_admin} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
+		\hline
+		\endhead
+		RF-A01 & Panel general & Mostrar, para un periodo elegido, las quejas recibidas contra el periodo
+		anterior, indicadores por etapa, casos que requieren atención, distribución por estatus, evolución
+		mensual, unidades con más quejas, carga del personal y motivos de rechazo más frecuentes. \\ \hline
+		RF-A02 & Explorador de quejas & Consultar todas las quejas con filtros (etapa, estatus, unidad,
+		abogado, recepcionista, periodo, estado, prioridad), ordenarlas, ver su detalle de solo lectura y
+		exportarlas. \\ \hline
+		RF-A03 & Quejas por unidad & Mostrar las unidades con quejas, su tipo, porcentaje y última
+		recepción, con gráficas y variación contra el periodo anterior. \\ \hline
+		RF-A04 & Carga de trabajo & Mostrar la carga de cada recepcionista y abogado, el tiempo promedio de
+		atención y un nivel de carga relativo al equipo. \\ \hline
+		RF-A05 & Gestionar personal & Dar de alta cuentas con contraseña temporal, editarlas, darlas de baja
+		lógica, reactivarlas, restablecer su contraseña y consultar su actividad. \\ \hline
+		RF-A06 & Catálogo de dependencias & Administrar las dependencias y unidades académicas del IPN e
+		importarlas desde un archivo Excel. \\ \hline
+		RF-A07 & Plantillas oficiales & Editar las plantillas de documentos con marcadores de posición y
+		previsualizarlas. \\ \hline
+		RF-A08 & Preguntas frecuentes & Crear, editar, ocultar y eliminar las preguntas del asistente del
+		portal. \\ \hline
+		RF-A09 & Respaldos & Generar respaldos manuales, programar uno diario, listarlos, descargarlos y
+		restaurar la base de datos a partir de uno. \\ \hline
+		RF-A10 & Bitácora & Consultar las acciones críticas: inicios de sesión exitosos y fallidos, cambios
+		al personal, plantillas, respaldos y restauraciones, con usuario, IP de origen y fecha. \\ \hline
+		RF-A11 & Contraseña propia & Cambiar la contraseña propia; obligatoriamente si es temporal. \\ \hline
+	\end{longtable}
+	\normalsize
+
+	\subsubsection{Requerimientos no funcionales}
+	Los requerimientos no funcionales expresan atributos de calidad y no funciones. Se clasificaron según
+	las características del modelo ISO/IEC 25010 descritas en la Sección~\ref{sec:atributos_calidad},
+	porque esa clasificación es la que permite verificarlos: cada característica se comprueba con un tipo
+	distinto de prueba, y el Capítulo~\ref{cap:pruebas} se organiza siguiendo la misma agrupación. La
+	Tabla~\ref{tab:rnf} los concentra; cada uno indica un criterio que puede comprobarse.
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{1.6cm}|p{2.9cm}|p{10.0cm}|}
 		\caption{Requerimientos no funcionales de la plataforma}
 		\label{tab:rnf} \\
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Categoría} & \headercell{Atributo requerido} \\
+		\headercell{ID} & \headercell{Característica} & \headercell{Atributo requerido} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Categoría} & \headercell{Atributo requerido} \\
+		\headercell{ID} & \headercell{Característica} & \headercell{Atributo requerido} \\
 		\hline
 		\endhead
-	
-		RNF-Q01 & Disponibilidad & Debe poder presentarse una queja sin cuenta ni sesión, en
+		RNF-Q01 & Fiabilidad (disponibilidad) & Debe poder presentarse una queja sin cuenta ni sesión, en
 		cualquier momento y desde cualquier dispositivo con navegador. \\ \hline
-	
-		RNF-Q02 & Confidencialidad & Todo el tráfico público debe viajar cifrado con TLS; tras el
-		inicio de sesión, la autenticación se transmite como token en el encabezado de autorización y
-		nunca como credenciales en claro. \\ \hline
-	
-		RNF-Q03 & Capacidad & El proxy público debe aceptar peticiones de hasta 100~MB y el backend
-		hasta 60~MB por petición multiparte, para permitir varios archivos de evidencia por queja.
-		\\ \hline
-	
-		RNF-Q04 & Resiliencia & Un fallo en el envío de correo o en el registro de una notificación
-		nunca debe impedir que la operación principal se complete; el fallo se degrada a un registro
-		en la bitácora del servidor. \\ \hline
-	
+		RNF-Q02 & Confidencialidad & Todo el tráfico público debe viajar cifrado con TLS 1.2 o 1.3; las
+		peticiones HTTP deben redirigirse a HTTPS; tras el inicio de sesión, la autenticación se
+		transmite como token en el encabezado \texttt{Authorization} y nunca como credenciales ni en la
+		URL. \\ \hline
+		RNF-Q03 & Capacidad & El proxy público debe aceptar peticiones de hasta 100~MB; el servicio de
+		quejas y el de la persona señalada, archivos de hasta 30~MB y peticiones multiparte de hasta
+		100~MB; las identificaciones no deben exceder 3~MB. Toda petición mayor debe rechazarse. \\ \hline
+		RNF-Q04 & Fiabilidad (tolerancia a fallos) & Un fallo en el envío de correo o en el registro de
+		una notificación nunca debe impedir que la operación principal se complete; el fallo se degrada a
+		un registro en la bitácora del servidor. \\ \hline
 		RNF-Q05 & Usabilidad & Los formularios extensos deben presentarse en pasos numerados, con
-		previsualización de los archivos seleccionados y ayuda contextual que no reduzca el espacio
-		útil del formulario. \\ \hline
-	
-		RNF-Q06 & Seguridad & La sesión del quejoso debe expirar en una hora; al expirar o ser
-		rechazada, el cliente debe cerrar sesión de forma automática. \\ \hline
-	
-		RNF-Q07 & Usabilidad & Toda operación debe producir retroalimentación visual inmediata de
-		éxito, error o validación; no se admiten fallos silenciosos. \\ \hline
-	
-		RNF-R01 & Trazabilidad & Cada rechazo y cada turnado debe registrar, sin excepción, el
-		correo de quien lo procesó y la fecha en que ocurrió. \\ \hline
-	
-		RNF-R02 & Seguridad & El personal debe autenticarse en un único punto; ningún panel de
-		personal implementa lógica de contraseñas propia. \\ \hline
-	
-		RNF-R03 & Interoperabilidad & La exportación del historial debe producir un archivo de hoja
-		de cálculo en formato estándar, abrible sin conversión previa. \\ \hline
-	
-		RNF-R04 & Resiliencia & Si falla el envío del correo de rechazo, el rechazo en sí debe
-		completarse igualmente. \\ \hline
-	
-		RNF-R05 & Consistencia & Los paneles de personal deben compartir componentes visuales,
-		patrones de error y criterios de accesibilidad. \\ \hline
-	
-		RNF-A01 & Seguridad & El primer acceso administrativo debe autoprovisionarse en el arranque
-		inicial con una contraseña temporal registrada una sola vez en la bitácora del servidor;
-		nunca incrustada en el cliente ni expuesta por la interfaz de programación. \\ \hline
-	
-		RNF-A02 & Trazabilidad & Toda acción administrativa relevante, no solo el inicio de sesión,
-		debe quedar registrada con la dirección de origen. \\ \hline
-	
-		RNF-A03 & Seguridad & La restauración de la base de datos debe exigir una confirmación
-		explícita en el cuerpo de la petición; no puede dispararse con una sola acción accidental.
+		previsualización de los archivos seleccionados y ayuda contextual que no reduzca el espacio útil.
 		\\ \hline
-	
-		RNF-A04 & Tolerancia a fallos & La importación masiva del catálogo debe reportar un resumen
-		de filas procesadas, creadas, actualizadas y con error, en lugar de fallar en bloque ante una
-		fila mal formada. \\ \hline
-	
-		RNF-A05 & Usabilidad & La consola de administración debe aprovechar la densidad de
-		información disponible en pantalla. \\ \hline
-	
-		RNF-A06 & Seguridad & La generación, descarga y restauración de respaldos debe estar
-		disponible únicamente para el rol de administración de sistemas. \\ \hline
+		RNF-Q06 & Seguridad (autenticidad) & La sesión debe expirar en una hora; al expirar o ser rechazada,
+		el cliente debe cerrar la sesión de forma automática. \\ \hline
+		RNF-Q07 & Usabilidad & Toda operación debe producir retroalimentación visual inmediata de éxito,
+		error o validación; no se admiten fallos silenciosos. \\ \hline
+		RNF-R01 & Seguridad (rendición de cuentas) & Cada toma, rechazo y turnado debe registrar quién lo
+		procesó y la fecha en que ocurrió. \\ \hline
+		RNF-R02 & Seguridad (autenticidad) & El personal debe autenticarse en un único punto; ningún panel
+		implementa lógica de contraseñas propia. \\ \hline
+		RNF-R03 & Compatibilidad & La exportación del historial debe producir un archivo \texttt{.xlsx}
+		abrible sin conversión previa. \\ \hline
+		RNF-R04 & Fiabilidad (tolerancia a fallos) & Si falla el envío del correo de observaciones, el
+		regreso de la queja debe completarse igualmente. \\ \hline
+		RNF-R05 & Usabilidad & Los paneles del personal deben compartir el armazón visual, los patrones de
+		error y los criterios de accesibilidad. \\ \hline
+		RNF-R06 & Adecuación funcional (corrección) & Una queja solo puede estar en atención por una
+		recepcionista a la vez, aun si dos la abren en el mismo instante. \\ \hline
+		RNF-A01 & Seguridad & El primer acceso administrativo debe autoprovisionarse con una contraseña
+		temporal; nunca incrustada en el cliente ni expuesta por la API. \\ \hline
+		RNF-A02 & Seguridad (rendición de cuentas) & Toda acción administrativa relevante, incluidos los
+		inicios de sesión fallidos, debe quedar en la bitácora con la IP real del cliente. \\ \hline
+		RNF-A03 & Seguridad (integridad) & La restauración de la base de datos debe exigir una
+		confirmación explícita en el cuerpo de la petición. \\ \hline
+		RNF-A04 & Fiabilidad (tolerancia a fallos) & La importación masiva del catálogo debe reportar un
+		resumen de filas creadas, actualizadas y con error, en lugar de fallar en bloque. \\ \hline
+		RNF-A05 & Usabilidad & El panel de la Defensora debe aprovechar la densidad de información en
+		pantalla y permitir pasar de cada indicador a la lista filtrada que lo explica. \\ \hline
+		RNF-A06 & Seguridad (confidencialidad) & La generación, descarga y restauración de respaldos solo
+		debe estar disponible para los roles de administración (\texttt{ADMIN\_SISTEMAS} y
+		\texttt{DEFENSOR}). \\ \hline
+		RNF-A07 & Fiabilidad & El sistema no debe permitir desactivar ni quitar el rol a la propia cuenta ni
+		a la última cuenta activa de administración. \\ \hline
+		RNF-G01 & Mantenibilidad & El código Java debe seguir la guía de estilo del proyecto (Google Java
+		Style con cuatro desviaciones documentadas), sin violaciones de las reglas obligatorias. \\ \hline
+		RNF-G02 & Mantenibilidad (capacidad de ser probado) & Las clases de reglas y servicios deben tener
+		pruebas unitarias con una cobertura de líneas de al menos 70~\%. \\ \hline
+		RNF-G03 & Mantenibilidad (analizabilidad) & Cada microservicio debe publicar su contrato OpenAPI y
+		una interfaz navegable para probarlo. \\ \hline
+		RNF-G04 & Fiabilidad (recuperabilidad) & Debe generarse un respaldo diario de la base de datos que
+		pueda restaurarse en una base limpia, y los contenedores deben reiniciarse solos tras un fallo o un
+		reinicio del servidor. \\ \hline
+		RNF-G05 & Capacidad & Las consultas públicas deben atender 50 usuarios concurrentes con un
+		percentil 95 de tiempo de respuesta menor a 1~s y menos de 1~\% de errores. \\ \hline
+		RNF-G06 & Seguridad & Los puertos de los microservicios y de la base de datos solo deben aceptar
+		conexiones del servidor autorizado, y las rutas de uso interno no deben ser alcanzables desde
+		Internet. \\ \hline
+		RNF-G07 & Seguridad & Los secretos (contraseñas de base de datos, clave de firma de tokens,
+		credenciales de correo) no deben residir en el código ni en el repositorio, y las dependencias no
+		deben tener vulnerabilidades altas o críticas con parche disponible. \\ \hline
+		RNF-G08 & Seguridad (integridad) & Todo archivo recibido debe validarse por su firma binaria y no
+		solo por su extensión. \\ \hline
+		RNF-G09 & Usabilidad & Los portales deben alcanzar una puntuación de accesibilidad de al menos 0.85
+		en Lighthouse y un puntaje SUS de al menos 68 en las pruebas de aceptación. \\ \hline
 	\end{longtable}
-	
 	\normalsize
-	
-	\subsubsection{Reglas de negocio}
-	Las reglas de negocio son las restricciones que el sistema debe hacer cumplir para que el
-	procedimiento sea válido. A diferencia de los requerimientos funcionales, que describen lo que
-	el sistema \emph{permite} hacer, las reglas describen lo que \emph{prohíbe} o \emph{obliga}. Su
-	característica común en esta plataforma es que se validan en el servidor y no solo en la
-	interfaz: ocultar un botón no es hacer cumplir una regla, y así se hace explícito en varias de
-	las que siguen.
-	
+
+	\subsubsection{Requerimientos técnicos}
+	Los requerimientos técnicos fijan las tecnologías, versiones y condiciones de infraestructura con
+	las que el sistema debe construirse y operarse. A diferencia de los no funcionales, no describen una
+	cualidad observable por el usuario sino restricciones de construcción, y su cumplimiento se verifica
+	por inspección de la configuración. La Tabla~\ref{tab:rt} los reúne.
+
+	\rowcolors{2}{rowblue}{white}
 	\small
 	\renewcommand{\arraystretch}{1.2}
-	
-	\begin{longtable}{|p{1.7cm}|p{2.7cm}|p{9.7cm}|}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{1.5cm}|p{3.4cm}|p{9.6cm}|}
+		\caption{Requerimientos técnicos de la plataforma}
+		\label{tab:rt} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Ámbito} & \headercell{Requerimiento} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Ámbito} & \headercell{Requerimiento} \\
+		\hline
+		\endhead
+		RT-01 & Lenguaje del servidor & Java 21 (LTS) para todos los microservicios. \\ \hline
+		RT-02 & Marco del servidor & Spring Boot 3.5 (3.3 en Primer Contacto y Subdefensoría), con Spring
+		Security, Spring Data JPA, springdoc-openapi y Maven como herramienta de construcción. \\ \hline
+		RT-03 & Interfaz & Angular 21 con componentes independientes y detección de cambios sin zonas;
+		compilación de producción a archivos estáticos. \\ \hline
+		RT-04 & Componentes de IA & Servicio de antecedentes en Java (Spring Boot) y servicio de resúmenes
+		en Python con un marco web ligero, ambos consumidos por HTTP. \\ \hline
+		RT-05 & Base de datos & PostgreSQL 16, codificación UTF-8 y zona horaria
+		\texttt{America/Mexico\_City}. \\ \hline
+		RT-06 & Contenedores & Podman con una imagen por servicio, límites de memoria explícitos y política
+		de reinicio \texttt{always}. \\ \hline
+		RT-07 & Publicación & Nginx como proxy inverso único, con HTTPS, certificado de Let's Encrypt
+		renovado por Certbot y dominio público. \\ \hline
+		RT-08 & Infraestructura & Tres servidores virtuales privados con Linux: publicación, aplicación y
+		datos; el de aplicación con memoria suficiente para los once microservicios (23~GB en el entorno
+		desplegado). \\ \hline
+		RT-09 & Configuración & La configuración de producción de cada servicio debe montarse como volumen
+		externo, de modo que pueda cambiarse sin reconstruir la imagen. \\ \hline
+		RT-10 & Correo & Envío por SMTP autenticado con una cuenta institucional de la Defensoría. \\ \hline
+		RT-11 & Clientes & Navegadores de escritorio y móviles actuales (Chrome, Firefox, Edge, Safari) con
+		JavaScript habilitado; diseño adaptable para el portal del quejoso. \\ \hline
+		RT-12 & Control de versiones & Repositorio Git en GitHub con la rama \texttt{Produccion} como línea
+		de entrega y un flujo de GitHub Actions para las pruebas. \\ \hline
+	\end{longtable}
+	\normalsize
+
+	\subsubsection{Reglas de negocio}
+	Las reglas de negocio son las restricciones que el sistema debe hacer cumplir para que el
+	procedimiento sea válido. A diferencia de los requerimientos funcionales, que describen lo que el
+	sistema \emph{permite} hacer, las reglas describen lo que \emph{prohíbe} u \emph{obliga}. Su
+	característica común en esta plataforma es que se validan en el servidor y no solo en la interfaz,
+	conforme al principio expuesto en la Sección~\ref{sec:seguridad_software}.
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{1.6cm}|p{2.9cm}|p{10.0cm}|}
 		\caption{Reglas de negocio de la plataforma}
 		\label{tab:reglas_negocio} \\
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Temática} & \headercell{Regla} \\
+		\headercell{ID} & \headercell{Ámbito} & \headercell{Regla} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Temática} & \headercell{Regla} \\
+		\headercell{ID} & \headercell{Ámbito} & \headercell{Regla} \\
 		\hline
 		\endhead
-	
-		RN-Q01 & Menores de edad & Una queja de una persona menor de 18 años requiere datos de tutor
-		o adulto responsable capturados y confirmados antes de poder enviarse. \\ \hline
-	
-		RN-Q02 & Menores de edad & Una persona menor de 14 años no puede autorregistrarse ni
-		gestionar la queja por sí misma; la interfaz indica de forma explícita que debe ser el tutor
-		quien complete el formulario a su nombre. \\ \hline
-	
-		RN-Q03 & Identificación & El número de boleta o de empleado debe ser exclusivamente numérico
-		y no exceder doce caracteres. \\ \hline
-	
-		RN-Q04 & Activación & Una cuenta de quejoso solo puede activarse si existe al menos una queja
-		previa con ese folio \emph{y} ese correo; el par folio-correo es la llave de activación.
+		RN-Q01 & Registro & Una queja de una persona menor de 18 años requiere los datos de un tutor antes
+		de poder enviarse. \\ \hline
+		RN-Q02 & Registro & Una persona menor de 14 años no gestiona la queja por sí misma: la interfaz
+		indica que debe hacerlo su tutor. \\ \hline
+		RN-Q03 & Registro & Nombres y apellidos admiten letras, acentos, ñ, guion y apóstrofo, de 2 a 50
+		caracteres; se permite un solo apellido. La boleta o el número de empleado son solo dígitos, con un
+		máximo de 10. \\ \hline
+		RN-Q04 & Registro & La fecha de los hechos no puede ser posterior a la fecha actual ni anterior a la
+		fecha de nacimiento; la narración debe tener al menos 20 caracteres y no tiene límite superior. \\ \hline
+		RN-Q05 & Registro & La identificación se entrega en una o dos imágenes JPG o PNG de hasta 3~MB; las
+		evidencias se aceptan en PDF, JPG, PNG, MP4 o MP3 de hasta 30~MB; el tipo se valida por la firma
+		binaria del archivo. \\ \hline
+		RN-Q06 & Cuenta & Una cuenta solo puede activarse con el par folio--correo de una queja existente, y
+		una cuenta ya activa no puede volver a activarse. \\ \hline
+		RN-Q07 & Cuenta & La contraseña debe tener al menos 8 caracteres, una mayúscula y un dígito. \\ \hline
+		RN-Q08 & Cuenta & El código de recuperación vence a los 10 minutos, admite 5 intentos y solo puede
+		usarse una vez. \\ \hline
+		RN-Q09 & Seguimiento & Una queja solo puede editarse o cancelarse por su autor y solo en estatus
+		\texttt{RECIBIDA}; no puede quitarse la última imagen de identificación. \\ \hline
+		RN-Q10 & Seguimiento & Solo una queja \texttt{RECHAZADA} puede corregirse; al reenviarse pasa a
+		\texttt{CORREGIDA}. \\ \hline
+		RN-Q11 & Seguimiento & La pertenencia de una queja, notificación, cita o acuerdo se determina con el
+		correo contenido en el token de sesión, nunca con un dato enviado por el cliente. \\ \hline
+		RN-Q12 & Conciliación & Un acuerdo solo puede responderlo su destinatario, solo si está pendiente, y
+		la respuesta es definitiva. \\ \hline
+		RN-Q13 & Registro & El origen de una queja se etiqueta automáticamente como \texttt{PUBLICO},
+		\texttt{AUTENTICADO} o \texttt{MANUAL} según la vía de registro. \\ \hline
+		RN-R01 & Estados & El estatus de una queja solo puede avanzar por las transiciones del ciclo de vida
+		de la Sección~\ref{sec:maquina_estados}. \\ \hline
+		RN-R02 & Acceso & Los puntos de acceso de Recepción exigen el rol \texttt{RECEPCIONISTA}; la consulta y
+		emisión de acuerdos de conciliación admite además a \texttt{SUBDEFENSOR}, \texttt{DEFENSOR} y
+		\texttt{ADMIN\_SISTEMAS}. \\ \hline
+		RN-R03 & Recepción & Solo la recepcionista que tomó la queja puede regresarla o turnarla. \\ \hline
+		RN-R04 & Recepción & Una queja solo se turna si los cinco requisitos están satisfechos (o no
+		aplican); con al menos uno no satisfecho solo puede regresarse, con observación por requisito. \\ \hline
+		RN-R05 & Recepción & El plazo de oportunidad es de 90 días naturales entre la fecha de los hechos y
+		la fecha de presentación. \\ \hline
+		RN-R06 & Turnado & Solo pueden asignarse abogados con rol \texttt{SUBDEFENSOR} o \texttt{DEFENSOR}
+		activos; la carga considera las quejas en trámite (no concluidas, improcedentes, remitidas ni
+		rechazadas). \\ \hline
+		RN-R07 & Ventanilla & Una queja registrada en ventanilla se marca \texttt{MANUAL} solo si se creó
+		en las dos horas previas. \\ \hline
+		RN-PC01 & Citas & Una persona analista no puede tener dos citas a la misma hora; no se agendan citas
+		en fin de semana ni en horarios pasados; las consultas de agenda abarcan como máximo un año. \\ \hline
+		RN-PC02 & Expediente & Citas, oficios y dictamen solo pueden registrarse en expedientes abiertos
+		(\texttt{TURNADA} o \texttt{EN\_ANALISIS}); un expediente admite un solo dictamen. \\ \hline
+		RN-PC03 & Dictamen & El dictamen exige justificación; si Subdefensoría no responde al turnar, el
+		dictamen se conserva y el envío puede reintentarse. \\ \hline
+		RN-PC04 & Remisión & Toda queja improcedente concluye con una remisión a la autoridad competente.
 		\\ \hline
-	
-		RN-Q05 & Activación & Una cuenta ya activa no puede volver a activarse. \\ \hline
-	
-		RN-Q06 & Contraseñas & La contraseña debe tener al menos ocho caracteres, una mayúscula y un
-		dígito, tanto en la activación de cuenta como en el restablecimiento. \\ \hline
-	
-		RN-Q07 & Contraseñas & Un código de recuperación expira diez minutos después de solicitado y
-		solo es válido una vez. \\ \hline
-	
-		RN-Q08 & Edición & Una queja solo es editable por su autor mientras su estatus sea
-		\texttt{RECIBIDA}; en cualquier otro estatus la edición se rechaza en el servidor, no
-		únicamente se oculta en la interfaz. \\ \hline
-	
-		RN-Q09 & Conciliación & Un acuerdo de conciliación solo puede ser respondido por el quejoso
-		al que va dirigido; el correo del acuerdo debe coincidir con el del token de sesión.
-		\\ \hline
-	
-		RN-Q10 & Origen & El origen de una queja se asigna de forma automática según el punto de
-		acceso empleado ---\texttt{PUBLICO}, \texttt{AUTENTICADO} o \texttt{MANUAL}---; no es un dato
-		que el usuario declare. \\ \hline
-	
-		RN-R01 & Ciclo de vida & La queja transita \texttt{RECIBIDA} $\rightarrow$
-		\texttt{EN\_VALIDACION} $\rightarrow$ \texttt{RECHAZADA} o \texttt{TURNADA}. Una vez
-		rechazada o turnada no regresa a un estado anterior desde el panel de revisión. \\ \hline
-	
-		RN-R02 & Autorización & Únicamente las cuentas con rol de recepción pueden invocar los
-		puntos de acceso del servicio de revisión; la restricción se declara en cada controlador y no
-		solo a nivel de ruta. \\ \hline
-	
-		RN-R03 & Rechazo & Rechazar una queja exige al menos un motivo y genera de forma automática
-		el correo de rechazo al quejoso; no es una acción silenciosa. \\ \hline
-	
-		RN-R04 & Turnado & Turnar una queja exige área y defensor asignado, y genera un folio oficial
-		de turnado distinto del folio original de seguimiento. \\ \hline
-	
-		RN-R05 & Registro manual & Una queja registrada a partir de un documento físico recibe origen
-		\texttt{MANUAL} y admite que no se conozca de antemano la boleta o el número de empleado.
-		\\ \hline
-	
-		RN-R06 & Turnado & El catálogo de personal disponible para turnar incluye únicamente cuentas
-		activas con rol de defensor o subdefensor. \\ \hline
-	
-		RN-R07 & Consistencia & El servicio de quejas y el de revisión operan sobre la misma tabla
-		física mediante entidades independientes, de modo que un cambio de estatus hecho por
-		recepción es visible de inmediato para el quejoso sin necesidad de una llamada entre
-		servicios. \\ \hline
-	
-		RN-A01 & Autorización & Todos los puntos de acceso administrativos exigen el rol de
-		administración de sistemas, salvo los de autenticación y los de gestión del perfil propio,
-		que cualquier cuenta autenticada puede usar sobre sí misma. \\ \hline
-	
-		RN-A02 & Cuentas & Una cuenta nueva de personal se crea siempre como temporal y con
-		obligación de cambiar la contraseña en el primer inicio de sesión. \\ \hline
-	
-		RN-A03 & Cuentas & Dar de baja una cuenta la desactiva, no la elimina, para conservar la
-		integridad referencial con las acciones que registró en el pasado. \\ \hline
-	
-		RN-A04 & Unicidad & El correo institucional y el número de empleado del personal son únicos
-		en el sistema, garantizado por restricción de base de datos y no solo por validación de
-		interfaz. \\ \hline
-	
-		RN-A05 & Autorización & Las rutas de administración de un catálogo deben evaluarse antes que
-		la regla pública del mismo prefijo; sin ese orden explícito prevalecería la regla menos
-		restrictiva por ser más genérica. \\ \hline
-	
-		RN-A06 & Plantillas & Una plantilla de documento se identifica por una clave estable de
-		negocio y no por su identificador autogenerado, para poder referenciarla sin depender del
-		orden de creación. \\ \hline
-	
-		RN-A07 & Trazabilidad & Cada actualización del contenido de una plantilla registra quién la
-		actualizó y cuándo, además del asiento correspondiente en la bitácora. \\ \hline
+		RN-SD01 & Plazos & La solicitud de información vence a los 10 días hábiles y cada recordatorio a los
+		5; los fines de semana no cuentan. \\ \hline
+		RN-SD02 & Conciliación & Si el quejoso rechaza el acuerdo de conciliación, el expediente regresa a
+		investigación; si lo acepta, procede el acuerdo de conclusión. \\ \hline
+		RN-A01 & Personal & Una cuenta nueva o restablecida se crea con contraseña temporal y cambio
+		obligatorio en el siguiente inicio de sesión. \\ \hline
+		RN-A02 & Personal & La baja de una cuenta es lógica: se desactiva y conserva su historial. \\ \hline
+		RN-A03 & Personal & El correo institucional y el número de empleado son únicos. \\ \hline
+		RN-A04 & Plantillas & Una plantilla se identifica por una clave de negocio estable y registra quién
+		y cuándo la actualizó. \\ \hline
 	\end{longtable}
-	
 	\normalsize
-	\setlength{\tabcolsep}{6pt}
-	\renewcommand{\arraystretch}{1}
-	
+
 	\subsection{Casos de uso}
 	\label{sec:casos_uso}
-	Los casos de uso describen las interacciones posibles entre cada actor y el sistema con
-	independencia de la tecnología empleada. Se presentan agrupados por actor y con la estructura
-	mínima que permite verificarlos: precondición, flujo principal y postcondición. La especificación
-	extendida de cada caso, con flujos alternos y de excepción, se documenta en el anexo
-	correspondiente.
-	
+	Los casos de uso traducen los requerimientos funcionales en interacciones concretas entre un actor y
+	el sistema. Su identificador lleva el prefijo del área a la que pertenecen: \texttt{QJ} para el
+	quejoso, \texttt{REC} para Recepción, \texttt{PC} para Primer Contacto, \texttt{SD} para
+	Subdefensoría, \texttt{ADM} para la administración y \texttt{BOT}, \texttt{CAT} y \texttt{NOT} para
+	los servicios transversales. Se clasifican además en \textbf{específicos}, cuando pertenecen a un
+	solo actor, y \textbf{globales}, cuando los comparte cualquier actor autenticado o cualquier
+	visitante. La misma nomenclatura se usa en el código fuente, en los registros del servidor y en la
+	matriz de trazabilidad de pruebas. Las tablas siguientes describen cada caso de uso conforme a su
+	comportamiento implementado; al final de la sección se detallan los tres que articulan el paso de la
+	queja entre áreas.
+
+	\rowcolors{2}{rowblue}{white}
 	\small
 	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
-	
-	\begin{longtable}{|p{1.5cm}|p{2.8cm}|p{2.6cm}|p{3.4cm}|p{3.4cm}|}
-		\caption{Casos de uso del actor Quejoso}
+	\begin{longtable}{|p{1.7cm}|L{3.8cm}|L{9.0cm}|}
+		\caption{Casos de uso del quejoso}
 		\label{tab:cu_quejoso} \\
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} &
-		\headercell{Flujo principal} & \headercell{Postcondición} \\
+		\headercell{ID} & \headercell{Caso de uso} & \headercell{Descripción} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} &
-		\headercell{Flujo principal} & \headercell{Postcondición} \\
+		\headercell{ID} & \headercell{Caso de uso} & \headercell{Descripción} \\
 		\hline
 		\endhead
-	
-		CU-Q01 & Presentar una queja sin cuenta & Ninguna & Completa el formulario público con
-		identidad, motivo, evidencias y tutor si aplica, y lo envía & Queja creada con estatus
-		\texttt{RECIBIDA} y origen \texttt{PUBLICO}; se muestra el folio \\ \hline
-	
-		CU-Q02 & Consultar una queja por folio & Conoce folio y correo & Captura ambos datos en la
-		pantalla de consulta & Se muestra el detalle y el estatus de la queja \\ \hline
-	
-		CU-Q03 & Activar cuenta de seguimiento & Existe una queja con ese folio y correo & Define una
-		contraseña; el sistema valida el par folio-correo contra el servicio de quejas & Cuenta
-		activa; puede iniciar sesión \\ \hline
-	
-		CU-Q04 & Iniciar sesión & Cuenta activa & Captura correo y contraseña & Token de sesión
-		emitido; se registra la notificación de acceso \\ \hline
-	
-		CU-Q05 & Recuperar contraseña & Cuenta activa existente & Solicita el código, lo recibe por
-		correo y lo captura con la nueva contraseña & Contraseña actualizada; se envía correo de
-		confirmación \\ \hline
-	
-		CU-Q06 & Presentar una queja autenticado & Sesión iniciada & Desde el panel captura motivo,
-		descripción y evidencias & Queja creada con estatus \texttt{RECIBIDA} y origen
-		\texttt{AUTENTICADO} \\ \hline
-	
-		CU-Q07 & Editar una queja propia & Sesión iniciada y queja en \texttt{RECIBIDA} & Modifica
-		los campos habilitados desde el detalle y guarda & Queja actualizada; en otro estatus el
-		servidor rechaza la edición \\ \hline
-	
-		CU-Q08 & Responder un acuerdo de conciliación & Existe un acuerdo pendiente dirigido a su
-		correo & Revisa el acuerdo y lo acepta o rechaza con comentario opcional & Acuerdo pasa a
-		aceptado o rechazado, con fecha de respuesta \\ \hline
-	
-		CU-Q09 & Revisar notificaciones & Sesión iniciada & Abre el centro de notificaciones y marca
-		como leídas & El contador de no leídas se actualiza \\ \hline
-	
-		CU-Q10 & Actualizar el perfil & Sesión iniciada & Edita los campos habilitados y guarda &
-		Perfil actualizado \\ \hline
+		CU-QJ-01 & Iniciar sesión & Autenticar al quejoso con el correo de su cuenta y su contraseña y
+		emitir un token de sesión con vigencia de una hora. \\ \hline
+		CU-QJ-02 & Activar cuenta & Crear la cuenta de seguimiento a partir del folio de una queja ya
+		presentada y del correo con que se registró, definiendo una contraseña. \\ \hline
+		CU-QJ-03 & Solicitar código de recuperación & Enviar al correo de la cuenta un código de seis
+		dígitos con vigencia de diez minutos para restablecer la contraseña. \\ \hline
+		CU-QJ-04 & Restablecer contraseña con código & Fijar una nueva contraseña con el código recibido,
+		con un máximo de cinco intentos. \\ \hline
+		CU-QJ-05 & Consultar y editar mi perfil & Consultar los datos de la cuenta y actualizar correo
+		personal, teléfono, unidad académica y domicilio. \\ \hline
+		CU-QJ-06 & Consultar menú del chatbot & Navegar, sin sesión, las preguntas frecuentes de la
+		Defensoría organizadas por categoría. \\ \hline
+		CU-QJ-07 & Registrar queja (formulario público) & Registrar, sin sesión, una queja con los datos del
+		quejoso, los de la persona señalada, la narración de los hechos, la identificación y las
+		evidencias, previa aceptación del aviso de privacidad. \\ \hline
+		CU-QJ-08 & Consultar mis quejas y su detalle & Consultar la lista y el detalle de las quejas
+		propias desde la cuenta, verificando que cada queja pertenezca al correo de la sesión. \\ \hline
+		CU-QJ-09 & Editar mi queja & Modificar los datos y las evidencias de una queja propia mientras se
+		encuentre en estatus \texttt{RECIBIDA}. \\ \hline
+		CU-QJ-10 & Consultar evidencias de mi queja & Consultar las evidencias de una queja propia y
+		visualizarlas o descargarlas. \\ \hline
+		CU-QJ-11 & Consultar queja por folio (sin sesión) & Consultar el estatus y el detalle de una queja
+		con el folio y el correo con que se registró. \\ \hline
+		CU-QJ-12 & Corregir queja & Atender las observaciones de Recepción sobre una queja
+		\texttt{RECHAZADA}, completar los datos o la documentación faltante y reenviarla. \\ \hline
+		CU-QJ-13 & Consultar mis acuerdos de conciliación & Consultar los acuerdos de conciliación
+		propuestos al quejoso, limitados a sus propias quejas. \\ \hline
+		CU-QJ-14 & Responder acuerdo de conciliación & Aceptar o rechazar un acuerdo pendiente, con un
+		comentario opcional; la respuesta es definitiva. \\ \hline
+		CU-QJ-15 & Cancelar queja & Desistir de una queja propia mientras se encuentre en estatus
+		\texttt{RECIBIDA}; la queja se conserva con estatus \texttt{CANCELADA}. \\ \hline
 	\end{longtable}
-	
-	\begin{longtable}{|p{1.5cm}|p{2.8cm}|p{2.6cm}|p{3.4cm}|p{3.4cm}|}
-		\caption{Casos de uso del actor Personal de recepción}
+	\normalsize
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{1.7cm}|L{3.8cm}|L{9.0cm}|}
+		\caption{Casos de uso de Recepción}
 		\label{tab:cu_recepcion} \\
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} &
-		\headercell{Flujo principal} & \headercell{Postcondición} \\
+		\headercell{ID} & \headercell{Caso de uso} & \headercell{Descripción} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} &
-		\headercell{Flujo principal} & \headercell{Postcondición} \\
+		\headercell{ID} & \headercell{Caso de uso} & \headercell{Descripción} \\
 		\hline
 		\endhead
-	
-		CU-R01 & Iniciar sesión en el panel de revisión & Cuenta activa con rol de recepción &
-		Se autentica contra el servicio de administración & Token emitido; acceso al panel \\ \hline
-	
-		CU-R02 & Revisar la bandeja de entrada & Sesión iniciada & Consulta contadores y lista de
-		pendientes & --- \\ \hline
-	
-		CU-R03 & Validar y rechazar una queja & Queja en \texttt{RECIBIDA} o \texttt{EN\_VALIDACION} &
-		Revisa documentos y antecedentes, marca motivos y observaciones, confirma & Queja pasa a
-		\texttt{RECHAZADA}; se envía correo al quejoso \\ \hline
-	
-		CU-R04 & Validar y turnar una queja & Queja en \texttt{RECIBIDA} o \texttt{EN\_VALIDACION} &
-		Revisa antecedentes, elige área y defensor, agrega comentarios, confirma & Queja pasa a
-		\texttt{TURNADA} con folio oficial, área y defensor \\ \hline
-	
-		CU-R05 & Registrar una queja en papel & Documento físico recibido & Captura los datos del
-		documento y adjunta el escaneo si lo hay & Queja creada con origen \texttt{MANUAL} y folio
-		propio \\ \hline
-	
-		CU-R06 & Consultar y exportar el historial & Existen trámites procesados & Filtra por texto,
-		estatus o fecha y exporta si lo requiere & Archivo de hoja de cálculo descargado con el
-		filtro aplicado \\ \hline
-	
-		CU-R07 & Emitir un acuerdo de conciliación & Existe una queja con folio conocido & Captura
-		asunto y términos dirigidos al folio y correo del quejoso & Acuerdo creado como pendiente,
-		visible para el quejoso \\ \hline
+		CU-REC-01 & Consultar bandeja de entrada & Mostrar los indicadores de la recepción ---por atender,
+		en atención, atendidas en el día, espera más larga y tiempo de respuesta--- y la cola paginada de
+		quejas \texttt{RECIBIDA}, \texttt{CORREGIDA} y \texttt{EN\_VALIDACION}, con filtros y búsqueda.
+		\\ \hline
+		CU-REC-02 & Consultar detalle de una queja & Abrir una queja, que queda asignada en exclusiva a la
+		recepcionista y pasa a \texttt{EN\_VALIDACION}, y consultar los datos del quejoso, la narración y
+		la documentación para verificar los requisitos de admisión. \\ \hline
+		CU-REC-03 & Visualizar evidencia adjunta & Abrir en el navegador los documentos e
+		identificaciones adjuntos a la queja, sin necesidad de descargarlos. \\ \hline
+		CU-REC-04 & Rechazar queja & Regresar al quejoso una queja que no satisface algún requisito de
+		admisión, con los motivos de cada requisito incumplido y observaciones, y notificarle por correo
+		lo que debe corregir. \\ \hline
+		CU-REC-05 & Turnar queja a Primer Contacto & Canalizar a Primer Contacto una queja que satisface
+		los cinco requisitos, eligiendo al abogado responsable con apoyo de su carga de trabajo y de los
+		antecedentes de la queja. \\ \hline
+		CU-REC-06 & Consultar catálogos de apoyo & Consultar las áreas, los abogados disponibles y los
+		documentos de identidad aceptados que alimentan la validación, el turnado y el registro en
+		ventanilla. \\ \hline
+		CU-REC-07 & Consultar historial y exportar & Listar las quejas atendidas con filtros por texto,
+		resultado, recepcionista y rango de fechas, y exportar el resultado a Excel. \\ \hline
+		CU-REC-08 & Registrar queja en ventanilla & Capturar una queja recibida de forma presencial o en
+		papel con el formulario del portal y los datos de la recepción física, de modo que reciba un folio
+		y siga el mismo flujo y las mismas notificaciones que una queja digital. \\ \hline
 	\end{longtable}
-	
-	\begin{longtable}{|p{1.5cm}|p{2.8cm}|p{2.6cm}|p{3.4cm}|p{3.4cm}|}
-		\caption{Casos de uso del actor Administrador de TI}
+	\normalsize
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{1.7cm}|L{3.8cm}|L{9.0cm}|}
+		\caption{Casos de uso de Primer Contacto y Subdefensoría}
+		\label{tab:cu_pc_sd} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Caso de uso} & \headercell{Descripción} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Caso de uso} & \headercell{Descripción} \\
+		\hline
+		\endhead
+		CU-PC-01 & Recibir expediente desde Recepción & Crear el expediente de Primer Contacto a partir de
+		una queja turnada. \\ \hline
+		CU-PC-02 & Consultar bandeja de análisis & Listar los expedientes con filtros por folio,
+		prioridad y estatus. \\ \hline
+		CU-PC-03 & Consultar expediente de análisis & Abrir el expediente, que pasa a
+		\texttt{EN\_ANALISIS}, y consultar sus datos, evidencias e historial. \\ \hline
+		CU-PC-04 & Agendar y gestionar citas & Programar, confirmar, reagendar y cancelar citas con el
+		quejoso y consultar la agenda; el quejoso confirma o cancela desde su panel o desde el enlace
+		recibido por correo. \\ \hline
+		CU-PC-05 & Registrar notas de análisis & Crear, editar y eliminar las notas del expediente, que se
+		formalizan como oficios numerados con asunto y PDF; solo su autor puede modificarlas. \\ \hline
+		CU-PC-06 & Registrar dictamen de competencia & Declarar la queja competencia de la Defensoría y
+		turnar el expediente a Subdefensoría con el responsable elegido. \\ \hline
+		CU-PC-07 & Registrar dictamen de improcedencia & Declarar la queja improcedente con su
+		justificación; el expediente concluye con la remisión de CU-PC-09. \\ \hline
+		CU-PC-08 & Consultar dictamen & Consultar el dictamen registrado de un expediente. \\ \hline
+		CU-PC-09 & Crear y enviar remisión externa & Remitir el caso a la autoridad competente externa a la
+		Defensoría, con su oficio en PDF y aviso al quejoso. \\ \hline
+		CU-PC-10 & Proponer y listar acuerdos de conciliación & Proponer un acuerdo de conciliación al
+		quejoso y consultar los propuestos en el expediente. \\ \hline
+		CU-SD-01 & Recibir expediente desde Primer Contacto & Crear el expediente de investigación a
+		partir del dictamen de competencia. \\ \hline
+		CU-SD-02 & Consultar bandeja de expedientes & Consultar los expedientes recién recibidos y los
+		expedientes en trámite agrupados por etapa. \\ \hline
+		CU-SD-03 & Consultar semáforo de control de plazos & Visualizar el avance de cada expediente contra
+		los plazos del Manual de Procedimientos. \\ \hline
+		CU-SD-04 & Consultar alertas de vencimiento & Consultar los oficios vencidos o por vencer. \\ \hline
+		CU-SD-05 & Consultar expediente de investigación & Consultar el detalle de un expediente, incluido
+		lo actuado en Primer Contacto; al abrirlo inicia la investigación. \\ \hline
+		CU-SD-06 & Emitir oficio & Generar y enviar el oficio de solicitud de información o de gestión con
+		el director de la unidad, con un plazo de diez días hábiles. \\ \hline
+		CU-SD-07 & Generar recordatorio de urgencia & Emitir un recordatorio sobre un oficio sin respuesta,
+		con un plazo de cinco días hábiles. \\ \hline
+		CU-SD-08 & Registrar respuesta externa & Registrar la respuesta del director o de la instancia
+		externa, con su archivo. \\ \hline
+		CU-SD-09 & Registrar acuerdo de conclusión & Enviar al quejoso el acuerdo de conciliación y, una
+		vez aceptado, cerrar el expediente con el acuerdo de conclusión. \\ \hline
+	\end{longtable}
+	\normalsize
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{1.7cm}|L{3.8cm}|L{9.0cm}|}
+		\caption{Casos de uso de administración y casos de uso globales}
 		\label{tab:cu_admin} \\
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} &
-		\headercell{Flujo principal} & \headercell{Postcondición} \\
+		\headercell{ID} & \headercell{Caso de uso} & \headercell{Descripción} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} &
-		\headercell{Flujo principal} & \headercell{Postcondición} \\
+		\headercell{ID} & \headercell{Caso de uso} & \headercell{Descripción} \\
 		\hline
 		\endhead
-	
-		CU-A01 & Iniciar sesión como administrador & Cuenta activa de administración &
-		Se autentica en la consola & Token emitido; acceso al panel \\ \hline
-	
-		CU-A02 & Dar de alta personal & Sesión iniciada & Captura nombre, número de empleado, correo
-		y rol & Cuenta creada con contraseña temporal; queda en bitácora \\ \hline
-	
-		CU-A03 & Restablecer la contraseña de otra cuenta & La cuenta destino existe & Selecciona la
-		cuenta y solicita el restablecimiento & Nueva contraseña temporal generada; queda en bitácora
-		\\ \hline
-	
-		CU-A04 & Dar de baja o reactivar una cuenta & Sesión iniciada & Selecciona la cuenta y
-		confirma la operación & La cuenta cambia su estado de actividad; queda en bitácora \\ \hline
-	
-		CU-A05 & Importar el catálogo institucional & Archivo de hoja de cálculo con el formato
-		esperado & Carga el archivo en el módulo de catálogo & Dependencias creadas o actualizadas
-		de forma masiva; se muestra el resumen \\ \hline
-	
-		CU-A06 & Editar una plantilla de oficio & Sesión iniciada & Edita el contenido con los
-		marcadores disponibles, previsualiza y publica & Plantilla actualizada; queda en bitácora
-		\\ \hline
-	
-		CU-A07 & Ejecutar un respaldo & Sesión iniciada & Solicita un respaldo bajo demanda &
-		Archivo de respaldo generado y listado; queda en bitácora \\ \hline
-	
-		CU-A08 & Restaurar desde un respaldo & Existe al menos un respaldo & Selecciona el archivo y
-		confirma de forma explícita la operación destructiva & Base de datos restaurada; queda en
-		bitácora \\ \hline
-	
-		CU-A09 & Revisar la bitácora de seguridad & Sesión iniciada & Abre el historial de acciones
-		críticas & Se listan las acciones con usuario, dirección de origen y fecha \\ \hline
-	
-		CU-A10 & Administrar las preguntas frecuentes & Sesión iniciada & Crea, edita o elimina
-		preguntas & Los cambios se reflejan de inmediato en el portal público \\ \hline
+		CU-ADM-01 & Gestionar personal administrativo & Dar de alta, editar, dar de baja lógica y
+		reactivar las cuentas del personal, asignando su rol. \\ \hline
+		CU-ADM-02 & Restablecer contraseña de un empleado & Generar una contraseña temporal para la cuenta
+		de otra persona, con cambio obligatorio en su siguiente inicio de sesión. \\ \hline
+		CU-ADM-03 & Ver tablero de indicadores & Consultar los indicadores globales del sistema: estado de
+		las quejas por etapa, casos que requieren atención, quejas por unidad y carga de trabajo del
+		personal. \\ \hline
+		CU-ADM-04 & Administrar plantillas de documentos & Listar, editar y previsualizar las plantillas
+		de los documentos oficiales. \\ \hline
+		CU-ADM-05 & Gestionar respaldos & Generar, listar, descargar y restaurar respaldos de la base de
+		datos, y consultar la bitácora de acciones críticas. \\ \hline
+		CU-ADM-06 & Administrar catálogo de dependencias & Dar de alta y editar dependencias, o importarlas
+		de forma masiva desde Excel. \\ \hline
+		CU-BOT-01 & Administrar preguntas del chatbot & Crear, editar, ocultar y eliminar las preguntas y
+		categorías del chatbot. \\ \hline
+		CU-ADM-07 & Iniciar sesión de personal (global) & Autenticar a cualquier cuenta de personal con
+		correo y contraseña y dirigirla al panel de su rol. \\ \hline
+		CU-ADM-08 & Cambiar mi contraseña (global) & Permitir a cualquier cuenta de personal cambiar su
+		propia contraseña. \\ \hline
+		CU-CAT-01 & Consultar catálogo de dependencias (global) & Consultar las dependencias y unidades
+		académicas activas. \\ \hline
+		CU-NOT-01 & Consultar mis notificaciones (global) & Consultar las notificaciones propias, el
+		número de no leídas y marcarlas como leídas. \\ \hline
+		CU-NOT-02 & Registrar notificación (interno) & Registrar una notificación dirigida a un actor a
+		partir de un evento de negocio; solo la invocan otros servicios. \\ \hline
 	\end{longtable}
-	
 	\normalsize
-	\setlength{\tabcolsep}{6pt}
-	\renewcommand{\arraystretch}{1}
-	
-	\subsection{Ciclo de vida del expediente}
+	\paragraph{Especificación detallada de los casos de uso que conectan áreas.}
+	Tres casos de uso concentran la mayor parte del riesgo funcional del sistema porque en ellos la
+	queja cambia de área y de responsable. Se especifican a continuación con su flujo principal y sus
+	flujos alternos.
+
+	\rowcolors{0}{white}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\begin{longtable}{|p{3.0cm}|p{11.6cm}|}
+		\caption{Especificación de CU-QJ-07: Registrar queja (formulario público)}
+		\label{tab:cu_qj07} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Elemento} & \headercell{Descripción} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Elemento} & \headercell{Descripción} \\
+		\hline
+		\endhead
+		Actor & Quejoso. \\ \hline
+		Requerimientos & RF-Q01, RF-Q02, RNF-Q01, RNF-Q03, RNF-Q04, RNF-G08; reglas RN-Q01 a RN-Q05 y
+		RN-Q13. \\ \hline
+		Precondición & Ninguna; no se requiere cuenta ni sesión. \\ \hline
+		Flujo principal & 1. El quejoso abre ``Presentar una queja''. 2. Captura sus datos de identidad;
+		si es menor de edad, el sistema solicita los datos del tutor. 3. Elige su unidad académica en el
+		catálogo, captura la fecha de los hechos, los datos de la persona señalada y la narración. 4.
+		Adjunta la identificación y las evidencias, que el sistema previsualiza. 5. Acepta el aviso de
+		privacidad y envía. 6. El servicio de quejas valida cada campo y la firma binaria de cada archivo,
+		genera el folio, guarda la queja con estatus \texttt{RECIBIDA} y origen \texttt{PUBLICO}, y
+		solicita las notificaciones correspondientes. 7. El sistema muestra el folio y ofrece activar una
+		cuenta de seguimiento. \\ \hline
+		Flujos alternos & A1. Un dato no cumple una regla: el servidor responde con el mensaje de la regla
+		incumplida y la interfaz lo señala en el campo; la queja no se guarda. A2. Un archivo excede el
+		tamaño o su contenido no corresponde a un tipo permitido: se rechaza la petición completa. A3. El
+		servicio de notificaciones no responde: la queja se guarda igualmente y el fallo queda en el
+		registro del servidor. \\ \hline
+		Postcondición & Queja persistida con su folio único, evidencias y aviso de privacidad aceptado,
+		visible en la bandeja de Recepción. \\ \hline
+	\end{longtable}
+	\normalsize
+
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\begin{longtable}{|p{3.0cm}|p{11.6cm}|}
+		\caption{Especificación de CU-REC-05: Turnar queja a Primer Contacto}
+		\label{tab:cu_rec05} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Elemento} & \headercell{Descripción} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Elemento} & \headercell{Descripción} \\
+		\hline
+		\endhead
+		Actor & Personal de recepción. \\ \hline
+		Requerimientos & RF-R04, RF-R05, RF-R08, RNF-R01, RNF-R06; reglas RN-R01, RN-R03 a RN-R06. \\ \hline
+		Precondición & La queja está \texttt{EN\_VALIDACION} a nombre de la recepcionista y los cinco
+		requisitos de admisión están satisfechos o no aplican. \\ \hline
+		Flujo principal & 1. La recepcionista elige ``Turnar''. 2. El sistema muestra los antecedentes de
+		la queja ---quejas previas de la misma persona quejosa o con la misma persona señalada--- y la lista
+		de abogados ordenada por carga en trámite, con el sugerido preseleccionado. 3. La recepcionista
+		confirma o cambia el abogado y agrega comentarios. 4. El servicio de revisión verifica que la queja
+		sea suya, registra el turnado con su correo y fecha, y crea el expediente en Primer Contacto. 5. La
+		queja pasa a \texttt{TURNADA} y se avisa al abogado asignado. \\ \hline
+		Flujos alternos & A1. Se elige un abogado con más carga que el sugerido: el sistema muestra un aviso
+		sin bloquear. A2. Otra recepcionista intenta turnar la queja: el servidor lo rechaza. A3. El turnado
+		se repite por un reintento de red: la operación es idempotente y no crea un segundo expediente. \\ \hline
+		Postcondición & Expediente de Primer Contacto creado y queja fuera de la cola de Recepción. \\ \hline
+	\end{longtable}
+	\normalsize
+
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\begin{longtable}{|p{3.0cm}|p{11.6cm}|}
+		\caption{Especificación de CU-PC-06: Registrar dictamen de competencia}
+		\label{tab:cu_pc06} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Elemento} & \headercell{Descripción} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Elemento} & \headercell{Descripción} \\
+		\hline
+		\endhead
+		Actor & Analista de Primer Contacto. \\ \hline
+		Requerimientos & RF-PC08, RNF-Q04; reglas RN-PC02 y RN-PC03. \\ \hline
+		Precondición & El expediente está abierto (\texttt{TURNADA} o \texttt{EN\_ANALISIS}) y no tiene
+		dictamen. \\ \hline
+		Flujo principal & 1. En la pestaña Resolución, el analista elige ``Competente''. 2. Captura la
+		justificación y las observaciones y elige al responsable en Subdefensoría de la lista ordenada por
+		carga. 3. El sistema registra el dictamen, cambia el expediente a \texttt{PROCEDENTE} y refleja el
+		estatus en la queja. 4. Envía el expediente a Subdefensoría, que lo crea como \texttt{RECIBIDO}. \\ \hline
+		Flujos alternos & A1. Falta la justificación: se rechaza el registro. A2. Ya existe un dictamen: el
+		sistema lo informa y lo muestra. A3. Subdefensoría no responde: el dictamen se conserva y se ofrece
+		reenviar el expediente. \\ \hline
+		Postcondición & Dictamen registrado y expediente disponible en la bandeja de Subdefensoría. \\ \hline
+	\end{longtable}
+	\normalsize
+
+	\subsection{Ciclo de vida de la queja}
 	\label{sec:maquina_estados}
-	El elemento que ordena todo el flujo de trabajo es el estatus de la queja. Se modeló como una
-	máquina de estados con cuatro valores y transiciones dirigidas, decisión que se tomó por dos
-	razones: permite validar en el servidor qué operaciones son admisibles en cada momento ---la
-	regla RN-Q08 depende por completo de esto--- y da al quejoso una línea de tiempo comprensible
-	del avance de su expediente.
-	
-	\begin{itemize}
-		\item \texttt{RECIBIDA}. Estado inicial de toda queja, sin importar su origen. Es el único
-		estado en el que el quejoso puede editar su propia queja, porque es el único en el que la
-		Defensoría no ha empezado a trabajar sobre ella.
-	
-		\item \texttt{EN\_VALIDACION}. El personal de recepción tomó la queja y está verificando su
-		documentación y sus antecedentes. La edición por parte del quejoso queda cerrada a partir de
-		aquí, para evitar que el expediente cambie mientras se lo evalúa.
-	
-		\item \texttt{RECHAZADA}. Estado terminal. La queja no reunió los requisitos de
-		documentación; el rechazo exige motivos registrados y notificación al quejoso.
-	
-		\item \texttt{TURNADA}. Estado terminal desde la perspectiva de recepción. La queja fue
-		canalizada a un área y a un defensor, y recibió un folio oficial de turnado.
-	\end{itemize}
-	
-	Los dos estados terminales lo son únicamente respecto del alcance implementado en esta etapa:
-	el flujo completo de la Defensoría continúa después del turnado con la investigación, la
-	conciliación y la resolución, etapas que corresponden a los roles que aún no cuentan con
-	interfaz propia. El modelo de datos ya contempla los campos necesarios para esas etapas, de modo
-	que su incorporación no requerirá modificar el esquema existente.
-	
+	El estatus de la queja es el eje que coordina a todas las áreas. Se modeló como una máquina de
+	estados cuyos nombres son los mismos en el diagrama acordado con la Defensoría, en la columna
+	\texttt{estatus} de la tabla \texttt{quejas} y en las constantes del código, de modo que no exista
+	traducción entre lo que el personal ve y lo que el sistema guarda. Cada área es dueña de un tramo de
+	la máquina: Recepción cambia los estados iniciales, Primer Contacto los de análisis y Subdefensoría
+	los de investigación, y cada una refleja su avance en la tabla compartida para que el quejoso, la
+	Defensora y las demás áreas lo vean sin llamadas entre servicios. La
+	Figura~\ref{fig:estados_queja} muestra el diagrama de estados acordado y la
+	Tabla~\ref{tab:estados} detalla las transiciones permitidas; cualquier otra se rechaza en el
+	servidor (RN-R01).
+
+	\begin{figure}[H]
+		\centering
+		\includegraphics[height=0.82\textheight,keepaspectratio]{images/diagrama_estados_queja.png}
+		\caption{Diagrama de estados de la queja}
+		\label{fig:estados_queja}
+	\end{figure}
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{4.4cm}|L{2.6cm}|L{3.3cm}|L{4.3cm}|}
+		\caption{Estados y transiciones de la queja}
+		\label{tab:estados} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Estado} & \headercell{Área} & \headercell{Evento} & \headercell{Siguiente estado} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Estado} & \headercell{Área} & \headercell{Evento} & \headercell{Siguiente estado} \\
+		\hline
+		\endhead
+		(inicio) & Quejoso & Registra la queja & \texttt{RECIBIDA} \\ \hline
+		\texttt{RECIBIDA} & Recepción & Una recepcionista la toma & \texttt{EN\_VALIDACION} \\ \hline
+		\texttt{RECIBIDA} & Quejoso & Cancela & \texttt{CANCELADA} (final) \\ \hline
+		\texttt{EN\_VALIDACION} & Recepción & Suelta la queja o vence la toma & \texttt{RECIBIDA} o
+		\texttt{CORREGIDA} \\ \hline
+		\texttt{EN\_VALIDACION} & Recepción & Regresa con observaciones & \texttt{RECHAZADA} \\ \hline
+		\texttt{EN\_VALIDACION} & Recepción & Turna & \texttt{TURNADA} \\ \hline
+		\texttt{RECHAZADA} & Quejoso & Corrige y reenvía & \texttt{CORREGIDA} \\ \hline
+		\texttt{CORREGIDA} & Recepción & Una recepcionista la toma & \texttt{EN\_VALIDACION} \\ \hline
+		\texttt{TURNADA} & Primer Contacto & El analista abre el expediente & \texttt{EN\_ANALISIS} \\ \hline
+		\texttt{EN\_ANALISIS} & Primer Contacto & Dictamen de competencia & \texttt{PROCEDENTE} \\ \hline
+		\texttt{EN\_ANALISIS} & Primer Contacto & Dictamen de improcedencia & \texttt{IMPROCEDENTE} \\ \hline
+		\texttt{IMPROCEDENTE} & Primer Contacto & Envía la remisión & \texttt{REMITIDA} (final) \\ \hline
+		\texttt{PROCEDENTE} & Subdefensoría & Recibe el expediente & \texttt{RECIBIDO} \\ \hline
+		\texttt{RECIBIDO} & Subdefensoría & El subdefensor abre el expediente & \texttt{EN\_INVESTIGACION} \\ \hline
+		\texttt{EN\_INVESTIGACION} & Subdefensoría & Envía la solicitud de información &
+		\texttt{EN\_ESPERA\_OFICIO} \\ \hline
+		\texttt{EN\_ESPERA\_OFICIO} & Subdefensoría & Registra la respuesta de la unidad &
+		\texttt{ELABORO\_ACUERDO} \\ \hline
+		\texttt{ELABORO\_ACUERDO} & Subdefensoría & Envía el acuerdo de conciliación &
+		\texttt{PENDIENTE\_CONCILIACION} \\ \hline
+		\texttt{PENDIENTE\_CONCILIACION} & Quejoso & Acepta el acuerdo & \texttt{PENDIENTE\_CONCLUSION} \\ \hline
+		\texttt{PENDIENTE\_CONCILIACION} & Quejoso & Rechaza el acuerdo & \texttt{EN\_INVESTIGACION} \\ \hline
+		\texttt{PENDIENTE\_CONCLUSION} & Subdefensoría & Envía el acuerdo de conclusión & \texttt{CONCLUIDO}
+		(final) \\ \hline
+	\end{longtable}
+	\normalsize
+
+	Dos decisiones del modelo merecen explicación. La primera es que tener una cita o notas no es un
+	estado: son indicadores del expediente que no bloquean ninguna transición, porque en una versión
+	temprana el pseudoestado ``con cita'' impedía dictaminar mientras hubiera una cita pendiente. La
+	segunda es que \texttt{IMPROCEDENTE} no es final: toda queja improcedente concluye con la remisión a
+	la autoridad competente, lo que garantiza que el quejoso reciba siempre una orientación sobre a dónde
+	acudir.
+
 	\subsection{Diseño de la arquitectura}
 	\label{sec:diseno_arquitectura}
-	La arquitectura de la plataforma aplica los principios expuestos en la
-	Sección~\ref{sec:arquitectura_software}. Esta sección describe cómo se concretaron: qué
-	componentes existen, cómo se comunican, cómo se despliegan y qué alternativas se descartaron en
-	cada decisión.
-	
+	La arquitectura se diseñó como un conjunto de microservicios organizados por capacidad del negocio:
+	cada área de la Defensoría y cada función transversal tiene su propio servicio, su propia interfaz
+	de programación y su propio contenedor. Esta sección presenta la vista de componentes, la vista de
+	despliegue, la comunicación entre servicios, el diseño de la seguridad y las decisiones tomadas con
+	sus alternativas.
+
 	\subsubsection{Vista de componentes}
-	El sistema se descompuso en siete microservicios, cada uno con una responsabilidad acotada y su
-	propio ciclo de despliegue. El criterio de división no fue técnico sino de dominio: cada
-	servicio agrupa las operaciones que comparten un mismo conjunto de datos y una misma razón para
-	cambiar. La Tabla~\ref{tab:microservicios} presenta la descomposición resultante.
-	
+	La Tabla~\ref{tab:microservicios} lista los servicios del lado del servidor con el puerto en que se
+	publican, su responsabilidad y las tablas de las que son dueños. Todos los servicios Java siguen la
+	misma estructura interna en capas (Sección~\ref{sec:impl_backend}) y escuchan dentro de su
+	contenedor en el puerto 8080; el puerto de la tabla es el que se publica en el servidor de
+	aplicación.
+
 	\rowcolors{2}{rowblue}{white}
-	
 	\small
-	\renewcommand{\arraystretch}{1.25}
+	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
-	
-	\begin{longtable}{|p{3.4cm}|p{1.2cm}|p{6.6cm}|p{2.4cm}|}
-		\caption{Microservicios de la plataforma y su responsabilidad}
+	\begin{longtable}{|p{4.2cm}|p{1.0cm}|L{4.9cm}|L{4.4cm}|}
+		\caption{Servicios del lado del servidor}
 		\label{tab:microservicios} \\
 		\hline
 		\rowcolor{headerblue}
 		\headercell{Servicio} & \headercell{Puerto} & \headercell{Responsabilidad} &
-		\headercell{Emite tokens} \\
+		\headercell{Tablas de las que es dueño} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
 		\headercell{Servicio} & \headercell{Puerto} & \headercell{Responsabilidad} &
-		\headercell{Emite tokens} \\
+		\headercell{Tablas de las que es dueño} \\
 		\hline
 		\endhead
-	
-		\texttt{auth-service} & 8083 & Sesión del quejoso, activación de cuenta, recuperación de
-		contraseña y perfil & Sí, para quejosos \\ \hline
-	
-		\texttt{queja-service} & 8084 & Registro de quejas público y autenticado, consulta y edición
-		de quejas propias, evidencias y respuesta a acuerdos de conciliación & No, solo verifica
-		\\ \hline
-	
-		\texttt{notificaciones-\allowbreak service} & 8085 & Envío de correo electrónico y centro de
-		notificaciones persistido por usuario & No, solo verifica \\ \hline
-	
-		\texttt{catalogo-\allowbreak service} & 8086 & Catálogo de dependencias y unidades académicas del
-		Instituto & No, solo verifica \\ \hline
-	
-		\texttt{admin-service} & 8087 & Sesión del personal, cuentas y roles, plantillas de oficios,
-		respaldos y bitácora de seguridad & Sí, para personal \\ \hline
-	
-		\texttt{revision-\allowbreak service} & 8088 & Bandeja de recepción, validación, rechazo, turnado,
-		registro manual, historial exportable y emisión de acuerdos & No, solo verifica \\ \hline
-	
-		\texttt{chatbot-\allowbreak service} & 8089 & Menú de preguntas frecuentes del portal público y su
-		administración & No, solo verifica \\ \hline
+		\texttt{auth-\allowbreak{}service} & 8083 & Sesión del quejoso: inicio de sesión, activación, recuperación de
+		contraseña y perfil. Emite el token del quejoso. & \texttt{usuarios} \\ \hline
+		\texttt{quejas-\allowbreak{}service} & 8084 & Registro, consulta, edición, corrección y cancelación de quejas;
+		evidencias; acuerdos del lado del quejoso. & \texttt{quejas}, \texttt{queja\_\allowbreak{}tutores},
+		\texttt{queja\_\allowbreak{}evidencias} \\ \hline
+		\texttt{notificaciones-\allowbreak{}service} & 8085 & Envío de correo por SMTP y centro de notificaciones de
+		quejosos y personal. & \texttt{notificaciones} \\ \hline
+		\texttt{catalogo-\allowbreak{}service} & 8086 & Catálogo de dependencias y unidades académicas del IPN. &
+		\texttt{dependencias} \\ \hline
+		\texttt{admin-\allowbreak{}service} & 8087 & Sesión del personal, cuentas, plantillas, respaldos, bitácora y
+		paneles de seguimiento de la Defensora. Emite el token del personal. &
+		\texttt{personal\_\allowbreak{}administrativo}, \texttt{plantillas\_\allowbreak{}documentos}, \texttt{bitacora\_\allowbreak{}acciones} \\ \hline
+		\texttt{revision-\allowbreak{}service} & 8088 & Bandeja, toma, validación, regreso, turnado, ventanilla e
+		historial de Recepción; acuerdos del lado del personal. & Columnas de flujo de \texttt{quejas};
+		\texttt{acuerdos\_\allowbreak{}conciliacion} \\ \hline
+		\texttt{chatbot-\allowbreak{}service} & 8089 & Preguntas frecuentes del portal y su administración. &
+		\texttt{preguntas\_\allowbreak{}chatbot} \\ \hline
+		\texttt{primer-contacto-\allowbreak{}service} & 8082 & Expedientes de análisis, citas, oficios, solicitudes a la
+		persona señalada, dictámenes, remisiones y antecedentes guardados. & \texttt{expedientes\_\allowbreak{}primer\_\allowbreak{}contacto},
+		\texttt{citas\_\allowbreak{}primer\_\allowbreak{}contacto}, \texttt{notas\_\allowbreak{}analisis}, \texttt{dictamenes\_\allowbreak{}primer\_\allowbreak{}contacto},
+		\texttt{remisiones\_\allowbreak{}externas}, \texttt{evidencias\_\allowbreak{}primer\_\allowbreak{}contacto}, \texttt{solicitudes\_\allowbreak{}denunciado} \\ \hline
+		\texttt{subdefensoria-\allowbreak{}service} & 8091 & Expedientes de investigación, oficios, recordatorios,
+		respuestas, control de plazos, alertas y acuerdos de conclusión. & \texttt{expedientes\_\allowbreak{}investigacion},
+		\texttt{oficios\_\allowbreak{}informacion}, \texttt{recordatorios\_\allowbreak{}urgencia}, \texttt{respuestas\_\allowbreak{}externas},
+		\texttt{respuestas\_\allowbreak{}externas\_\allowbreak{}archivos}, \texttt{acuerdos\_\allowbreak{}conclusion} \\ \hline
+		\texttt{denunciado-\allowbreak{}service} & 8094 & Registro y consulta de la versión de la persona señalada. &
+		\texttt{respuestas\_\allowbreak{}denunciado}, \texttt{respuesta\_\allowbreak{}denunciado\_\allowbreak{}archivos} \\ \hline
+		\texttt{antecedentes-\allowbreak{}service} & 8093 & Búsqueda de quejas similares por contenido y generación de
+		resúmenes extractivos. & Ninguna (solo lectura) \\ \hline
+		\texttt{resumen-\allowbreak{}service} & 8090 & Borrador narrativo de resumen de la queja (Python). & Ninguna \\ \hline
 	\end{longtable}
-	
 	\normalsize
-	
-	Solo dos de los siete servicios emiten tokens de sesión: uno para quejosos y otro para
-	personal. Los cinco restantes se limitan a verificarlos. Esta asimetría es deliberada y
-	responde al principio de un único punto de emisión de credenciales: concentrar la lógica de
-	contraseñas en dos lugares en vez de siete reduce la superficie donde puede introducirse un
-	defecto de autenticación, y evita que la política de complejidad de contraseñas quede
-	implementada de siete maneras distintas.
-	
+
+	Del lado del cliente, las cinco aplicaciones Angular son proyectos independientes, cada uno con su
+	propio enrutamiento, guardas, interceptores y contenedor de publicación: el portal del quejoso
+	(\texttt{/}), Recepción (\texttt{/revision/}), Primer Contacto (\texttt{/primer-contacto/}),
+	Subdefensoría (\texttt{/subdefensoria/}) y el panel de la Defensora (\texttt{/admin/}).
+
 	\subsubsection{Vista de despliegue}
-	El sistema se despliega sobre dos servidores virtuales privados con responsabilidades separadas.
-	El primero, al que en adelante se denomina \emph{servidor de aplicación}, aloja los siete
-	microservicios y la base de datos. El segundo, el \emph{servidor de acceso público}, aloja las
-	tres aplicaciones web y el proxy inverso que da la cara a Internet.
-	
-	Esta separación cumple tres propósitos. El primero es de seguridad: el servidor que contiene la
-	base de datos y la lógica de negocio no está expuesto directamente a Internet, y su cortafuegos
-	acepta conexiones a los puertos de los microservicios únicamente desde la dirección del servidor
-	de acceso público. El segundo es de aislamiento de fallos: una saturación en la entrega de
-	archivos estáticos no compite por recursos con el procesamiento de las peticiones de negocio.
-	El tercero es operativo: el certificado de transporte y la configuración del dominio residen en
-	un solo lugar, de modo que renovarlos no implica reiniciar ningún servicio de negocio.
-	
-	El único puerto realmente público es el de HTTPS; el puerto de HTTP se conserva abierto
-	exclusivamente para redirigir el tráfico a su equivalente cifrado y para atender el reto de
-	validación del certificado. La Tabla~\ref{tab:enrutamiento} presenta las reglas de enrutamiento
-	del proxy inverso, que son el contrato entre el exterior y la arquitectura interna.
-	
+	La plataforma se despliega en tres servidores virtuales privados con funciones separadas, de modo
+	que cada uno exponga solo lo indispensable:
+
+	\begin{itemize}
+		\item \textbf{Servidor de publicación.} Ejecuta el proxy inverso público (puertos 80 y 443), que
+		termina TLS, y los cinco contenedores Nginx que sirven las aplicaciones compiladas. Es el único
+		servidor con puertos de aplicación abiertos a Internet.
+		\item \textbf{Servidor de aplicación.} Ejecuta los once microservicios Java y el servicio de
+		resúmenes. Sus puertos solo aceptan conexiones que llegan por la interfaz pública desde el servidor
+		de publicación; las llamadas entre servicios del mismo servidor no se filtran.
+		\item \textbf{Servidor de datos.} Ejecuta PostgreSQL~16. El puerto de la base solo acepta
+		conexiones del servidor de aplicación y los respaldos diarios se guardan en el propio servidor.
+	\end{itemize}
+
+	El proxy enruta por prefijo de ruta, como muestra la Tabla~\ref{tab:enrutamiento}. Además de enrutar,
+	bloquea con una respuesta 403 las rutas de uso exclusivo entre servicios, que no deben ser
+	alcanzables desde Internet aunque el servicio de destino las declare públicas.
+
+	\rowcolors{2}{rowblue}{white}
 	\small
 	\renewcommand{\arraystretch}{1.2}
-	
-	\begin{longtable}{|p{4.0cm}|p{5.4cm}|p{4.4cm}|}
-		\caption{Reglas de enrutamiento del proxy inverso público}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{5.6cm}|p{4.6cm}|p{4.3cm}|}
+		\caption{Enrutamiento del proxy inverso público}
 		\label{tab:enrutamiento} \\
 		\hline
 		\rowcolor{headerblue}
-		\headercell{Ruta pública} & \headercell{Destino} & \headercell{Servidor} \\
+		\headercell{Ruta pública} & \headercell{Destino} & \headercell{Observación} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
-		\headercell{Ruta pública} & \headercell{Destino} & \headercell{Servidor} \\
+		\headercell{Ruta pública} & \headercell{Destino} & \headercell{Observación} \\
 		\hline
 		\endhead
-	
-		\texttt{/} & Portal del quejoso & Acceso público \\ \hline
-		\texttt{/admin/} & Consola de administración & Acceso público \\ \hline
-		\texttt{/revision/} & Panel de revisión & Acceso público \\ \hline
-		\texttt{/api/auth/} & \texttt{auth-service} & Aplicación \\ \hline
-		\texttt{/api/quejoso/} & \texttt{queja-service} & Aplicación \\ \hline
-		\texttt{/api/notificaciones/} & \texttt{notificaciones-\allowbreak service} & Aplicación \\ \hline
-		\texttt{/api/catalogos/} & \texttt{catalogo-\allowbreak service} & Aplicación \\ \hline
-		\texttt{/api/admin/} & \texttt{admin-service} & Aplicación \\ \hline
-		\texttt{/api/revision/} & \texttt{revision-\allowbreak service} & Aplicación \\ \hline
-		\texttt{/api/chatbot/} & \texttt{chatbot-\allowbreak service} & Aplicación \\ \hline
+		\texttt{/} & Portal del quejoso & Aplicación Angular \\ \hline
+		\texttt{/revision/}, \texttt{/admin/}, \texttt{/primer-contacto/}, \texttt{/subdefensoria/} &
+		Paneles del personal & Aplicaciones Angular \\ \hline
+		\texttt{/api/auth/} & \texttt{auth-service} & \\ \hline
+		\texttt{/api/quejoso/} & \texttt{quejas-service} & \\ \hline
+		\texttt{/api/notificaciones/} & \texttt{notificaciones-service} & \texttt{/enviar} y
+		\texttt{/registrar} bloqueadas \\ \hline
+		\texttt{/api/catalogos/} & \texttt{catalogo-service} & \\ \hline
+		\texttt{/api/admin/} & \texttt{admin-service} & \\ \hline
+		\texttt{/api/revision/} & \texttt{revision-service} & \\ \hline
+		\texttt{/api/chatbot/} & \texttt{chatbot-service} & \\ \hline
+		\texttt{/api/denunciado/} & \texttt{denunciado-service} & \\ \hline
+		\texttt{/api/primer-contacto/} & \texttt{primer-contacto-service} & \texttt{/ingesta/} bloqueada \\ \hline
+		\texttt{/api/subdefensoria/} & \texttt{subdefensoria-service} & \texttt{/ingesta/} y
+		\texttt{/acuerdos-conclusion/interno/} bloqueadas \\ \hline
 	\end{longtable}
-	
 	\normalsize
-	\setlength{\tabcolsep}{6pt}
-	\renewcommand{\arraystretch}{1}
-	
-	Una consecuencia de diseño de este esquema merece destacarse: como el proxy entrega tanto las
-	aplicaciones web como la interfaz de programación bajo un mismo dominio, el navegador considera
-	que todo proviene del mismo origen y no activa la verificación de intercambio de recursos entre
-	orígenes. Eso simplifica el modelo de seguridad del cliente sin sacrificar la separación en
-	servicios del lado del servidor.
-	
+
 	\subsubsection{Diseño de la comunicación entre servicios}
-	La comunicación entre servicios es síncrona sobre HTTP siguiendo el estilo REST, conforme a lo
-	expuesto en la Sección~\ref{sec:arquitectura_software}. Se descartó la mensajería asíncrona
-	porque el volumen de operaciones y el número de servicios no justifican la complejidad operativa
-	de un intermediario de mensajes, y porque ninguno de los flujos identificados tolera bien la
-	consistencia eventual: un quejoso que envía una queja espera su folio en la misma respuesta, no
-	después.
-	
-	El diseño reduce al mínimo las llamadas entre servicios. Solo existen dos rutas de comunicación
-	interna: la validación del par folio-correo que el servicio de autenticación solicita al de
-	quejas durante la activación de una cuenta, y el envío de correo que varios servicios solicitan
-	al de notificaciones. Todo lo demás se resuelve por lectura directa de la base de datos
-	compartida, decisión cuyas consecuencias se discuten en la
-	Sección~\ref{sec:decisiones_diseno}.
-	
+	La plataforma combina dos mecanismos de integración, elegidos según la naturaleza de cada relación.
+	El primero es la \textbf{tabla compartida}: los servicios que necesitan conocer el estatus de una
+	queja lo leen directamente de la tabla \texttt{quejas}, cada uno con su propia entidad de
+	persistencia sobre ella, de modo que un cambio hecho por un área es visible de inmediato para las
+	demás sin una llamada en línea. El segundo son las \textbf{llamadas REST síncronas}, que se usan
+	cuando un servicio debe pedir a otro que haga algo. La Tabla~\ref{tab:comunicacion} enumera estas
+	llamadas.
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{3.3cm}|p{3.3cm}|p{4.6cm}|p{3.3cm}|}
+		\caption{Llamadas entre servicios}
+		\label{tab:comunicacion} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Origen} & \headercell{Destino} & \headercell{Propósito} & \headercell{Si falla} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Origen} & \headercell{Destino} & \headercell{Propósito} & \headercell{Si falla} \\
+		\hline
+		\endhead
+		\texttt{auth-service} & \texttt{quejas-service} & Validar el par folio--correo al activar una cuenta
+		(cliente declarativo) & La activación se rechaza \\ \hline
+		\texttt{quejas-service}, \texttt{revision-service}, \texttt{primer-contacto-service},
+		\texttt{subdefensoria-service} & \texttt{notificaciones-service} & Enviar correos y registrar
+		notificaciones & Se registra el error; la operación continúa \\ \hline
+		\texttt{revision-service} & \texttt{primer-contacto-service} & Crear el expediente al turnar &
+		El turnado se reporta como fallido y puede repetirse \\ \hline
+		\texttt{primer-contacto-service} & \texttt{subdefensoria-service} & Crear el expediente de
+		investigación al dictaminar competencia & El dictamen se conserva; se ofrece reenviar \\ \hline
+		\texttt{primer-contacto-service} & \texttt{revision-service} & Obtener el contenido de una
+		evidencia sin duplicar archivos & Se informa al usuario \\ \hline
+		\texttt{primer-contacto-service} & \texttt{antecedentes-service}, \texttt{resumen-service} &
+		Antecedentes similares y borrador de resumen & Se muestra un aviso y un resumen de respaldo \\ \hline
+	\end{longtable}
+	\normalsize
+
+	Todas las llamadas síncronas se configuraron con tiempos de espera explícitos ---tres segundos para
+	conectar y diez para responder en los clientes de plantilla--- y las que corresponden a operaciones
+	secundarias se ejecutan en modo de mejor esfuerzo. La consecuencia de diseño es que el fallo de un
+	servicio auxiliar nunca deja colgada una petición del usuario ni revierte una operación principal ya
+	guardada, conforme a los requerimientos RNF-Q04 y RNF-R04.
+
 	\subsubsection{Diseño de la seguridad y el control de acceso}
-	El esquema de seguridad se construyó sobre cuatro mecanismos, cada uno atendiendo una amenaza
-	distinta.
-	
-	La \textbf{autenticación} emplea tokens firmados con algoritmo simétrico. Un token emitido por
-	el servicio de autenticación es válido en los servicios que atienden al quejoso, y uno emitido
-	por el servicio de administración es válido en los que atienden al personal, porque todos
-	comparten la misma clave de firma. Cada servicio verifica el token de forma local, sin consultar
-	al emisor, lo que evita un punto único de falla en cada petición. La vigencia del token es de
-	una hora, y el cliente cierra la sesión de forma automática cuando el servidor la rechaza.
-	
-	El \textbf{almacenamiento de contraseñas} usa una función de resumen con costo configurable en
-	los dos servicios que emiten sesión. La política de complejidad exige un mínimo de ocho
-	caracteres, al menos una mayúscula y al menos un dígito, y está implementada como una expresión
-	compartida para que no divergja entre servicios. Las cuentas de personal se crean con contraseña
-	temporal y obligación de cambiarla en el primer acceso.
-	
-	La \textbf{autorización} se declara por rol en cada controlador, no solo por ruta. Esta
-	distinción no es cosmética: una restricción declarada únicamente en la configuración de rutas
-	puede eludirse si una ruta nueva se agrega sin actualizar esa configuración, mientras que la
-	declaración en el controlador viaja con el código que protege.
-	
-	El \textbf{cifrado en tránsito} se termina en el proxy inverso con un certificado de una
-	autoridad reconocida y renovación automática. Del proxy hacia los microservicios el tráfico
-	viaja sin cifrar, decisión aceptable porque ese tramo no atraviesa Internet y está restringido
-	por dirección de origen en el cortafuegos, pero que conviene revisar si en el futuro los
-	servidores dejan de estar bajo control directo del proyecto.
-	
-	Un punto pendiente que debe declararse: el cierre automático de sesión por inactividad
-	solicitado para las cuentas de personal no está implementado al cierre de esta etapa. La
-	expiración del token limita la ventana de exposición a una hora, pero no equivale a un cierre
-	por inactividad.
-	
+	La seguridad se diseñó en capas, de modo que ningún mecanismo sea el único que protege un recurso:
+
+	\begin{enumerate}
+		\item \textbf{Red.} Solo el servidor de publicación acepta tráfico de Internet; el de aplicación y
+		el de datos filtran por origen, con reglas aplicadas antes de las que inserta el motor de
+		contenedores.
+		\item \textbf{Proxy.} Termina TLS, redirige HTTP a HTTPS y bloquea las rutas internas.
+		\item \textbf{Autenticación.} Dos emisores de tokens: \texttt{auth-service} para quejosos y
+		\texttt{admin-service} para el personal. Ambos firman con HS256 y una vigencia de una hora; el
+		token del personal incluye el rol. Cada microservicio valida el token de forma local con un filtro
+		propio.
+		\item \textbf{Autorización por rol.} Cada controlador declara los roles que admite, tanto por ruta
+		en la cadena de filtros como por método con anotaciones.
+		\item \textbf{Autorización por pertenencia.} Las consultas del quejoso se filtran por el correo del
+		token; las de las recepcionistas, por la asignación de la queja; y la edición de oficios, por su
+		autor.
+		\item \textbf{Validación en el servidor.} Todas las reglas de negocio se verifican en el servicio,
+		incluida la firma binaria de los archivos, y no solo en el formulario.
+	\end{enumerate}
+
+	La Tabla~\ref{tab:matriz_roles} resume qué rol puede usar cada grupo de puntos de acceso.
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{6.6cm}|p{7.9cm}|}
+		\caption{Matriz de autorización por grupo de puntos de acceso}
+		\label{tab:matriz_roles} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Grupo de puntos de acceso} & \headercell{Acceso} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Grupo de puntos de acceso} & \headercell{Acceso} \\
+		\hline
+		\endhead
+		Inicio de sesión, activación y recuperación; registro público de quejas; consulta por folio;
+		catálogo; menú del chatbot; respuesta de la persona señalada; respuesta a citas y acuerdos por
+		enlace & Público (el enlace lleva un token de un solo propósito) \\ \hline
+		Mis quejas, evidencias propias, corrección, cancelación, acuerdos y citas del quejoso & Token de
+		quejoso; filtrado por el correo del token \\ \hline
+		Notificaciones propias & Cualquier token válido \\ \hline
+		\texttt{/api/revision/**} & \texttt{RECEPCIONISTA} \\ \hline
+		Acuerdos de conciliación del personal & \texttt{RECEPCIONISTA}, \texttt{SUBDEFENSOR},
+		\texttt{DEFENSOR}, \texttt{ADMIN\_SISTEMAS} \\ \hline
+		\texttt{/api/primer-contacto/**} & \texttt{ANALISTA\_PRIMER\_CONTACTO} \\ \hline
+		Consulta de lo actuado en Primer Contacto, PDF de oficios y evidencias de Primer Contacto &
+		\texttt{ANALISTA\_PRIMER\_CONTACTO}, \texttt{SUBDEFENSOR}, \texttt{DEFENSOR} \\ \hline
+		\texttt{/api/subdefensoria/**} & \texttt{SUBDEFENSOR} \\ \hline
+		Consulta de respuestas de la persona señalada & Todos los roles de personal \\ \hline
+		Personal, plantillas, respaldos, bitácora, seguimiento, administración del catálogo y del chatbot &
+		\texttt{ADMIN\_SISTEMAS}, \texttt{DEFENSOR} \\ \hline
+		Cambio de contraseña propia del personal & Cualquier rol de personal \\ \hline
+		Envío de correo, registro de notificaciones e ingesta de expedientes & Solo entre servicios;
+		bloqueado en el proxy \\ \hline
+	\end{longtable}
+	\normalsize
+
 	\subsubsection{Decisiones de diseño y alternativas descartadas}
 	\label{sec:decisiones_diseno}
-	Esta sección documenta las decisiones estructurales del proyecto con el formato
-	contexto-alternativas-decisión-consecuencias. Registrarlas de esta forma cumple un propósito
-	concreto: una decisión de arquitectura cuyo razonamiento no se documenta se vuelve
-	indistinguible de un accidente, y quien mantenga el sistema en el futuro no sabrá si puede
-	revertirla.
-	
-	\paragraph{Decisión 1: base de datos única compartida.}
-	\emph{Contexto:} siete servicios independientes necesitan datos que se relacionan entre sí ---una
-	queja, su tutor, sus evidencias, el usuario que la presentó, la notificación que se le envió---.
-	\emph{Alternativas:} una base de datos por servicio, con sincronización explícita entre ellas;
-	o una base única compartida. \emph{Decisión:} base única. \emph{Consecuencias aceptadas:} se
-	sacrifica la autonomía de datos que caracteriza a los microservicios puros, y dos servicios
-	escriben la misma tabla sin coordinación transaccional entre ellos. A cambio se evita la
-	complejidad de mantener consistencia entre bases separadas, que a la escala de este sistema
-	habría requerido un esfuerzo mayor que el beneficio obtenido. Es un híbrido consciente, no una
-	implementación incompleta del patrón.
-	
-	\paragraph{Decisión 2: entidades independientes sobre una tabla compartida.}
-	\emph{Contexto:} el servicio de quejas y el de revisión necesitan la misma tabla de quejas, pero
-	con vistas distintas: el primero requiere los campos del quejoso, el segundo los del flujo de
-	validación. \emph{Alternativas:} un servicio dueño de la tabla que exponga los datos al otro por
-	interfaz de programación; o dos clases de persistencia independientes sobre la misma tabla
-	física. \emph{Decisión:} entidades independientes. \emph{Consecuencias aceptadas:} un cambio de
-	estatus hecho por recepción es visible de inmediato para el quejoso sin llamada entre servicios,
-	lo que simplifica el flujo; pero ambos servicios pueden agregar columnas sin que el otro lo
-	sepa, y una modificación descoordinada del esquema puede romper al servicio vecino. La mitigación
-	adoptada es que cada servicio declare únicamente las columnas que usa.
-	
-	\paragraph{Decisión 3: catálogo institucional como servicio propio.}
-	\emph{Contexto:} el catálogo de dependencias del Instituto es requerido por el formulario público
-	de quejas, por el turnado en el panel de revisión y por la consola de administración.
-	\emph{Alternativas:} alojarlo dentro del servicio de quejas, que fue quien primero lo necesitó;
-	o extraerlo a un servicio propio. \emph{Decisión:} servicio propio.
-	\emph{Consecuencias aceptadas:} se añadió un servicio más que operar y desplegar, con el
-	sobrecosto correspondiente, en un momento en que un solo consumidor lo necesitaba. La razón para
-	asumirlo fue anticipada: al convertirse en dato de referencia de tres consumidores distintos,
-	alojarlo dentro de un servicio de negocio habría obligado a que los otros dos dependieran de él
-	por razones ajenas a su dominio.
-	
-	\paragraph{Decisión 4: evidencias almacenadas en la base de datos.}
-	\emph{Contexto:} cada queja puede llevar varios archivos de evidencia que constituyen material
-	probatorio. \emph{Alternativas:} guardar los archivos en el sistema de archivos del servidor y
-	almacenar la ruta en la base; o almacenar el contenido binario completo dentro de la base.
-	\emph{Decisión:} contenido binario en la base. \emph{Consecuencias aceptadas:} la base crece más
-	rápido y los respaldos son más grandes. A cambio se obtiene lo que en este dominio pesa más: el
-	archivo y su expediente se respaldan y se restauran como una unidad atómica, de modo que no puede
-	existir un expediente cuya evidencia se haya perdido porque el respaldo del sistema de archivos y
-	el de la base se tomaron en momentos distintos. Para material con posible valor probatorio, esa
-	garantía justifica el costo de almacenamiento.
-	
-	\paragraph{Decisión 5: tres aplicaciones web independientes.}
-	\emph{Contexto:} tres actores con perfiles de uso y niveles de privilegio muy distintos.
-	\emph{Alternativas:} una sola aplicación con vistas y rutas condicionadas por rol; o tres
-	aplicaciones separadas. \emph{Decisión:} tres aplicaciones. \emph{Consecuencias aceptadas:} se
-	duplica cierto código de infraestructura ---guardas, interceptores, estilos base--- en tres
-	proyectos que deben mantenerse sincronizados a mano. A cambio, el código de la consola de
-	administración no se entrega al navegador de un usuario público, lo que reduce la superficie
-	expuesta: un visitante del portal no recibe siquiera las rutas de administración.
-	
-	\paragraph{Decisión 6: datos del quejoso en columnas propias.}
-	\emph{Contexto:} el registro público debe capturar la identidad completa del quejoso, que en una
-	versión inicial se concatenaba como texto libre dentro de la descripción de la queja.
-	\emph{Alternativas:} conservar la concatenación, más simple de implementar; o estructurar cada
-	dato en su propia columna. \emph{Decisión:} columnas propias. \emph{Consecuencias aceptadas:} el
-	esquema creció y el formulario requiere más validación. A cambio, los datos se volvieron
-	consultables y verificables ---la búsqueda de antecedentes del requerimiento RF-R04 sería
-	impracticable sobre texto concatenado--- y la unidad académica pudo pasar de texto libre a una
-	referencia al catálogo institucional.
-	
-	\paragraph{Decisión 7: una imagen de contenedor por servicio.}
-	\emph{Contexto:} los microservicios comparten la misma imagen base y el mismo procedimiento de
-	construcción. \emph{Alternativas:} una imagen común reutilizada por todos, parametrizada al
-	ejecutarse; o una imagen dedicada por servicio. \emph{Decisión:} una por servicio.
-	\emph{Consecuencias aceptadas:} se consume más espacio de almacenamiento en el registro de
-	imágenes. A cambio, cada contenedor es identificable y versionable de forma independiente, y se
-	elimina la ambigüedad de no poder saber qué versión de qué servicio está ejecutando un
-	contenedor determinado.
-	
+	Cada decisión de arquitectura implicó renunciar a una alternativa. Se documentan aquí las más
+	relevantes, con la razón que las sostuvo.
+
+	\paragraph{Microservicios en lugar de un monolito.} La alternativa más simple era una sola aplicación
+	con módulos por área. Se descartó porque las áreas de la Defensoría evolucionaron a ritmos distintos
+	---Recepción se construyó y validó meses antes que Subdefensoría--- y porque dos equipos trabajaron en
+	paralelo sobre módulos diferentes. Con servicios separados, el despliegue de un área no detiene a las
+	demás, y un fallo de memoria en un servicio no tumba al resto.
+
+	\paragraph{Base de datos compartida en lugar de una base por servicio.} La alternativa canónica era
+	que cada servicio tuviera su base. Se descartó porque la Defensora necesita indicadores que cruzan
+	todas las etapas ---dónde está cada queja, cuánto tarda cada área---, y obtenerlos de once bases
+	habría exigido un servicio de agregación. Se adoptó una base compartida con un dueño declarado por
+	tabla; los servicios que solo consultan datos de otro lo hacen en modo de solo lectura. Primer
+	Contacto y Subdefensoría operaron inicialmente con bases en memoria y se migraron a la base
+	compartida al detectarse que perdían sus datos con cada reinicio.
+
+	\paragraph{Llamadas síncronas en lugar de mensajería.} La alternativa era un intermediario de
+	mensajes para los avisos y el paso de expedientes. Se descartó por el costo operativo de un
+	componente más en una infraestructura administrada por un equipo de dos personas; la tolerancia a
+	fallos se obtuvo con tiempos de espera, operaciones de mejor esfuerzo y reenvío manual.
+
+	\paragraph{Dos emisores de tokens.} Se separó la autenticación de quejosos y la del personal porque
+	sus poblaciones, políticas y tablas son distintas; ambos usan el mismo formato, de modo que los
+	servicios validan los dos con el mismo filtro.
+
+	\paragraph{Evidencias en la base de datos.} Las evidencias se guardan como contenido binario en la
+	base y no en un almacenamiento de archivos. La decisión simplifica los respaldos ---un solo volcado
+	incluye todo el expediente--- a cambio de mayor consumo de memoria al recibir archivos grandes, lo que
+	obligó a dimensionar el contenedor del servicio de quejas (Sección~\ref{sec:impl_despliegue}).
+
+	\paragraph{Cinco aplicaciones web en lugar de una con vistas por rol.} Una sola aplicación habría
+	enviado al navegador del quejoso el código de los paneles del personal. Con aplicaciones separadas,
+	cada navegador recibe solo el código de su actor.
+
 	\subsection{Diseño de la base de datos}
 	\label{sec:diseno_bd}
-	La base de datos es relacional y única para los siete microservicios. Cada tabla tiene un
-	servicio propietario, entendido como el único autorizado a definir su estructura, y en dos casos
-	una segunda tabla es escrita por un servicio adicional bajo el patrón descrito en la Decisión~2.
-	La Tabla~\ref{tab:esquema_bd} presenta el esquema con su propietario y su contenido.
-	
+	La base de datos \texttt{defensoria\_db} reúne las tablas de todos los servicios. El esquema lo
+	genera Hibernate a partir de las entidades de cada servicio al arrancar, y los datos de referencia
+	---dependencias, preguntas frecuentes y cuentas iniciales del personal--- se cargan con guiones
+	idempotentes posteriores. La Tabla~\ref{tab:esquema_bd} agrupa las tablas por dominio.
+
 	\rowcolors{2}{rowblue}{white}
-	
 	\small
-	\renewcommand{\arraystretch}{1.25}
+	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
-	
-	\begin{longtable}{|p{3.5cm}|p{3.1cm}|p{7.5cm}|}
-		\caption{Esquema de la base de datos por tabla y servicio propietario}
+	\begin{longtable}{|p{2.8cm}|p{5.6cm}|p{6.1cm}|}
+		\caption{Tablas de la base de datos por dominio}
 		\label{tab:esquema_bd} \\
 		\hline
 		\rowcolor{headerblue}
-		\headercell{Tabla} & \headercell{Propietario} & \headercell{Contenido} \\
+		\headercell{Dominio} & \headercell{Tablas} & \headercell{Contenido principal} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
-		\headercell{Tabla} & \headercell{Propietario} & \headercell{Contenido} \\
+		\headercell{Dominio} & \headercell{Tablas} & \headercell{Contenido principal} \\
 		\hline
 		\endhead
-	
-		\texttt{usuarios} & \texttt{auth-service} & Cuentas de quejoso: identidad institucional,
-		credencial cifrada, datos de contacto, datos de tutor y código de recuperación con su
-		vigencia \\ \hline
-	
-		\texttt{quejas} & \texttt{queja-service} y \texttt{revision-\allowbreak service} & Cuerpo del expediente:
-		folio, identidad del quejoso, narrativa de los hechos, unidad académica, denunciado, origen,
-		estatus, y los campos del flujo de validación ---motivo de rechazo, área, defensor asignado,
-		quién validó y cuándo--- \\ \hline
-	
-		\texttt{queja\_tutores} & \texttt{queja-service} & Datos del tutor o adulto responsable,
-		en relación uno a uno con la queja \\ \hline
-	
-		\texttt{queja\_evidencias} & \texttt{queja-service} & Archivos de evidencia: nombre, tipo,
-		tamaño y contenido binario completo \\ \hline
-	
-		\texttt{acuerdos\_} \texttt{conciliacion} & \texttt{revision-\allowbreak service} y
-		\texttt{queja-service} & Acuerdos emitidos por la Defensoría: asunto, términos, estado y
-		respuesta del quejoso \\ \hline
-	
-		\texttt{notificaciones} & \texttt{notificaciones-} \texttt{service} & Avisos persistidos por
-		destinatario, con tipo, estado de lectura y enlace \\ \hline
-	
-		\texttt{dependencias} & \texttt{catalogo-\allowbreak service} & Catálogo institucional jerárquico con
-		clave propia, clave del padre, tipo, categoría y nivel \\ \hline
-	
-		\texttt{personal\_} \texttt{administrativo} & \texttt{admin-service} & Cuentas de personal:
-		identidad, rol, credencial cifrada, condición de cuenta temporal y último acceso \\ \hline
-	
-		\texttt{plantillas\_} \texttt{documentos} & \texttt{admin-service} & Plantillas de oficios
-		con clave estable de negocio, contenido y datos de última actualización \\ \hline
-	
-		\texttt{bitacora\_acciones} & \texttt{admin-service} & Registro de auditoría: usuario, acción,
-		dirección de origen y fecha \\ \hline
-	
-		\texttt{preguntas\_chatbot} & \texttt{chatbot-\allowbreak service} & Contenido del menú de preguntas
-		frecuentes del portal público \\ \hline
+		Quejosos & \texttt{usuarios} & Cuenta, contraseña cifrada, perfil y código de recuperación
+		cifrado con su vigencia e intentos \\ \hline
+		Quejas & \texttt{quejas}, \texttt{queja\_tutores}, \texttt{queja\_evidencias} & Datos de la queja,
+		estatus, columnas del flujo de Recepción (asignación, validación, turnado, ventanilla), tutor y
+		archivos binarios \\ \hline
+		Persona señalada & \texttt{respuestas\_denunciado}, \texttt{respuesta\_denunciado\_archivos} &
+		Versión de los hechos, aviso de privacidad aceptado y archivos \\ \hline
+		Primer Contacto & \texttt{expedientes\_primer\_contacto}, \texttt{citas\_primer\_contacto},
+		\texttt{notas\_analisis}, \texttt{dictamenes\_primer\_contacto}, \texttt{remisiones\_externas},
+		\texttt{evidencias\_primer\_contacto}, \texttt{solicitudes\_denunciado} & Expediente de análisis,
+		citas con categoría y modalidad, oficios, dictamen, remisión y referencias a evidencias \\ \hline
+		Subdefensoría & \texttt{expedientes\_investigacion}, \texttt{oficios\_informacion},
+		\texttt{recordatorios\_urgencia}, \texttt{respuestas\_externas},
+		\texttt{respuestas\_externas\_archivos}, \texttt{acuerdos\_conclusion} & Expediente de
+		investigación, oficios con fecha límite y estatus, recordatorios, respuestas y acuerdos \\ \hline
+		Conciliación & \texttt{acuerdos\_conciliacion} & Acuerdo, destinatario, estado y respuesta \\ \hline
+		Personal y auditoría & \texttt{personal\_administrativo}, \texttt{bitacora\_acciones} & Cuentas
+		con rol, contraseña temporal y último acceso; acciones con usuario, IP y fecha \\ \hline
+		Referencia & \texttt{dependencias}, \texttt{plantillas\_documentos}, \texttt{preguntas\_chatbot} &
+		Catálogo institucional, plantillas y preguntas frecuentes \\ \hline
+		Avisos & \texttt{notificaciones} & Notificación por destinatario, tipo, enlace y lectura \\ \hline
 	\end{longtable}
-	
 	\normalsize
-	
+
 	\subsubsection{Correspondencia entre reglas de negocio y mecanismos de integridad}
-	Un modelo de datos que solo almacena información deja las reglas del dominio a merced de que
-	cada consumidor las respete. El diseño de esta base busca lo contrario: que las reglas se hagan
-	cumplir en el nivel más bajo posible, de modo que ningún camino de acceso pueda violarlas. La
-	Tabla~\ref{tab:reglas_mecanismos} muestra esa correspondencia para las reglas que admiten
-	verificación estructural.
-	
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	
-	\begin{longtable}{|p{1.9cm}|p{5.6cm}|p{6.6cm}|}
-		\caption{Reglas de negocio y mecanismo que las hace cumplir}
-		\label{tab:reglas_mecanismos} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Regla} & \headercell{Enunciado} & \headercell{Mecanismo} \\
-		\hline
-		\endfirsthead
-	
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Regla} & \headercell{Enunciado} & \headercell{Mecanismo} \\
-		\hline
-		\endhead
-	
-		RN-Q04 & El par folio-correo es la llave de activación & Consulta entre servicios que exige
-		coincidencia de ambos campos antes de crear la cuenta \\ \hline
-	
-		RN-Q05 & Una cuenta activa no se reactiva & Verificación del indicador de actividad antes de
-		procesar la activación \\ \hline
-	
-		RN-Q07 & El código de recuperación expira en diez minutos & Columna de fecha de expiración
-		evaluada en el servidor al validar el código \\ \hline
-	
-		RN-Q08 & Una queja solo es editable en estatus recibida & Validación del estatus en la capa
-		de negocio antes de aplicar la modificación \\ \hline
-	
-		RN-Q09 & Solo el destinatario responde un acuerdo & Comparación del correo del acuerdo contra
-		el del token de sesión \\ \hline
-	
-		RN-Q10 & El origen de la queja se infiere & Asignación en el servidor según el punto de acceso
-		invocado, sin exponerlo como campo de entrada \\ \hline
-	
-		RN-R01 & Transiciones válidas del expediente & Columna de estatus con conjunto acotado de
-		valores y validación de la transición en la capa de negocio \\ \hline
-	
-		RN-R02 & Solo recepción usa el servicio de revisión & Declaración de rol requerido en cada
-		controlador \\ \hline
-	
-		RN-R06 & Solo defensores activos reciben turnado & Consulta filtrada por rol y por indicador
-		de actividad \\ \hline
-	
-		RN-A03 & La baja desactiva, no elimina & Indicador de actividad en lugar de borrado físico,
-		preservando la integridad referencial con la bitácora \\ \hline
-	
-		RN-A04 & Correo y número de empleado únicos & Restricción de unicidad en la definición de la
-		tabla \\ \hline
-	
-		RN-A06 & La plantilla se identifica por clave de negocio & Restricción de unicidad sobre la
-		columna de tipo, independiente del identificador autogenerado \\ \hline
-	\end{longtable}
-	
-	\normalsize
-	\setlength{\tabcolsep}{6pt}
-	\renewcommand{\arraystretch}{1}
-	
-	El diccionario de datos completo, con el tipo y la longitud de cada columna, las cardinalidades
-	detalladas, los índices y las sentencias de creación, se documenta en el anexo correspondiente.
-	
-	\subsection{Diseño del clasificador de competencia}
-	\label{sec:diseno_clasificador}
-	El clasificador de competencia se diseñó como componente independiente de la plataforma, con la
-	función de sugerir al personal de primer contacto si una queja es competencia de la Defensoría a
-	partir de la narrativa de los hechos. Sus fundamentos conceptuales y su diseño detallado
-	---la representación híbrida de características, el factor de amplificación de la señal
-	normativa, la arquitectura del flujo de transformaciones y el protocolo de evaluación--- se
-	desarrollan en las secciones~\ref{sec:problema_clasificacion} a~\ref{sec:validacion_robusta} del
-	marco teórico, por lo que aquí se documenta únicamente su relación con el resto del sistema.
-	
-	El diseño de la integración prevé que el clasificador se consuma como un servicio adicional
-	invocado por el flujo de validación, de modo que su ausencia no interrumpa la operación
-	administrativa. Esta condición se recogió como requerimiento explícito: la indisponibilidad del
-	componente inteligente no debe impedir que una queja se reciba, se valide o se turne. La
-	consecuencia de diseño es que la sugerencia del clasificador es un dato adicional del
-	expediente, nunca una precondición de su avance, lo cual además satisface la restricción de que
-	la decisión final sea siempre humana.
-	
-	Al cierre de esta etapa el clasificador se desarrolló y evaluó de forma independiente ---los
-	resultados experimentales se presentan en el Capítulo~\ref{cap:implementacion}--- y no forma
-	parte de los siete microservicios desplegados. Su integración como servicio de la plataforma
-	está prevista para la etapa siguiente.
-	
+	Las reglas de negocio se hicieron cumplir con el mecanismo más cercano a los datos que fuera
+	viable. Las restricciones de unicidad ---folio de la queja, folio de respuesta, correo y número de
+	empleado del personal, folio de cada expediente--- son restricciones \texttt{UNIQUE} de la base, de
+	modo que ni siquiera un defecto del código podría duplicarlas. Las relaciones de la queja con su
+	tutor y sus evidencias, y de la respuesta de la persona señalada con sus archivos, son claves
+	foráneas reales. La exclusividad de la toma de una queja se garantiza con una sola sentencia de
+	actualización condicionada al estatus, que la base ejecuta de forma atómica.
+
+	Las referencias entre tablas de servicios distintos ---el folio de la queja en un expediente de
+	Primer Contacto, por ejemplo--- se guardan como texto y no como claves foráneas, y los nombres de las
+	personas se copian junto a sus identificadores. Esta desnormalización deliberada rompe la tercera
+	forma normal en esas tablas a cambio de que cada servicio pueda mostrar sus datos sin depender de
+	otro, conforme al compromiso descrito en la Sección~\ref{sec:persistencia_datos}. Las reglas que
+	dependen del momento ---plazos, transiciones de estado, vigencia de códigos--- se validan en la capa
+	de servicios, donde además se prueban de forma unitaria.
+
+	\subsection{Diseño de los componentes de apoyo con inteligencia artificial}
+	\label{sec:diseno_ia}
+	Los componentes de inteligencia artificial se diseñaron como servicios independientes que Primer
+	Contacto consume por HTTP. Sus fundamentos ---representación vectorial del texto, similitud,
+	recuperación de antecedentes y generación de resúmenes--- se desarrollan en las
+	secciones~\ref{sec:busqueda_antecedentes} y~\ref{sec:generacion_resumenes} del marco teórico; aquí se
+	documenta únicamente su relación con el resto del sistema.
+
+	\begin{itemize}
+		\item \textbf{Búsqueda de antecedentes.} Recibe la narración de una queja y devuelve las quejas
+		más parecidas con su porcentaje de similitud y el fragmento relevante. Solo lee la tabla de quejas;
+		la identificación de la misma persona quejosa o señalada se hace después en Primer Contacto.
+		\item \textbf{Borrador de resumen.} Recibe la narración y devuelve un borrador narrativo junto con
+		los fragmentos que lo sustentan, para que el analista pueda contrastarlo con el texto original.
+	\end{itemize}
+
+	El diseño impone dos condiciones. La primera es que la indisponibilidad de estos componentes no debe
+	impedir que una queja se analice o se dictamine: si no responden dentro de su tiempo de espera, la
+	pantalla lo indica y muestra un resumen de respaldo generado en el navegador. La segunda es que su
+	resultado es siempre una sugerencia que el personal valora, nunca una decisión: ningún estado de la
+	queja cambia a partir de una salida del modelo.
+
 	\subsection{Diseño de la interfaz de usuario}
 	\label{sec:diseno_interfaz}
-	El diseño de las interfaces partió de prototipos de alta fidelidad que se usaron como
-	herramienta de validación temprana con el cliente. La razón de invertir en ellos antes de
-	escribir código fue económica: corregir el orden de los campos de un formulario en un prototipo
-	cuesta minutos, y hacerlo sobre una interfaz ya implementada y desplegada cuesta un ciclo
-	completo de compilación y despliegue.
-	
-	Esa inversión se justificó en la práctica. La retroalimentación de las sesiones de revisión
-	derivó en dos tipos de cambio que se incorporaron antes de implementar: ajustes en el orden y
-	agrupación de los campos del formulario de queja, y la incorporación de mensajes de validación
-	explícitos donde el prototipo original solo mostraba el campo en rojo.
-	
-	Los criterios de diseño que se fijaron para las tres aplicaciones fueron los siguientes:
-	
+	El diseño de las interfaces partió de prototipos de alta fidelidad que se usaron como herramienta de
+	validación temprana con el cliente: corregir el orden de los campos de un formulario en un prototipo
+	cuesta minutos, y hacerlo sobre una interfaz desplegada cuesta un ciclo completo de compilación y
+	despliegue. Los paneles de Primer Contacto y de la Defensora se rehicieron sobre un documento de
+	diseño revisado con el personal, pantalla por pantalla. Los criterios que se fijaron para las cinco
+	aplicaciones fueron los siguientes:
+
 	\begin{itemize}
-		\item \textbf{Identidad institucional.} La paleta y la estructura del encabezado y del pie
-		siguen la identidad visual del Instituto, de modo que el usuario reconozca que se encuentra en
-		un servicio oficial y no en un sitio de terceros.
-	
-		\item \textbf{Formularios por pasos.} Los formularios extensos se dividen en secciones
-		numeradas en lugar de presentarse como una lista continua de campos, para reducir la carga
-		cognitiva y hacer visible el progreso.
-	
-		\item \textbf{Ayuda contextual no intrusiva.} Los avisos normativos que el usuario debe
-		conocer ---como el plazo para presentar una queja--- se presentan en un elemento flotante
-		consultable en cualquier momento, en lugar de un bloque fijo que reduce el espacio útil del
-		formulario.
-	
-		\item \textbf{Retroalimentación explícita.} Toda operación produce un mensaje visible de
-		éxito, error o validación pendiente. Este criterio se elevó a requerimiento no funcional
-		(RNF-Q07) porque su ausencia fue la causa de que, en una versión temprana, los mensajes de
-		error existieran en el código pero no fueran visibles para el usuario.
-	
-		\item \textbf{Consistencia entre paneles de personal.} La consola de administración y el panel
-		de revisión comparten componentes, patrones de error y estilos base, para que el personal que
-		use ambos no tenga que aprender dos lenguajes visuales distintos.
+		\item \textbf{Identidad institucional.} Encabezado blanco con la marca del IPN, menú lateral claro
+		y pie en color guinda, de modo que el usuario reconozca un servicio oficial.
+		\item \textbf{Un mismo armazón para el personal.} Los cuatro paneles del personal comparten
+		estructura, componentes, insignias y patrones de error, para que quien use más de uno no aprenda
+		dos lenguajes visuales.
+		\item \textbf{Formularios por pasos.} Los formularios extensos se dividen en secciones numeradas,
+		con previsualización de archivos y validación por campo.
+		\item \textbf{Ayuda contextual no intrusiva.} Los avisos normativos ---como el plazo para presentar
+		una queja o el fundamento de cada requisito de admisión--- se muestran junto al elemento al que se
+		refieren o en un elemento flotante.
+		\item \textbf{Retroalimentación explícita.} Toda operación produce un mensaje de éxito, error o
+		validación pendiente (RNF-Q07).
+		\item \textbf{Del indicador al detalle.} Cada número de un tablero abre la lista ya filtrada que
+		lo explica, y los filtros quedan en la URL para poder compartirse (RNF-A05).
+		\item \textbf{Siguiente paso visible.} En los expedientes de Primer Contacto y Subdefensoría, el
+		sistema indica cuál es la siguiente acción que corresponde según el estado.
 	\end{itemize}
-	
-	Los prototipos completos y las capturas de las interfaces implementadas se presentan en el
-	Capítulo~\ref{cap:modulos} y en el anexo correspondiente.
+
+	El recorrido funcional de cada aplicación se presenta en el Capítulo~\ref{cap:modulos}.

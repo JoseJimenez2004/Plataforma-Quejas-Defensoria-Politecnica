@@ -7,7 +7,6 @@ import { RevisionService } from '../../core/services/revision.service';
 import { ToastService } from '../../core/services/toast.service';
 import {
   BandejaResumen,
-  CargaRecepcionista,
   FiltroBandeja,
   QuejaResumenBandeja,
 } from '../../core/models/revision.models';
@@ -16,8 +15,14 @@ import {
  * recepcionista ve casi en vivo qué quejas toman sus compañeras. */
 const INTERVALO_REFRESCO_MS = 20000;
 
-/** Quejas por página (la cola muestra 10 y se navega con el paginado). */
-const TAMANIO_PAGINA = 10;
+/** Opciones de "quejas por página" que puede elegir la recepcionista. */
+const OPCIONES_TAMANIO = [5, 10, 15, 20, 30, 50];
+
+/** Tamaño por defecto si la recepcionista nunca ha elegido uno. */
+const TAMANIO_POR_DEFECTO = 10;
+
+/** Dónde se recuerda la elección (solo en este navegador). */
+const CLAVE_TAMANIO = 'revision.bandeja.tamanioPagina';
 
 /** A partir de cuántos días sin que nadie la tome, la queja más antigua se marca en ámbar. */
 const DIAS_ALERTA_ESPERA = 3;
@@ -49,7 +54,10 @@ export class Bandeja implements OnInit, OnDestroy {
   filtro: FiltroBandeja = 'todas';
   busqueda = '';
   pagina = 0;
+  readonly opcionesTamanio = OPCIONES_TAMANIO;
+  tamanioPagina = Bandeja.leerTamanioGuardado();
   soltando = '';
+  buscandoSiguiente = false;
   /** "Jueves, 15 de octubre de 2026" (igual que el panel de Primer Contacto). */
   readonly fechaHoy = (() => {
     const texto = new Intl.DateTimeFormat('es-MX', {
@@ -108,6 +116,33 @@ export class Bandeja implements OnInit, OnDestroy {
     this.busqueda = '';
     this.pagina = 0;
     this.cargar();
+  }
+
+  /** La recepcionista elige cuántas quejas ver por página; se recuerda en su navegador. */
+  cambiarTamanio(tamanio: number | string): void {
+    const valor = Number(tamanio);
+    if (!OPCIONES_TAMANIO.includes(valor) || valor === this.tamanioPagina) {
+      return;
+    }
+    // Conserva aproximadamente la posición: la primera queja visible sigue en pantalla.
+    const primera = this.pagina * this.tamanioPagina;
+    this.tamanioPagina = valor;
+    this.pagina = Math.floor(primera / valor);
+    try {
+      localStorage.setItem(CLAVE_TAMANIO, String(valor));
+    } catch {
+      /* navegador sin almacenamiento: solo dura esta sesión */
+    }
+    this.cargar();
+  }
+
+  private static leerTamanioGuardado(): number {
+    try {
+      const guardado = Number(localStorage.getItem(CLAVE_TAMANIO));
+      return OPCIONES_TAMANIO.includes(guardado) ? guardado : TAMANIO_POR_DEFECTO;
+    } catch {
+      return TAMANIO_POR_DEFECTO;
+    }
   }
 
   irAPagina(pagina: number): void {
@@ -172,6 +207,56 @@ export class Bandeja implements OnInit, OnDestroy {
     this.router.navigate(['/validacion', item.numeroFolio]);
   }
 
+  abrirFolio(folio: string): void {
+    this.router.navigate(['/validacion', folio]);
+  }
+
+  get hayDisponibles(): boolean {
+    return (this.resumen?.indicadores.porAtender ?? 0) > 0;
+  }
+
+  /**
+   * Abre la queja disponible que más tiempo lleva esperando (la primera en llegar se atiende
+   * primero). La cola viene ordenada de la más reciente a la más antigua, así que la más
+   * antigua es el último elemento de la última página del filtro "disponibles".
+   */
+  atenderSiguiente(): void {
+    if (this.buscandoSiguiente) {
+      return;
+    }
+    this.buscandoSiguiente = true;
+    const fallo = () => {
+      this.buscandoSiguiente = false;
+      this.toast.error('No se pudo obtener la siguiente queja.');
+      this.cdr.detectChanges();
+    };
+    this.revisionService.bandeja('disponibles', '', 0, 1).subscribe({
+      next: (primera) => {
+        const total = primera.totalElementos;
+        if (total === 0) {
+          this.buscandoSiguiente = false;
+          this.toast.exito('No hay quejas disponibles. ¡Cola al día!');
+          this.cdr.detectChanges();
+          return;
+        }
+        // Con tamaño 1, la página (total - 1) contiene exactamente la queja más antigua.
+        this.revisionService.bandeja('disponibles', '', total - 1, 1).subscribe({
+          next: (ultima) => {
+            this.buscandoSiguiente = false;
+            const item = ultima.lista[ultima.lista.length - 1];
+            if (item) {
+              this.atender(item);
+            } else {
+              fallo();
+            }
+          },
+          error: fallo,
+        });
+      },
+      error: fallo,
+    });
+  }
+
   soltar(item: QuejaResumenBandeja): void {
     this.soltando = item.numeroFolio;
     this.revisionService.liberar(item.numeroFolio).subscribe({
@@ -231,24 +316,17 @@ export class Bandeja implements OnInit, OnDestroy {
 
   readonly diasAlertaEspera = DIAS_ALERTA_ESPERA;
 
-  get tiempoPromedio(): string {
-    const horas = this.resumen?.indicadores.horasPromedioAtencion;
-    if (horas === null || horas === undefined) {
-      return '—';
+  /** Semáforo de antigüedad para la franja de color de cada fila:
+   * verde < 1 día, ámbar < DIAS_ALERTA_ESPERA días, rojo a partir de ahí. */
+  nivelEspera(fecha?: string | null): 'baja' | 'media' | 'alta' {
+    if (!fecha) {
+      return 'baja';
     }
-    if (horas < 1) {
-      return `${Math.max(1, Math.round(horas * 60))} min`;
+    const dias = (Date.now() - new Date(fecha).getTime()) / 86400000;
+    if (dias >= DIAS_ALERTA_ESPERA) {
+      return 'alta';
     }
-    if (horas < 48) {
-      return `${Math.round(horas)} h`;
-    }
-    return `${(horas / 24).toFixed(1)} días`;
-  }
-
-  /** Ancho de la barra de "atendidas hoy" relativo a quien más lleva. */
-  anchoBarra(persona: CargaRecepcionista): number {
-    const maximo = Math.max(1, ...(this.resumen?.equipo ?? []).map((p) => p.atendidasHoy));
-    return Math.round((persona.atendidasHoy / maximo) * 100);
+    return dias >= 1 ? 'media' : 'baja';
   }
 
   // ---------------- carga ----------------
@@ -257,7 +335,7 @@ export class Bandeja implements OnInit, OnDestroy {
     if (!silencioso) {
       this.cargando = true;
     }
-    this.revisionService.bandeja(this.filtro, this.busqueda, this.pagina, TAMANIO_PAGINA).subscribe({
+    this.revisionService.bandeja(this.filtro, this.busqueda, this.pagina, this.tamanioPagina).subscribe({
       next: (resumen) => {
         // Si la página quedó vacía (p. ej. otra recepcionista atendió las últimas), se regresa
         // a la última que sí tiene quejas.

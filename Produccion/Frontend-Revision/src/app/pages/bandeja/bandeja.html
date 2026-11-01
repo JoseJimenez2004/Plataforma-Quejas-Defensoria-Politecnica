@@ -4,72 +4,41 @@
       <h2>Bandeja de Entrada</h2>
       <p class="fecha">{{ fechaHoy }}</p>
     </div>
-    <a routerLink="/registro-manual" class="btn-guinda">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
-      Registro manual
-    </a>
+    <div class="encabezado-acciones">
+      <button type="button" class="btn-guinda" (click)="atenderSiguiente()"
+              [disabled]="buscandoSiguiente || !hayDisponibles"
+              title="Abre la queja disponible que más tiempo lleva esperando">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        {{ buscandoSiguiente ? 'Buscando…' : 'Atender siguiente' }}
+      </button>
+      <a routerLink="/registro-manual" class="btn-secundario">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+        Registro manual
+      </a>
+    </div>
   </div>
 
   @if (resumen; as r) {
-    <!-- ================= Indicadores ================= -->
-    <div class="indicadores">
-      <button type="button" class="indicador clic" [class.seleccionado]="filtro === 'disponibles'"
-              (click)="cambiarFiltro('disponibles')" title="Ver las quejas que nadie ha tomado">
-        <span class="indicador-icono">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M22 6l-10 7L2 6"></path></svg>
-        </span>
-        <span class="indicador-cuerpo">
-          <span class="indicador-titulo">Por atender</span>
-          <strong>{{ r.indicadores.porAtender }}</strong>
-          <span class="indicador-detalle">{{ r.indicadores.nuevasHoy }} llegaron hoy · {{ r.indicadores.corregidas }} corregidas</span>
-        </span>
-      </button>
+    <!-- ================= Resumen del día (franja compacta) =================
+         Solo lo que le sirve a la recepcionista: su propio avance y la queja más urgente.
+         Las métricas de gestión (promedios, carga del equipo) son para supervisión. -->
+    <div class="franja-resumen">
+      <span class="franja-dato">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        Hoy atendiste <strong>{{ r.indicadores.atendidasHoyMias }}</strong>
+      </span>
+      <span class="franja-separador" aria-hidden="true">·</span>
+      <span class="franja-dato">Tienes <strong>{{ r.indicadores.enAtencionMias }}</strong> abiertas</span>
 
-      <button type="button" class="indicador clic" [class.seleccionado]="filtro === 'en_atencion'"
-              (click)="cambiarFiltro('en_atencion')" title="Ver quién está atendiendo qué">
-        <span class="indicador-icono">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-        </span>
-        <span class="indicador-cuerpo">
-          <span class="indicador-titulo">En atención ahora</span>
-          <strong>{{ r.indicadores.enAtencion }}</strong>
-          <span class="indicador-detalle">{{ r.indicadores.enAtencionMias }} contigo</span>
-        </span>
-      </button>
-
-      <div class="indicador">
-        <span class="indicador-icono">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        </span>
-        <span class="indicador-cuerpo">
-          <span class="indicador-titulo">Atendidas hoy</span>
-          <strong>{{ r.indicadores.atendidasHoy }}</strong>
-          <span class="indicador-detalle">{{ r.indicadores.turnadasHoy }} turnadas · {{ r.indicadores.rechazadasHoy }} con observaciones</span>
-        </span>
-      </div>
-
-      <div class="indicador" [class.alerta]="esperaEnAlerta"
-           [title]="esperaEnAlerta ? 'Lleva ' + diasAlertaEspera + ' días o más sin que nadie la tome' : 'La queja que más tiempo lleva esperando'">
-        <span class="indicador-icono">
+      @if (r.indicadores.folioMasAntiguo) {
+        <button type="button" class="franja-alerta" [class.urgente]="esperaEnAlerta"
+                (click)="abrirFolio(r.indicadores.folioMasAntiguo)"
+                [title]="esperaEnAlerta ? 'Lleva ' + diasAlertaEspera + ' días o más sin que nadie la tome' : 'La queja que más tiempo lleva esperando'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-        </span>
-        <span class="indicador-cuerpo">
-          <span class="indicador-titulo">Espera más larga</span>
-          <strong>{{ esperaMasLarga }}</strong>
-          <span class="indicador-detalle">{{ r.indicadores.folioMasAntiguo ?? 'Sin quejas en espera' }}</span>
-        </span>
-      </div>
-
-      <div class="indicador" title="Tiempo promedio entre que llega una queja y Recepción la turna o la regresa con observaciones">
-        <span class="indicador-icono">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 15l4-4 3 3 5-6"></path></svg>
-        </span>
-        <span class="indicador-cuerpo">
-          <span class="indicador-titulo">Tiempo de respuesta</span>
-          <strong>{{ tiempoPromedio }}</strong>
-          <span class="indicador-detalle">promedio · últimos 30 días ({{ r.indicadores.atendidasUltimos30 }})</span>
-        </span>
-      </div>
+          Más antigua: <strong>{{ esperaMasLarga }}</strong> · {{ r.indicadores.folioMasAntiguo }}
+          <span class="franja-ir">Abrir →</span>
+        </button>
+      }
     </div>
 
     <div class="distribucion">
@@ -78,7 +47,7 @@
         <div class="cola-encabezado">
           <div>
             <h3>Cola de quejas</h3>
-            <p>La más reciente arriba. Al abrir una queja queda a tu nombre y nadie más puede atenderla.</p>
+            <p>Al abrir una queja queda a tu nombre y nadie más puede atenderla. El color de la izquierda indica cuánto lleva esperando.</p>
           </div>
           <div class="buscador">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
@@ -119,25 +88,28 @@
                   <th>Folio</th>
                   <th>Llegó</th>
                   <th>Quejoso</th>
-                  <th>Unidad</th>
+                  <th class="col-unidad">Unidad</th>
                   <th class="centro">Docs.</th>
                   <th>Estado</th>
-                  <th class="derecha">Acción</th>
+                  <th class="derecha col-accion">Acción</th>
                 </tr>
               </thead>
               <tbody>
                 @for (item of r.lista; track item.numeroFolio) {
-                  <tr [class.ocupada]="bloqueadaPorOtro(item)" [class.mia]="item.esMia">
+                  <tr [class.ocupada]="bloqueadaPorOtro(item)" [class.mia]="item.esMia" [ngClass]="'edad-' + nivelEspera(item.fechaCreacion)">
                     <td>
                       <span class="folio">{{ item.numeroFolio }}</span>
                       @if (item.origen === 'MANUAL') { <span class="etiqueta-origen">Ventanilla</span> }
                     </td>
-                    <td>
+                    <td [title]="item.fechaCreacion | date: 'dd/MM/yyyy HH:mm'">
+                      <span class="hace-principal">{{ hace(item.fechaCreacion) }}</span>
                       <span class="fecha-fila">{{ item.fechaCreacion | date: 'dd/MM/yy HH:mm' }}</span>
-                      <span class="hace">{{ hace(item.fechaCreacion) }}</span>
                     </td>
-                    <td class="quejoso">{{ item.nombreQuejoso }}</td>
-                    <td>{{ item.unidadAcademicaClave || '—' }}</td>
+                    <td class="quejoso">
+                      {{ item.nombreQuejoso }}
+                      <span class="unidad-inline">{{ item.unidadAcademicaClave || '—' }}</span>
+                    </td>
+                    <td class="col-unidad">{{ item.unidadAcademicaClave || '—' }}</td>
                     <td class="centro">
                       @if (item.documentacionAparenteCompleta) {
                         <span class="docs ok" title="Trae archivos adjuntos y datos mínimos">✓</span>
@@ -161,7 +133,7 @@
                         <span class="chip nueva">Nueva</span>
                       }
                     </td>
-                    <td class="derecha acciones">
+                    <td class="derecha acciones col-accion">
                       @if (bloqueadaPorOtro(item)) {
                         <button type="button" class="btn-fila" disabled
                                 [title]="'La atiende ' + item.revisandoPorNombre + '. Se libera sola si la deja 20 min sin actividad.'">
@@ -185,7 +157,19 @@
 
           @if (r.totalPaginas > 1 || r.totalElementos > 0) {
             <div class="paginado">
-              <span class="paginado-rango">{{ rangoMostrado }}</span>
+              <div class="paginado-info">
+                <label class="paginado-tamanio">
+                  Ver
+                  <select [ngModel]="tamanioPagina" (ngModelChange)="cambiarTamanio($event)"
+                          name="tamanioPagina" aria-label="Quejas por página">
+                    @for (n of opcionesTamanio; track n) {
+                      <option [ngValue]="n">{{ n }}</option>
+                    }
+                  </select>
+                  por página
+                </label>
+                <span class="paginado-rango">{{ rangoMostrado }}</span>
+              </div>
               @if (r.totalPaginas > 1) {
                 <nav aria-label="Páginas de la cola">
                   <button type="button" (click)="irAPagina(pagina - 1)" [disabled]="pagina === 0" aria-label="Página anterior">‹</button>
@@ -205,35 +189,6 @@
         }
       </div>
 
-      <!-- ================= Equipo ================= -->
-      <aside class="card-panel equipo">
-        <h3>Equipo de Recepción</h3>
-        <p class="equipo-sub">Quejas abiertas y atendidas hoy por cada recepcionista.</p>
-
-        <ul class="equipo-lista">
-          @for (p of r.equipo; track p.nombre) {
-            <li [class.yo]="p.soyYo">
-              <div class="equipo-fila">
-                <span class="equipo-nombre">{{ p.nombre }} @if (p.soyYo) { <em>(tú)</em> }</span>
-                <span class="equipo-abiertas" [class.activa]="p.enAtencion > 0"
-                      [title]="p.enAtencion + ' queja(s) abiertas ahora'">{{ p.enAtencion }} abiertas</span>
-              </div>
-              <div class="equipo-barra" [title]="p.atendidasHoy + ' atendidas hoy'">
-                <span [style.width.%]="anchoBarra(p)"></span>
-              </div>
-              <span class="equipo-atendidas">{{ p.atendidasHoy }} atendidas hoy</span>
-            </li>
-          } @empty {
-            <li class="equipo-vacio">No hay recepcionistas activas.</li>
-          }
-        </ul>
-
-        <div class="tu-dia">
-          <span>Tu día</span>
-          <strong>{{ r.indicadores.atendidasHoyMias }}</strong>
-          <span>atendidas · {{ r.indicadores.enAtencionMias }} abiertas</span>
-        </div>
-      </aside>
     </div>
   } @else if (cargando) {
     <p class="estado">Cargando bandeja…</p>

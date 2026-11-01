@@ -6,7 +6,8 @@
 /* ---- Armazón (igual al módulo de Primer Contacto) ---- */
 $alto-header: 72px;
 $alto-footer: 40px;
-$ancho-sidebar: 250px;
+$ancho-sidebar: 68px;           // colapsado: solo iconos
+$ancho-sidebar-abierto: 232px;  // desplegado al pasar el cursor
 
 .app-shell {
   min-height: 100vh;
@@ -133,11 +134,13 @@ $ancho-sidebar: 250px;
   left: 0;
   bottom: $alto-footer;
   width: $ancho-sidebar;
+  overflow-x: hidden;
   overflow-y: auto;
   background: #fff;
   border-right: 1px solid var(--borde);
-  padding: 22px 14px;
+  padding: 22px 12px;
   z-index: 900;
+  transition: width 0.2s ease, box-shadow 0.2s ease;
 
   nav {
     display: flex;
@@ -148,12 +151,14 @@ $ancho-sidebar: 250px;
   a {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
+    gap: 14px;
+    height: 44px;
+    padding: 0 13px;
     border-radius: 8px;
     color: var(--texto);
     text-decoration: none;
     font-weight: 500;
+    white-space: nowrap;
 
     svg {
       width: 18px;
@@ -171,6 +176,32 @@ $ancho-sidebar: 250px;
         opacity: 1;
       }
     }
+
+    &.active {
+      font-weight: 700;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--guinda);
+      outline-offset: -2px;
+    }
+  }
+
+  .label {
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+
+  // Se despliega sobre el contenido (no lo empuja), así la tabla no "brinca".
+  &:hover,
+  &:focus-within {
+    width: $ancho-sidebar-abierto;
+    box-shadow: 6px 0 24px rgba(15, 23, 42, 0.12);
+
+    .label {
+      opacity: 1;
+      transition-delay: 0.06s;
+    }
   }
 }
 
@@ -178,7 +209,7 @@ $ancho-sidebar: 250px;
   flex: 1;
   min-width: 0;
   margin-left: $ancho-sidebar;
-  padding: 32px 32px 72px 40px;
+  padding: 24px 28px 64px 32px;
   min-height: calc(100vh - #{$alto-header});
 }
 
@@ -222,6 +253,17 @@ $ancho-sidebar: 250px;
 
     a {
       white-space: nowrap;
+      height: 40px;
+    }
+
+    .label {
+      opacity: 1;
+    }
+
+    &:hover,
+    &:focus-within {
+      width: auto;
+      box-shadow: none;
     }
   }
 

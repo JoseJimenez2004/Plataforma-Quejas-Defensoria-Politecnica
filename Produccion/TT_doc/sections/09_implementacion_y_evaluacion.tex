@@ -1,478 +1,480 @@
-	\section{Implementación y evaluación del prototipo}
+	\section{Implementación}
 	\label{cap:implementacion}
-	Este capítulo documenta cómo se construyó, se desplegó y se verificó la plataforma diseñada en
-	el Capítulo~\ref{sec:descripcion_solucion}. Se organiza siguiendo las capas del sistema: primero
-	el entorno y las herramientas, después la implementación del lado del servidor, en seguida las
-	aplicaciones web, luego el empaquetado en contenedores y la publicación en los servidores, y
-	finalmente la evaluación del clasificador y las pruebas realizadas. Cierra con un balance
-	explícito de lo que quedó implementado y lo que no, porque un documento técnico que solo enumera
-	logros no permite a nadie retomar el trabajo.
-	
+	Este capítulo documenta cómo se construyó la plataforma diseñada en el
+	Capítulo~\ref{cap:analisis_diseno}: las herramientas empleadas, la estructura común de los
+	microservicios y de las aplicaciones web, los mecanismos que hacen cumplir las reglas de negocio y
+	los requerimientos no funcionales, la integración de los componentes de inteligencia artificial y el
+	empaquetado y despliegue en los tres servidores. Cierra con los incidentes de operación que obligaron
+	a corregir el diseño y con el estado de avance de cada componente. La verificación sistemática del
+	sistema se presenta por separado en el Capítulo~\ref{cap:pruebas}.
+
 	\subsection{Entorno de desarrollo y herramientas}
 	\label{sec:entorno_herramientas}
-	La plataforma se construyó con el conjunto de tecnologías cuyos fundamentos se expusieron en la
-	Sección~\ref{sec:tecnologias}. La Tabla~\ref{tab:herramientas} resume la asignación concreta de
-	cada herramienta a su función dentro del proyecto.
-	
+	La Tabla~\ref{tab:herramientas} reúne las herramientas y bibliotecas con las que se construyó y opera
+	la plataforma. Las versiones son las que se encuentran en los archivos de proyecto al cierre del
+	Trabajo Terminal.
+
 	\rowcolors{2}{rowblue}{white}
-	
 	\small
-	\renewcommand{\arraystretch}{1.25}
+	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
-	
-	\begin{longtable}{|p{3.4cm}|p{3.2cm}|p{7.5cm}|}
-		\caption{Herramientas empleadas y su función en el proyecto}
+	\begin{longtable}{|p{4.0cm}|L{2.6cm}|L{7.9cm}|}
+		\caption{Herramientas y bibliotecas empleadas}
 		\label{tab:herramientas} \\
 		\hline
 		\rowcolor{headerblue}
-		\headercell{Capa} & \headercell{Herramienta} & \headercell{Función} \\
+		\headercell{Herramienta} & \headercell{Versión} & \headercell{Uso en el proyecto} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
-		\headercell{Capa} & \headercell{Herramienta} & \headercell{Función} \\
+		\headercell{Herramienta} & \headercell{Versión} & \headercell{Uso en el proyecto} \\
 		\hline
 		\endhead
-	
-		Lenguaje del servidor & Java 21 & Lenguaje de los siete microservicios \\ \hline
-		Marco del servidor & Spring Boot & Autoconfiguración, servidor embebido, seguridad y
+		Java (OpenJDK) & 21 & Lenguaje de los once microservicios \\ \hline
+		Spring Boot & 3.5.16 / 3.3.5 & Marco de los microservicios (3.3.5 en Primer Contacto y
+		Subdefensoría) \\ \hline
+		Spring Security, Spring Data JPA, Hibernate & Las de Spring Boot & Autenticación, autorización y
 		persistencia \\ \hline
-		Construcción & Maven & Gestión de dependencias y empaquetado en archivo ejecutable \\ \hline
-		Persistencia & Spring Data JPA & Mapeo objeto-relacional y derivación de consultas \\ \hline
-		Base de datos & PostgreSQL 16 & Almacén relacional único compartido \\ \hline
-		Autenticación & JSON Web Token & Tokens firmados con algoritmo simétrico \\ \hline
-		Documentación de la API & OpenAPI 3 & Especificación e interfaz de exploración por servicio
-		\\ \hline
-		Hojas de cálculo & Apache POI & Generación del historial exportable y lectura de la
-		importación masiva del catálogo \\ \hline
-		Cliente web & Angular 21 & Las tres aplicaciones de página única \\ \hline
-		Contenedores & Podman & Empaquetado y ejecución de los doce contenedores \\ \hline
-		Servidor web & Nginx & Proxy inverso público y entrega de archivos estáticos \\ \hline
-		Certificados & Certbot & Emisión y renovación automática del certificado de transporte
-		\\ \hline
-		Control de versiones & Git & Historial del proyecto \\ \hline
-		Clasificador & Python, scikit-learn, spaCy, Sentence-BERT & Vectorización, entrenamiento y
-		evaluación del componente de clasificación \\ \hline
+		Spring Cloud OpenFeign & --- & Cliente declarativo de \texttt{auth-service} hacia
+		\texttt{quejas-service} \\ \hline
+		springdoc-openapi & 2.8.5 / 2.6.0 & Contrato OpenAPI e interfaz Swagger de cada servicio \\ \hline
+		Lombok & --- & Generación de métodos de acceso en parte de los servicios \\ \hline
+		OpenPDF & --- & Oficios de Primer Contacto y Subdefensoría en PDF \\ \hline
+		Apache POI & --- & Exportación a \texttt{.xlsx} e importación del catálogo desde Excel \\ \hline
+		OWASP Java Encoder & 1.3.1 & Neutralización de saltos de línea en los encabezados de correo \\ \hline
+		Apache Maven & 3.9 & Construcción, pruebas y empaquetado \\ \hline
+		Angular y Angular CLI & 21.2 & Las cinco aplicaciones web \\ \hline
+		TypeScript & 5.9 & Lenguaje de las aplicaciones web \\ \hline
+		Node.js & 22 & Compilación de las aplicaciones web \\ \hline
+		Python y FastAPI & 3.11 & Servicio de resúmenes \\ \hline
+		PostgreSQL & 16 & Base de datos \\ \hline
+		Podman & --- & Motor de contenedores en los tres servidores \\ \hline
+		Nginx & imagen \texttt{alpine} & Proxy inverso público y servidores de las aplicaciones \\ \hline
+		Certbot / Let's Encrypt & --- & Certificado TLS y su renovación automática \\ \hline
+		JUnit 5, Mockito, AssertJ & Las de Spring Boot & Pruebas unitarias \\ \hline
+		JaCoCo & 0.8.12 & Cobertura de las pruebas \\ \hline
+		Checkstyle & 10.21 & Verificación de la guía de estilo \\ \hline
+		Git, GitHub y GitHub Actions & --- & Control de versiones y flujo de pruebas \\ \hline
 	\end{longtable}
-	
 	\normalsize
-	\setlength{\tabcolsep}{6pt}
-	\renewcommand{\arraystretch}{1}
-	
-	Una característica del proyecto que conviene señalar desde el principio: cada microservicio es un
-	proyecto de construcción independiente, sin un descriptor padre que los agrupe. La decisión
-	simplifica la evolución de cada servicio por separado, pero tiene una consecuencia operativa
-	concreta: no existe un comando único que compile todo el sistema, y cada servicio debe compilarse
-	desde su propio directorio.
-	
+
 	\subsection{Implementación del lado del servidor}
 	\label{sec:impl_backend}
-	Los siete microservicios comparten deliberadamente la misma estructura interna. Esta uniformidad
-	fue una decisión de implementación, no una consecuencia: cuando se construyó cada servicio nuevo
-	se replicó la organización de carpetas, los filtros y el manejo de errores del anterior, en lugar
-	de introducir un estilo distinto. El beneficio es que quien conoce un servicio conoce los siete, y
-	un defecto corregido en uno se localiza sin dificultad en los demás.
-	
+	Los once microservicios Java comparten una misma organización, de modo que quien conoce uno puede
+	orientarse en cualquier otro. Esta sección describe esa estructura y los mecanismos transversales
+	que la complementan.
+
 	\subsubsection{Estructura común de un microservicio}
-	Cada servicio organiza su código en cinco paquetes que corresponden a las capas descritas en la
-	Sección~\ref{sec:arquitectura_software}:
-	
+	Cada servicio es un proyecto Maven independiente con su propio archivo \texttt{pom.xml} y un nombre de
+	artefacto fijo ---por ejemplo \texttt{quejas-service.jar}---, que es el que esperan los guiones de
+	despliegue. Su código se organiza en los paquetes de la arquitectura en capas
+	(Sección~\ref{sec:arquitectura_software}):
+
 	\begin{itemize}
-		\item \texttt{controller}. Puntos de acceso HTTP. Reciben y devuelven objetos de
-		transferencia, nunca entidades de persistencia, y declaran el rol requerido para invocarlos.
-	
-		\item \texttt{service}. Lógica de negocio y validación de las reglas. Es la única capa que
-		conoce las reglas del dominio; los controladores no validan reglas y los repositorios no las
-		conocen.
-	
-		\item \texttt{repository}. Acceso a datos mediante interfaces de persistencia que derivan las
-		consultas a partir del nombre de sus métodos, sin escribir sentencias SQL.
-	
-		\item \texttt{entity}. Entidades de persistencia con su correspondencia a tablas y columnas.
-	
-		\item \texttt{model}. Objetos de transferencia de datos para las peticiones y las respuestas.
+		\item \texttt{controller}: controladores REST, sin lógica de negocio; reciben DTO y delegan.
+		\item \texttt{service}: reglas del dominio, transacciones y llamadas a otros servicios.
+		\item \texttt{validacion}: en los servicios con formularios públicos, las reglas de captura
+		concentradas en clases sin dependencias de Spring.
+		\item \texttt{repository} y \texttt{entity}: repositorios de Spring Data y entidades JPA.
+		\item \texttt{dto}: objetos de entrada y salida de la API.
+		\item \texttt{config} y \texttt{security}: cadena de filtros, filtro JWT, CORS, clientes HTTP y
+		OpenAPI.
+		\item \texttt{exception}: excepciones del dominio y su manejador global.
 	\end{itemize}
-	
-	La separación entre \texttt{entity} y \texttt{model} merece una justificación explícita, porque
-	implica escribir clases que a primera vista parecen redundantes. Exponer directamente la entidad
-	de persistencia en una respuesta HTTP acopla el contrato público del servicio a la estructura de
-	la base de datos: cualquier columna nueva aparece automáticamente en la respuesta, incluidas las
-	que no deberían ser públicas ---la credencial cifrada de un usuario, por ejemplo---. Mantener
-	objetos de transferencia separados obliga a decidir de forma consciente qué se expone.
-	
+
+	La configuración se lee de un archivo \texttt{application.yml} propio de cada servicio. En producción
+	ese archivo no forma parte de la imagen: se monta desde una carpeta del servidor, de modo que cambiar
+	una dirección, un tiempo de espera o un límite de tamaño solo requiere reiniciar el contenedor
+	(RT-09).
+
 	\subsubsection{Verificación de tokens y control de acceso}
-	El mecanismo de autenticación se implementó como un filtro que se ejecuta antes de que la
-	petición llegue al controlador. Su lógica es la misma en los siete servicios: extrae el token del
-	encabezado de autorización, verifica su firma con la clave compartida, extrae de él la identidad
-	y el rol, y establece el contexto de seguridad de la petición. Si el token falta, está vencido o
-	su firma no coincide, el filtro rechaza la petición sin llegar a la lógica de negocio.
-	
-	Sobre ese contexto se aplica la autorización, declarada en cada controlador mediante anotaciones
-	que exigen un rol determinado. Un detalle de configuración que resultó relevante durante la
-	implementación: cuando un mismo prefijo de ruta tiene una parte pública y una parte
-	administrativa, el orden de declaración de las reglas importa, porque el marco de seguridad
-	aplica la primera coincidencia. Declarar la regla pública antes de la administrativa hace que la
-	menos restrictiva prevalezca por ser más genérica, y el resultado es un punto de acceso
-	administrativo efectivamente abierto. Esta situación se atendió declarando siempre la regla más
-	específica primero, y quedó registrada como regla de negocio RN-A05 justamente para que no se
-	reintroduzca al agregar servicios nuevos.
-	
-	\subsubsection{Manejo centralizado de errores}
-	Cada servicio implementa un manejador global de excepciones que traduce cualquier error de la
-	capa de negocio a una respuesta con estructura uniforme: mensaje, marca de tiempo y código. La
-	alternativa ---capturar excepciones en cada controlador--- se descartó porque produce respuestas
-	de error con formatos distintos según el punto de acceso, y obliga al cliente a implementar
-	tantas variantes de manejo de error como puntos de acceso consuma. Con el manejador centralizado,
-	las tres aplicaciones web leen el mensaje de error siempre del mismo lugar.
-	
-	\subsubsection{Documentación de la interfaz de programación}
-	Los siete servicios exponen su especificación en formato OpenAPI y una interfaz de exploración
-	interactiva. Esta decisión resolvió un problema concreto de coordinación: durante el desarrollo
-	del cliente, la única forma de conocer la forma exacta de una petición era leer el código del
-	controlador correspondiente. Con la especificación publicada, el contrato de cada servicio es
-	consultable sin abrir el código.
-	
+	Los dos servicios que inician sesión ---\texttt{auth-service} para quejosos y \texttt{admin-service}
+	para el personal--- emiten tokens JWT firmados con HS256 y una vigencia de 3\,600 segundos. El de
+	personal incluye la afirmación \texttt{rol}. Todos los demás servicios contienen un filtro
+	\texttt{JwtAuthenticationFilter} que se ejecuta antes de la autenticación de Spring: extrae el token
+	del encabezado \texttt{Authorization}, verifica su firma y vigencia con la clave compartida y, si es
+	válido, registra al usuario en el contexto de seguridad con la autoridad \texttt{ROLE\_}\textit{rol}. Una
+	petición sin token o con un token alterado o vencido continúa como anónima y es rechazada por la regla
+	que corresponda.
+
+	La autorización se declara en dos niveles. En la cadena de filtros de cada servicio se listan las
+	rutas públicas y las protegidas; el orden importa, porque Spring aplica la primera regla que
+	coincide, de modo que las rutas de administración ---por ejemplo,
+	\texttt{/api/catalogos/dependencias/admin/**}--- se declaran antes que la regla pública general del
+	mismo prefijo. En los controladores, la anotación \texttt{@PreAuthorize} fija los roles de cada
+	método, lo que hace que la regla sea visible junto al código que protege y que pueda verificarse de
+	forma estática (Capítulo~\ref{cap:pruebas}). Las peticiones de verificación previa con el método
+	\texttt{OPTIONS} se permiten siempre, para que el navegador pueda completar el protocolo CORS.
+
+	La pertenencia se verifica en la capa de servicios con la identidad del token. Todas las consultas
+	del quejoso sobre ``sus'' recursos reciben el correo del token como parámetro y buscan por folio
+	\emph{y} correo, de modo que cambiar el folio en la URL devuelve un error de recurso no encontrado
+	en lugar de la queja de otra persona.
+
+	\subsubsection{Validación de las reglas de captura}
+	Las reglas del formulario de queja se implementaron en el paquete \texttt{validacion} de
+	\texttt{quejas-service}, separado de los controladores y de la persistencia:
+
+	\begin{itemize}
+		\item \texttt{ReglasQueja} concentra las constantes normativas: expresión regular de nombres,
+		longitudes, número de identificación de hasta diez dígitos, longitud mínima de la narración, tamaños
+		máximos de archivos, número de imágenes de identificación y versión del aviso de privacidad. La
+		aplicación del quejoso tiene una copia de estas reglas para validar antes de enviar, pero la
+		autoridad es siempre la del servidor.
+		\item \texttt{ValidadorCorreo} valida el formato general del correo y, en un segundo nivel, las
+		reglas propias del proveedor más común, para detectar errores de captura.
+		\item \texttt{ValidadorFechas} calcula la edad y la vigencia de las fechas en la zona horaria
+		\texttt{America/Mexico\_City}, para que una queja registrada de noche no cambie de día.
+		\item \texttt{DetectorTipoArchivo} lee los primeros doce bytes de cada archivo y determina su tipo
+		real por la firma binaria (los ``números mágicos'' de PDF, JPEG, PNG, MP4 y MP3); un ejecutable
+		renombrado con extensión \texttt{.jpg} se rechaza aunque el navegador declare un tipo de imagen
+		(RNF-G08).
+		\item \texttt{ValidadorQuejaPublica} aplica todas las anteriores y lanza una
+		\texttt{ValidacionException} con un mensaje para el usuario ante la primera regla incumplida.
+	\end{itemize}
+
+	El servicio de la persona señalada reproduce las mismas reglas con su propio conjunto de constantes,
+	y Recepción calcula el plazo de 90 días naturales con una constante única en su aplicación.
+
+	\subsubsection{Coordinación entre recepcionistas}
+	El requerimiento RNF-R06 ---una queja solo puede estar en atención por una recepcionista--- se
+	implementó sin bloqueos en memoria ni tablas auxiliares. Al abrir una queja, \texttt{revision-service}
+	ejecuta una única sentencia de actualización que asigna la queja a la recepcionista \emph{solo si} su
+	estatus sigue siendo \texttt{RECIBIDA} o \texttt{CORREGIDA}. La base de datos ejecuta esa sentencia de
+	forma atómica: si dos recepcionistas abren la misma queja en el mismo instante, una actualiza la fila
+	y la otra recibe cero filas afectadas, y el sistema le informa que la queja ya está en atención. Se
+	guarda además el estatus previo, para devolverla a él si se suelta.
+
+	Las operaciones de regreso y turnado verifican primero que la queja pertenezca a quien las solicita.
+	La aplicación renueva la asignación cada cuatro minutos mientras la queja está abierta y, si se
+	abandona, el servicio la libera a los veinte minutos de inactividad. La bandeja dejó de descargar las
+	quejas completas en cada actualización: la consulta es paginada y el indicador de documentación se
+	calcula con un conteo, no cargando los archivos.
+
+	\subsubsection{Integración y resiliencia entre servicios}
+	Las llamadas entre servicios se implementaron con \texttt{RestTemplate} configurado con tiempos de
+	espera de tres segundos para conectar y diez para responder, y con un cliente OpenFeign con tiempos
+	equivalentes en \texttt{auth-service}. Las llamadas a \texttt{notificaciones-service} están
+	envueltas en bloques que capturan cualquier error de red o de servidor, lo registran y continúan
+	(RNF-Q04, RNF-R04): la queja ya se guardó antes de notificar, de modo que el fallo del correo solo se
+	pierde como aviso.
+
+	El paso de expedientes entre áreas se implementó con dos garantías adicionales. El turnado es
+	idempotente: si Recepción repite la llamada por un error de red, Primer Contacto reconoce el folio y
+	no crea un segundo expediente. Y el dictamen de competencia se guarda antes de llamar a
+	Subdefensoría: si esta no responde, el expediente queda marcado como pendiente de envío y la
+	interfaz ofrece reenviarlo.
+
+	Cada área tiene un único punto donde cambia el estatus de sus expedientes, la clase
+	\texttt{TransicionExpedienteService}, que además refleja el nuevo estatus en la columna
+	\texttt{estatus} de la tabla \texttt{quejas}. Concentrar el cambio en una sola clase garantiza que no
+	haya caminos que actualicen el expediente sin actualizar la queja, defecto que existió en una versión
+	temprana y que hacía que Recepción, la Defensora y el quejoso no vieran el avance de las etapas
+	posteriores.
+
+	\subsubsection{Seguridad complementaria}
+	Además de los tokens, los servicios implementan los siguientes mecanismos:
+
+	\begin{itemize}
+		\item Contraseñas con BCrypt en \texttt{usuarios} y \texttt{personal\_administrativo}, con la
+		política de RN-Q07.
+		\item Código de recuperación de seis dígitos guardado cifrado, con vigencia de diez minutos y un
+		máximo de cinco intentos; al agotarse, el código se invalida.
+		\item Cuentas de personal creadas o restablecidas con contraseña temporal y cambio obligatorio, y
+		una cuenta técnica inicial autoprovisionada en el primer arranque (RNF-A01).
+		\item Protección contra quedarse sin administración: \texttt{PersonalAdministrativoService} impide
+		desactivar o quitar el rol a la propia cuenta y a la última cuenta activa de administración
+		(RNF-A07).
+		\item Bitácora con la IP real del cliente, tomada de los encabezados \texttt{X-Real-IP} y
+		\texttt{X-Forwarded-For} que añade el proxy, e inicios de sesión fallidos (RNF-A02).
+		\item Neutralización de saltos de línea en asunto y destinatario de los correos, para impedir la
+		inyección de encabezados (CWE-93).
+		\item Enlaces de respuesta para citas y acuerdos con un token aleatorio de un solo propósito, que
+		permite al quejoso responder sin iniciar sesión sin exponer otros datos.
+	\end{itemize}
+
+	\subsubsection{Manejo centralizado de errores y documentación}
+	Los servicios cuentan con un manejador global (\texttt{@RestControllerAdvice}) que traduce las
+	excepciones del dominio a respuestas HTTP con un cuerpo uniforme: las de validación a 400, las de
+	acceso a 403, las de recurso no encontrado a 404, las de conflicto a 409, las peticiones que exceden
+	el tamaño permitido a 413 y cualquier error no previsto a 500 sin exponer la traza. Así, la interfaz puede mostrar el mensaje del servidor sin interpretar trazas de error
+	(RNF-Q07). En los ocho servicios desarrollados por el equipo, un filtro de registro escribe una línea por petición con método, ruta, estatus y duración,
+	lo que permitió diagnosticar los incidentes de la Sección~\ref{sec:incidentes}.
+
+	Los once servicios publican su contrato con springdoc-openapi en \texttt{/v3/api-docs} y una interfaz
+	navegable en \texttt{/swagger-ui.html} (RNF-G03). Como los puertos de los servicios no son
+	alcanzables desde Internet, la documentación se consulta mediante un túnel SSH desde el servidor de
+	publicación.
+
 	\subsubsection{Puntos de acceso implementados}
-	La Tabla~\ref{tab:endpoints} presenta los puntos de acceso principales agrupados por servicio,
-	con su condición de acceso. La especificación completa de cada uno, con sus parámetros y
-	respuestas, se consulta en la interfaz de exploración de cada servicio y se reproduce en el anexo
-	correspondiente.
-	
+	La Tabla~\ref{tab:endpoints} resume, por servicio, el número de puntos de acceso y los grupos
+	funcionales que cubren. El catálogo detallado, con el rol que exige cada uno, se genera de forma
+	automática a partir del código y se usa como insumo de las pruebas de seguridad
+	(Sección~\ref{sec:pruebas_seguridad}).
+
 	\rowcolors{2}{rowblue}{white}
-	
-	\footnotesize
+	\small
 	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
-	
-	\begin{longtable}{|p{2.6cm}|p{8.6cm}|p{3.0cm}|}
-		\caption{Puntos de acceso principales por microservicio}
+	\begin{longtable}{|p{3.6cm}|L{1.4cm}|L{9.5cm}|}
+		\caption{Puntos de acceso por servicio}
 		\label{tab:endpoints} \\
 		\hline
 		\rowcolor{headerblue}
-		\headercell{Servicio} & \headercell{Punto de acceso} & \headercell{Acceso} \\
+		\headercell{Servicio} & \headercell{Puntos} & \headercell{Grupos funcionales} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
-		\headercell{Servicio} & \headercell{Punto de acceso} & \headercell{Acceso} \\
+		\headercell{Servicio} & \headercell{Puntos} & \headercell{Grupos funcionales} \\
 		\hline
 		\endhead
-	
-		\texttt{auth-service} & \texttt{POST /api/auth/login} & Público \\ \hline
-		& \texttt{POST /api/auth/activar-cuenta} & Público \\ \hline
-		& \texttt{POST /api/auth/solicitar-codigo} & Público \\ \hline
-		& \texttt{POST /api/auth/reset-password} & Público \\ \hline
-		& \texttt{GET} y \texttt{PUT /api/auth/me}, \texttt{/api/auth/perfil} & Sesión de quejoso
-		\\ \hline
-	
-		\texttt{queja-service} & \texttt{POST /api/quejoso/\allowbreak quejas/registro-publico} & Público
-		\\ \hline
-		& \texttt{GET /api/quejoso/quejas/folio/\{folio\}} & Público \\ \hline
-		& \texttt{POST /api/quejoso/quejas/registrar} & Sesión de quejoso \\ \hline
-		& \texttt{GET /api/quejoso/quejas/mias} & Sesión de quejoso \\ \hline
-		& \texttt{GET} y \texttt{PUT /api/quejoso/\allowbreak quejas/mias/\{folio\}} & Sesión de quejoso \\ \hline
-		& \texttt{GET} y \texttt{PUT /api/quejoso/conciliaciones/**} & Sesión de quejoso \\ \hline
-	
-		\texttt{notificaciones-\allowbreak service} & \texttt{GET /api/notificaciones/mias} y
-		\texttt{/mias/no-leidas} & Sesión de quejoso \\ \hline
-		& \texttt{PUT /api/notificaciones/\{id\}/leida} & Sesión de quejoso \\ \hline
-		& \texttt{POST /api/notificaciones/enviar} y \texttt{/registrar} & Uso interno entre
-		servicios \\ \hline
-	
-		\texttt{catalogo-\allowbreak service} & \texttt{GET /api/catalogos/dependencias} y
-		\texttt{/dependencias/\{clave\}} & Público \\ \hline
-		& \texttt{GET}, \texttt{POST}, \texttt{PUT /api/catalogos/\allowbreak dependencias/admin/**} &
-		Administración \\ \hline
-		& \texttt{POST /api/catalogos/\allowbreak dependencias/admin/\allowbreak importar-excel} & Administración \\ \hline
-	
-		\texttt{admin-service} & \texttt{POST /api/admin/auth/login} & Público \\ \hline
-		& \texttt{GET}, \texttt{POST}, \texttt{PUT}, \texttt{DELETE /api/admin/personal/**} &
-		Administración \\ \hline
-		& \texttt{GET} y \texttt{PUT /api/admin/plantillas/**} & Administración \\ \hline
-		& \texttt{GET} y \texttt{POST /api/admin/\allowbreak seguridad/respaldos/**} & Administración \\ \hline
-		& \texttt{POST /api/admin/seguridad/restaurar} & Administración \\ \hline
-		& \texttt{GET /api/admin/seguridad/bitacora} & Administración \\ \hline
-		& \texttt{GET /api/admin/dashboard/resumen} & Administración \\ \hline
-		& \texttt{PUT /api/admin/perfil/password} & Cualquier cuenta de personal \\ \hline
-	
-		\texttt{revision-\allowbreak service} & \texttt{GET /api/revision/bandeja} & Recepción \\ \hline
-		& \texttt{GET /api/revision/quejas/\{folio\}} y \texttt{/antecedentes} & Recepción \\ \hline
-		& \texttt{GET /api/revision/\allowbreak quejas/evidencias/\{id\}} & Recepción \\ \hline
-		& \texttt{POST /api/revision/\allowbreak quejas/\{folio\}/rechazar} y \texttt{/turnar} & Recepción
-		\\ \hline
-		& \texttt{POST /api/revision/registro-manual} & Recepción \\ \hline
-		& \texttt{GET /api/revision/historial} y \texttt{/historial/exportar} & Recepción \\ \hline
-		& \texttt{GET /api/revision/catalogos/areas} y \texttt{/defensores} & Recepción \\ \hline
-		& \texttt{POST} y \texttt{GET /api/revision/conciliaciones} & Recepción \\ \hline
-	
-		\texttt{chatbot-\allowbreak service} & \texttt{GET /api/chatbot/menu} & Público \\ \hline
-		& \texttt{GET}, \texttt{POST}, \texttt{PUT}, \texttt{DELETE /api/chatbot/\allowbreak admin/preguntas/**} &
-		Administración \\ \hline
+		\texttt{auth-service} & 7 & Inicio de sesión, activación, existencia de cuenta, código de
+		recuperación, restablecimiento y perfil \\ \hline
+		\texttt{quejas-service} & 15 & Registro público y con sesión, validación de folio, consulta por
+		folio, mis quejas, edición, corrección, cancelación, evidencias y acuerdos \\ \hline
+		\texttt{notificaciones-service} & 5 & Envío de correo y registro (internos), mis notificaciones, no
+		leídas y marcado \\ \hline
+		\texttt{catalogo-service} & 6 & Consulta pública y administración del catálogo, importación desde
+		Excel \\ \hline
+		\texttt{admin-service} & 32 & Inicio de sesión, personal, plantillas, respaldos, bitácora, tablero,
+		seguimiento de quejas, unidades, carga y personal \\ \hline
+		\texttt{revision-service} & 19 & Bandeja, toma, liberación, renovación, validación, regreso,
+		turnado, abogados, antecedentes, ventanilla, historial, catálogos y acuerdos \\ \hline
+		\texttt{chatbot-service} & 5 & Menú público y administración de preguntas \\ \hline
+		\texttt{denunciado-service} & 3 & Registro público de la respuesta y consulta del personal \\ \hline
+		\texttt{primer-contacto-service} & 56 & Bandeja, expedientes, citas (personal, quejoso y enlace
+		público), oficios, solicitudes a la persona señalada, dictámenes, remisiones, conciliación,
+		antecedentes, resumen, abogados, evidencias, consulta para Subdefensoría e ingesta \\ \hline
+		\texttt{subdefensoria-service} & 30 & Bandeja, expedientes, oficios, recordatorios, respuestas y
+		archivos, documentos PDF, control de plazos, alertas, acuerdos de conclusión, acuerdos por enlace e
+		ingesta \\ \hline
+		\texttt{antecedentes-service} & 6 & Búsqueda, resumen extractivo, corpus, entrenamiento y salud \\ \hline
+		\textbf{Total} & \textbf{184} & \\ \hline
 	\end{longtable}
-	
 	\normalsize
-	\setlength{\tabcolsep}{6pt}
-	\renewcommand{\arraystretch}{1}
-	
+
 	\subsection{Implementación de las aplicaciones web}
 	\label{sec:impl_frontend}
-	Las tres aplicaciones se desarrollaron como aplicaciones de página única con componentes
-	autónomos, sin el sistema de módulos de versiones anteriores del marco de trabajo. Cada
-	aplicación es un proyecto independiente con su propio árbol de rutas, su guarda de
-	autenticación y sus interceptores.
-	
+	Las cinco aplicaciones se construyeron con Angular~21 sin un repositorio común: cada una es un
+	proyecto independiente con su propio \texttt{package.json}, su compilación y su contenedor. La
+	independencia se aceptó a cambio de duplicar algunos archivos compartidos, que se mantienen como
+	copias idénticas y se documentan como tales.
+
 	\subsubsection{Estructura común}
-	Las tres comparten la misma organización: una capa \texttt{core} con los servicios de
-	comunicación con el servidor, los modelos de datos y la configuración de seguridad del cliente;
-	una capa \texttt{shared} con los componentes reutilizables ---encabezado, pie, avisos, ayuda
-	flotante---; y una capa \texttt{pages} con un componente por pantalla, cargado de forma diferida
-	para que el navegador no descargue el código de pantallas que el usuario no ha visitado.
-	
-	\subsubsection{Interceptores y guardas}
-	Dos piezas transversales resuelven problemas que de otro modo habría que repetir en cada
-	pantalla.
-	
-	El \textbf{interceptor de autorización} agrega el token de sesión al encabezado de cada petición
-	saliente, de modo que ningún servicio de la aplicación tiene que recordar hacerlo. El mismo
-	interceptor detecta las respuestas de sesión inválida o insuficiente y, en ese caso, cierra la
-	sesión local y redirige al inicio de sesión. Esto implementa el requerimiento RNF-Q06 en un solo
-	punto del código.
-	
-	La \textbf{guarda de rutas} impide el acceso a las secciones autenticadas cuando no existe una
-	sesión válida en el cliente. Es importante entender su alcance: la guarda es una medida de
-	usabilidad, no de seguridad, porque se ejecuta en el navegador y puede eludirse. La seguridad
-	real la aplica el servidor, que rechaza cualquier petición sin token válido con independencia de
-	lo que haga el cliente. Confundir ambas cosas es un error frecuente y por eso se hace explícito.
-	
-	\subsubsection{Detección de cambios sin zonas}
-	La versión del marco de trabajo empleada permite ejecutar la aplicación sin la biblioteca que
-	tradicionalmente intercepta las operaciones asíncronas para disparar la actualización de la
-	vista. Ese modo reduce el trabajo del navegador, pero tiene una consecuencia que apareció durante
-	la implementación: la vista no se actualizaba de forma automática al recibir la respuesta de una
-	petición, de modo que los datos llegaban pero la pantalla seguía mostrando el estado anterior.
-	
-	La solución adoptada fue un interceptor adicional que solicita de forma explícita una
-	actualización de la vista tras cada respuesta del servidor. Se documenta aquí porque es una
-	particularidad no evidente del entorno y porque cualquier pantalla nueva que se agregue al
-	proyecto depende de que ese interceptor siga registrado.
-	
+	Todas las aplicaciones usan componentes independientes y se organizan en \texttt{core} (servicios
+	HTTP, modelos, guardas, interceptores, sesión y reglas de validación), \texttt{shared} (componentes
+	reutilizables) y \texttt{pages} o \texttt{features} (una carpeta por pantalla). Las rutas se declaran
+	con carga diferida (\texttt{loadComponent}), de modo que cada pantalla se descarga la primera vez que
+	se visita: en el portal del quejoso el paquete inicial bajó de unos 600~KB a 320~KB (90~KB
+	comprimido), y en Primer Contacto de 1.19~MB a 361~KB. El asistente de preguntas frecuentes se carga
+	con un bloque diferido cuando la página ya está inactiva.
+
+	\subsubsection{Interceptores, guardas y sesión}
+	Cada aplicación registra tres interceptores HTTP. El de autenticación añade el token a las peticiones
+	dirigidas a la API. El de errores cierra la sesión y redirige al inicio de sesión ante una respuesta
+	401 o 403 de un servicio de negocio (RNF-Q06), con excepción de las respuestas del servicio de
+	notificaciones, cuyo fallo no debe expulsar al usuario. El tercero fuerza la detección de cambios al
+	terminar cada petición, necesario porque las aplicaciones usan el modo sin zonas. Las guardas de ruta
+	comprueban que exista una sesión vigente y, en los paneles del personal, que el rol corresponda al
+	panel.
+
+	El inicio de sesión del personal es único: la lógica compartida en \texttt{sesion-personal.ts} borra
+	cualquier sesión previa al iniciar una nueva ---para que en una computadora compartida una
+	recepcionista no herede la sesión de la Defensora---, redirige según el rol y cierra a la vez las
+	sesiones de todos los paneles al salir.
+
+	\subsubsection{Componentes compartidos}
+	Entre los componentes reutilizables destacan el formulario de queja, que Recepción reutiliza para el
+	registro en ventanilla; el autocompletado de dependencias sobre el catálogo; el selector de fechas; el
+	aviso de privacidad; la campana de notificaciones de los paneles del personal, que se actualiza cada
+	minuto; la ventana de programación de citas, usada tanto en la agenda como en el expediente; y, en el
+	panel de la Defensora, un conjunto de componentes de tablero ---paginador, ventana modal, gráficas de
+	dona y de barras, exportación a CSV y tablas de atención, unidades, carga y motivos---.
+
+	\subsection{Integración de los componentes de inteligencia artificial}
+	\label{sec:impl_ia}
+	Los dos componentes de apoyo se integraron con Primer Contacto conforme al diseño de la
+	Sección~\ref{sec:diseno_ia}:
+
+	\begin{itemize}
+		\item \texttt{antecedentes-service} es un servicio Spring Boot que expone
+		\texttt{POST /api/antecedentes/buscar} con la narración y devuelve los antecedentes con su
+		similitud, el fragmento relevante y los datos básicos de la queja. Primer Contacto filtra después
+		los resultados que corresponden a la misma persona quejosa o señalada y muestra los cuatro más
+		parecidos.
+		\item \texttt{resumen-service} es un servicio Python con FastAPI que recibe la narración, selecciona
+		los fragmentos de mayor relevancia y produce un borrador editado por un modelo de lenguaje ejecutado
+		en un servidor de inferencia local. Devuelve el borrador y los fragmentos que lo sustentan.
+	\end{itemize}
+
+	Primer Contacto los invoca con un tiempo de espera configurable (110~s para el resumen, que es la
+	operación más costosa). Si un componente no responde, la pestaña de análisis lo indica y muestra un
+	resumen de respaldo generado en el navegador; el
+	resto del expediente sigue operando.
+
 	\subsection{Empaquetado en contenedores y despliegue}
 	\label{sec:impl_despliegue}
-	El sistema se ejecuta en doce contenedores distribuidos en los dos servidores descritos en la
-	Sección~\ref{sec:diseno_arquitectura}. La Tabla~\ref{tab:contenedores} presenta la matriz de
-	despliegue.
-	
+	Cada componente se distribuye como una imagen de contenedor propia. Los microservicios Java usan un
+	\texttt{Dockerfile} común que recibe el nombre del artefacto como argumento de construcción, salvo
+	\texttt{admin-service}, que tiene uno propio porque necesita el cliente de PostgreSQL~16 para generar
+	y restaurar respaldos. Las aplicaciones web se publican con una imagen de Nginx que sirve los archivos
+	compilados. La Tabla~\ref{tab:contenedores} resume los contenedores por servidor.
+
 	\rowcolors{2}{rowblue}{white}
-	
 	\small
 	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
-	
-	\begin{longtable}{|p{3.4cm}|p{3.0cm}|p{7.6cm}|}
-		\caption{Matriz de despliegue en contenedores}
+	\begin{longtable}{|p{2.5cm}|L{4.8cm}|L{3.0cm}|L{4.2cm}|}
+		\caption{Contenedores por servidor}
 		\label{tab:contenedores} \\
 		\hline
 		\rowcolor{headerblue}
-		\headercell{Contenedor} & \headercell{Servidor} & \headercell{Contenido} \\
+		\headercell{Servidor} & \headercell{Contenedores} & \headercell{Puertos} &
+		\headercell{Memoria} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
-		\headercell{Contenedor} & \headercell{Servidor} & \headercell{Contenido} \\
+		\headercell{Servidor} & \headercell{Contenedores} & \headercell{Puertos} &
+		\headercell{Memoria} \\
 		\hline
 		\endhead
-	
-		Base de datos & Aplicación & PostgreSQL 16 con almacenamiento persistente \\ \hline
-		\texttt{auth-service} & Aplicación & Imagen dedicada del servicio de autenticación \\ \hline
-		\texttt{quejas-service} & Aplicación & Imagen dedicada del servicio de quejas \\ \hline
-		\texttt{notificaciones-\allowbreak service} & Aplicación & Imagen dedicada del servicio de
-		notificaciones \\ \hline
-		\texttt{catalogo-\allowbreak service} & Aplicación & Imagen dedicada del servicio de catálogo \\ \hline
-		\texttt{admin-service} & Aplicación & Imagen propia que incluye el cliente de la base de
-		datos, necesario para generar y restaurar respaldos \\ \hline
-		\texttt{revision-\allowbreak service} & Aplicación & Imagen dedicada del servicio de revisión \\ \hline
-		\texttt{chatbot-\allowbreak service} & Aplicación & Imagen dedicada del servicio de preguntas frecuentes
-		\\ \hline
-		Portal del quejoso & Acceso público & Servidor de estáticos con la aplicación compilada
-		\\ \hline
-		Consola de administración & Acceso público & Servidor de estáticos con la aplicación compilada
-		\\ \hline
-		Panel de revisión & Acceso público & Servidor de estáticos con la aplicación compilada
-		\\ \hline
-		Proxy inverso & Acceso público & Nginx con la configuración de enrutamiento y el certificado
-		de transporte \\ \hline
+		Publicación & \texttt{router-nginx} & 80, 443 (público) & --- \\ \hline
+		Publicación & \texttt{defensoria-web}, \texttt{admin-web}, \texttt{revision-web},
+		\texttt{primer-contacto-web}, \texttt{subdefensoria-web} & 8090, 8091, 8092, 8094, 8095 (locales) &
+		--- \\ \hline
+		Aplicación & \texttt{quejas-service} & 8084 & 1~GB, montón de 640~MB \\ \hline
+		Aplicación & \texttt{auth-service}, \texttt{notificaciones-service}, \texttt{catalogo-service},
+		\texttt{admin-service}, \texttt{revision-service}, \texttt{chatbot-service},
+		\texttt{denunciado-service}, \texttt{primer-contacto-service}, \texttt{subdefensoria-service} &
+		8083, 8085--8089, 8094, 8082, 8091 & 512~MB, montón de 320~MB \\ \hline
+		Aplicación & \texttt{antecedentes-service}, \texttt{resumen-service} & 8093, 8090 & Según el modelo \\ \hline
+		Datos & \texttt{defensoria-db} (PostgreSQL 16) & 5432 & --- \\ \hline
 	\end{longtable}
-	
 	\normalsize
-	\setlength{\tabcolsep}{6pt}
-	\renewcommand{\arraystretch}{1}
-	
-	\subsubsection{Configuración externalizada}
-	Cada microservicio monta su configuración de producción como un volumen del contenedor, en lugar
-	de incluirla en la imagen. La consecuencia práctica es una distinción importante en el
-	procedimiento de operación: un cambio de configuración ---una dirección, un tiempo de
-	expiración--- se aplica editando el archivo montado y reiniciando el contenedor, mientras que un
-	cambio de lógica exige recompilar el servicio, generar un artefacto nuevo y reconstruir la
-	imagen. Esta separación es la que permite que la misma imagen sirva en cualquier ambiente sin
-	reconstruirse, tal como se expuso en la Sección~\ref{sec:tecnologias}.
-	
-	Durante la operación apareció una consecuencia no evidente de este esquema: editar el archivo de
-	configuración en el servidor anfitrión no basta para que el contenedor lo tome, porque el punto de
-	montaje conserva la referencia al archivo original. Es necesario reiniciar el contenedor, no solo
-	recargar el servicio. Se documenta porque es una fuente de diagnósticos erróneos: el archivo se ve
-	correcto en el servidor y el servicio sigue comportándose como antes.
-	
-	\subsubsection{Publicación segura y cifrado del canal}
-	La publicación al exterior se resolvió en tres pasos. Primero se restringió el cortafuegos del
-	servidor de aplicación para que los puertos de los microservicios y de la base de datos aceptaran
-	conexiones únicamente desde la dirección del servidor de acceso público, dejando fuera cualquier
-	otro origen de Internet. Después se configuró el proxy inverso del servidor de acceso público con
-	las reglas de enrutamiento de la Tabla~\ref{tab:enrutamiento}. Por último se emitió el certificado
-	de transporte mediante el método de validación por directorio web, se reconfiguró el proxy para
-	atender el puerto cifrado y se dejó el puerto sin cifrar únicamente para redirigir el tráfico y
-	atender la renovación automática del certificado.
-	
-	Durante este proceso se documentaron dos incidentes que conviene registrar por su valor
-	diagnóstico. El primero fue una aparente imposibilidad de alcanzar los puertos web del servidor
-	de acceso público desde el exterior, mientras que el puerto de administración remota respondía
-	con normalidad. Tras descartar de forma sistemática la configuración del servicio, la publicación
-	del contenedor y el cortafuegos local, se identificó que la causa era una regla de cortafuegos
-	del proveedor que estaba guardada pero no sincronizada con la máquina virtual: existía en el panel
-	de control pero no se había aplicado. El segundo fue un aviso recurrente del motor de contenedores
-	sobre una red virtual mal configurada, que provenía de un intento previo de crear una red propia
-	que finalmente no se utilizó; su eliminación resolvió el aviso. Ambos casos ilustran un principio
-	de diagnóstico útil: cuando un componente responde de forma local y no desde el exterior, el
-	problema no está en el componente sino en el camino.
-	
-	\subsection{Evaluación del clasificador de competencia}
-	\label{sec:eval_clasificador}
-	El clasificador se evaluó de forma independiente, conforme al protocolo definido en la
-	Sección~\ref{sec:validacion_robusta}. Se construyeron ocho configuraciones que combinan las dos
-	representaciones semánticas del texto con los cuatro clasificadores descritos en el marco
-	teórico, y se evaluaron todas bajo el mismo procedimiento para que la comparación fuera válida.
-	
-	El protocolo aplicado tiene tres características que conviene explicitar, porque son las que
-	impiden que las métricas resulten optimistas. La primera es la partición en tres subconjuntos:
-	entrenamiento, validación cruzada dentro del entrenamiento, y un subconjunto de prueba aislado
-	por completo durante el ajuste de hiperparámetros. La segunda es la estratificación de los
-	pliegues, que preserva la proporción de clases en cada uno y evita que un pliegue quede sin
-	ejemplos de la clase minoritaria. La tercera, y la más determinante, es que el criterio de
-	selección del modelo final es su desempeño en modo autónomo ---sin los atributos jurídicos
-	anotados--- porque ese es el escenario real de producción, en el que el quejoso redacta
-	libremente sin conocer la normativa.
-	
-	% PENDIENTE: insertar aquí la tabla de resultados de las 8 configuraciones
-	% (F1 en validación cruzada, desviación estándar entre pliegues, F1 en el subconjunto
-	% de prueba con y sin atributos jurídicos) y las matrices de confusión del modelo
-	% seleccionado. Falta que el autor proporcione las métricas.
-	
-	Los resultados numéricos de las ocho configuraciones, las matrices de confusión del modelo
-	seleccionado y el análisis de los casos mal clasificados se presentan más adelante en esta misma
-	sección.
-	
-	Una advertencia metodológica debe acompañar a cualquier lectura de estas métricas. Conforme a lo
-	declarado en la Sección~\ref{sec:limitaciones}, el corpus con el que se entrenó y validó el
-	clasificador es un conjunto sintético construido por el equipo de desarrollo, porque a la fecha
-	de elaboración de este documento la Defensoría no ha entregado los expedientes históricos reales
-	y anonimizados solicitados. En consecuencia, los valores reportados caracterizan el
-	comportamiento del modelo sobre la distribución de ese corpus, no sobre la distribución real de
-	las quejas que recibe la institución, y deben considerarse preliminares y sujetos a recalibración.
-	
-	\subsection{Pruebas y verificación}
-	\label{sec:pruebas}
-	La verificación del sistema se realizó en cuatro niveles, cada uno atendiendo un tipo distinto de
-	defecto.
-	
-	\textbf{Verificación de compilación.} Cada microservicio se compila y empaqueta antes de
-	desplegarse, y cada aplicación web se compila en modo de producción. Este nivel detecta errores
-	de tipo y de plantilla, que en un lenguaje de tipado estático constituyen una fracción
-	significativa de los defectos posibles.
-	
-	\textbf{Verificación de puntos de acceso.} Cada punto de acceso se probó de forma individual
-	contra el servicio en ejecución, verificando el código de respuesta y la estructura del cuerpo.
-	Este nivel detecta errores de configuración de seguridad ---un punto de acceso que debía ser
-	público y exige token, o al contrario--- que la compilación no puede detectar.
-	
-	\textbf{Verificación de integración a través del proxy.} Cada ruta pública se probó desde el
-	exterior, atravesando la cadena completa: proxy inverso, cortafuegos, microservicio y base de
-	datos. Este nivel es el que detecta los problemas de enrutamiento y de cortafuegos, y fue el que
-	permitió aislar los incidentes descritos en la Sección~\ref{sec:impl_despliegue}. El criterio de
-	verificación aquí es específico: una respuesta de error generada por el servicio de destino
-	constituye una prueba exitosa de conectividad, mientras que una expiración del tiempo de espera
-	indica un problema en el camino.
-	
-	\textbf{Verificación funcional de los flujos.} Los flujos completos de cada actor se ejecutaron
-	manualmente desde el navegador, siguiendo los casos de uso de la Sección~\ref{sec:casos_uso}:
-	presentar una queja sin cuenta, activarla, iniciar sesión, editar, validar desde recepción,
-	rechazar, turnar y consultar el historial exportado.
-	
-	Un límite de este esquema de verificación debe declararse con claridad: el proyecto no cuenta con
-	pruebas automatizadas ---unitarias, de integración o de extremo a extremo--- ni con un flujo de
-	integración continua que las ejecute. Toda la verificación descrita se realizó de forma manual.
-	Esto significa que una modificación futura puede reintroducir un defecto ya corregido sin que
-	nada lo detecte de forma automática, y constituye la deuda técnica más relevante del proyecto en
-	materia de calidad.
-	
+
+	Todos los contenedores se crean con la política de reinicio \texttt{always} y el servicio de reinicio
+	de Podman habilitado, de modo que se levantan solos si terminan o si el servidor se reinicia
+	(RNF-G04). Los servicios Java propios se ejecutan además con la opción
+	\texttt{-XX:+ExitOnOutOfMemoryError}: si agotan la memoria, el registro muestra el error antes de que
+	el contenedor se reinicie, en lugar de una terminación silenciosa por parte del núcleo.
+
+	\subsubsection{Guiones de despliegue}
+	El despliegue se automatizó con guiones de Bash, uno por servidor, en lugar de una plataforma de
+	orquestación, conforme a la escala del proyecto (Sección~\ref{sec:tecnologias}):
+
+	\begin{itemize}
+		\item \texttt{podman-compose.sh} construye la imagen y crea el contenedor de cada microservicio con
+		su puerto, memoria, variables y carpeta de configuración (\texttt{up}, \texttt{up-container},
+		\texttt{delete}).
+		\item \texttt{podman-compose-bd.sh} crea la base, aplica el cortafuegos de la base, carga los datos
+		de referencia de forma idempotente y transaccional, y genera o restaura respaldos comprimidos. Un
+		respaldo diario se programa a las 4:00 con \texttt{cron}.
+		\item \texttt{firewall-backend.sh} restringe los puertos 8082 a 8094 a conexiones desde el servidor
+		de publicación.
+		\item Un guion por aplicación web reconstruye su contenedor a partir de la carpeta compilada.
+	\end{itemize}
+
+	Los cortafuegos se implementaron con reglas en la tabla \texttt{raw} de \texttt{iptables}, que se
+	evalúa antes que las reglas de traducción que inserta Podman al publicar un puerto; una regla de
+	\texttt{ufw} sobre el mismo puerto no habría tenido efecto (Sección~\ref{sec:tecnologias}). Las reglas
+	se limitan a la interfaz pública del servidor, de modo que no afectan las llamadas entre contenedores.
+
+	\subsubsection{Publicación segura y configuración del proxy}
+	El proxy público redirige todo el tráfico HTTP a HTTPS con una respuesta 301, acepta solo TLS 1.2 y
+	1.3 con el certificado de Let's Encrypt renovado por Certbot, y limita las peticiones a 100~MB. Además:
+
+	\begin{itemize}
+		\item Bloquea con 403 las rutas internas de notificaciones e ingesta
+		(Tabla~\ref{tab:enrutamiento}).
+		\item Comprime con \texttt{gzip} los archivos JavaScript, CSS y SVG, pero no las respuestas JSON de
+		la API, para no exponerse a ataques de tipo BREACH.
+		\item Sirve con caché de un año los archivos cuyo nombre incluye un resumen de su contenido, y sin
+		caché el \texttt{index.html} y la API, de modo que cada despliegue se ve de inmediato.
+		\item Reenvía a los servicios la IP real del cliente en los encabezados \texttt{X-Real-IP} y
+		\texttt{X-Forwarded-For}.
+	\end{itemize}
+
+	\subsection{Incidentes de operación y correcciones}
+	\label{sec:incidentes}
+	La operación del sistema en los servidores reveló defectos que las pruebas de compilación no podían
+	detectar. Se documentan porque cada uno originó un requerimiento o una prueba del
+	Capítulo~\ref{cap:pruebas}.
+
+	\paragraph{Peticiones colgadas al registrar una queja.} El formulario público mostraba un error,
+	aunque la queja sí se guardaba. La causa era una regla de cortafuegos que descartaba sin responder
+	todo el tráfico hacia los puertos de los servicios que no viniera del servidor de publicación,
+	incluidas las llamadas del servicio de quejas al de notificaciones; como el cliente HTTP no tenía
+	tiempo de espera, la petición esperaba hasta que el proxy la cortaba. La corrección limitó la regla a
+	la interfaz pública y añadió tiempos de espera a todos los clientes HTTP.
+
+	\paragraph{Terminación por memoria al recibir evidencias grandes.} Con seis archivos, uno de
+	12.5~MB, el servicio de quejas terminaba sin mensaje de error y el navegador recibía un error 502. El
+	núcleo lo detenía por exceder su límite de memoria, porque cada archivo se copia varias veces en
+	memoria al guardarse como contenido binario. Se dimensionó el contenedor a 1~GB con un montón de
+	640~MB, suficiente para una petición de 100~MB, y se añadió la terminación explícita por falta de
+	memoria y el reinicio automático.
+
+	\paragraph{Correo de observaciones que nunca se enviaba.} Recepción y el servicio de quejas invocaban
+	un punto de envío de correo que no existía en el servicio de notificaciones; como la llamada era de
+	mejor esfuerzo, el error solo quedaba en el registro y el quejoso nunca recibía las observaciones. Se
+	implementó el punto de acceso con el contrato que ya usaban los clientes. El incidente mostró el
+	límite de la degradación controlada: ocultar un fallo al usuario no debe ocultarlo también al equipo,
+	y motivó la revisión de los registros como parte de las pruebas.
+
+	\paragraph{Rutas internas expuestas a Internet.} Las rutas de envío de correo y registro de
+	notificaciones eran públicas para que los servicios las invocaran sin token, y el proxy reenviaba
+	todo el prefijo, de modo que cualquiera podía enviar correos desde la cuenta de la Defensoría. Se
+	bloquearon en el proxy, y el mismo criterio se aplicó a las rutas de ingesta de Primer Contacto y
+	Subdefensoría.
+
+	\paragraph{Pérdida de datos en Primer Contacto y Subdefensoría.} Ambos servicios se desarrollaron
+	inicialmente con una base en memoria, de modo que sus expedientes se perdían con cada reinicio y el
+	personal no se encontraba en su copia de la tabla de cuentas. Se migraron a la base compartida.
+
+
 	\subsection{Estado de avance por componente}
 	\label{sec:estado_avance}
-	La Tabla~\ref{tab:estado_avance} presenta el balance de lo implementado al cierre de esta etapa.
-	Se incluye de forma deliberada la columna de lo no implementado, porque el valor de este balance
-	para quien retome el proyecto está en lo que falta, no en lo que ya está.
-	
+	La Tabla~\ref{tab:estado_avance} resume el estado de cada componente al cierre del proyecto, con las
+	limitaciones conocidas que no impiden su operación.
+
 	\rowcolors{2}{rowblue}{white}
-	
 	\small
-	\renewcommand{\arraystretch}{1.25}
+	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
-	
-	\begin{longtable}{|p{3.7cm}|p{2.1cm}|p{8.2cm}|}
-		\caption{Estado de avance por componente al cierre de la etapa}
+	\begin{longtable}{|p{3.5cm}|L{2.2cm}|L{8.8cm}|}
+		\caption{Estado de avance por componente}
 		\label{tab:estado_avance} \\
 		\hline
 		\rowcolor{headerblue}
 		\headercell{Componente} & \headercell{Estado} & \headercell{Observaciones} \\
 		\hline
 		\endfirsthead
-	
 		\hline
 		\rowcolor{headerblue}
 		\headercell{Componente} & \headercell{Estado} & \headercell{Observaciones} \\
 		\hline
 		\endhead
-	
-		Portal del quejoso & Operativo & Los diecisiete requerimientos funcionales del actor están
-		implementados y desplegados \\ \hline
-	
-		Panel de revisión & Operativo & Los trece requerimientos del actor de recepción están
-		implementados \\ \hline
-	
-		Consola de administración & Operativo & Los nueve requerimientos de administración están
-		implementados \\ \hline
-	
-		Servicios de análisis, subdefensoría y resolución & No iniciado & Los tres roles existen como
-		cuentas y como catálogo de turnado, pero no cuentan con interfaz ni permisos propios \\ \hline
-	
-		Integración del clasificador & Pendiente & El componente se desarrolló y evaluó de forma
-		independiente; su exposición como servicio de la plataforma queda para la etapa siguiente
-		\\ \hline
-	
-		Cierre de sesión por inactividad & Pendiente & La expiración del token limita la ventana de
-		exposición, pero no equivale a un cierre por inactividad \\ \hline
-	
-		Pruebas automatizadas & No iniciado & Toda la verificación es manual; no existe integración
-		continua \\ \hline
-	
-		Corrección de hallazgos de análisis estático & Pendiente & Las vulnerabilidades de
-		neutralización de entradas y de generación pseudoaleatoria identificadas requieren remediación
-		prioritaria \\ \hline
-	
-		Separación de los cortafuegos por servidor & Pendiente & Ambos servidores comparten el mismo
-		grupo de reglas; no hay exposición real hoy, pero conviene separarlos \\ \hline
+		Portal del quejoso & Desplegado & El perfil valida el formato del teléfono pero no aplica todavía
+		las mismas reglas del registro al correo personal y al domicilio (CU-QJ-05); la cancelación no
+		registra el motivo (CU-QJ-15). \\ \hline
+		Respuesta de la persona señalada & Desplegado & El folio llega en el enlace; falta un token que
+		garantice que solo la persona señalada real responda. \\ \hline
+		Panel de Recepción & Desplegado & El rango de fechas del historial filtra por la fecha de registro,
+		no por la de atención; el visor de PDF del navegador permite descargar la evidencia que se
+		visualiza (CU-REC-03). \\ \hline
+		Panel de Primer Contacto & Desplegado & Todos los expedientes son visibles para todos los analistas;
+		la asignación por analista está pendiente de acuerdo con la Defensoría. \\ \hline
+		Panel de Subdefensoría & Desplegado & ``Mis expedientes'' muestra todos los expedientes hasta que se
+		implemente la asignación por abogado. \\ \hline
+		Panel de la Defensora & Desplegado & Completo según el documento de diseño. \\ \hline
+		Componentes de IA & Desplegados & Su calidad depende del corpus disponible
+		(Sección~\ref{sec:limitaciones}). \\ \hline
+		Seguridad transversal & Con pendientes & Los secretos de configuración residen en texto plano en el
+		repositorio; el proxy no envía HSTS; la descarga y restauración de respaldos no valida que el nombre
+		de archivo permanezca dentro de la carpeta de respaldos; no existe cierre de sesión por inactividad
+		en los paneles del personal. Se detallan en la Sección~\ref{sec:pruebas_seguridad}. \\ \hline
 	\end{longtable}
-	
 	\normalsize
-	\setlength{\tabcolsep}{6pt}
-	\renewcommand{\arraystretch}{1}

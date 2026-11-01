@@ -566,8 +566,9 @@ button {
    comparten Panel general, Quejas, Quejas por unidad y el detalle de una queja; mismo
    lenguaje visual que Recepción y Primer Contacto.
    ===================================================================================== */
+/* Sin ancho máximo: con el menú compacto la página aprovecha toda la pantalla. */
 .seg-pagina {
-  max-width: 1440px;
+  max-width: none;
 }
 
 .seg-encabezado {
@@ -1486,4 +1487,12 @@ button {
   .seg-modal-cabeza h2 {
     font-size: 21px;
   }
+}
+
+/* Panel de la Defensora: la vista previa al arrastrar una sección vive fuera del componente. */
+.cdk-drag-preview {
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.25);
+  opacity: 0.92;
+  overflow: hidden;
 }
