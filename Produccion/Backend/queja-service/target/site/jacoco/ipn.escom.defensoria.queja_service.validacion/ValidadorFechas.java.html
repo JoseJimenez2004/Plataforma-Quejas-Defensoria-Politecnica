@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ValidadorFechas.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.queja_service.validacion</a> &gt; <span class="el_source">ValidadorFechas.java</span></div><h1>ValidadorFechas.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.queja_service.validacion;
+
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+
+/**
+ * Reglas de fecha del CU-Q01, aplicadas en el microservicio (fuente de verdad).
+ *
+ * El &quot;hoy&quot; y el &quot;año en curso&quot; se calculan con el reloj del servidor en zona
+ * America/Mexico_City, NO con constantes en código: si se dejara un año fijo, la regla
+ * quedaría obsoleta el 1 de enero siguiente sin que nadie se dé cuenta.
+ */
+public final class ValidadorFechas {
+
+<span class="fc" id="L16">    private static final Clock RELOJ = Clock.system(ZoneId.of(ReglasQueja.ZONA_HORARIA));</span>
+
+    private ValidadorFechas() {
+    }
+
+    public static LocalDate hoy() {
+<span class="fc" id="L22">        return LocalDate.now(RELOJ);</span>
+    }
+
+    /**
+     * Último día de nacimiento aceptable: 31 de diciembre del año pasado.
+     * Regla de negocio: durante el año en curso nadie puede declarar haber nacido ese año.
+     */
+    public static LocalDate fechaNacimientoMaxima() {
+<span class="fc" id="L30">        return LocalDate.of(hoy().getYear() - 1, 12, 31);</span>
+    }
+
+    public static void validarFechaNacimiento(LocalDate fechaNacimiento) {
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (fechaNacimiento == null) {</span>
+<span class="fc" id="L35">            throw new ValidacionException(&quot;Falta la fecha de nacimiento.&quot;);</span>
+        }
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (fechaNacimiento.isBefore(ReglasQueja.FECHA_NACIMIENTO_MINIMA)) {</span>
+<span class="fc" id="L38">            throw new ValidacionException(</span>
+                    &quot;La fecha de nacimiento no puede ser anterior al 1 de enero de 1920.&quot;);
+        }
+<span class="fc" id="L41">        LocalDate maxima = fechaNacimientoMaxima();</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (fechaNacimiento.isAfter(maxima)) {</span>
+<span class="fc" id="L43">            throw new ValidacionException(</span>
+                    &quot;La fecha de nacimiento no puede ser posterior al 31 de diciembre de &quot;
+<span class="fc" id="L45">                            + maxima.getYear() + &quot;.&quot;);</span>
+        }
+<span class="fc" id="L47">    }</span>
+
+    public static void validarFechaHechos(LocalDate fechaHechos, LocalDate fechaNacimiento) {
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (fechaHechos == null) {</span>
+<span class="fc" id="L51">            throw new ValidacionException(&quot;Falta la fecha de los hechos.&quot;);</span>
+        }
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (fechaHechos.isAfter(hoy())) {</span>
+<span class="fc" id="L54">            throw new ValidacionException(&quot;La fecha de los hechos no puede ser posterior a hoy.&quot;);</span>
+        }
+<span class="fc bfc" id="L56" title="All 4 branches covered.">        if (fechaNacimiento != null &amp;&amp; fechaHechos.isBefore(fechaNacimiento)) {</span>
+<span class="fc" id="L57">            throw new ValidacionException(</span>
+                    &quot;La fecha de los hechos no puede ser anterior a tu fecha de nacimiento.&quot;);
+        }
+<span class="fc" id="L60">        validarPlazo(fechaHechos);</span>
+<span class="fc" id="L61">    }</span>
+
+    /** Fecha más antigua aceptada para los hechos: hoy menos {@link ReglasQueja#PLAZO_DIAS_QUEJA}. */
+    public static LocalDate fechaHechosMinima() {
+<span class="fc" id="L65">        return hoy().minusDays(ReglasQueja.PLAZO_DIAS_QUEJA);</span>
+    }
+
+    /**
+     * Candado de 90 días naturales (artículo 13, párrafo tercero). Se aplica en todo registro
+     * nuevo, venga del formulario público, del panel del quejoso o de ventanilla.
+     */
+    public static void validarPlazo(LocalDate fechaHechos) {
+<span class="pc bpc" id="L73" title="1 of 4 branches missed.">        if (fechaHechos != null &amp;&amp; fechaHechos.isBefore(fechaHechosMinima())) {</span>
+<span class="fc" id="L74">            throw new ValidacionException(&quot;Solo se pueden presentar quejas por hechos ocurridos dentro de los últimos &quot;</span>
+                    + ReglasQueja.PLAZO_DIAS_QUEJA + &quot; días naturales (artículo 13, párrafo tercero).&quot;);
+        }
+<span class="fc" id="L77">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

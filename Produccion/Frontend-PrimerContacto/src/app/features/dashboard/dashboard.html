@@ -11,6 +11,16 @@
     </button>
   </div>
 
+  @if (cargando) {
+    <div class="estado-carga" role="status"><mat-icon>hourglass_top</mat-icon> Cargando…</div>
+  } @else if (error) {
+    <div class="estado-carga error" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      No se pudo cargar la información de Inicio.
+      <button mat-stroked-button class="outline-btn" (click)="cargar()"><mat-icon>refresh</mat-icon> Reintentar</button>
+    </div>
+  }
+
   <div class="stats-grid">
     @for (item of resumen; track item.titulo) {
       <div 
@@ -36,7 +46,7 @@
       </div>
 
       <div class="dashboard-list">
-        @if (obtenerListaSeleccionada().length === 0) {
+        @if (!cargando && !error && obtenerListaSeleccionada().length === 0) {
           <p style="color: #6b7280; padding: var(--space-3); text-align: center; font-size: var(--font-size-sm);">
             No hay expedientes en esta categoría.
           </p>
@@ -71,7 +81,11 @@
         </div>
 
         <div class="appointments">
-          @if (citasHoy.length === 0) {
+          @if (errorCitas) {
+            <p style="color: #b42318; padding: var(--space-3); text-align: center; font-size: var(--font-size-sm);">
+              No se pudo cargar la agenda de hoy. <button mat-button (click)="cargar()">Reintentar</button>
+            </p>
+          } @else if (citasHoy.length === 0) {
             <p style="color: #6b7280; padding: var(--space-3); text-align: center; font-size: var(--font-size-sm);">
               No hay citas programadas para hoy.
             </p>
@@ -101,7 +115,7 @@
         </div>
 
         <div class="activity-timeline">
-          @if (actividad.length === 0) {
+          @if (!cargando && !error && actividad.length === 0) {
             <p style="color: #6b7280; padding: var(--space-3); text-align: center; font-size: var(--font-size-sm);">
               No se registra actividad reciente.
             </p>
@@ -115,15 +129,13 @@
                 <div class="activity-title">
                   <strong>{{ item.folio }}</strong>
 
-                  @if (item.prioridad === 'Alta') {
-                    <mat-chip class="priority-high">Alta</mat-chip>
-                  } @else if (item.prioridad === 'Media') {
-                    <mat-chip class="priority-medium">Media</mat-chip>
+                  @if (item.prioridad !== 'Sin asignar') {
+                    <span [class]="'pc-chip ' + clasePrioridad(item.prioridad)">{{ item.prioridad }}</span>
                   }
                 </div>
 
                 <span>{{ item.accion }}</span>
-                <small>Hace {{ item.tiempo }}</small>
+                <small>Recibido el {{ item.tiempo }}</small>
               </div>
             </div>
           }

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegistroManualController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.revision_service.controller</a> &gt; <span class="el_source">RegistroManualController.java</span></div><h1>RegistroManualController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.revision_service.controller;
+
+import java.time.LocalDate;
+
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import ipn.escom.defensoria.revision_service.entity.Queja;
+import ipn.escom.defensoria.revision_service.model.DatosVentanillaRequest;
+import ipn.escom.defensoria.revision_service.model.RegistroManualResponse;
+import ipn.escom.defensoria.revision_service.service.RevisionQuejaService;
+
+/** &quot;Registro Manual de Nueva Queja&quot; -- alta de documentos físicos recibidos en papel. */
+@RestController
+@RequestMapping(&quot;/api/revision/registro-manual&quot;)
+@PreAuthorize(&quot;hasRole('RECEPCIONISTA')&quot;)
+@Tag(name = &quot;Registro Manual&quot;, description = &quot;Alta de quejas recibidas en documento físico&quot;)
+public class RegistroManualController {
+
+    private final RevisionQuejaService revisionService;
+
+<span class="nc" id="L33">    public RegistroManualController(RevisionQuejaService revisionService) {</span>
+<span class="nc" id="L34">        this.revisionService = revisionService;</span>
+<span class="nc" id="L35">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;)
+    @Operation(summary = &quot;Registra una queja recibida en papel y genera su folio de seguimiento&quot;)
+    public ResponseEntity&lt;RegistroManualResponse&gt; registrar(
+            @RequestParam String nombre,
+            @RequestParam String apellido1,
+            @RequestParam(required = false) String apellido2,
+            @RequestParam(required = false) String tipoUsuario,
+            @RequestParam(required = false) String dependenciaClave,
+            @RequestParam(required = false) String numeroOficio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaRecepcionFisica,
+            @RequestParam(required = false) String tipoDocumento,
+            @RequestParam String descripcion,
+            @RequestParam(required = false) String ubicacionFisica,
+            @RequestParam(required = false) MultipartFile archivo,
+            @RequestParam(required = false) String correoContacto,
+            @RequestParam(required = false) String telefonoContacto,
+            Authentication authentication) {
+
+<span class="nc" id="L55">        Queja creada = revisionService.registrarManual(</span>
+                nombre, apellido1, apellido2, tipoUsuario, dependenciaClave, numeroOficio,
+                fechaRecepcionFisica, tipoDocumento, descripcion, ubicacionFisica, archivo,
+<span class="nc" id="L58">                authentication.getName(), correoContacto, telefonoContacto);</span>
+
+<span class="nc" id="L60">        return ResponseEntity.ok(new RegistroManualResponse(</span>
+<span class="nc" id="L61">                creada.getNumeroFolio(), &quot;Entrada registrada. Folio de seguimiento: &quot; + creada.getNumeroFolio()));</span>
+    }
+
+    /**
+     * Segundo paso del registro en ventanilla (2026-10-16): la queja ya se creó con el
+     * formulario público; aquí se marca como recibida en ventanilla y se guardan los datos del
+     * documento físico.
+     */
+    @PostMapping(&quot;/{folio}/ventanilla&quot;)
+    @Operation(summary = &quot;Marca una queja recién capturada como recibida en ventanilla (origen MANUAL)&quot;)
+    public ResponseEntity&lt;java.util.Map&lt;String, String&gt;&gt; marcarVentanilla(
+            @PathVariable String folio,
+            @RequestBody DatosVentanillaRequest datos,
+            Authentication authentication) {
+<span class="nc" id="L75">        revisionService.marcarVentanilla(folio, datos, authentication.getName());</span>
+<span class="nc" id="L76">        return ResponseEntity.ok(java.util.Map.of(&quot;mensaje&quot;, &quot;Queja marcada como recibida en ventanilla.&quot;));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

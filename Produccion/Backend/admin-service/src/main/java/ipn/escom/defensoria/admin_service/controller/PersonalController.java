@@ -25,12 +25,11 @@ import ipn.escom.defensoria.admin_service.service.BitacoraService;
 import ipn.escom.defensoria.admin_service.service.PersonalAdministrativoService;
 import jakarta.servlet.http.HttpServletRequest;
 
-/** Todo este controller es exclusivo de ADMIN_SISTEMAS -- "Usuarios y Roles" del mockup. */
+/** Todo este controller es exclusivo de la Defensora (DEFENSOR) -- "Usuarios y Roles" del mockup. */
 @RestController
 @RequestMapping("/api/admin/personal")
-// La Defensora (DEFENSOR) tiene todas las funciones de administración; ADMIN_SISTEMAS se
-// conserva para la cuenta técnica inicial.
-@PreAuthorize("hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')")
+// Exclusivo de la Defensora (DEFENSOR), que tiene todas las funciones de administración.
+@PreAuthorize("hasRole('DEFENSOR')")
 @Tag(name = "Personal Administrativo", description = "Gestión de usuarios y roles del personal")
 public class PersonalController {
 

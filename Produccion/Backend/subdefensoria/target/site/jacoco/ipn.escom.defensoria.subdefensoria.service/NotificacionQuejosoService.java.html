@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotificacionQuejosoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">NotificacionQuejosoService.java</span></div><h1>NotificacionQuejosoService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import ipn.escom.defensoria.subdefensoria.entity.ExpedienteInvestigacion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
+
+/**
+ * Avisa al quejoso de lo que pasa con su queja en Subdefensoría, con el mismo patrón que
+ * NotificacionQuejosoService de Primer Contacto:
+ *
+ *   POST /api/notificaciones/registrar -&gt; aviso en el centro de notificaciones de su panel;
+ *   POST /api/notificaciones/enviar    -&gt; correo electrónico.
+ *
+ * Ambas llamadas son best-effort: si notificaciones-service no responde, la operación del
+ * subdefensor YA quedó guardada y no se revierte; solo se deja en el log.
+ */
+@Service
+public class NotificacionQuejosoService {
+
+<span class="nc" id="L25">    private static final Logger log = LoggerFactory.getLogger(NotificacionQuejosoService.class);</span>
+
+    private static final String ENDPOINT_REGISTRAR = &quot;/api/notificaciones/registrar&quot;;
+    private static final String ENDPOINT_ENVIAR = &quot;/api/notificaciones/enviar&quot;;
+
+    public static final String TIPO_CAMBIO_ESTATUS = &quot;CAMBIO_ESTATUS&quot;;
+    public static final String TIPO_CONCILIACION = &quot;CONCILIACION&quot;;
+
+    private static final String ENLACE_MIS_QUEJAS = &quot;/panel/mis-quejas/&quot;;
+    private static final String FIRMA = &quot;\n\nDefensoría de los Derechos Politécnicos.&quot;;
+
+    private final RestTemplate restTemplate;
+    private final String notificacionesUrl;
+
+    public NotificacionQuejosoService(
+            RestTemplate restTemplate,
+            @Value(&quot;${notificaciones.service.url:http://localhost:8085}&quot;) String notificacionesUrl
+<span class="nc" id="L42">    ) {</span>
+<span class="nc" id="L43">        this.restTemplate = restTemplate;</span>
+<span class="nc" id="L44">        this.notificacionesUrl = notificacionesUrl;</span>
+<span class="nc" id="L45">    }</span>
+
+    /**
+     * Deja el aviso en el panel del quejoso y le manda el mismo texto por correo. El aviso
+     * abre {@code enlace} (ruta del portal) o, si es null, su queja.
+     */
+    public void notificar(
+            ExpedienteInvestigacion expediente,
+            String tipo,
+            String titulo,
+            String mensaje,
+            String enlace
+    ) {
+<span class="nc" id="L58">        String correo = expediente.getQuejosoCorreo();</span>
+<span class="nc bnc" id="L59" title="All 4 branches missed.">        if (correo == null || correo.isBlank()) {</span>
+<span class="nc" id="L60">            log.warn(&quot;El expediente {} no tiene correo del quejoso; no se notificó: {}&quot;,</span>
+<span class="nc" id="L61">                    expediente.getFolio(), titulo);</span>
+<span class="nc" id="L62">            return;</span>
+        }
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        String folioQueja = expediente.getFolioQueja() != null ? expediente.getFolioQueja() : expediente.getFolio();</span>
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        registrar(correo, tipo, titulo, mensaje, enlace != null ? enlace : ENLACE_MIS_QUEJAS + folioQueja);</span>
+<span class="nc" id="L68">        enviarCorreo(</span>
+                correo,
+                &quot;Defensoría de los Derechos Politécnicos — &quot; + titulo + &quot; (&quot; + folioQueja + &quot;)&quot;,
+<span class="nc" id="L71">                saludo(expediente) + mensaje + FIRMA</span>
+        );
+<span class="nc" id="L73">    }</span>
+
+    private void registrar(String correo, String tipo, String titulo, String mensaje, String enlace) {
+        try {
+<span class="nc" id="L77">            restTemplate.postForObject(</span>
+                    notificacionesUrl + ENDPOINT_REGISTRAR,
+<span class="nc" id="L79">                    Map.of(</span>
+                            &quot;correoDestino&quot;, correo,
+                            &quot;tipo&quot;, tipo,
+                            &quot;titulo&quot;, titulo,
+                            &quot;mensaje&quot;, mensaje,
+                            &quot;enlace&quot;, enlace
+                    ),
+                    String.class
+            );
+<span class="nc" id="L88">        } catch (Exception ex) {</span>
+<span class="nc" id="L89">            log.error(&quot;No se pudo registrar la notificación ({}) para {}: {}&quot;, tipo, correo, ex.getMessage());</span>
+<span class="nc" id="L90">        }</span>
+<span class="nc" id="L91">    }</span>
+
+    private void enviarCorreo(String destinatario, String asunto, String cuerpo) {
+        try {
+<span class="nc" id="L95">            restTemplate.postForObject(</span>
+                    notificacionesUrl + ENDPOINT_ENVIAR,
+<span class="nc" id="L97">                    Map.of(</span>
+                            &quot;destinatario&quot;, destinatario,
+                            &quot;asunto&quot;, asunto,
+                            &quot;cuerpo&quot;, cuerpo
+                    ),
+                    String.class
+            );
+<span class="nc" id="L104">        } catch (Exception ex) {</span>
+<span class="nc" id="L105">            log.error(&quot;No se pudo enviar el correo \&quot;{}\&quot; a {}: {}&quot;, asunto, destinatario, ex.getMessage());</span>
+<span class="nc" id="L106">        }</span>
+<span class="nc" id="L107">    }</span>
+
+    private String saludo(ExpedienteInvestigacion expediente) {
+<span class="nc" id="L110">        String nombre = expediente.getQuejosoNombre();</span>
+<span class="nc bnc" id="L111" title="All 4 branches missed.">        return &quot;Estimado(a) &quot; + (nombre == null || nombre.isBlank() ? &quot;quejoso(a)&quot; : nombre) + &quot;,\n\n&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

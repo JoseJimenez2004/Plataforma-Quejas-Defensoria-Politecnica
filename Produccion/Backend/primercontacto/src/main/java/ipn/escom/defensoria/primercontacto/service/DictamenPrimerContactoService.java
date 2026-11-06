@@ -363,6 +363,7 @@ public class DictamenPrimerContactoService {
                         .abogadoAsesorNombre(dictamen.getResponsableTurno())
                         .quejoso(quejoso)
                         .observacionesAnalista(dictamen.getObservaciones())
+                        .prioridad(expediente.getPrioridad())
                         .build();
 
         try {

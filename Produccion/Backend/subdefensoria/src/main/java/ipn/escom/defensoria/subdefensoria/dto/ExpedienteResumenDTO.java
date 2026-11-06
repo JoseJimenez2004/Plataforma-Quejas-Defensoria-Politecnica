@@ -34,4 +34,7 @@ public class ExpedienteResumenDTO {
 
     /* Solo si toca emitir oficio: SOLICITUD_INFORMACION. */
     private String siguienteFase;
+
+    /* BAJA | MEDIA | ALTA | URGENTE, o null ("Sin asignar"). */
+    private String prioridad;
 }

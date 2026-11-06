@@ -1,0 +1,7 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+,ipn.escom.defensoria.notificaciones_service.exception,AccesoNotificacionDenegadoException,0,4,0,0,0,2,0,1,0,1
+,ipn.escom.defensoria.notificaciones_service.exception,NotificacionNoEncontradaException,0,4,0,0,0,2,0,1,0,1
+,ipn.escom.defensoria.notificaciones_service.exception,DatosNotificacionInvalidosException,0,4,0,0,0,2,0,1,0,1
+,ipn.escom.defensoria.notificaciones_service.controller,NotificacionController,130,0,2,0,29,0,9,0,8,0
+,ipn.escom.defensoria.notificaciones_service.service,CorreoService,17,210,5,27,2,49,5,22,0,11
+,ipn.escom.defensoria.notificaciones_service.service,NotificacionService,5,110,0,12,1,22,1,12,1,6

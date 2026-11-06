@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConciliacionPrimerContactoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.controller</a> &gt; <span class="el_source">ConciliacionPrimerContactoController.java</span></div><h1>ConciliacionPrimerContactoController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.controller;
+
+import ipn.escom.defensoria.primercontacto.dto.AcuerdoConciliacionDTO;
+import ipn.escom.defensoria.primercontacto.dto.CrearConciliacionDTO;
+import ipn.escom.defensoria.primercontacto.service.AnalistaAutenticadoService;
+import ipn.escom.defensoria.primercontacto.service.ConciliacionPrimerContactoService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/*
+ * CU-PC-10: proponer y listar acuerdos de conciliación.
+ */
+@RestController
+@RequestMapping(&quot;/api/primer-contacto/conciliaciones&quot;)
+public class ConciliacionPrimerContactoController {
+
+    private final ConciliacionPrimerContactoService conciliacionService;
+    private final AnalistaAutenticadoService analistaAutenticadoService;
+
+    public ConciliacionPrimerContactoController(
+            ConciliacionPrimerContactoService conciliacionService,
+            AnalistaAutenticadoService analistaAutenticadoService
+<span class="nc" id="L27">    ) {</span>
+<span class="nc" id="L28">        this.conciliacionService = conciliacionService;</span>
+<span class="nc" id="L29">        this.analistaAutenticadoService = analistaAutenticadoService;</span>
+<span class="nc" id="L30">    }</span>
+
+    @PostMapping
+    public ResponseEntity&lt;AcuerdoConciliacionDTO&gt; proponer(
+            @Valid @RequestBody CrearConciliacionDTO dto,
+            Authentication authentication
+    ) {
+<span class="nc" id="L37">        return ResponseEntity.ok(</span>
+<span class="nc" id="L38">                conciliacionService.proponer(</span>
+                        dto,
+<span class="nc" id="L40">                        analistaAutenticadoService.obtenerAnalista(authentication)</span>
+                )
+        );
+    }
+
+    /*
+     * Acuerdos del expediente (folio PC-...), del más reciente al más antiguo.
+     */
+    @GetMapping(&quot;/expediente/{folio}&quot;)
+    public List&lt;AcuerdoConciliacionDTO&gt; listar(
+            @PathVariable String folio
+    ) {
+<span class="nc" id="L52">        return conciliacionService.listar(folio);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

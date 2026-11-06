@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IndicadoresQuejasService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.admin_service.service</a> &gt; <span class="el_source">IndicadoresQuejasService.java</span></div><h1>IndicadoresQuejasService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.admin_service.service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.admin_service.model.IndicadoresQuejasModel;
+import ipn.escom.defensoria.admin_service.model.IndicadoresQuejasModel.ConteoModel;
+
+/**
+ * Cuenta quejas directamente en defensoria_db. Solo lectura: admin-service no mapea la tabla
+ * quejas como entidad (es de queja-service), por eso se usa SQL y no JPA.
+ */
+@Service
+public class IndicadoresQuejasService {
+
+<span class="fc" id="L22">    private static final Logger log = LoggerFactory.getLogger(IndicadoresQuejasService.class);</span>
+
+    /** Turnadas = TURNADA o cualquier estado posterior de Primer Contacto / Subdefensoría. */
+<span class="fc" id="L25">    private static final java.util.List&lt;String&gt; TURNADA_O_POSTERIOR = java.util.List.of(</span>
+            &quot;TURNADA&quot;,
+            &quot;EN_ANALISIS&quot;, &quot;PROCEDENTE&quot;, &quot;IMPROCEDENTE&quot;, &quot;REMITIDA&quot;,
+            &quot;RECIBIDA_SUBDEFENSORIA&quot;, &quot;EN_INVESTIGACION&quot;, &quot;EN_ESPERA_OFICIO&quot;, &quot;ELABORO_ACUERDO&quot;,
+            &quot;PENDIENTE_CONCILIACION&quot;, &quot;PENDIENTE_CONCLUSION&quot;, &quot;CONCLUIDA&quot;);
+
+    private final JdbcTemplate jdbc;
+
+<span class="nc" id="L33">    public IndicadoresQuejasService(JdbcTemplate jdbc) {</span>
+<span class="nc" id="L34">        this.jdbc = jdbc;</span>
+<span class="nc" id="L35">    }</span>
+
+    public IndicadoresQuejasModel obtener() {
+        try {
+<span class="nc" id="L39">            Map&lt;String, Long&gt; porEstatus = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L40">            jdbc.query(&quot;SELECT COALESCE(estatus, 'RECIBIDA') AS estatus, COUNT(*) AS total FROM quejas GROUP BY 1&quot;,</span>
+<span class="nc" id="L41">                    rs -&gt; { porEstatus.merge(rs.getString(&quot;estatus&quot;), rs.getLong(&quot;total&quot;), Long::sum); });</span>
+<span class="nc" id="L42">            long total = porEstatus.values().stream().mapToLong(Long::longValue).sum();</span>
+
+<span class="nc" id="L44">            long ultimos30 = contar(&quot;SELECT COUNT(*) FROM quejas WHERE fecha_creacion &gt;= NOW() - INTERVAL '30 days'&quot;);</span>
+            // fecha_turnado solo se llena al turnar: cuenta aunque la queja ya haya avanzado a
+            // Primer Contacto o Subdefensoría (que desde 2026-10-13 escriben quejas.estatus).
+<span class="nc" id="L47">            long turnadasMes = contar(&quot;SELECT COUNT(*) FROM quejas &quot;</span>
+                    + &quot;WHERE fecha_turnado &gt;= date_trunc('month', NOW())&quot;);
+<span class="nc" id="L49">            long respuestas = contarSiExiste(&quot;respuestas_denunciado&quot;, &quot;SELECT COUNT(*) FROM respuestas_denunciado&quot;);</span>
+
+<span class="nc" id="L51">            List&lt;ConteoModel&gt; unidades = jdbc.query(</span>
+                    &quot;SELECT q.unidad_academica_clave AS clave, &quot;
+                    + &quot;COALESCE(d.abreviatura, d.nombre, q.unidad_academica_clave) AS etiqueta, COUNT(*) AS total &quot;
+                    + &quot;FROM quejas q LEFT JOIN dependencias d ON d.clave = q.unidad_academica_clave &quot;
+                    + &quot;WHERE q.unidad_academica_clave IS NOT NULL &quot;
+                    + &quot;GROUP BY 1, 2 ORDER BY 3 DESC, 2 LIMIT 5&quot;,
+<span class="nc" id="L57">                    (rs, i) -&gt; new ConteoModel(rs.getString(&quot;clave&quot;), rs.getString(&quot;etiqueta&quot;), rs.getLong(&quot;total&quot;)));</span>
+
+<span class="nc" id="L59">            List&lt;ConteoModel&gt; porMes = jdbc.query(</span>
+                    &quot;SELECT to_char(m.mes, 'YYYY-MM') AS clave, to_char(m.mes, 'YYYY-MM') AS etiqueta, &quot;
+                    + &quot;COUNT(q.id) AS total &quot;
+                    + &quot;FROM generate_series(date_trunc('month', NOW()) - INTERVAL '5 months', &quot;
+                    + &quot;date_trunc('month', NOW()), INTERVAL '1 month') AS m(mes) &quot;
+                    + &quot;LEFT JOIN quejas q ON date_trunc('month', q.fecha_creacion) = m.mes &quot;
+                    + &quot;GROUP BY m.mes ORDER BY m.mes&quot;,
+<span class="nc" id="L66">                    (rs, i) -&gt; new ConteoModel(rs.getString(&quot;clave&quot;), rs.getString(&quot;etiqueta&quot;), rs.getLong(&quot;total&quot;)));</span>
+
+<span class="nc" id="L68">            return new IndicadoresQuejasModel(total,</span>
+<span class="nc" id="L69">                    porEstatus.getOrDefault(&quot;RECIBIDA&quot;, 0L),</span>
+<span class="nc" id="L70">                    porEstatus.getOrDefault(&quot;EN_VALIDACION&quot;, 0L),</span>
+<span class="nc" id="L71">                    porEstatus.getOrDefault(&quot;CORREGIDA&quot;, 0L),</span>
+<span class="nc" id="L72">                    TURNADA_O_POSTERIOR.stream().mapToLong(e -&gt; porEstatus.getOrDefault(e, 0L)).sum(),</span>
+<span class="nc" id="L73">                    porEstatus.getOrDefault(&quot;RECHAZADA&quot;, 0L),</span>
+<span class="nc" id="L74">                    porEstatus.getOrDefault(&quot;CANCELADA&quot;, 0L),</span>
+                    ultimos30, turnadasMes, respuestas, unidades, porMes);
+<span class="nc" id="L76">        } catch (Exception ex) {</span>
+            // El dashboard no debe caerse si la tabla quejas aún no existe (queja-service no ha arrancado).
+<span class="nc" id="L78">            log.warn(&quot;No se pudieron calcular los indicadores de quejas: {}&quot;, ex.getMessage());</span>
+<span class="nc" id="L79">            return null;</span>
+        }
+    }
+
+    private long contar(String sql) {
+<span class="nc" id="L84">        Long valor = jdbc.queryForObject(sql, Long.class);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        return valor == null ? 0 : valor;</span>
+    }
+
+    private long contarSiExiste(String tabla, String sql) {
+<span class="nc" id="L89">        Boolean existe = jdbc.queryForObject(&quot;SELECT to_regclass(?) IS NOT NULL&quot;, Boolean.class, &quot;public.&quot; + tabla);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        return Boolean.TRUE.equals(existe) ? contar(sql) : 0;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -13,8 +13,20 @@
 
 .app-content {
   flex: 1;
-  margin-left: 250px;
+  min-width: 0;
+  margin-left: 68px;
   padding: var(--space-6) var(--space-6) 68px var(--content-gutter);
   background: #f4f5f7;
-  min-height: calc(100vh - 72px - 40px);
+  min-height: calc(100vh - 72px - 48px);
+}
+
+
+@media (max-width: 900px) {
+  .app-body {
+    flex-direction: column;
+  }
+
+  .app-content {
+    margin-left: 0;
+  }
 }

@@ -41,7 +41,7 @@ public class WebConfig {
                     "/swagger-ui.html",
                     "/swagger-ui/**"
                 ).permitAll()
-                // El resto requiere token válido; el rol exacto (ADMIN_SISTEMAS) se exige
+                // El resto requiere token válido; el rol exacto (DEFENSOR) se exige
                 // aparte con @PreAuthorize en cada controller.
                 .anyRequest().authenticated()
             )

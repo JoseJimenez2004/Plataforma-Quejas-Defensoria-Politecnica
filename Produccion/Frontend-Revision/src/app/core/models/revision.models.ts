@@ -1,5 +1,4 @@
 export type RolStaff =
-  | 'ADMIN_SISTEMAS'
   | 'RECEPCIONISTA'
   | 'ANALISTA_PRIMER_CONTACTO'
   | 'SUBDEFENSOR'
@@ -7,8 +6,6 @@ export type RolStaff =
 
 export function etiquetaRol(rol: RolStaff | string): string {
   switch (rol) {
-    case 'ADMIN_SISTEMAS':
-      return 'Admin. de Sistemas';
     case 'RECEPCIONISTA':
       return 'Recepcionista';
     case 'ANALISTA_PRIMER_CONTACTO':

@@ -49,12 +49,12 @@
 
     <!-- Columna izquierda: lista de verificación -->
     <div class="card">
-      <h3>Revisión del Quejoso</h3>
+      <h3>Revisión de datos personales</h3>
       <p class="pista-checks">
-        <strong>Instrucción:</strong> Valide los datos asentados en la queja contra las constancias adjuntas.
-        Si la totalidad de los requisitos se satisface afirmativamente (<strong>Sí</strong>), proceda a la
-        canalización. Si determina uno o más incumplimientos (<strong>No</strong>), motive la inconsistencia o
-        señale el requerimiento de prevención correspondiente.
+        <strong>Instrucción:</strong> Valide los datos asentados en la queja contra la identificación oficial
+        presentada. Si la totalidad de los requisitos se satisface afirmativamente (<strong>Sí</strong>), proceda a
+        la canalización. Si determina uno o más incumplimientos (<strong>No</strong>), motive la inconsistencia y
+        señálela.
       </p>
 
       <ol class="lista-preguntas">
@@ -62,7 +62,7 @@
         <li [class.dato-cumplido]="respuestas.nombreCompleto.valor === true"
             [class.dato-fallido]="respuestas.nombreCompleto.valor === false">
           <p class="titulo-requisito">Identidad de la persona quejosa</p>
-          <p class="etiqueta-dato">¿El nombre asentado coincide íntegramente con la identificación oficial adjunta?</p>
+          <p class="etiqueta-dato">¿El nombre asentado coincide íntegramente con la identificación oficial presentada?</p>
           <div class="dato-capturado">
             <strong>{{ queja.nombreCompletoQuejoso }}</strong>
             <span class="meta">{{ queja.correoInstitucional }}</span>
@@ -82,9 +82,8 @@
             [class.dato-fallido]="respuestas.identificacionOficial.valor === false">
           <p class="titulo-requisito">Validez y suficiencia de la documentación de identidad y personalidad jurídica</p>
           <p class="etiqueta-dato">
-            ¿El Quejoso exhibió una identificación oficial con fotografía válida y vigente (y, en su caso, la
-            constancia idónea de representación legal), en términos del Artículo 13 de la Gaceta Politécnica y
-            del apartado de Control y Gestión Administrativa de Documentos?
+            ¿El quejoso exhibió una identificación oficial con fotografía válida y vigente (y, en su caso, el
+            documento que acredite la representación)?
             <button type="button" class="link-listado" (click)="alternarListadoOficial()">
               {{ mostrarListadoOficial ? 'Ocultar catálogo de documentos' : 'Ver catálogo de documentos' }}
             </button>
@@ -127,7 +126,8 @@
             <ul>
               <li>
                 <strong>Presentación personal:</strong> se tendrá por satisfecha con credencial para votar (INE),
-                pasaporte, cédula profesional, cartilla del SMN, licencia de conducir o credencial del IPN vigente.
+                pasaporte, VISA, cédula profesional, cartilla del SMN, constancia de identificación expedida por el
+                municipio o alcaldía, o credencial del IPN vigente.
               </li>
               <li>
                 <strong>Casos de representación:</strong>
@@ -137,9 +137,8 @@
                     de tutela, acompañada de la identificación oficial vigente del padre, madre o tutor legal.
                   </li>
                   <li>
-                    <em>Representación legal / Apoderado:</em> verificar poder notarial o carta poder simple
-                    ratificada/firmada ante dos testigos, adjuntando las identificaciones oficiales de todas las
-                    partes intervinientes.
+                    <em>Representación legal / Apoderado:</em> verificar carta poder simple firmada ante dos
+                    testigos, adjuntando las identificaciones oficiales de todas las partes intervinientes.
                   </li>
                 </ul>
               </li>
@@ -167,7 +166,7 @@
             [class.dato-fallido]="estadoRequisito('numeroIdentificacion') === 'no'">
           <p class="titulo-requisito">Correspondencia de matrícula institucional (en su caso)</p>
           <p class="etiqueta-dato">
-            ¿El número de boleta registrado concuerda con la constancia o credencial institucional aportada?
+            ¿El número de boleta registrado concuerda con la credencial institucional presentada?
           </p>
           <div class="dato-capturado">
             <span class="meta">Dato capturado:</span>
@@ -182,7 +181,7 @@
           @if (respuestas.numeroIdentificacion.valor === 'na') {
             <div class="sub-requisito">
               <p class="etiqueta-dato">
-                ¿El número de empleado registrado concuerda con la constancia o credencial institucional aportada?
+                ¿El número de empleado registrado concuerda con la credencial institucional presentada?
               </p>
               <div class="dato-capturado">
                 <span class="meta">Dato capturado:</span>
@@ -197,35 +196,10 @@
           }
         </li>
 
-        <!-- 4. Oportunidad en la presentación (cómputo de temporalidad) -->
-        <li [class.dato-cumplido]="respuestas.fechaHechos.valor === true"
-            [class.dato-fallido]="respuestas.fechaHechos.valor === false">
-          <p class="titulo-requisito">Oportunidad en la presentación (cómputo de temporalidad)</p>
-          <p class="etiqueta-dato">
-            ¿La queja fue promovida dentro del término de {{ plazoDias }} días naturales posteriores a los hechos
-            imputados?
-          </p>
-          <div class="dato-capturado">
-            @if (diasDesdeHechos !== null) {
-              <span class="meta">Cálculo automático del sistema:</span>
-              <span class="computo">
-                Fecha de hechos: <strong>{{ fechaCorta(queja.fechaHechos) }}</strong>
-                <span class="separador">|</span>
-                Presentación: <strong>{{ fechaCorta(queja.fechaCreacion) }}</strong>
-                <span class="separador">|</span>
-                Transcurridos: <strong>{{ diasDesdeHechos | number: '1.0-0' }} {{ diasDesdeHechos === 1 ? 'día' : 'días' }}</strong>
-              </span>
-              <span class="plazo" [class.plazo-ok]="dentroDePlazo" [class.plazo-vencido]="!dentroDePlazo">
-                {{ dentroDePlazo ? 'En término' : 'Término fenecido' }}
-              </span>
-            } @else {
-              <span class="sin-dato">La queja no tiene fecha de los hechos capturada; verifíquela en las constancias.</span>
-            }
-          </div>
-          <ng-container *ngTemplateOutlet="sino; context: { clave: 'fechaHechos' }"></ng-container>
-        </li>
+        <!-- La oportunidad en la presentación (90 días) ya no se revisa aquí: el formulario y el
+             backend impiden registrar hechos con más de 90 días (art. 13, párrafo tercero). -->
 
-        <!-- 5. Identificación de la persona señalada o denunciada -->
+        <!-- 4. Identificación de la persona señalada o denunciada -->
         <li [class.dato-cumplido]="respuestas.datosDenunciado.valor === true"
             [class.dato-fallido]="respuestas.datosDenunciado.valor === false">
           <p class="titulo-requisito">Identificación de la persona señalada o denunciada</p>

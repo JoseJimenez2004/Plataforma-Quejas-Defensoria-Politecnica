@@ -5,3 +5,14 @@
 .tabla-card .sd-vacio {
   padding: 14px 10px;
 }
+
+/* SD-5: segunda línea con lo que está pasando con la queja. */
+.paso-desc {
+  display: block;
+  margin-top: 2px;
+  color: var(--texto-suave, #6b7280);
+  font-style: italic;
+}
+
+.paso-desc.nivel-crit { color: var(--peligro, #b42318); font-style: normal; font-weight: 600; }
+.paso-desc.nivel-warn { color: #a15c07; }

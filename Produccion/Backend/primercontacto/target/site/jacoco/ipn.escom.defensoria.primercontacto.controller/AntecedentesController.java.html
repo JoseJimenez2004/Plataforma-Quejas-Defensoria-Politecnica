@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AntecedentesController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.controller</a> &gt; <span class="el_source">AntecedentesController.java</span></div><h1>AntecedentesController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.controller;
+
+import ipn.escom.defensoria.primercontacto.dto.AntecedenteGuardadoDTO;
+import ipn.escom.defensoria.primercontacto.dto.BusquedaAntecedentesDTO;
+import ipn.escom.defensoria.primercontacto.dto.GuardarAntecedentesDTO;
+import ipn.escom.defensoria.primercontacto.service.AnalistaAutenticadoService;
+import ipn.escom.defensoria.primercontacto.service.antecedentes.AntecedentesService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/primer-contacto/antecedentes&quot;)
+public class AntecedentesController {
+
+    private final AntecedentesService antecedentesService;
+    private final AnalistaAutenticadoService analistaAutenticadoService;
+
+    public AntecedentesController(
+            AntecedentesService antecedentesService,
+            AnalistaAutenticadoService analistaAutenticadoService
+<span class="nc" id="L25">    ) {</span>
+<span class="nc" id="L26">        this.antecedentesService = antecedentesService;</span>
+<span class="nc" id="L27">        this.analistaAutenticadoService = analistaAutenticadoService;</span>
+<span class="nc" id="L28">    }</span>
+
+    /*
+     * Antecedentes del expediente (folio PC-...) según el modelo.
+     *
+     * GET /api/primer-contacto/antecedentes/PC-A1B2C3D4
+     */
+    @GetMapping(&quot;/{folio}&quot;)
+    public BusquedaAntecedentesDTO buscar(@PathVariable String folio) {
+<span class="nc" id="L37">        return antecedentesService.buscar(folio);</span>
+    }
+
+    /*
+     * Búsqueda manual por nombre del quejoso y/o del denunciado.
+     *
+     * GET /api/primer-contacto/antecedentes/PC-A1B2C3D4/manual?quejoso=...&amp;denunciado=...
+     */
+    @GetMapping(&quot;/{folio}/manual&quot;)
+    public BusquedaAntecedentesDTO buscarManual(
+            @PathVariable String folio,
+            @RequestParam(required = false) String quejoso,
+            @RequestParam(required = false) String denunciado
+    ) {
+<span class="nc" id="L51">        return antecedentesService.buscarManual(folio, quejoso, denunciado);</span>
+    }
+
+    /* Antecedentes finales ya elegidos para el expediente. */
+    @GetMapping(&quot;/{folio}/guardados&quot;)
+    public List&lt;AntecedenteGuardadoDTO&gt; listarGuardados(@PathVariable String folio) {
+<span class="nc" id="L57">        return antecedentesService.listarGuardados(folio);</span>
+    }
+
+    @PostMapping(&quot;/{folio}/guardados&quot;)
+    public List&lt;AntecedenteGuardadoDTO&gt; guardar(
+            @PathVariable String folio,
+            @Valid @RequestBody GuardarAntecedentesDTO dto,
+            Authentication authentication
+    ) {
+<span class="nc" id="L66">        return antecedentesService.guardar(</span>
+                folio,
+<span class="nc" id="L68">                dto.getAntecedentes(),</span>
+<span class="nc" id="L69">                analistaAutenticadoService.obtenerAnalista(authentication)</span>
+        );
+    }
+
+    @DeleteMapping(&quot;/{folio}/guardados/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; quitarGuardado(
+            @PathVariable String folio,
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+<span class="nc" id="L79">        analistaAutenticadoService.obtenerAnalista(authentication);</span>
+<span class="nc" id="L80">        antecedentesService.quitarGuardado(folio, id);</span>
+<span class="nc" id="L81">        return ResponseEntity.noContent().build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

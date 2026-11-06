@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RespuestaExternaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">RespuestaExternaService.java</span></div><h1>RespuestaExternaService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import ipn.escom.defensoria.subdefensoria.dto.RegistrarRespuestaExternaDTO;
+import ipn.escom.defensoria.subdefensoria.dto.RespuestaExternaDTO;
+import ipn.escom.defensoria.subdefensoria.entity.*;
+import ipn.escom.defensoria.subdefensoria.exception.OperacionInvalidaException;
+import ipn.escom.defensoria.subdefensoria.exception.RecursoNoEncontradoException;
+import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
+import ipn.escom.defensoria.subdefensoria.repository.OficioInformacionRepository;
+import ipn.escom.defensoria.subdefensoria.repository.RespuestaArchivoRepository;
+import ipn.escom.defensoria.subdefensoria.repository.RespuestaExternaRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * CU-SD-08: registro manual de la respuesta del director a un oficio (no se asume ingesta
+ * automática de correo). La respuesta lleva al expediente a ELABORO_ACUERDO.
+ *
+ * Puede llevar el archivo de la respuesta (oficio escaneado o PDF; ver RespuestaArchivo). Se
+ * valida ANTES de registrar la respuesta, para que un archivo inválido no deje la respuesta a
+ * medias; también se puede adjuntar o reemplazar después.
+ */
+@Service
+public class RespuestaExternaService {
+
+    private final RespuestaExternaRepository respuestaRepository;
+    private final RespuestaArchivoRepository archivoRepository;
+    private final OficioInformacionRepository oficioRepository;
+    private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final TransicionExpedienteService transicionService;
+
+    public RespuestaExternaService(
+            RespuestaExternaRepository respuestaRepository,
+            RespuestaArchivoRepository archivoRepository,
+            OficioInformacionRepository oficioRepository,
+            ExpedienteInvestigacionRepository expedienteRepository,
+            TransicionExpedienteService transicionService
+<span class="nc" id="L43">    ) {</span>
+<span class="nc" id="L44">        this.respuestaRepository = respuestaRepository;</span>
+<span class="nc" id="L45">        this.archivoRepository = archivoRepository;</span>
+<span class="nc" id="L46">        this.oficioRepository = oficioRepository;</span>
+<span class="nc" id="L47">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L48">        this.transicionService = transicionService;</span>
+<span class="nc" id="L49">    }</span>
+
+    public RespuestaExternaDTO registrarRespuesta(RegistrarRespuestaExternaDTO dto) {
+<span class="nc" id="L52">        return registrarRespuesta(dto, null);</span>
+    }
+
+    public RespuestaExternaDTO registrarRespuesta(RegistrarRespuestaExternaDTO dto, MultipartFile archivo) {
+
+        // Primero el archivo: si no sirve, no se registra nada.
+        ArchivoRespuestaValidador.Validado validado =
+<span class="nc bnc" id="L59" title="All 4 branches missed.">                archivo != null &amp;&amp; !archivo.isEmpty() ? ArchivoRespuestaValidador.validar(archivo) : null;</span>
+
+<span class="nc" id="L61">        OficioInformacion oficio = oficioRepository.findById(dto.getOficioId())</span>
+<span class="nc" id="L62">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el oficio &quot; + dto.getOficioId()));</span>
+
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (EstatusOficio.RESPONDIDO.equals(oficio.getEstatus())) {</span>
+<span class="nc" id="L65">            throw new OperacionInvalidaException(</span>
+<span class="nc" id="L66">                    &quot;El oficio &quot; + oficio.getNumeroOficio() + &quot; ya tiene una respuesta registrada.&quot;);</span>
+        }
+
+<span class="nc" id="L69">        ExpedienteInvestigacion expediente = expedienteRepository.findById(oficio.getExpedienteId())</span>
+<span class="nc" id="L70">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="nc" id="L71">                        &quot;No existe el expediente &quot; + oficio.getExpedienteId()));</span>
+
+<span class="nc" id="L73">        RespuestaExterna respuesta = RespuestaExterna.builder()</span>
+<span class="nc" id="L74">                .expedienteId(expediente.getId())</span>
+<span class="nc" id="L75">                .oficioId(oficio.getId())</span>
+<span class="nc" id="L76">                .canalRecepcion(dto.getCanalRecepcion())</span>
+<span class="nc" id="L77">                .numeroOficioRespuestaUA(dto.getNumeroOficioRespuestaUA())</span>
+<span class="nc" id="L78">                .archivoPdfPath(dto.getArchivoPdfPath())</span>
+<span class="nc" id="L79">                .resumen(dto.getResumen())</span>
+<span class="nc" id="L80">                .fechaRecepcion(LocalDateTime.now())</span>
+<span class="nc" id="L81">                .build();</span>
+<span class="nc" id="L82">        RespuestaExterna guardada = respuestaRepository.save(respuesta);</span>
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (validado != null) {</span>
+<span class="nc" id="L85">            guardarArchivo(guardada.getId(), validado);</span>
+        }
+
+<span class="nc" id="L88">        oficio.setEstatus(EstatusOficio.RESPONDIDO);</span>
+<span class="nc" id="L89">        oficioRepository.save(oficio);</span>
+
+        // El director responde el oficio: se redacta el acuerdo de conciliación.
+<span class="nc" id="L92">        transicionService.cambiar(expediente, EstatusExpediente.ELABORO_ACUERDO);</span>
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        return convertir(guardada, expediente, validado != null ? validado.nombre() : null);</span>
+    }
+
+    /** Adjunta (o reemplaza) el archivo de una respuesta ya registrada. */
+    public RespuestaExternaDTO adjuntarArchivo(Long respuestaId, MultipartFile archivo) {
+<span class="nc" id="L99">        ArchivoRespuestaValidador.Validado validado = ArchivoRespuestaValidador.validar(archivo);</span>
+<span class="nc" id="L100">        RespuestaExterna respuesta = respuestaRepository.findById(respuestaId)</span>
+<span class="nc" id="L101">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe la respuesta &quot; + respuestaId));</span>
+<span class="nc" id="L102">        guardarArchivo(respuestaId, validado);</span>
+<span class="nc" id="L103">        return convertir(respuesta, expediente(respuesta.getExpedienteId()), validado.nombre());</span>
+    }
+
+    public List&lt;RespuestaExternaDTO&gt; porOficio(Long oficioId) {
+<span class="nc" id="L107">        List&lt;RespuestaExterna&gt; respuestas = respuestaRepository.findByOficioIdOrderByFechaRecepcionDesc(oficioId);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (respuestas.isEmpty()) {</span>
+<span class="nc" id="L109">            return List.of();</span>
+        }
+<span class="nc" id="L111">        Map&lt;Long, String&gt; nombres = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L112">        archivoRepository.nombresPorRespuesta(respuestas.stream().map(RespuestaExterna::getId).toList())</span>
+<span class="nc" id="L113">                .forEach(fila -&gt; nombres.put((Long) fila[0], (String) fila[1]));</span>
+<span class="nc" id="L114">        ExpedienteInvestigacion expediente = expediente(respuestas.get(0).getExpedienteId());</span>
+<span class="nc" id="L115">        return respuestas.stream().map(r -&gt; convertir(r, expediente, nombres.get(r.getId()))).toList();</span>
+    }
+
+    public RespuestaArchivo archivo(Long respuestaId) {
+<span class="nc" id="L119">        return archivoRepository.findByRespuestaId(respuestaId)</span>
+<span class="nc" id="L120">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;La respuesta no tiene archivo adjunto.&quot;));</span>
+    }
+
+    private void guardarArchivo(Long respuestaId, ArchivoRespuestaValidador.Validado validado) {
+<span class="nc" id="L124">        RespuestaArchivo existente = archivoRepository.findByRespuestaId(respuestaId).orElse(null);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        RespuestaArchivo archivo = existente != null ? existente : new RespuestaArchivo();</span>
+<span class="nc" id="L126">        archivo.setRespuestaId(respuestaId);</span>
+<span class="nc" id="L127">        archivo.setNombreArchivo(validado.nombre());</span>
+<span class="nc" id="L128">        archivo.setTipoContenido(validado.tipo());</span>
+<span class="nc" id="L129">        archivo.setTamanoBytes((long) validado.contenido().length);</span>
+<span class="nc" id="L130">        archivo.setContenido(validado.contenido());</span>
+<span class="nc" id="L131">        archivo.setFechaCarga(LocalDateTime.now());</span>
+<span class="nc" id="L132">        archivoRepository.save(archivo);</span>
+<span class="nc" id="L133">    }</span>
+
+    private ExpedienteInvestigacion expediente(Long expedienteId) {
+<span class="nc" id="L136">        return expedienteRepository.findById(expedienteId)</span>
+<span class="nc" id="L137">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el expediente &quot; + expedienteId));</span>
+    }
+
+    private RespuestaExternaDTO convertir(RespuestaExterna r, ExpedienteInvestigacion expediente, String nombreArchivo) {
+<span class="nc" id="L141">        return RespuestaExternaDTO.builder()</span>
+<span class="nc" id="L142">                .id(r.getId())</span>
+<span class="nc" id="L143">                .expedienteId(expediente.getId())</span>
+<span class="nc" id="L144">                .oficioId(r.getOficioId())</span>
+<span class="nc" id="L145">                .folio(expediente.getFolio())</span>
+<span class="nc" id="L146">                .canalRecepcion(r.getCanalRecepcion())</span>
+<span class="nc" id="L147">                .numeroOficioRespuestaUA(r.getNumeroOficioRespuestaUA())</span>
+<span class="nc" id="L148">                .archivoPdfPath(r.getArchivoPdfPath())</span>
+<span class="nc" id="L149">                .resumen(r.getResumen())</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                .fechaRecepcion(r.getFechaRecepcion() != null ? r.getFechaRecepcion().toString() : null)</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">                .estatusExpediente(expediente.getEstatus())</span>
+<span class="nc" id="L152">                .tieneArchivo(nombreArchivo != null)</span>
+<span class="nc" id="L153">                .archivoNombre(nombreArchivo)</span>
+<span class="nc" id="L154">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

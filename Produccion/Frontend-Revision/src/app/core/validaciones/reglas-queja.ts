@@ -59,6 +59,28 @@ export function esFechaValida(iso: string | null | undefined): boolean {
 }
 
 // ---- Descripción --------------------------------------------------------------------------
+// ---- Plazo para presentar la queja -----------------------------------------------------
+/**
+ * Candado de 90 días naturales: la queja solo procede por hechos ocurridos dentro de los 90
+ * días anteriores a su presentación (artículo 13, párrafo tercero). El backend aplica la misma
+ * regla (ReglasQueja.PLAZO_DIAS_QUEJA en queja-service); si cambia aquí, cámbiala allá.
+ */
+export const PLAZO_DIAS_QUEJA = 90;
+
+/** Fecha más antigua aceptada para los hechos (hoy − 90 días), en hora local, yyyy-mm-dd. */
+export function fechaMinimaHechos(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - PLAZO_DIAS_QUEJA);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Mensaje cuando la fecha de los hechos queda fuera del plazo. */
+export function mensajeFueraDePlazo(): string {
+  const [a, m, d] = fechaMinimaHechos().split('-');
+  return `Solo se pueden presentar quejas por hechos ocurridos dentro de los últimos ${PLAZO_DIAS_QUEJA} días naturales `
+    + `(artículo 13, párrafo tercero). La fecha más antigua que puedes elegir es ${d}/${m}/${a}.`;
+}
+
 export const DESCRIPCION_LONGITUD_MINIMA = 20;
 /** La descripción de la QUEJA no tiene máximo (decisión 2026-10-14). Este límite solo lo usa
  * la respuesta del denunciado, que sigue validándose igual en denunciado-service. */

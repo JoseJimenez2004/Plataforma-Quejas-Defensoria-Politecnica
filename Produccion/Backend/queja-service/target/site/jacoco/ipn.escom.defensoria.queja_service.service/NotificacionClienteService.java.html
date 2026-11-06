@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotificacionClienteService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.queja_service.service</a> &gt; <span class="el_source">NotificacionClienteService.java</span></div><h1>NotificacionClienteService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.queja_service.service;
+
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+/** Deja un aviso persistido en el centro de notificaciones del quejoso cuando se registra una
+ * queja nueva (POST /api/notificaciones/registrar) -- mismo patrón de llamada simple entre
+ * microservicios que ya usa revision-service para el correo de rechazo. Nunca debe tumbar el
+ * registro de la queja si falla. */
+@Service
+public class NotificacionClienteService {
+
+<span class="fc" id="L18">    private static final Logger log = LoggerFactory.getLogger(NotificacionClienteService.class);</span>
+
+    private static final String ENDPOINT_REGISTRAR = &quot;/api/notificaciones/registrar&quot;;
+    private static final String ENDPOINT_ENVIAR = &quot;/api/notificaciones/enviar&quot;;
+    private static final String TIPO_QUEJA_CREADA = &quot;QUEJA_CREADA&quot;;
+
+    private final RestTemplate restTemplate;
+    private final String notificacionesServiceUrl;
+
+    public NotificacionClienteService(
+            RestTemplate restTemplate,
+<span class="fc" id="L29">            @Value(&quot;${notificaciones.service.url}&quot;) String notificacionesServiceUrl) {</span>
+<span class="fc" id="L30">        this.restTemplate = restTemplate;</span>
+<span class="fc" id="L31">        this.notificacionesServiceUrl = notificacionesServiceUrl;</span>
+<span class="fc" id="L32">    }</span>
+
+    /**
+     * Aviso genérico de cambio de estatus en el centro de notificaciones del quejoso (NO
+     * manda correo). Mismo patrón de resiliencia que el resto: si notificaciones-service no
+     * responde, la operación de la queja no se revierte, solo queda en el log.
+     */
+    public void notificarCambioEstatus(String correoDestino, String folio, String titulo, String mensaje) {
+        try {
+<span class="pc" id="L41">            restTemplate.postForObject(</span>
+                    notificacionesServiceUrl + ENDPOINT_REGISTRAR,
+<span class="fc" id="L43">                    Map.of(</span>
+                            &quot;correoDestino&quot;, correoDestino,
+                            &quot;tipo&quot;, &quot;CAMBIO_ESTATUS&quot;,
+                            &quot;titulo&quot;, titulo,
+                            &quot;mensaje&quot;, mensaje,
+                            &quot;enlace&quot;, &quot;/panel/mis-quejas/&quot; + folio),
+                    String.class);
+<span class="fc" id="L50">        } catch (Exception ex) {</span>
+<span class="fc" id="L51">            log.error(&quot;No se pudo registrar el aviso de cambio de estatus del folio {}: {}&quot;,</span>
+<span class="fc" id="L52">                    folio, ex.getMessage());</span>
+<span class="nc" id="L53">        }</span>
+<span class="fc" id="L54">    }</span>
+
+    /** Aviso en la campana de la recepcionista que rechazó la queja, cuando el quejoso la corrige. */
+    public void notificarPersonal(String correoDestino, String titulo, String mensaje) {
+<span class="pc bpc" id="L58" title="2 of 4 branches missed.">        if (correoDestino == null || correoDestino.isBlank()) {</span>
+<span class="nc" id="L59">            return;</span>
+        }
+        try {
+<span class="pc" id="L62">            restTemplate.postForObject(</span>
+                    notificacionesServiceUrl + ENDPOINT_REGISTRAR,
+<span class="fc" id="L64">                    Map.of(&quot;correoDestino&quot;, correoDestino, &quot;tipo&quot;, &quot;GENERAL&quot;, &quot;titulo&quot;, titulo,</span>
+                            &quot;mensaje&quot;, mensaje, &quot;enlace&quot;, &quot;&quot;),
+                    String.class);
+<span class="fc" id="L67">        } catch (Exception ex) {</span>
+<span class="fc" id="L68">            log.error(&quot;No se pudo avisar al personal {}: {}&quot;, correoDestino, ex.getMessage());</span>
+<span class="nc" id="L69">        }</span>
+<span class="fc" id="L70">    }</span>
+
+    public void notificarQuejaCreada(String correoDestino, String folio) {
+        try {
+<span class="pc" id="L74">            restTemplate.postForObject(</span>
+                    notificacionesServiceUrl + ENDPOINT_REGISTRAR,
+<span class="fc" id="L76">                    Map.of(</span>
+                            &quot;correoDestino&quot;, correoDestino,
+                            &quot;tipo&quot;, TIPO_QUEJA_CREADA,
+                            &quot;titulo&quot;, &quot;Queja registrada&quot;,
+                            &quot;mensaje&quot;, &quot;Tu queja con folio &quot; + folio + &quot; fue registrada correctamente. &quot;
+                                    + &quot;Te avisaremos aquí cuando cambie de estatus.&quot;,
+                            &quot;enlace&quot;, &quot;/panel/mis-quejas/&quot; + folio),
+                    String.class);
+<span class="fc" id="L84">        } catch (Exception ex) {</span>
+<span class="fc" id="L85">            log.error(&quot;No se pudo registrar la notificación de queja creada para el folio {}: {}&quot;,</span>
+<span class="fc" id="L86">                    folio, ex.getMessage());</span>
+<span class="nc" id="L87">        }</span>
+<span class="fc" id="L88">    }</span>
+
+    /** Correo real (no solo aviso en la app) al padre/madre/tutor cuando se presenta una queja
+     * a nombre de un menor de edad -- usa POST /api/notificaciones/enviar (mismo endpoint que ya
+     * usa revision-service para el correo de rechazo), no /registrar. Nunca debe tumbar el
+     * registro de la queja si falla o si el tutor no dejó correo. */
+    public void notificarTutorQuejaCreada(String correoTutor, String nombreTutor, String nombreMenor, String folio) {
+<span class="pc bpc" id="L95" title="2 of 4 branches missed.">        if (correoTutor == null || correoTutor.isBlank()) {</span>
+<span class="nc" id="L96">            return;</span>
+        }
+        try {
+<span class="fc" id="L99">            String asunto = &quot;Defensoría de los Derechos Politécnicos — Queja registrada a nombre de &quot; + nombreMenor;</span>
+<span class="fc" id="L100">            String cuerpo = &quot;Estimado(a) &quot; + nombreTutor + &quot;,\n\n&quot;</span>
+                    + &quot;Te informamos que se registró una queja ante la Defensoría de los Derechos &quot;
+                    + &quot;Politécnicos a nombre de &quot; + nombreMenor + &quot;, de quien apareces como tutor(a) &quot;
+                    + &quot;o adulto(a) responsable.\n\n&quot;
+                    + &quot;El folio de seguimiento es: &quot; + folio + &quot;\n\n&quot;
+                    + &quot;Puedes dar seguimiento al trámite ingresando el folio y el correo del quejoso &quot;
+                    + &quot;en la sección \&quot;Consultar folio\&quot; de la plataforma.\n\n&quot;
+                    + &quot;Defensoría de los Derechos Politécnicos.&quot;;
+<span class="pc" id="L108">            restTemplate.postForObject(</span>
+                    notificacionesServiceUrl + ENDPOINT_ENVIAR,
+<span class="fc" id="L110">                    Map.of(&quot;destinatario&quot;, correoTutor, &quot;asunto&quot;, asunto, &quot;cuerpo&quot;, cuerpo),</span>
+                    String.class);
+<span class="fc" id="L112">        } catch (Exception ex) {</span>
+<span class="fc" id="L113">            log.error(&quot;No se pudo enviar el correo al tutor para el folio {}: {}&quot;, folio, ex.getMessage());</span>
+<span class="nc" id="L114">        }</span>
+<span class="fc" id="L115">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

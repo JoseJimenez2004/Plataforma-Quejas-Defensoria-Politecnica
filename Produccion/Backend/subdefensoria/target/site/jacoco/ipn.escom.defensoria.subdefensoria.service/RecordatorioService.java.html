@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RecordatorioService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">RecordatorioService.java</span></div><h1>RecordatorioService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import ipn.escom.defensoria.subdefensoria.dto.GenerarRecordatorioDTO;
+import ipn.escom.defensoria.subdefensoria.dto.RecordatorioDTO;
+import ipn.escom.defensoria.subdefensoria.entity.*;
+import ipn.escom.defensoria.subdefensoria.exception.OperacionInvalidaException;
+import ipn.escom.defensoria.subdefensoria.exception.RecursoNoEncontradoException;
+import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
+import ipn.escom.defensoria.subdefensoria.repository.OficioInformacionRepository;
+import ipn.escom.defensoria.subdefensoria.repository.RecordatorioUrgenciaRepository;
+import ipn.escom.defensoria.subdefensoria.util.DiasHabilesCalculator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+/**
+ * TS-03 (recordatorio simple, fase SOLICITUD_INFORMACION) y TS-06
+ * (recordatorio + medidas, fase GESTION_DIRECTOR, incluso reabriendo
+ * un oficio ya RESPONDIDO cuando en TS-05 se decidio &quot;no concluyo&quot;).
+ */
+@Service
+public class RecordatorioService {
+
+<span class="nc" id="L28">    private static final Logger log = LoggerFactory.getLogger(RecordatorioService.class);</span>
+
+    private final OficioInformacionRepository oficioRepository;
+    private final RecordatorioUrgenciaRepository recordatorioRepository;
+    private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final int diasRecordatorio;
+    private final DocumentoService documentoService;
+    private final CorreoUnidadAcademicaService correoService;
+
+    public RecordatorioService(
+            OficioInformacionRepository oficioRepository,
+            RecordatorioUrgenciaRepository recordatorioRepository,
+            ExpedienteInvestigacionRepository expedienteRepository,
+            @Value(&quot;${plazos.recordatorio-dias}&quot;) int diasRecordatorio,
+            DocumentoService documentoService,
+            CorreoUnidadAcademicaService correoService
+<span class="nc" id="L44">    ) {</span>
+<span class="nc" id="L45">        this.oficioRepository = oficioRepository;</span>
+<span class="nc" id="L46">        this.recordatorioRepository = recordatorioRepository;</span>
+<span class="nc" id="L47">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L48">        this.diasRecordatorio = diasRecordatorio;</span>
+<span class="nc" id="L49">        this.documentoService = documentoService;</span>
+<span class="nc" id="L50">        this.correoService = correoService;</span>
+<span class="nc" id="L51">    }</span>
+
+    public RecordatorioDTO generarRecordatorio(GenerarRecordatorioDTO dto) {
+
+<span class="nc" id="L55">        OficioInformacion oficio = oficioRepository.findById(dto.getOficioId())</span>
+<span class="nc" id="L56">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el oficio &quot; + dto.getOficioId()));</span>
+
+<span class="nc" id="L58">        ExpedienteInvestigacion expediente = expedienteRepository.findById(oficio.getExpedienteId())</span>
+<span class="nc" id="L59">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="nc" id="L60">                        &quot;No existe el expediente &quot; + oficio.getExpedienteId()));</span>
+
+        // Un recordatorio es para un oficio que sigue sin respuesta (CU-SD-07). Si el quejoso
+        // no queda conforme con un acuerdo, el camino es su rechazo (fila 18), no reabrir oficios.
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (EstatusOficio.RESPONDIDO.equals(oficio.getEstatus())) {</span>
+<span class="nc" id="L65">            throw new OperacionInvalidaException(</span>
+<span class="nc" id="L66">                    &quot;El oficio &quot; + oficio.getNumeroOficio() + &quot; ya tiene respuesta; no requiere recordatorio.&quot;);</span>
+        }
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (!EstatusExpediente.EN_ESPERA_OFICIO.equals(expediente.getEstatus())) {</span>
+<span class="nc" id="L69">            throw new OperacionInvalidaException(&quot;El expediente &quot; + expediente.getFolio()</span>
+<span class="nc" id="L70">                    + &quot; no está esperando la respuesta de un oficio (estatus: &quot; + expediente.getEstatus() + &quot;).&quot;);</span>
+        }
+
+<span class="nc" id="L73">        LocalDate hoy = LocalDate.now();</span>
+<span class="nc" id="L74">        long diasRetraso = DiasHabilesCalculator.diasHabilesTranscurridos(oficio.getFechaLimite(), hoy);</span>
+
+<span class="nc" id="L76">        RecordatorioUrgencia recordatorio = RecordatorioUrgencia.builder()</span>
+<span class="nc" id="L77">                .oficioId(oficio.getId())</span>
+<span class="nc" id="L78">                .mensaje(dto.getMensaje())</span>
+<span class="nc" id="L79">                .medidasOfrecidas(dto.getMedidasOfrecidas())</span>
+<span class="nc" id="L80">                .diasRetraso((int) diasRetraso)</span>
+<span class="nc" id="L81">                .fechaEnvio(LocalDateTime.now())</span>
+<span class="nc" id="L82">                .build();</span>
+<span class="nc" id="L83">        recordatorioRepository.save(recordatorio);</span>
+
+<span class="nc" id="L85">        oficio.setTipoPlazo(&quot;SUBSECUENTE&quot;);</span>
+<span class="nc" id="L86">        oficio.setFechaLimite(DiasHabilesCalculator.sumarDiasHabiles(hoy, diasRecordatorio));</span>
+<span class="nc" id="L87">        oficio.setEstatus(EstatusOficio.EN_ESPERA);</span>
+<span class="nc" id="L88">        OficioInformacion actualizado = oficioRepository.save(oficio);</span>
+
+<span class="nc" id="L90">        enviarPorCorreo(recordatorio, actualizado, expediente);</span>
+
+<span class="nc" id="L92">        return RecordatorioDTO.builder()</span>
+<span class="nc" id="L93">                .id(recordatorio.getId())</span>
+<span class="nc" id="L94">                .oficioId(actualizado.getId())</span>
+<span class="nc" id="L95">                .numeroOficio(actualizado.getNumeroOficio())</span>
+<span class="nc" id="L96">                .mensaje(recordatorio.getMensaje())</span>
+<span class="nc" id="L97">                .medidasOfrecidas(recordatorio.getMedidasOfrecidas())</span>
+<span class="nc" id="L98">                .diasRetraso(recordatorio.getDiasRetraso())</span>
+<span class="nc" id="L99">                .fechaEnvio(recordatorio.getFechaEnvio().toString())</span>
+<span class="nc" id="L100">                .nuevaFechaLimite(actualizado.getFechaLimite().toString())</span>
+<span class="nc" id="L101">                .estatusExpediente(expediente.getEstatus())</span>
+<span class="nc" id="L102">                .build();</span>
+    }
+
+    /** Correo a la unidad académica con el recordatorio en PDF; si falla, ya quedó guardado. */
+    private void enviarPorCorreo(RecordatorioUrgencia recordatorio, OficioInformacion oficio,
+                                 ExpedienteInvestigacion expediente) {
+        try {
+<span class="nc" id="L109">            correoService.enviar(</span>
+<span class="nc" id="L110">                    oficio.getDestinatarioCorreo(),</span>
+<span class="nc" id="L111">                    &quot;Recordatorio del oficio &quot; + oficio.getNumeroOficio() + &quot; (&quot; + expediente.getFolio() + &quot;)&quot;,</span>
+<span class="nc" id="L112">                    &quot;Estimado(a) &quot; + oficio.getDestinatarioNombre() + &quot;,\n\nSe adjunta el recordatorio del oficio &quot;</span>
+<span class="nc" id="L113">                            + oficio.getNumeroOficio() + &quot;, que sigue sin respuesta. Le agradeceremos que la haga &quot;</span>
+<span class="nc" id="L114">                            + &quot;llegar a más tardar el &quot; + oficio.getFechaLimite() + &quot;.&quot;,</span>
+<span class="nc" id="L115">                    documentoService.recordatorio(recordatorio.getId()));</span>
+<span class="nc" id="L116">        } catch (Exception ex) {</span>
+<span class="nc" id="L117">            log.error(&quot;No se pudo enviar el recordatorio del oficio {} por correo: {}&quot;,</span>
+<span class="nc" id="L118">                    oficio.getNumeroOficio(), ex.getMessage());</span>
+<span class="nc" id="L119">        }</span>
+<span class="nc" id="L120">    }</span>
+
+    public java.util.List&lt;RecordatorioDTO&gt; porOficio(Long oficioId) {
+<span class="nc" id="L123">        OficioInformacion oficio = oficioRepository.findById(oficioId)</span>
+<span class="nc" id="L124">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el oficio &quot; + oficioId));</span>
+<span class="nc" id="L125">        return recordatorioRepository.findByOficioIdOrderByFechaEnvioDesc(oficioId).stream()</span>
+<span class="nc" id="L126">                .map(r -&gt; RecordatorioDTO.builder()</span>
+<span class="nc" id="L127">                        .id(r.getId())</span>
+<span class="nc" id="L128">                        .oficioId(oficio.getId())</span>
+<span class="nc" id="L129">                        .numeroOficio(oficio.getNumeroOficio())</span>
+<span class="nc" id="L130">                        .mensaje(r.getMensaje())</span>
+<span class="nc" id="L131">                        .medidasOfrecidas(r.getMedidasOfrecidas())</span>
+<span class="nc" id="L132">                        .diasRetraso(r.getDiasRetraso())</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                        .fechaEnvio(r.getFechaEnvio() != null ? r.getFechaEnvio().toString() : null)</span>
+<span class="nc" id="L134">                        .build())</span>
+<span class="nc" id="L135">                .toList();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

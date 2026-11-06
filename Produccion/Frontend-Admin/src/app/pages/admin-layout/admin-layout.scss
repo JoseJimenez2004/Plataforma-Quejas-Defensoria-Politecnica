@@ -5,7 +5,7 @@
 
 /* ---- Armazón (igual al módulo de Primer Contacto) ---- */
 $alto-header: 72px;
-$alto-footer: 40px;
+$alto-footer: 48px; // dos renglones: fundamento legal + derechos
 $ancho-sidebar: 68px;           // colapsado: solo iconos
 $ancho-sidebar-abierto: 260px;  // desplegado al pasar el cursor
 
@@ -255,12 +255,23 @@ $ancho-sidebar-abierto: 260px;  // desplegado al pasar el cursor
   position: fixed;
   inset: auto 0 0 0;
   z-index: 1000;
-  height: $alto-footer;
+  min-height: $alto-footer;
   background: #3b0a22;
   color: #fff;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 12px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 16px;
+  text-align: center;
+  line-height: 1.3;
+
+  .footer-legal {
+    font-size: 10.5px;
+    opacity: 0.85;
+  }
 }
 
 /* En pantallas angostas el menú pasa arriba y deja de ser fijo. */

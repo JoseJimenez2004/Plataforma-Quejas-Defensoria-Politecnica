@@ -2,7 +2,7 @@
  * Login unificado del personal (2026-10-08). Todo el personal entra por /revision/login; según
  * el rol, cada quien termina en su panel:
  *   RECEPCIONISTA                -> /revision/  (este frontend)
- *   DEFENSOR / ADMIN_SISTEMAS    -> /admin/     (Frontend-Admin, "panel de la Defensora")
+ *   DEFENSOR                     -> /admin/     (Frontend-Admin, "panel de la Defensora")
  *   ANALISTA_PRIMER_CONTACTO     -> /primer-contacto/
  *   SUBDEFENSOR                  -> /subdefensoria/
  *
@@ -13,7 +13,7 @@
  */
 export const RUTA_LOGIN_PERSONAL = '/revision/login';
 export const RUTA_PANEL_DEFENSORA = '/admin/';
-export const ROLES_DEFENSORA = ['DEFENSOR', 'ADMIN_SISTEMAS'];
+export const ROLES_DEFENSORA = ['DEFENSOR'];
 
 const CLAVES_ADMIN = ['ddp_admin_token', 'ddp_admin_nombre', 'ddp_admin_rol', 'ddp_admin_forzar_cambio'];
 const CLAVES_REVISION = ['ddp_revision_token', 'ddp_revision_nombre', 'ddp_revision_rol', 'ddp_revision_forzar_cambio'];

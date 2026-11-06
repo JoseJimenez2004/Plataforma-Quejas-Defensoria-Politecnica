@@ -17,17 +17,28 @@
   <div class="sd-toolbar">
     <input type="search" id="busqueda" [(ngModel)]="busqueda" (ngModelChange)="aplicarFiltros()"
            placeholder="Buscar por folio, quejoso, asunto, unidad u oficio…" aria-label="Buscar expedientes">
-    <select id="unidad" [(ngModel)]="unidad" (ngModelChange)="aplicarFiltros()" aria-label="Unidad">
+    <select id="etapa" [(ngModel)]="etapa" (ngModelChange)="cambiarFiltro()" aria-label="Etapa">
+      <option value="">Etapa: todas</option>
+      @for (o of opcionesEtapa; track o.valor) { <option [value]="o.valor">{{ o.etiqueta }}</option> }
+      @if (etapaFueraDeLista) { <option [value]="etapa">Etapas: {{ etapa }}</option> }
+    </select>
+    <select id="unidad" [(ngModel)]="unidad" (ngModelChange)="cambiarFiltro()" aria-label="Unidad">
       <option value="">Unidad: todas</option>
       @for (u of unidades; track u) { <option [value]="u">{{ u }}</option> }
     </select>
-    <select id="plazo" [(ngModel)]="plazo" (ngModelChange)="aplicarFiltros()" aria-label="Plazo">
+    <select id="prioridad" [(ngModel)]="prioridad" (ngModelChange)="cambiarFiltro()" aria-label="Prioridad">
+      <option value="">Prioridad: todas</option>
+      @for (p of prioridades; track p.codigo) { <option [value]="p.codigo">{{ p.etiqueta }}</option> }
+      <option value="SIN_ASIGNAR">Sin asignar</option>
+    </select>
+    <select id="plazo" [(ngModel)]="plazo" (ngModelChange)="cambiarFiltro()" aria-label="Plazo">
       <option value="">Plazo: todos</option>
       <option value="vencidos">Oficio vencido</option>
       <option value="por-vencer">Vence en 3 días o menos</option>
       <option value="sin-oficio">Sin oficio vigente</option>
     </select>
-    <select id="orden" [(ngModel)]="orden" (ngModelChange)="aplicarFiltros()" aria-label="Orden">
+    <select id="orden" [(ngModel)]="orden" (ngModelChange)="cambiarFiltro()" aria-label="Orden">
+      <option value="prioridad">Mayor prioridad primero</option>
       <option value="urgencia">Más urgentes primero</option>
       <option value="recientes">Más recientes</option>
       <option value="antiguos">Más antiguos</option>
@@ -38,12 +49,17 @@
     <div class="sd-tabla-wrap">
       <table class="sd-tabla">
         <thead>
-          <tr><th>Expediente</th><th>Unidad</th><th>Admisión</th><th>Etapa</th><th>Oficio vigente · plazo</th><th>Siguiente paso</th></tr>
+          <tr><th>Expediente</th><th>Prioridad</th><th>Unidad</th><th>Admisión</th><th>Etapa</th><th>Oficio vigente · plazo</th><th>Siguiente paso</th></tr>
         </thead>
         <tbody>
           @for (e of visibles; track e.expedienteId) {
             <tr (click)="abrir(e)">
-              <td><b>{{ e.folio }}</b><small>{{ e.quejosoNombre }} · {{ e.asunto }}</small></td>
+              <td>
+                <b>{{ e.folio }}</b><small>{{ e.quejosoNombre }} · {{ e.asunto }}</small>
+                <!-- SD-5: qué está pasando con la queja -->
+                <small class="paso-desc" [class]="'paso-desc nivel-' + paso(e).nivel">{{ paso(e).descripcion }}</small>
+              </td>
+              <td><span [class]="'sd-chip ' + clasePrioridad(e.prioridad)">{{ etiquetaPrioridad(e.prioridad) }}</span></td>
               <td>{{ e.unidadAcademica }}</td>
               <td class="sd-muted">{{ formatearFecha(e.fechaAdmision) }}</td>
               <td><span class="sd-chip" [class]="'sd-chip ' + claseEtapa(e)">{{ etiquetaEtapa(e) }}</span></td>

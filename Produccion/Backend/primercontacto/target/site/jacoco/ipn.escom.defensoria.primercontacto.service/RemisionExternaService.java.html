@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RemisionExternaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service</a> &gt; <span class="el_source">RemisionExternaService.java</span></div><h1>RemisionExternaService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service;
+
+import ipn.escom.defensoria.primercontacto.dto.CrearRemisionDTO;
+import ipn.escom.defensoria.primercontacto.dto.RemisionDTO;
+import ipn.escom.defensoria.primercontacto.entity.DictamenPrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.EstatusExpediente;
+import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.primercontacto.entity.RemisionExterna;
+import ipn.escom.defensoria.primercontacto.exception.OperacionInvalidaException;
+import ipn.escom.defensoria.primercontacto.exception.RecursoNoEncontradoException;
+import ipn.escom.defensoria.primercontacto.repository.DictamenPrimerContactoRepository;
+import ipn.escom.defensoria.primercontacto.repository.EvidenciaPrimerContactoRepository;
+import ipn.escom.defensoria.primercontacto.repository.RemisionExternaRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+
+/**
+ * Remisión externa (CU-PC-09). Solo aplica a expedientes IMPROCEDENTES:
+ *
+ *   crear  -&gt; la remisión queda GENERADA y ya se puede descargar su oficio en PDF;
+ *             el expediente sigue IMPROCEDENTE.
+ *   enviar -&gt; el analista registra que el oficio se envió: remisión ENVIADA y expediente
+ *             REMITIDA (cierre por remisión). Se avisa al quejoso.
+ *
+ * No hay envío electrónico a la instancia externa: el oficio se descarga y se entrega por
+ * los medios oficiales; aquí solo se registra que se envió.
+ */
+@Service
+public class RemisionExternaService {
+
+    private final RemisionExternaRepository remisionExternaRepository;
+    private final DictamenPrimerContactoRepository dictamenRepository;
+    private final EvidenciaPrimerContactoRepository evidenciaRepository;
+    private final TransicionExpedienteService transicionService;
+    private final NotificacionQuejosoService notificacionService;
+    private final OficioRemisionPdfService pdfService;
+
+    public RemisionExternaService(
+            RemisionExternaRepository remisionExternaRepository,
+            DictamenPrimerContactoRepository dictamenRepository,
+            EvidenciaPrimerContactoRepository evidenciaRepository,
+            TransicionExpedienteService transicionService,
+            NotificacionQuejosoService notificacionService,
+            OficioRemisionPdfService pdfService
+<span class="nc" id="L48">    ) {</span>
+<span class="nc" id="L49">        this.remisionExternaRepository = remisionExternaRepository;</span>
+<span class="nc" id="L50">        this.dictamenRepository = dictamenRepository;</span>
+<span class="nc" id="L51">        this.evidenciaRepository = evidenciaRepository;</span>
+<span class="nc" id="L52">        this.transicionService = transicionService;</span>
+<span class="nc" id="L53">        this.notificacionService = notificacionService;</span>
+<span class="nc" id="L54">        this.pdfService = pdfService;</span>
+<span class="nc" id="L55">    }</span>
+
+    @Transactional
+    public RemisionDTO crearRemision(
+            CrearRemisionDTO dto,
+            PersonalAdministrativo analista
+    ) {
+
+<span class="nc" id="L63">        ExpedientePrimerContacto expediente =</span>
+<span class="nc" id="L64">                transicionService.obtenerPorFolio(dto.getFolio());</span>
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (!EstatusExpediente.esImprocedente(expediente.getEstatus())) {</span>
+<span class="nc" id="L67">            throw new OperacionInvalidaException(</span>
+                    &quot;Solo se remite un expediente dictaminado como improcedente &quot;
+<span class="nc" id="L69">                            + &quot;(estatus actual: &quot; + expediente.getEstatus() + &quot;).&quot;</span>
+            );
+        }
+
+        /*
+         * Un expediente solamente puede tener
+         * una remisión externa.
+         */
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (remisionExternaRepository.existsByExpedienteId(expediente.getId())) {</span>
+<span class="nc" id="L78">            throw new OperacionInvalidaException(</span>
+                    &quot;El expediente ya cuenta con una remisión registrada.&quot;
+            );
+        }
+
+<span class="nc" id="L83">        LocalDateTime ahora = LocalDateTime.now();</span>
+
+        RemisionExterna remision =
+<span class="nc" id="L86">                RemisionExterna.builder()</span>
+<span class="nc" id="L87">                        .expedienteId(expediente.getId())</span>
+<span class="nc" id="L88">                        .folio(expediente.getFolio())</span>
+<span class="nc" id="L89">                        .analistaId(analista.getId())</span>
+<span class="nc" id="L90">                        .analistaNombre(analista.getNombreCompleto())</span>
+<span class="nc" id="L91">                        .autoridadRemision(dto.getAutoridadRemision())</span>
+<span class="nc" id="L92">                        .justificacionLegal(dto.getJustificacionLegal())</span>
+<span class="nc" id="L93">                        .sugerenciaQuejoso(dto.getSugerenciaQuejoso())</span>
+<span class="nc" id="L94">                        .adjuntarExpediente(dto.getAdjuntarExpediente())</span>
+<span class="nc" id="L95">                        .fechaRemision(ahora)</span>
+<span class="nc" id="L96">                        .estatus(RemisionExterna.ESTATUS_GENERADA)</span>
+<span class="nc" id="L97">                        .build();</span>
+
+<span class="nc" id="L99">        RemisionExterna guardada = remisionExternaRepository.save(remision);</span>
+
+<span class="nc" id="L101">        guardada.setNumeroOficio(</span>
+<span class="nc" id="L102">                String.format(&quot;DDP/PC/REM/%d/%04d&quot;, ahora.getYear(), guardada.getId())</span>
+        );
+
+        /*
+         * Un expediente con el estado viejo PENDIENTE_REMISION se
+         * normaliza a IMPROCEDENTE: la diferencia &quot;redactada vs.
+         * enviada&quot; ahora vive en la remisión, no en el expediente.
+         */
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (EstatusExpediente.PENDIENTE_REMISION_LEGADO.equals(expediente.getEstatus())) {</span>
+<span class="nc" id="L111">            transicionService.cambiarEstatus(expediente, EstatusExpediente.IMPROCEDENTE);</span>
+        }
+
+<span class="nc" id="L114">        return convertirADTO(remisionExternaRepository.save(guardada));</span>
+    }
+
+    public RemisionDTO obtenerPorExpediente(
+            Long expedienteId
+    ) {
+
+<span class="nc" id="L121">        return remisionExternaRepository</span>
+<span class="nc" id="L122">                .findByExpedienteId(expedienteId)</span>
+<span class="nc" id="L123">                .map(this::convertirADTO)</span>
+<span class="nc" id="L124">                .orElseThrow(() -&gt;</span>
+<span class="nc" id="L125">                        new RecursoNoEncontradoException(&quot;Remisión no encontrada&quot;)</span>
+                );
+    }
+
+    public RemisionDTO obtenerPorFolio(
+            String folio
+    ) {
+
+<span class="nc" id="L133">        return convertirADTO(buscarPorFolio(folio));</span>
+    }
+
+    @Transactional
+    public RemisionDTO enviarRemision(
+            String folio
+    ) {
+
+<span class="nc" id="L141">        RemisionExterna remision = buscarPorFolio(folio);</span>
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        if (RemisionExterna.ESTATUS_ENVIADA.equals(estatusDe(remision))) {</span>
+<span class="nc" id="L144">            throw new OperacionInvalidaException(</span>
+                    &quot;La remisión ya se había registrado como enviada.&quot;
+            );
+        }
+
+<span class="nc" id="L149">        ExpedientePrimerContacto expediente =</span>
+<span class="nc" id="L150">                transicionService.obtenerPorFolio(folio);</span>
+
+<span class="nc" id="L152">        remision.setEstatus(RemisionExterna.ESTATUS_ENVIADA);</span>
+<span class="nc" id="L153">        remision.setFechaEnvio(LocalDateTime.now());</span>
+<span class="nc" id="L154">        remisionExternaRepository.save(remision);</span>
+
+<span class="nc" id="L156">        transicionService.cambiarEstatus(</span>
+                expediente,
+                EstatusExpediente.REMITIDA
+        );
+
+        String orientacion =
+<span class="nc bnc" id="L162" title="All 2 branches missed.">                remision.getSugerenciaQuejoso() != null</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">                        &amp;&amp; !remision.getSugerenciaQuejoso().isBlank()</span>
+<span class="nc" id="L164">                        ? &quot;\n\nOrientación de Primer Contacto: &quot; + remision.getSugerenciaQuejoso().trim()</span>
+<span class="nc" id="L165">                        : &quot;&quot;;</span>
+
+<span class="nc" id="L167">        notificacionService.notificar(</span>
+                expediente,
+                NotificacionQuejosoService.TIPO_CAMBIO_ESTATUS,
+                &quot;Tu queja fue remitida a otra instancia&quot;,
+<span class="nc" id="L171">                &quot;Tu queja &quot; + expediente.getFolioOrigen() + &quot; fue remitida a &quot;</span>
+<span class="nc" id="L172">                        + remision.getAutoridadRemision()</span>
+<span class="nc" id="L173">                        + &quot; mediante el oficio &quot; + remision.getNumeroOficio()</span>
+                        + &quot;, por ser la instancia competente para atenderla.&quot; + orientacion
+        );
+
+<span class="nc" id="L177">        return convertirADTO(remision);</span>
+    }
+
+    /**
+     * Oficio de remisión en PDF. Se genera al vuelo con los datos guardados, así que siempre
+     * coincide con lo registrado y no hay archivos que almacenar.
+     */
+    public OficioPdf generarPdf(String folio) {
+
+<span class="nc" id="L186">        RemisionExterna remision = buscarPorFolio(folio);</span>
+
+<span class="nc" id="L188">        ExpedientePrimerContacto expediente =</span>
+<span class="nc" id="L189">                transicionService.obtenerPorFolio(folio);</span>
+
+<span class="nc" id="L191">        DictamenPrimerContacto dictamen =</span>
+<span class="nc" id="L192">                dictamenRepository.findByExpedienteId(expediente.getId()).orElse(null);</span>
+
+<span class="nc" id="L194">        byte[] contenido = pdfService.generar(</span>
+                remision,
+                expediente,
+                dictamen,
+<span class="nc" id="L198">                evidenciaRepository.findByExpedienteId(expediente.getId())</span>
+        );
+
+<span class="nc" id="L201">        String nombre = &quot;oficio-remision-&quot; + expediente.getFolioOrigen() + &quot;.pdf&quot;;</span>
+
+<span class="nc" id="L203">        return new OficioPdf(nombre, contenido);</span>
+    }
+
+<span class="nc" id="L206">    public record OficioPdf(String nombreArchivo, byte[] contenido) {</span>
+    }
+
+    private RemisionExterna buscarPorFolio(String folio) {
+<span class="nc" id="L210">        return remisionExternaRepository</span>
+<span class="nc" id="L211">                .findByFolio(folio)</span>
+<span class="nc" id="L212">                .orElseThrow(() -&gt;</span>
+<span class="nc" id="L213">                        new RecursoNoEncontradoException(</span>
+                                &quot;El expediente &quot; + folio + &quot; no tiene remisión registrada.&quot;
+                        )
+                );
+    }
+
+    /*
+     * Las remisiones creadas antes de que existiera la columna estatus
+     * (null) salieron con el flujo anterior, que creaba y enviaba en el
+     * mismo paso: se leen como ENVIADA.
+     */
+    private String estatusDe(RemisionExterna remision) {
+<span class="nc bnc" id="L225" title="All 2 branches missed.">        return remision.getEstatus() != null</span>
+<span class="nc" id="L226">                ? remision.getEstatus()</span>
+<span class="nc" id="L227">                : RemisionExterna.ESTATUS_ENVIADA;</span>
+    }
+
+    private RemisionDTO convertirADTO(
+            RemisionExterna remision
+    ) {
+
+<span class="nc" id="L234">        return RemisionDTO.builder()</span>
+<span class="nc" id="L235">                .id(remision.getId())</span>
+<span class="nc" id="L236">                .expedienteId(remision.getExpedienteId())</span>
+<span class="nc" id="L237">                .folio(remision.getFolio())</span>
+<span class="nc" id="L238">                .analistaId(remision.getAnalistaId())</span>
+<span class="nc" id="L239">                .analistaNombre(remision.getAnalistaNombre())</span>
+<span class="nc" id="L240">                .autoridadRemision(remision.getAutoridadRemision())</span>
+<span class="nc" id="L241">                .justificacionLegal(remision.getJustificacionLegal())</span>
+<span class="nc" id="L242">                .sugerenciaQuejoso(remision.getSugerenciaQuejoso())</span>
+<span class="nc" id="L243">                .adjuntarExpediente(remision.getAdjuntarExpediente())</span>
+<span class="nc" id="L244">                .fechaRemision(</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">                        remision.getFechaRemision() != null</span>
+<span class="nc" id="L246">                                ? remision.getFechaRemision().toString()</span>
+<span class="nc" id="L247">                                : null</span>
+                )
+<span class="nc" id="L249">                .estatus(estatusDe(remision))</span>
+<span class="nc" id="L250">                .numeroOficio(remision.getNumeroOficio())</span>
+<span class="nc" id="L251">                .fechaEnvio(</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">                        remision.getFechaEnvio() != null</span>
+<span class="nc" id="L253">                                ? remision.getFechaEnvio().toString()</span>
+<span class="nc" id="L254">                                : null</span>
+                )
+<span class="nc" id="L256">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

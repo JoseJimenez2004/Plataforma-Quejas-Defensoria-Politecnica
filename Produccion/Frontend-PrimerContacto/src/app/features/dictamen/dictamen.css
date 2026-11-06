@@ -30,8 +30,8 @@
   justify-content: space-between;
   gap: var(--space-3);
   background: white;
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  box-shadow: var(--sombra-suave);
   padding: var(--space-4);
   margin-bottom: var(--space-5);
 }
@@ -69,8 +69,8 @@
 
 /* ---- Bloque de Resumen (Métricas Rápidas) ---- */
 .summary-card {
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  box-shadow: var(--sombra-suave);
   padding: var(--space-4);
   margin-bottom: var(--space-5);
   display: grid;
@@ -111,8 +111,8 @@
 }
 
 .card {
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  box-shadow: var(--sombra-suave);
   padding: var(--space-4);
   background: white;
 }

@@ -42,6 +42,18 @@ export class ExpedienteService {
     );
   }
 
+  /** PC-1: el analista asigna la prioridad (BAJA | MEDIA | ALTA | URGENTE). */
+  cambiarPrioridad(
+    folio: string,
+    prioridad: string
+  ): Observable<ExpedientePrimerContacto> {
+
+    return this.api.patch<ExpedientePrimerContacto>(
+      `/expedientes/folio/${encodeURIComponent(folio)}/prioridad`,
+      { prioridad }
+    );
+  }
+
   /** Archivo real de una evidencia (CU-PC-06/07). */
   descargarEvidencia(id: number): Observable<Blob> {
     return this.api.getBlob(`/evidencias/${id}`);

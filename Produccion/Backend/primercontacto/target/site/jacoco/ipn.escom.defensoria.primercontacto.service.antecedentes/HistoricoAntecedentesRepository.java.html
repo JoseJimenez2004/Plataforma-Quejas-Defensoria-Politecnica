@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HistoricoAntecedentesRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service.antecedentes</a> &gt; <span class="el_source">HistoricoAntecedentesRepository.java</span></div><h1>HistoricoAntecedentesRepository.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service.antecedentes;
+
+import ipn.escom.defensoria.primercontacto.dto.AntecedenteDTO;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.stereotype.Component;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Lectura de casos HISTÓRICOS (base historico_db, tabla quejas_historicas, dueño:
+ * historico-service) para la búsqueda manual por quejoso o denunciado.
+ *
+ * Se lee directo y en solo lectura porque la API interna de historico-service solo busca al
+ * quejoso por nombre exacto (no al denunciado). A propósito NO se registra como bean un
+ * DataSource: eso desplazaría al DataSource principal (defensoria_db) que autoconfigura
+ * Spring Boot. Si historico.datasource.url está vacío, la búsqueda solo usa el sistema.
+ */
+@Component
+public class HistoricoAntecedentesRepository {
+
+    private static final int MAX_FILAS = 200;
+
+    /*
+     * Filtro grueso en SQL (minúsculas y sin acentos); el filtro fino con las mismas reglas
+     * que el resto de la búsqueda se hace en Java (NombresPersona.coincide).
+     */
+    private static final String QUITAR_ACENTOS = &quot;translate(lower(%s), 'áéíóúü', 'aeiouu')&quot;;
+    private static final String NOMBRE_QUEJOSO =
+            &quot;concat_ws(' ', quejoso_nombre, quejoso_apellido1, quejoso_apellido2)&quot;;
+    private static final String NOMBRE_DENUNCIADO =
+            &quot;concat_ws(' ', denunciado_nombre, denunciado_apellido1, denunciado_apellido2)&quot;;
+
+    private final JdbcTemplate jdbc;
+
+    public HistoricoAntecedentesRepository(
+            @Value(&quot;${historico.datasource.url:}&quot;) String url,
+            @Value(&quot;${historico.datasource.username:postgres}&quot;) String username,
+            @Value(&quot;${historico.datasource.password:}&quot;) String password
+<span class="nc" id="L44">    ) {</span>
+<span class="nc bnc" id="L45" title="All 4 branches missed.">        if (url == null || url.isBlank()) {</span>
+<span class="nc" id="L46">            this.jdbc = null;</span>
+<span class="nc" id="L47">            return;</span>
+        }
+<span class="nc" id="L49">        DriverManagerDataSource dataSource = new DriverManagerDataSource(url, username, password);</span>
+<span class="nc" id="L50">        dataSource.setDriverClassName(&quot;org.postgresql.Driver&quot;);</span>
+<span class="nc" id="L51">        this.jdbc = new JdbcTemplate(dataSource);</span>
+<span class="nc" id="L52">        this.jdbc.setQueryTimeout(10);</span>
+<span class="nc" id="L53">    }</span>
+
+    public boolean habilitado() {
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        return jdbc != null;</span>
+    }
+
+    /**
+     * Casos históricos donde el quejoso coincide con palabrasQuejoso O el denunciado con
+     * palabrasDenunciado (las que no estén vacías).
+     */
+    public List&lt;AntecedenteDTO&gt; buscar(List&lt;String&gt; palabrasQuejoso, List&lt;String&gt; palabrasDenunciado) {
+<span class="nc" id="L64">        List&lt;String&gt; condiciones = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L65">        List&lt;Object&gt; parametros = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L66">        agregarCondicion(condiciones, parametros, NOMBRE_QUEJOSO, palabrasQuejoso);</span>
+<span class="nc" id="L67">        agregarCondicion(condiciones, parametros, NOMBRE_DENUNCIADO, palabrasDenunciado);</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (condiciones.isEmpty()) {</span>
+<span class="nc" id="L69">            return List.of();</span>
+        }
+
+<span class="nc" id="L72">        String sql = &quot;SELECT folio, fecha_presentacion_original, unidad_academica_clave, motivo, &quot;</span>
+                + &quot;descripcion, estatus, resultado, quejoso_nombre, quejoso_apellido1, &quot;
+                + &quot;quejoso_apellido2, denunciado_nombre, denunciado_apellido1, denunciado_apellido2 &quot;
+<span class="nc" id="L75">                + &quot;FROM quejas_historicas WHERE &quot; + String.join(&quot; OR &quot;, condiciones)</span>
+                + &quot; ORDER BY fecha_presentacion_original DESC NULLS LAST LIMIT &quot; + MAX_FILAS;
+
+<span class="nc" id="L78">        return jdbc.query(sql, (rs, i) -&gt; convertir(rs), parametros.toArray());</span>
+    }
+
+    private void agregarCondicion(
+            List&lt;String&gt; condiciones,
+            List&lt;Object&gt; parametros,
+            String columnaNombre,
+            List&lt;String&gt; palabras
+    ) {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (palabras.isEmpty()) {</span>
+<span class="nc" id="L88">            return;</span>
+        }
+<span class="nc" id="L90">        List&lt;String&gt; partes = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        for (String palabra : palabras) {</span>
+<span class="nc" id="L92">            partes.add(QUITAR_ACENTOS.formatted(columnaNombre) + &quot; LIKE ?&quot;);</span>
+<span class="nc" id="L93">            parametros.add(&quot;%&quot; + palabra + &quot;%&quot;);</span>
+<span class="nc" id="L94">        }</span>
+<span class="nc" id="L95">        condiciones.add(&quot;(&quot; + String.join(&quot; AND &quot;, partes) + &quot;)&quot;);</span>
+<span class="nc" id="L96">    }</span>
+
+    private AntecedenteDTO convertir(ResultSet rs) throws SQLException {
+<span class="nc" id="L99">        java.sql.Date fecha = rs.getDate(&quot;fecha_presentacion_original&quot;);</span>
+<span class="nc" id="L100">        String descripcion = rs.getString(&quot;descripcion&quot;);</span>
+<span class="nc" id="L101">        return AntecedenteDTO.builder()</span>
+<span class="nc" id="L102">                .folioQueja(rs.getString(&quot;folio&quot;))</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                .fecha(fecha != null ? fecha.toLocalDate().toString() : null)</span>
+<span class="nc" id="L104">                .unidadAcademica(rs.getString(&quot;unidad_academica_clave&quot;))</span>
+<span class="nc" id="L105">                .asunto(rs.getString(&quot;motivo&quot;))</span>
+<span class="nc" id="L106">                .descripcion(descripcion)</span>
+<span class="nc" id="L107">                .estatus(rs.getString(&quot;estatus&quot;))</span>
+<span class="nc" id="L108">                .resultado(rs.getString(&quot;resultado&quot;))</span>
+<span class="nc" id="L109">                .nombreQuejoso(NombresPersona.unir(rs.getString(&quot;quejoso_nombre&quot;),</span>
+<span class="nc" id="L110">                        rs.getString(&quot;quejoso_apellido1&quot;), rs.getString(&quot;quejoso_apellido2&quot;)))</span>
+<span class="nc" id="L111">                .nombreDenunciado(NombresPersona.unir(rs.getString(&quot;denunciado_nombre&quot;),</span>
+<span class="nc" id="L112">                        rs.getString(&quot;denunciado_apellido1&quot;), rs.getString(&quot;denunciado_apellido2&quot;)))</span>
+<span class="nc" id="L113">                .origen(NombresPersona.ORIGEN_HISTORICO)</span>
+<span class="nc" id="L114">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

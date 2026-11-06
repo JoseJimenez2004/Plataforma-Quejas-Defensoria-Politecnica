@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BandejaInvestigacionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">BandejaInvestigacionService.java</span></div><h1>BandejaInvestigacionService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import ipn.escom.defensoria.subdefensoria.dto.BandejaNuevaDTO;
+import ipn.escom.defensoria.subdefensoria.entity.EstatusExpediente;
+import ipn.escom.defensoria.subdefensoria.entity.EstatusOficio;
+import ipn.escom.defensoria.subdefensoria.entity.ExpedienteInvestigacion;
+import ipn.escom.defensoria.subdefensoria.entity.FaseOficio;
+import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
+import ipn.escom.defensoria.subdefensoria.repository.OficioInformacionRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * Pantalla P14.A &quot;Quejas Nuevas&quot;: expedientes a los que hay que
+ * redactarles un oficio ahora mismo. Cubre dos casos: RECIBIDO (toca
+ * TS-01, primer oficio) y EN_ESPERA_OFICIO sin oficio de esa fase
+ * todavia activo (toca TS-04, oficio al director).
+ */
+@Service
+public class BandejaInvestigacionService {
+
+    private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final OficioInformacionRepository oficioRepository;
+
+    public BandejaInvestigacionService(
+            ExpedienteInvestigacionRepository expedienteRepository,
+            OficioInformacionRepository oficioRepository
+<span class="nc" id="L29">    ) {</span>
+<span class="nc" id="L30">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L31">        this.oficioRepository = oficioRepository;</span>
+<span class="nc" id="L32">    }</span>
+
+    public List&lt;BandejaNuevaDTO&gt; obtenerQuejasNuevas() {
+<span class="nc" id="L35">        List&lt;BandejaNuevaDTO&gt; resultado = new java.util.ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L37">        expedienteRepository.findByEstatusOrderByFechaAdmisionAsc(EstatusExpediente.RECIBIDO)</span>
+<span class="nc" id="L38">                .forEach(e -&gt; resultado.add(convertirADTO(e, FaseOficio.SOLICITUD_INFORMACION)));</span>
+
+        // En investigación (abierto o con un acuerdo rechazado) y sin oficio pendiente: toca
+        // emitir el oficio.
+<span class="nc" id="L42">        expedienteRepository.findByEstatusOrderByFechaAdmisionAsc(EstatusExpediente.EN_INVESTIGACION).stream()</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">                .filter(e -&gt; !oficioRepository.existsByExpedienteIdAndEstatus(e.getId(), EstatusOficio.EN_ESPERA)</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">                        &amp;&amp; !oficioRepository.existsByExpedienteIdAndEstatus(e.getId(), EstatusOficio.VENCIDO))</span>
+<span class="nc" id="L45">                .forEach(e -&gt; resultado.add(convertirADTO(e, FaseOficio.SOLICITUD_INFORMACION)));</span>
+
+<span class="nc" id="L47">        return resultado;</span>
+    }
+
+    private BandejaNuevaDTO convertirADTO(ExpedienteInvestigacion e, String siguienteFase) {
+<span class="nc" id="L51">        return BandejaNuevaDTO.builder()</span>
+<span class="nc" id="L52">                .expedienteId(e.getId())</span>
+<span class="nc" id="L53">                .folio(e.getFolio())</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">                .fechaAdmision(e.getFechaAdmision() != null ? e.getFechaAdmision().toString() : null)</span>
+<span class="nc" id="L55">                .quejosoNombre(e.getQuejosoNombre())</span>
+<span class="nc" id="L56">                .asunto(e.getAsunto())</span>
+<span class="nc" id="L57">                .unidadAcademica(e.getUnidadAcademica())</span>
+<span class="nc" id="L58">                .siguienteFase(siguienteFase)</span>
+<span class="nc" id="L59">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

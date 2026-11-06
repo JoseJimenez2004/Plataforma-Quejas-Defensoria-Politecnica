@@ -5,18 +5,22 @@
   </div>
 
   <div class="sd-kpis">
-    <button type="button" class="sd-kpi" (click)="irA('atender')">
+    <button type="button" class="sd-kpi" (click)="irAEtapa('RECIBIDO')">
       <span>Por abrir</span><strong>{{ porAbrir }}</strong><small>Llegaron de Primer Contacto</small>
     </button>
-    <button type="button" class="sd-kpi" (click)="irA('atender')">
+    <button type="button" class="sd-kpi" (click)="irAEtapa('EN_INVESTIGACION')">
       <span>Por emitir oficio</span><strong>{{ porOficio }}</strong><small>Solicitud o gestión</small>
     </button>
     <button type="button" class="sd-kpi" (click)="irA('ua')">
-      <span>Esperando respuesta</span><strong>{{ esperando }}</strong>
+      <span>Esperando a la unidad</span><strong>{{ esperando }}</strong>
       <small>{{ esperandoPorVencer ? esperandoPorVencer + ' vence en 3 días o menos' : 'De la unidad académica' }}</small>
     </button>
-    <button type="button" class="sd-kpi" (click)="irA('atender')">
+    <button type="button" class="sd-kpi" (click)="irAEtapa('ELABORO_ACUERDO', 'PENDIENTE_CONCLUSION')">
       <span>Por redactar acuerdo</span><strong>{{ porAcuerdo }}</strong><small>Conciliación o conclusión</small>
+    </button>
+    <!-- SD-3: los acuerdos enviados ya no "desaparecen" -->
+    <button type="button" class="sd-kpi" (click)="irAEtapa('PENDIENTE_CONCILIACION')">
+      <span>Esperando al quejoso</span><strong>{{ esperandoQuejoso }}</strong><small>Acuerdo de conciliación enviado</small>
     </button>
     <button type="button" class="sd-kpi" [class.alerta]="vencidos > 0" (click)="irA('tramite', 'vencidos')">
       <span>Oficios vencidos</span><strong>{{ vencidos }}</strong><small>Requieren recordatorio</small>
@@ -37,7 +41,8 @@
             <div class="sd-pendiente">
               <i class="sev" [class]="'sev sev-' + p.paso.nivel"></i>
               <div>
-                <b><a class="enlace" (click)="abrir(p.e)">{{ p.e.folio }}</a> · {{ p.e.unidadAcademica }}</b>
+                <b><a class="enlace" (click)="abrir(p.e)">{{ p.e.folio }}</a> · {{ p.e.unidadAcademica }}
+                  @if (p.e.prioridad) { <span [class]="'sd-chip ' + clasePrioridad(p.e.prioridad)">{{ etiquetaPrioridad(p.e.prioridad) }}</span> }</b>
                 <span class="sd-muted">{{ p.paso.descripcion }}</span>
               </div>
               <button type="button" [class]="p.paso.nivel === 'info' ? 'sd-btn-borde chico' : 'sd-btn chico'" (click)="hacer(p)">{{ p.paso.boton }}</button>
@@ -72,12 +77,12 @@
         @if (enTramite) {
           <div class="barra-etapas">
             @for (et of etapas; track et.etiqueta) {
-              @if (et.total) { <i [style.width.%]="ancho(et)" [style.background]="et.color" [title]="et.etiqueta + ': ' + et.total"></i> }
+              @if (et.total) { <i class="clic" [style.width.%]="ancho(et)" [style.background]="et.color" [title]="et.etiqueta + ': ' + et.total" (click)="irAEtapa(et.estatus)"></i> }
             }
           </div>
           <div class="leyenda">
             @for (et of etapas; track et.etiqueta) {
-              <span><i [style.background]="et.color"></i>{{ et.etiqueta }} {{ et.total }}</span>
+              <span class="clic" (click)="irAEtapa(et.estatus)"><i [style.background]="et.color"></i>{{ et.etiqueta }} {{ et.total }}</span>
             }
           </div>
         } @else {

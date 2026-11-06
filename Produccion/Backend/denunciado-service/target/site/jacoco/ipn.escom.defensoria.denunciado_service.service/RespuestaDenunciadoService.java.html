@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RespuestaDenunciadoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">denunciado-service</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.denunciado_service.service</a> &gt; <span class="el_source">RespuestaDenunciadoService.java</span></div><h1>RespuestaDenunciadoService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.denunciado_service.service;
+
+import static ipn.escom.defensoria.denunciado_service.validacion.ReglasDenunciado.*;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import ipn.escom.defensoria.denunciado_service.dto.ArchivoResumen;
+import ipn.escom.defensoria.denunciado_service.dto.RegistroRespuestaRequest;
+import ipn.escom.defensoria.denunciado_service.dto.RespuestaDetalleModel;
+import ipn.escom.defensoria.denunciado_service.dto.RespuestaRegistradaModel;
+import ipn.escom.defensoria.denunciado_service.entity.RespuestaDenunciado;
+import ipn.escom.defensoria.denunciado_service.entity.RespuestaDenunciadoArchivo;
+import ipn.escom.defensoria.denunciado_service.repository.RespuestaDenunciadoArchivoRepository;
+import ipn.escom.defensoria.denunciado_service.repository.RespuestaDenunciadoRepository;
+import ipn.escom.defensoria.denunciado_service.validacion.DetectorTipoArchivo;
+import ipn.escom.defensoria.denunciado_service.validacion.Textos;
+import ipn.escom.defensoria.denunciado_service.validacion.TipoArchivoDetectado;
+import ipn.escom.defensoria.denunciado_service.validacion.ValidacionException;
+
+@Service
+public class RespuestaDenunciadoService {
+
+<span class="fc" id="L37">    private static final Logger log = LoggerFactory.getLogger(RespuestaDenunciadoService.class);</span>
+<span class="fc" id="L38">    private static final ZoneId ZONA = ZoneId.of(&quot;America/Mexico_City&quot;);</span>
+    private static final String ESTATUS_RECIBIDA = &quot;RECIBIDA&quot;;
+
+    private final RespuestaDenunciadoRepository respuestaRepository;
+    private final RespuestaDenunciadoArchivoRepository archivoRepository;
+
+    public RespuestaDenunciadoService(RespuestaDenunciadoRepository respuestaRepository,
+<span class="fc" id="L45">                                      RespuestaDenunciadoArchivoRepository archivoRepository) {</span>
+<span class="fc" id="L46">        this.respuestaRepository = respuestaRepository;</span>
+<span class="fc" id="L47">        this.archivoRepository = archivoRepository;</span>
+<span class="fc" id="L48">    }</span>
+
+    // ------------------------------------------------------------------ registro
+
+    public static final String ORIGEN_DENUNCIADO = &quot;DENUNCIADO&quot;;
+    public static final String ORIGEN_PERSONAL = &quot;PERSONAL&quot;;
+
+    /** Registro del propio denunciado (formulario público; el endpoint ya está cerrado). */
+    @Transactional
+    public RespuestaRegistradaModel registrar(RegistroRespuestaRequest d) {
+<span class="fc" id="L58">        return registrar(d, null);</span>
+    }
+
+    /**
+     * PC-2: el analista de Primer Contacto captura la versión del denunciado (p. ej. tras una
+     * entrevista). No pide aviso de privacidad (se guarda false) y la credencial es opcional;
+     * los archivos siguen las mismas reglas de tipo y tamaño.
+     */
+    @Transactional
+    public RespuestaRegistradaModel registrarPorPersonal(RegistroRespuestaRequest d, String capturadoPor) {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (Textos.esVacio(capturadoPor)) {</span>
+<span class="nc" id="L69">            throw new ValidacionException(&quot;No se identificó al usuario que captura la versión.&quot;);</span>
+        }
+<span class="nc" id="L71">        return registrar(d, capturadoPor.trim());</span>
+    }
+
+    private RespuestaRegistradaModel registrar(RegistroRespuestaRequest d, String capturadoPor) {
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        boolean personal = capturadoPor != null;</span>
+<span class="fc" id="L76">        String folioQueja = mayusculas(Textos.normalizar(d.getFolioQueja()));</span>
+<span class="fc" id="L77">        String nombre = Textos.normalizar(d.getNombre());</span>
+<span class="fc" id="L78">        String apellido1 = Textos.normalizar(d.getApellido1());</span>
+<span class="fc" id="L79">        String apellido2 = Textos.normalizar(d.getApellido2());</span>
+<span class="fc" id="L80">        String unidad = Textos.normalizar(d.getUnidadProcedenciaClave());</span>
+<span class="fc" id="L81">        String tipo = mayusculas(Textos.normalizar(d.getTipoIdentificacion()));</span>
+<span class="fc" id="L82">        String numero = Textos.normalizar(d.getNumeroIdentificacion());</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        String descripcion = d.getDescripcionHechos() == null ? null : d.getDescripcionHechos().trim();</span>
+
+<span class="pc bpc" id="L85" title="1 of 4 branches missed.">        if (folioQueja == null || !folioQueja.matches(REGEX_FOLIO_QUEJA)) {</span>
+<span class="fc" id="L86">            throw new ValidacionException(&quot;El folio de la queja no es válido (formato FOL-XXXXXXXX).&quot;);</span>
+        }
+<span class="fc" id="L88">        validarNombre(nombre, &quot;el nombre&quot;, true);</span>
+<span class="fc" id="L89">        validarNombre(apellido1, &quot;el primer apellido&quot;, true);</span>
+<span class="fc" id="L90">        validarNombre(apellido2, &quot;el segundo apellido&quot;, false);</span>
+
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (unidad == null) {</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">            throw new ValidacionException(personal ? &quot;Selecciona la unidad de procedencia.&quot;</span>
+<span class="fc" id="L94">                    : &quot;Selecciona tu unidad de procedencia.&quot;);</span>
+        }
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (unidad.length() &gt; CLAVE_UNIDAD_LONGITUD_MAXIMA) {</span>
+<span class="fc" id="L97">            throw new ValidacionException(&quot;La unidad de procedencia no es válida.&quot;);</span>
+        }
+<span class="fc bfc" id="L99" title="All 4 branches covered.">        if (!TIPO_ALUMNO.equals(tipo) &amp;&amp; !TIPO_EMPLEADO.equals(tipo)) {</span>
+<span class="fc" id="L100">            throw new ValidacionException(&quot;Indica si eres alumno o empleado.&quot;);</span>
+        }
+<span class="pc bpc" id="L102" title="1 of 4 branches missed.">        if (numero == null || !numero.matches(REGEX_NUMERO_IDENTIFICACION)) {</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">            throw new ValidacionException(TIPO_ALUMNO.equals(tipo)</span>
+<span class="fc" id="L104">                    ? &quot;El número de boleta solo admite dígitos (máximo 10).&quot;</span>
+<span class="pc" id="L105">                    : &quot;El número de empleado solo admite dígitos (máximo 10).&quot;);</span>
+        }
+<span class="pc bpc" id="L107" title="1 of 4 branches missed.">        if (descripcion == null || descripcion.length() &lt; DESCRIPCION_LONGITUD_MINIMA) {</span>
+<span class="fc" id="L108">            throw new ValidacionException(&quot;Describe los hechos con al menos &quot; + DESCRIPCION_LONGITUD_MINIMA + &quot; caracteres.&quot;);</span>
+        }
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (descripcion.length() &gt; DESCRIPCION_LONGITUD_MAXIMA) {</span>
+<span class="fc" id="L111">            throw new ValidacionException(&quot;La descripción no puede exceder &quot; + DESCRIPCION_LONGITUD_MAXIMA + &quot; caracteres.&quot;);</span>
+        }
+<span class="pc bpc" id="L113" title="1 of 4 branches missed.">        if (!personal &amp;&amp; !Boolean.TRUE.equals(d.getAvisoPrivacidadAceptado())) {</span>
+<span class="fc" id="L114">            throw new ValidacionException(&quot;Debes leer y aceptar el aviso de privacidad.&quot;);</span>
+        }
+<span class="fc" id="L116">        LocalDate fechaEntrevista = null;</span>
+<span class="pc bpc" id="L117" title="3 of 4 branches missed.">        if (personal &amp;&amp; !Textos.esVacio(d.getFechaEntrevista())) {</span>
+            try {
+<span class="nc" id="L119">                fechaEntrevista = LocalDate.parse(d.getFechaEntrevista().trim());</span>
+<span class="nc" id="L120">            } catch (DateTimeParseException e) {</span>
+<span class="nc" id="L121">                throw new ValidacionException(&quot;La fecha de la entrevista no es válida.&quot;);</span>
+<span class="nc" id="L122">            }</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            if (fechaEntrevista.isAfter(LocalDate.now(ZONA))) {</span>
+<span class="nc" id="L124">                throw new ValidacionException(&quot;La fecha de la entrevista no puede ser futura.&quot;);</span>
+            }
+        }
+
+<span class="fc" id="L128">        List&lt;MultipartFile&gt; credencial = sinVacios(d.getCredencial());</span>
+<span class="fc" id="L129">        List&lt;MultipartFile&gt; evidencias = sinVacios(d.getEvidencias());</span>
+<span class="pc bpc" id="L130" title="3 of 4 branches missed.">        List&lt;TipoArchivoDetectado&gt; tiposCredencial = personal &amp;&amp; credencial.isEmpty()</span>
+<span class="pc" id="L131">                ? List.of() : validarCredencial(credencial);</span>
+<span class="fc" id="L132">        List&lt;TipoArchivoDetectado&gt; tiposEvidencia = validarEvidencias(evidencias);</span>
+
+<span class="fc" id="L134">        LocalDateTime ahora = LocalDateTime.now(ZONA);</span>
+<span class="fc" id="L135">        RespuestaDenunciado r = new RespuestaDenunciado();</span>
+<span class="fc" id="L136">        r.setFolioRespuesta(generarFolio());</span>
+<span class="fc" id="L137">        r.setFolioQueja(folioQueja);</span>
+<span class="fc" id="L138">        r.setNombre(nombre);</span>
+<span class="fc" id="L139">        r.setApellido1(apellido1);</span>
+<span class="fc" id="L140">        r.setApellido2(apellido2);</span>
+<span class="fc" id="L141">        r.setUnidadProcedenciaClave(unidad);</span>
+<span class="fc" id="L142">        r.setTipoIdentificacion(tipo);</span>
+<span class="fc" id="L143">        r.setNumeroIdentificacion(numero);</span>
+<span class="fc" id="L144">        r.setDescripcionHechos(descripcion);</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (personal) {</span>
+            // El aviso no aplica cuando captura el personal: se guarda false, sin bloquear.
+<span class="nc" id="L147">            r.setAvisoPrivacidadAceptado(false);</span>
+<span class="nc" id="L148">            r.setOrigen(ORIGEN_PERSONAL);</span>
+<span class="nc" id="L149">            r.setCapturadoPor(capturadoPor);</span>
+<span class="nc" id="L150">            r.setFechaEntrevista(fechaEntrevista);</span>
+        } else {
+<span class="fc" id="L152">            r.setAvisoPrivacidadAceptado(true);</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">            r.setAvisoPrivacidadVersion(Textos.esVacio(d.getAvisoPrivacidadVersion())</span>
+<span class="pc" id="L154">                    ? AVISO_PRIVACIDAD_VERSION : d.getAvisoPrivacidadVersion().trim());</span>
+<span class="fc" id="L155">            r.setAvisoPrivacidadFecha(ahora);</span>
+<span class="fc" id="L156">            r.setOrigen(ORIGEN_DENUNCIADO);</span>
+        }
+<span class="fc" id="L158">        r.setEstatus(ESTATUS_RECIBIDA);</span>
+<span class="fc" id="L159">        r.setFechaRegistro(ahora);</span>
+
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        for (int i = 0; i &lt; credencial.size(); i++) {</span>
+<span class="fc" id="L162">            r.agregarArchivo(aArchivo(credencial.get(i), tiposCredencial.get(i),</span>
+                    RespuestaDenunciadoArchivo.TIPO_IDENTIFICACION, ahora));
+        }
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        for (int i = 0; i &lt; evidencias.size(); i++) {</span>
+<span class="fc" id="L166">            r.agregarArchivo(aArchivo(evidencias.get(i), tiposEvidencia.get(i),</span>
+                    RespuestaDenunciadoArchivo.TIPO_EVIDENCIA, ahora));
+        }
+
+<span class="fc" id="L170">        RespuestaDenunciado guardada = respuestaRepository.save(r);</span>
+<span class="fc" id="L171">        log.info(&quot;Respuesta {} registrada para la queja {} ({} credencial, {} evidencias)&quot;,</span>
+<span class="fc" id="L172">                guardada.getFolioRespuesta(), folioQueja, credencial.size(), evidencias.size());</span>
+
+<span class="fc" id="L174">        return new RespuestaRegistradaModel(guardada.getFolioRespuesta(), guardada.getFolioQueja(),</span>
+<span class="fc" id="L175">                nombreCompleto(guardada), guardada.getFechaRegistro(), credencial.size(), evidencias.size());</span>
+    }
+
+    // ------------------------------------------------------------------ consulta (personal)
+
+    @Transactional(readOnly = true)
+    public List&lt;RespuestaDetalleModel&gt; listarPorFolioQueja(String folioQueja) {
+<span class="fc" id="L182">        String folio = mayusculas(Textos.normalizar(folioQueja));</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        if (folio == null) {</span>
+<span class="fc" id="L184">            throw new ValidacionException(&quot;Indica el folio de la queja.&quot;);</span>
+        }
+<span class="fc" id="L186">        return respuestaRepository.findByFolioQuejaOrderByFechaRegistroDesc(folio).stream()</span>
+<span class="fc" id="L187">                .map(this::aDetalle)</span>
+<span class="fc" id="L188">                .toList();</span>
+    }
+
+    @Transactional(readOnly = true)
+    public RespuestaDenunciadoArchivo obtenerArchivo(Long id) {
+<span class="pc" id="L193">        return archivoRepository.findById(id)</span>
+<span class="pc" id="L194">                .orElseThrow(() -&gt; new ValidacionException(&quot;No se encontró el archivo.&quot;));</span>
+    }
+
+    // ------------------------------------------------------------------ validaciones
+
+    private void validarNombre(String valor, String etiqueta, boolean obligatorio) {
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if (valor == null) {</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">            if (obligatorio) {</span>
+<span class="fc" id="L202">                throw new ValidacionException(&quot;Escribe &quot; + etiqueta + &quot;.&quot;);</span>
+            }
+<span class="fc" id="L204">            return;</span>
+        }
+<span class="pc bpc" id="L206" title="1 of 4 branches missed.">        if (valor.length() &lt; NOMBRE_LONGITUD_MINIMA || valor.length() &gt; NOMBRE_LONGITUD_MAXIMA) {</span>
+<span class="fc" id="L207">            throw new ValidacionException(capitalizar(etiqueta) + &quot; debe tener entre &quot;</span>
+                    + NOMBRE_LONGITUD_MINIMA + &quot; y &quot; + NOMBRE_LONGITUD_MAXIMA + &quot; caracteres.&quot;);
+        }
+<span class="fc bfc" id="L210" title="All 2 branches covered.">        if (!valor.matches(REGEX_NOMBRE)) {</span>
+<span class="fc" id="L211">            throw new ValidacionException(capitalizar(etiqueta)</span>
+                    + &quot; solo admite letras (se aceptan acentos, ñ, guion y apóstrofe).&quot;);
+        }
+<span class="fc" id="L214">    }</span>
+
+    private List&lt;TipoArchivoDetectado&gt; validarCredencial(List&lt;MultipartFile&gt; archivos) {
+<span class="fc bfc" id="L217" title="All 2 branches covered.">        if (archivos.size() &lt; CREDENCIAL_CANTIDAD_MINIMA) {</span>
+<span class="fc" id="L218">            throw new ValidacionException(&quot;Adjunta la imagen de tu credencial con la que te identificas.&quot;);</span>
+        }
+<span class="fc bfc" id="L220" title="All 2 branches covered.">        if (archivos.size() &gt; CREDENCIAL_CANTIDAD_MAXIMA) {</span>
+<span class="fc" id="L221">            throw new ValidacionException(&quot;Adjunta máximo &quot; + CREDENCIAL_CANTIDAD_MAXIMA</span>
+                    + &quot; imágenes de tu credencial (frente y reverso).&quot;);
+        }
+<span class="fc" id="L224">        List&lt;TipoArchivoDetectado&gt; tipos = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">        for (MultipartFile a : archivos) {</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">            if (a.getSize() &gt; CREDENCIAL_TAMANIO_MAXIMO) {</span>
+<span class="fc" id="L227">                throw new ValidacionException(&quot;La imagen \&quot;&quot; + a.getOriginalFilename() + &quot;\&quot; pesa más de 3 MB.&quot;);</span>
+            }
+<span class="fc" id="L229">            TipoArchivoDetectado tipo = DetectorTipoArchivo.detectar(a);</span>
+<span class="fc bfc" id="L230" title="All 2 branches covered.">            if (!tipo.esImagen()) {</span>
+<span class="fc" id="L231">                throw new ValidacionException(&quot;La credencial debe ser una imagen JPG o PNG (\&quot;&quot;</span>
+<span class="fc" id="L232">                        + a.getOriginalFilename() + &quot;\&quot; no lo es).&quot;);</span>
+            }
+<span class="fc" id="L234">            tipos.add(tipo);</span>
+<span class="fc" id="L235">        }</span>
+<span class="fc" id="L236">        return tipos;</span>
+    }
+
+    private List&lt;TipoArchivoDetectado&gt; validarEvidencias(List&lt;MultipartFile&gt; archivos) {
+<span class="fc bfc" id="L240" title="All 2 branches covered.">        if (archivos.size() &gt; EVIDENCIA_CANTIDAD_MAXIMA) {</span>
+<span class="fc" id="L241">            throw new ValidacionException(&quot;Puedes adjuntar máximo &quot; + EVIDENCIA_CANTIDAD_MAXIMA + &quot; evidencias.&quot;);</span>
+        }
+<span class="fc" id="L243">        long total = 0;</span>
+<span class="fc" id="L244">        List&lt;TipoArchivoDetectado&gt; tipos = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">        for (MultipartFile a : archivos) {</span>
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">            if (a.getSize() &gt; EVIDENCIA_TAMANIO_MAXIMO) {</span>
+<span class="nc" id="L247">                throw new ValidacionException(&quot;La evidencia \&quot;&quot; + a.getOriginalFilename() + &quot;\&quot; pesa más de 30 MB.&quot;);</span>
+            }
+<span class="fc" id="L249">            total += a.getSize();</span>
+<span class="fc" id="L250">            TipoArchivoDetectado tipo = DetectorTipoArchivo.detectar(a);</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">            if (tipo == TipoArchivoDetectado.DESCONOCIDO) {</span>
+<span class="fc" id="L252">                throw new ValidacionException(&quot;\&quot;&quot; + a.getOriginalFilename()</span>
+                        + &quot;\&quot; no es un tipo de archivo permitido (PDF, JPG, PNG, MP4 o MP3).&quot;);
+            }
+<span class="fc" id="L255">            tipos.add(tipo);</span>
+<span class="fc" id="L256">        }</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">        if (total &gt; EVIDENCIA_TAMANIO_TOTAL_MAXIMO) {</span>
+<span class="fc" id="L258">            throw new ValidacionException(&quot;Las evidencias suman más de 95 MB. Quita alguna o redúcela.&quot;);</span>
+        }
+<span class="fc" id="L260">        return tipos;</span>
+    }
+
+    // ------------------------------------------------------------------ utilidades
+
+    private RespuestaDenunciadoArchivo aArchivo(MultipartFile a, TipoArchivoDetectado tipo, String clase,
+                                                LocalDateTime fecha) {
+<span class="fc" id="L267">        RespuestaDenunciadoArchivo archivo = new RespuestaDenunciadoArchivo();</span>
+<span class="fc" id="L268">        archivo.setTipo(clase);</span>
+<span class="fc" id="L269">        archivo.setNombreArchivo(nombreSeguro(a.getOriginalFilename()));</span>
+<span class="fc" id="L270">        archivo.setTipoMime(tipo.mime());</span>
+<span class="fc" id="L271">        archivo.setTamanioBytes(a.getSize());</span>
+<span class="fc" id="L272">        archivo.setFechaSubida(fecha);</span>
+        try {
+<span class="fc" id="L274">            archivo.setContenido(a.getBytes());</span>
+<span class="nc" id="L275">        } catch (IOException e) {</span>
+<span class="nc" id="L276">            throw new ValidacionException(&quot;No se pudo leer el archivo \&quot;&quot; + a.getOriginalFilename() + &quot;\&quot;.&quot;);</span>
+<span class="fc" id="L277">        }</span>
+<span class="fc" id="L278">        return archivo;</span>
+    }
+
+    private RespuestaDetalleModel aDetalle(RespuestaDenunciado r) {
+<span class="nc" id="L282">        List&lt;ArchivoResumen&gt; archivos = r.getArchivos().stream()</span>
+<span class="nc" id="L283">                .map(a -&gt; new ArchivoResumen(a.getId(), a.getTipo(), a.getNombreArchivo(), a.getTipoMime(),</span>
+<span class="nc" id="L284">                        a.getTamanioBytes(), a.getFechaSubida()))</span>
+<span class="nc" id="L285">                .toList();</span>
+<span class="nc" id="L286">        return new RespuestaDetalleModel(r.getId(), r.getFolioRespuesta(), r.getFolioQueja(), r.getNombre(),</span>
+<span class="nc" id="L287">                r.getApellido1(), r.getApellido2(), r.getUnidadProcedenciaClave(), r.getTipoIdentificacion(),</span>
+<span class="nc" id="L288">                r.getNumeroIdentificacion(), r.getDescripcionHechos(), r.getEstatus(), r.getFechaRegistro(),</span>
+<span class="nc" id="L289">                r.getAvisoPrivacidadVersion(), archivos, r.getOrigen(), r.getCapturadoPor(), r.getFechaEntrevista());</span>
+    }
+
+    private String generarFolio() {
+        String folio;
+        do {
+<span class="fc" id="L295">            folio = &quot;RD-&quot; + UUID.randomUUID().toString().replace(&quot;-&quot;, &quot;&quot;).substring(0, 8).toUpperCase(Locale.ROOT);</span>
+<span class="fc bfc" id="L296" title="All 2 branches covered.">        } while (respuestaRepository.existsByFolioRespuesta(folio));</span>
+<span class="fc" id="L297">        return folio;</span>
+    }
+
+    private static List&lt;MultipartFile&gt; sinVacios(List&lt;MultipartFile&gt; archivos) {
+<span class="pc bpc" id="L301" title="2 of 6 branches missed.">        return archivos == null ? List.of() : archivos.stream().filter(a -&gt; a != null &amp;&amp; !a.isEmpty()).toList();</span>
+    }
+
+    /** Quita rutas y caracteres de control del nombre que manda el navegador. */
+    private static String nombreSeguro(String original) {
+<span class="pc bpc" id="L306" title="1 of 2 branches missed.">        String nombre = original == null ? &quot;archivo&quot; : original.replaceAll(&quot;^.*[\\\\/]&quot;, &quot;&quot;);</span>
+<span class="fc" id="L307">        nombre = nombre.replaceAll(&quot;[\\p{Cntrl}\&quot;]&quot;, &quot;&quot;).trim();</span>
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">        if (nombre.isEmpty()) {</span>
+<span class="nc" id="L309">            nombre = &quot;archivo&quot;;</span>
+        }
+<span class="pc bpc" id="L311" title="1 of 2 branches missed.">        return nombre.length() &gt; 200 ? nombre.substring(nombre.length() - 200) : nombre;</span>
+    }
+
+    private static String nombreCompleto(RespuestaDenunciado r) {
+<span class="pc bpc" id="L315" title="1 of 2 branches missed.">        return (r.getNombre() + &quot; &quot; + r.getApellido1() + (r.getApellido2() != null ? &quot; &quot; + r.getApellido2() : &quot;&quot;)).trim();</span>
+    }
+
+    private static String mayusculas(String valor) {
+<span class="fc bfc" id="L319" title="All 2 branches covered.">        return valor == null ? null : valor.toUpperCase(Locale.ROOT);</span>
+    }
+
+    private static String capitalizar(String texto) {
+<span class="fc" id="L323">        return Character.toUpperCase(texto.charAt(0)) + texto.substring(1);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

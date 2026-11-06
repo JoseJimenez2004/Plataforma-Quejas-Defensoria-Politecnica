@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DashboardService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.admin_service.service</a> &gt; <span class="el_source">DashboardService.java</span></div><h1>DashboardService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.admin_service.service;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import ipn.escom.defensoria.admin_service.model.DashboardResumenModel;
+
+@Service
+public class DashboardService {
+
+<span class="fc" id="L14">    private static final Logger log = LoggerFactory.getLogger(DashboardService.class);</span>
+    private static final String ENDPOINT_DEPENDENCIAS = &quot;/api/catalogos/dependencias&quot;;
+
+    private final PersonalAdministrativoService personalService;
+    private final PlantillaService plantillaService;
+    private final RespaldoService respaldoService;
+    private final RestTemplate restTemplate;
+    private final String catalogoServiceUrl;
+    private final IndicadoresQuejasService indicadoresQuejasService;
+
+    public DashboardService(
+            IndicadoresQuejasService indicadoresQuejasService,
+            PersonalAdministrativoService personalService,
+            PlantillaService plantillaService,
+            RespaldoService respaldoService,
+            RestTemplate restTemplate,
+<span class="fc" id="L30">            @Value(&quot;${catalogo.service.url}&quot;) String catalogoServiceUrl) {</span>
+<span class="fc" id="L31">        this.personalService = personalService;</span>
+<span class="fc" id="L32">        this.plantillaService = plantillaService;</span>
+<span class="fc" id="L33">        this.respaldoService = respaldoService;</span>
+<span class="fc" id="L34">        this.restTemplate = restTemplate;</span>
+<span class="fc" id="L35">        this.catalogoServiceUrl = catalogoServiceUrl;</span>
+<span class="fc" id="L36">        this.indicadoresQuejasService = indicadoresQuejasService;</span>
+<span class="fc" id="L37">    }</span>
+
+    public DashboardResumenModel obtenerResumen() {
+<span class="fc" id="L40">        long totalPersonal = personalService.contarActivos();</span>
+<span class="fc" id="L41">        long totalPlantillas = plantillaService.contarActivas();</span>
+<span class="fc" id="L42">        String ultimoRespaldo = respaldoService.ultimoRespaldoTexto();</span>
+<span class="fc" id="L43">        long totalDependencias = obtenerTotalDependencias();</span>
+
+<span class="fc" id="L45">        return new DashboardResumenModel(totalPersonal, totalDependencias, ultimoRespaldo, totalPlantillas,</span>
+<span class="fc" id="L46">                indicadoresQuejasService.obtener());</span>
+    }
+
+    private long obtenerTotalDependencias() {
+        try {
+<span class="nc" id="L51">            Object[] dependencias = restTemplate.getForObject(</span>
+                    catalogoServiceUrl + ENDPOINT_DEPENDENCIAS, Object[].class);
+<span class="nc bnc" id="L53" title="All 2 branches missed.">            return dependencias == null ? 0 : dependencias.length;</span>
+<span class="fc" id="L54">        } catch (Exception ex) {</span>
+            // El dashboard no debe romperse solo porque catalogo-service esté caído --
+            // simplemente mostramos 0 y lo dejamos registrado en el log.
+<span class="fc" id="L57">            log.warn(&quot;No se pudo obtener el total de dependencias desde catalogo-service: {}&quot;, ex.getMessage());</span>
+<span class="fc" id="L58">            return 0;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

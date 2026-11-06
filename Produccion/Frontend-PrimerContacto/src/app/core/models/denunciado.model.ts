@@ -36,4 +36,25 @@ export interface RespuestaDenunciado {
   fechaRegistro: string;
   avisoPrivacidadVersion?: string;
   archivos: ArchivoRespuestaDenunciado[];
+  /** PC-2: DENUNCIADO (formulario anterior) o PERSONAL (la capturó el analista). */
+  origen?: string | null;
+  /** Usuario (correo) del analista que la capturó. */
+  capturadoPor?: string | null;
+  /** AAAA-MM-DD, opcional. */
+  fechaEntrevista?: string | null;
+}
+
+/** PC-2: lo que captura el analista (multipart a denunciado-service). */
+export interface VersionDenunciadoCaptura {
+  folioQueja: string;
+  nombre: string;
+  apellido1: string;
+  apellido2?: string;
+  unidadProcedenciaClave: string;
+  tipoIdentificacion: 'ALUMNO' | 'EMPLEADO';
+  numeroIdentificacion: string;
+  fechaEntrevista?: string;
+  descripcionHechos: string;
+  credencial: File[];
+  evidencias: File[];
 }

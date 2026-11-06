@@ -13,10 +13,21 @@
 
 .app-content {
   flex: 1;
-  margin-left: 250px; /* ancho del sidebar fijo */
+  min-width: 0;
+  margin-left: 68px; /* ancho del sidebar fijo */
   /* top | right | bottom | left — el left usa --content-gutter para separar
      bien las vistas del menú (antes 28px parejo se sentía pegado). */
   padding: var(--space-6) var(--space-6) 68px var(--content-gutter);
   background: #f4f5f7;
-  min-height: calc(100vh - 72px - 40px); /* header + footer, evita que el footer quede pegado si hay poco contenido */
+  min-height: calc(100vh - 72px - 48px); /* header + footer, evita que el footer quede pegado si hay poco contenido */
+}
+
+@media (max-width: 900px) {
+  .app-body {
+    flex-direction: column;
+  }
+
+  .app-content {
+    margin-left: 0;
+  }
 }

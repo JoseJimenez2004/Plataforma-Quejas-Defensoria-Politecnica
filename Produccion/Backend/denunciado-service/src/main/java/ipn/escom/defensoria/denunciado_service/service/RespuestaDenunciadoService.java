@@ -3,7 +3,9 @@ package ipn.escom.defensoria.denunciado_service.service;
 import static ipn.escom.defensoria.denunciado_service.validacion.ReglasDenunciado.*;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,8 +49,30 @@ public class RespuestaDenunciadoService {
 
     // ------------------------------------------------------------------ registro
 
+    public static final String ORIGEN_DENUNCIADO = "DENUNCIADO";
+    public static final String ORIGEN_PERSONAL = "PERSONAL";
+
+    /** Registro del propio denunciado (formulario público; el endpoint ya está cerrado). */
     @Transactional
     public RespuestaRegistradaModel registrar(RegistroRespuestaRequest d) {
+        return registrar(d, null);
+    }
+
+    /**
+     * PC-2: el analista de Primer Contacto captura la versión del denunciado (p. ej. tras una
+     * entrevista). No pide aviso de privacidad (se guarda false) y la credencial es opcional;
+     * los archivos siguen las mismas reglas de tipo y tamaño.
+     */
+    @Transactional
+    public RespuestaRegistradaModel registrarPorPersonal(RegistroRespuestaRequest d, String capturadoPor) {
+        if (Textos.esVacio(capturadoPor)) {
+            throw new ValidacionException("No se identificó al usuario que captura la versión.");
+        }
+        return registrar(d, capturadoPor.trim());
+    }
+
+    private RespuestaRegistradaModel registrar(RegistroRespuestaRequest d, String capturadoPor) {
+        boolean personal = capturadoPor != null;
         String folioQueja = mayusculas(Textos.normalizar(d.getFolioQueja()));
         String nombre = Textos.normalizar(d.getNombre());
         String apellido1 = Textos.normalizar(d.getApellido1());
@@ -66,7 +90,8 @@ public class RespuestaDenunciadoService {
         validarNombre(apellido2, "el segundo apellido", false);
 
         if (unidad == null) {
-            throw new ValidacionException("Selecciona tu unidad de procedencia.");
+            throw new ValidacionException(personal ? "Selecciona la unidad de procedencia."
+                    : "Selecciona tu unidad de procedencia.");
         }
         if (unidad.length() > CLAVE_UNIDAD_LONGITUD_MAXIMA) {
             throw new ValidacionException("La unidad de procedencia no es válida.");
@@ -85,13 +110,25 @@ public class RespuestaDenunciadoService {
         if (descripcion.length() > DESCRIPCION_LONGITUD_MAXIMA) {
             throw new ValidacionException("La descripción no puede exceder " + DESCRIPCION_LONGITUD_MAXIMA + " caracteres.");
         }
-        if (!Boolean.TRUE.equals(d.getAvisoPrivacidadAceptado())) {
+        if (!personal && !Boolean.TRUE.equals(d.getAvisoPrivacidadAceptado())) {
             throw new ValidacionException("Debes leer y aceptar el aviso de privacidad.");
+        }
+        LocalDate fechaEntrevista = null;
+        if (personal && !Textos.esVacio(d.getFechaEntrevista())) {
+            try {
+                fechaEntrevista = LocalDate.parse(d.getFechaEntrevista().trim());
+            } catch (DateTimeParseException e) {
+                throw new ValidacionException("La fecha de la entrevista no es válida.");
+            }
+            if (fechaEntrevista.isAfter(LocalDate.now(ZONA))) {
+                throw new ValidacionException("La fecha de la entrevista no puede ser futura.");
+            }
         }
 
         List<MultipartFile> credencial = sinVacios(d.getCredencial());
         List<MultipartFile> evidencias = sinVacios(d.getEvidencias());
-        List<TipoArchivoDetectado> tiposCredencial = validarCredencial(credencial);
+        List<TipoArchivoDetectado> tiposCredencial = personal && credencial.isEmpty()
+                ? List.of() : validarCredencial(credencial);
         List<TipoArchivoDetectado> tiposEvidencia = validarEvidencias(evidencias);
 
         LocalDateTime ahora = LocalDateTime.now(ZONA);
@@ -105,10 +142,19 @@ public class RespuestaDenunciadoService {
         r.setTipoIdentificacion(tipo);
         r.setNumeroIdentificacion(numero);
         r.setDescripcionHechos(descripcion);
-        r.setAvisoPrivacidadAceptado(true);
-        r.setAvisoPrivacidadVersion(Textos.esVacio(d.getAvisoPrivacidadVersion())
-                ? AVISO_PRIVACIDAD_VERSION : d.getAvisoPrivacidadVersion().trim());
-        r.setAvisoPrivacidadFecha(ahora);
+        if (personal) {
+            // El aviso no aplica cuando captura el personal: se guarda false, sin bloquear.
+            r.setAvisoPrivacidadAceptado(false);
+            r.setOrigen(ORIGEN_PERSONAL);
+            r.setCapturadoPor(capturadoPor);
+            r.setFechaEntrevista(fechaEntrevista);
+        } else {
+            r.setAvisoPrivacidadAceptado(true);
+            r.setAvisoPrivacidadVersion(Textos.esVacio(d.getAvisoPrivacidadVersion())
+                    ? AVISO_PRIVACIDAD_VERSION : d.getAvisoPrivacidadVersion().trim());
+            r.setAvisoPrivacidadFecha(ahora);
+            r.setOrigen(ORIGEN_DENUNCIADO);
+        }
         r.setEstatus(ESTATUS_RECIBIDA);
         r.setFechaRegistro(ahora);
 
@@ -240,7 +286,7 @@ public class RespuestaDenunciadoService {
         return new RespuestaDetalleModel(r.getId(), r.getFolioRespuesta(), r.getFolioQueja(), r.getNombre(),
                 r.getApellido1(), r.getApellido2(), r.getUnidadProcedenciaClave(), r.getTipoIdentificacion(),
                 r.getNumeroIdentificacion(), r.getDescripcionHechos(), r.getEstatus(), r.getFechaRegistro(),
-                r.getAvisoPrivacidadVersion(), archivos);
+                r.getAvisoPrivacidadVersion(), archivos, r.getOrigen(), r.getCapturadoPor(), r.getFechaEntrevista());
     }
 
     private String generarFolio() {

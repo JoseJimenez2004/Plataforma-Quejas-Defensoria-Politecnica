@@ -16,8 +16,8 @@ import lombok.Data;
  * Se mapea sobre la tabla "acuerdos_conciliacion", que también mapea revision-service con su
  * propia clase (mismo patrón "entidad propia sobre tabla compartida" ya usado con "quejas").
  * Aquí en queja-service esta entidad es de SOLO LECTURA + respuesta del quejoso (aceptar/
- * rechazar); la creación del acuerdo la hace el personal (staff con rol SUBDEFENSOR, DEFENSOR
- * o ADMIN_SISTEMAS) desde revision-service.
+ * rechazar); la creación del acuerdo la hace el personal (staff con rol RECEPCIONISTA, SUBDEFENSOR
+ * o DEFENSOR) desde revision-service.
  *
  * No se modela como relación JPA hacia Queja (evitaría mezclar entidades de dos módulos
  * distintos sobre la misma fila) -- se referencia por folio y correo, igual que el resto de

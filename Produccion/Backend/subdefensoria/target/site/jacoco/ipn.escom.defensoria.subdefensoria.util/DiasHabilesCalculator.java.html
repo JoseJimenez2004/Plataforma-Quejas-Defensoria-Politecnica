@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DiasHabilesCalculator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.util</a> &gt; <span class="el_source">DiasHabilesCalculator.java</span></div><h1>DiasHabilesCalculator.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.util;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+
+/**
+ * Calcula fechas contando solo dias habiles (lunes a viernes), tal
+ * como lo pide la politica de operacion #7 del Manual DDP-PO-02:
+ * 10 dias habiles para la primera solicitud de informacion, 5 dias
+ * habiles para las subsecuentes.
+ *
+ * Nota: esto NO descuenta dias festivos oficiales del calendario del
+ * IPN todavia (no hay ese catalogo disponible aun); si mas adelante
+ * se agrega un catalogo de dias inhabiles, este es el unico lugar
+ * que habria que tocar.
+ */
+public final class DiasHabilesCalculator {
+
+    private DiasHabilesCalculator() {
+    }
+
+    public static LocalDate sumarDiasHabiles(LocalDate fechaInicio, int diasHabiles) {
+<span class="fc" id="L23">        LocalDate fecha = fechaInicio;</span>
+<span class="fc" id="L24">        int sumados = 0;</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        while (sumados &lt; diasHabiles) {</span>
+<span class="fc" id="L26">            fecha = fecha.plusDays(1);</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">            if (esDiaHabil(fecha)) {</span>
+<span class="fc" id="L28">                sumados++;</span>
+            }
+        }
+<span class="fc" id="L31">        return fecha;</span>
+    }
+
+    public static long diasHabilesTranscurridos(LocalDate desde, LocalDate hasta) {
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        if (hasta.isBefore(desde)) {</span>
+<span class="fc" id="L36">            return 0;</span>
+        }
+<span class="fc" id="L38">        long contador = 0;</span>
+<span class="fc" id="L39">        LocalDate cursor = desde;</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        while (cursor.isBefore(hasta)) {</span>
+<span class="fc" id="L41">            cursor = cursor.plusDays(1);</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">            if (esDiaHabil(cursor)) {</span>
+<span class="fc" id="L43">                contador++;</span>
+            }
+        }
+<span class="fc" id="L46">        return contador;</span>
+    }
+
+    private static boolean esDiaHabil(LocalDate fecha) {
+<span class="fc" id="L50">        DayOfWeek dia = fecha.getDayOfWeek();</span>
+<span class="fc bfc" id="L51" title="All 4 branches covered.">        return dia != DayOfWeek.SATURDAY &amp;&amp; dia != DayOfWeek.SUNDAY;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

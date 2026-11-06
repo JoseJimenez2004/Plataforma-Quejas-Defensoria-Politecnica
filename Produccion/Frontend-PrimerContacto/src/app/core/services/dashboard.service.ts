@@ -22,6 +22,24 @@ export class DashboardService {
     private agendaService: AgendaService
   ) {}
 
+  /**
+   * PC-4: Inicio pide la bandeja UNA sola vez y de ahí saca indicadores, lista y actividad
+   * (antes eran tres peticiones iguales a /bandeja al abrir la pantalla).
+   */
+  obtenerPanel(): Observable<{
+    resumen: DashboardResumen[];
+    lista: DashboardItemLista[];
+    actividad: DashboardActividad[];
+  }> {
+    return this.bandejaService.obtenerBandeja().pipe(
+      map(expedientes => ({
+        resumen: this.construirResumen(expedientes),
+        lista: expedientes.map(exp => this.mapearItemLista(exp)),
+        actividad: this.construirActividad(expedientes)
+      }))
+    );
+  }
+
   obtenerResumen(): Observable<DashboardResumen[]> {
     return this.bandejaService.obtenerBandeja().pipe(
       map(expedientes => this.construirResumen(expedientes))

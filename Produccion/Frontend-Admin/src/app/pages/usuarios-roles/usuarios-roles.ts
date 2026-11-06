@@ -19,7 +19,7 @@ import {
 import { Paginador } from '../../shared/panel/paginador';
 import { fechaCorta, fechaHora } from '../../shared/panel/csv';
 
-const ROLES_DISPONIBLES: RolStaff[] = ['RECEPCIONISTA', 'ANALISTA_PRIMER_CONTACTO', 'SUBDEFENSOR', 'DEFENSOR', 'ADMIN_SISTEMAS'];
+const ROLES_DISPONIBLES: RolStaff[] = ['RECEPCIONISTA', 'ANALISTA_PRIMER_CONTACTO', 'SUBDEFENSOR', 'DEFENSOR'];
 
 /** Área por defecto cuando la persona no tiene una dependencia capturada. */
 const AREA_POR_ROL: Record<string, string> = {
@@ -27,7 +27,6 @@ const AREA_POR_ROL: Record<string, string> = {
   ANALISTA_PRIMER_CONTACTO: 'Primer Contacto',
   SUBDEFENSOR: 'Subdefensoría',
   DEFENSOR: 'Defensoría',
-  ADMIN_SISTEMAS: 'Sistemas',
 };
 
 const TAMANIO = 10;
@@ -165,7 +164,6 @@ export class UsuariosRoles implements OnInit {
       plural(this.contar('RECEPCIONISTA'), 'recepcionista', 'recepcionistas'),
       plural(this.contar('SUBDEFENSOR'), 'abogado', 'abogados'),
       plural(this.contar('ANALISTA_PRIMER_CONTACTO'), 'analista', 'analistas'),
-      plural(this.contar('ADMIN_SISTEMAS'), 'administrativo', 'administrativos'),
       plural(this.contar('DEFENSOR'), 'defensor', 'defensores'),
     ];
     return partes.filter((p) => !p.startsWith('0 ')).join(' · ');

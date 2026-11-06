@@ -8,9 +8,13 @@ import ipn.escom.defensoria.subdefensoria.entity.ExpedienteInvestigacion;
 import ipn.escom.defensoria.subdefensoria.exception.RecursoNoEncontradoException;
 import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
 import ipn.escom.defensoria.subdefensoria.service.ExpedienteResumenService;
+import ipn.escom.defensoria.subdefensoria.util.Prioridad;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /** Consulta de detalle de un expediente (para la pantalla de detalle del front). */
 @RestController
@@ -57,6 +61,23 @@ public class ExpedienteInvestigacionController {
         return convertir(e);
     }
 
+    /**
+     * SD-6: el subdefensor cambia la prioridad (BAJA|MEDIA|ALTA|URGENTE). El cambio no regresa
+     * a Primer Contacto. Cualquier otro valor responde 400.
+     */
+    @PatchMapping("/{id}/prioridad")
+    public ResponseEntity<?> cambiarPrioridad(@PathVariable Long id, @RequestBody Map<String, String> cuerpo) {
+        String valor = cuerpo == null ? null : cuerpo.get("prioridad");
+        if (!Prioridad.esValida(valor)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Prioridad inválida. Usa BAJA, MEDIA, ALTA o URGENTE."));
+        }
+        ExpedienteInvestigacion e = expedienteRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el expediente " + id));
+        e.setPrioridad(Prioridad.normalizar(valor));
+        e.setFechaActualizacion(LocalDateTime.now());
+        return ResponseEntity.ok(convertir(expedienteRepository.save(e)));
+    }
+
     private ExpedienteInvestigacion buscar(String folio) {
         return expedienteRepository.findByFolio(folio)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe el expediente con folio " + folio));
@@ -84,6 +105,7 @@ public class ExpedienteInvestigacionController {
                 .observacionesAnalista(
                         e.getObservacionesAnalista()
                 )
+                .prioridad(e.getPrioridad())
                 .build();
     }
 }

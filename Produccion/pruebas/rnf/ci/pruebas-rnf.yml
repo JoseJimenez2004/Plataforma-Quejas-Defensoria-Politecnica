@@ -14,7 +14,7 @@
 #
 # Secretos (Settings > Secrets and variables > Actions):
 #   CRED_QUEJOSO, CRED_RECEPCIONISTA, CRED_ANALISTA_PRIMER_CONTACTO, CRED_SUBDEFENSOR,
-#   CRED_DEFENSOR, CRED_ADMIN_SISTEMAS   -> "correo:password" de cuentas DE PRUEBA
+#   CRED_DEFENSOR                       -> "correo:password" de cuentas DE PRUEBA
 # Variables:
 #   URL_PRUEBAS   -> https://... del entorno de pruebas (nunca producción)
 #   DOMINIO_TLS   -> dominio para la prueba pasiva de TLS (puede ser producción)
@@ -237,7 +237,6 @@ jobs:
       CRED_ANALISTA_PRIMER_CONTACTO: ${{ secrets.CRED_ANALISTA_PRIMER_CONTACTO }}
       CRED_SUBDEFENSOR: ${{ secrets.CRED_SUBDEFENSOR }}
       CRED_DEFENSOR: ${{ secrets.CRED_DEFENSOR }}
-      CRED_ADMIN_SISTEMAS: ${{ secrets.CRED_ADMIN_SISTEMAS }}
     steps:
       - uses: actions/checkout@v4
       - name: SEG-01 / RNF-Q06 / RNF-A03 Matriz rol x endpoint en vivo
@@ -311,7 +310,7 @@ jobs:
       - name: Respaldo -> descarga -> restauración en base desechable
         env:
           BASE_URL: ${{ vars.URL_PRUEBAS }}
-          CRED_ADMIN_SISTEMAS: ${{ secrets.CRED_ADMIN_SISTEMAS }}
+          CRED_DEFENSOR: ${{ secrets.CRED_DEFENSOR }}
         run: bash "$RNF/fiabilidad/respaldo-restaurable.sh"
 
   usabilidad:

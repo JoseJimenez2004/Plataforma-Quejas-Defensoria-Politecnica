@@ -362,3 +362,11 @@ button {
 .badge--turnada    { color: #1b6b4a; background: #e2f4ec; }
 .badge--rechazada  { color: #b3261e; background: #fdeceb; }
 .badge--cancelada  { color: #6b6b6b; background: #eeeeee; }
+
+/* Leyenda del candado de 90 días bajo la fecha de los hechos. */
+.ayuda-plazo {
+  display: block;
+  margin-top: 4px;
+  color: var(--texto-suave, #6b7280);
+  font-size: 12px;
+}

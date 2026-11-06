@@ -17,7 +17,7 @@ import ipn.escom.defensoria.admin_service.service.PersonalAdministrativoService;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * A diferencia de PersonalController (exclusivo ADMIN_SISTEMAS, opera sobre OTRAS cuentas),
+ * A diferencia de PersonalController (exclusivo DEFENSOR, opera sobre OTRAS cuentas),
  * este endpoint NO lleva @PreAuthorize de rol -- cualquier cuenta autenticada (recepcionista,
  * analista, subdefensor, defensor o admin de sistemas) puede usarlo para cambiar SU PROPIA
  * contraseña. WebConfig ya exige un JWT válido para todo lo que no sea /api/admin/auth/**.

@@ -37,7 +37,7 @@ public class WebConfig {
                 // Igual que en catalogo-service: la regla de "/admin/**" va ANTES del
                 // permitAll de abajo porque es un subconjunto de "/api/chatbot/**" y Spring
                 // Security aplica la PRIMERA regla que haga match. El rol exacto
-                // (ADMIN_SISTEMAS) lo exige @PreAuthorize en ChatbotAdminController.
+                // (DEFENSOR) lo exige @PreAuthorize en ChatbotAdminController.
                 .requestMatchers("/api/chatbot/admin/**").authenticated()
                 // El resto (preguntas/categorías) es público: lo consume el widget del
                 // mini-chat en el portal del quejoso, sin necesidad de sesión.

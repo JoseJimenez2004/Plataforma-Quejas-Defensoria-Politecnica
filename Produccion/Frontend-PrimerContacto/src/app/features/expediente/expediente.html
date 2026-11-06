@@ -23,7 +23,14 @@
       }
     </div>
     <div class="exp-chips">
-      <span class="pc-chip prioridad grande">{{ expediente.prioridad }} prioridad</span>
+      <label class="selector-prioridad" title="La prioridad la asigna Primer Contacto y viaja a Subdefensoría">
+        <mat-icon>flag</mat-icon> Prioridad
+        <select [class]="clasePrioridad(expediente.prioridad)" [ngModel]="codigoPrioridadActual"
+                (ngModelChange)="cambiarPrioridad($event)" [disabled]="guardandoPrioridad" aria-label="Prioridad del expediente">
+          @if (codigoPrioridadActual === 'SIN_ASIGNAR') { <option value="SIN_ASIGNAR" disabled>Sin asignar</option> }
+          @for (p of prioridades; track p.codigo) { <option [value]="p.codigo">{{ p.etiqueta }}</option> }
+        </select>
+      </label>
       @if (expediente.quejoso.unidadAcademica) { <span class="pc-chip unidad grande">{{ expediente.quejoso.unidadAcademica }}</span> }
     </div>
   </div>
@@ -59,9 +66,20 @@
               <p class="exp-aviso">El modelo de resumen no respondió; esto es una aproximación hecha en el navegador. Revísalo antes de usarlo.</p>
             }
             <div class="acciones-der">
+              <button type="button" class="pc-btn-borde" (click)="generarResumen()"><mat-icon>refresh</mat-icon> Volver a generar</button>
               <button type="button" class="pc-btn-borde" (click)="verNarrativaCompleta()"><mat-icon>visibility</mat-icon> Ver narrativa completa</button>
               <button type="button" class="pc-btn" (click)="copiarResumen()"><mat-icon>content_copy</mat-icon> Copiar resumen</button>
             </div>
+          } @else if (expediente.narrativa.trim()) {
+            <!-- PC-3: el resumen se pide a demanda (el modelo tarda y no siempre hace falta). -->
+            @if (narrativaBreve) {
+              <p class="exp-aviso">La queja es breve; puede que no necesites resumen.</p>
+            }
+            <div class="acciones-der">
+              <button type="button" class="pc-btn-borde" (click)="verNarrativaCompleta()"><mat-icon>visibility</mat-icon> Ver narrativa completa</button>
+              <button type="button" class="pc-btn" (click)="generarResumen()" [disabled]="cargandoResumen"><mat-icon>auto_awesome</mat-icon> Generar resumen con IA</button>
+            </div>
+            <p class="vacio">Esto puede tardar hasta 2 minutos.</p>
           } @else {
             <p class="vacio">La queja no tiene narrativa para resumir.</p>
           }
@@ -195,7 +213,7 @@
             <div><dt><mat-icon>event</mat-icon> Fecha de los hechos</dt><dd>{{ expediente.datosQueja?.fechaHechos || '—' }}</dd></div>
             <div><dt><mat-icon>send</mat-icon> Origen</dt><dd>Portal institucional</dd></div>
             <div><dt><mat-icon>schedule</mat-icon> Estado actual</dt><dd><span [class]="'estatus-chip ' + claseEstatus(expediente.estatusCodigo)">{{ expediente.estatus }}</span></dd></div>
-            <div><dt><mat-icon>flag</mat-icon> Prioridad</dt><dd><span class="pc-chip prioridad">{{ expediente.prioridad }}</span></dd></div>
+            <div><dt><mat-icon>flag</mat-icon> Prioridad</dt><dd><span [class]="'pc-chip ' + clasePrioridad(expediente.prioridad)">{{ expediente.prioridad }}</span></dd></div>
           </dl>
         </div>
 
@@ -284,11 +302,16 @@
         </div>
 
         <div class="pc-card">
-          <div class="pc-card-cabeza"><h3><mat-icon>record_voice_over</mat-icon> Versión del denunciado</h3></div>
+          <div class="pc-card-cabeza">
+            <h3><mat-icon>record_voice_over</mat-icon> Versión del denunciado</h3>
+            @if (abierto) {
+              <button type="button" class="pc-btn-borde chico" (click)="registrarVersionDenunciado()"><mat-icon>add</mat-icon> Registrar versión del denunciado</button>
+            }
+          </div>
           @if (respuestasDenunciado.length > 0) {
             <div class="exp-respuesta">
               <mat-icon class="ok">check_circle</mat-icon>
-              <div><b>Respuesta recibida</b><span>El denunciado respondió el {{ formatearFechaHora(respuestasDenunciado[0].fechaRegistro) }}.</span></div>
+              <div><b>Versión registrada@if (respuestasDenunciado.length > 1) { ({{ respuestasDenunciado.length }})}</b><span>{{ origenVersion(respuestasDenunciado[0]) }}.</span></div>
               <button type="button" class="pc-btn-borde chico" (click)="verRespuestaDenunciado()"><mat-icon>visibility</mat-icon> Ver respuesta</button>
             </div>
             @if (respuestasDenunciado[0].archivos.length) {
@@ -305,8 +328,8 @@
               </ul>
             }
           } @else {
-            <div class="pc-vacio-caja"><mat-icon>hourglass_empty</mat-icon><div><b>Sin respuesta todavía</b><span>
-              {{ ultimaSolicitudDenunciado ? 'Ya se le pidió su versión; aún no responde.' : 'Aún no se le ha pedido al denunciado su versión de los hechos.' }}</span></div></div>
+            <div class="pc-vacio-caja"><mat-icon>hourglass_empty</mat-icon><div><b>Sin versión registrada</b><span>
+              Regístrala después de entrevistar a la persona denunciada.</span></div></div>
           }
         </div>
       </div>
@@ -346,33 +369,7 @@
           }
         </div>
 
-        <div class="pc-card">
-          <div class="pc-card-cabeza">
-            <h3><mat-icon>outgoing_mail</mat-icon> Solicitud de versión del denunciado</h3>
-            @if (abierto) {
-              <button type="button" class="pc-btn-borde chico" [disabled]="enviandoSolicitudDenunciado" (click)="solicitarRespuestaDenunciado()">
-                <mat-icon>{{ ultimaSolicitudDenunciado ? 'refresh' : 'add' }}</mat-icon> {{ ultimaSolicitudDenunciado ? 'Reenviar' : 'Enviar solicitud' }}
-              </button>
-            }
-          </div>
-          @if (ultimaSolicitudDenunciado; as s) {
-            <ol class="pc-timeline">
-              <li><span class="punto lleno azul"></span><b>Solicitud enviada</b><small>{{ formatearFechaHora(s.fechaEnvio) }}</small>
-                <p>Solicitud enviada a {{ s.correoDenunciado }}@if (s.enviadoPorNombre) { por {{ s.enviadoPorNombre }}}.</p>
-                @if (!s.correoEnviado) { <p class="rojo">El correo no se pudo enviar. Revisa la dirección y reenvíalo.</p> }
-              </li>
-              <li><span class="punto" [class.lleno]="respuestasDenunciado.length > 0"></span><b>En espera de respuesta</b>
-                <p>{{ respuestasDenunciado.length ? 'Completado' : 'Pendiente · se espera la respuesta del denunciado.' }}</p></li>
-              @if (respuestasDenunciado.length > 0) {
-                <li><span class="punto lleno"></span><b>Respuesta recibida</b><small>{{ formatearFechaHora(respuestasDenunciado[0].fechaRegistro) }}</small>
-                  <p>Respondió al correo de seguimiento ({{ respuestasDenunciado[0].folioRespuesta }}).
-                    <button type="button" class="pc-link" (click)="verRespuestaDenunciado()"><mat-icon>visibility</mat-icon> Ver respuesta</button></p></li>
-              }
-            </ol>
-          } @else {
-            <div class="pc-vacio-caja"><mat-icon>mail_outline</mat-icon><div><b>Sin solicitudes enviadas</b><span>Envía al denunciado el enlace para que dé su versión de los hechos.</span></div></div>
-          }
-        </div>
+        <!-- PC-2 (2026-11): se quitó la tarjeta "Solicitud de versión del denunciado" (ya no se manda enlace). -->
 
         <div class="pc-card">
           <div class="pc-card-cabeza">
@@ -522,7 +519,7 @@
             <div><dt>Persona denunciada</dt><dd>{{ expediente.datosQueja?.denunciado || '—' }}</dd></div>
             <div><dt>Unidad académica</dt><dd>{{ expediente.quejoso.unidadAcademica || '—' }}</dd></div>
             <div><dt>Fecha de ingreso</dt><dd>{{ expediente.fechaIngreso || expediente.datosQueja?.fechaRegistro || '—' }}</dd></div>
-            <div><dt>Prioridad</dt><dd><span class="pc-chip prioridad">{{ expediente.prioridad }}</span></dd></div>
+            <div><dt>Prioridad</dt><dd><span [class]="'pc-chip ' + clasePrioridad(expediente.prioridad)">{{ expediente.prioridad }}</span></dd></div>
             <div><dt>Estado actual</dt><dd><span [class]="'estatus-chip ' + claseEstatus(expediente.estatusCodigo)">{{ expediente.estatus }}</span></dd></div>
           </dl>
         </div>

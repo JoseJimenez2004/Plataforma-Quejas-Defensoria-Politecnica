@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ValidadorQuejaPublica.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.queja_service.validacion</a> &gt; <span class="el_source">ValidadorQuejaPublica.java</span></div><h1>ValidadorQuejaPublica.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.queja_service.validacion;
+
+import java.util.regex.Pattern;
+
+import org.springframework.stereotype.Component;
+
+import ipn.escom.defensoria.queja_service.dto.RegistroQuejaPublicaRequest;
+
+/**
+ * Valida y normaliza TODO lo que llega del formulario público (CU-Q01) antes de convertirlo
+ * en una queja.
+ *
+ * Normaliza in-place sobre el request: los campos de texto quedan sin espacios sobrantes y el
+ * correo en minúsculas, de modo que lo que se persiste es siempre la versión limpia.
+ *
+ * Este validador es la fuente de verdad. El frontend replica las mismas reglas para dar
+ * retroalimentación inmediata, pero un cliente que se salte el formulario (Postman, un script)
+ * choca igual contra estas validaciones.
+ */
+@Component
+<span class="fc" id="L21">public class ValidadorQuejaPublica {</span>
+
+<span class="fc" id="L23">    private static final Pattern NOMBRE = Pattern.compile(ReglasQueja.REGEX_NOMBRE);</span>
+<span class="fc" id="L24">    private static final Pattern NUMERO_IDENTIFICACION =</span>
+<span class="fc" id="L25">            Pattern.compile(ReglasQueja.REGEX_NUMERO_IDENTIFICACION);</span>
+
+    private static final String TIPO_ALUMNO = &quot;alumno&quot;;
+    private static final String TIPO_EMPLEADO = &quot;empleado&quot;;
+
+    public ValidadorArchivos.ArchivosClasificados validar(RegistroQuejaPublicaRequest datos) {
+<span class="fc" id="L31">        normalizarTextos(datos);</span>
+
+<span class="fc" id="L33">        validarAvisoPrivacidad(datos);</span>
+<span class="fc" id="L34">        validarDatosQuejoso(datos);</span>
+<span class="fc" id="L35">        validarDatosHechos(datos);</span>
+<span class="fc" id="L36">        validarDatosDenunciado(datos);</span>
+<span class="fc" id="L37">        validarDescripcion(datos);</span>
+
+<span class="fc" id="L39">        return ValidadorArchivos.validarYClasificar(datos.getArchivos());</span>
+    }
+
+    // ---------------------------------------------------------------------------------------
+
+    private void normalizarTextos(RegistroQuejaPublicaRequest datos) {
+<span class="fc" id="L45">        datos.setNombre(Textos.normalizar(datos.getNombre()));</span>
+<span class="fc" id="L46">        datos.setApellido1(Textos.normalizar(datos.getApellido1()));</span>
+<span class="fc" id="L47">        datos.setApellido2(Textos.normalizar(datos.getApellido2()));</span>
+<span class="fc" id="L48">        datos.setNombreDenunciado(Textos.normalizar(datos.getNombreDenunciado()));</span>
+<span class="fc" id="L49">        datos.setApellido1Denunciado(Textos.normalizar(datos.getApellido1Denunciado()));</span>
+<span class="fc" id="L50">        datos.setApellido2Denunciado(Textos.normalizar(datos.getApellido2Denunciado()));</span>
+<span class="fc" id="L51">        datos.setNumeroIdentificacion(Textos.normalizar(datos.getNumeroIdentificacion()));</span>
+<span class="fc" id="L52">        datos.setUnidadAcademicaClave(Textos.normalizar(datos.getUnidadAcademicaClave()));</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (datos.getDescripcion() != null) {</span>
+<span class="fc" id="L54">            datos.setDescripcion(datos.getDescripcion().trim());</span>
+        }
+<span class="fc" id="L56">    }</span>
+
+    private void validarAvisoPrivacidad(RegistroQuejaPublicaRequest datos) {
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (!Boolean.TRUE.equals(datos.getAvisoPrivacidadAceptado())) {</span>
+<span class="fc" id="L60">            throw new ValidacionException(</span>
+                    &quot;Debes leer y aceptar el aviso de privacidad para poder presentar tu queja.&quot;);
+        }
+<span class="fc" id="L63">    }</span>
+
+    private void validarDatosQuejoso(RegistroQuejaPublicaRequest datos) {
+<span class="fc" id="L66">        validarNombre(datos.getNombre(), &quot;el nombre&quot;, true);</span>
+<span class="fc" id="L67">        validarNombre(datos.getApellido1(), &quot;el primer apellido&quot;, true);</span>
+<span class="fc" id="L68">        validarNombre(datos.getApellido2(), &quot;el segundo apellido&quot;, false);</span>
+
+<span class="fc" id="L70">        datos.setCorreo(ValidadorCorreo.validarYNormalizar(datos.getCorreo()));</span>
+
+<span class="fc" id="L72">        ValidadorFechas.validarFechaNacimiento(datos.getFechaNacimiento());</span>
+
+<span class="fc" id="L74">        validarTipoIdentificacion(datos.getTipoIdentificacion());</span>
+<span class="fc" id="L75">        validarNumeroIdentificacion(datos.getNumeroIdentificacion(), datos.getTipoIdentificacion());</span>
+<span class="fc" id="L76">    }</span>
+
+    private void validarDatosHechos(RegistroQuejaPublicaRequest datos) {
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (Textos.esVacio(datos.getUnidadAcademicaClave())) {</span>
+<span class="fc" id="L80">            throw new ValidacionException(&quot;Selecciona el lugar donde sucedieron los hechos.&quot;);</span>
+        }
+<span class="fc" id="L82">        ValidadorFechas.validarFechaHechos(datos.getFechaHechos(), datos.getFechaNacimiento());</span>
+<span class="fc" id="L83">    }</span>
+
+    private void validarDatosDenunciado(RegistroQuejaPublicaRequest datos) {
+<span class="fc" id="L86">        validarNombre(datos.getNombreDenunciado(), &quot;el nombre del denunciado&quot;, false);</span>
+<span class="fc" id="L87">        validarNombre(datos.getApellido1Denunciado(), &quot;el primer apellido del denunciado&quot;, false);</span>
+<span class="fc" id="L88">        validarNombre(datos.getApellido2Denunciado(),</span>
+                &quot;el segundo apellido del denunciado&quot;, false);
+<span class="fc" id="L90">    }</span>
+
+    private void validarDescripcion(RegistroQuejaPublicaRequest datos) {
+<span class="fc" id="L93">        String descripcion = datos.getDescripcion();</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (Textos.esVacio(descripcion)) {</span>
+<span class="fc" id="L95">            throw new ValidacionException(&quot;Falta la descripción de los hechos.&quot;);</span>
+        }
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (descripcion.length() &lt; ReglasQueja.DESCRIPCION_LONGITUD_MINIMA) {</span>
+<span class="fc" id="L98">            throw new ValidacionException(&quot;Describe los hechos con al menos &quot;</span>
+                    + ReglasQueja.DESCRIPCION_LONGITUD_MINIMA + &quot; caracteres.&quot;);
+        }
+        // Sin máximo (decisión 2026-10-14): la columna quejas.descripcion es TEXT. El único
+        // tope práctico es el tamaño de la petición (max-request-size / nginx, 100MB).
+<span class="fc" id="L103">    }</span>
+
+    // ---------------------------------------------------------------------------------------
+
+    /**
+     * @param etiqueta cómo se llama el campo en el mensaje de error (&quot;el nombre&quot;, &quot;el primer
+     *                 apellido del denunciado&quot;...), para que el usuario sepa cuál corregir.
+     */
+    private void validarNombre(String valor, String etiqueta, boolean obligatorio) {
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (Textos.esVacio(valor)) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">            if (obligatorio) {</span>
+<span class="fc" id="L114">                throw new ValidacionException(&quot;Falta &quot; + etiqueta + &quot;.&quot;);</span>
+            }
+<span class="fc" id="L116">            return;</span>
+        }
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (valor.length() &lt; ReglasQueja.NOMBRE_LONGITUD_MINIMA) {</span>
+<span class="fc" id="L119">            throw new ValidacionException(&quot;Revisa &quot; + etiqueta + &quot;: debe tener al menos &quot;</span>
+                    + ReglasQueja.NOMBRE_LONGITUD_MINIMA + &quot; letras.&quot;);
+        }
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        if (valor.length() &gt; ReglasQueja.NOMBRE_LONGITUD_MAXIMA) {</span>
+<span class="fc" id="L123">            throw new ValidacionException(&quot;Revisa &quot; + etiqueta + &quot;: no puede exceder &quot;</span>
+                    + ReglasQueja.NOMBRE_LONGITUD_MAXIMA + &quot; caracteres.&quot;);
+        }
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (!NOMBRE.matcher(valor).matches()) {</span>
+<span class="fc" id="L127">            throw new ValidacionException(&quot;Revisa &quot; + etiqueta</span>
+                    + &quot;: solo se permiten letras (se aceptan acentos, ñ, guion y apóstrofe). &quot;
+                    + &quot;No se admiten números ni otros símbolos.&quot;);
+        }
+<span class="fc" id="L131">    }</span>
+
+    private void validarTipoIdentificacion(String tipo) {
+<span class="fc bfc" id="L134" title="All 4 branches covered.">        if (!TIPO_ALUMNO.equalsIgnoreCase(tipo) &amp;&amp; !TIPO_EMPLEADO.equalsIgnoreCase(tipo)) {</span>
+<span class="fc" id="L135">            throw new ValidacionException(&quot;Indica si eres alumno o empleado.&quot;);</span>
+        }
+<span class="fc" id="L137">    }</span>
+
+    private void validarNumeroIdentificacion(String numero, String tipo) {
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        String etiqueta = TIPO_EMPLEADO.equalsIgnoreCase(tipo)</span>
+<span class="fc" id="L141">                ? &quot;El número de empleado&quot;</span>
+<span class="fc" id="L142">                : &quot;El número de boleta&quot;;</span>
+
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (Textos.esVacio(numero)) {</span>
+<span class="fc" id="L145">            throw new ValidacionException(&quot;Falta &quot; + etiqueta.toLowerCase() + &quot;.&quot;);</span>
+        }
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        if (!NUMERO_IDENTIFICACION.matcher(numero).matches()) {</span>
+<span class="fc" id="L148">            throw new ValidacionException(etiqueta + &quot; solo puede contener números, &quot;</span>
+                    + &quot;con un máximo de &quot; + ReglasQueja.NUMERO_IDENTIFICACION_LONGITUD_MAXIMA
+                    + &quot; dígitos.&quot;);
+        }
+<span class="fc" id="L152">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ResumenModeloService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service</a> &gt; <span class="el_source">ResumenModeloService.java</span></div><h1>ResumenModeloService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service;
+
+import ipn.escom.defensoria.primercontacto.dto.ResumenQuejaDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.Arrays;
+import java.util.HexFormat;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Cliente del modelo de resumen del compañero (resumen-service, POST /resumir). En CPU tarda
+ * de decenas de segundos a ~2 minutos (D9 entrena por queja y Qwen redacta), así que:
+ *  - el tiempo de espera es largo (resumen.timeout-segundos) pero menor que el de nginx;
+ *  - cada resumen se guarda en memoria por el texto de la queja, para no generarlo dos veces.
+ * Si el modelo no responde, la pantalla se queda con el resumen simulado y lo avisa.
+ */
+@Service
+public class ResumenModeloService {
+
+<span class="nc" id="L30">    private static final Logger log = LoggerFactory.getLogger(ResumenModeloService.class);</span>
+    private static final String ENDPOINT = &quot;/resumir&quot;;
+    private static final int MAX_EN_MEMORIA = 300;
+    private static final int MAX_CARACTERES = 20000;
+
+    private final RestTemplate restTemplate;
+    private final String url;
+<span class="nc" id="L37">    private final Map&lt;String, ResumenQuejaDTO&gt; generados = new ConcurrentHashMap&lt;&gt;();</span>
+
+    public ResumenModeloService(
+            @Value(&quot;${resumen.service.url:http://localhost:8090}&quot;) String url,
+            @Value(&quot;${resumen.timeout-segundos:110}&quot;) int timeoutSegundos
+<span class="nc" id="L42">    ) {</span>
+<span class="nc" id="L43">        SimpleClientHttpRequestFactory fabrica = new SimpleClientHttpRequestFactory();</span>
+<span class="nc" id="L44">        fabrica.setConnectTimeout(5_000);</span>
+<span class="nc" id="L45">        fabrica.setReadTimeout(timeoutSegundos * 1_000);</span>
+<span class="nc" id="L46">        this.restTemplate = new RestTemplate(fabrica);</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        this.url = url.endsWith(&quot;/&quot;) ? url.substring(0, url.length() - 1) : url;</span>
+<span class="nc" id="L48">    }</span>
+
+    /** Vacío si el modelo no está disponible o no respondió a tiempo. */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public Optional&lt;ResumenQuejaDTO&gt; resumir(String texto) {
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        String limpio = texto == null ? &quot;&quot; : texto.strip();</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        if (limpio.isEmpty()) {</span>
+<span class="nc" id="L55">            return Optional.empty();</span>
+        }
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (limpio.length() &gt; MAX_CARACTERES) {</span>
+<span class="nc" id="L58">            limpio = limpio.substring(0, MAX_CARACTERES);</span>
+        }
+
+<span class="nc" id="L61">        String clave = huella(limpio);</span>
+<span class="nc" id="L62">        ResumenQuejaDTO guardado = generados.get(clave);</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (guardado != null) {</span>
+<span class="nc" id="L64">            return Optional.of(guardado);</span>
+        }
+
+<span class="nc" id="L67">        long inicio = System.currentTimeMillis();</span>
+        try {
+<span class="nc" id="L69">            Map&lt;String, Object&gt; r = restTemplate.postForObject(</span>
+<span class="nc" id="L70">                    url + ENDPOINT, Map.of(&quot;descripcion&quot;, limpio), Map.class);</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">            if (r == null || r.get(&quot;resumen&quot;) == null) {</span>
+<span class="nc" id="L72">                return Optional.empty();</span>
+            }
+<span class="nc" id="L74">            ResumenQuejaDTO dto = ResumenQuejaDTO.builder()</span>
+<span class="nc" id="L75">                    .resumen(String.valueOf(r.get(&quot;resumen&quot;)).strip())</span>
+<span class="nc" id="L76">                    .fragmentos(fragmentos(r.get(&quot;captura_d9&quot;)))</span>
+<span class="nc" id="L77">                    .requiereRevision(true)</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">                    .versionPipeline(r.get(&quot;version_pipeline&quot;) != null ? String.valueOf(r.get(&quot;version_pipeline&quot;)) : null)</span>
+<span class="nc" id="L79">                    .build();</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">            if (generados.size() &gt;= MAX_EN_MEMORIA) {</span>
+<span class="nc" id="L81">                generados.clear();</span>
+            }
+<span class="nc" id="L83">            generados.put(clave, dto);</span>
+<span class="nc" id="L84">            log.info(&quot;Resumen generado por el modelo en {} ms&quot;, System.currentTimeMillis() - inicio);</span>
+<span class="nc" id="L85">            return Optional.of(dto);</span>
+<span class="nc" id="L86">        } catch (Exception ex) {</span>
+<span class="nc" id="L87">            log.warn(&quot;El modelo de resumen no respondió ({} ms): {}&quot;,</span>
+<span class="nc" id="L88">                    System.currentTimeMillis() - inicio, ex.getMessage());</span>
+<span class="nc" id="L89">            return Optional.empty();</span>
+        }
+    }
+
+    /** captura_d9 llega como un solo texto: se separa en oraciones para listarlas. */
+    private static List&lt;String&gt; fragmentos(Object captura) {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (captura == null) {</span>
+<span class="nc" id="L96">            return List.of();</span>
+        }
+<span class="nc" id="L98">        return Arrays.stream(String.valueOf(captura).split(&quot;(?&lt;=[.!?;])\\s+&quot;))</span>
+<span class="nc" id="L99">                .map(String::strip)</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">                .filter(f -&gt; f.length() &gt; 3)</span>
+<span class="nc" id="L101">                .toList();</span>
+    }
+
+    private static String huella(String texto) {
+        try {
+<span class="nc" id="L106">            return HexFormat.of().formatHex(</span>
+<span class="nc" id="L107">                    MessageDigest.getInstance(&quot;SHA-256&quot;).digest(texto.getBytes(StandardCharsets.UTF_8)));</span>
+<span class="nc" id="L108">        } catch (Exception ex) {</span>
+<span class="nc" id="L109">            return Integer.toHexString(texto.hashCode());</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

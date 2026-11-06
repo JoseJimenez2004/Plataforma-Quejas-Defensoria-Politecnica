@@ -1,12 +1,11 @@
 	\section{Pruebas}
 	\label{cap:pruebas}
 	Este capítulo documenta la verificación de la plataforma: la estrategia con que se diseñaron las
-	pruebas, el flujo automatizado que las ejecuta y los casos y resultados de cada característica de
-	calidad. Las pruebas se organizan siguiendo el modelo ISO/IEC 25010 \cite{iso25010} con que se
+	pruebas y los casos y resultados de cada característica de calidad. Las pruebas se organizan siguiendo el modelo ISO/IEC 25010 \cite{iso25010} con que se
 	clasificaron los requerimientos no funcionales (Tabla~\ref{tab:rnf}), en siete secciones:
 	funcionalidad, mantenibilidad, usabilidad, fiabilidad, seguridad, capacidad y confidencialidad. Cada
-	caso de prueba indica el requerimiento que verifica, de modo que la matriz final permite rastrear
-	cada requerimiento hasta la evidencia que lo respalda.
+	caso de prueba indica el requerimiento que verifica, lo que permite rastrear cada requerimiento
+	hasta la evidencia que lo respalda.
 
 	Una advertencia de método acompaña a todo el capítulo: probar no demuestra la ausencia de defectos,
 	solo reduce el riesgo de que existan \cite{myers_testing}. Por eso las pruebas se priorizaron según
@@ -96,60 +95,6 @@
 		ejecución hasta corregirlo.
 	\end{itemize}
 
-	\subsection{Flujo automatizado de pruebas}
-	\label{sec:pipeline}
-	Las pruebas se automatizaron en un flujo de integración continua de GitHub Actions
-	\cite{github_actions} que se versiona junto con el código. Cada característica de calidad es una
-	etapa del flujo, y cada etapa usa el tipo de prueba que le corresponde. Las etapas estáticas y
-	unitarias se ejecutan en cada envío a la rama \texttt{Produccion}, porque no requieren el sistema
-	desplegado y terminan en minutos; las dinámicas se lanzan manualmente o cada semana contra el entorno
-	de pruebas, con las cuentas de prueba guardadas como secretos del repositorio. Una etapa final
-	resume el resultado por requerimiento. La Tabla~\ref{tab:etapas_pipeline} describe las etapas.
-
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{0.6cm}|L{2.6cm}|L{5.6cm}|L{3.2cm}|L{2.3cm}|}
-		\caption{Etapas del flujo automatizado de pruebas}
-		\label{tab:etapas_pipeline} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{\#} & \headercell{Característica} & \headercell{Herramientas} &
-		\headercell{Requerimientos} & \headercell{Ejecución} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{\#} & \headercell{Característica} & \headercell{Herramientas} &
-		\headercell{Requerimientos} & \headercell{Ejecución} \\
-		\hline
-		\endhead
-		1 & Mantenibilidad & Checkstyle \cite{checkstyle} con la guía del proyecto & RNF-G01 & Cada envío \\ \hline
-		2 & Funcionalidad & JUnit 5, Mockito y JaCoCo \cite{junit5, mockito, jacoco}; compilación de
-		producción de las aplicaciones & RF, RN, RNF-G02 & Cada envío \\ \hline
-		3 & Seguridad estática & Extracción de la matriz de permisos del código, gitleaks
-		\cite{gitleaks}, Trivy \cite{trivy} & RNF-A06, RN-R02, RNF-R02, RNF-G07 & Cada envío \\ \hline
-		4 & Seguridad dinámica & Guion de matriz de roles con un token por rol; OWASP ZAP
-		\cite{owasp_zap} & RNF-Q06, RNF-A03, RNF-G06 & Manual o semanal \\ \hline
-		5 & Confidencialidad & Guion con \texttt{openssl} y \texttt{curl} & RNF-Q02, RNF-G06 & Manual o
-		semanal \\ \hline
-		6 & Capacidad & Guion de límites de tamaño y k6 \cite{grafana_k6} & RNF-Q03, RNF-G05 & Manual o
-		semanal \\ \hline
-		7 & Fiabilidad & Guion de respaldo y restauración en una base desechable & RNF-G04, RF-A09 & Manual
-		o semanal \\ \hline
-		8 & Usabilidad & Lighthouse CI \cite{lighthouse}; cuestionario SUS manual & RNF-Q05, RNF-Q07,
-		RNF-G09 & Manual o semanal \\ \hline
-		9 & Informe & Resumen por requerimiento en la página del flujo & Todos & Siempre \\ \hline
-	\end{longtable}
-	\normalsize
-
-	Las etapas 1 a 3 rompen el flujo si encuentran una violación obligatoria, de modo que un cambio que
-	reintroduzca un defecto ya corregido no puede integrarse sin que alguien lo note. La primera
-	ejecución completa de las verificaciones estáticas se realizó el 28 de octubre de 2026 y constituye
-	la línea base de los resultados que se reportan en las secciones siguientes; las pruebas unitarias se
-	ejecutaron el 27 de octubre de 2026.
-
 	\subsection{Pruebas de funcionalidad}
 	\label{sec:pruebas_funcionalidad}
 	Las pruebas de funcionalidad verifican la adecuación funcional: que las reglas de negocio y los
@@ -159,7 +104,7 @@
 	Se escribieron pruebas unitarias con JUnit~5 y Mockito para los diez microservicios Java
 	desarrollados para la plataforma \cite{junit5, mockito}. Las pruebas no levantan el contexto de
 	Spring ni requieren base de datos o red: las dependencias se sustituyen por objetos simulados, lo que
-	permite ejecutarlas en segundos en cada envío. Siguen el patrón preparar--actuar--verificar, incluyen
+	permite ejecutarlas en segundos en cada compilación. Siguen el patrón preparar--actuar--verificar, incluyen
 	un mensaje en cada aserción y se diseñaron con particiones de equivalencia y valores límite. La
 	Tabla~\ref{tab:pruebas_unitarias} resume su alcance.
 
@@ -210,7 +155,7 @@
 	errores). La única prueba que requería base de datos ---la carga del contexto de Primer Contacto---
 	se etiquetó como de integración y se excluye de la ejecución unitaria, para que la suite no dependa
 	del entorno. Posteriormente se agregaron ocho casos de resiliencia, descritos en la
-	Sección~\ref{sec:pruebas_fiabilidad}, que se ejecutan en el mismo flujo.
+	Sección~\ref{sec:pruebas_fiabilidad}, que se ejecutan junto con el resto de la suite.
 
 	\subsubsection{Pruebas de integración y de sistema}
 	La Tabla~\ref{tab:pruebas_integracion} lista los casos de integración y de sistema de prioridad P1 y
@@ -243,7 +188,7 @@
 		Aprobada en prueba unitaria; dinámica pendiente \\ \hline
 		IT-22 & La queja turnada aparece en la bandeja de Primer Contacto & RF-R08, RF-PC01 & Dinámica,
 		CN & Aprobada en el sistema desplegado \\ \hline
-		IT-23 & El dictamen competente crea el expediente en Subdefensoría & RF-PC08, RF-SD01 & Dinámica,
+		IT-23 & El dictamen competente crea el expediente en Subdefensoría & RF-PC07, RF-SD01 & Dinámica,
 		CN & Aprobada en entorno local con la base de pruebas \\ \hline
 		IT-24 & El cambio de estatus en Primer Contacto se refleja en la tabla de quejas & RN-R01 &
 		Dinámica, CB & Aprobada en prueba unitaria de sincronización \\ \hline
@@ -268,14 +213,15 @@
 
 	\subsection{Pruebas de mantenibilidad}
 	\label{sec:pruebas_mantenibilidad}
-	La mantenibilidad se verificó con pruebas estáticas de caja blanca sobre el código Java de los ocho
-	servicios mantenidos por el equipo (225 archivos), y con la cobertura de las pruebas unitarias.
+	La mantenibilidad se verificó con pruebas estáticas de caja blanca sobre el código Java de ocho de
+	los diez servicios (225 archivos), y con la cobertura de las pruebas unitarias. Primer Contacto y
+	Subdefensoría se analizaron con las mismas reglas de forma informativa.
 
 	\subsubsection{Guía de estilo}
 	El proyecto adoptó como guía de estilo el Google Java Style Guide \cite{google_java_style}, con cuatro
 	desviaciones que reflejan lo que el código ya seguía de forma consistente, para no reformatear todo
 	el proyecto sin aportar calidad (Tabla~\ref{tab:desviaciones_estilo}). La guía se codificó como
-	configuración de Checkstyle: las reglas \textbf{obligatorias} rompen el flujo y las
+	configuración de Checkstyle: las reglas \textbf{obligatorias} deben cumplirse sin excepción y las
 	\textbf{recomendadas} se reportan como deuda técnica.
 
 	\rowcolors{2}{rowblue}{white}
@@ -333,15 +279,15 @@
 		deuda & Informativa: 5 métodos con complejidad mayor a 15, 117 tipos públicos sin Javadoc, 90 líneas
 		de más de 120 columnas \\ \hline
 		MAN-03 & Cobertura de líneas en los paquetes de servicios, validaciones y utilerías, medida con
-		JaCoCo & $\geq 70~\%$ por servicio & Pendiente de la primera ejecución en el flujo (el reporte se
+		JaCoCo & $\geq 70~\%$ por servicio & Pendiente de su primera ejecución (el reporte se
 		genera en cada ejecución de las pruebas) \\ \hline
-		MAN-04 & Cada servicio publica su contrato OpenAPI & 11 de 11 & Aprobada (Primer Contacto y
+		MAN-04 & Cada servicio publica su contrato OpenAPI & 10 de 10 & Aprobada (Primer Contacto y
 		Subdefensoría lo incorporaron al cierre) \\ \hline
 	\end{longtable}
 	\normalsize
 
 	El cumplimiento global de las reglas obligatorias es de cuatro violaciones en 225 archivos: corregirlas
-	deja la etapa en verde. La deuda reportada por MAN-02 no bloquea el flujo, pero indica dónde conviene
+	permite aprobar MAN-01. La deuda reportada por MAN-02 no es bloqueante, pero indica dónde conviene
 	concentrar la refactorización; los métodos más complejos están en los servicios de revisión y de
 	seguimiento, que concentran la lógica de los tableros.
 
@@ -377,7 +323,7 @@
 		USA-03 & Accesibilidad básica de los portales: contraste, etiquetas y uso con teclado, medida con
 		Lighthouse & RNF-G09 & Puntuación $\geq 0.85$ & Configurada; informativa hasta definir el umbral
 		por portal \\ \hline
-		USA-04 & El portal del quejoso permite presentar la queja completa desde un teléfono & RT-11 &
+		USA-04 & El portal del quejoso permite presentar la queja completa desde un teléfono & RNF-Q01 &
 		Flujo completo & Pendiente de verificación formal; diseño adaptable implementado \\ \hline
 		USA-05 & El formulario de queja se presenta en pasos numerados con previsualización de archivos &
 		RNF-Q05 & Cumple & Aprobada por inspección \\ \hline
@@ -423,10 +369,10 @@
 		\endhead
 		FIA-05 & Con el servicio de notificaciones sin conexión o respondiendo 500, los avisos de queja
 		creada, al tutor, de cambio de estatus y al personal no propagan la excepción (4 casos) & RNF-Q04 &
-		Ninguna excepción se propaga & Implementada; primera ejecución en el flujo \\ \hline
+		Ninguna excepción se propaga & Implementada; pendiente de su primera ejecución \\ \hline
 		FIA-06 & Con el servicio de notificaciones caído, el correo de observaciones y los avisos de
 		Recepción no impiden el regreso de la queja (4 casos) & RNF-R04 & Ninguna excepción se propaga &
-		Implementada; primera ejecución en el flujo \\ \hline
+		Implementada; pendiente de su primera ejecución \\ \hline
 		FIA-07 & La importación del catálogo con filas mal formadas reporta un resumen y no falla en bloque
 		& RNF-A04 & Resumen de creadas, actualizadas y con error & Aprobada \\ \hline
 		FIA-04 & Con Subdefensoría caída al dictaminar, el dictamen se conserva y puede reenviarse &
@@ -459,22 +405,23 @@
 	token por rol.
 
 	\subsubsection{Matriz de permisos extraída del código}
-	Un guion recorre los controladores de los ocho servicios mantenidos por el equipo, lee las rutas, los
+	Un guion recorre los controladores de ocho de los diez servicios ---Primer Contacto y Subdefensoría
+	declaran sus permisos solo en la cadena de filtros y se verifican en la prueba dinámica---, lee las rutas, los
 	métodos HTTP, las anotaciones \texttt{@PreAuthorize} y las reglas públicas de la cadena de filtros, y
 	genera una matriz de 92 puntos de acceso con los roles que cada uno admite. Un segundo guion compara
 	esa matriz con un archivo de reglas que traduce los requerimientos a expresiones sobre las rutas ---por
-	ejemplo, ``\texttt{/api/admin/seguridad/(respaldos|restaurar)} solo admite administración''--- y
-	reporta cada diferencia. Al ser estática, la prueba se ejecuta en cada envío y detecta, antes del
+	ejemplo, ``\texttt{/api/admin/seguridad/(respaldos|restaurar)} solo admite a la Defensora''--- y
+	reporta cada diferencia. Al ser estática, la prueba puede ejecutarse con cada cambio del código y detecta, antes del
 	despliegue, un punto de acceso nuevo que se haya publicado con permisos de más.
 
 	La primera ejecución encontró seis diferencias. Cuatro correspondían a los respaldos y la
-	restauración, que el código abre a \texttt{ADMIN\_SISTEMAS} y a \texttt{DEFENSOR} mientras que la
-	redacción original del requerimiento RNF-A06 solo mencionaba el primer rol. Las otras dos
+	restauración, que el código abre al rol \texttt{DEFENSOR} mientras que la redacción original del
+	requerimiento RNF-A06 los reservaba a un rol técnico de administración. Las otras dos
 	correspondían a la consulta y emisión de acuerdos de conciliación, que el código abre también a
 	Subdefensoría y a la Defensora, mientras que la redacción original de RN-R02 reservaba todo el
 	servicio de revisión a Recepción. En ambos casos el análisis concluyó que el código reflejaba la
-	decisión de diseño vigente ---la Defensora tiene las facultades de administración y la conciliación
-	es una actuación de varias áreas---, de modo que se corrigió la redacción de los requerimientos
+	decisión de diseño vigente ---por convención con la Defensoría, la administración corresponde a la
+	Defensora, y la conciliación es una actuación de varias áreas---, de modo que se corrigió la redacción de los requerimientos
 	(Tablas~\ref{tab:rnf} y~\ref{tab:reglas_negocio}) y el archivo de reglas, y no el código. El
 	resultado ilustra un beneficio de esta prueba que va más allá de la seguridad: obliga a que el
 	documento de requerimientos y el código digan lo mismo.
@@ -524,7 +471,7 @@
 		repositorio & RNF-G07 & 0 hallazgos & Fallida: residen en texto plano en los archivos de
 		configuración \\ \hline
 		SEG-04 & Dependencias Maven y npm con vulnerabilidades altas o críticas con parche & RNF-G07 & 0 &
-		Pendiente de la primera ejecución en el flujo \\ \hline
+		Pendiente de su primera ejecución \\ \hline
 		SEG-02 & Escaneo pasivo de vulnerabilidades web de los cinco portales & RNF-G06 & Sin alertas
 		altas & Pendiente (informativa) \\ \hline
 		SEG-11 & Los puertos de los servicios y de la base no son alcanzables desde Internet & RNF-G06 &
@@ -638,52 +585,7 @@
 	La única falla, CON-05, se corrige con una línea en la configuración del servidor seguro del proxy.
 	Varias pruebas figuran como aprobadas por configuración porque la configuración del proxy se revisó
 	línea por línea; su ejecución dinámica, que confirma que esa configuración es la que realmente está
-	cargada, forma parte de la etapa 5 del flujo.
-
-	\subsection{Matriz de trazabilidad}
-	\label{sec:trazabilidad_pruebas}
-	La Tabla~\ref{tab:trazabilidad_pruebas} relaciona los casos de uso y los requerimientos principales
-	con las pruebas que los verifican en cada nivel.
-
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{4.0cm}|L{3.1cm}|L{3.4cm}|L{4.0cm}|}
-		\caption{Matriz de trazabilidad de pruebas}
-		\label{tab:trazabilidad_pruebas} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Caso de uso / requerimiento} & \headercell{Unitarias} & \headercell{Integración y
-		sistema} & \headercell{No funcionales} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Caso de uso / requerimiento} & \headercell{Unitarias} & \headercell{Integración y
-		sistema} & \headercell{No funcionales} \\
-		\hline
-		\endhead
-		CU-QJ-07 Registrar queja & \texttt{quejas-service} (validadores) & REN-02, ST-01 & CAP-01 a CAP-07,
-		FIA-05, RNF-G08 \\ \hline
-		CU-QJ-01 a CU-QJ-04 Cuenta y sesión & \texttt{auth-service} & IT-20 & SEG-08, CON-08 \\ \hline
-		CU-QJ-08 a CU-QJ-15 Seguimiento & \texttt{quejas-service} & IT-04, ST-03, ST-04 & SEG-07, CON-09 \\ \hline
-		CU-REC-02 Consultar detalle (toma) & \texttt{revision-service} & IT-06 & RNF-R06 \\ \hline
-		CU-REC-04 Rechazar queja & \texttt{revision-service} & ST-04 & FIA-06 \\ \hline
-		CU-REC-05 Turnar & \texttt{revision-service} & IT-22, ST-05 & SEG-07 \\ \hline
-		CU-ADM-07 Inicio de sesión de personal & \texttt{admin-service} & IT-11 & SEG-01 \\ \hline
-		CU-PC-04 Citas & \texttt{primer-contacto-service} & ST-06 & SEG-10 \\ \hline
-		CU-PC-06, CU-PC-07 Dictamen & \texttt{primer-contacto-service} & IT-23, IT-24, ST-07, ST-08 &
-		FIA-04 \\ \hline
-		CU-SD-06 a CU-SD-09 Investigación & \texttt{subdefensoria-service} & IT-23 & SEG-10 \\ \hline
-		RF-D01 Persona señalada & \texttt{denunciado-service} & IT-12 & RNF-G08 \\ \hline
-		CU-ADM-03 Tablero de indicadores & \texttt{admin-service} & IT-09, ST-09 & USA-07 \\ \hline
-		CU-ADM-01, CU-ADM-02 Personal & \texttt{admin-service} & ST-12 & SEG-07, RNF-A07 \\ \hline
-		CU-ADM-05 Respaldos & \texttt{admin-service} & ST-12 & FIA-03, SEG-03, SEG-09 \\ \hline
-		CU-ADM-06 Catálogo & \texttt{catalogo-service} & --- & FIA-07 \\ \hline
-		RNF-G01 a RNF-G03 Mantenibilidad & --- & --- & MAN-01 a MAN-04 \\ \hline
-	\end{longtable}
-	\normalsize
+	cargada, queda pendiente para el entorno de pruebas.
 
 	\subsection{Resumen de resultados}
 	\label{sec:resumen_pruebas}
@@ -754,6 +656,5 @@
 	como se diseñaron. Ningún defecto abierto es crítico. El de mayor severidad, la presencia de secretos
 	en el repositorio, no es un defecto del sistema en ejecución sino de su gestión de configuración, y
 	su corrección es la condición principal para dar por cumplido el criterio de salida. La automatización
-	en un flujo de integración continua es, a su vez, el resultado más duradero de este capítulo: corrige
-	la deuda señalada en versiones anteriores de este documento, en las que toda la verificación era
-	manual, y garantiza que cada cambio futuro se someta a las mismas pruebas.
+	de las pruebas es, a su vez, el resultado más duradero de este capítulo: sustituye la verificación
+	manual de versiones anteriores y permite que cada cambio futuro se someta a las mismas pruebas.

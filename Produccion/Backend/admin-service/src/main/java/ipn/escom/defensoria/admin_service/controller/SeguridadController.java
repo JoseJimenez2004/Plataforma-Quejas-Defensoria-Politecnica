@@ -22,14 +22,13 @@ import ipn.escom.defensoria.admin_service.service.BitacoraService;
 import ipn.escom.defensoria.admin_service.service.RespaldoService;
 import jakarta.servlet.http.HttpServletRequest;
 
-/** "Seguridad y Respaldos" del mockup -- exclusivo de ADMIN_SISTEMAS. La restauración es una
+/** "Seguridad y Respaldos" del mockup -- exclusivo de la Defensora (DEFENSOR). La restauración es una
  * operación destructiva: se exige mandar {"confirmar": true} en el cuerpo a propósito, para
  * que no sea un solo clic accidental. */
 @RestController
 @RequestMapping("/api/admin/seguridad")
-// La Defensora (DEFENSOR) tiene todas las funciones de administración; ADMIN_SISTEMAS se
-// conserva para la cuenta técnica inicial.
-@PreAuthorize("hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')")
+// Exclusivo de la Defensora (DEFENSOR), que tiene todas las funciones de administración.
+@PreAuthorize("hasRole('DEFENSOR')")
 @Tag(name = "Seguridad y Respaldos", description = "Respaldos manuales/automáticos y bitácora de acciones")
 public class SeguridadController {
 

@@ -29,13 +29,17 @@ export const PASOS_EXPEDIENTE: EstatusExpediente[] = [
   'CONCLUIDO'
 ];
 
+/**
+ * SD-4 (2026-11): los nombres dicen qué falta y quién lo tiene. Solo cambia el texto que se
+ * ve; los códigos (ELABORO_ACUERDO, etc.) siguen igual en el front y en la base.
+ */
 export const ETIQUETAS_ESTATUS: Record<EstatusExpediente, string> = {
-  RECIBIDO: 'Recibido',
-  EN_INVESTIGACION: 'En investigación',
-  EN_ESPERA_OFICIO: 'En espera de oficio',
-  ELABORO_ACUERDO: 'Elaboró acuerdo',
-  PENDIENTE_CONCILIACION: 'Pendiente de acuerdo de conciliación',
-  PENDIENTE_CONCLUSION: 'Pendiente de conclusión',
+  RECIBIDO: 'Por abrir',
+  EN_INVESTIGACION: 'Por solicitar oficio',
+  EN_ESPERA_OFICIO: 'Esperando respuesta de la unidad',
+  ELABORO_ACUERDO: 'Por redactar acuerdo de conciliación',
+  PENDIENTE_CONCILIACION: 'Esperando respuesta del quejoso',
+  PENDIENTE_CONCLUSION: 'Por redactar acuerdo de conclusión',
   CONCLUIDO: 'Concluido'
 };
 

@@ -57,5 +57,22 @@ public final class ValidadorFechas {
             throw new ValidacionException(
                     "La fecha de los hechos no puede ser anterior a tu fecha de nacimiento.");
         }
+        validarPlazo(fechaHechos);
+    }
+
+    /** Fecha más antigua aceptada para los hechos: hoy menos {@link ReglasQueja#PLAZO_DIAS_QUEJA}. */
+    public static LocalDate fechaHechosMinima() {
+        return hoy().minusDays(ReglasQueja.PLAZO_DIAS_QUEJA);
+    }
+
+    /**
+     * Candado de 90 días naturales (artículo 13, párrafo tercero). Se aplica en todo registro
+     * nuevo, venga del formulario público, del panel del quejoso o de ventanilla.
+     */
+    public static void validarPlazo(LocalDate fechaHechos) {
+        if (fechaHechos != null && fechaHechos.isBefore(fechaHechosMinima())) {
+            throw new ValidacionException("Solo se pueden presentar quejas por hechos ocurridos dentro de los últimos "
+                    + ReglasQueja.PLAZO_DIAS_QUEJA + " días naturales (artículo 13, párrafo tercero).");
+        }
     }
 }

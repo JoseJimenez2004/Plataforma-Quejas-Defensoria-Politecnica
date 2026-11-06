@@ -35,6 +35,13 @@ public final class ReglasQueja {
     public static final LocalDate FECHA_NACIMIENTO_MINIMA = LocalDate.of(1920, 1, 1);
     /** Zona con la que se calcula "hoy" y "el año en curso" — no la del servidor por default. */
     public static final String ZONA_HORARIA = "America/Mexico_City";
+    /**
+     * Candado de temporalidad: la queja solo procede por hechos ocurridos dentro de los 90 días
+     * naturales anteriores a su presentación (artículo 13, párrafo tercero). Antes lo revisaba
+     * la recepcionista a mano (punto 4 de la lista de verificación); ahora lo impide el sistema.
+     * El frontend replica el valor en reglas-queja.ts (PLAZO_DIAS_QUEJA).
+     */
+    public static final int PLAZO_DIAS_QUEJA = 90;
 
     // ---- Descripción ---------------------------------------------------------------------
     public static final int DESCRIPCION_LONGITUD_MINIMA = 20;

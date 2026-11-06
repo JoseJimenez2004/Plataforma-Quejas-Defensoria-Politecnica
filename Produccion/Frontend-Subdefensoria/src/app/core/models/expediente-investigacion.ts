@@ -19,4 +19,6 @@ export interface ExpedienteInvestigacion {
 
   estatus: string;
   observacionesAnalista: string | null;
+  /** SD-6: BAJA | MEDIA | ALTA | URGENTE, o null (sin asignar). */
+  prioridad?: string | null;
 }

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MotorAntecedentesReglas.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service.antecedentes</a> &gt; <span class="el_source">MotorAntecedentesReglas.java</span></div><h1>MotorAntecedentesReglas.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service.antecedentes;
+
+import ipn.escom.defensoria.primercontacto.dto.AntecedenteDTO;
+import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.QuejaReferencia;
+import org.springframework.stereotype.Component;
+
+import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+/**
+ * Motor PROVISIONAL de antecedentes, mientras llega el modelo. Puntaje de 0 a 100:
+ *
+ *   mismo quejoso (mismo correo)          45
+ *   misma unidad académica                15
+ *   hechos similares (palabras en común)  hasta 40
+ *
+ * Aparece como antecedente si es del mismo quejoso o si suma al menos UMBRAL. Es
+ * deliberadamente simple y explicable: cada resultado dice por qué salió.
+ */
+@Component
+<span class="fc" id="L29">public class MotorAntecedentesReglas implements MotorAntecedentes {</span>
+
+    private static final int PUNTOS_MISMO_QUEJOSO = 45;
+    private static final int PUNTOS_MISMA_UNIDAD = 15;
+    private static final int PUNTOS_MAX_TEXTO = 40;
+    private static final int UMBRAL = 25;
+    private static final int MAX_RESULTADOS = 15;
+
+<span class="fc" id="L37">    private static final Set&lt;String&gt; VACIAS = Set.of(</span>
+            &quot;para&quot;, &quot;como&quot;, &quot;pero&quot;, &quot;porque&quot;, &quot;desde&quot;, &quot;hasta&quot;, &quot;sobre&quot;, &quot;entre&quot;, &quot;cuando&quot;,
+            &quot;donde&quot;, &quot;este&quot;, &quot;esta&quot;, &quot;estos&quot;, &quot;estas&quot;, &quot;tambien&quot;, &quot;tiene&quot;, &quot;tenia&quot;, &quot;fueron&quot;,
+            &quot;sido&quot;, &quot;hace&quot;, &quot;hacia&quot;, &quot;ante&quot;, &quot;sino&quot;, &quot;solo&quot;, &quot;todo&quot;, &quot;todos&quot;, &quot;otra&quot;, &quot;otro&quot;,
+            &quot;otros&quot;, &quot;mismo&quot;, &quot;misma&quot;, &quot;queja&quot;, &quot;quejo&quot;, &quot;senalo&quot;, &quot;manera&quot;, &quot;parte&quot;, &quot;ademas&quot;,
+            &quot;dicho&quot;, &quot;dicha&quot;, &quot;cual&quot;, &quot;cuales&quot;, &quot;quien&quot;, &quot;quienes&quot;, &quot;estaba&quot;, &quot;estan&quot;, &quot;esto&quot;,
+            &quot;unos&quot;, &quot;unas&quot;, &quot;muy&quot;, &quot;mas&quot;, &quot;menos&quot;, &quot;ellos&quot;, &quot;ellas&quot;, &quot;nuestro&quot;, &quot;nuestra&quot;,
+            &quot;registro&quot;, &quot;manual&quot;, &quot;prueba&quot;
+    );
+
+    @Override
+    public String nombre() {
+<span class="nc" id="L49">        return &quot;REGLAS_PROVISIONAL&quot;;</span>
+    }
+
+    @Override
+    public String descripcion() {
+<span class="nc" id="L54">        return &quot;Búsqueda provisional por reglas: mismo quejoso, misma unidad académica y &quot;</span>
+                + &quot;palabras en común en el motivo y los hechos. Se sustituirá por el modelo.&quot;;
+    }
+
+    @Override
+    public List&lt;AntecedenteDTO&gt; buscar(
+            ExpedientePrimerContacto expediente,
+            QuejaReferencia queja,
+            List&lt;QuejaReferencia&gt; candidatas
+    ) {
+
+<span class="pc bpc" id="L65" title="3 of 4 branches missed.">        String correo = queja != null &amp;&amp; queja.getCorreoInstitucional() != null</span>
+<span class="nc" id="L66">                ? queja.getCorreoInstitucional()</span>
+<span class="fc" id="L67">                : expediente.getQuejosoCorreo();</span>
+
+<span class="pc bpc" id="L69" title="3 of 4 branches missed.">        String unidad = queja != null &amp;&amp; queja.getUnidadAcademicaClave() != null</span>
+<span class="nc" id="L70">                ? queja.getUnidadAcademicaClave()</span>
+<span class="fc" id="L71">                : expediente.getUnidadAcademica();</span>
+
+<span class="fc" id="L73">        Set&lt;String&gt; palabras = palabrasClave(</span>
+<span class="fc" id="L74">                expediente.getTema() + &quot; &quot; + expediente.getDescripcionHechos()</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                        + (queja != null ? &quot; &quot; + queja.getMotivo() + &quot; &quot; + queja.getDescripcion() : &quot;&quot;)</span>
+        );
+
+<span class="fc" id="L78">        List&lt;AntecedenteDTO&gt; resultados = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        for (QuejaReferencia candidata : candidatas) {</span>
+
+<span class="fc" id="L82">            List&lt;String&gt; coincidencias = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L83">            int puntaje = 0;</span>
+
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">            boolean mismoQuejoso = correo != null</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">                    &amp;&amp; correo.equalsIgnoreCase(candidata.getCorreoInstitucional());</span>
+
+<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (mismoQuejoso) {</span>
+<span class="fc" id="L89">                puntaje += PUNTOS_MISMO_QUEJOSO;</span>
+<span class="fc" id="L90">                coincidencias.add(&quot;Mismo quejoso&quot;);</span>
+            }
+
+<span class="pc bpc" id="L93" title="1 of 4 branches missed.">            if (unidad != null &amp;&amp; unidad.equalsIgnoreCase(candidata.getUnidadAcademicaClave())) {</span>
+<span class="fc" id="L94">                puntaje += PUNTOS_MISMA_UNIDAD;</span>
+<span class="fc" id="L95">                coincidencias.add(&quot;Misma unidad académica&quot;);</span>
+            }
+
+<span class="fc" id="L98">            Set&lt;String&gt; otras = palabrasClave(candidata.getMotivo() + &quot; &quot; + candidata.getDescripcion());</span>
+<span class="fc" id="L99">            Set&lt;String&gt; comunes = new LinkedHashSet&lt;&gt;(palabras);</span>
+<span class="fc" id="L100">            comunes.retainAll(otras);</span>
+
+<span class="pc bpc" id="L102" title="2 of 6 branches missed.">            if (!comunes.isEmpty() &amp;&amp; !palabras.isEmpty() &amp;&amp; !otras.isEmpty()) {</span>
+                // Coeficiente de traslape: tolera que una narrativa sea mucho más larga que la otra.
+<span class="fc" id="L104">                double traslape = (double) comunes.size() / Math.min(palabras.size(), otras.size());</span>
+<span class="fc" id="L105">                int puntosTexto = (int) Math.round(Math.min(1.0, traslape * 1.5) * PUNTOS_MAX_TEXTO);</span>
+
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">                if (puntosTexto &gt;= 8) {</span>
+<span class="fc" id="L108">                    puntaje += puntosTexto;</span>
+<span class="fc" id="L109">                    coincidencias.add(&quot;Hechos similares: &quot; + comunes.stream().limit(5).collect(Collectors.joining(&quot;, &quot;)));</span>
+                }
+            }
+
+<span class="fc bfc" id="L113" title="All 4 branches covered.">            if (mismoQuejoso || puntaje &gt;= UMBRAL) {</span>
+<span class="fc" id="L114">                resultados.add(AntecedenteDTO.builder()</span>
+<span class="fc" id="L115">                        .folioQueja(candidata.getNumeroFolio())</span>
+<span class="fc" id="L116">                        .folioPrimerContacto(candidata.getFolioPrimerContacto())</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">                        .fecha(candidata.getFechaCreacion() != null ? candidata.getFechaCreacion().toString() : null)</span>
+<span class="fc" id="L118">                        .asunto(candidata.getMotivo())</span>
+<span class="fc" id="L119">                        .extracto(extracto(candidata.getDescripcion()))</span>
+<span class="fc" id="L120">                        .unidadAcademica(candidata.getUnidadAcademicaClave())</span>
+<span class="fc" id="L121">                        .nombreQuejoso(nombre(candidata))</span>
+<span class="fc" id="L122">                        .estatus(candidata.getEstatus())</span>
+<span class="fc" id="L123">                        .similitud(Math.min(100, puntaje))</span>
+<span class="fc" id="L124">                        .coincidencias(coincidencias)</span>
+<span class="fc" id="L125">                        .mismoQuejoso(mismoQuejoso)</span>
+<span class="fc" id="L126">                        .origen(NombresPersona.ORIGEN_SISTEMA)</span>
+<span class="fc" id="L127">                        .nombreDenunciado(NombresPersona.unir(candidata.getNombreDenunciado(),</span>
+<span class="fc" id="L128">                                candidata.getApellido1Denunciado(), candidata.getApellido2Denunciado()))</span>
+<span class="fc" id="L129">                        .descripcion(candidata.getDescripcion())</span>
+<span class="fc" id="L130">                        .correoQuejoso(candidata.getCorreoInstitucional())</span>
+<span class="fc" id="L131">                        .identificacionQuejoso(candidata.getNumeroIdentificacionQuejoso())</span>
+<span class="fc" id="L132">                        .build());</span>
+            }
+<span class="fc" id="L134">        }</span>
+
+<span class="fc" id="L136">        resultados.sort(Comparator.comparingInt(AntecedenteDTO::getSimilitud).reversed()</span>
+<span class="fc" id="L137">                .thenComparing(AntecedenteDTO::getFecha, Comparator.nullsLast(Comparator.reverseOrder())));</span>
+
+<span class="fc" id="L139">        return resultados.stream().limit(MAX_RESULTADOS).toList();</span>
+    }
+
+    private Set&lt;String&gt; palabrasClave(String texto) {
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        if (texto == null) {</span>
+<span class="nc" id="L144">            return Set.of();</span>
+        }
+
+<span class="fc" id="L147">        String limpio = Normalizer.normalize(texto.toLowerCase(), Normalizer.Form.NFD)</span>
+<span class="fc" id="L148">                .replaceAll(&quot;\\p{M}&quot;, &quot;&quot;)</span>
+<span class="fc" id="L149">                .replaceAll(&quot;[^a-z0-9ñ ]&quot;, &quot; &quot;);</span>
+
+<span class="fc" id="L151">        return Arrays.stream(limpio.split(&quot;\\s+&quot;))</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">                .filter(p -&gt; p.length() &gt;= 4)</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">                .filter(p -&gt; !VACIAS.contains(p))</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">                .filter(p -&gt; !&quot;null&quot;.equals(p))</span>
+<span class="fc" id="L155">                .collect(Collectors.toCollection(LinkedHashSet::new));</span>
+    }
+
+    private String extracto(String descripcion) {
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        if (descripcion == null) {</span>
+<span class="nc" id="L160">            return null;</span>
+        }
+<span class="fc" id="L162">        String texto = descripcion.strip();</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        return texto.length() &lt;= 220 ? texto : texto.substring(0, 217) + &quot;…&quot;;</span>
+    }
+
+    private String nombre(QuejaReferencia queja) {
+<span class="fc" id="L167">        String nombre = Arrays.stream(new String[]{queja.getNombreQuejoso(), queja.getApellido1Quejoso()})</span>
+<span class="fc" id="L168">                .filter(Objects::nonNull)</span>
+<span class="fc" id="L169">                .map(String::strip)</span>
+<span class="pc bnc" id="L170" title="All 2 branches missed.">                .filter(s -&gt; !s.isEmpty())</span>
+<span class="fc" id="L171">                .collect(Collectors.joining(&quot; &quot;));</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">        return nombre.isEmpty() ? null : nombre;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

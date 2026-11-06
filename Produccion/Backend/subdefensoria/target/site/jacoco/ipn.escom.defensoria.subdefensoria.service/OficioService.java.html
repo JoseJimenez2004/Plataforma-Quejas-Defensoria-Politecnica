@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OficioService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">OficioService.java</span></div><h1>OficioService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import ipn.escom.defensoria.subdefensoria.dto.CrearOficioDTO;
+import ipn.escom.defensoria.subdefensoria.dto.OficioDTO;
+import ipn.escom.defensoria.subdefensoria.entity.*;
+import ipn.escom.defensoria.subdefensoria.exception.OperacionInvalidaException;
+import ipn.escom.defensoria.subdefensoria.exception.RecursoNoEncontradoException;
+import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
+import ipn.escom.defensoria.subdefensoria.repository.OficioInformacionRepository;
+import ipn.escom.defensoria.subdefensoria.util.DiasHabilesCalculator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * Redacta y envia los oficios de los dos ciclos del BPMN:
+ * - TS-01 (fase SOLICITUD_INFORMACION), disparado cuando el
+ *   expediente esta RECIBIDO.
+ * - TS-04 (fase GESTION_DIRECTOR), disparado cuando el expediente
+ *   esta EN_ESPERA_OFICIO y aun no tiene un oficio de esa fase.
+ * La generacion real de PDF y el envio de correo quedan como campos
+ * preparados en la entidad (rutaPdfGenerado, correoEnviado) para
+ * conectar despues; aqui solo se persiste el contenido redactado.
+ */
+@Service
+public class OficioService {
+
+<span class="nc" id="L33">    private static final Logger log = LoggerFactory.getLogger(OficioService.class);</span>
+
+    private final OficioInformacionRepository oficioRepository;
+    private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final int diasPrimeraSolicitud;
+    private final TransicionExpedienteService transicionService;
+    private final DocumentoService documentoService;
+    private final CorreoUnidadAcademicaService correoService;
+
+    public OficioService(
+            OficioInformacionRepository oficioRepository,
+            ExpedienteInvestigacionRepository expedienteRepository,
+            @Value(&quot;${plazos.primera-solicitud-dias}&quot;) int diasPrimeraSolicitud,
+            TransicionExpedienteService transicionService,
+            DocumentoService documentoService,
+            CorreoUnidadAcademicaService correoService
+<span class="nc" id="L49">    ) {</span>
+<span class="nc" id="L50">        this.oficioRepository = oficioRepository;</span>
+<span class="nc" id="L51">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L52">        this.diasPrimeraSolicitud = diasPrimeraSolicitud;</span>
+<span class="nc" id="L53">        this.transicionService = transicionService;</span>
+<span class="nc" id="L54">        this.documentoService = documentoService;</span>
+<span class="nc" id="L55">        this.correoService = correoService;</span>
+<span class="nc" id="L56">    }</span>
+
+    public OficioDTO crearOficio(CrearOficioDTO dto) {
+
+<span class="nc" id="L60">        ExpedienteInvestigacion expediente = expedienteRepository.findById(dto.getExpedienteId())</span>
+<span class="nc" id="L61">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="nc" id="L62">                        &quot;No existe el expediente &quot; + dto.getExpedienteId()));</span>
+
+        // Si se oficia sin haber abierto el detalle, primero pasa por EN_INVESTIGACION (fila 14).
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (EstatusExpediente.RECIBIDO.equals(expediente.getEstatus())) {</span>
+<span class="nc" id="L66">            expediente = transicionService.cambiar(expediente, EstatusExpediente.EN_INVESTIGACION);</span>
+        }
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (!EstatusExpediente.EN_INVESTIGACION.equals(expediente.getEstatus())) {</span>
+<span class="nc" id="L70">            throw new OperacionInvalidaException(</span>
+<span class="nc" id="L71">                    &quot;El expediente &quot; + expediente.getFolio() + &quot; no admite generar un nuevo oficio en su estatus actual (&quot;</span>
+<span class="nc" id="L72">                            + expediente.getEstatus() + &quot;).&quot;);</span>
+        }
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (oficioRepository.existsByExpedienteIdAndEstatus(expediente.getId(), EstatusOficio.EN_ESPERA)</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                || oficioRepository.existsByExpedienteIdAndEstatus(expediente.getId(), EstatusOficio.VENCIDO)) {</span>
+<span class="nc" id="L76">            throw new OperacionInvalidaException(</span>
+<span class="nc" id="L77">                    &quot;El expediente &quot; + expediente.getFolio() + &quot; ya tiene un oficio esperando respuesta.&quot;);</span>
+        }
+
+        // Un solo tipo de oficio: la solicitud de información, cuya respuesta es la del
+        // director. También es el que se emite de nuevo cuando el quejoso rechaza un acuerdo.
+<span class="nc" id="L82">        String fase = FaseOficio.SOLICITUD_INFORMACION;</span>
+
+<span class="nc" id="L84">        LocalDate hoy = LocalDate.now();</span>
+<span class="nc" id="L85">        LocalDate fechaLimite = DiasHabilesCalculator.sumarDiasHabiles(hoy, diasPrimeraSolicitud);</span>
+
+<span class="nc" id="L87">        long consecutivo = oficioRepository.findByExpedienteIdOrderByFechaEnvioDesc(expediente.getId()).size() + 1;</span>
+<span class="nc" id="L88">        String numeroOficio = &quot;OF%03d-%s-%03d&quot;.formatted(consecutivo, siglasUA(dto.getUnidadAcademica()), expediente.getId());</span>
+
+<span class="nc" id="L90">        OficioInformacion oficio = OficioInformacion.builder()</span>
+<span class="nc" id="L91">                .expedienteId(expediente.getId())</span>
+<span class="nc" id="L92">                .folio(expediente.getFolio())</span>
+<span class="nc" id="L93">                .numeroOficio(numeroOficio)</span>
+<span class="nc" id="L94">                .fase(fase)</span>
+<span class="nc" id="L95">                .destinatarioNombre(dto.getDestinatarioNombre())</span>
+<span class="nc" id="L96">                .destinatarioCorreo(dto.getDestinatarioCorreo())</span>
+<span class="nc" id="L97">                .unidadAcademica(dto.getUnidadAcademica())</span>
+<span class="nc" id="L98">                .contenidoRedactado(dto.getContenidoRedactado())</span>
+<span class="nc" id="L99">                .correoEnviado(false)</span>
+<span class="nc" id="L100">                .tipoPlazo(&quot;PRIMERA&quot;)</span>
+<span class="nc" id="L101">                .fechaEnvio(hoy)</span>
+<span class="nc" id="L102">                .fechaLimite(fechaLimite)</span>
+<span class="nc" id="L103">                .estatus(EstatusOficio.EN_ESPERA)</span>
+<span class="nc" id="L104">                .fechaCreacion(LocalDateTime.now())</span>
+<span class="nc" id="L105">                .build();</span>
+
+<span class="nc" id="L107">        OficioInformacion guardado = oficioRepository.save(oficio);</span>
+
+        // Fila 15: oficio enviado, se espera la respuesta.
+<span class="nc" id="L110">        transicionService.cambiar(expediente, EstatusExpediente.EN_ESPERA_OFICIO);</span>
+
+<span class="nc" id="L112">        enviarPorCorreo(guardado, expediente);</span>
+
+<span class="nc" id="L114">        return convertirADTO(guardado);</span>
+    }
+
+    /** Correo a la unidad académica con el oficio en PDF; si falla, el oficio ya está guardado. */
+    private void enviarPorCorreo(OficioInformacion oficio, ExpedienteInvestigacion expediente) {
+        try {
+<span class="nc" id="L120">            boolean enviado = correoService.enviar(</span>
+<span class="nc" id="L121">                    oficio.getDestinatarioCorreo(),</span>
+<span class="nc" id="L122">                    &quot;Oficio &quot; + oficio.getNumeroOficio() + &quot; — solicitud de información (&quot; + expediente.getFolio() + &quot;)&quot;,</span>
+<span class="nc" id="L123">                    &quot;Estimado(a) &quot; + oficio.getDestinatarioNombre() + &quot;,\n\nSe adjunta el oficio &quot;</span>
+<span class="nc" id="L124">                            + oficio.getNumeroOficio() + &quot; con la solicitud de información del expediente &quot;</span>
+<span class="nc" id="L125">                            + expediente.getFolio() + &quot;. Le agradeceremos su respuesta a más tardar el &quot;</span>
+<span class="nc" id="L126">                            + oficio.getFechaLimite() + &quot;.&quot;,</span>
+<span class="nc" id="L127">                    documentoService.oficio(oficio.getId()));</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">            if (enviado) {</span>
+<span class="nc" id="L129">                oficio.setCorreoEnviado(true);</span>
+<span class="nc" id="L130">                oficioRepository.save(oficio);</span>
+            }
+<span class="nc" id="L132">        } catch (Exception ex) {</span>
+<span class="nc" id="L133">            log.error(&quot;No se pudo enviar el oficio {} por correo: {}&quot;, oficio.getNumeroOficio(), ex.getMessage());</span>
+<span class="nc" id="L134">        }</span>
+<span class="nc" id="L135">    }</span>
+
+    public List&lt;OficioDTO&gt; historialPorFolio(String folio) {
+<span class="nc" id="L138">        return oficioRepository.findByFolioOrderByFechaEnvioDesc(folio).stream()</span>
+<span class="nc" id="L139">                .map(this::convertirADTO)</span>
+<span class="nc" id="L140">                .toList();</span>
+    }
+
+    public OficioDTO obtenerPorId(Long oficioId) {
+<span class="nc" id="L144">        return oficioRepository.findById(oficioId)</span>
+<span class="nc" id="L145">                .map(this::convertirADTO)</span>
+<span class="nc" id="L146">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el oficio &quot; + oficioId));</span>
+    }
+
+    private String siglasUA(String unidadAcademica) {
+<span class="nc bnc" id="L150" title="All 4 branches missed.">        if (unidadAcademica == null || unidadAcademica.isBlank()) {</span>
+<span class="nc" id="L151">            return &quot;UA&quot;;</span>
+        }
+<span class="nc" id="L153">        return unidadAcademica.trim().toUpperCase().replaceAll(&quot;[^A-Z0-9]&quot;, &quot;&quot;);</span>
+    }
+
+    OficioDTO convertirADTO(OficioInformacion o) {
+<span class="nc" id="L157">        return OficioDTO.builder()</span>
+<span class="nc" id="L158">                .id(o.getId())</span>
+<span class="nc" id="L159">                .expedienteId(o.getExpedienteId())</span>
+<span class="nc" id="L160">                .folio(o.getFolio())</span>
+<span class="nc" id="L161">                .numeroOficio(o.getNumeroOficio())</span>
+<span class="nc" id="L162">                .fase(o.getFase())</span>
+<span class="nc" id="L163">                .destinatarioNombre(o.getDestinatarioNombre())</span>
+<span class="nc" id="L164">                .destinatarioCorreo(o.getDestinatarioCorreo())</span>
+<span class="nc" id="L165">                .unidadAcademica(o.getUnidadAcademica())</span>
+<span class="nc" id="L166">                .contenidoRedactado(o.getContenidoRedactado())</span>
+<span class="nc" id="L167">                .tipoPlazo(o.getTipoPlazo())</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                .fechaEnvio(o.getFechaEnvio() != null ? o.getFechaEnvio().toString() : null)</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                .fechaLimite(o.getFechaLimite() != null ? o.getFechaLimite().toString() : null)</span>
+<span class="nc" id="L170">                .estatus(o.getEstatus())</span>
+<span class="nc" id="L171">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

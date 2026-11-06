@@ -85,4 +85,11 @@ public interface CitaPrimerContactoRepository
             LocalDate fechaCita,
             java.util.Collection<String> estatus
     );
+
+    /* PC-5: ids de expedientes con al menos una cita activa, en UNA sola consulta. */
+    @org.springframework.data.jpa.repository.Query(
+            "select distinct c.expedienteId from CitaPrimerContacto c where c.estatus not in :cerradas")
+    java.util.Set<Long> idsExpedientesConCitaActiva(
+            @org.springframework.data.repository.query.Param("cerradas") java.util.Collection<String> cerradas
+    );
 }

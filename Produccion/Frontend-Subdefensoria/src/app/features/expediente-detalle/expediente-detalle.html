@@ -6,7 +6,14 @@
     <h2>{{ e.folio }}</h2>
     <span class="sd-chip" [class]="'sd-chip chip-' + e.estatus.toLowerCase().replace('_', '-').replace('_', '-')">{{ etiquetaEstatus(e.estatus) }}</span>
     <div class="der">
-      @if (pc?.expediente?.prioridad) { <span class="sd-chip chip-venc">Prioridad {{ pc!.expediente.prioridad!.toLowerCase() }}</span> }
+      <label class="selector-prioridad" title="Llega de Primer Contacto; aquí puedes cambiarla">
+        Prioridad
+        <select [class]="clasePrioridad(e.prioridad)" [ngModel]="codigoPrioridad(e.prioridad)"
+                (ngModelChange)="cambiarPrioridad($event)" [disabled]="guardandoPrioridad" aria-label="Prioridad del expediente">
+          @if (codigoPrioridad(e.prioridad) === 'SIN_ASIGNAR') { <option value="SIN_ASIGNAR" disabled>Sin asignar</option> }
+          @for (p of prioridades; track p.codigo) { <option [value]="p.codigo">{{ p.etiqueta }}</option> }
+        </select>
+      </label>
       <span class="sd-chip chip-pc">{{ e.unidadAcademica }}</span>
     </div>
   </div>
@@ -292,7 +299,7 @@
       @if (e.estatus === 'PENDIENTE_CONCILIACION' && acuerdo) {
         <div class="sd-card">
           <div class="sd-card-cabeza">
-            <h3><mat-icon>hourglass_top</mat-icon> Pendiente de acuerdo de conciliación</h3>
+            <h3><mat-icon>hourglass_top</mat-icon> Esperando respuesta del quejoso</h3>
             <button type="button" class="sd-btn-borde chico" (click)="verPdfAcuerdoConciliacion()"><mat-icon>picture_as_pdf</mat-icon> Ver acuerdo (PDF)</button>
           </div>
           <p class="sd-texto">{{ acuerdo.textoAcuerdo }}</p>

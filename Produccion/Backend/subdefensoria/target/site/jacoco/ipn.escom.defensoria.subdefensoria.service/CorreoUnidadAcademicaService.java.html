@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CorreoUnidadAcademicaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">CorreoUnidadAcademicaService.java</span></div><h1>CorreoUnidadAcademicaService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Manda a la unidad académica el oficio o el recordatorio (con su PDF adjunto) por correo,
+ * usando POST /api/notificaciones/enviar de notificaciones-service.
+ *
+ * Mientras se valida el flujo, {@code correo.unidad-academica.redirigir-a} manda TODO a un
+ * correo de prueba (el asunto y el cuerpo dicen a quién iba dirigido en realidad). Con
+ * {@code correo.unidad-academica.habilitado=false} no se envía nada.
+ *
+ * Es best-effort, como las notificaciones al quejoso: si el correo falla, el oficio ya quedó
+ * guardado y solo se deja en el log; el resultado indica si salió para marcar correoEnviado.
+ */
+@Service
+public class CorreoUnidadAcademicaService {
+
+<span class="nc" id="L27">    private static final Logger log = LoggerFactory.getLogger(CorreoUnidadAcademicaService.class);</span>
+    private static final String ENDPOINT_ENVIAR = &quot;/api/notificaciones/enviar&quot;;
+    private static final String FIRMA = &quot;\n\nDefensoría de los Derechos Politécnicos.&quot;;
+
+    private final RestTemplate restTemplate;
+    private final String notificacionesUrl;
+    private final boolean habilitado;
+    private final String redirigirA;
+
+    public CorreoUnidadAcademicaService(
+            RestTemplate restTemplate,
+            @Value(&quot;${notificaciones.service.url:http://localhost:8085}&quot;) String notificacionesUrl,
+            @Value(&quot;${correo.unidad-academica.habilitado:true}&quot;) boolean habilitado,
+            @Value(&quot;${correo.unidad-academica.redirigir-a:}&quot;) String redirigirA
+<span class="nc" id="L41">    ) {</span>
+<span class="nc" id="L42">        this.restTemplate = restTemplate;</span>
+<span class="nc" id="L43">        this.notificacionesUrl = notificacionesUrl;</span>
+<span class="nc" id="L44">        this.habilitado = habilitado;</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        this.redirigirA = redirigirA == null ? &quot;&quot; : redirigirA.trim();</span>
+<span class="nc" id="L46">    }</span>
+
+    /** @return true si notificaciones-service aceptó el correo. */
+    public boolean enviar(String destinatario, String asunto, String cuerpo, DocumentoService.Pdf pdf) {
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (!habilitado) {</span>
+<span class="nc" id="L51">            log.info(&quot;Correo a la unidad académica deshabilitado; no se envió: {}&quot;, asunto);</span>
+<span class="nc" id="L52">            return false;</span>
+        }
+<span class="nc bnc" id="L54" title="All 4 branches missed.">        if (destinatario == null || destinatario.isBlank()) {</span>
+<span class="nc" id="L55">            log.warn(&quot;El oficio no tiene correo de destinatario; no se envió: {}&quot;, asunto);</span>
+<span class="nc" id="L56">            return false;</span>
+        }
+
+<span class="nc" id="L59">        String para = destinatario.trim();</span>
+<span class="nc" id="L60">        String asuntoFinal = asunto;</span>
+<span class="nc" id="L61">        String cuerpoFinal = cuerpo;</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (!redirigirA.isEmpty()) {</span>
+<span class="nc" id="L63">            asuntoFinal = &quot;[PRUEBA] &quot; + asunto;</span>
+<span class="nc" id="L64">            cuerpoFinal = &quot;(Correo de prueba: iba dirigido a &quot; + para + &quot;)\n\n&quot; + cuerpo;</span>
+<span class="nc" id="L65">            para = redirigirA;</span>
+        }
+
+<span class="nc" id="L68">        Map&lt;String, String&gt; body = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L69">        body.put(&quot;destinatario&quot;, para);</span>
+<span class="nc" id="L70">        body.put(&quot;asunto&quot;, asuntoFinal);</span>
+<span class="nc" id="L71">        body.put(&quot;cuerpo&quot;, cuerpoFinal + FIRMA);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (pdf != null) {</span>
+<span class="nc" id="L73">            body.put(&quot;adjuntoNombre&quot;, pdf.nombreArchivo());</span>
+<span class="nc" id="L74">            body.put(&quot;adjuntoTipo&quot;, &quot;application/pdf&quot;);</span>
+<span class="nc" id="L75">            body.put(&quot;adjuntoBase64&quot;, Base64.getEncoder().encodeToString(pdf.contenido()));</span>
+        }
+
+        try {
+<span class="nc" id="L79">            restTemplate.postForObject(notificacionesUrl + ENDPOINT_ENVIAR, body, String.class);</span>
+<span class="nc" id="L80">            log.info(&quot;Correo \&quot;{}\&quot; enviado a {}&quot;, asuntoFinal, para);</span>
+<span class="nc" id="L81">            return true;</span>
+<span class="nc" id="L82">        } catch (Exception ex) {</span>
+<span class="nc" id="L83">            log.error(&quot;No se pudo enviar el correo \&quot;{}\&quot; a {}: {}&quot;, asuntoFinal, para, ex.getMessage());</span>
+<span class="nc" id="L84">            return false;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

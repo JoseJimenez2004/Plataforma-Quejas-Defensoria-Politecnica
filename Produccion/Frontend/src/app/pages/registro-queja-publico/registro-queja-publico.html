@@ -291,8 +291,10 @@
           <app-datepicker
             [(ngModel)]="fechaHechos"
             name="fechaHechos"
+            [min]="fechaMinimaHechos"
             [max]="fechaMaxima"
           ></app-datepicker>
+          <small class="ayuda-plazo">Solo hechos de los últimos 90 días naturales (art. 13, párrafo tercero).</small>
           @if (errorFechaHechos && intentoEnviar) {
             <span class="mensaje-campo">{{ errorFechaHechos }}</span>
           }

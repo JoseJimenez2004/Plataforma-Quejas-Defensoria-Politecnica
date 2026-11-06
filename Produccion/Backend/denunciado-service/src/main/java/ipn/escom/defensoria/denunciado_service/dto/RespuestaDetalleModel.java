@@ -1,5 +1,6 @@
 package ipn.escom.defensoria.denunciado_service.dto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -8,5 +9,6 @@ public record RespuestaDetalleModel(Long id, String folioRespuesta, String folio
                                     String apellido1, String apellido2, String unidadProcedenciaClave,
                                     String tipoIdentificacion, String numeroIdentificacion,
                                     String descripcionHechos, String estatus, LocalDateTime fechaRegistro,
-                                    String avisoPrivacidadVersion, List<ArchivoResumen> archivos) {
+                                    String avisoPrivacidadVersion, List<ArchivoResumen> archivos,
+                                    String origen, String capturadoPor, LocalDate fechaEntrevista) {
 }

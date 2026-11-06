@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExpedienteInvestigacionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.controller</a> &gt; <span class="el_source">ExpedienteInvestigacionController.java</span></div><h1>ExpedienteInvestigacionController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.controller;
+
+import ipn.escom.defensoria.subdefensoria.entity.EstatusExpediente;
+import ipn.escom.defensoria.subdefensoria.service.TransicionExpedienteService;
+import ipn.escom.defensoria.subdefensoria.dto.ExpedienteInvestigacionDTO;
+import ipn.escom.defensoria.subdefensoria.dto.ExpedienteResumenDTO;
+import ipn.escom.defensoria.subdefensoria.entity.ExpedienteInvestigacion;
+import ipn.escom.defensoria.subdefensoria.exception.RecursoNoEncontradoException;
+import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
+import ipn.escom.defensoria.subdefensoria.service.ExpedienteResumenService;
+import ipn.escom.defensoria.subdefensoria.util.Prioridad;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+/** Consulta de detalle de un expediente (para la pantalla de detalle del front). */
+@RestController
+@RequestMapping(&quot;/api/subdefensoria/expedientes&quot;)
+public class ExpedienteInvestigacionController {
+
+    private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final ExpedienteResumenService expedienteResumenService;
+    private final TransicionExpedienteService transicionService;
+
+    public ExpedienteInvestigacionController(
+            ExpedienteInvestigacionRepository expedienteRepository,
+            ExpedienteResumenService expedienteResumenService,
+            TransicionExpedienteService transicionService
+<span class="nc" id="L32">    ) {</span>
+<span class="nc" id="L33">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L34">        this.expedienteResumenService = expedienteResumenService;</span>
+<span class="nc" id="L35">        this.transicionService = transicionService;</span>
+<span class="nc" id="L36">    }</span>
+
+    /** Bandeja unificada: todos los expedientes, cualquier estatus, con su progreso. */
+    @GetMapping
+    public List&lt;ExpedienteResumenDTO&gt; listarTodos() {
+<span class="nc" id="L41">        return expedienteResumenService.listarTodos();</span>
+    }
+
+    @GetMapping(&quot;/folio/{folio}&quot;)
+    public ExpedienteInvestigacionDTO obtenerPorFolio(@PathVariable String folio) {
+<span class="nc" id="L46">        return convertir(buscar(folio));</span>
+    }
+
+    /*
+     * CU-SD-05 / fila 14 del diagrama: el subdefensor abre el expediente para trabajarlo,
+     * RECIBIDO -&gt; EN_INVESTIGACION (en otro estado solo lo devuelve). Es explícito y no un
+     * efecto del GET, igual que iniciar-analisis de Primer Contacto: otras pantallas también
+     * consultan el expediente y eso no es &quot;abrirlo&quot;.
+     */
+    @PostMapping(&quot;/folio/{folio}/iniciar-investigacion&quot;)
+    public ExpedienteInvestigacionDTO iniciarInvestigacion(@PathVariable String folio) {
+<span class="nc" id="L57">        ExpedienteInvestigacion e = buscar(folio);</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        if (EstatusExpediente.RECIBIDO.equals(e.getEstatus())) {</span>
+<span class="nc" id="L59">            e = transicionService.cambiar(e, EstatusExpediente.EN_INVESTIGACION);</span>
+        }
+<span class="nc" id="L61">        return convertir(e);</span>
+    }
+
+    /**
+     * SD-6: el subdefensor cambia la prioridad (BAJA|MEDIA|ALTA|URGENTE). El cambio no regresa
+     * a Primer Contacto. Cualquier otro valor responde 400.
+     */
+    @PatchMapping(&quot;/{id}/prioridad&quot;)
+    public ResponseEntity&lt;?&gt; cambiarPrioridad(@PathVariable Long id, @RequestBody Map&lt;String, String&gt; cuerpo) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        String valor = cuerpo == null ? null : cuerpo.get(&quot;prioridad&quot;);</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">        if (!Prioridad.esValida(valor)) {</span>
+<span class="nc" id="L72">            return ResponseEntity.badRequest().body(Map.of(&quot;error&quot;, &quot;Prioridad inválida. Usa BAJA, MEDIA, ALTA o URGENTE.&quot;));</span>
+        }
+<span class="nc" id="L74">        ExpedienteInvestigacion e = expedienteRepository.findById(id)</span>
+<span class="nc" id="L75">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el expediente &quot; + id));</span>
+<span class="nc" id="L76">        e.setPrioridad(Prioridad.normalizar(valor));</span>
+<span class="nc" id="L77">        e.setFechaActualizacion(LocalDateTime.now());</span>
+<span class="nc" id="L78">        return ResponseEntity.ok(convertir(expedienteRepository.save(e)));</span>
+    }
+
+    private ExpedienteInvestigacion buscar(String folio) {
+<span class="nc" id="L82">        return expedienteRepository.findByFolio(folio)</span>
+<span class="nc" id="L83">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el expediente con folio &quot; + folio));</span>
+    }
+
+    private ExpedienteInvestigacionDTO convertir(ExpedienteInvestigacion e) {
+
+<span class="nc" id="L88">        return ExpedienteInvestigacionDTO.builder()</span>
+<span class="nc" id="L89">                .id(e.getId())</span>
+<span class="nc" id="L90">                .folio(e.getFolio())</span>
+<span class="nc" id="L91">                .folioOrigen(e.getFolioOrigen())</span>
+<span class="nc" id="L92">                .folioQueja(e.getFolioQueja())</span>
+<span class="nc" id="L93">                .quejosoNombre(e.getQuejosoNombre())</span>
+<span class="nc" id="L94">                .unidadAcademica(e.getUnidadAcademica())</span>
+<span class="nc" id="L95">                .asunto(e.getAsunto())</span>
+<span class="nc" id="L96">                .descripcionHechos(e.getDescripcionHechos())</span>
+<span class="nc" id="L97">                .fechaAdmision(</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                        e.getFechaAdmision() != null</span>
+<span class="nc" id="L99">                                ? e.getFechaAdmision().toString()</span>
+<span class="nc" id="L100">                                : null</span>
+                )
+<span class="nc" id="L102">                .abogadoAsesorId(e.getAbogadoAsesorId())</span>
+<span class="nc" id="L103">                .abogadoAsesorNombre(e.getAbogadoAsesorNombre())</span>
+<span class="nc" id="L104">                .estatus(e.getEstatus())</span>
+<span class="nc" id="L105">                .observacionesAnalista(</span>
+<span class="nc" id="L106">                        e.getObservacionesAnalista()</span>
+                )
+<span class="nc" id="L108">                .prioridad(e.getPrioridad())</span>
+<span class="nc" id="L109">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

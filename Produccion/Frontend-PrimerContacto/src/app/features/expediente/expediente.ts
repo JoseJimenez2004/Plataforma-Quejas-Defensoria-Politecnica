@@ -25,6 +25,10 @@ import { AntecedentesService } from '../../core/services/antecedentes.service';
 import { AnalistaSesionService } from '../../core/services/analista-sesion.service';
 import {
   claseEstatus,
+  PRIORIDADES,
+  codigoPrioridad,
+  clasePrioridad,
+  formatearPrioridad,
   estaAbierto,
   formatearFechaHora
 } from '../../core/utils/estatus-expediente';
@@ -32,9 +36,9 @@ import { abrirBlob, mensajeDeError } from '../../core/utils/archivos';
 import { DenunciadoService } from '../../core/services/denunciado.service';
 import { RespuestaDenunciado, SolicitudDenunciado } from '../../core/models/denunciado.model';
 import {
-  SolicitudDenunciadoDialog,
-  SolicitudDenunciadoDialogData
-} from '../../shared/solicitud-denunciado-dialog/solicitud-denunciado-dialog';
+  RegistrarVersionDenunciadoDialog,
+  RegistrarVersionDenunciadoData
+} from '../../shared/registrar-version-denunciado-dialog/registrar-version-denunciado-dialog';
 import {
   RespuestaDenunciadoDialog,
   RespuestaDenunciadoDialogData
@@ -134,7 +138,7 @@ export class Expediente implements OnInit, OnDestroy {
     fechaIngreso: '',
     estatus: '',
     estatusCodigo: '',
-    prioridad: 'Media',
+    prioridad: 'Sin asignar',
     narrativa: '',
     quejoso: {
       nombre: '',
@@ -155,7 +159,6 @@ export class Expediente implements OnInit, OnDestroy {
   // Versión del denunciado: correos enviados (Primer Contacto) y respuestas (denunciado-service).
   solicitudesDenunciado: SolicitudDenunciado[] = [];
   respuestasDenunciado: RespuestaDenunciado[] = [];
-  enviandoSolicitudDenunciado = false;
 
   /** Resumen de la búsqueda automática de antecedentes al abrir el expediente. */
   antecedentes?: { total: number; mismoQuejoso: number; maxSimilitud: number };
@@ -170,6 +173,9 @@ export class Expediente implements OnInit, OnDestroy {
   procesando = false;
 
   readonly claseEstatus = claseEstatus;
+  readonly prioridades = PRIORIDADES;
+  readonly clasePrioridad = clasePrioridad;
+  guardandoPrioridad = false;
   readonly formatearFechaHora = formatearFechaHora;
 
   constructor(
@@ -263,7 +269,7 @@ export class Expediente implements OnInit, OnDestroy {
         this.cargarCitaActiva();
         this.cargarResumenAntecedentes();
         this.cargarDenunciado();
-        this.generarResumen();
+        // PC-3: el resumen con IA ya no se pide al abrir; el analista lo genera con el botón.
       },
       error: (error) => {
         this.cargando = false;
@@ -534,9 +540,10 @@ export class Expediente implements OnInit, OnDestroy {
    * eso se pide al abrir el expediente; si el modelo no responde se usa el resumen simulado
    * del navegador y la pantalla lo dice.
    */
-  private generarResumen(): void {
+  generarResumen(): void {
     const texto = this.expediente.narrativa?.trim();
-    if (!texto || this.resumen || this.cargandoResumen) return;
+    if (!texto || this.cargandoResumen) return;
+    this.peticionResumen?.unsubscribe();
     this.cargandoResumen = true;
     this.peticionResumen = this.resumenService.resumir(texto).subscribe({
       next: (r) => {
@@ -557,6 +564,36 @@ export class Expediente implements OnInit, OnDestroy {
         this.resumenSimulado = true;
         this.cargandoResumen = false;
         this.fechaResumen = new Date().toISOString().slice(0, 16);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /** PC-3: narrativa corta (menos de 40 palabras): quizá no haga falta resumen. */
+  get narrativaBreve(): boolean {
+    const t = this.expediente.narrativa?.trim() ?? '';
+    return t.length > 0 && t.split(/\s+/).length < 40;
+  }
+
+  // ---------------------------------------------------------------- Prioridad (PC-1)
+
+  get codigoPrioridadActual(): string {
+    return codigoPrioridad(this.expediente.prioridad);
+  }
+
+  cambiarPrioridad(codigo: string): void {
+    if (!codigo || codigo === 'SIN_ASIGNAR' || codigo === this.codigoPrioridadActual) return;
+    this.guardandoPrioridad = true;
+    this.expedienteService.cambiarPrioridad(this.expediente.folio, codigo).subscribe({
+      next: (exp) => {
+        this.expediente.prioridad = formatearPrioridad(exp?.prioridad ?? codigo);
+        this.guardandoPrioridad = false;
+        this.snackBar.open(`Prioridad actualizada a ${this.expediente.prioridad}.`, 'Cerrar', { duration: 2500 });
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.guardandoPrioridad = false;
+        this.snackBar.open('No se pudo guardar la prioridad. Intenta de nuevo.', 'Cerrar', { duration: 3500 });
         this.cdr.detectChanges();
       }
     });
@@ -607,7 +644,7 @@ export class Expediente implements OnInit, OnDestroy {
       eventos.push({ fecha: s.fechaEnvio, titulo: 'Solicitud al denunciado', detalle: 'Se pidió su versión de los hechos a ' + s.correoDenunciado + '.', tipo: 'normal' });
     }
     for (const r of this.respuestasDenunciado) {
-      eventos.push({ fecha: r.fechaRegistro, titulo: 'Respuesta del denunciado', detalle: 'Registró su versión (' + r.folioRespuesta + ').', tipo: 'normal' });
+      eventos.push({ fecha: r.fechaRegistro, titulo: 'Versión del denunciado', detalle: (r.origen === 'PERSONAL' ? 'Capturada por ' + (r.capturadoPor || 'el personal') : 'Registró su versión') + ' (' + r.folioRespuesta + ').', tipo: 'normal' });
     }
     for (const a of this.acuerdos) {
       if (a.fechaEmision) eventos.push({ fecha: a.fechaEmision, titulo: 'Propuesta de conciliación', detalle: a.asunto, tipo: 'normal' });
@@ -664,35 +701,32 @@ export class Expediente implements OnInit, OnDestroy {
     });
   }
 
-  solicitarRespuestaDenunciado(): void {
+  /**
+   * PC-2 (2026-11): el analista captura la versión del denunciado (tras una cita o
+   * entrevista). Ya no se le manda enlace al formulario público.
+   */
+  registrarVersionDenunciado(): void {
     const folioQueja = this.expediente?.folioOrigen;
     if (!folioQueja) return;
 
-    const data: SolicitudDenunciadoDialogData = {
+    const data: RegistrarVersionDenunciadoData = {
       folioQueja,
       denunciado: this.expediente?.datosQueja?.denunciado,
-      correoAnterior: this.ultimaSolicitudDenunciado?.correoDenunciado
+      unidadAcademica: this.expediente?.quejoso?.unidadAcademica
     };
 
-    this.dialog.open(SolicitudDenunciadoDialog, { width: '560px', data }).afterClosed().subscribe(correo => {
-      if (!correo) return;
-
-      this.enviandoSolicitudDenunciado = true;
-      this.denunciadoService.enviarSolicitud(this.folio, correo).subscribe({
-        next: () => {
-          this.enviandoSolicitudDenunciado = false;
-          this.snackBar.open(`Se envió la solicitud a ${correo}.`, 'Cerrar', { duration: 3500 });
-          this.cargarDenunciado();
-        },
-        error: (error) => {
-          this.enviandoSolicitudDenunciado = false;
-          this.snackBar.open(mensajeDeError(error, 'No fue posible enviar la solicitud.'), 'Cerrar', {
-            duration: 4500
-          });
-          this.cargarDenunciado();
-        }
+    this.dialog.open(RegistrarVersionDenunciadoDialog, { width: '820px', maxWidth: '96vw', data })
+      .afterClosed().subscribe(guardada => {
+        if (guardada) this.cargarDenunciado();
       });
-    });
+  }
+
+  /** "Capturada por … el …" o "La registró el denunciado el …". */
+  origenVersion(r: RespuestaDenunciado): string {
+    return r.origen === 'PERSONAL'
+      ? `Capturada por ${r.capturadoPor || 'el personal'} el ${this.formatearFechaHora(r.fechaRegistro)}`
+        + (r.fechaEntrevista ? ` · entrevista del ${r.fechaEntrevista.split('-').reverse().join('/')}` : '')
+      : `La registró el denunciado el ${this.formatearFechaHora(r.fechaRegistro)}`;
   }
 
   verRespuestaDenunciado(): void {

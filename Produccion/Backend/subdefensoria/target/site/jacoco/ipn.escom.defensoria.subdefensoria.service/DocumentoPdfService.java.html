@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocumentoPdfService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">DocumentoPdfService.java</span></div><h1>DocumentoPdfService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import com.lowagie.text.Chunk;
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+import com.lowagie.text.pdf.draw.LineSeparator;
+import ipn.escom.defensoria.subdefensoria.entity.AcuerdoConclusion;
+import ipn.escom.defensoria.subdefensoria.entity.ExpedienteInvestigacion;
+import ipn.escom.defensoria.subdefensoria.entity.OficioInformacion;
+import ipn.escom.defensoria.subdefensoria.entity.RecordatorioUrgencia;
+import org.springframework.stereotype.Service;
+
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
+/**
+ * Documentos PDF de Subdefensoría: oficio de solicitud de información (CU-SD-06),
+ * recordatorio de urgencia (CU-SD-07), acuerdo de conciliación y acuerdo de conclusión
+ * (CU-SD-09).
+ *
+ * No existe un formato oficial todavía: son de EJEMPLO y siguen la misma estructura que el
+ * oficio de remisión de Primer Contacto (membrete, datos del documento, lugar y fecha,
+ * destinatario, cuerpo, firma y copias). Cuando la Defensoría defina sus formatos, basta con
+ * cambiar esta clase.
+ */
+@Service
+<span class="nc" id="L40">public class DocumentoPdfService {</span>
+
+<span class="nc" id="L42">    private static final Color GUINDA = new Color(0x6C, 0x1D, 0x45);</span>
+<span class="nc" id="L43">    private static final Color GRIS = new Color(0x55, 0x55, 0x55);</span>
+
+<span class="nc" id="L45">    private static final Locale ES_MX = Locale.forLanguageTag(&quot;es-MX&quot;);</span>
+<span class="nc" id="L46">    private static final DateTimeFormatter FECHA_LARGA = DateTimeFormatter.ofPattern(&quot;d 'de' MMMM 'de' yyyy&quot;, ES_MX);</span>
+
+    private static final String AREA = &quot;Defensoría de los Derechos Politécnicos · Subdefensoría&quot;;
+
+<span class="nc" id="L50">    private final Font titulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, GUINDA);</span>
+<span class="nc" id="L51">    private final Font subtitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, GUINDA);</span>
+<span class="nc" id="L52">    private final Font normal = FontFactory.getFont(FontFactory.HELVETICA, 10.5f, Color.BLACK);</span>
+<span class="nc" id="L53">    private final Font negrita = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10.5f, Color.BLACK);</span>
+<span class="nc" id="L54">    private final Font pequena = FontFactory.getFont(FontFactory.HELVETICA, 8.5f, GRIS);</span>
+
+    // ---------------------------------------------------------------------------------
+    // CU-SD-06: oficio de solicitud de información al director
+    // ---------------------------------------------------------------------------------
+
+    public byte[] oficio(OficioInformacion oficio, ExpedienteInvestigacion expediente) {
+<span class="nc" id="L61">        return generar(&quot;Oficio &quot; + oficio.getNumeroOficio(), documento -&gt; {</span>
+<span class="nc" id="L62">            datos(documento, new String[]{</span>
+<span class="nc" id="L63">                    &quot;Oficio núm.:&quot;, oficio.getNumeroOficio(),</span>
+<span class="nc" id="L64">                    &quot;Expediente:&quot;, expediente.getFolio(),</span>
+<span class="nc" id="L65">                    &quot;Folio de la queja:&quot;, folioQueja(expediente),</span>
+                    &quot;Asunto:&quot;, &quot;Solicitud de información&quot;
+<span class="nc" id="L67">            }, oficio.getFechaEnvio());</span>
+<span class="nc" id="L68">            destinatario(documento, oficio.getDestinatarioNombre(), oficio.getUnidadAcademica());</span>
+
+<span class="nc" id="L70">            parrafo(documento,</span>
+                    &quot;Por medio del presente, y en seguimiento a la queja registrada con el folio &quot;
+<span class="nc" id="L72">                            + folioQueja(expediente) + &quot;, relativa a \&quot;&quot; + valor(expediente.getAsunto(), &quot;sin asunto&quot;)</span>
+                            + &quot;\&quot;, me permito solicitarle la información que a continuación se describe, &quot;
+                            + &quot;a fin de que esta Defensoría esté en posibilidad de integrar el expediente &quot;
+<span class="nc" id="L75">                            + &quot;de investigación &quot; + expediente.getFolio() + &quot;.&quot;);</span>
+<span class="nc" id="L76">            seccion(documento, &quot;Información solicitada&quot;);</span>
+<span class="nc" id="L77">            parrafo(documento, oficio.getContenidoRedactado());</span>
+<span class="nc" id="L78">            seccion(documento, &quot;Plazo de respuesta&quot;);</span>
+<span class="nc" id="L79">            parrafo(documento, &quot;Mucho agradeceré que la respuesta se haga llegar a más tardar el &quot;</span>
+<span class="nc" id="L80">                    + fecha(oficio.getFechaLimite()) + &quot;, por correo electrónico o por oficio dirigido a esta Defensoría.&quot;);</span>
+<span class="nc" id="L81">            cierre(documento);</span>
+<span class="nc" id="L82">            firma(documento, expediente);</span>
+<span class="nc" id="L83">            copias(documento, expediente, oficio.getDestinatarioCorreo());</span>
+<span class="nc" id="L84">        });</span>
+    }
+
+    // ---------------------------------------------------------------------------------
+    // CU-SD-07: recordatorio de urgencia de un oficio sin respuesta
+    // ---------------------------------------------------------------------------------
+
+    public byte[] recordatorio(
+            RecordatorioUrgencia recordatorio,
+            int numero,
+            OficioInformacion oficio,
+            ExpedienteInvestigacion expediente
+    ) {
+<span class="nc" id="L97">        String numeroRecordatorio = oficio.getNumeroOficio() + &quot;/R&quot; + numero;</span>
+<span class="nc" id="L98">        return generar(&quot;Recordatorio &quot; + numeroRecordatorio, documento -&gt; {</span>
+<span class="nc" id="L99">            datos(documento, new String[]{</span>
+                    &quot;Recordatorio núm.:&quot;, numeroRecordatorio,
+<span class="nc" id="L101">                    &quot;Oficio de referencia:&quot;, oficio.getNumeroOficio(),</span>
+<span class="nc" id="L102">                    &quot;Expediente:&quot;, expediente.getFolio(),</span>
+                    &quot;Asunto:&quot;, &quot;Recordatorio de urgencia&quot;
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            }, recordatorio.getFechaEnvio() != null ? recordatorio.getFechaEnvio().toLocalDate() : null);</span>
+<span class="nc" id="L105">            destinatario(documento, oficio.getDestinatarioNombre(), oficio.getUnidadAcademica());</span>
+
+<span class="nc" id="L107">            parrafo(documento,</span>
+<span class="nc" id="L108">                    &quot;En relación con el oficio &quot; + oficio.getNumeroOficio() + &quot; de fecha &quot; + fecha(oficio.getFechaEnvio())</span>
+                            + &quot;, mediante el cual se solicitó información para la integración del expediente &quot;
+<span class="nc" id="L110">                            + expediente.getFolio() + &quot;, me permito recordarle que a la fecha no se ha recibido &quot;</span>
+                            + &quot;la respuesta correspondiente&quot;
+<span class="nc bnc" id="L112" title="All 4 branches missed.">                            + (recordatorio.getDiasRetraso() != null &amp;&amp; recordatorio.getDiasRetraso() &gt; 0</span>
+<span class="nc" id="L113">                            ? &quot;, con un retraso de &quot; + recordatorio.getDiasRetraso() + &quot; días hábiles.&quot;</span>
+<span class="nc" id="L114">                            : &quot;.&quot;));</span>
+<span class="nc" id="L115">            seccion(documento, &quot;Mensaje&quot;);</span>
+<span class="nc" id="L116">            parrafo(documento, recordatorio.getMensaje());</span>
+<span class="nc bnc" id="L117" title="All 4 branches missed.">            if (recordatorio.getMedidasOfrecidas() != null &amp;&amp; !recordatorio.getMedidasOfrecidas().isBlank()) {</span>
+<span class="nc" id="L118">                seccion(documento, &quot;Medidas ofrecidas&quot;);</span>
+<span class="nc" id="L119">                parrafo(documento, recordatorio.getMedidasOfrecidas());</span>
+            }
+<span class="nc" id="L121">            seccion(documento, &quot;Nuevo plazo&quot;);</span>
+<span class="nc" id="L122">            parrafo(documento, &quot;Mucho agradeceré que la respuesta se haga llegar a más tardar el &quot;</span>
+<span class="nc" id="L123">                    + fecha(oficio.getFechaLimite()) + &quot;.&quot;);</span>
+<span class="nc" id="L124">            cierre(documento);</span>
+<span class="nc" id="L125">            firma(documento, expediente);</span>
+<span class="nc" id="L126">            copias(documento, expediente, oficio.getDestinatarioCorreo());</span>
+<span class="nc" id="L127">        });</span>
+    }
+
+    // ---------------------------------------------------------------------------------
+    // CU-SD-09: acuerdo de conciliación (lo responde el quejoso) y acuerdo de conclusión
+    // ---------------------------------------------------------------------------------
+
+    public byte[] acuerdoConciliacion(AcuerdoConclusion acuerdo, ExpedienteInvestigacion expediente) {
+<span class="nc" id="L135">        return generar(&quot;Acuerdo de conciliación &quot; + expediente.getFolio(), documento -&gt; {</span>
+<span class="nc" id="L136">            datos(documento, new String[]{</span>
+<span class="nc" id="L137">                    &quot;Expediente:&quot;, expediente.getFolio(),</span>
+<span class="nc" id="L138">                    &quot;Folio de la queja:&quot;, folioQueja(expediente),</span>
+                    &quot;Asunto:&quot;, &quot;Acuerdo de conciliación&quot;
+<span class="nc" id="L140">            }, fechaDe(acuerdo.getFechaEnvioSecretarial()));</span>
+<span class="nc" id="L141">            destinatario(documento, valor(expediente.getQuejosoNombre(), &quot;Persona quejosa&quot;), null);</span>
+
+<span class="nc" id="L143">            parrafo(documento,</span>
+<span class="nc" id="L144">                    &quot;Con motivo de la queja registrada con el folio &quot; + folioQueja(expediente) + &quot;, relativa a \&quot;&quot;</span>
+<span class="nc" id="L145">                            + valor(expediente.getAsunto(), &quot;sin asunto&quot;) + &quot;\&quot;, y una vez recabada la información &quot;</span>
+                            + &quot;de la unidad académica, esta Defensoría le propone el siguiente acuerdo:&quot;);
+<span class="nc" id="L147">            seccion(documento, &quot;Acuerdo propuesto&quot;);</span>
+<span class="nc" id="L148">            parrafo(documento, acuerdo.getTextoAcuerdo());</span>
+<span class="nc" id="L149">            seccion(documento, &quot;Respuesta de la persona quejosa&quot;);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            if (&quot;ACEPTADO&quot;.equals(acuerdo.getRespuestaQuejoso())) {</span>
+<span class="nc" id="L151">                parrafo(documento, &quot;Aceptado el &quot; + fecha(fechaDe(acuerdo.getFechaRespuestaQuejoso())) + &quot;.&quot;);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">            } else if (&quot;RECHAZADO&quot;.equals(acuerdo.getRespuestaQuejoso())) {</span>
+<span class="nc" id="L153">                parrafo(documento, &quot;Rechazado el &quot; + fecha(fechaDe(acuerdo.getFechaRespuestaQuejoso()))</span>
+<span class="nc" id="L154">                        + &quot;. Motivo: &quot; + valor(acuerdo.getComentarioQuejoso(), &quot;sin motivo registrado&quot;) + &quot;.&quot;);</span>
+            } else {
+<span class="nc" id="L156">                parrafo(documento, &quot;Pendiente. La persona quejosa puede aceptarlo o rechazarlo indicando el &quot;</span>
+                        + &quot;motivo desde el enlace que se le envió por correo; si lo rechaza, la investigación continúa.&quot;);
+            }
+<span class="nc" id="L159">            firma(documento, expediente);</span>
+<span class="nc" id="L160">            copias(documento, expediente, null);</span>
+<span class="nc" id="L161">        });</span>
+    }
+
+    public byte[] acuerdoConclusion(AcuerdoConclusion acuerdo, ExpedienteInvestigacion expediente) {
+<span class="nc" id="L165">        return generar(&quot;Acuerdo de conclusión &quot; + expediente.getFolio(), documento -&gt; {</span>
+<span class="nc" id="L166">            datos(documento, new String[]{</span>
+<span class="nc" id="L167">                    &quot;Expediente:&quot;, expediente.getFolio(),</span>
+<span class="nc" id="L168">                    &quot;Folio de la queja:&quot;, folioQueja(expediente),</span>
+                    &quot;Asunto:&quot;, &quot;Acuerdo de conclusión&quot;
+<span class="nc" id="L170">            }, fechaDe(acuerdo.getFechaConclusion()));</span>
+
+<span class="nc" id="L172">            Paragraph encabezado = new Paragraph(&quot;ACUERDO DE CONCLUSIÓN&quot;, titulo);</span>
+<span class="nc" id="L173">            encabezado.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L174">            encabezado.setSpacingAfter(8);</span>
+<span class="nc" id="L175">            documento.add(encabezado);</span>
+
+<span class="nc" id="L177">            parrafo(documento,</span>
+<span class="nc" id="L178">                    &quot;Visto el expediente de investigación &quot; + expediente.getFolio() + &quot;, derivado de la queja &quot;</span>
+<span class="nc" id="L179">                            + folioQueja(expediente) + &quot; presentada por &quot; + valor(expediente.getQuejosoNombre(), &quot;la persona quejosa&quot;)</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                            + (expediente.getUnidadAcademica() != null ? &quot;, de &quot; + expediente.getUnidadAcademica() : &quot;&quot;)</span>
+                            + &quot;, y toda vez que la persona quejosa aceptó el acuerdo de conciliación propuesto, &quot;
+                            + &quot;se emite el presente acuerdo de conclusión.&quot;);
+<span class="nc" id="L183">            seccion(documento, &quot;Acuerdo de conciliación aceptado&quot;);</span>
+<span class="nc" id="L184">            parrafo(documento, valor(acuerdo.getTextoAcuerdo(), &quot;—&quot;));</span>
+<span class="nc" id="L185">            seccion(documento, &quot;Conclusión&quot;);</span>
+<span class="nc" id="L186">            parrafo(documento, valor(acuerdo.getTextoConclusion(), &quot;—&quot;));</span>
+<span class="nc" id="L187">            parrafo(documento, &quot;En consecuencia, se da por concluido el expediente y se ordena su archivo como asunto &quot;</span>
+                    + &quot;total y definitivamente concluido.&quot;);
+<span class="nc" id="L189">            firma(documento, expediente);</span>
+<span class="nc" id="L190">            copias(documento, expediente, null);</span>
+<span class="nc" id="L191">        });</span>
+    }
+
+    // ---------------------------------------------------------------------------------
+
+    private interface Contenido {
+        void escribir(Document documento) throws DocumentException;
+    }
+
+    private byte[] generar(String tituloDocumento, Contenido contenido) {
+<span class="nc" id="L201">        ByteArrayOutputStream salida = new ByteArrayOutputStream();</span>
+<span class="nc" id="L202">        Document documento = new Document(PageSize.LETTER, 64, 64, 44, 40);</span>
+        try {
+<span class="nc" id="L204">            PdfWriter.getInstance(documento, salida);</span>
+<span class="nc" id="L205">            documento.addTitle(tituloDocumento);</span>
+<span class="nc" id="L206">            documento.addAuthor(&quot;Defensoría de los Derechos Politécnicos&quot;);</span>
+<span class="nc" id="L207">            documento.open();</span>
+<span class="nc" id="L208">            membrete(documento);</span>
+<span class="nc" id="L209">            contenido.escribir(documento);</span>
+<span class="nc" id="L210">            documento.close();</span>
+<span class="nc" id="L211">        } catch (DocumentException ex) {</span>
+<span class="nc" id="L212">            throw new IllegalStateException(&quot;No se pudo generar el PDF: &quot; + tituloDocumento, ex);</span>
+<span class="nc" id="L213">        }</span>
+<span class="nc" id="L214">        return salida.toByteArray();</span>
+    }
+
+    private void membrete(Document documento) throws DocumentException {
+<span class="nc" id="L218">        Paragraph institucion = new Paragraph(&quot;INSTITUTO POLITÉCNICO NACIONAL&quot;, titulo);</span>
+<span class="nc" id="L219">        institucion.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L220">        documento.add(institucion);</span>
+
+<span class="nc" id="L222">        Paragraph area = new Paragraph(AREA, subtitulo);</span>
+<span class="nc" id="L223">        area.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L224">        documento.add(area);</span>
+
+<span class="nc" id="L226">        documento.add(new Chunk(new LineSeparator(1.2f, 100, GUINDA, Element.ALIGN_CENTER, -4)));</span>
+<span class="nc" id="L227">        documento.add(espacio(10));</span>
+<span class="nc" id="L228">    }</span>
+
+    /** Tabla de datos (pares etiqueta, valor) alineada a la derecha + lugar y fecha. */
+    private void datos(Document documento, String[] etiquetaValor, LocalDate fecha) throws DocumentException {
+<span class="nc" id="L232">        PdfPTable tabla = new PdfPTable(2);</span>
+<span class="nc" id="L233">        tabla.setWidthPercentage(62);</span>
+<span class="nc" id="L234">        tabla.setHorizontalAlignment(Element.ALIGN_RIGHT);</span>
+<span class="nc" id="L235">        tabla.setWidths(new float[]{0.9f, 1.6f});</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">        for (int i = 0; i + 1 &lt; etiquetaValor.length; i += 2) {</span>
+<span class="nc" id="L237">            tabla.addCell(celda(new Phrase(etiquetaValor[i], negrita)));</span>
+<span class="nc" id="L238">            tabla.addCell(celda(new Phrase(valor(etiquetaValor[i + 1], &quot;—&quot;), normal)));</span>
+        }
+<span class="nc" id="L240">        documento.add(tabla);</span>
+
+<span class="nc bnc" id="L242" title="All 2 branches missed.">        Paragraph lugarFecha = new Paragraph(&quot;Ciudad de México, a &quot; + fecha(fecha != null ? fecha : LocalDate.now()) + &quot;.&quot;, normal);</span>
+<span class="nc" id="L243">        lugarFecha.setAlignment(Element.ALIGN_RIGHT);</span>
+<span class="nc" id="L244">        lugarFecha.setSpacingBefore(8);</span>
+<span class="nc" id="L245">        documento.add(lugarFecha);</span>
+<span class="nc" id="L246">        documento.add(espacio(14));</span>
+<span class="nc" id="L247">    }</span>
+
+    private void destinatario(Document documento, String nombre, String unidadAcademica) throws DocumentException {
+<span class="nc" id="L250">        documento.add(new Paragraph(valor(nombre, &quot;Destinatario&quot;).toUpperCase(ES_MX), negrita));</span>
+<span class="nc bnc" id="L251" title="All 4 branches missed.">        if (unidadAcademica != null &amp;&amp; !unidadAcademica.isBlank()) {</span>
+<span class="nc" id="L252">            documento.add(new Paragraph(unidadAcademica, normal));</span>
+        }
+<span class="nc" id="L254">        documento.add(new Paragraph(&quot;P R E S E N T E&quot;, negrita));</span>
+<span class="nc" id="L255">        documento.add(espacio(12));</span>
+<span class="nc" id="L256">    }</span>
+
+    private void cierre(Document documento) throws DocumentException {
+<span class="nc" id="L259">        documento.add(espacio(10));</span>
+<span class="nc" id="L260">        parrafo(documento, &quot;Sin otro particular, aprovecho la ocasión para enviarle un cordial saludo.&quot;);</span>
+<span class="nc" id="L261">    }</span>
+
+    private void firma(Document documento, ExpedienteInvestigacion expediente) throws DocumentException {
+<span class="nc" id="L264">        documento.add(espacio(14));</span>
+
+<span class="nc" id="L266">        Paragraph atentamente = new Paragraph(&quot;A T E N T A M E N T E&quot;, negrita);</span>
+<span class="nc" id="L267">        atentamente.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L268">        documento.add(atentamente);</span>
+
+<span class="nc" id="L270">        Paragraph lema = new Paragraph(&quot;\&quot;La Técnica al Servicio de la Patria\&quot;&quot;, normal);</span>
+<span class="nc" id="L271">        lema.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L272">        documento.add(lema);</span>
+
+<span class="nc" id="L274">        documento.add(espacio(26));</span>
+
+<span class="nc" id="L276">        Paragraph linea = new Paragraph(&quot;______________________________________&quot;, normal);</span>
+<span class="nc" id="L277">        linea.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L278">        documento.add(linea);</span>
+
+<span class="nc" id="L280">        Paragraph nombre = new Paragraph(valor(expediente.getAbogadoAsesorNombre(), &quot;Subdefensor(a)&quot;), negrita);</span>
+<span class="nc" id="L281">        nombre.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L282">        documento.add(nombre);</span>
+
+<span class="nc" id="L284">        Paragraph cargo = new Paragraph(&quot;Subdefensoría\nDefensoría de los Derechos Politécnicos&quot;, normal);</span>
+<span class="nc" id="L285">        cargo.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L286">        documento.add(cargo);</span>
+<span class="nc" id="L287">    }</span>
+
+    private void copias(Document documento, ExpedienteInvestigacion expediente, String correoDestinatario)
+            throws DocumentException {
+<span class="nc" id="L291">        documento.add(espacio(10));</span>
+<span class="nc" id="L292">        StringBuilder texto = new StringBuilder();</span>
+<span class="nc bnc" id="L293" title="All 4 branches missed.">        if (correoDestinatario != null &amp;&amp; !correoDestinatario.isBlank()) {</span>
+<span class="nc" id="L294">            texto.append(&quot;Enviado por correo electrónico a &quot;).append(correoDestinatario).append(&quot;.\n&quot;);</span>
+        }
+<span class="nc" id="L296">        texto.append(&quot;c.c.p. &quot;).append(valor(expediente.getQuejosoNombre(), &quot;Persona quejosa&quot;)).append(&quot;.- Para su conocimiento.\n&quot;);</span>
+<span class="nc" id="L297">        texto.append(&quot;c.c.p. Expediente &quot;).append(expediente.getFolio()).append(&quot;.&quot;);</span>
+<span class="nc" id="L298">        documento.add(new Paragraph(texto.toString(), pequena));</span>
+<span class="nc" id="L299">    }</span>
+
+    private PdfPCell celda(Phrase contenido) {
+<span class="nc" id="L302">        PdfPCell celda = new PdfPCell(contenido);</span>
+<span class="nc" id="L303">        celda.setBorder(PdfPCell.NO_BORDER);</span>
+<span class="nc" id="L304">        celda.setPaddingBottom(2);</span>
+<span class="nc" id="L305">        return celda;</span>
+    }
+
+    private void seccion(Document documento, String texto) throws DocumentException {
+<span class="nc" id="L309">        Paragraph p = new Paragraph(texto, subtitulo);</span>
+<span class="nc" id="L310">        p.setSpacingBefore(10);</span>
+<span class="nc" id="L311">        p.setSpacingAfter(3);</span>
+<span class="nc" id="L312">        documento.add(p);</span>
+<span class="nc" id="L313">    }</span>
+
+    private void parrafo(Document documento, String texto) throws DocumentException {
+<span class="nc" id="L316">        Paragraph p = new Paragraph(valor(texto, &quot;—&quot;), normal);</span>
+<span class="nc" id="L317">        p.setAlignment(Element.ALIGN_JUSTIFIED);</span>
+<span class="nc" id="L318">        p.setLeading(15);</span>
+<span class="nc" id="L319">        p.setSpacingAfter(4);</span>
+<span class="nc" id="L320">        documento.add(p);</span>
+<span class="nc" id="L321">    }</span>
+
+    private Paragraph espacio(float alto) {
+<span class="nc" id="L324">        Paragraph p = new Paragraph(&quot; &quot;);</span>
+<span class="nc" id="L325">        p.setLeading(alto);</span>
+<span class="nc" id="L326">        return p;</span>
+    }
+
+    private static String folioQueja(ExpedienteInvestigacion expediente) {
+<span class="nc bnc" id="L330" title="All 2 branches missed.">        return expediente.getFolioQueja() != null ? expediente.getFolioQueja() : expediente.getFolioOrigen();</span>
+    }
+
+    private static LocalDate fechaDe(LocalDateTime fechaHora) {
+<span class="nc bnc" id="L334" title="All 2 branches missed.">        return fechaHora != null ? fechaHora.toLocalDate() : null;</span>
+    }
+
+    private static String fecha(LocalDate fecha) {
+<span class="nc bnc" id="L338" title="All 2 branches missed.">        return fecha != null ? fecha.format(FECHA_LARGA) : &quot;—&quot;;</span>
+    }
+
+    private static String valor(String texto, String porDefecto) {
+<span class="nc bnc" id="L342" title="All 4 branches missed.">        return texto == null || texto.isBlank() ? porDefecto : texto.strip();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

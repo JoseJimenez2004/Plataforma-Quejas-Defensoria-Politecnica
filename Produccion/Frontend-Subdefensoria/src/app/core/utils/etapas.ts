@@ -1,4 +1,5 @@
 import { ExpedienteResumen } from '../models/expediente-resumen';
+import { ETIQUETAS_ESTATUS } from '../models/estatus-expediente';
 
 /*
  * Reglas de presentación del rediseño (2026-10-21): en qué grupo cae cada expediente,
@@ -12,7 +13,7 @@ export const GRUPOS: { id: GrupoExpediente; etiqueta: string }[] = [
   { id: 'tramite', etiqueta: 'En trámite' },
   { id: 'atender', etiqueta: 'Por atender' },
   { id: 'ua', etiqueta: 'Esperando a la unidad' },
-  { id: 'conciliacion', etiqueta: 'Pendiente de acuerdo de conciliación' },
+  { id: 'conciliacion', etiqueta: 'Esperando al quejoso' },
   { id: 'concluidos', etiqueta: 'Concluidos' }
 ];
 
@@ -73,18 +74,21 @@ export function siguientePaso(e: ExpedienteResumen): SiguientePaso {
     };
   }
   if (e.estatus === 'ELABORO_ACUERDO') {
-    return { nivel: 'warn', boton: 'Redactar acuerdo', accion: 'acuerdos', descripcion: 'La unidad respondió · falta el acuerdo de conciliación' };
+    return { nivel: 'warn', boton: 'Redactar acuerdo', accion: 'acuerdos', descripcion: 'La unidad respondió · por redactar el acuerdo de conciliación' };
   }
   if (e.estatus === 'PENDIENTE_CONCILIACION') {
     return { nivel: 'espera', boton: 'Ver acuerdo', accion: 'acuerdos', descripcion: 'Acuerdo enviado · esperando que el quejoso lo acepte o rechace' };
   }
   if (e.estatus === 'PENDIENTE_CONCLUSION') {
-    return { nivel: 'warn', boton: 'Redactar conclusión', accion: 'acuerdos', descripcion: 'El quejoso aceptó el acuerdo de conciliación' };
+    return { nivel: 'warn', boton: 'Redactar conclusión', accion: 'acuerdos', descripcion: 'El quejoso aceptó la conciliación · por redactar el acuerdo de conclusión' };
   }
   if (e.estatus === 'CONCLUIDO') {
     return { nivel: 'fin', boton: 'Ver expediente', accion: 'abrir', descripcion: 'Expediente concluido' };
   }
-  return { nivel: 'info', boton: 'Abrir expediente', accion: 'abrir', descripcion: 'En investigación' };
+  if (e.estatus === 'EN_INVESTIGACION') {
+    return { nivel: 'info', boton: 'Abrir expediente', accion: 'abrir', descripcion: 'Por solicitar oficio · revisa el expediente' };
+  }
+  return { nivel: 'info', boton: 'Abrir expediente', accion: 'abrir', descripcion: 'Abre el expediente para ver en qué va' };
 }
 
 export function enGrupo(e: ExpedienteResumen, grupo: GrupoExpediente): boolean {
@@ -122,4 +126,23 @@ export function formatearFecha(valor: string | null | undefined, conHora = false
   if (isNaN(fecha.getTime())) return valor;
   return fecha.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' })
     + (conHora ? ' ' + fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '');
+}
+
+/**
+ * SD-2: filtro "Etapa" de Mis expedientes. El valor viaja en la URL (?etapa=...) y acepta
+ * varias etapas separadas por coma.
+ */
+export const OPCIONES_ETAPA: { valor: string; etiqueta: string }[] = [
+  { valor: 'RECIBIDO', etiqueta: ETIQUETAS_ESTATUS.RECIBIDO },
+  { valor: 'EN_INVESTIGACION', etiqueta: ETIQUETAS_ESTATUS.EN_INVESTIGACION },
+  { valor: 'EN_ESPERA_OFICIO', etiqueta: ETIQUETAS_ESTATUS.EN_ESPERA_OFICIO },
+  { valor: 'ELABORO_ACUERDO', etiqueta: ETIQUETAS_ESTATUS.ELABORO_ACUERDO },
+  { valor: 'PENDIENTE_CONCILIACION', etiqueta: ETIQUETAS_ESTATUS.PENDIENTE_CONCILIACION },
+  { valor: 'PENDIENTE_CONCLUSION', etiqueta: ETIQUETAS_ESTATUS.PENDIENTE_CONCLUSION },
+  { valor: 'CONCLUIDO', etiqueta: ETIQUETAS_ESTATUS.CONCLUIDO },
+  { valor: 'ELABORO_ACUERDO,PENDIENTE_CONCLUSION', etiqueta: 'Por redactar acuerdo (conciliación o conclusión)' }
+];
+
+export function etapasDe(valor: string | null | undefined): string[] {
+  return (valor ?? '').split(',').map(v => v.trim()).filter(Boolean);
 }

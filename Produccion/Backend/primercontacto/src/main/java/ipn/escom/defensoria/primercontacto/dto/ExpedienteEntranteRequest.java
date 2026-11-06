@@ -33,4 +33,7 @@ public class ExpedienteEntranteRequest {
     private QuejosoResumenRequest quejoso;
 
     private String observacionesAnalista;
+
+    /* SD-6: prioridad que asignó el analista (BAJA|MEDIA|ALTA|URGENTE) o null. */
+    private String prioridad;
 }

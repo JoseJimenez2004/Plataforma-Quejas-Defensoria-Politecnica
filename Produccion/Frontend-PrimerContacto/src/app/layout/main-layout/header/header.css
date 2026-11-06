@@ -62,3 +62,49 @@
   cursor: pointer;
   font-weight: 600;
 }
+
+/* Usuario con avatar y rol, igual que en Recepción y el panel de la Defensora. */
+.perfil {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--guinda-suave);
+  color: var(--guinda);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.perfil-texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.perfil-texto .user-name {
+  font-size: 14px;
+}
+
+.perfil-rol {
+  color: var(--guinda-vivo);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  background: var(--guinda-oscuro);
+}
+
+@media (max-width: 700px) {
+  .perfil-texto,
+  .brand p {
+    display: none;
+  }
+}

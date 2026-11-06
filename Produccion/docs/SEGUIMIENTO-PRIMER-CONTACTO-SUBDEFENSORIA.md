@@ -1128,3 +1128,83 @@ dominio sirve `main-OKSPFXQO.js` (SD) y `main-MTQMI43Z.js` (PC), iguales a los c
    pestaña Primer Contacto de SD (vive en denunciado-service).
 4. Limpieza: `C:\Users\leish\despliegue-1021` y `/tmp/primer-contacto-service.jar`,
    `/tmp/pc-front.tgz`, `/tmp/sd-front.tgz` en los servidores. Siguen los de la sección 15.10.
+
+## 18. 2026-11-02: pendientes de PC y SD (noviembre 2026) — LISTO EN CÓDIGO, falta desplegar
+
+Se aplicó el documento "Pendientes de Primer Contacto y Subdefensoría (noviembre 2026)". Respaldo
+previo: `_backups/claude/respaldo-antes-pendientes-pc-sd-2026-11-02.tgz`. SD-7 **no** se hizo
+(escribe en producción; requiere autorización del equipo).
+
+### 18.1 Subdefensoría (front)
+- **SD-4 nombres:** `ETIQUETAS_ESTATUS` → Por abrir · Por solicitar oficio · Esperando respuesta de
+  la unidad · Por redactar acuerdo de conciliación · Esperando respuesta del quejoso · Por redactar
+  acuerdo de conclusión · Concluido. Pestaña `conciliacion` = "Esperando al quejoso". Barra de
+  etapas de Inicio usa `ETIQUETAS_ESTATUS` (conciliación y conclusión separadas, clicables).
+  Textos de `siguientePaso()` y del recuadro del expediente actualizados. Códigos sin cambio.
+- **SD-2 filtros:** nuevo `?etapa=` (acepta `A,B`) con desplegable "Etapa". La bandeja escucha
+  `queryParamMap` y escribe pestaña/etapa/unidad/prioridad/plazo/orden en la URL con
+  `replaceUrl`. Cuadros de Inicio: Por abrir → `etapa=RECIBIDO`; Por emitir oficio →
+  `etapa=EN_INVESTIGACION` (el cuadro ahora cuenta esa etapa); Esperando a la unidad → `grupo=ua`
+  (cuenta todos los `EN_ESPERA_OFICIO`, incluidos vencidos); Por redactar acuerdo →
+  `etapa=ELABORO_ACUERDO,PENDIENTE_CONCLUSION`; **Esperando al quejoso** (nuevo) →
+  `etapa=PENDIENTE_CONCILIACION`; Vencidos → `plazo=vencidos`. Probado con datos simulados: el
+  número de cada cuadro = filas mostradas.
+- **SD-3:** al enviar el acuerdo, snackbar "Acuerdo enviado. El expediente quedó en «Esperando al
+  quejoso»." con botón **Ver** → `/bandeja?grupo=conciliacion`.
+- **SD-5:** segunda línea por fila con `paso(e).descripcion` (rojo si vencido). En "Plazos y
+  oficios" las filas ya describen el oficio y los días de retraso; no se cambió.
+- **SD-6 front:** columna y chip de prioridad (mismos colores que PC), filtro Prioridad (incluye
+  Sin asignar), orden **"Mayor prioridad primero"** por defecto (Urgente→Alta→Media→Baja→Sin
+  asignar; empate por urgencia y fecha), desplegable en el encabezado del expediente
+  (`PATCH /api/subdefensoria/expedientes/{id}/prioridad`), desempate por prioridad en
+  "Pendientes de hoy". CSV incluye Prioridad.
+- **SD-1:** `core/services/catalogo-dependencias.service.ts` (`GET /api/catalogos/dependencias`,
+  en memoria). En "Solicitud de información": buscador + selector de unidad; preselecciona la del
+  expediente (abreviatura/clave/nombre sin acentos); llena titular y correo (editables); aviso si
+  no hay correo. El recordatorio no pide destinatario, así que no se tocó. No cambia el backend ni
+  la redirección `correo.unidad-academica.redirigir-a`.
+
+### 18.2 Primer Contacto
+- **PC-1:** `formatearPrioridad` devuelve Urgente/Alta/Media/Baja/**Sin asignar** (ya no inventa
+  "Media"). Desplegable en el encabezado del expediente → `PATCH
+  /api/primer-contacto/expedientes/folio/{folio}/prioridad` con snackbar "Prioridad actualizada a
+  X". Bandeja: filtro con Urgente y Sin asignar (`SIN_ASIGNAR` encuentra nulos en
+  `BandejaAnalisisService.coincidePrioridad`), chip Urgente.
+- **PC-3:** el resumen con IA ya no se pide al abrir. Botón "Generar resumen con IA" / "Volver a
+  generar", aviso "Esto puede tardar hasta 2 minutos" y "La queja es breve; puede que no necesites
+  resumen" (< 40 palabras). Se conserva el resumen simulado si el modelo falla. resumen-service y
+  `POST /api/primer-contacto/resumen` sin cambios.
+- **PC-4/PC-5:** Inicio hace una sola petición a la bandeja (`DashboardService.obtenerPanel`) con
+  estados Cargando / error + Reintentar; en el back se quitó el N+1 de citas activas
+  (`CitaPrimerContactoRepository.idsExpedientesConCitaActiva`).
+- **PC-2:** "Registrar versión del denunciado" (recuadro nuevo
+  `shared/registrar-version-denunciado-dialog`): nombre y apellidos, unidad (catálogo), tipo y
+  número de identificación, fecha de entrevista opcional, versión, credencial (opcional) y
+  evidencias con las mismas reglas de tipo/tamaño. La tarjeta muestra "Capturada por … el …" y el
+  diálogo de respuesta indica quién la registró. Se quitó la tarjeta y el botón "Solicitud de
+  versión del denunciado" (las solicitudes antiguas siguen en el historial; no se borraron datos).
+
+### 18.3 denunciado-service
+- `POST /api/denunciado/respuestas/personal` (multipart, JWT, rol `ANALISTA_PRIMER_CONTACTO`):
+  guarda `origen=PERSONAL`, `capturado_por` (usuario del JWT) y `fecha_entrevista`;
+  `aviso_privacidad_aceptado=false` sin bloquear. Formularios anteriores quedan `origen` null.
+- Se **cerró** el `POST /api/denunciado/respuestas` público (sin sesión responde 403).
+- `RespuestaDetalleModel` agrega `origen`, `capturadoPor`, `fechaEntrevista`.
+
+### 18.4 Portal del quejoso
+- Solo se quitó la ruta `denunciado/respuesta` de `app.routes.ts`. La página, su servicio y su
+  modelo se movieron a `_backups/claude/portal-denunciado-2026-11-02/`.
+
+### 18.5 G-1 (solo estilos)
+- PC y SD tienen las variables de Recepción (`--sombra-*`, `--acento-*`), `--radius-card: 12px`,
+  tarjetas con borde `#eef0f3` y `--sombra-suave`, botones de 38 px con peso 700, y tablas con el
+  encabezado en mayúsculas grises y filas en tarjeta gris claro (SD) / hover guinda suave (PC).
+
+### 18.6 Para desplegar
+- Jars (compilar con `mvn -DskipTests package`; correr antes `mvn test` en denunciado-service):
+  `primercontacto`, `subdefensoria`, `denunciado-service`.
+- Fronts: `Frontend-PrimerContacto`, `Frontend-Subdefensoria`, `Frontend` (portal).
+- Opcional: `database-scripts/migraciones/2026-11-02-copiar-prioridad-pc-a-sd.sql` (después de que
+  arranque el subdefensoria nuevo).
+- Verificar que `seeds/06-directorio-ipn-2026-10.sql` ya corrió en producción (SD-1 lo necesita).
+- No reemplazar `config-files/` del servidor; respaldar jar/dist en `/apps/utiles/respaldos/<fecha>/`.

@@ -61,7 +61,8 @@ public class ExpedienteResumenService {
                 .asunto(e.getAsunto())
                 .unidadAcademica(e.getUnidadAcademica())
                 .fechaAdmision(e.getFechaAdmision() != null ? e.getFechaAdmision().toString() : null)
-                .estatus(e.getEstatus());
+                .estatus(e.getEstatus())
+                .prioridad(e.getPrioridad());
 
         if (ESTATUS_CON_OFICIO_ACTIVO.contains(e.getEstatus())) {
             Optional<OficioInformacion> vigente = oficioVigente(e.getId());

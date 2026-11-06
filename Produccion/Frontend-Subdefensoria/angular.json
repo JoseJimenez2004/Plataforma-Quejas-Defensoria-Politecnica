@@ -30,7 +30,12 @@
                 }
               ],
               "budgets": [{ "type": "initial", "maximumWarning": "2MB", "maximumError": "5MB" }],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": { "minify": true, "inlineCritical": true },
+                "fonts": { "inline": false }
+              }
             },
             "development": { "optimization": false, "sourceMap": true }
           },

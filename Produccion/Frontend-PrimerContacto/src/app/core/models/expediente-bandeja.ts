@@ -1,3 +1,5 @@
+import { PrioridadEtiqueta } from '../utils/estatus-expediente';
+
 export interface ExpedienteBandeja {
   expedienteId: number;
   folio: string;
@@ -7,7 +9,7 @@ export interface ExpedienteBandeja {
   unidadAcademica: string;
   tema: string;
 
-  prioridad: 'Alta' | 'Media' | 'Baja';
+  prioridad: PrioridadEtiqueta;
 
   /** Etiqueta legible ('En análisis') y código del backend ('EN_ANALISIS'). */
   estatus: string;

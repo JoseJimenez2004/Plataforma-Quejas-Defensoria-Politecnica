@@ -85,7 +85,9 @@ class ValidadorFechasTest {
 
     @Test
     void validarFechaHechos_mismoDiaDelNacimiento_esValida() {
-        assertDoesNotThrow(() -> ValidadorFechas.validarFechaHechos(NACIMIENTO_VALIDO, NACIMIENTO_VALIDO),
+        // Fecha reciente: con el candado de 90 días (art. 13, párr. 3) una fecha vieja ya no pasa.
+        LocalDate mismoDia = ValidadorFechas.hoy().minusDays(10);
+        assertDoesNotThrow(() -> ValidadorFechas.validarFechaHechos(mismoDia, mismoDia),
                 "El mismo día del nacimiento es el borde válido");
     }
 
@@ -98,7 +100,23 @@ class ValidadorFechasTest {
 
     @Test
     void validarFechaHechos_sinFechaNacimiento_soloValidaContraHoy() {
-        assertDoesNotThrow(() -> ValidadorFechas.validarFechaHechos(MINIMA, null),
+        // Dentro de los 90 días; sin nacimiento solo se valida contra hoy y el plazo.
+        LocalDate reciente = ValidadorFechas.hoy().minusDays(30);
+        assertDoesNotThrow(() -> ValidadorFechas.validarFechaHechos(reciente, null),
                 "Sin fecha de nacimiento no se compara contra ella");
+    }
+
+    @Test
+    void validarFechaHechos_justoEn90Dias_esValida() {
+        LocalDate limite = ValidadorFechas.hoy().minusDays(ReglasQueja.PLAZO_DIAS_QUEJA);
+        assertDoesNotThrow(() -> ValidadorFechas.validarFechaHechos(limite, NACIMIENTO_VALIDO),
+                "El día 90 todavía está en término");
+    }
+
+    @Test
+    void validarFechaHechos_hace91Dias_lanzaExcepcion() {
+        LocalDate fuera = ValidadorFechas.hoy().minusDays(ReglasQueja.PLAZO_DIAS_QUEJA + 1L);
+        assertThrows(ValidacionException.class,
+                () -> ValidadorFechas.validarFechaHechos(fuera, NACIMIENTO_VALIDO));
     }
 }

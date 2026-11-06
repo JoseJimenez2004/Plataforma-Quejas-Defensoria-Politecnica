@@ -15,7 +15,7 @@ export interface RespuestaDenunciadoDialogData {
   respuestas: RespuestaDenunciado[];
 }
 
-/** Lo que contestó el denunciado en el formulario del portal (denunciado-service). */
+/** Versiones del denunciado (las captura el analista; antes, el formulario del portal). */
 @Component({
   selector: 'app-respuesta-denunciado-dialog',
   imports: [DatePipe, MatDialogModule, MatButtonModule, MatIconModule, MatSnackBarModule],

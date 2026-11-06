@@ -1,6 +1,19 @@
 /* You can add global styles to this file, and also import other style files */
 
 :root {
+  /* G-1 (2026-11): mismas sombras y acentos que Recepción (Frontend-Revision/src/styles.scss). */
+  --sombra-suave: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+  --sombra-media: 0 4px 12px rgba(16, 24, 40, 0.1);
+  --sombra-alta: 0 12px 32px rgba(16, 24, 40, 0.18);
+  --acento-azul: #2f6fed;
+  --acento-azul-suave: #eaf1fe;
+  --acento-verde: #1f9d6b;
+  --acento-verde-suave: #e7f7f0;
+  --acento-ambar: #c4841d;
+  --acento-ambar-suave: #fbf1e0;
+  --acento-morado: #7c4dc4;
+  --acento-morado-suave: #f1eafb;
+
   /* ---- Paleta institucional (misma que Frontend/Frontend-Revision/Frontend-Admin,
      para que los 5 paneles del sistema se vean consistentes) ---- */
   --guinda: #6c1d45;
@@ -44,7 +57,7 @@
   --line-height-tight: 1.35; /* solo para títulos grandes */
 
   /* ---- Radios reutilizados ---- */
-  --radius-card: 16px;
+  --radius-card: 12px;
   --radius-pill: 999px;
 }
 
@@ -100,8 +113,8 @@ h1, h2, h3, h4 {
 .pc-card {
   background: #fff;
   border: 1px solid #eceef1;
-  border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  border-radius: 12px;
+  box-shadow: var(--sombra-suave);
   padding: 18px 20px;
   min-width: 0;
 }
@@ -313,7 +326,7 @@ h1, h2, h3, h4 {
 
 .pc-modal {
   width: min(880px, 100%);
-  border-radius: 16px;
+  border-radius: 12px;
   background: #fff;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
 }
@@ -356,7 +369,7 @@ h1, h2, h3, h4 {
   border: 1px solid #eceef1;
   border-radius: 12px;
   background: #fff;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--sombra-suave);
 }
 
 .pc-kpi .icono {
@@ -457,4 +470,65 @@ h1, h2, h3, h4 {
   margin: 2px 0 0;
   color: #555;
   font-size: 12.5px;
+}
+
+/* PC-1: chips de prioridad (mismos colores en bandeja, expediente e Inicio). */
+.prio-urgente { background: #b71c1c !important; color: #fff !important; }
+.prio-alta { background: #ffebee !important; color: #c62828 !important; }
+.prio-media { background: #fdf6e3 !important; color: #a16207 !important; }
+.prio-baja { background: #e8f5e9 !important; color: #2e7d32 !important; }
+.prio-sin-asignar { background: #f1f2f4 !important; color: #6b7280 !important; }
+
+.selector-prioridad {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.selector-prioridad select {
+  height: 32px;
+  padding: 0 28px 0 10px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* =====================================================================================
+ * G-1 (2026-11): homologación con Recepción — tarjetas, tablas y botones. Solo estilos.
+ * ===================================================================================== */
+.pc-card { border-color: #eef0f3; border-radius: 12px; box-shadow: var(--sombra-suave); }
+.pc-btn, .pc-btn-borde { height: 38px; padding: 0 16px; }
+.pc-btn.chico, .pc-btn-borde.chico { height: 30px; padding: 0 12px; font-size: 12.5px; }
+
+/* Tablas (mat-table de la bandeja y tablas propias): encabezado como Recepción. */
+.mat-mdc-table .mat-mdc-header-cell,
+.ag-tabla th {
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.mat-mdc-table .mat-mdc-row:hover .mat-mdc-cell,
+.ag-tabla tbody tr:hover td {
+  background: #f7eef1;
+}
+
+.mat-mdc-table .mat-mdc-cell {
+  border-bottom-color: #eef0f3;
+}
+
+/* Botones de Material con la forma del botón principal de Recepción. */
+.mat-mdc-unelevated-button.mat-mdc-button-base,
+.mat-mdc-outlined-button.mat-mdc-button-base {
+  height: 38px;
+  border-radius: 8px;
+  font-weight: 700;
+  letter-spacing: 0;
 }

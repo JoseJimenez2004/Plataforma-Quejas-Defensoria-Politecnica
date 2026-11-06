@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocumentoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">DocumentoService.java</span></div><h1>DocumentoService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import ipn.escom.defensoria.subdefensoria.entity.AcuerdoConclusion;
+import ipn.escom.defensoria.subdefensoria.entity.ExpedienteInvestigacion;
+import ipn.escom.defensoria.subdefensoria.entity.OficioInformacion;
+import ipn.escom.defensoria.subdefensoria.entity.RecordatorioUrgencia;
+import ipn.escom.defensoria.subdefensoria.exception.OperacionInvalidaException;
+import ipn.escom.defensoria.subdefensoria.exception.RecursoNoEncontradoException;
+import ipn.escom.defensoria.subdefensoria.repository.AcuerdoConclusionRepository;
+import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
+import ipn.escom.defensoria.subdefensoria.repository.OficioInformacionRepository;
+import ipn.escom.defensoria.subdefensoria.repository.RecordatorioUrgenciaRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
+import java.util.List;
+
+/**
+ * Arma los PDF de Subdefensoría a partir de lo guardado (no se almacenan: se generan al
+ * descargarlos, así siempre reflejan los datos vigentes). Ver DocumentoPdfService.
+ */
+@Service
+public class DocumentoService {
+
+<span class="nc" id="L25">    public record Pdf(String nombreArchivo, byte[] contenido) {</span>
+    }
+
+    private final OficioInformacionRepository oficioRepository;
+    private final RecordatorioUrgenciaRepository recordatorioRepository;
+    private final AcuerdoConclusionRepository acuerdoRepository;
+    private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final DocumentoPdfService pdfService;
+
+    public DocumentoService(
+            OficioInformacionRepository oficioRepository,
+            RecordatorioUrgenciaRepository recordatorioRepository,
+            AcuerdoConclusionRepository acuerdoRepository,
+            ExpedienteInvestigacionRepository expedienteRepository,
+            DocumentoPdfService pdfService
+<span class="nc" id="L40">    ) {</span>
+<span class="nc" id="L41">        this.oficioRepository = oficioRepository;</span>
+<span class="nc" id="L42">        this.recordatorioRepository = recordatorioRepository;</span>
+<span class="nc" id="L43">        this.acuerdoRepository = acuerdoRepository;</span>
+<span class="nc" id="L44">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L45">        this.pdfService = pdfService;</span>
+<span class="nc" id="L46">    }</span>
+
+    public Pdf oficio(Long oficioId) {
+<span class="nc" id="L49">        OficioInformacion oficio = oficioRepository.findById(oficioId)</span>
+<span class="nc" id="L50">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el oficio &quot; + oficioId));</span>
+<span class="nc" id="L51">        return new Pdf(archivo(&quot;oficio&quot;, oficio.getNumeroOficio()),</span>
+<span class="nc" id="L52">                pdfService.oficio(oficio, expediente(oficio.getExpedienteId())));</span>
+    }
+
+    public Pdf recordatorio(Long recordatorioId) {
+<span class="nc" id="L56">        RecordatorioUrgencia recordatorio = recordatorioRepository.findById(recordatorioId)</span>
+<span class="nc" id="L57">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el recordatorio &quot; + recordatorioId));</span>
+<span class="nc" id="L58">        OficioInformacion oficio = oficioRepository.findById(recordatorio.getOficioId())</span>
+<span class="nc" id="L59">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el oficio &quot; + recordatorio.getOficioId()));</span>
+
+        // Número consecutivo del recordatorio dentro de su oficio (1, 2, ...).
+<span class="nc" id="L62">        List&lt;RecordatorioUrgencia&gt; delOficio = recordatorioRepository.findByOficioIdOrderByFechaEnvioDesc(oficio.getId())</span>
+<span class="nc" id="L63">                .stream().sorted(Comparator.comparing(RecordatorioUrgencia::getId)).toList();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        int numero = (int) delOficio.stream().takeWhile(r -&gt; !r.getId().equals(recordatorioId)).count() + 1;</span>
+
+<span class="nc" id="L66">        return new Pdf(archivo(&quot;recordatorio&quot;, oficio.getNumeroOficio() + &quot;-R&quot; + numero),</span>
+<span class="nc" id="L67">                pdfService.recordatorio(recordatorio, numero, oficio, expediente(oficio.getExpedienteId())));</span>
+    }
+
+    public Pdf acuerdoConciliacion(Long expedienteId) {
+<span class="nc" id="L71">        AcuerdoConclusion acuerdo = acuerdo(expedienteId);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (acuerdo.getFechaEnvioSecretarial() == null) {</span>
+<span class="nc" id="L73">            throw new OperacionInvalidaException(&quot;El acuerdo de conciliación todavía es un borrador.&quot;);</span>
+        }
+<span class="nc" id="L75">        ExpedienteInvestigacion expediente = expediente(expedienteId);</span>
+<span class="nc" id="L76">        return new Pdf(archivo(&quot;acuerdo-conciliacion&quot;, expediente.getFolio()),</span>
+<span class="nc" id="L77">                pdfService.acuerdoConciliacion(acuerdo, expediente));</span>
+    }
+
+    public Pdf acuerdoConclusion(Long expedienteId) {
+<span class="nc" id="L81">        AcuerdoConclusion acuerdo = acuerdo(expedienteId);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        if (!Boolean.TRUE.equals(acuerdo.getConcluido())) {</span>
+<span class="nc" id="L83">            throw new OperacionInvalidaException(&quot;El expediente todavía no tiene acuerdo de conclusión.&quot;);</span>
+        }
+<span class="nc" id="L85">        ExpedienteInvestigacion expediente = expediente(expedienteId);</span>
+<span class="nc" id="L86">        return new Pdf(archivo(&quot;acuerdo-conclusion&quot;, expediente.getFolio()),</span>
+<span class="nc" id="L87">                pdfService.acuerdoConclusion(acuerdo, expediente));</span>
+    }
+
+    /** Para el enlace del quejoso: el acuerdo del token (conciliación o conclusión). */
+    public Pdf acuerdoPorToken(String token, boolean conclusion) {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        AcuerdoConclusion acuerdo = acuerdoRepository.findByTokenRespuesta(token == null ? &quot;&quot; : token.strip())</span>
+<span class="nc" id="L93">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                        &quot;El enlace del acuerdo no es válido o ya fue sustituido por uno más reciente.&quot;));
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        return conclusion ? acuerdoConclusion(acuerdo.getExpedienteId()) : acuerdoConciliacion(acuerdo.getExpedienteId());</span>
+    }
+
+    private AcuerdoConclusion acuerdo(Long expedienteId) {
+<span class="nc" id="L99">        return acuerdoRepository.findByExpedienteId(expedienteId)</span>
+<span class="nc" id="L100">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;El expediente no tiene acuerdo.&quot;));</span>
+    }
+
+    private ExpedienteInvestigacion expediente(Long expedienteId) {
+<span class="nc" id="L104">        return expedienteRepository.findById(expedienteId)</span>
+<span class="nc" id="L105">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el expediente &quot; + expedienteId));</span>
+    }
+
+    private static String archivo(String tipo, String identificador) {
+<span class="nc" id="L109">        return tipo + &quot;-&quot; + identificador.replaceAll(&quot;[^A-Za-z0-9-]&quot;, &quot;_&quot;) + &quot;.pdf&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

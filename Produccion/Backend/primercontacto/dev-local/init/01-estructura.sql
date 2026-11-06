@@ -456,7 +456,7 @@ CREATE TABLE public.personal_administrativo (
     password character varying(255) NOT NULL,
     rol character varying(255) NOT NULL,
     ultimo_login timestamp(6) without time zone,
-    CONSTRAINT personal_administrativo_rol_check CHECK (((rol)::text = ANY (ARRAY[('ADMIN_SISTEMAS'::character varying)::text, ('RECEPCIONISTA'::character varying)::text, ('ANALISTA_PRIMER_CONTACTO'::character varying)::text, ('SUBDEFENSOR'::character varying)::text, ('DEFENSOR'::character varying)::text])))
+    CONSTRAINT personal_administrativo_rol_check CHECK (((rol)::text = ANY (ARRAY[('RECEPCIONISTA'::character varying)::text, ('ANALISTA_PRIMER_CONTACTO'::character varying)::text, ('SUBDEFENSOR'::character varying)::text, ('DEFENSOR'::character varying)::text])))
 );
 
 

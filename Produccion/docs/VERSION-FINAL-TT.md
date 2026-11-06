@@ -1005,3 +1005,68 @@ mvn clean test                     # unitarias + reporte JaCoCo
 mvn clean package -DskipTests      # empaquetar igual que antes
 ```
 No cambia nada del despliegue: los jars se generan igual.
+
+---
+
+## 23. Se elimina el rol ADMIN_SISTEMAS — 2026-11-01
+
+Por convención con la Defensoría, la administración de la plataforma corresponde a la
+Defensora (`DEFENSOR`). Ya no existe un actor técnico separado: se quitó el rol del código,
+de las pruebas y del documento del TT. Respaldo previo:
+`_backups/claude/respaldo-antes-quitar-admin-sistemas-2026-11-01.tgz`.
+
+- **Backend:** `RolStaff` (admin, revision, primercontacto) sin `ADMIN_SISTEMAS`; todos los
+  `hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')` pasan a `hasRole('DEFENSOR')` (admin-service,
+  catalogo-service, chatbot-service) y se quita de las listas de denunciado-service y de
+  `ConciliacionRevisionController`. La protección "no quedarse sin administración" cuenta solo
+  cuentas `DEFENSOR`. `DatosInicialesRunner` crea la cuenta inicial `defensora@ipn.mx` con rol
+  `DEFENSOR` (antes `admin.sistemas@ipn.mx`).
+- **Frontends:** Revision y Admin ya no conocen el rol (login, sesión compartida, guardas,
+  etiquetas, Usuarios y Roles). Verificado con `tsc --noEmit` en ambos.
+- **Seeds:** `03-personal_test.sql` crea `defensora.test@ipn.mx` (DEFENSOR) en lugar de
+  `admin.test@ipn.mx`.
+- **Pruebas:** reglas de autorización, matriz regenerada (0 diferencias), `matriz-roles.sh`,
+  `respaldo-restaurable.sh` y el workflow usan `CRED_DEFENSOR`; el secreto
+  `CRED_ADMIN_SISTEMAS` ya no se usa.
+
+### 23.1 Qué hacer en el servidor (en este orden)
+1. **BD primero:** `podman exec -i defensoria-db psql -U postgres -d defensoria_db < Backend/database-scripts/migraciones/2026-11-01-quitar-admin-sistemas.sql`
+   (convierte las cuentas ADMIN_SISTEMAS a DEFENSOR, desactivándolas si ya hay otra Defensora
+   activa, y actualiza la restricción CHECK). Si se suben los jars antes, una fila con
+   ADMIN_SISTEMAS hace fallar la carga del personal.
+2. Recompilar y subir `admin-service`, `revision-service`, `primer-contacto-service`,
+   `catalogo-service`, `chatbot-service`, `denunciado-service` y `quejas-service` (solo
+   comentario) → `bash podman-compose.sh up-container <servicio>`.
+3. `ng build` de Frontend-Revision y Frontend-Admin y subirlos.
+4. En GitHub, borrar el secreto `CRED_ADMIN_SISTEMAS` y verificar que exista `CRED_DEFENSOR`.
+
+## 24. Observaciones de revisión: candado de 90 días, revisión de datos personales y fundamento legal — 2026-11-02
+
+- **Candado de 90 días (art. 13, párrafo tercero):** el formulario público, el panel del
+  quejoso y el registro en ventanilla ya no permiten elegir una fecha de hechos con más de 90
+  días naturales (`PLAZO_DIAS_QUEJA` en `reglas-queja.ts` de Frontend y Frontend-Revision).
+  `queja-service` lo aplica también como fuente de verdad (`ReglasQueja.PLAZO_DIAS_QUEJA`,
+  `ValidadorFechas.validarPlazo`, en el registro público y en `/registrar`). Pruebas nuevas en
+  `ValidadorFechasTest` (día 90 válido, día 91 rechazado); `ValidadorQuejaPublicaTest` usa una
+  fecha relativa a hoy.
+- **Recepción (validación):** "Revisión del Quejoso" → "Revisión de datos personales"; la
+  instrucción coteja contra la *identificación oficial presentada* (ya no "constancias") y pide
+  "motive la inconsistencia y señálela"; se quitó la referencia al Artículo 13 de la Gaceta en el
+  requisito 2 y en el motivo de rechazo; se quitó el requisito 4 (temporalidad), que ahora impide
+  el formulario. Los prefijos de los motivos se conservan, así que las estadísticas de "Motivos de
+  rechazo" del panel siguen contando igual.
+- **Catálogo de identificaciones (revision-service):** sin licencia de conducir ni poder
+  notarial; se agregan VISA y la constancia de identificación expedida por el municipio o alcaldía.
+- **Fundamento legal en el pie** de los cinco frontends: arts. 3 (fr. I a IV) y 25 de la LFPDPPP
+  y art. 15, fr. III, del Código Penal Federal.
+- **Primer Contacto y Subdefensoría** homologados con Recepción y el panel de la Defensora: menú
+  solo con iconos que se despliega al pasar el cursor, encabezado con avatar y rol, mismo pie.
+- `angular.json` de Frontend, Frontend-PrimerContacto y Frontend-Subdefensoria: `fonts.inline:
+  false` en producción (como Admin y Revisión) para que `ng build` no dependa de descargar Google
+  Fonts.
+
+### 24.1 Qué subir (además de lo de §23)
+1. `queja-service` y `revision-service` ya estaban en la lista de §23: al recompilarlos se
+   incluyen estos cambios.
+2. `ng build` y subir los **cinco** frontends: Frontend (público), Frontend-Revision,
+   Frontend-Admin, Frontend-PrimerContacto y Frontend-Subdefensoria.

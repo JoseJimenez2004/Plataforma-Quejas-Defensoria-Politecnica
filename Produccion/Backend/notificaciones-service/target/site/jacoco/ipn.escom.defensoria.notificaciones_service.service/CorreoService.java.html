@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CorreoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.notificaciones_service.service</a> &gt; <span class="el_source">CorreoService.java</span></div><h1>CorreoService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.notificaciones_service.service;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.notificaciones_service.model.EnviarCorreoRequest;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import lombok.SneakyThrows;
+
+import java.util.Base64;
+
+/**
+ * Envío de correo saliente (SMTP configurado en spring.mail de notificaciones-service.yml).
+ *
+ * Este endpoint existía y en algún momento se perdió: revision-service y queja-service lo
+ * seguían llamando, recibían un error, lo registraban en su log y continuaban -- así que el
+ * correo de rechazo al quejoso nunca salía y nadie lo notaba (hallazgo del 2026-10-07).
+ *
+ * Kiuwan: enviar() se partió en métodos chicos (complejidad ciclomática) sin cambiar el orden
+ * de las validaciones ni los mensajes, y el asunto se limpia de saltos de línea antes de usarse
+ * como cabecera (Mail Command Injection, CWE-93).
+ */
+@Service
+public class CorreoService {
+
+<span class="fc" id="L32">    private static final Logger log = LoggerFactory.getLogger(CorreoService.class);</span>
+    private static final String PATRON_CORREO = &quot;^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$&quot;;
+    /** CR, LF y demás caracteres de control: con ellos se podrían inyectar cabeceras SMTP. */
+    private static final String CARACTERES_CONTROL = &quot;[\\r\\n\\x00-\\x1F\\x7F]+&quot;;
+
+    private final JavaMailSender mailSender;
+    private final String remitente;
+
+<span class="fc" id="L40">    public CorreoService(JavaMailSender mailSender, @Value(&quot;${spring.mail.username}&quot;) String remitente) {</span>
+<span class="fc" id="L41">        this.mailSender = mailSender;</span>
+<span class="fc" id="L42">        this.remitente = remitente;</span>
+<span class="fc" id="L43">    }</span>
+
+    public void enviar(EnviarCorreoRequest datos) {
+<span class="fc" id="L46">        validarDatos(datos);</span>
+<span class="fc" id="L47">        String destinatario = validarDestinatario(datos.getDestinatario());</span>
+        // Los registros manuales sin correo usan una dirección interna de referencia; no tiene
+        // caso intentar entregarla.
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (esRegistroManual(destinatario)) {</span>
+<span class="fc" id="L51">            log.info(&quot;Correo omitido: {} es una dirección interna de registro manual&quot;, destinatario);</span>
+<span class="fc" id="L52">            return;</span>
+        }
+<span class="fc" id="L54">        byte[] adjunto = decodificarAdjunto(datos);</span>
+<span class="fc" id="L55">        String asunto = limpiarCabecera(datos.getAsunto());</span>
+<span class="fc" id="L56">        armarYEnviar(datos, destinatario, asunto, adjunto);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        log.info(&quot;Correo enviado a {} ({}){}&quot;, destinatario, asunto, adjunto != null ? &quot; con adjunto&quot; : &quot;&quot;);</span>
+<span class="fc" id="L58">    }</span>
+
+    private static void validarDatos(EnviarCorreoRequest datos) {
+<span class="pc bpc" id="L61" title="2 of 6 branches missed.">        if (datos == null || esVacio(datos.getDestinatario()) || esVacio(datos.getAsunto())</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">                || esVacio(datos.getCuerpo())) {</span>
+<span class="fc" id="L63">            throw new IllegalArgumentException(&quot;Faltan destinatario, asunto o cuerpo del correo.&quot;);</span>
+        }
+<span class="fc" id="L65">    }</span>
+
+    private static String validarDestinatario(String valor) {
+<span class="fc" id="L68">        String destinatario = valor.trim();</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (!destinatario.matches(PATRON_CORREO)) {</span>
+<span class="fc" id="L70">            throw new IllegalArgumentException(&quot;El destinatario no es un correo válido.&quot;);</span>
+        }
+<span class="fc" id="L72">        return destinatario;</span>
+    }
+
+    private static boolean esRegistroManual(String destinatario) {
+<span class="fc" id="L76">        String minusculas = destinatario.toLowerCase();</span>
+<span class="pc bpc" id="L77" title="1 of 4 branches missed.">        return minusculas.endsWith(&quot;@defensoria.ipn.mx&quot;) &amp;&amp; minusculas.startsWith(&quot;registro-manual+&quot;);</span>
+    }
+
+    /** Devuelve null si el correo no trae adjunto. */
+    private static byte[] decodificarAdjunto(EnviarCorreoRequest datos) {
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (esVacio(datos.getAdjuntoBase64())) {</span>
+<span class="fc" id="L83">            return null;</span>
+        }
+        try {
+<span class="fc" id="L86">            return Base64.getDecoder().decode(datos.getAdjuntoBase64());</span>
+<span class="fc" id="L87">        } catch (IllegalArgumentException ex) {</span>
+<span class="fc" id="L88">            throw new IllegalArgumentException(&quot;El adjunto no está en base64 válido.&quot;);</span>
+        }
+    }
+
+    /** Neutraliza saltos de línea y caracteres de control para que no se puedan inyectar cabeceras. */
+    static String limpiarCabecera(String valor) {
+<span class="fc" id="L94">        return valor.replaceAll(CARACTERES_CONTROL, &quot; &quot;).trim();</span>
+    }
+
+    private void armarYEnviar(EnviarCorreoRequest datos, String destinatario, String asunto, byte[] adjunto) {
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        boolean conAdjunto = adjunto != null;</span>
+        try {
+<span class="fc" id="L100">            MimeMessage mensaje = mailSender.createMimeMessage();</span>
+<span class="fc" id="L101">            MimeMessageHelper helper = new MimeMessageHelper(mensaje, conAdjunto, &quot;UTF-8&quot;);</span>
+<span class="fc" id="L102">            helper.setFrom(remitente);</span>
+<span class="fc" id="L103">            helper.setTo(destinatario);</span>
+<span class="fc" id="L104">            helper.setSubject(asunto);</span>
+<span class="fc" id="L105">            helper.setText(datos.getCuerpo());</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">            if (conAdjunto) {</span>
+<span class="fc" id="L107">                agregarAdjunto(helper, datos, adjunto);</span>
+            }
+<span class="fc" id="L109">            mailSender.send(mensaje);</span>
+<span class="nc" id="L110">        } catch (MessagingException ex) {</span>
+<span class="nc" id="L111">            throw new IllegalArgumentException(&quot;No se pudo armar el correo: &quot; + ex.getMessage());</span>
+<span class="fc" id="L112">        }</span>
+<span class="fc" id="L113">    }</span>
+
+<span class="pc" id="L115">    @SneakyThrows</span>
+    private static void agregarAdjunto(MimeMessageHelper helper, EnviarCorreoRequest datos, byte[] adjunto) {
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        String nombre = esVacio(datos.getAdjuntoNombre()) ? &quot;adjunto.pdf&quot; : limpiarCabecera(datos.getAdjuntoNombre());</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        String tipo = esVacio(datos.getAdjuntoTipo()) ? &quot;application/pdf&quot; : limpiarCabecera(datos.getAdjuntoTipo());</span>
+<span class="fc" id="L119">        helper.addAttachment(nombre, new ByteArrayResource(adjunto), tipo);</span>
+<span class="fc" id="L120">    }</span>
+
+    private static boolean esVacio(String valor) {
+<span class="fc bfc" id="L123" title="All 4 branches covered.">        return valor == null || valor.isBlank();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

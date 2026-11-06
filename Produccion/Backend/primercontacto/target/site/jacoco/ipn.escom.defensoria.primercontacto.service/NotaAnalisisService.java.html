@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotaAnalisisService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service</a> &gt; <span class="el_source">NotaAnalisisService.java</span></div><h1>NotaAnalisisService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service;
+
+import ipn.escom.defensoria.primercontacto.dto.CrearNotaAnalisisDTO;
+import ipn.escom.defensoria.primercontacto.dto.NotaAnalisisDTO;
+import ipn.escom.defensoria.primercontacto.entity.NotaAnalisis;
+import ipn.escom.defensoria.primercontacto.repository.NotaAnalisisRepository;
+import org.springframework.stereotype.Service;
+import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
+import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.primercontacto.exception.RecursoNoEncontradoException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+public class NotaAnalisisService {
+
+    private final NotaAnalisisRepository notaAnalisisRepository;
+    private final ExpedientePrimerContactoRepository expedienteRepository;
+    private final OficioAnalisisPdfService oficioPdfService;
+
+    public NotaAnalisisService(
+            NotaAnalisisRepository notaAnalisisRepository,
+            ExpedientePrimerContactoRepository expedienteRepository,
+            OficioAnalisisPdfService oficioPdfService
+<span class="nc" id="L29">    ) {</span>
+<span class="nc" id="L30">        this.notaAnalisisRepository = notaAnalisisRepository;</span>
+<span class="nc" id="L31">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L32">        this.oficioPdfService = oficioPdfService;</span>
+<span class="nc" id="L33">    }</span>
+
+    /** Contenido y nombre de archivo del oficio en PDF. */
+<span class="nc" id="L36">    public record OficioPdf(String nombreArchivo, byte[] contenido) {}</span>
+
+    public NotaAnalisisDTO crearNota(
+            CrearNotaAnalisisDTO dto,
+            PersonalAdministrativo analista
+    ) {
+        /*
+         * El frontend manda el folio de Primer Contacto.
+         * A partir del folio obtenemos el expediente interno.
+         */
+<span class="nc" id="L46">        ExpedientePrimerContacto expediente =</span>
+<span class="nc" id="L47">                expedienteRepository.findByFolio(dto.getFolio())</span>
+<span class="nc" id="L48">                        .orElseThrow(() -&gt;</span>
+<span class="nc" id="L49">                                new RecursoNoEncontradoException(</span>
+                                        &quot;No existe un expediente de Primer Contacto con folio &quot;
+<span class="nc" id="L51">                                                + dto.getFolio()</span>
+                                )
+                        );
+
+<span class="nc" id="L55">        NotaAnalisis nota = NotaAnalisis.builder()</span>
+<span class="nc" id="L56">                .expedienteId(expediente.getId())</span>
+<span class="nc" id="L57">                .folio(expediente.getFolio())</span>
+<span class="nc" id="L58">                .analistaId(analista.getId())</span>
+<span class="nc" id="L59">                .analistaNombre(analista.getNombreCompleto())</span>
+<span class="nc" id="L60">                .asunto(dto.getAsunto().trim())</span>
+<span class="nc" id="L61">                .contenido(dto.getContenido())</span>
+<span class="nc" id="L62">                .fechaCreacion(LocalDateTime.now())</span>
+<span class="nc" id="L63">                .build();</span>
+
+<span class="nc" id="L65">        NotaAnalisis guardada =</span>
+<span class="nc" id="L66">                notaAnalisisRepository.save(nota);</span>
+
+<span class="nc" id="L68">        return convertirADTO(guardada);</span>
+    }
+
+    public List&lt;NotaAnalisisDTO&gt; listarPorExpediente(
+            Long expedienteId
+    ) {
+<span class="nc" id="L74">        return notaAnalisisRepository</span>
+<span class="nc" id="L75">                .findByExpedienteIdOrderByFechaCreacionDesc(</span>
+                        expedienteId
+                )
+<span class="nc" id="L78">                .stream()</span>
+<span class="nc" id="L79">                .map(NotaAnalisisService::convertirADTO)</span>
+<span class="nc" id="L80">                .toList();</span>
+    }
+
+    public List&lt;NotaAnalisisDTO&gt; listarPorFolio(String folio) {
+<span class="nc" id="L84">        return notaAnalisisRepository</span>
+<span class="nc" id="L85">                .findByFolioOrderByFechaCreacionDesc(folio)</span>
+<span class="nc" id="L86">                .stream()</span>
+<span class="nc" id="L87">                .map(NotaAnalisisService::convertirADTO)</span>
+<span class="nc" id="L88">                .toList();</span>
+    }
+
+    public NotaAnalisisDTO actualizarNota(
+            Long id,
+            CrearNotaAnalisisDTO dto,
+            PersonalAdministrativo analista
+    ) {
+
+<span class="nc" id="L97">        NotaAnalisis nota = obtenerPropia(id, analista, &quot;editar&quot;);</span>
+
+<span class="nc" id="L99">        nota.setAsunto(dto.getAsunto().trim());</span>
+<span class="nc" id="L100">        nota.setContenido(dto.getContenido());</span>
+<span class="nc" id="L101">        nota.setFechaActualizacion(LocalDateTime.now());</span>
+
+<span class="nc" id="L103">        NotaAnalisis actualizada = notaAnalisisRepository.save(nota);</span>
+
+<span class="nc" id="L105">        return convertirADTO(actualizada);</span>
+    }
+
+    public void eliminarNota(Long id, PersonalAdministrativo analista) {
+
+<span class="nc" id="L110">        NotaAnalisis nota = obtenerPropia(id, analista, &quot;eliminar&quot;);</span>
+
+<span class="nc" id="L112">        notaAnalisisRepository.delete(nota);</span>
+<span class="nc" id="L113">    }</span>
+
+    /*
+     * El oficio en PDF se arma al vuelo con los datos guardados: si el autor lo edita, el
+     * PDF siguiente ya sale con el cambio (y con la fecha de edición).
+     */
+    public OficioPdf generarPdf(Long id) {
+
+<span class="nc" id="L121">        NotaAnalisis nota = notaAnalisisRepository.findById(id)</span>
+<span class="nc" id="L122">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Oficio no encontrado&quot;));</span>
+
+<span class="nc" id="L124">        ExpedientePrimerContacto expediente = expedienteRepository.findById(nota.getExpedienteId())</span>
+<span class="nc" id="L125">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Expediente del oficio no encontrado&quot;));</span>
+
+<span class="nc" id="L127">        String numero = numeroOficio(nota);</span>
+
+<span class="nc" id="L129">        return new OficioPdf(</span>
+<span class="nc" id="L130">                &quot;oficio-&quot; + numero.replace('/', '-') + &quot;.pdf&quot;,</span>
+<span class="nc" id="L131">                oficioPdfService.generar(nota, numero, expediente)</span>
+        );
+    }
+
+    /*
+     * CU-PC-05: solo el autor de una nota puede editarla o borrarla.
+     * El autor es el analista del JWT que la creó (analistaId).
+     */
+    private NotaAnalisis obtenerPropia(
+            Long id,
+            PersonalAdministrativo analista,
+            String accion
+    ) {
+
+<span class="nc" id="L145">        NotaAnalisis nota = notaAnalisisRepository.findById(id)</span>
+<span class="nc" id="L146">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Nota de análisis no encontrada&quot;));</span>
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        if (!nota.getAnalistaId().equals(analista.getId())) {</span>
+<span class="nc" id="L149">            throw new ResponseStatusException(</span>
+                    HttpStatus.FORBIDDEN,
+<span class="nc" id="L151">                    &quot;Solo &quot; + nota.getAnalistaNombre() + &quot;, autor(a) de la nota, puede &quot; + accion + &quot;la.&quot;</span>
+            );
+        }
+
+<span class="nc" id="L155">        return nota;</span>
+    }
+
+    /** Número del oficio: DDP/PC/OF/año de creación/id (mismo formato que la remisión). */
+    public static String numeroOficio(NotaAnalisis nota) {
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        int anio = nota.getFechaCreacion() != null</span>
+<span class="nc" id="L161">                ? nota.getFechaCreacion().getYear()</span>
+<span class="nc" id="L162">                : LocalDateTime.now().getYear();</span>
+<span class="nc" id="L163">        return &quot;DDP/PC/OF/&quot; + anio + &quot;/&quot; + nota.getId();</span>
+    }
+
+    /** También lo usa ExpedienteAnalisisService al armar el detalle del expediente. */
+    public static NotaAnalisisDTO convertirADTO(NotaAnalisis nota) {
+
+<span class="nc" id="L169">        return NotaAnalisisDTO.builder()</span>
+<span class="nc" id="L170">                .id(nota.getId())</span>
+<span class="nc" id="L171">                .expedienteId(nota.getExpedienteId())</span>
+<span class="nc" id="L172">                .folio(nota.getFolio())</span>
+<span class="nc" id="L173">                .analistaId(nota.getAnalistaId())</span>
+<span class="nc" id="L174">                .analistaNombre(nota.getAnalistaNombre())</span>
+<span class="nc" id="L175">                .numeroOficio(numeroOficio(nota))</span>
+<span class="nc" id="L176">                .asunto(nota.getAsunto())</span>
+<span class="nc" id="L177">                .contenido(nota.getContenido())</span>
+<span class="nc" id="L178">                .fechaCreacion(</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">                        nota.getFechaCreacion() != null</span>
+<span class="nc" id="L180">                                ? nota.getFechaCreacion().toString()</span>
+<span class="nc" id="L181">                                : null</span>
+                )
+<span class="nc" id="L183">                .fechaActualizacion(</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">                        nota.getFechaActualizacion() != null</span>
+<span class="nc" id="L185">                                ? nota.getFechaActualizacion().toString()</span>
+<span class="nc" id="L186">                                : null</span>
+                )
+<span class="nc" id="L188">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

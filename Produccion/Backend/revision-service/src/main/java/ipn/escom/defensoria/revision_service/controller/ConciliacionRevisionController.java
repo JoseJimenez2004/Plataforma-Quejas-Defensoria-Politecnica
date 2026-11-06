@@ -22,7 +22,7 @@ import ipn.escom.defensoria.revision_service.service.ConciliacionRevisionService
  * responde (aceptar/rechazar) desde queja-service ("/api/quejoso/conciliaciones/..."). */
 @RestController
 @RequestMapping("/api/revision/conciliaciones")
-@PreAuthorize("hasAnyRole('RECEPCIONISTA','SUBDEFENSOR','DEFENSOR','ADMIN_SISTEMAS')")
+@PreAuthorize("hasAnyRole('RECEPCIONISTA','SUBDEFENSOR','DEFENSOR')")
 @Tag(name = "Conciliación (Revisión)", description = "Emisión de acuerdos de conciliación al quejoso")
 public class ConciliacionRevisionController {
 

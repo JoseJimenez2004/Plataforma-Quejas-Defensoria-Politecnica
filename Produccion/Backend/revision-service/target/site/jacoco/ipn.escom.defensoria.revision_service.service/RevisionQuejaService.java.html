@@ -1,0 +1,809 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RevisionQuejaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.revision_service.service</a> &gt; <span class="el_source">RevisionQuejaService.java</span></div><h1>RevisionQuejaService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.revision_service.service;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import ipn.escom.defensoria.revision_service.dto.EvidenciaResumen;
+import ipn.escom.defensoria.revision_service.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.revision_service.entity.Queja;
+import ipn.escom.defensoria.revision_service.entity.QuejaEvidencia;
+import ipn.escom.defensoria.revision_service.model.AntecedenteModel;
+import ipn.escom.defensoria.revision_service.model.BandejaResumenModel;
+import ipn.escom.defensoria.revision_service.model.CargaAbogadoModel;
+import ipn.escom.defensoria.revision_service.model.CargaRecepcionistaModel;
+import ipn.escom.defensoria.revision_service.model.DatosVentanillaRequest;
+import ipn.escom.defensoria.revision_service.model.HistorialFilaModel;
+import ipn.escom.defensoria.revision_service.model.HistorialPaginaModel;
+import ipn.escom.defensoria.revision_service.model.HistorialResumenModel;
+import ipn.escom.defensoria.revision_service.model.IndicadoresBandejaModel;
+import ipn.escom.defensoria.revision_service.model.HistorialItemModel;
+import ipn.escom.defensoria.revision_service.model.QuejaDetalleModel;
+import ipn.escom.defensoria.revision_service.model.QuejaResumenBandejaModel;
+import ipn.escom.defensoria.revision_service.repository.PersonalAdministrativoRepository;
+import ipn.escom.defensoria.revision_service.repository.QuejaEvidenciaRepository;
+import ipn.escom.defensoria.revision_service.repository.QuejaRepository;
+import ipn.escom.defensoria.revision_service.model.PrimerContactoIngresoResponse;
+
+@Service
+public class RevisionQuejaService {
+
+    // Estatus del flujo de revisión -- ver comentario en la entidad Queja.
+    public static final String RECIBIDA = &quot;RECIBIDA&quot;;
+    public static final String EN_VALIDACION = &quot;EN_VALIDACION&quot;;
+    public static final String RECHAZADA = &quot;RECHAZADA&quot;;
+    public static final String TURNADA = &quot;TURNADA&quot;;
+    /**
+     * El quejoso ya atendió las observaciones de un rechazo y reenvió su queja. Vuelve a la
+     * bandeja para una segunda validación. Sin este estado, una queja rechazada quedaba
+     * muerta: no se podía editar ni turnar.
+     */
+    public static final String CORREGIDA = &quot;CORREGIDA&quot;;
+
+    /**
+     * Desde 2026-10-13 Primer Contacto y Subdefensoría escriben su avance en quejas.estatus
+     * (diagrama de estados de la queja), así que una queja turnada ya no se queda en TURNADA.
+     * Para Recepción todas estas siguen siendo &quot;turnadas&quot;: salieron de su bandeja hacia
+     * Primer Contacto.
+     */
+<span class="fc" id="L60">    public static final List&lt;String&gt; TURNADA_O_POSTERIOR = List.of(</span>
+            TURNADA,
+            &quot;EN_ANALISIS&quot;, &quot;PROCEDENTE&quot;, &quot;IMPROCEDENTE&quot;, &quot;REMITIDA&quot;,
+            &quot;RECIBIDA_SUBDEFENSORIA&quot;, &quot;EN_INVESTIGACION&quot;, &quot;EN_ESPERA_OFICIO&quot;, &quot;ELABORO_ACUERDO&quot;,
+            &quot;PENDIENTE_CONCILIACION&quot;, &quot;PENDIENTE_CONCLUSION&quot;, &quot;CONCLUIDA&quot;);
+
+    private static final String ORIGEN_MANUAL = &quot;MANUAL&quot;;
+    private static final String PREFIJO_FOLIO = &quot;FOL-&quot;;
+    private static final int LONGITUD_UUID_FOLIO = 8;
+
+    /** Si una queja lleva más de esto EN_VALIDACION sin que su recepcionista la rechace o
+     * turne, se libera sola de vuelta a la bandeja -- ver liberarRevisionesVencidas(). */
+    private static final long MINUTOS_LIMITE_REVISION = 20;
+
+    private final QuejaRepository quejaRepository;
+    private final QuejaEvidenciaRepository evidenciaRepository;
+    private final NotificacionQuejaService notificacionService;
+    private final PrimerContactoClientService primerContactoClientService;
+    private final PersonalAdministrativoRepository personalRepository;
+    private final IndicadoresBandejaService indicadoresService;
+
+    /** Filas por página de la Bandeja (10 por defecto; el cliente puede pedir hasta 50). */
+    public static final int TAMANIO_PAGINA_DEFAULT = 10;
+    private static final int TAMANIO_PAGINA_MAXIMO = 50;
+
+    public RevisionQuejaService(
+            QuejaRepository quejaRepository,
+            QuejaEvidenciaRepository evidenciaRepository,
+            NotificacionQuejaService notificacionService,
+            PrimerContactoClientService primerContactoClientService,
+            PersonalAdministrativoRepository personalRepository,
+<span class="fc" id="L91">            IndicadoresBandejaService indicadoresService) {</span>
+<span class="fc" id="L92">        this.quejaRepository = quejaRepository;</span>
+<span class="fc" id="L93">        this.evidenciaRepository = evidenciaRepository;</span>
+<span class="fc" id="L94">        this.notificacionService = notificacionService;</span>
+<span class="fc" id="L95">        this.primerContactoClientService = primerContactoClientService;</span>
+<span class="fc" id="L96">        this.personalRepository = personalRepository;</span>
+<span class="fc" id="L97">        this.indicadoresService = indicadoresService;</span>
+<span class="fc" id="L98">    }</span>
+
+    // ---------------- Bandeja de Entrada ----------------
+
+    /**
+     * Bandeja de Entrada paginada (2026-10-15). Funciona como una cola: la queja que llegó más
+     * recientemente va arriba. Filtros:
+     *   todas        -&gt; por atender + en atención (de cualquiera)
+     *   disponibles  -&gt; solo las que nadie ha tomado (nuevas y corregidas)
+     *   mias         -&gt; las que tiene abiertas quien consulta
+     *   corregidas   -&gt; reenviadas por el quejoso tras un rechazo
+     *   en_atencion  -&gt; abiertas ahora mismo por cualquier recepcionista
+     * texto busca en folio, nombre del quejoso y clave de la unidad.
+     */
+    public BandejaResumenModel bandeja(String correo, String filtro, String texto, int pagina, int tamanio) {
+        // Antes de contar/listar, se liberan las que quedaron abandonadas EN_VALIDACION --
+        // así la bandeja nunca muestra &quot;en atención&quot; a alguien que ya no está ahí.
+<span class="nc" id="L115">        liberarRevisionesVencidas();</span>
+
+        List&lt;String&gt; estatus;
+<span class="nc" id="L118">        boolean soloMias = false;</span>
+<span class="nc bnc" id="L119" title="All 7 branches missed.">        switch (filtro == null ? &quot;todas&quot; : filtro.toLowerCase()) {</span>
+<span class="nc" id="L120">            case &quot;disponibles&quot; -&gt; estatus = List.of(RECIBIDA, CORREGIDA);</span>
+<span class="nc" id="L121">            case &quot;mias&quot; -&gt; { estatus = List.of(EN_VALIDACION); soloMias = true; }</span>
+<span class="nc" id="L122">            case &quot;corregidas&quot; -&gt; estatus = List.of(CORREGIDA);</span>
+<span class="nc" id="L123">            case &quot;en_atencion&quot; -&gt; estatus = List.of(EN_VALIDACION);</span>
+<span class="nc" id="L124">            default -&gt; estatus = List.of(RECIBIDA, CORREGIDA, EN_VALIDACION);</span>
+        }
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        String busqueda = texto == null ? &quot;&quot; : texto.trim().toLowerCase();</span>
+<span class="nc" id="L128">        String patron = &quot;%&quot; + busqueda.replace(&quot;\\&quot;, &quot;&quot;).replace(&quot;%&quot;, &quot;&quot;).replace(&quot;_&quot;, &quot;&quot;) + &quot;%&quot;;</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        int tam = Math.max(1, Math.min(tamanio &lt;= 0 ? TAMANIO_PAGINA_DEFAULT : tamanio, TAMANIO_PAGINA_MAXIMO));</span>
+<span class="nc" id="L130">        PageRequest paginaSolicitada = PageRequest.of(Math.max(0, pagina), tam,</span>
+<span class="nc" id="L131">                Sort.by(Sort.Order.desc(&quot;fechaCreacion&quot;), Sort.Order.desc(&quot;id&quot;)));</span>
+
+<span class="nc" id="L133">        Page&lt;Queja&gt; resultado = quejaRepository.buscarBandeja(</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">                estatus, soloMias, correo == null ? &quot;&quot; : correo, busqueda, patron, paginaSolicitada);</span>
+
+        // Nombres del personal (tabla chica) para &quot;la rechazó antes ...&quot; sin una consulta por fila.
+<span class="nc" id="L137">        Map&lt;String, String&gt; nombresPersonal = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L138">        personalRepository.findAll().forEach(p -&gt; {</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">            if (p.getCorreoInstitucional() != null) {</span>
+<span class="nc" id="L140">                nombresPersonal.put(p.getCorreoInstitucional().toLowerCase(), p.getNombreCompleto());</span>
+            }
+<span class="nc" id="L142">        });</span>
+
+<span class="nc" id="L144">        List&lt;QuejaResumenBandejaModel&gt; lista = resultado.getContent().stream()</span>
+<span class="nc" id="L145">                .map(q -&gt; new QuejaResumenBandejaModel(</span>
+<span class="nc" id="L146">                        q.getNumeroFolio(),</span>
+<span class="nc" id="L147">                        q.getFechaCreacion(),</span>
+<span class="nc" id="L148">                        nombreMostrar(q),</span>
+<span class="nc" id="L149">                        q.getUnidadAcademicaClave(),</span>
+<span class="nc" id="L150">                        documentacionAparenteCompleta(q),</span>
+<span class="nc" id="L151">                        q.getEstatus(),</span>
+<span class="nc" id="L152">                        q.getRevisandoPorNombre(),</span>
+<span class="nc bnc" id="L153" title="All 4 branches missed.">                        EN_VALIDACION.equals(q.getEstatus()) &amp;&amp; q.getRevisandoPor() != null</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">                                &amp;&amp; q.getRevisandoPor().equalsIgnoreCase(correo),</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">                        ORIGEN_MANUAL.equals(q.getOrigenRegistro()) ? &quot;MANUAL&quot; : &quot;WEB&quot;,</span>
+<span class="nc" id="L156">                        rechazadaAntesPor(q, nombresPersonal)))</span>
+<span class="nc" id="L157">                .toList();</span>
+
+<span class="nc" id="L159">        IndicadoresBandejaModel indicadores = indicadoresService.indicadores(correo);</span>
+<span class="nc" id="L160">        List&lt;CargaRecepcionistaModel&gt; equipo = indicadoresService.equipo(correo);</span>
+
+<span class="nc" id="L162">        return new BandejaResumenModel(indicadores, lista, resultado.getNumber(), resultado.getSize(),</span>
+<span class="nc" id="L163">                resultado.getTotalElements(), resultado.getTotalPages(), equipo);</span>
+    }
+
+    /** En una queja CORREGIDA (o en revisión tras corregirse), quién la había rechazado. */
+    private String rechazadaAntesPor(Queja q, Map&lt;String, String&gt; nombresPersonal) {
+<span class="nc bnc" id="L168" title="All 2 branches missed.">        boolean esReenvio = CORREGIDA.equals(q.getEstatus())</span>
+<span class="nc bnc" id="L169" title="All 4 branches missed.">                || (EN_VALIDACION.equals(q.getEstatus()) &amp;&amp; CORREGIDA.equals(q.getEstatusPrevioRevision()));</span>
+<span class="nc bnc" id="L170" title="All 4 branches missed.">        if (!esReenvio || esVacio(q.getValidadoPor())) {</span>
+<span class="nc" id="L171">            return null;</span>
+        }
+<span class="nc" id="L173">        return nombresPersonal.getOrDefault(q.getValidadoPor().toLowerCase(), q.getValidadoPor());</span>
+    }
+
+    // ---------------- Validación de Requisitos ----------------
+
+    /**
+     * Al abrir el detalle, una queja RECIBIDA o CORREGIDA pasa a EN_VALIDACION -- así la
+     * bandeja refleja que alguien ya la está trabajando (contador &quot;En Proceso&quot;) y les muestra
+     * a los demás recepcionistas quién la tiene abierta, para que no la dupliquen.
+     *
+     * Si YA está EN_VALIDACION porque otro recepcionista la abrió antes (y no ha pasado el
+     * límite de inactividad), se rechaza con un mensaje claro -- es el respaldo del backend a
+     * lo que la bandeja ya oculta/deshabilita en la interfaz. Si el que vuelve a abrirla es la
+     * misma persona que ya la tenía (por ejemplo, recargó la página), simplemente continúa.
+     */
+    public QuejaDetalleModel detalle(String folio, String correoRecepcionista) {
+<span class="fc" id="L189">        liberarRevisionesVencidas();</span>
+<span class="fc" id="L190">        Queja queja = obtenerPorFolio(folio);</span>
+
+<span class="pc bpc" id="L192" title="1 of 4 branches missed.">        if (RECIBIDA.equals(queja.getEstatus()) || CORREGIDA.equals(queja.getEstatus())) {</span>
+            // Toma atómica: si otra recepcionista la tomó un instante antes, el UPDATE no
+            // encuentra la queja libre (0 filas) y se cae al aviso de &quot;ya la tiene X&quot;.
+<span class="fc" id="L195">            quejaRepository.tomarParaRevision(folio, correoRecepcionista,</span>
+<span class="fc" id="L196">                    resolverNombre(correoRecepcionista), LocalDateTime.now());</span>
+<span class="fc" id="L197">            queja = obtenerPorFolio(folio);</span>
+        }
+
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if (EN_VALIDACION.equals(queja.getEstatus())) {</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">            if (esDeOtraPersona(queja, correoRecepcionista)) {</span>
+<span class="fc" id="L202">                throw new RuntimeException(mensajeOcupada(queja));</span>
+            }
+            // Es suya (abrió de nuevo o recargó): se reinicia su tiempo de inactividad.
+<span class="fc" id="L205">            quejaRepository.renovarRevision(folio, correoRecepcionista, LocalDateTime.now());</span>
+        }
+<span class="fc" id="L207">        return aDetalle(queja);</span>
+    }
+
+    /** La recepcionista suelta la queja sin rechazarla ni turnarla: regresa a la cola tal como
+     * estaba (nueva o corregida) para que la tome alguien más. */
+    public void liberar(String folio, String correoRecepcionista) {
+<span class="fc" id="L213">        Queja queja = obtenerPorFolio(folio);</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (!EN_VALIDACION.equals(queja.getEstatus())) {</span>
+<span class="fc" id="L215">            return; // ya estaba libre o ya se cerró: no hay nada que soltar</span>
+        }
+<span class="fc bfc" id="L217" title="All 2 branches covered.">        if (esDeOtraPersona(queja, correoRecepcionista)) {</span>
+<span class="fc" id="L218">            throw new RuntimeException(mensajeOcupada(queja));</span>
+        }
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">        queja.setEstatus(queja.getEstatusPrevioRevision() != null ? queja.getEstatusPrevioRevision() : RECIBIDA);</span>
+<span class="fc" id="L221">        limpiarRevision(queja);</span>
+<span class="fc" id="L222">        quejaRepository.save(queja);</span>
+<span class="fc" id="L223">    }</span>
+
+    /** Lo llama el front cada pocos minutos mientras la queja sigue abierta en pantalla, para
+     * que no se libere sola si la recepcionista tarda en revisar una queja larga. */
+    public void renovar(String folio, String correoRecepcionista) {
+<span class="fc" id="L228">        Queja queja = obtenerPorFolio(folio);</span>
+<span class="pc bpc" id="L229" title="2 of 4 branches missed.">        if (!EN_VALIDACION.equals(queja.getEstatus()) || esDeOtraPersona(queja, correoRecepcionista)) {</span>
+<span class="fc" id="L230">            throw new RuntimeException(&quot;Esta queja ya no está a tu nombre. Regresa a la bandeja.&quot;);</span>
+        }
+<span class="nc" id="L232">        quejaRepository.renovarRevision(folio, correoRecepcionista, LocalDateTime.now());</span>
+<span class="nc" id="L233">    }</span>
+
+    /**
+     * Solo quien tomó la queja puede rechazarla o turnarla. Sin esto, dos recepcionistas
+     * podían cerrar la misma queja (una la turnaba y otra la rechazaba).
+     */
+    private void exigirQueSeaMia(Queja queja, String correoRecepcionista) {
+<span class="pc bpc" id="L240" title="1 of 4 branches missed.">        if (!EN_VALIDACION.equals(queja.getEstatus()) || queja.getRevisandoPor() == null) {</span>
+<span class="fc" id="L241">            throw new RuntimeException(&quot;Abre la queja &quot; + queja.getNumeroFolio()</span>
+                    + &quot; desde la Bandeja para tomarla antes de rechazarla o turnarla.&quot;);
+        }
+<span class="fc bfc" id="L244" title="All 2 branches covered.">        if (esDeOtraPersona(queja, correoRecepcionista)) {</span>
+<span class="fc" id="L245">            throw new RuntimeException(mensajeOcupada(queja));</span>
+        }
+<span class="fc" id="L247">    }</span>
+
+    private boolean esDeOtraPersona(Queja queja, String correo) {
+<span class="pc bpc" id="L250" title="1 of 4 branches missed.">        return queja.getRevisandoPor() != null &amp;&amp; !queja.getRevisandoPor().equalsIgnoreCase(correo);</span>
+    }
+
+    private String mensajeOcupada(Queja queja) {
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">        String quien = queja.getRevisandoPorNombre() != null ? queja.getRevisandoPorNombre() : queja.getRevisandoPor();</span>
+<span class="fc" id="L255">        return &quot;La queja &quot; + queja.getNumeroFolio() + &quot; la está atendiendo &quot; + quien + &quot;. &quot;</span>
+                + &quot;Elige otra de la bandeja; esta se libera sola si &quot; + quien
+                + &quot; la deja sin actividad más de &quot; + MINUTOS_LIMITE_REVISION + &quot; minutos.&quot;;
+    }
+
+    /** Quejas EN_VALIDACION cuyo recepcionista las dejó abiertas más del límite de inactividad
+     * sin rechazarlas ni turnarlas -- se regresan solas a su estatus anterior para que otro
+     * recepcionista las pueda tomar. Se corre al inicio de bandeja() y detalle(), no como
+     * tarea programada aparte. */
+    private void liberarRevisionesVencidas() {
+<span class="fc" id="L265">        LocalDateTime limite = LocalDateTime.now().minusMinutes(MINUTOS_LIMITE_REVISION);</span>
+<span class="fc" id="L266">        List&lt;Queja&gt; vencidas = quejaRepository.findByEstatusAndFechaInicioRevisionBefore(EN_VALIDACION, limite);</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">        if (vencidas.isEmpty()) {</span>
+<span class="fc" id="L268">            return;</span>
+        }
+<span class="fc bfc" id="L270" title="All 2 branches covered.">        for (Queja q : vencidas) {</span>
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">            q.setEstatus(q.getEstatusPrevioRevision() != null ? q.getEstatusPrevioRevision() : RECIBIDA);</span>
+<span class="fc" id="L272">            q.setRevisandoPor(null);</span>
+<span class="fc" id="L273">            q.setRevisandoPorNombre(null);</span>
+<span class="fc" id="L274">            q.setFechaInicioRevision(null);</span>
+<span class="fc" id="L275">            q.setEstatusPrevioRevision(null);</span>
+<span class="fc" id="L276">        }</span>
+<span class="fc" id="L277">        quejaRepository.saveAll(vencidas);</span>
+<span class="fc" id="L278">    }</span>
+
+    private String resolverNombre(String correo) {
+<span class="fc" id="L281">        return personalRepository.findByCorreoInstitucional(correo)</span>
+<span class="fc" id="L282">                .map(PersonalAdministrativo::getNombreCompleto)</span>
+<span class="fc" id="L283">                .orElse(correo);</span>
+    }
+
+    /** Limpia las marcas de &quot;en revisión&quot; al cerrar el caso (rechazo o turnado) -- ya no hace
+     * falta bloquearla para nadie más. */
+    private void limpiarRevision(Queja queja) {
+<span class="fc" id="L289">        queja.setRevisandoPor(null);</span>
+<span class="fc" id="L290">        queja.setRevisandoPorNombre(null);</span>
+<span class="fc" id="L291">        queja.setFechaInicioRevision(null);</span>
+<span class="fc" id="L292">        queja.setEstatusPrevioRevision(null);</span>
+<span class="fc" id="L293">    }</span>
+
+    /** Estatus en los que una queja ya no está en trámite. */
+<span class="fc" id="L296">    private static final List&lt;String&gt; ESTATUS_CERRADOS = List.of(&quot;CONCLUIDA&quot;, &quot;IMPROCEDENTE&quot;, &quot;REMITIDA&quot;, RECHAZADA);</span>
+
+    /**
+     * Antecedentes de la queja (2026-10-16): otras quejas de la MISMA persona quejosa (por
+     * boleta/número o por correo) y otras contra la MISMA persona señalada (nombre y primer
+     * apellido). Cada una con el abogado que la lleva, para que el turnado pueda dar
+     * continuidad.
+     */
+    public List&lt;AntecedenteModel&gt; antecedentes(String folio) {
+<span class="nc" id="L305">        Queja queja = obtenerPorFolio(folio);</span>
+<span class="nc" id="L306">        Map&lt;Long, AntecedenteModel&gt; porId = new java.util.LinkedHashMap&lt;&gt;();</span>
+
+<span class="nc" id="L308">        List&lt;Queja&gt; mismaPersona = new java.util.ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">        if (!esVacio(queja.getNumeroIdentificacionQuejoso())) {</span>
+<span class="nc" id="L310">            mismaPersona.addAll(quejaRepository.findByNumeroIdentificacionQuejosoAndIdNotOrderByFechaCreacionDesc(</span>
+<span class="nc" id="L311">                    queja.getNumeroIdentificacionQuejoso(), queja.getId()));</span>
+        }
+<span class="nc bnc" id="L313" title="All 2 branches missed.">        if (!esVacio(queja.getCorreoInstitucional())) {</span>
+<span class="nc" id="L314">            mismaPersona.addAll(quejaRepository.findByCorreoInstitucionalAndIdNotOrderByFechaCreacionDesc(</span>
+<span class="nc" id="L315">                    queja.getCorreoInstitucional(), queja.getId()));</span>
+        }
+<span class="nc" id="L317">        mismaPersona.forEach(q -&gt; porId.putIfAbsent(q.getId(), aAntecedente(q, &quot;MISMA_PERSONA&quot;)));</span>
+
+<span class="nc bnc" id="L319" title="All 4 branches missed.">        if (!esVacio(queja.getNombreDenunciado()) &amp;&amp; !esVacio(queja.getApellido1Denunciado())) {</span>
+<span class="nc" id="L320">            quejaRepository.findByNombreDenunciadoIgnoreCaseAndApellido1DenunciadoIgnoreCaseAndIdNotOrderByFechaCreacionDesc(</span>
+<span class="nc" id="L321">                            queja.getNombreDenunciado().trim(), queja.getApellido1Denunciado().trim(), queja.getId())</span>
+<span class="nc" id="L322">                    .forEach(q -&gt; porId.putIfAbsent(q.getId(), aAntecedente(q, &quot;MISMO_DENUNCIADO&quot;)));</span>
+        }
+
+<span class="nc" id="L325">        return porId.values().stream()</span>
+<span class="nc" id="L326">                .sorted(java.util.Comparator.comparing(AntecedenteModel::fecha,</span>
+<span class="nc" id="L327">                        java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())))</span>
+<span class="nc" id="L328">                .toList();</span>
+    }
+
+    private AntecedenteModel aAntecedente(Queja q, String relacion) {
+<span class="nc" id="L332">        String estado = ESTATUS_ACTUAL.getOrDefault(q.getEstatus(),</span>
+<span class="nc bnc" id="L333" title="All 4 branches missed.">                RECIBIDA.equals(q.getEstatus()) || CORREGIDA.equals(q.getEstatus()) ? &quot;En Recepción, sin validar&quot;</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">                        : EN_VALIDACION.equals(q.getEstatus()) ? &quot;En validación&quot; : q.getEstatus());</span>
+<span class="nc" id="L335">        return new AntecedenteModel(q.getNumeroFolio(), q.getFechaCreacion(), q.getMotivo(), estado, relacion,</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">                q.getUnidadAcademicaClave(), esVacio(q.getDefensorAsignado()) ? null : q.getDefensorAsignado(),</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">                !ESTATUS_CERRADOS.contains(q.getEstatus()));</span>
+    }
+
+    /**
+     * Abogados disponibles para turnar, con su carga (2026-10-16), del que menos quejas en
+     * trámite lleva al que más. Regla de sugerencia:
+     *   1. Si un abogado ya lleva en trámite un antecedente de esta queja (misma persona
+     *      quejosa o mismo denunciado), se le sugiere a él para dar continuidad aunque tenga
+     *      más carga.
+     *   2. Si no, se sugiere al de menor carga activa (empate: menos asignadas en total).
+     */
+    public List&lt;CargaAbogadoModel&gt; abogados(String folio) {
+<span class="nc" id="L349">        List&lt;AntecedenteModel&gt; antecedentes = antecedentes(folio);</span>
+<span class="nc" id="L350">        Map&lt;String, long[]&gt; cargas = indicadoresService.cargaPorAbogado(ESTATUS_CERRADOS);</span>
+
+<span class="nc" id="L352">        List&lt;PersonalAdministrativo&gt; personal = personalRepository.findByRolInAndActivoTrueOrderByNombreCompletoAsc(</span>
+<span class="nc" id="L353">                List.of(ipn.escom.defensoria.revision_service.entity.RolStaff.DEFENSOR,</span>
+                        ipn.escom.defensoria.revision_service.entity.RolStaff.SUBDEFENSOR));
+
+<span class="nc" id="L356">        record Fila(PersonalAdministrativo p, long activa, long total, List&lt;String&gt; folios) {}</span>
+<span class="nc" id="L357">        List&lt;Fila&gt; filas = personal.stream().map(p -&gt; {</span>
+<span class="nc" id="L358">            long[] c = cargas.getOrDefault(p.getNombreCompleto().toLowerCase(), new long[] {0, 0});</span>
+<span class="nc" id="L359">            List&lt;String&gt; folios = antecedentes.stream()</span>
+<span class="nc bnc" id="L360" title="All 4 branches missed.">                    .filter(a -&gt; a.enCurso() &amp;&amp; a.defensorAsignado() != null</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">                            &amp;&amp; a.defensorAsignado().equalsIgnoreCase(p.getNombreCompleto()))</span>
+<span class="nc" id="L362">                    .map(AntecedenteModel::numeroFolio)</span>
+<span class="nc" id="L363">                    .toList();</span>
+<span class="nc" id="L364">            return new Fila(p, c[0], c[1], folios);</span>
+<span class="nc" id="L365">        }).sorted(java.util.Comparator.comparingLong(Fila::activa).thenComparingLong(Fila::total)</span>
+                // A igual carga, primero los abogados (SUBDEFENSOR) que la persona titular (DEFENSOR).
+<span class="nc bnc" id="L367" title="All 2 branches missed.">                .thenComparing(f -&gt; f.p().getRol() == ipn.escom.defensoria.revision_service.entity.RolStaff.DEFENSOR)</span>
+<span class="nc" id="L368">                .thenComparing(f -&gt; f.p().getNombreCompleto())).toList();</span>
+
+<span class="nc bnc" id="L370" title="All 2 branches missed.">        Fila sugerida = filas.stream().filter(f -&gt; !f.folios().isEmpty()).findFirst()</span>
+<span class="nc bnc" id="L371" title="All 2 branches missed.">                .orElse(filas.isEmpty() ? null : filas.get(0));</span>
+
+<span class="nc" id="L373">        return filas.stream().map(f -&gt; {</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">            boolean esSugerida = f == sugerida;</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">            String motivo = !esSugerida ? null</span>
+<span class="nc bnc" id="L376" title="All 2 branches missed.">                    : !f.folios().isEmpty() ? &quot;Ya lleva un antecedente de esta queja (&quot; + String.join(&quot;, &quot;, f.folios()) + &quot;)&quot;</span>
+<span class="nc" id="L377">                    : &quot;Es quien tiene menos quejas en trámite&quot;;</span>
+<span class="nc" id="L378">            return new CargaAbogadoModel(f.p().getId(), f.p().getNombreCompleto(), f.p().getRol().name(),</span>
+<span class="nc" id="L379">                    f.activa(), f.total(), f.folios(), esSugerida, motivo);</span>
+<span class="nc" id="L380">        }).toList();</span>
+    }
+
+    // ---------------- Rechazo ----------------
+
+    public Queja rechazar(String folio, List&lt;String&gt; motivos, String observaciones, String correoRecepcionista) {
+<span class="fc" id="L386">        Queja queja = obtenerPorFolio(folio);</span>
+
+<span class="fc bfc" id="L388" title="All 4 branches covered.">        String motivosTexto = (motivos == null || motivos.isEmpty())</span>
+<span class="fc" id="L389">                ? &quot;&quot;</span>
+<span class="fc" id="L390">                : String.join(&quot;; &quot;, motivos);</span>
+<span class="fc" id="L391">        String textoCompleto = motivosTexto</span>
+<span class="fc bfc" id="L392" title="All 4 branches covered.">                + ((observaciones != null &amp;&amp; !observaciones.isBlank())</span>
+<span class="fc bfc" id="L393" title="All 2 branches covered.">                        ? (motivosTexto.isBlank() ? &quot;&quot; : &quot;\n\n&quot;) + observaciones</span>
+<span class="fc" id="L394">                        : &quot;&quot;);</span>
+
+<span class="fc bfc" id="L396" title="All 2 branches covered.">        if (textoCompleto.isBlank()) {</span>
+<span class="fc" id="L397">            throw new RuntimeException(&quot;Selecciona al menos un motivo o escribe una observación.&quot;);</span>
+        }
+<span class="fc" id="L399">        exigirQueSeaMia(queja, correoRecepcionista);</span>
+
+<span class="fc" id="L401">        queja.setEstatus(RECHAZADA);</span>
+<span class="fc" id="L402">        queja.setMotivoRechazo(textoCompleto);</span>
+<span class="fc" id="L403">        queja.setValidadoPor(correoRecepcionista);</span>
+<span class="fc" id="L404">        queja.setFechaValidacion(LocalDateTime.now());</span>
+<span class="fc" id="L405">        limpiarRevision(queja);</span>
+<span class="fc" id="L406">        Queja guardada = quejaRepository.save(queja);</span>
+
+<span class="fc" id="L408">        notificacionService.enviarCorreoRechazo(</span>
+<span class="fc" id="L409">                guardada.getCorreoInstitucional(), nombreMostrar(guardada), guardada.getNumeroFolio(), textoCompleto);</span>
+<span class="fc" id="L410">        notificacionService.registrarCambioEstatus(</span>
+<span class="fc" id="L411">                guardada.getCorreoInstitucional(), guardada.getNumeroFolio(),</span>
+                &quot;Tu queja necesita observaciones&quot;,
+<span class="fc" id="L413">                &quot;Tu queja &quot; + guardada.getNumeroFolio() + &quot; fue revisada y requiere que atiendas algunas observaciones. &quot;</span>
+                        + &quot;Revisa el detalle para más información.&quot;);
+
+<span class="fc" id="L416">        return guardada;</span>
+    }
+
+    // ---------------- Turnado ----------------
+
+    /** Todas las quejas turnadas van a Primer Contacto -- no existe otro destino posible hoy,
+     * así que el área ya no se le pregunta al recepcionista (antes ofrecía un combo de
+     * dependencias del IPN que no aplicaba aquí). Se deja fijo solo para que Historial siga
+     * mostrando algo coherente en la columna &quot;Área&quot;. */
+    private static final String AREA_DESTINO = &quot;Primer Contacto&quot;;
+
+    public Queja turnar(
+            String folio,
+            String defensorAsignado,
+            String comentarios,
+            String correoRecepcionista
+    ) {
+
+<span class="fc bfc" id="L434" title="All 2 branches covered.">        if (esVacio(defensorAsignado)) {</span>
+<span class="fc" id="L435">            throw new RuntimeException(</span>
+                    &quot;Selecciona el defensor responsable antes de turnar.&quot;
+            );
+        }
+
+<span class="fc" id="L440">        Queja queja = obtenerPorFolio(folio);</span>
+
+        /*
+         * Si ya fue turnada correctamente anteriormente,
+         * no volvemos a crear ni enviar el expediente.
+         */
+<span class="fc bfc" id="L446" title="All 2 branches covered.">        if (TURNADA_O_POSTERIOR.contains(queja.getEstatus())</span>
+<span class="pc bpc" id="L447" title="1 of 2 branches missed.">                &amp;&amp; !esVacio(queja.getFolioPrimerContacto())) {</span>
+<span class="fc" id="L448">            return queja;</span>
+        }
+
+        /*
+         * Una queja rechazada ya no puede continuar
+         * al flujo de Primer Contacto.
+         */
+<span class="fc bfc" id="L455" title="All 2 branches covered.">        if (RECHAZADA.equals(queja.getEstatus())) {</span>
+<span class="fc" id="L456">            throw new RuntimeException(</span>
+                    &quot;Una queja rechazada no puede ser turnada.&quot;
+            );
+        }
+
+<span class="fc" id="L461">        exigirQueSeaMia(queja, correoRecepcionista);</span>
+
+        /*
+         * Primero pedimos a Primer Contacto que cree
+         * su expediente.
+         *
+         * Se manda el FOLIO de la queja, NO quejas.id.
+         */
+<span class="fc" id="L469">        PrimerContactoIngresoResponse expedientePC =</span>
+                primerContactoClientService
+<span class="fc" id="L471">                        .enviarAPrimerContacto(queja);</span>
+
+        /*
+         * Primer Contacto devuelve su propio folio.
+         *
+         * Ejemplo:
+         * FOL-12345678 -&gt; PC-A1B2C3D4
+         */
+<span class="fc" id="L479">        queja.setFolioPrimerContacto(</span>
+<span class="fc" id="L480">                expedientePC.getFolio()</span>
+        );
+
+<span class="fc" id="L483">        queja.setEstatus(TURNADA);</span>
+<span class="fc" id="L484">        queja.setAreaTurnada(AREA_DESTINO);</span>
+<span class="fc" id="L485">        queja.setDefensorAsignado(defensorAsignado);</span>
+<span class="fc" id="L486">        queja.setComentariosRecepcion(comentarios);</span>
+<span class="fc" id="L487">        queja.setValidadoPor(correoRecepcionista);</span>
+
+<span class="fc" id="L489">        LocalDateTime ahora = LocalDateTime.now();</span>
+
+<span class="fc" id="L491">        queja.setFechaValidacion(ahora);</span>
+<span class="fc" id="L492">        queja.setFechaTurnado(ahora);</span>
+<span class="fc" id="L493">        limpiarRevision(queja);</span>
+
+<span class="fc" id="L495">        Queja guardada =</span>
+<span class="fc" id="L496">                quejaRepository.save(queja);</span>
+
+<span class="fc" id="L498">        notificacionService.registrarCambioEstatus(</span>
+<span class="fc" id="L499">                guardada.getCorreoInstitucional(),</span>
+<span class="fc" id="L500">                guardada.getNumeroFolio(),</span>
+                &quot;Tu queja fue turnada&quot;,
+                &quot;Tu queja &quot;
+<span class="fc" id="L503">                        + guardada.getNumeroFolio()</span>
+                        + &quot; fue admitida y turnada a &quot;
+                        + AREA_DESTINO
+                        + &quot; para su atención.&quot;
+        );
+
+        // Aviso en la campana del defensor/subdefensor al que se le asignó la queja.
+<span class="fc" id="L510">        personalRepository.findFirstByNombreCompletoAndActivoTrue(defensorAsignado)</span>
+<span class="fc" id="L511">                .ifPresent(defensor -&gt; notificacionService.notificarPersonal(</span>
+<span class="fc" id="L512">                        defensor.getCorreoInstitucional(),</span>
+                        &quot;Se te turnó una queja&quot;,
+<span class="fc" id="L514">                        &quot;La queja &quot; + guardada.getNumeroFolio() + &quot; fue validada por Recepción y turnada a &quot;</span>
+                                + AREA_DESTINO + &quot;; quedaste como responsable.&quot;
+<span class="pc bpc" id="L516" title="1 of 2 branches missed.">                                + (esVacio(comentarios) ? &quot;&quot; : &quot; Comentarios de Recepción: &quot; + comentarios),</span>
+                        &quot;&quot;));
+
+<span class="fc" id="L519">        return guardada;</span>
+    }
+
+    // ---------------- Registro Manual ----------------
+
+    public Queja registrarManual(
+            String nombre, String apellido1, String apellido2,
+            String tipoUsuario, String dependenciaClave, String numeroOficio,
+            LocalDate fechaRecepcionFisica, String tipoDocumento,
+            String descripcion, String ubicacionFisica,
+            MultipartFile archivo, String correoRecepcionista,
+            String correoContacto, String telefonoContacto) {
+
+<span class="pc bpc" id="L532" title="2 of 6 branches missed.">        if (esVacio(nombre) || esVacio(apellido1) || esVacio(descripcion)) {</span>
+<span class="fc" id="L533">            throw new RuntimeException(&quot;Completa al menos nombre, primer apellido y descripción del asunto.&quot;);</span>
+        }
+
+<span class="fc" id="L536">        Queja queja = new Queja();</span>
+<span class="fc" id="L537">        queja.setNumeroFolio(generarFolio());</span>
+        // Si el recepcionista captura un correo de contacto real, se usa como correo
+        // institucional para que el quejoso reciba las notificaciones automáticas
+        // (rechazo/turnado) igual que un registro digital. Cuando no se tiene un correo
+        // capturable de inmediato, se usa un valor de referencia interno para no romper
+        // el NOT NULL de la columna compartida con queja-service.
+<span class="fc bfc" id="L543" title="All 2 branches covered.">        if (!esVacio(correoContacto)) {</span>
+<span class="fc" id="L544">            queja.setCorreoInstitucional(correoContacto.trim());</span>
+        } else {
+<span class="fc" id="L546">            queja.setCorreoInstitucional(&quot;registro-manual+&quot; + queja.getNumeroFolio().toLowerCase() + &quot;@defensoria.ipn.mx&quot;);</span>
+        }
+<span class="fc" id="L548">        queja.setTelefonoContacto(telefonoContacto);</span>
+<span class="fc" id="L549">        queja.setMotivo(&quot;Registro manual: &quot; + tipoDocumento);</span>
+<span class="fc" id="L550">        queja.setDescripcion(descripcion);</span>
+<span class="fc" id="L551">        queja.setNombreQuejoso(nombre);</span>
+<span class="fc" id="L552">        queja.setApellido1Quejoso(apellido1);</span>
+<span class="fc" id="L553">        queja.setApellido2Quejoso(apellido2);</span>
+<span class="fc" id="L554">        queja.setTipoUsuarioManual(tipoUsuario);</span>
+<span class="fc" id="L555">        queja.setUnidadAcademicaClave(dependenciaClave);</span>
+<span class="fc" id="L556">        queja.setNumeroOficio(numeroOficio);</span>
+<span class="fc" id="L557">        queja.setFechaRecepcionFisica(fechaRecepcionFisica);</span>
+<span class="fc" id="L558">        queja.setTipoDocumentoFisico(tipoDocumento);</span>
+<span class="fc" id="L559">        queja.setUbicacionFisicaExpediente(ubicacionFisica);</span>
+<span class="fc" id="L560">        queja.setOrigenRegistro(ORIGEN_MANUAL);</span>
+<span class="fc" id="L561">        queja.setEstatus(RECIBIDA);</span>
+
+<span class="pc bpc" id="L563" title="3 of 4 branches missed.">        if (archivo != null &amp;&amp; !archivo.isEmpty()) {</span>
+<span class="nc" id="L564">            queja.getEvidencias().add(convertirAEvidencia(archivo, queja));</span>
+        }
+
+<span class="fc" id="L567">        return quejaRepository.save(queja);</span>
+    }
+
+    // ---------------- Historial ----------------
+
+    /** fechaDesde/fechaHasta acotan un RANGO (ambos límites incluidos); cualquiera de los dos
+     * puede venir vacío para dejar ese extremo abierto (ej. solo &quot;hasta&quot; = todo lo procesado
+     * hasta esa fecha). Antes solo se podía filtrar un día exacto. */
+    public List&lt;HistorialItemModel&gt; historial(String texto, String estatus, LocalDate fechaDesde, LocalDate fechaHasta) {
+<span class="nc" id="L576">        List&lt;String&gt; estatusProcesadas = new java.util.ArrayList&lt;&gt;(TURNADA_O_POSTERIOR);</span>
+<span class="nc" id="L577">        estatusProcesadas.add(RECHAZADA);</span>
+<span class="nc" id="L578">        List&lt;Queja&gt; procesadas = quejaRepository.findByEstatusInOrderByFechaCreacionDesc(estatusProcesadas);</span>
+
+<span class="nc" id="L580">        return procesadas.stream()</span>
+<span class="nc bnc" id="L581" title="All 6 branches missed.">                .filter(q -&gt; estatus == null || estatus.isBlank() || etiquetaEstatusFinal(q.getEstatus()).equalsIgnoreCase(estatus))</span>
+<span class="nc bnc" id="L582" title="All 4 branches missed.">                .filter(q -&gt; fechaDesde == null || !q.getFechaCreacion().toLocalDate().isBefore(fechaDesde))</span>
+<span class="nc bnc" id="L583" title="All 4 branches missed.">                .filter(q -&gt; fechaHasta == null || !q.getFechaCreacion().toLocalDate().isAfter(fechaHasta))</span>
+<span class="nc bnc" id="L584" title="All 6 branches missed.">                .filter(q -&gt; texto == null || texto.isBlank() || coincideTexto(q, texto))</span>
+<span class="nc" id="L585">                .map(q -&gt; new HistorialItemModel(</span>
+<span class="nc" id="L586">                        q.getNumeroFolio(), q.getFechaCreacion(), nombreMostrar(q),</span>
+<span class="nc bnc" id="L587" title="All 2 branches missed.">                        ORIGEN_MANUAL.equals(q.getOrigenRegistro()) ? &quot;Manual&quot; : &quot;Web&quot;,</span>
+<span class="nc" id="L588">                        etiquetaEstatusFinal(q.getEstatus()), q.getMotivoRechazo()))</span>
+<span class="nc" id="L589">                .toList();</span>
+    }
+
+    /** Etiqueta legible del estatus en que va una queja ya atendida por Recepción. */
+<span class="fc" id="L593">    private static final Map&lt;String, String&gt; ESTATUS_ACTUAL = Map.ofEntries(</span>
+<span class="fc" id="L594">            Map.entry(TURNADA, &quot;Turnada a Primer Contacto&quot;),</span>
+<span class="fc" id="L595">            Map.entry(&quot;EN_ANALISIS&quot;, &quot;En análisis · Primer Contacto&quot;),</span>
+<span class="fc" id="L596">            Map.entry(&quot;PROCEDENTE&quot;, &quot;Procedente · Primer Contacto&quot;),</span>
+<span class="fc" id="L597">            Map.entry(&quot;IMPROCEDENTE&quot;, &quot;Improcedente&quot;),</span>
+<span class="fc" id="L598">            Map.entry(&quot;REMITIDA&quot;, &quot;Remitida a otra instancia&quot;),</span>
+<span class="fc" id="L599">            Map.entry(&quot;RECIBIDA_SUBDEFENSORIA&quot;, &quot;Recibida en Subdefensoría&quot;),</span>
+<span class="fc" id="L600">            Map.entry(&quot;EN_INVESTIGACION&quot;, &quot;En investigación · Subdefensoría&quot;),</span>
+<span class="fc" id="L601">            Map.entry(&quot;EN_ESPERA_OFICIO&quot;, &quot;En espera de oficio · Subdefensoría&quot;),</span>
+<span class="fc" id="L602">            Map.entry(&quot;ELABORO_ACUERDO&quot;, &quot;Acuerdo elaborado · Subdefensoría&quot;),</span>
+<span class="fc" id="L603">            Map.entry(&quot;PENDIENTE_CONCILIACION&quot;, &quot;Pendiente de conciliación&quot;),</span>
+<span class="fc" id="L604">            Map.entry(&quot;PENDIENTE_CONCLUSION&quot;, &quot;Pendiente de conclusión&quot;),</span>
+<span class="fc" id="L605">            Map.entry(&quot;CONCLUIDA&quot;, &quot;Concluida&quot;),</span>
+<span class="fc" id="L606">            Map.entry(RECHAZADA, &quot;Esperando corrección del quejoso&quot;));</span>
+
+    /**
+     * Historial paginado (2026-10-16): quejas que Recepción ya turnó o regresó con
+     * observaciones, la atendida más recientemente primero, con totales del mismo filtro.
+     * fechaDesde/fechaHasta acotan la fecha en que LLEGÓ la queja (ambos incluidos).
+     */
+    public HistorialPaginaModel historialPagina(String correo, String texto, String estatus,
+                                                LocalDate fechaDesde, LocalDate fechaHasta,
+                                                boolean soloMias, int pagina, int tamanio) {
+<span class="fc" id="L616">        List&lt;String&gt; estatusBuscados = new java.util.ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L617" title="3 of 6 branches missed.">        if (estatus == null || estatus.isBlank() || &quot;TURNADO&quot;.equalsIgnoreCase(estatus)) {</span>
+<span class="nc" id="L618">            estatusBuscados.addAll(TURNADA_O_POSTERIOR);</span>
+        }
+<span class="pc bpc" id="L620" title="3 of 6 branches missed.">        if (estatus == null || estatus.isBlank() || &quot;RECHAZADO&quot;.equalsIgnoreCase(estatus)) {</span>
+<span class="fc" id="L621">            estatusBuscados.add(RECHAZADA);</span>
+        }
+<span class="pc bpc" id="L623" title="1 of 2 branches missed.">        LocalDateTime desde = fechaDesde != null ? fechaDesde.atStartOfDay() : LocalDateTime.of(1900, 1, 1, 0, 0);</span>
+<span class="pc bpc" id="L624" title="1 of 2 branches missed.">        LocalDateTime hasta = fechaHasta != null ? fechaHasta.plusDays(1).atStartOfDay() : LocalDateTime.of(9999, 1, 1, 0, 0);</span>
+<span class="pc bpc" id="L625" title="1 of 2 branches missed.">        String busqueda = texto == null ? &quot;&quot; : texto.trim().toLowerCase();</span>
+<span class="fc" id="L626">        String patron = &quot;%&quot; + busqueda.replace(&quot;%&quot;, &quot;&quot;).replace(&quot;_&quot;, &quot;&quot;) + &quot;%&quot;;</span>
+<span class="pc bpc" id="L627" title="1 of 2 branches missed.">        String yo = correo == null ? &quot;&quot; : correo;</span>
+<span class="pc bpc" id="L628" title="1 of 2 branches missed.">        int tam = Math.max(1, Math.min(tamanio &lt;= 0 ? TAMANIO_PAGINA_DEFAULT : tamanio, TAMANIO_PAGINA_MAXIMO));</span>
+
+<span class="fc" id="L630">        Page&lt;Queja&gt; resultado = quejaRepository.buscarHistorial(estatusBuscados, soloMias, yo, desde, hasta,</span>
+<span class="fc" id="L631">                busqueda, patron, PageRequest.of(Math.max(0, pagina), tam));</span>
+
+<span class="fc" id="L633">        Map&lt;String, String&gt; nombresPersonal = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L634">        personalRepository.findAll().forEach(p -&gt; {</span>
+<span class="nc bnc" id="L635" title="All 2 branches missed.">            if (p.getCorreoInstitucional() != null) {</span>
+<span class="nc" id="L636">                nombresPersonal.put(p.getCorreoInstitucional().toLowerCase(), p.getNombreCompleto());</span>
+            }
+<span class="nc" id="L638">        });</span>
+
+<span class="fc" id="L640">        List&lt;HistorialFilaModel&gt; filas = resultado.getContent().stream().map(q -&gt; {</span>
+<span class="nc bnc" id="L641" title="All 2 branches missed.">            LocalDateTime atencion = q.getFechaValidacion() != null ? q.getFechaValidacion() : q.getFechaTurnado();</span>
+<span class="nc bnc" id="L642" title="All 2 branches missed.">            String atendio = esVacio(q.getValidadoPor()) ? null</span>
+<span class="nc" id="L643">                    : nombresPersonal.getOrDefault(q.getValidadoPor().toLowerCase(), q.getValidadoPor());</span>
+<span class="nc" id="L644">            return new HistorialFilaModel(</span>
+<span class="nc" id="L645">                    q.getNumeroFolio(), q.getFechaCreacion(), atencion, horasEntre(q.getFechaCreacion(), atencion),</span>
+<span class="nc" id="L646">                    nombreMostrar(q), q.getUnidadAcademicaClave(),</span>
+<span class="nc bnc" id="L647" title="All 2 branches missed.">                    ORIGEN_MANUAL.equals(q.getOrigenRegistro()) ? &quot;Ventanilla&quot; : &quot;Web&quot;,</span>
+<span class="nc" id="L648">                    etiquetaEstatusFinal(q.getEstatus()),</span>
+<span class="nc" id="L649">                    ESTATUS_ACTUAL.getOrDefault(q.getEstatus(), q.getEstatus()),</span>
+                    atendio,
+<span class="nc bnc" id="L651" title="All 4 branches missed.">                    q.getValidadoPor() != null &amp;&amp; q.getValidadoPor().equalsIgnoreCase(yo),</span>
+<span class="nc" id="L652">                    q.getFolioPrimerContacto(), q.getDefensorAsignado());</span>
+<span class="fc" id="L653">        }).toList();</span>
+
+        // Totales del filtro completo (no solo de la página), con columnas ligeras.
+<span class="fc" id="L656">        long total = 0, rechazadas = 0, mias = 0, conTiempo = 0;</span>
+<span class="fc" id="L657">        double horasSuma = 0;</span>
+<span class="pc bpc" id="L658" title="1 of 2 branches missed.">        for (Object[] fila : quejaRepository.resumenHistorial(estatusBuscados, soloMias, yo, desde, hasta, busqueda, patron)) {</span>
+<span class="nc" id="L659">            total++;</span>
+<span class="nc bnc" id="L660" title="All 2 branches missed.">            if (RECHAZADA.equals(fila[0])) {</span>
+<span class="nc" id="L661">                rechazadas++;</span>
+            }
+<span class="nc bnc" id="L663" title="All 4 branches missed.">            if (fila[1] != null &amp;&amp; ((String) fila[1]).equalsIgnoreCase(yo)) {</span>
+<span class="nc" id="L664">                mias++;</span>
+            }
+<span class="nc" id="L666">            Double horas = horasEntre((LocalDateTime) fila[2], (LocalDateTime) fila[3]);</span>
+<span class="nc bnc" id="L667" title="All 2 branches missed.">            if (horas != null) {</span>
+<span class="nc" id="L668">                horasSuma += horas;</span>
+<span class="nc" id="L669">                conTiempo++;</span>
+            }
+<span class="nc" id="L671">        }</span>
+<span class="fc" id="L672">        HistorialResumenModel resumen = new HistorialResumenModel(total, total - rechazadas, rechazadas, mias,</span>
+<span class="pc bpc" id="L673" title="1 of 2 branches missed.">                conTiempo == 0 ? null : horasSuma / conTiempo);</span>
+
+<span class="fc" id="L675">        return new HistorialPaginaModel(resumen, filas, resultado.getNumber(), resultado.getSize(),</span>
+<span class="fc" id="L676">                resultado.getTotalElements(), resultado.getTotalPages());</span>
+    }
+
+    private static Double horasEntre(LocalDateTime desde, LocalDateTime hasta) {
+<span class="nc bnc" id="L680" title="All 6 branches missed.">        if (desde == null || hasta == null || hasta.isBefore(desde)) {</span>
+<span class="nc" id="L681">            return null;</span>
+        }
+<span class="nc" id="L683">        return java.time.Duration.between(desde, hasta).toMinutes() / 60.0;</span>
+    }
+
+    // ---------------- Registro en ventanilla ----------------
+
+    /**
+     * La queja se capturó en ventanilla con el formulario público (queja-service) y aquí se
+     * marca como MANUAL con los datos del documento físico. Solo aplica a quejas recién
+     * creadas (2 horas) que siguen sin atenderse, para que no se pueda reclasificar después
+     * una queja que llegó por el portal.
+     */
+    public void marcarVentanilla(String folio, DatosVentanillaRequest datos, String correoRecepcionista) {
+<span class="fc" id="L695">        Queja queja = obtenerPorFolio(folio);</span>
+<span class="pc bpc" id="L696" title="1 of 2 branches missed.">        boolean reciente = queja.getFechaCreacion() != null</span>
+<span class="fc bfc" id="L697" title="All 2 branches covered.">                &amp;&amp; queja.getFechaCreacion().isAfter(LocalDateTime.now().minusHours(2));</span>
+<span class="pc bpc" id="L698" title="1 of 4 branches missed.">        if (!RECIBIDA.equals(queja.getEstatus()) || !reciente) {</span>
+<span class="fc" id="L699">            throw new RuntimeException(&quot;Solo se pueden marcar como de ventanilla las quejas recién capturadas.&quot;);</span>
+        }
+<span class="fc" id="L701">        queja.setOrigenRegistro(ORIGEN_MANUAL);</span>
+<span class="pc bpc" id="L702" title="1 of 2 branches missed.">        queja.setTipoDocumentoFisico(esVacio(datos.tipoDocumento()) ? &quot;FORMATO_QUEJA&quot; : datos.tipoDocumento().trim());</span>
+<span class="fc bfc" id="L703" title="All 2 branches covered.">        queja.setNumeroOficio(esVacio(datos.numeroOficio()) ? null : datos.numeroOficio().trim());</span>
+<span class="pc bpc" id="L704" title="1 of 2 branches missed.">        queja.setUbicacionFisicaExpediente(esVacio(datos.ubicacionFisica()) ? null : datos.ubicacionFisica().trim());</span>
+<span class="pc bpc" id="L705" title="1 of 2 branches missed.">        if (!esVacio(datos.fechaRecepcionFisica())) {</span>
+            try {
+<span class="fc" id="L707">                queja.setFechaRecepcionFisica(LocalDate.parse(datos.fechaRecepcionFisica().trim()));</span>
+<span class="fc" id="L708">            } catch (java.time.format.DateTimeParseException ex) {</span>
+<span class="fc" id="L709">                throw new RuntimeException(&quot;La fecha de recepción física no es válida (AAAA-MM-DD).&quot;);</span>
+<span class="fc" id="L710">            }</span>
+        }
+<span class="fc" id="L712">        quejaRepository.save(queja);</span>
+<span class="fc" id="L713">    }</span>
+
+    public QuejaEvidencia obtenerEvidencia(Long id) {
+<span class="nc" id="L716">        return evidenciaRepository.findById(id)</span>
+<span class="nc" id="L717">                .orElseThrow(() -&gt; new RuntimeException(&quot;No se encontró el documento.&quot;));</span>
+    }
+
+    // ---------------- helpers ----------------
+
+    private Queja obtenerPorFolio(String folio) {
+<span class="fc" id="L723">        return quejaRepository.findByNumeroFolio(folio)</span>
+<span class="fc" id="L724">                .orElseThrow(() -&gt; new RuntimeException(&quot;No se encontró ninguna queja con el folio &quot; + folio));</span>
+    }
+
+    private QuejaDetalleModel aDetalle(Queja q) {
+<span class="fc" id="L728">        List&lt;EvidenciaResumen&gt; evidencias = evidenciaRepository.findByQuejaId(q.getId()).stream()</span>
+<span class="pc" id="L729">                .map(ev -&gt; new EvidenciaResumen(ev.getId(), ev.getNombreArchivo(), ev.getTipoMime(),</span>
+<span class="nc" id="L730">                        ev.getTamanioBytes(), ev.getFechaSubida()))</span>
+<span class="fc" id="L731">                .toList();</span>
+
+<span class="fc" id="L733">        return new QuejaDetalleModel(</span>
+<span class="fc" id="L734">                q.getNumeroFolio(), q.getFechaCreacion(), nombreMostrar(q), q.getCorreoInstitucional(),</span>
+<span class="fc" id="L735">                q.getTelefonoContacto(),</span>
+<span class="fc" id="L736">                q.getTipoIdentificacionQuejoso(), q.getNumeroIdentificacionQuejoso(),</span>
+<span class="fc" id="L737">                q.getMotivo(), q.getDescripcion(), q.getUnidadAcademicaClave(), q.getFechaHechos(),</span>
+<span class="fc" id="L738">                nombreDenunciadoCompleto(q), q.getOrigenRegistro(), q.getEstatus(), evidencias,</span>
+<span class="fc" id="L739">                q.getMotivoRechazo(), q.getAreaTurnada(), q.getDefensorAsignado(), q.getComentariosRecepcion());</span>
+    }
+
+    private String nombreMostrar(Queja q) {
+<span class="fc" id="L743">        String nombre = concatenarNoVacios(q.getNombreQuejoso(), q.getApellido1Quejoso(), q.getApellido2Quejoso());</span>
+<span class="pc bpc" id="L744" title="1 of 2 branches missed.">        return nombre.isBlank() ? q.getCorreoInstitucional() : nombre;</span>
+    }
+
+    private String nombreDenunciadoCompleto(Queja q) {
+<span class="fc" id="L748">        String nombre = concatenarNoVacios(q.getNombreDenunciado(), q.getApellido1Denunciado());</span>
+<span class="pc bpc" id="L749" title="1 of 2 branches missed.">        return nombre.isBlank() ? &quot;No especificado&quot; : nombre;</span>
+    }
+
+    private String concatenarNoVacios(String... partes) {
+<span class="fc" id="L753">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L754" title="All 2 branches covered.">        for (String parte : partes) {</span>
+<span class="pc bpc" id="L755" title="1 of 4 branches missed.">            if (parte != null &amp;&amp; !parte.isBlank()) {</span>
+<span class="fc bfc" id="L756" title="All 2 branches covered.">                if (sb.length() &gt; 0) sb.append(' ');</span>
+<span class="fc" id="L757">                sb.append(parte.trim());</span>
+            }
+        }
+<span class="fc" id="L760">        return sb.toString();</span>
+    }
+
+    private boolean documentacionAparenteCompleta(Queja q) {
+<span class="nc bnc" id="L764" title="All 2 branches missed.">        boolean tieneEvidencias = evidenciaRepository.countByQuejaId(q.getId()) &gt; 0;</span>
+<span class="nc bnc" id="L765" title="All 4 branches missed.">        boolean tieneDatosBasicos = !esVacio(q.getMotivo()) &amp;&amp; !esVacio(q.getDescripcion());</span>
+<span class="nc bnc" id="L766" title="All 4 branches missed.">        return tieneEvidencias &amp;&amp; tieneDatosBasicos;</span>
+    }
+
+    private String etiquetaEstatus(String estatus) {
+<span class="nc bnc" id="L770" title="All 2 branches missed.">        if (TURNADA_O_POSTERIOR.contains(estatus)) {</span>
+<span class="nc" id="L771">            return &quot;TURNADA&quot;;</span>
+        }
+<span class="nc bnc" id="L773" title="All 2 branches missed.">        return RECHAZADA.equals(estatus) ? &quot;RECHAZADA&quot; : &quot;EN PROCESO&quot;;</span>
+    }
+
+    private String etiquetaEstatusFinal(String estatus) {
+<span class="nc bnc" id="L777" title="All 2 branches missed.">        return RECHAZADA.equals(estatus) ? &quot;RECHAZADO&quot; : &quot;TURNADO&quot;;</span>
+    }
+
+    private boolean coincideTexto(Queja q, String texto) {
+<span class="nc" id="L781">        String t = texto.toLowerCase();</span>
+<span class="nc bnc" id="L782" title="All 4 branches missed.">        return (q.getNumeroFolio() != null &amp;&amp; q.getNumeroFolio().toLowerCase().contains(t))</span>
+<span class="nc bnc" id="L783" title="All 2 branches missed.">                || nombreMostrar(q).toLowerCase().contains(t)</span>
+<span class="nc bnc" id="L784" title="All 4 branches missed.">                || (q.getUnidadAcademicaClave() != null &amp;&amp; q.getUnidadAcademicaClave().toLowerCase().contains(t));</span>
+    }
+
+    private boolean esVacio(String valor) {
+<span class="fc bfc" id="L788" title="All 4 branches covered.">        return valor == null || valor.isBlank();</span>
+    }
+
+    private String generarFolio() {
+<span class="fc" id="L792">        return PREFIJO_FOLIO + UUID.randomUUID().toString().substring(0, LONGITUD_UUID_FOLIO).toUpperCase();</span>
+    }
+
+    private QuejaEvidencia convertirAEvidencia(MultipartFile archivo, Queja queja) {
+        try {
+<span class="nc" id="L797">            QuejaEvidencia evidencia = new QuejaEvidencia();</span>
+<span class="nc" id="L798">            evidencia.setQueja(queja);</span>
+<span class="nc" id="L799">            evidencia.setNombreArchivo(archivo.getOriginalFilename());</span>
+<span class="nc" id="L800">            evidencia.setTipoMime(archivo.getContentType());</span>
+<span class="nc" id="L801">            evidencia.setTamanioBytes(archivo.getSize());</span>
+<span class="nc" id="L802">            evidencia.setContenido(archivo.getBytes());</span>
+<span class="nc" id="L803">            return evidencia;</span>
+<span class="nc" id="L804">        } catch (IOException e) {</span>
+<span class="nc" id="L805">            throw new RuntimeException(&quot;Error al leer el archivo adjunto: &quot; + e.getMessage());</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

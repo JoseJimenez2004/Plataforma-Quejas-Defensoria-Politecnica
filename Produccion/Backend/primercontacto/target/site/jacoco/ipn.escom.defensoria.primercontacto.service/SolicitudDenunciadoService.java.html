@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SolicitudDenunciadoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service</a> &gt; <span class="el_source">SolicitudDenunciadoService.java</span></div><h1>SolicitudDenunciadoService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service;
+
+import ipn.escom.defensoria.primercontacto.dto.SolicitudDenunciadoDTO;
+import ipn.escom.defensoria.primercontacto.entity.EstatusExpediente;
+import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.primercontacto.entity.QuejaReferencia;
+import ipn.escom.defensoria.primercontacto.entity.SolicitudDenunciado;
+import ipn.escom.defensoria.primercontacto.exception.OperacionInvalidaException;
+import ipn.escom.defensoria.primercontacto.repository.QuejaReferenciaRepository;
+import ipn.escom.defensoria.primercontacto.repository.SolicitudDenunciadoRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+/**
+ * Le pide al denunciado su versión de los hechos: le manda por correo el enlace al formulario
+ * del portal (/denunciado/respuesta?folio=FOL-...). La respuesta la guarda denunciado-service
+ * por folio de la queja; Primer Contacto la consulta ahí (GET /api/denunciado/respuestas).
+ *
+ * Es una sola dirección por queja, como la diseñó denunciado-service: no hay enlace único ni
+ * plazo. Reenviar solo vuelve a mandar el correo (a la misma dirección o a una corregida).
+ */
+@Service
+public class SolicitudDenunciadoService {
+
+    private static final String FIRMA = &quot;\n\nDefensoría de los Derechos Politécnicos.&quot;;
+
+    private final SolicitudDenunciadoRepository solicitudRepository;
+    private final QuejaReferenciaRepository quejaRepository;
+    private final TransicionExpedienteService transicionService;
+    private final NotificacionQuejosoService notificacionService;
+    private final String portalUrl;
+
+    public SolicitudDenunciadoService(
+            SolicitudDenunciadoRepository solicitudRepository,
+            QuejaReferenciaRepository quejaRepository,
+            TransicionExpedienteService transicionService,
+            NotificacionQuejosoService notificacionService,
+            @Value(&quot;${primer-contacto.portal.url:https://defensoria-escom.ddns.net}&quot;) String portalUrl
+<span class="nc" id="L45">    ) {</span>
+<span class="nc" id="L46">        this.solicitudRepository = solicitudRepository;</span>
+<span class="nc" id="L47">        this.quejaRepository = quejaRepository;</span>
+<span class="nc" id="L48">        this.transicionService = transicionService;</span>
+<span class="nc" id="L49">        this.notificacionService = notificacionService;</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        this.portalUrl = portalUrl.endsWith(&quot;/&quot;) ? portalUrl.substring(0, portalUrl.length() - 1) : portalUrl;</span>
+<span class="nc" id="L51">    }</span>
+
+    public List&lt;SolicitudDenunciadoDTO&gt; listar(String folio) {
+<span class="nc" id="L54">        ExpedientePrimerContacto expediente = transicionService.obtenerPorFolio(folio);</span>
+<span class="nc" id="L55">        return solicitudRepository.findByExpedienteIdOrderByFechaEnvioDesc(expediente.getId()).stream()</span>
+<span class="nc" id="L56">                .map(this::convertirADTO)</span>
+<span class="nc" id="L57">                .toList();</span>
+    }
+
+    public SolicitudDenunciadoDTO enviar(String folio, String correo, PersonalAdministrativo analista) {
+<span class="nc" id="L61">        ExpedientePrimerContacto expediente = transicionService.obtenerPorFolio(folio);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (!EstatusExpediente.estaAbierto(expediente.getEstatus())) {</span>
+<span class="nc" id="L63">            throw new OperacionInvalidaException(</span>
+                    &quot;Solo se le pide su versión al denunciado mientras el expediente está en análisis.&quot;);
+        }
+<span class="nc" id="L66">        String folioQueja = expediente.getFolioOrigen();</span>
+<span class="nc bnc" id="L67" title="All 4 branches missed.">        if (folioQueja == null || folioQueja.isBlank()) {</span>
+<span class="nc" id="L68">            throw new OperacionInvalidaException(&quot;El expediente no tiene folio de queja.&quot;);</span>
+        }
+<span class="nc" id="L70">        String destinatario = correo.trim();</span>
+
+<span class="nc" id="L72">        boolean enviado = notificacionService.enviarCorreoExterno(</span>
+                destinatario,
+                &quot;Defensoría de los Derechos Politécnicos — Solicitud de su versión de los hechos (&quot; + folioQueja + &quot;)&quot;,
+<span class="nc" id="L75">                cuerpo(folioQueja));</span>
+
+<span class="nc" id="L77">        SolicitudDenunciado solicitud = solicitudRepository.save(SolicitudDenunciado.builder()</span>
+<span class="nc" id="L78">                .expedienteId(expediente.getId())</span>
+<span class="nc" id="L79">                .folio(expediente.getFolio())</span>
+<span class="nc" id="L80">                .folioQueja(folioQueja)</span>
+<span class="nc" id="L81">                .correoDenunciado(destinatario)</span>
+<span class="nc" id="L82">                .correoEnviado(enviado)</span>
+<span class="nc" id="L83">                .enviadoPorId(analista.getId())</span>
+<span class="nc" id="L84">                .enviadoPorNombre(analista.getNombreCompleto())</span>
+<span class="nc" id="L85">                .fechaEnvio(LocalDateTime.now())</span>
+<span class="nc" id="L86">                .build());</span>
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (!enviado) {</span>
+<span class="nc" id="L89">            throw new OperacionInvalidaException(</span>
+                    &quot;Se registró la solicitud, pero el correo no se pudo enviar. Revisa la dirección e inténtalo de nuevo.&quot;);
+        }
+<span class="nc" id="L92">        return convertirADTO(solicitud);</span>
+    }
+
+    private String cuerpo(String folioQueja) {
+<span class="nc" id="L96">        String nombre = quejaRepository.findByNumeroFolio(folioQueja)</span>
+<span class="nc" id="L97">                .map(this::nombreDenunciado)</span>
+<span class="nc" id="L98">                .orElse(null);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        return &quot;Estimado(a) &quot; + (nombre != null ? nombre : &quot;servidor(a) politécnico(a)&quot;) + &quot;,\n\n&quot;</span>
+                + &quot;La Defensoría de los Derechos Politécnicos recibió una queja (folio &quot; + folioQueja + &quot;) &quot;
+                + &quot;en la que se le menciona. Como parte del análisis del caso, y para conocer todas las &quot;
+                + &quot;versiones de lo ocurrido, le solicitamos que comparta su versión de los hechos en el &quot;
+                + &quot;siguiente formulario:\n\n&quot;
+                + portalUrl + &quot;/denunciado/respuesta?folio=&quot; + folioQueja + &quot;\n\n&quot;
+                + &quot;Le pedimos responder a la brevedad. Podrá adjuntar su credencial y, si lo desea, &quot;
+                + &quot;evidencias que respalden su versión. La información se trata conforme al aviso de &quot;
+                + &quot;privacidad que aparece en el formulario.&quot;
+                + FIRMA;
+    }
+
+    private String nombreDenunciado(QuejaReferencia q) {
+<span class="nc" id="L112">        String nombre = Stream.of(q.getNombreDenunciado(), q.getApellido1Denunciado(), q.getApellido2Denunciado())</span>
+<span class="nc bnc" id="L113" title="All 4 branches missed.">                .filter(p -&gt; p != null &amp;&amp; !p.isBlank())</span>
+<span class="nc" id="L114">                .map(String::strip)</span>
+<span class="nc" id="L115">                .collect(Collectors.joining(&quot; &quot;));</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        return nombre.isEmpty() ? null : nombre;</span>
+    }
+
+    private SolicitudDenunciadoDTO convertirADTO(SolicitudDenunciado s) {
+<span class="nc" id="L120">        return SolicitudDenunciadoDTO.builder()</span>
+<span class="nc" id="L121">                .id(s.getId())</span>
+<span class="nc" id="L122">                .folio(s.getFolio())</span>
+<span class="nc" id="L123">                .folioQueja(s.getFolioQueja())</span>
+<span class="nc" id="L124">                .correoDenunciado(s.getCorreoDenunciado())</span>
+<span class="nc" id="L125">                .correoEnviado(s.isCorreoEnviado())</span>
+<span class="nc" id="L126">                .enviadoPorNombre(s.getEnviadoPorNombre())</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">                .fechaEnvio(s.getFechaEnvio() != null ? s.getFechaEnvio().toString() : null)</span>
+<span class="nc" id="L128">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

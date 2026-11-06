@@ -87,7 +87,6 @@ export class Login {
             break;
 
           case 'DEFENSOR':
-          case 'ADMIN_SISTEMAS':
             // Panel de la Defensora (Frontend-Admin): todo lo de administración y más.
             cerrarSesionPersonal();
             guardarSesionDefensora(resp);

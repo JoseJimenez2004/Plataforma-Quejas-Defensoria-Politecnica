@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.auth.service.service</a> &gt; <span class="el_source">UsuarioService.java</span></div><h1>UsuarioService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.auth.service.service;
+
+import java.time.LocalDateTime;
+import java.security.SecureRandom;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import ipn.escom.defensoria.auth.service.entity.Usuario;
+import ipn.escom.defensoria.auth.service.repository.UsuarioRepository;
+import ipn.escom.defensoria.auth.service.model.LoginModel;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import ipn.escom.defensoria.auth.service.client.QuejasClient;
+import ipn.escom.defensoria.auth.service.model.ActivacionCuentaModel;
+import ipn.escom.defensoria.auth.service.model.PerfilModel;
+import ipn.escom.defensoria.auth.service.model.PerfilUpdateRequest;
+import ipn.escom.defensoria.auth.service.model.QuejaResumenModel;
+
+@Service
+public class UsuarioService {
+
+<span class="fc" id="L25">    private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);</span>
+
+    /**
+     * SecureRandom, no Random: el código de recuperación es una credencial temporal y un
+     * generador predecible permitiría adivinarlo conociendo otros códigos emitidos
+     * (OWASP A02). Antes se usaba new Random(), que además con nextInt(999999) nunca podía
+     * generar el código 999999.
+     */
+<span class="fc" id="L33">    private static final SecureRandom GENERADOR_CODIGO = new SecureRandom();</span>
+
+    /** Intentos fallidos permitidos antes de invalidar el código. Sin esto, 6 dígitos y
+     *  10 minutos son suficientes para probar por fuerza bruta. */
+    private static final int MAX_INTENTOS_CODIGO = 5;
+
+    /** Mensaje único para &quot;no existe el código&quot; y &quot;no existe el usuario&quot;: distinguirlos
+     *  revela qué correos están registrados. */
+    private static final String MENSAJE_CODIGO_INVALIDO =
+            &quot;El código es incorrecto o ya no es válido. Solicita uno nuevo.&quot;;
+
+    /**
+     * Remitente de todos los correos de este servicio (código de recuperación, confirmación
+     * de cambio de contraseña, bienvenida).
+     *
+     * Se toma de spring.mail.username en vez de estar escrito aquí: Gmail exige que el &quot;From&quot;
+     * sea la misma cuenta que autentica, y tener el valor duplicado en el yml y en el código
+     * fue justo lo que provocó el &quot;Authentication failed&quot; -- el yml apuntaba a una cuenta y la
+     * App Password era de otra.
+     */
+    @Value(&quot;${spring.mail.username}&quot;)
+    private String remitenteCorreo;
+    /** Mínimo 8 caracteres, al menos una mayúscula y un número (símbolos opcionales). */
+    private static final String PASSWORD_REGEX = &quot;^(?=.*[A-Z])(?=.*\\d).{8,}$&quot;;
+
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JavaMailSender mailSender;
+    private final QuejasClient quejasClient;
+
+    public UsuarioService(
+            UsuarioRepository usuarioRepository,
+            PasswordEncoder passwordEncoder,
+            JavaMailSender mailSender,
+<span class="fc" id="L67">            QuejasClient quejasClient) {</span>
+<span class="fc" id="L68">        this.usuarioRepository = usuarioRepository;</span>
+<span class="fc" id="L69">        this.passwordEncoder = passwordEncoder;</span>
+<span class="fc" id="L70">        this.mailSender = mailSender;</span>
+<span class="fc" id="L71">        this.quejasClient = quejasClient;</span>
+<span class="fc" id="L72">    }</span>
+
+    public Usuario validarLogin(LoginModel model) {
+        // 1. Buscar al usuario por correo institucional
+<span class="fc" id="L76">        Usuario usuario = usuarioRepository.findByCorreoInstitucional(model.getCorreo())</span>
+<span class="fc" id="L77">                .orElseThrow(() -&gt; new RuntimeException(&quot;Credenciales incorrectas o cuenta no activa&quot;));</span>
+
+        // 2. Verificar que la cuenta esté activa (que tenga password)
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (usuario.getPassword() == null) {</span>
+<span class="fc" id="L81">            throw new RuntimeException(&quot;La cuenta no ha sido activada. Usa tu folio primero.&quot;);</span>
+        }
+
+        // 3. Comparar contraseñas usando el PasswordEncoder
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (!passwordEncoder.matches(model.getPassword(), usuario.getPassword())) {</span>
+<span class="fc" id="L86">            throw new RuntimeException(&quot;Credenciales incorrectas&quot;);</span>
+        }
+
+        // 4. Si todo es correcto, retornamos la entidad Usuario
+<span class="fc" id="L90">        return usuario;</span>
+    }
+
+    /**
+     * Genera y envía el código de recuperación.
+     *
+     * Responde igual exista o no el correo: antes lanzaba &quot;Correo no registrado&quot;, lo que
+     * convertía este endpoint público en un detector de cuentas válidas (enumeración de
+     * usuarios, OWASP A07). Quien pide el código y no tiene cuenta simplemente no recibe
+     * nada; el intento queda en el log para poder detectar barridos.
+     */
+    public void generarCodigoRecuperacion(String correo) {
+<span class="fc" id="L102">        Optional&lt;Usuario&gt; encontrado = usuarioRepository.findByCorreoInstitucional(correo);</span>
+
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        if (encontrado.isEmpty()) {</span>
+<span class="fc" id="L105">            log.info(&quot;Solicitud de código de recuperación para un correo sin cuenta.&quot;);</span>
+<span class="fc" id="L106">            return;</span>
+        }
+
+<span class="fc" id="L109">        Usuario usuario = encontrado.get();</span>
+
+<span class="fc" id="L111">        String codigo = String.format(&quot;%06d&quot;, GENERADOR_CODIGO.nextInt(1_000_000));</span>
+
+<span class="fc" id="L113">        usuario.setCodigoRecuperacion(passwordEncoder.encode(codigo));</span>
+<span class="fc" id="L114">        usuario.setFechaExpiracionCodigo(LocalDateTime.now().plusMinutes(10));</span>
+<span class="fc" id="L115">        usuario.setIntentosCodigo(0);</span>
+<span class="fc" id="L116">        usuarioRepository.save(usuario);</span>
+
+        try {
+<span class="fc" id="L119">            enviarCorreoCodigo(correo, codigo);</span>
+<span class="fc" id="L120">        } catch (Exception ex) {</span>
+            // El código ya quedó guardado. No se propaga el fallo al cliente porque la
+            // respuesta debe ser idéntica en todos los casos, pero sí queda en el log:
+            // si el usuario reporta que nunca le llegó, aquí está la causa.
+<span class="fc" id="L124">            log.error(&quot;No se pudo enviar el correo con el código de recuperación: {}&quot;,</span>
+<span class="fc" id="L125">                    ex.getMessage());</span>
+<span class="fc" id="L126">        }</span>
+<span class="fc" id="L127">    }</span>
+
+    /** Deja la cuenta sin código activo: se usa al consumirlo, al expirar y al agotarse
+     *  los intentos, para que un código quemado no pueda reutilizarse. */
+    private void limpiarCodigoRecuperacion(Usuario usuario) {
+<span class="fc" id="L132">        usuario.setCodigoRecuperacion(null);</span>
+<span class="fc" id="L133">        usuario.setFechaExpiracionCodigo(null);</span>
+<span class="fc" id="L134">        usuario.setIntentosCodigo(0);</span>
+<span class="fc" id="L135">    }</span>
+
+    private void enviarCorreoCodigo(String destinatario, String codigo) {
+<span class="fc" id="L138">        SimpleMailMessage message = new SimpleMailMessage();</span>
+<span class="fc" id="L139">        message.setFrom(remitenteCorreo);</span>
+<span class="fc" id="L140">        message.setTo(destinatario);</span>
+<span class="fc" id="L141">        message.setSubject(&quot;Código de Recuperación - Defensoría&quot;);</span>
+<span class="fc" id="L142">        message.setText(&quot;Hola,\n\nTu código de verificación para restablecer tu contraseña es: &quot;</span>
+                + codigo + &quot;\n\nEste código expirará en 10 minutos.&quot;);
+        
+<span class="fc" id="L145">        mailSender.send(message);</span>
+<span class="fc" id="L146">    }</span>
+
+    public void validarCodigoYCambiarPassword(String correo, String codigoRecuperado, String nuevaPassword) {
+<span class="fc" id="L149">        Usuario usuario = usuarioRepository.findByCorreoInstitucional(correo)</span>
+<span class="pc" id="L150">                .orElseThrow(() -&gt; new RuntimeException(MENSAJE_CODIGO_INVALIDO));</span>
+
+        // Sin esta guarda, un usuario que nunca pidió código tenía fechaExpiracionCodigo en
+        // null y la línea siguiente lanzaba NullPointerException -&gt; 500 en vez de un mensaje
+        // entendible.
+<span class="pc bpc" id="L155" title="1 of 4 branches missed.">        if (usuario.getCodigoRecuperacion() == null || usuario.getFechaExpiracionCodigo() == null) {</span>
+<span class="fc" id="L156">            throw new RuntimeException(</span>
+                    &quot;No hay una solicitud de recuperación activa para esta cuenta. Solicita un código nuevo.&quot;);
+        }
+
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        if (usuario.getFechaExpiracionCodigo().isBefore(LocalDateTime.now())) {</span>
+<span class="fc" id="L161">            limpiarCodigoRecuperacion(usuario);</span>
+<span class="fc" id="L162">            usuarioRepository.save(usuario);</span>
+<span class="fc" id="L163">            throw new RuntimeException(&quot;El código ha expirado. Solicita uno nuevo.&quot;);</span>
+        }
+
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        int intentos = usuario.getIntentosCodigo() == null ? 0 : usuario.getIntentosCodigo();</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">        if (intentos &gt;= MAX_INTENTOS_CODIGO) {</span>
+<span class="fc" id="L168">            limpiarCodigoRecuperacion(usuario);</span>
+<span class="fc" id="L169">            usuarioRepository.save(usuario);</span>
+<span class="fc" id="L170">            log.warn(&quot;Código de recuperación invalidado por exceso de intentos fallidos.&quot;);</span>
+<span class="fc" id="L171">            throw new RuntimeException(</span>
+                    &quot;Demasiados intentos fallidos. El código quedó invalidado; solicita uno nuevo.&quot;);
+        }
+
+<span class="fc bfc" id="L175" title="All 2 branches covered.">        if (!passwordEncoder.matches(codigoRecuperado, usuario.getCodigoRecuperacion())) {</span>
+<span class="fc" id="L176">            usuario.setIntentosCodigo(intentos + 1);</span>
+<span class="fc" id="L177">            usuarioRepository.save(usuario);</span>
+<span class="fc" id="L178">            throw new RuntimeException(&quot;El código es incorrecto. Te quedan &quot;</span>
+                    + (MAX_INTENTOS_CODIGO - intentos - 1) + &quot; intentos.&quot;);
+        }
+
+        // Cifrar la nueva contraseña según las reglas
+<span class="fc" id="L183">        validarPassword(nuevaPassword);</span>
+<span class="fc" id="L184">        usuario.setPassword(passwordEncoder.encode(nuevaPassword));</span>
+<span class="fc" id="L185">        limpiarCodigoRecuperacion(usuario);</span>
+
+<span class="fc" id="L187">        usuarioRepository.save(usuario);</span>
+
+        // Confirmación de que la contraseña SÍ cambió -- antes solo se mandaba el código, no
+        // había ningún aviso una vez que el cambio se completaba. Sirve también como alerta de
+        // seguridad si alguien más restableció la contraseña sin que el dueño lo pidiera.
+        try {
+<span class="fc" id="L193">            enviarCorreoConfirmacionCambio(correo);</span>
+<span class="nc" id="L194">        } catch (Exception ex) {</span>
+            // La contraseña ya quedó cambiada -- el correo es informativo, no crítico.
+<span class="fc" id="L196">        }</span>
+<span class="fc" id="L197">    }</span>
+
+    private void enviarCorreoConfirmacionCambio(String destinatario) {
+<span class="fc" id="L200">        SimpleMailMessage message = new SimpleMailMessage();</span>
+<span class="fc" id="L201">        message.setFrom(remitenteCorreo);</span>
+<span class="fc" id="L202">        message.setTo(destinatario);</span>
+<span class="fc" id="L203">        message.setSubject(&quot;Tu contraseña fue restablecida - Defensoría&quot;);</span>
+<span class="fc" id="L204">        message.setText(&quot;Hola,\n\n&quot;</span>
+                + &quot;Tu contraseña en la Plataforma de Seguimiento de la Defensoría de los Derechos &quot;
+                + &quot;Politécnicos fue restablecida correctamente el &quot;
+<span class="fc" id="L207">                + LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy HH:mm&quot;)) + &quot;.\n\n&quot;</span>
+                + &quot;Si tú no realizaste este cambio, contacta de inmediato a la Defensoría de los &quot;
+                + &quot;Derechos Politécnicos para proteger tu cuenta.\n\n&quot;
+                + &quot;Defensoría de los Derechos Politécnicos.&quot;);
+<span class="fc" id="L211">        mailSender.send(message);</span>
+<span class="fc" id="L212">    }</span>
+
+    // Requisitos: mínimo 8 caracteres, al menos una mayúscula y al menos un número. El resto
+    // de los caracteres (&quot;.&quot; al final del lookahead) puede ser cualquier cosa: minúsculas,
+    // acentos y símbolos/caracteres especiales (!@#$%^&amp;*, etc.) están permitidos explícitamente,
+    // no hay una lista blanca que los excluya.
+    private void validarPassword(String p1) {
+<span class="pc bpc" id="L219" title="1 of 4 branches missed.">        if (p1 == null || p1.isBlank()) {</span>
+<span class="fc" id="L220">            throw new RuntimeException(&quot;La contraseña no puede estar vacía.&quot;);</span>
+        }
+<span class="fc bfc" id="L222" title="All 2 branches covered.">        if (!p1.matches(PASSWORD_REGEX)) {</span>
+<span class="fc" id="L223">            throw new RuntimeException(</span>
+                    &quot;La contraseña no cumple con los requisitos mínimos: 8 caracteres, una mayúscula y un número. Puedes usar también símbolos y caracteres especiales.&quot;);
+        }
+<span class="fc" id="L226">    }</span>
+
+    public void activarCuenta(ActivacionCuentaModel model) {
+        // 1. Validar contraseñas
+<span class="pc bpc" id="L230" title="1 of 4 branches missed.">        if (model.getPassword() == null || !model.getPassword().equals(model.getConfirmarPassword())) {</span>
+<span class="fc" id="L231">            throw new RuntimeException(&quot;Las contraseñas no coinciden.&quot;);</span>
+        }
+<span class="fc" id="L233">        validarPassword(model.getPassword()); // El método de la regex (8 chars, 1 mayús, 1 num)</span>
+
+        // 1. Empaquetamos los datos en un mapa idéntico a lo que espera el controlador
+<span class="fc" id="L236">        java.util.Map&lt;String, String&gt; datosParaValidar = java.util.Map.of(</span>
+<span class="fc" id="L237">            &quot;folio&quot;, model.getNumeroFolio(),</span>
+<span class="fc" id="L238">            &quot;correo&quot;, model.getCorreo()</span>
+        );
+
+        // 2. Comunicación HTTP limpia con el quejas-service enviando el JSON en el cuerpo de la petición
+<span class="fc" id="L242">        boolean esValido = quejasClient.validarFolioYCorreo(datosParaValidar);</span>
+        
+<span class="fc bfc" id="L244" title="All 2 branches covered.">        if (!esValido) {</span>
+<span class="fc" id="L245">            throw new RuntimeException(&quot;El folio no existe o el correo no coincide con el registro.&quot;);</span>
+        }
+
+        // 3. Lógica de activación &quot;Just-in-Time&quot;
+<span class="fc" id="L249">        Usuario usuario = usuarioRepository.findByCorreoInstitucional(model.getCorreo())</span>
+<span class="fc" id="L250">                .orElse(new Usuario());</span>
+
+<span class="pc bpc" id="L252" title="1 of 4 branches missed.">        if (usuario.getId() != null &amp;&amp; usuario.isActivo()) {</span>
+<span class="fc" id="L253">            throw new RuntimeException(&quot;Esta cuenta ya se encuentra activa.&quot;);</span>
+        }
+
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">        if (usuario.getId() == null) {</span>
+<span class="fc" id="L257">            usuario.setCorreoInstitucional(model.getCorreo());</span>
+<span class="fc" id="L258">            usuario.setBoleta(&quot;PENDIENTE&quot;);</span>
+<span class="fc" id="L259">            usuario.setNombre(&quot;Ciudadano Defensoría&quot;);</span>
+
+            // Traemos el nombre y número de identificación reales de la queja que ya validamos
+            // arriba, en vez de dejar los placeholders. Si por algo falla esta llamada (la
+            // queja es de un flujo autenticado viejo sin esos campos, error de red, etc.) no
+            // tumbamos la activación de la cuenta — nos quedamos con el placeholder.
+            try {
+<span class="fc" id="L266">                QuejaResumenModel resumen = quejasClient.obtenerPorFolio(model.getNumeroFolio(), model.getCorreo());</span>
+<span class="fc" id="L267">                String nombreCompleto = construirNombre(resumen);</span>
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">                if (nombreCompleto != null) {</span>
+<span class="fc" id="L269">                    usuario.setNombre(nombreCompleto);</span>
+                }
+<span class="pc bpc" id="L271" title="2 of 4 branches missed.">                if (resumen.getNumeroIdentificacionQuejoso() != null &amp;&amp; !resumen.getNumeroIdentificacionQuejoso().isBlank()) {</span>
+<span class="fc" id="L272">                    usuario.setBoleta(resumen.getNumeroIdentificacionQuejoso());</span>
+                }
+<span class="fc" id="L274">            } catch (RuntimeException ex) {</span>
+                // No es crítico: la cuenta se activa igual, solo con datos genéricos.
+<span class="fc" id="L276">            }</span>
+        }
+
+<span class="fc" id="L279">        usuario.setPassword(passwordEncoder.encode(model.getPassword()));</span>
+<span class="fc" id="L280">        usuario.setActivo(true);</span>
+
+<span class="fc" id="L282">        usuarioRepository.save(usuario);</span>
+
+        // Correo de bienvenida -- se manda AQUÍ (cuando se crea/activa la cuenta), no cuando
+        // se presenta una queja. Nunca debe tumbar la activación si el correo falla.
+        try {
+<span class="fc" id="L287">            enviarCorreoBienvenida(usuario.getCorreoInstitucional(), usuario.getNombre());</span>
+<span class="nc" id="L288">        } catch (Exception ex) {</span>
+            // La cuenta ya quedó activa -- el correo es informativo, no crítico.
+<span class="fc" id="L290">        }</span>
+<span class="fc" id="L291">    }</span>
+
+    private void enviarCorreoBienvenida(String destinatario, String nombre) {
+<span class="fc" id="L294">        SimpleMailMessage message = new SimpleMailMessage();</span>
+<span class="fc" id="L295">        message.setFrom(remitenteCorreo);</span>
+<span class="fc" id="L296">        message.setTo(destinatario);</span>
+<span class="fc" id="L297">        message.setSubject(&quot;Bienvenido a la Defensoría de los Derechos Politécnicos&quot;);</span>
+<span class="fc" id="L298">        message.setText(&quot;Hola &quot; + nombre + &quot;,\n\n&quot;</span>
+                + &quot;Tu cuenta en la Plataforma de Seguimiento de la Defensoría de los Derechos &quot;
+                + &quot;Politécnicos ha sido creada y activada correctamente.\n\n&quot;
+                + &quot;Ya puedes iniciar sesión con tu correo institucional y la contraseña que &quot;
+                + &quot;acabas de definir para dar seguimiento a tus quejas, recibir notificaciones &quot;
+                + &quot;y actualizar tus datos de contacto.\n\n&quot;
+                + &quot;Si tú no solicitaste esta cuenta, ignora este mensaje.\n\n&quot;
+                + &quot;Defensoría de los Derechos Politécnicos.&quot;);
+<span class="fc" id="L306">        mailSender.send(message);</span>
+<span class="fc" id="L307">    }</span>
+
+    /** Perfil completo del usuario autenticado (GET /api/auth/me) -- antes el frontend solo
+     * tenía nombre+correo (lo que regresaba /login), sin boleta/unidad académica/domicilio. */
+    public PerfilModel obtenerPerfil(String correo) {
+<span class="fc" id="L312">        Usuario usuario = usuarioRepository.findByCorreoInstitucional(correo)</span>
+<span class="fc" id="L313">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado.&quot;));</span>
+<span class="fc" id="L314">        return new PerfilModel(</span>
+<span class="fc" id="L315">                usuario.getNombre(),</span>
+<span class="fc" id="L316">                usuario.getCorreoInstitucional(),</span>
+<span class="fc" id="L317">                usuario.getBoleta(),</span>
+<span class="fc" id="L318">                usuario.getUnidadAcademica(),</span>
+<span class="fc" id="L319">                usuario.getCorreoPersonal(),</span>
+<span class="fc" id="L320">                usuario.getTelefonoCelular(),</span>
+<span class="fc" id="L321">                usuario.getDomicilio());</span>
+    }
+
+    /** Actualiza los campos editables del perfil (correo personal, teléfono, unidad
+     * académica, domicilio) -- nombre/correo institucional/boleta son de solo lectura. */
+    public PerfilModel actualizarPerfil(String correo, PerfilUpdateRequest datos) {
+<span class="fc" id="L327">        Usuario usuario = usuarioRepository.findByCorreoInstitucional(correo)</span>
+<span class="pc" id="L328">                .orElseThrow(() -&gt; new RuntimeException(&quot;Usuario no encontrado.&quot;));</span>
+
+<span class="pc bpc" id="L330" title="1 of 2 branches missed.">        if (datos.getCorreoPersonal() != null) {</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">            usuario.setCorreoPersonal(datos.getCorreoPersonal().isBlank() ? null : datos.getCorreoPersonal());</span>
+        }
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">        if (datos.getTelefonoCelular() != null) {</span>
+<span class="pc bpc" id="L334" title="1 of 4 branches missed.">            if (!datos.getTelefonoCelular().isBlank() &amp;&amp; !datos.getTelefonoCelular().matches(&quot;\\d{10}&quot;)) {</span>
+<span class="fc" id="L335">                throw new RuntimeException(&quot;El teléfono celular debe tener exactamente 10 dígitos.&quot;);</span>
+            }
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">            usuario.setTelefonoCelular(datos.getTelefonoCelular().isBlank() ? null : datos.getTelefonoCelular());</span>
+        }
+<span class="pc bpc" id="L339" title="1 of 2 branches missed.">        if (datos.getUnidadAcademica() != null) {</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">            usuario.setUnidadAcademica(datos.getUnidadAcademica().isBlank() ? null : datos.getUnidadAcademica());</span>
+        }
+<span class="pc bpc" id="L342" title="1 of 2 branches missed.">        if (datos.getDomicilio() != null) {</span>
+<span class="pc bpc" id="L343" title="1 of 2 branches missed.">            usuario.setDomicilio(datos.getDomicilio().isBlank() ? null : datos.getDomicilio());</span>
+        }
+
+<span class="fc" id="L346">        usuarioRepository.save(usuario);</span>
+<span class="fc" id="L347">        return obtenerPerfil(correo);</span>
+    }
+
+    private String construirNombre(QuejaResumenModel resumen) {
+<span class="pc bpc" id="L351" title="2 of 4 branches missed.">        if (resumen.getNombreQuejoso() == null || resumen.getNombreQuejoso().isBlank()) {</span>
+<span class="nc" id="L352">            return null;</span>
+        }
+<span class="fc" id="L354">        StringBuilder nombre = new StringBuilder(resumen.getNombreQuejoso());</span>
+<span class="pc bpc" id="L355" title="2 of 4 branches missed.">        if (resumen.getApellido1Quejoso() != null &amp;&amp; !resumen.getApellido1Quejoso().isBlank()) {</span>
+<span class="fc" id="L356">            nombre.append(' ').append(resumen.getApellido1Quejoso());</span>
+        }
+<span class="pc bpc" id="L358" title="3 of 4 branches missed.">        if (resumen.getApellido2Quejoso() != null &amp;&amp; !resumen.getApellido2Quejoso().isBlank()) {</span>
+<span class="nc" id="L359">            nombre.append(' ').append(resumen.getApellido2Quejoso());</span>
+        }
+<span class="fc" id="L361">        return nombre.toString();</span>
+    }
+
+    /**
+     * Indica si el correo ya tiene una cuenta de seguimiento activa. Lo usa el formulario
+     * publico de queja para avisarle al quejoso que inicie sesion en vez de volver a
+     * capturar sus datos. Es una consulta de solo lectura y no revela ningun dato personal.
+     */
+    public boolean existeCuenta(String correo) {
+<span class="pc bpc" id="L370" title="1 of 4 branches missed.">        if (correo == null || correo.isBlank()) {</span>
+<span class="fc" id="L371">            return false;</span>
+        }
+<span class="fc" id="L373">        String limpio = correo.trim();</span>
+<span class="pc bpc" id="L374" title="1 of 2 branches missed.">        if (usuarioRepository.findByCorreoInstitucional(limpio).isPresent()) {</span>
+<span class="nc" id="L375">            return true;</span>
+        }
+<span class="fc" id="L377">        return usuarioRepository.findByCorreoInstitucional(limpio.toLowerCase()).isPresent();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

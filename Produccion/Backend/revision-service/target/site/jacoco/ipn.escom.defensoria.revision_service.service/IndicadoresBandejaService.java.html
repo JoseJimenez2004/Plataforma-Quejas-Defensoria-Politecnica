@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IndicadoresBandejaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.revision_service.service</a> &gt; <span class="el_source">IndicadoresBandejaService.java</span></div><h1>IndicadoresBandejaService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.revision_service.service;
+
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.revision_service.model.CargaRecepcionistaModel;
+import ipn.escom.defensoria.revision_service.model.IndicadoresBandejaModel;
+
+/**
+ * Indicadores de la Bandeja de Entrada y carga de trabajo del equipo de Recepción
+ * (2026-10-15). Se calculan con SQL directo (conteos y un promedio) para no traer quejas
+ * completas -- con descripción y archivos -- solo para contarlas.
+ *
+ * &quot;Hoy&quot; se toma con LocalDate.now() del contenedor, igual que el resto del servicio y que las
+ * fechas que guarda queja-service, para que los conteos cuadren con las fechas guardadas.
+ */
+@Service
+public class IndicadoresBandejaService {
+
+    private final JdbcTemplate jdbc;
+
+<span class="nc" id="L28">    public IndicadoresBandejaService(JdbcTemplate jdbc) {</span>
+<span class="nc" id="L29">        this.jdbc = jdbc;</span>
+<span class="nc" id="L30">    }</span>
+
+    public IndicadoresBandejaModel indicadores(String correo) {
+<span class="nc" id="L33">        Timestamp inicioHoy = Timestamp.valueOf(LocalDate.now().atStartOfDay());</span>
+<span class="nc" id="L34">        Timestamp hace30Dias = Timestamp.valueOf(LocalDateTime.now().minusDays(30));</span>
+
+<span class="nc" id="L36">        Map&lt;String, Object&gt; c = jdbc.queryForMap(&quot;&quot;&quot;</span>
+                SELECT
+                  count(*) FILTER (WHERE estatus IN ('RECIBIDA', 'CORREGIDA'))                 AS por_atender,
+                  count(*) FILTER (WHERE fecha_creacion &gt;= ?)                                  AS nuevas_hoy,
+                  count(*) FILTER (WHERE estatus = 'CORREGIDA')                                AS corregidas,
+                  count(*) FILTER (WHERE estatus = 'EN_VALIDACION')                            AS en_atencion,
+                  count(*) FILTER (WHERE estatus = 'EN_VALIDACION'
+                                     AND lower(revisando_por) = lower(?))                      AS en_atencion_mias,
+                  count(*) FILTER (WHERE fecha_validacion &gt;= ?)                                AS atendidas_hoy,
+                  count(*) FILTER (WHERE fecha_validacion &gt;= ? AND lower(validado_por) = lower(?)) AS atendidas_hoy_mias,
+                  count(*) FILTER (WHERE fecha_turnado &gt;= ?)                                   AS turnadas_hoy,
+                  count(*) FILTER (WHERE estatus = 'RECHAZADA' AND fecha_validacion &gt;= ?)      AS rechazadas_hoy,
+                  avg(EXTRACT(EPOCH FROM (fecha_validacion - fecha_creacion)) / 3600.0)
+                      FILTER (WHERE fecha_validacion &gt;= ? AND fecha_creacion IS NOT NULL)      AS horas_promedio,
+                  count(*) FILTER (WHERE fecha_validacion &gt;= ?)                                AS atendidas_30
+                FROM quejas
+                &quot;&quot;&quot;,
+                inicioHoy, correo, inicioHoy, inicioHoy, correo, inicioHoy, inicioHoy, hace30Dias, hace30Dias);
+
+<span class="nc" id="L55">        String folioMasAntiguo = null;</span>
+<span class="nc" id="L56">        LocalDateTime fechaMasAntigua = null;</span>
+<span class="nc" id="L57">        List&lt;Map&lt;String, Object&gt;&gt; antigua = jdbc.queryForList(&quot;&quot;&quot;</span>
+                SELECT numero_folio, fecha_creacion FROM quejas
+                 WHERE estatus IN ('RECIBIDA', 'CORREGIDA')
+                 ORDER BY fecha_creacion ASC NULLS LAST, id ASC
+                 LIMIT 1
+                &quot;&quot;&quot;);
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (!antigua.isEmpty()) {</span>
+<span class="nc" id="L64">            folioMasAntiguo = (String) antigua.get(0).get(&quot;numero_folio&quot;);</span>
+<span class="nc" id="L65">            Object f = antigua.get(0).get(&quot;fecha_creacion&quot;);</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            fechaMasAntigua = f instanceof Timestamp ts ? ts.toLocalDateTime() : null;</span>
+        }
+
+<span class="nc" id="L69">        Object horas = c.get(&quot;horas_promedio&quot;);</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        Double horasPromedio = horas == null ? null : ((Number) horas).doubleValue();</span>
+
+<span class="nc" id="L72">        return new IndicadoresBandejaModel(</span>
+<span class="nc" id="L73">                num(c, &quot;por_atender&quot;), num(c, &quot;nuevas_hoy&quot;), num(c, &quot;corregidas&quot;),</span>
+<span class="nc" id="L74">                num(c, &quot;en_atencion&quot;), num(c, &quot;en_atencion_mias&quot;),</span>
+<span class="nc" id="L75">                num(c, &quot;atendidas_hoy&quot;), num(c, &quot;atendidas_hoy_mias&quot;),</span>
+<span class="nc" id="L76">                num(c, &quot;turnadas_hoy&quot;), num(c, &quot;rechazadas_hoy&quot;),</span>
+<span class="nc" id="L77">                folioMasAntiguo, fechaMasAntigua, horasPromedio, num(c, &quot;atendidas_30&quot;));</span>
+    }
+
+    /** Cada recepcionista activa con lo que tiene abierto y lo que validó hoy. */
+    public List&lt;CargaRecepcionistaModel&gt; equipo(String correo) {
+<span class="nc" id="L82">        Timestamp inicioHoy = Timestamp.valueOf(LocalDate.now().atStartOfDay());</span>
+<span class="nc" id="L83">        return jdbc.query(&quot;&quot;&quot;</span>
+                SELECT p.nombre_completo,
+                       lower(p.correo_institucional) = lower(?) AS soy_yo,
+                       (SELECT count(*) FROM quejas q
+                         WHERE q.estatus = 'EN_VALIDACION'
+                           AND lower(q.revisando_por) = lower(p.correo_institucional)) AS en_atencion,
+                       (SELECT count(*) FROM quejas q
+                         WHERE q.fecha_validacion &gt;= ?
+                           AND lower(q.validado_por) = lower(p.correo_institucional)) AS atendidas_hoy
+                  FROM personal_administrativo p
+                 WHERE p.rol = 'RECEPCIONISTA' AND p.activo = true
+                 ORDER BY atendidas_hoy DESC, p.nombre_completo ASC
+                &quot;&quot;&quot;,
+<span class="nc" id="L96">                (rs, i) -&gt; new CargaRecepcionistaModel(</span>
+<span class="nc" id="L97">                        rs.getString(&quot;nombre_completo&quot;),</span>
+<span class="nc" id="L98">                        rs.getBoolean(&quot;soy_yo&quot;),</span>
+<span class="nc" id="L99">                        rs.getLong(&quot;en_atencion&quot;),</span>
+<span class="nc" id="L100">                        rs.getLong(&quot;atendidas_hoy&quot;)),</span>
+                correo, inicioHoy);
+    }
+
+    /**
+     * Quejas por abogado asignado: [en trámite, total]. La llave es el nombre en minúsculas
+     * (quejas.defensor_asignado guarda el NOMBRE del abogado, no su id).
+     */
+    public Map&lt;String, long[]&gt; cargaPorAbogado(List&lt;String&gt; estatusCerrados) {
+<span class="nc" id="L109">        Map&lt;String, long[]&gt; cargas = new java.util.HashMap&lt;&gt;();</span>
+<span class="nc" id="L110">        String enLista = String.join(&quot;,&quot;, java.util.Collections.nCopies(estatusCerrados.size(), &quot;?&quot;));</span>
+<span class="nc" id="L111">        jdbc.query(&quot;&quot;&quot;</span>
+                SELECT lower(defensor_asignado) AS abogado,
+                       count(*) FILTER (WHERE estatus NOT IN (%s)) AS activas,
+                       count(*) AS total
+                  FROM quejas
+                 WHERE defensor_asignado IS NOT NULL AND defensor_asignado &lt;&gt; ''
+                 GROUP BY lower(defensor_asignado)
+<span class="nc" id="L118">                &quot;&quot;&quot;.formatted(enLista),</span>
+                rs -&gt; {
+<span class="nc" id="L120">                    cargas.put(rs.getString(&quot;abogado&quot;), new long[] {rs.getLong(&quot;activas&quot;), rs.getLong(&quot;total&quot;)});</span>
+<span class="nc" id="L121">                },</span>
+<span class="nc" id="L122">                estatusCerrados.toArray());</span>
+<span class="nc" id="L123">        return cargas;</span>
+    }
+
+    private static long num(Map&lt;String, Object&gt; fila, String columna) {
+<span class="nc" id="L127">        Object v = fila.get(columna);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        return v == null ? 0 : ((Number) v).longValue();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

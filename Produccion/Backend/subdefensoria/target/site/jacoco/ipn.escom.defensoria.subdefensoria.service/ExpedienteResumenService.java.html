@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExpedienteResumenService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">ExpedienteResumenService.java</span></div><h1>ExpedienteResumenService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import ipn.escom.defensoria.subdefensoria.dto.ExpedienteResumenDTO;
+import ipn.escom.defensoria.subdefensoria.entity.EstatusExpediente;
+import ipn.escom.defensoria.subdefensoria.entity.EstatusOficio;
+import ipn.escom.defensoria.subdefensoria.entity.FaseOficio;
+import ipn.escom.defensoria.subdefensoria.entity.ExpedienteInvestigacion;
+import ipn.escom.defensoria.subdefensoria.entity.OficioInformacion;
+import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
+import ipn.escom.defensoria.subdefensoria.repository.OficioInformacionRepository;
+import ipn.escom.defensoria.subdefensoria.util.DiasHabilesCalculator;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+/**
+ * Alimenta la bandeja unificada de expedientes (reemplaza tener
+ * bandejas separadas por fase): trae todos los expedientes sin
+ * importar su estatus, y cuando aplica agrega el oficio vigente para
+ * que el front pueda mostrar el progreso sin una pantalla aparte.
+ */
+@Service
+public class ExpedienteResumenService {
+
+<span class="nc" id="L30">    private static final Set&lt;String&gt; ESTATUS_CON_OFICIO_ACTIVO = Set.of(</span>
+            EstatusExpediente.EN_INVESTIGACION, EstatusExpediente.EN_ESPERA_OFICIO);
+
+    private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final OficioInformacionRepository oficioRepository;
+    private final int diasPrimeraSolicitud;
+    private final int diasRecordatorio;
+
+    public ExpedienteResumenService(
+            ExpedienteInvestigacionRepository expedienteRepository,
+            OficioInformacionRepository oficioRepository,
+            @Value(&quot;${plazos.primera-solicitud-dias}&quot;) int diasPrimeraSolicitud,
+            @Value(&quot;${plazos.recordatorio-dias}&quot;) int diasRecordatorio
+<span class="nc" id="L43">    ) {</span>
+<span class="nc" id="L44">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L45">        this.oficioRepository = oficioRepository;</span>
+<span class="nc" id="L46">        this.diasPrimeraSolicitud = diasPrimeraSolicitud;</span>
+<span class="nc" id="L47">        this.diasRecordatorio = diasRecordatorio;</span>
+<span class="nc" id="L48">    }</span>
+
+    public List&lt;ExpedienteResumenDTO&gt; listarTodos() {
+<span class="nc" id="L51">        return expedienteRepository.findAll(Sort.by(Sort.Direction.DESC, &quot;fechaAdmision&quot;)).stream()</span>
+<span class="nc" id="L52">                .map(this::convertirADTO)</span>
+<span class="nc" id="L53">                .toList();</span>
+    }
+
+    private ExpedienteResumenDTO convertirADTO(ExpedienteInvestigacion e) {
+<span class="nc" id="L57">        ExpedienteResumenDTO.ExpedienteResumenDTOBuilder builder = ExpedienteResumenDTO.builder()</span>
+<span class="nc" id="L58">                .expedienteId(e.getId())</span>
+<span class="nc" id="L59">                .folio(e.getFolio())</span>
+<span class="nc" id="L60">                .quejosoNombre(e.getQuejosoNombre())</span>
+<span class="nc" id="L61">                .asunto(e.getAsunto())</span>
+<span class="nc" id="L62">                .unidadAcademica(e.getUnidadAcademica())</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">                .fechaAdmision(e.getFechaAdmision() != null ? e.getFechaAdmision().toString() : null)</span>
+<span class="nc" id="L64">                .estatus(e.getEstatus())</span>
+<span class="nc" id="L65">                .prioridad(e.getPrioridad());</span>
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (ESTATUS_CON_OFICIO_ACTIVO.contains(e.getEstatus())) {</span>
+<span class="nc" id="L68">            Optional&lt;OficioInformacion&gt; vigente = oficioVigente(e.getId());</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">            if (vigente.isEmpty() &amp;&amp; EstatusExpediente.EN_INVESTIGACION.equals(e.getEstatus())) {</span>
+                // Sin oficio pendiente: toca emitir el oficio.
+<span class="nc" id="L71">                builder.siguienteFase(FaseOficio.SOLICITUD_INFORMACION);</span>
+            }
+<span class="nc" id="L73">            vigente.ifPresent(oficio -&gt; {</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">                int diasLimite = &quot;PRIMERA&quot;.equals(oficio.getTipoPlazo()) ? diasPrimeraSolicitud : diasRecordatorio;</span>
+<span class="nc" id="L75">                long diasTranscurridos = DiasHabilesCalculator.diasHabilesTranscurridos(</span>
+<span class="nc" id="L76">                        oficio.getFechaEnvio(), LocalDate.now());</span>
+
+<span class="nc" id="L78">                builder.oficioIdVigente(oficio.getId())</span>
+<span class="nc" id="L79">                        .numeroOficioVigente(oficio.getNumeroOficio())</span>
+<span class="nc" id="L80">                        .destinatarioNombreVigente(oficio.getDestinatarioNombre())</span>
+<span class="nc" id="L81">                        .faseOficioVigente(oficio.getFase())</span>
+<span class="nc" id="L82">                        .estatusOficioVigente(oficio.getEstatus())</span>
+<span class="nc" id="L83">                        .diasTranscurridos(diasTranscurridos)</span>
+<span class="nc" id="L84">                        .diasLimite(diasLimite);</span>
+<span class="nc" id="L85">            });</span>
+        }
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (EstatusExpediente.RECIBIDO.equals(e.getEstatus())) {</span>
+<span class="nc" id="L89">            builder.siguienteFase(FaseOficio.SOLICITUD_INFORMACION);</span>
+        }
+
+<span class="nc" id="L92">        return builder.build();</span>
+    }
+
+    private Optional&lt;OficioInformacion&gt; oficioVigente(Long expedienteId) {
+<span class="nc" id="L96">        Optional&lt;OficioInformacion&gt; vigente = oficioRepository</span>
+<span class="nc" id="L97">                .findFirstByExpedienteIdAndEstatusNotOrderByFechaEnvioDesc(expedienteId, EstatusOficio.RESPONDIDO);</span>
+
+<span class="nc" id="L99">        return vigente.map(oficio -&gt; {</span>
+<span class="nc bnc" id="L100" title="All 4 branches missed.">            if (EstatusOficio.EN_ESPERA.equals(oficio.getEstatus()) &amp;&amp; oficio.getFechaLimite().isBefore(LocalDate.now())) {</span>
+<span class="nc" id="L101">                oficio.setEstatus(EstatusOficio.VENCIDO);</span>
+<span class="nc" id="L102">                return oficioRepository.save(oficio);</span>
+            }
+<span class="nc" id="L104">            return oficio;</span>
+        });
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

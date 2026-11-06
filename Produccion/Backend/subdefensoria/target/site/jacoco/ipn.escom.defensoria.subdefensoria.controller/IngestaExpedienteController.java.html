@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IngestaExpedienteController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.controller</a> &gt; <span class="el_source">IngestaExpedienteController.java</span></div><h1>IngestaExpedienteController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.controller;
+
+import ipn.escom.defensoria.subdefensoria.dto.ExpedienteEntranteDTO;
+import ipn.escom.defensoria.subdefensoria.dto.ExpedienteInvestigacionDTO;
+import ipn.escom.defensoria.subdefensoria.service.IngestaExpedienteService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * Puerta de entrada para el area de Primer Contacto: hace un POST
+ * aqui cada vez que emite un acuerdo de admision y turna el
+ * expediente a la Subdefensoria (Abogado Asesor) que corresponda.
+ * Llamada servidor-a-servidor (Primer Contacto -&gt; Subdefensoria), no
+ * pasa por CORS.
+ */
+@RestController
+@RequestMapping(&quot;/api/subdefensoria/ingesta&quot;)
+public class IngestaExpedienteController {
+
+    private final IngestaExpedienteService ingestaExpedienteService;
+
+<span class="nc" id="L24">    public IngestaExpedienteController(IngestaExpedienteService ingestaExpedienteService) {</span>
+<span class="nc" id="L25">        this.ingestaExpedienteService = ingestaExpedienteService;</span>
+<span class="nc" id="L26">    }</span>
+
+    @PostMapping(&quot;/expedientes&quot;)
+    public ResponseEntity&lt;ExpedienteInvestigacionDTO&gt; recibirExpediente(
+            @Valid @RequestBody ExpedienteEntranteDTO expediente
+    ) {
+<span class="nc" id="L32">        ExpedienteInvestigacionDTO guardado = ingestaExpedienteService.recibirExpediente(expediente);</span>
+<span class="nc" id="L33">        return ResponseEntity.status(HttpStatus.CREATED).body(guardado);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

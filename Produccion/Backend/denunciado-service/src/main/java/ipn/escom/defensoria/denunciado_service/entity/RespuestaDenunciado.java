@@ -1,5 +1,6 @@
 package ipn.escom.defensoria.denunciado_service.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,6 +78,21 @@ public class RespuestaDenunciado {
     @Column(name = "fecha_registro", nullable = false)
     private LocalDateTime fechaRegistro;
 
+    /**
+     * PC-2 (2026-11): DENUNCIADO (formulario público, ya cerrado) o PERSONAL (la captura el
+     * analista de Primer Contacto tras una entrevista). Las filas anteriores quedan en null.
+     */
+    @Column(length = 20)
+    private String origen;
+
+    /** Usuario (correo) del personal que la capturó; null si la registró el denunciado. */
+    @Column(name = "capturado_por", length = 120)
+    private String capturadoPor;
+
+    /** Fecha de la entrevista con el denunciado (opcional). */
+    @Column(name = "fecha_entrevista")
+    private LocalDate fechaEntrevista;
+
     @OneToMany(mappedBy = "respuesta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RespuestaDenunciadoArchivo> archivos = new ArrayList<>();
 
@@ -116,4 +132,10 @@ public class RespuestaDenunciado {
     public LocalDateTime getFechaRegistro() { return fechaRegistro; }
     public void setFechaRegistro(LocalDateTime fechaRegistro) { this.fechaRegistro = fechaRegistro; }
     public List<RespuestaDenunciadoArchivo> getArchivos() { return archivos; }
+    public String getOrigen() { return origen; }
+    public void setOrigen(String origen) { this.origen = origen; }
+    public String getCapturadoPor() { return capturadoPor; }
+    public void setCapturadoPor(String capturadoPor) { this.capturadoPor = capturadoPor; }
+    public LocalDate getFechaEntrevista() { return fechaEntrevista; }
+    public void setFechaEntrevista(LocalDate fechaEntrevista) { this.fechaEntrevista = fechaEntrevista; }
 }

@@ -18,3 +18,24 @@ mat-form-field {
   font-weight: 700;
   border-radius: 8px !important;
 }
+
+/* SD-1 */
+.selector-unidad {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  gap: 0 12px;
+}
+
+.selector-unidad .aviso {
+  grid-column: 1 / -1;
+  margin: -8px 0 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #fff8eb;
+  color: #8a5a0a;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .selector-unidad { grid-template-columns: 1fr; }
+}

@@ -55,11 +55,8 @@ export const routes: Routes = [
         path: 'acuerdo/responder',
         loadComponent: () => import('./pages/responder-acuerdo/responder-acuerdo').then((m) => m.ResponderAcuerdo),
       },
-      {
-        path: 'denunciado/respuesta',
-        loadComponent: () =>
-          import('./pages/respuesta-denunciado/respuesta-denunciado').then((m) => m.RespuestaDenunciado),
-      },
+      // PC-2 (2026-11): se quitó el formulario público del denunciado; su versión la
+      // captura el analista de Primer Contacto.
     ],
   },
   {

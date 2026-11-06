@@ -3,9 +3,8 @@
 	Este capítulo documenta cómo se construyó la plataforma diseñada en el
 	Capítulo~\ref{cap:analisis_diseno}: las herramientas empleadas, la estructura común de los
 	microservicios y de las aplicaciones web, los mecanismos que hacen cumplir las reglas de negocio y
-	los requerimientos no funcionales, la integración de los componentes de inteligencia artificial y el
-	empaquetado y despliegue en los tres servidores. Cierra con los incidentes de operación que obligaron
-	a corregir el diseño y con el estado de avance de cada componente. La verificación sistemática del
+	los requerimientos no funcionales, y el empaquetado y despliegue en los tres servidores. Cierra con los
+	incidentes de operación que obligaron a corregir el diseño. La verificación sistemática del
 	sistema se presenta por separado en el Capítulo~\ref{cap:pruebas}.
 
 	\subsection{Entorno de desarrollo y herramientas}
@@ -31,7 +30,7 @@
 		\headercell{Herramienta} & \headercell{Versión} & \headercell{Uso en el proyecto} \\
 		\hline
 		\endhead
-		Java (OpenJDK) & 21 & Lenguaje de los once microservicios \\ \hline
+		Java (OpenJDK) & 21 & Lenguaje de los diez microservicios \\ \hline
 		Spring Boot & 3.5.16 / 3.3.5 & Marco de los microservicios (3.3.5 en Primer Contacto y
 		Subdefensoría) \\ \hline
 		Spring Security, Spring Data JPA, Hibernate & Las de Spring Boot & Autenticación, autorización y
@@ -47,7 +46,6 @@
 		Angular y Angular CLI & 21.2 & Las cinco aplicaciones web \\ \hline
 		TypeScript & 5.9 & Lenguaje de las aplicaciones web \\ \hline
 		Node.js & 22 & Compilación de las aplicaciones web \\ \hline
-		Python y FastAPI & 3.11 & Servicio de resúmenes \\ \hline
 		PostgreSQL & 16 & Base de datos \\ \hline
 		Podman & --- & Motor de contenedores en los tres servidores \\ \hline
 		Nginx & imagen \texttt{alpine} & Proxy inverso público y servidores de las aplicaciones \\ \hline
@@ -61,7 +59,7 @@
 
 	\subsection{Implementación del lado del servidor}
 	\label{sec:impl_backend}
-	Los once microservicios Java comparten una misma organización, de modo que quien conoce uno puede
+	Los diez microservicios Java comparten una misma organización, de modo que quien conoce uno puede
 	orientarse en cualquier otro. Esta sección describe esa estructura y los mecanismos transversales
 	que la complementan.
 
@@ -78,15 +76,14 @@
 		concentradas en clases sin dependencias de Spring.
 		\item \texttt{repository} y \texttt{entity}: repositorios de Spring Data y entidades JPA.
 		\item \texttt{dto}: objetos de entrada y salida de la API.
-		\item \texttt{config} y \texttt{security}: cadena de filtros, filtro JWT, CORS, clientes HTTP y
+		\item \texttt{config} y \texttt{security}: cadena de filtros, filtro JWT, clientes HTTP y
 		OpenAPI.
 		\item \texttt{exception}: excepciones del dominio y su manejador global.
 	\end{itemize}
 
 	La configuración se lee de un archivo \texttt{application.yml} propio de cada servicio. En producción
 	ese archivo no forma parte de la imagen: se monta desde una carpeta del servidor, de modo que cambiar
-	una dirección, un tiempo de espera o un límite de tamaño solo requiere reiniciar el contenedor
-	(RT-09).
+	una dirección, un tiempo de espera o un límite de tamaño solo requiere reiniciar el contenedor.
 
 	\subsubsection{Verificación de tokens y control de acceso}
 	Los dos servicios que inician sesión ---\texttt{auth-service} para quejosos y \texttt{admin-service}
@@ -104,8 +101,7 @@
 	\texttt{/api/catalogos/dependencias/admin/**}--- se declaran antes que la regla pública general del
 	mismo prefijo. En los controladores, la anotación \texttt{@PreAuthorize} fija los roles de cada
 	método, lo que hace que la regla sea visible junto al código que protege y que pueda verificarse de
-	forma estática (Capítulo~\ref{cap:pruebas}). Las peticiones de verificación previa con el método
-	\texttt{OPTIONS} se permiten siempre, para que el navegador pueda completar el protocolo CORS.
+	forma estática (Capítulo~\ref{cap:pruebas}).
 
 	La pertenencia se verifica en la capa de servicios con la identidad del token. Todas las consultas
 	del quejoso sobre ``sus'' recursos reciben el correo del token como parámetro y buscan por folio
@@ -152,27 +148,6 @@
 	quejas completas en cada actualización: la consulta es paginada y el indicador de documentación se
 	calcula con un conteo, no cargando los archivos.
 
-	\subsubsection{Integración y resiliencia entre servicios}
-	Las llamadas entre servicios se implementaron con \texttt{RestTemplate} configurado con tiempos de
-	espera de tres segundos para conectar y diez para responder, y con un cliente OpenFeign con tiempos
-	equivalentes en \texttt{auth-service}. Las llamadas a \texttt{notificaciones-service} están
-	envueltas en bloques que capturan cualquier error de red o de servidor, lo registran y continúan
-	(RNF-Q04, RNF-R04): la queja ya se guardó antes de notificar, de modo que el fallo del correo solo se
-	pierde como aviso.
-
-	El paso de expedientes entre áreas se implementó con dos garantías adicionales. El turnado es
-	idempotente: si Recepción repite la llamada por un error de red, Primer Contacto reconoce el folio y
-	no crea un segundo expediente. Y el dictamen de competencia se guarda antes de llamar a
-	Subdefensoría: si esta no responde, el expediente queda marcado como pendiente de envío y la
-	interfaz ofrece reenviarlo.
-
-	Cada área tiene un único punto donde cambia el estatus de sus expedientes, la clase
-	\texttt{TransicionExpedienteService}, que además refleja el nuevo estatus en la columna
-	\texttt{estatus} de la tabla \texttt{quejas}. Concentrar el cambio en una sola clase garantiza que no
-	haya caminos que actualicen el expediente sin actualizar la queja, defecto que existió en una versión
-	temprana y que hacía que Recepción, la Defensora y el quejoso no vieran el avance de las etapas
-	posteriores.
-
 	\subsubsection{Seguridad complementaria}
 	Además de los tokens, los servicios implementan los siguientes mecanismos:
 
@@ -182,27 +157,27 @@
 		\item Código de recuperación de seis dígitos guardado cifrado, con vigencia de diez minutos y un
 		máximo de cinco intentos; al agotarse, el código se invalida.
 		\item Cuentas de personal creadas o restablecidas con contraseña temporal y cambio obligatorio, y
-		una cuenta técnica inicial autoprovisionada en el primer arranque (RNF-A01).
+		una cuenta inicial de la Defensora autoprovisionada en el primer arranque (RNF-A01).
 		\item Protección contra quedarse sin administración: \texttt{PersonalAdministrativoService} impide
-		desactivar o quitar el rol a la propia cuenta y a la última cuenta activa de administración
+		desactivar o quitar el rol a la propia cuenta y a la última cuenta activa con rol \texttt{DEFENSOR}
 		(RNF-A07).
 		\item Bitácora con la IP real del cliente, tomada de los encabezados \texttt{X-Real-IP} y
 		\texttt{X-Forwarded-For} que añade el proxy, e inicios de sesión fallidos (RNF-A02).
 		\item Neutralización de saltos de línea en asunto y destinatario de los correos, para impedir la
 		inyección de encabezados (CWE-93).
 		\item Enlaces de respuesta para citas y acuerdos con un token aleatorio de un solo propósito, que
-		permite al quejoso responder sin iniciar sesión sin exponer otros datos.
+		permite a la persona citada responder sin iniciar sesión y sin exponer otros datos.
 	\end{itemize}
 
 	\subsubsection{Manejo centralizado de errores y documentación}
 	Los servicios cuentan con un manejador global (\texttt{@RestControllerAdvice}) que traduce las
 	excepciones del dominio a respuestas HTTP con un cuerpo uniforme: las de validación a 400, las de
 	acceso a 403, las de recurso no encontrado a 404, las de conflicto a 409, las peticiones que exceden
-	el tamaño permitido a 413 y cualquier error no previsto a 500 sin exponer la traza. Así, la interfaz puede mostrar el mensaje del servidor sin interpretar trazas de error
-	(RNF-Q07). En los ocho servicios desarrollados por el equipo, un filtro de registro escribe una línea por petición con método, ruta, estatus y duración,
-	lo que permitió diagnosticar los incidentes de la Sección~\ref{sec:incidentes}.
+	el tamaño permitido a 413 y cualquier error no previsto a 500 sin exponer detalles internos. Así, la interfaz puede mostrar
+	directamente el mensaje del servidor (RNF-Q07). En ocho de los diez servicios, un filtro de registro
+	escribe además una línea por petición con método, ruta, estatus y duración, lo que permitió diagnosticar los incidentes de la Sección~\ref{sec:incidentes}.
 
-	Los once servicios publican su contrato con springdoc-openapi en \texttt{/v3/api-docs} y una interfaz
+	Los diez servicios publican su contrato con springdoc-openapi en \texttt{/v3/api-docs} y una interfaz
 	navegable en \texttt{/swagger-ui.html} (RNF-G03). Como los puertos de los servicios no son
 	alcanzables desde Internet, la documentación se consulta mediante un túnel SSH desde el servidor de
 	publicación.
@@ -246,12 +221,11 @@
 		\texttt{denunciado-service} & 3 & Registro público de la respuesta y consulta del personal \\ \hline
 		\texttt{primer-contacto-service} & 56 & Bandeja, expedientes, citas (personal, quejoso y enlace
 		público), oficios, solicitudes a la persona señalada, dictámenes, remisiones, conciliación,
-		antecedentes, resumen, abogados, evidencias, consulta para Subdefensoría e ingesta \\ \hline
+		antecedentes guardados, abogados, evidencias, consulta para Subdefensoría e ingesta \\ \hline
 		\texttt{subdefensoria-service} & 30 & Bandeja, expedientes, oficios, recordatorios, respuestas y
 		archivos, documentos PDF, control de plazos, alertas, acuerdos de conclusión, acuerdos por enlace e
 		ingesta \\ \hline
-		\texttt{antecedentes-service} & 6 & Búsqueda, resumen extractivo, corpus, entrenamiento y salud \\ \hline
-		\textbf{Total} & \textbf{184} & \\ \hline
+		\textbf{Total} & \textbf{178} & \\ \hline
 	\end{longtable}
 	\normalsize
 
@@ -293,27 +267,6 @@
 	panel de la Defensora, un conjunto de componentes de tablero ---paginador, ventana modal, gráficas de
 	dona y de barras, exportación a CSV y tablas de atención, unidades, carga y motivos---.
 
-	\subsection{Integración de los componentes de inteligencia artificial}
-	\label{sec:impl_ia}
-	Los dos componentes de apoyo se integraron con Primer Contacto conforme al diseño de la
-	Sección~\ref{sec:diseno_ia}:
-
-	\begin{itemize}
-		\item \texttt{antecedentes-service} es un servicio Spring Boot que expone
-		\texttt{POST /api/antecedentes/buscar} con la narración y devuelve los antecedentes con su
-		similitud, el fragmento relevante y los datos básicos de la queja. Primer Contacto filtra después
-		los resultados que corresponden a la misma persona quejosa o señalada y muestra los cuatro más
-		parecidos.
-		\item \texttt{resumen-service} es un servicio Python con FastAPI que recibe la narración, selecciona
-		los fragmentos de mayor relevancia y produce un borrador editado por un modelo de lenguaje ejecutado
-		en un servidor de inferencia local. Devuelve el borrador y los fragmentos que lo sustentan.
-	\end{itemize}
-
-	Primer Contacto los invoca con un tiempo de espera configurable (110~s para el resumen, que es la
-	operación más costosa). Si un componente no responde, la pestaña de análisis lo indica y muestra un
-	resumen de respaldo generado en el navegador; el
-	resto del expediente sigue operando.
-
 	\subsection{Empaquetado en contenedores y despliegue}
 	\label{sec:impl_despliegue}
 	Cada componente se distribuye como una imagen de contenedor propia. Los microservicios Java usan un
@@ -350,7 +303,6 @@
 		\texttt{admin-service}, \texttt{revision-service}, \texttt{chatbot-service},
 		\texttt{denunciado-service}, \texttt{primer-contacto-service}, \texttt{subdefensoria-service} &
 		8083, 8085--8089, 8094, 8082, 8091 & 512~MB, montón de 320~MB \\ \hline
-		Aplicación & \texttt{antecedentes-service}, \texttt{resumen-service} & 8093, 8090 & Según el modelo \\ \hline
 		Datos & \texttt{defensoria-db} (PostgreSQL 16) & 5432 & --- \\ \hline
 	\end{longtable}
 	\normalsize
@@ -434,47 +386,3 @@
 	inicialmente con una base en memoria, de modo que sus expedientes se perdían con cada reinicio y el
 	personal no se encontraba en su copia de la tabla de cuentas. Se migraron a la base compartida.
 
-
-	\subsection{Estado de avance por componente}
-	\label{sec:estado_avance}
-	La Tabla~\ref{tab:estado_avance} resume el estado de cada componente al cierre del proyecto, con las
-	limitaciones conocidas que no impiden su operación.
-
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{3.5cm}|L{2.2cm}|L{8.8cm}|}
-		\caption{Estado de avance por componente}
-		\label{tab:estado_avance} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Componente} & \headercell{Estado} & \headercell{Observaciones} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Componente} & \headercell{Estado} & \headercell{Observaciones} \\
-		\hline
-		\endhead
-		Portal del quejoso & Desplegado & El perfil valida el formato del teléfono pero no aplica todavía
-		las mismas reglas del registro al correo personal y al domicilio (CU-QJ-05); la cancelación no
-		registra el motivo (CU-QJ-15). \\ \hline
-		Respuesta de la persona señalada & Desplegado & El folio llega en el enlace; falta un token que
-		garantice que solo la persona señalada real responda. \\ \hline
-		Panel de Recepción & Desplegado & El rango de fechas del historial filtra por la fecha de registro,
-		no por la de atención; el visor de PDF del navegador permite descargar la evidencia que se
-		visualiza (CU-REC-03). \\ \hline
-		Panel de Primer Contacto & Desplegado & Todos los expedientes son visibles para todos los analistas;
-		la asignación por analista está pendiente de acuerdo con la Defensoría. \\ \hline
-		Panel de Subdefensoría & Desplegado & ``Mis expedientes'' muestra todos los expedientes hasta que se
-		implemente la asignación por abogado. \\ \hline
-		Panel de la Defensora & Desplegado & Completo según el documento de diseño. \\ \hline
-		Componentes de IA & Desplegados & Su calidad depende del corpus disponible
-		(Sección~\ref{sec:limitaciones}). \\ \hline
-		Seguridad transversal & Con pendientes & Los secretos de configuración residen en texto plano en el
-		repositorio; el proxy no envía HSTS; la descarga y restauración de respaldos no valida que el nombre
-		de archivo permanezca dentro de la carpeta de respaldos; no existe cierre de sesión por inactividad
-		en los paneles del personal. Se detallan en la Sección~\ref{sec:pruebas_seguridad}. \\ \hline
-	\end{longtable}
-	\normalsize

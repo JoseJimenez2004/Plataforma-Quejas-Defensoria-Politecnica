@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConciliacionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.queja_service.service</a> &gt; <span class="el_source">ConciliacionService.java</span></div><h1>ConciliacionService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.queja_service.service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.queja_service.dto.RespuestaConciliacionRequest;
+import ipn.escom.defensoria.queja_service.entity.AcuerdoConciliacion;
+import ipn.escom.defensoria.queja_service.repository.AcuerdoConciliacionRepository;
+
+@Service
+public class ConciliacionService {
+
+    private static final String ESTADO_PENDIENTE = &quot;PENDIENTE&quot;;
+    private static final String ESTADO_ACEPTADO = &quot;ACEPTADO&quot;;
+    private static final String ESTADO_RECHAZADO = &quot;RECHAZADO&quot;;
+
+    private final AcuerdoConciliacionRepository acuerdoConciliacionRepository;
+
+<span class="fc" id="L21">    public ConciliacionService(AcuerdoConciliacionRepository acuerdoConciliacionRepository) {</span>
+<span class="fc" id="L22">        this.acuerdoConciliacionRepository = acuerdoConciliacionRepository;</span>
+<span class="fc" id="L23">    }</span>
+
+    /** Todos los acuerdos de conciliación dirigidos al usuario autenticado (a través de
+     * cualquiera de sus quejas), más reciente primero. */
+    public List&lt;AcuerdoConciliacion&gt; listarMisAcuerdos(String correo) {
+<span class="nc" id="L28">        return acuerdoConciliacionRepository.findByCorreoInstitucionalOrderByFechaEmisionDesc(correo);</span>
+    }
+
+    /** El quejoso acepta o rechaza un acuerdo que le fue propuesto -- solo si es suyo y sigue
+     * pendiente (una vez respondido, la decisión es definitiva). */
+    public AcuerdoConciliacion responder(Long id, String correo, RespuestaConciliacionRequest datos) {
+<span class="fc" id="L34">        AcuerdoConciliacion acuerdo = acuerdoConciliacionRepository.findById(id)</span>
+<span class="fc" id="L35">                .orElseThrow(() -&gt; new RuntimeException(&quot;No se encontró el acuerdo de conciliación indicado.&quot;));</span>
+
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (!acuerdo.getCorreoInstitucional().equalsIgnoreCase(correo)) {</span>
+<span class="fc" id="L38">            throw new RuntimeException(&quot;Ese acuerdo no corresponde a tu cuenta.&quot;);</span>
+        }
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (!ESTADO_PENDIENTE.equalsIgnoreCase(acuerdo.getEstado())) {</span>
+<span class="fc" id="L41">            throw new RuntimeException(&quot;Este acuerdo ya fue respondido anteriormente.&quot;);</span>
+        }
+<span class="pc bpc" id="L43" title="1 of 4 branches missed.">        if (!ESTADO_ACEPTADO.equalsIgnoreCase(datos.getEstado()) &amp;&amp; !ESTADO_RECHAZADO.equalsIgnoreCase(datos.getEstado())) {</span>
+<span class="fc" id="L44">            throw new RuntimeException(&quot;La respuesta debe ser ACEPTADO o RECHAZADO.&quot;);</span>
+        }
+
+<span class="fc" id="L47">        acuerdo.setEstado(datos.getEstado().toUpperCase());</span>
+<span class="fc" id="L48">        acuerdo.setComentarioQuejoso(datos.getComentario());</span>
+<span class="fc" id="L49">        acuerdo.setFechaRespuesta(LocalDateTime.now());</span>
+
+<span class="fc" id="L51">        return acuerdoConciliacionRepository.save(acuerdo);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

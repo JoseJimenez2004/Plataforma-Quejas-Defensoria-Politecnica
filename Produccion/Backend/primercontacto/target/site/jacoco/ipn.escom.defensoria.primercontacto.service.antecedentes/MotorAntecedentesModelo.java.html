@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MotorAntecedentesModelo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service.antecedentes</a> &gt; <span class="el_source">MotorAntecedentesModelo.java</span></div><h1>MotorAntecedentesModelo.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service.antecedentes;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import ipn.escom.defensoria.primercontacto.dto.AntecedenteDTO;
+import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.QuejaReferencia;
+import ipn.escom.defensoria.primercontacto.repository.QuejaReferenciaRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Motor que consulta el MODELO de antecedentes.
+ *
+ * MODELO V5 (Python, Backend/antecedentes_service, mismo puerto 8093): buscarV5().
+ *
+ *   POST {antecedentes.modelo.url}/api/v5/antecedentes/buscar
+ *        { &quot;descripcion&quot;, &quot;folio&quot;, &quot;origen&quot;, &quot;fechaHechos&quot;, &quot;unidadAcademicaClave&quot;,
+ *          &quot;quejoso&quot;: { nombre, apellido1, apellido2, numeroIdentificacion, correo },
+ *          &quot;denunciado&quot;: { nombre, apellido1, apellido2 }, &quot;topK&quot; }
+ *   -&gt;   { &quot;por_hechos&quot;: [...], &quot;por_involucrados&quot;: [...], &quot;coincidencias_fuertes&quot;: [...] }
+ *
+ * Lee directo las quejas del sistema y las históricas. &quot;por_involucrados&quot; solo trae folio y
+ * banderas de coincidencia: los datos de cada queja se toman de &quot;por_hechos&quot;, por eso se
+ * pide un topK alto (todas las candidatas quedan en &quot;por_hechos&quot;).
+ *
+ * Si el modelo desplegado todavía es el anterior (sin la ruta V5), se usa buscar():
+ *
+ * MODELO ANTERIOR (antecedentes-service, proyecto Modelo-Java):
+ *
+ *   POST {antecedentes.modelo.url}/api/antecedentes/buscar
+ *        { &quot;texto&quot;: &quot;...&quot;, &quot;umbral&quot;: 0.0, &quot;topK&quot;: 500 }
+ *   →    { &quot;antecedentes&quot;: [ { &quot;queja&quot;: {...}, &quot;similitud&quot;: 0.42, &quot;historico&quot;: true } ] }
+ *        (versión del repo) o, en la versión desplegada, cada item &quot;plano&quot;:
+ *        { &quot;folio&quot;, &quot;similitud&quot;, &quot;historico&quot;, &quot;quejoso&quot;: {...}, &quot;denunciado&quot;: {...}, &quot;fragmento&quot;, ... }
+ *
+ * El modelo trae su propio índice de quejas (hoy, su dataset de prueba) y solo compara
+ * TEXTO: no sabe quién es el quejoso. Por eso se le piden TODOS sus resultados (umbral 0,
+ * topK alto) y AntecedentesService se queda solo con los del mismo quejoso o del mismo
+ * denunciado. El modelo en sí no se modifica (es de otro compañero). Si la URL no está configurada el motor
+ * queda deshabilitado, y si falla, AntecedentesService usa el motor por reglas.
+ */
+@Component
+public class MotorAntecedentesModelo implements MotorAntecedentes {
+
+    private static final String ENDPOINT = &quot;/api/antecedentes/buscar&quot;;
+    private static final String ENDPOINT_V5 = &quot;/api/v5/antecedentes/buscar&quot;;
+
+    private final String url;
+    private final double umbral;
+    private final int maxResultados;
+    private final RestTemplate restTemplate;
+    private final QuejaReferenciaRepository quejaRepository;
+
+    public MotorAntecedentesModelo(
+            @Value(&quot;${antecedentes.modelo.url:}&quot;) String url,
+            @Value(&quot;${antecedentes.modelo.umbral:0.0}&quot;) double umbral,
+            @Value(&quot;${antecedentes.modelo.max-resultados:500}&quot;) int maxResultados,
+            @Value(&quot;${antecedentes.modelo.timeout-segundos:45}&quot;) int timeoutSegundos,
+            QuejaReferenciaRepository quejaRepository
+<span class="nc" id="L69">    ) {</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        this.url = url == null ? &quot;&quot; : url.strip().replaceAll(&quot;/+$&quot;, &quot;&quot;);</span>
+<span class="nc" id="L71">        this.umbral = umbral;</span>
+<span class="nc" id="L72">        this.maxResultados = maxResultados;</span>
+<span class="nc" id="L73">        this.quejaRepository = quejaRepository;</span>
+
+        // La primera consulta tras un rato sin uso tarda más (el modelo se &quot;despierta&quot;); con
+        // 15 s se caía al motor por reglas en ese primer intento. 45 s por defecto deja margen
+        // sin pasar los 60 s con que nginx corta la petición.
+<span class="nc" id="L78">        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();</span>
+<span class="nc" id="L79">        factory.setConnectTimeout(3_000);</span>
+<span class="nc" id="L80">        factory.setReadTimeout(timeoutSegundos * 1_000);</span>
+<span class="nc" id="L81">        this.restTemplate = new RestTemplate(factory);</span>
+<span class="nc" id="L82">    }</span>
+
+    public boolean habilitado() {
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        return !url.isEmpty();</span>
+    }
+
+    @Override
+    public String nombre() {
+<span class="nc" id="L90">        return &quot;MODELO&quot;;</span>
+    }
+
+    @Override
+    public String descripcion() {
+<span class="nc" id="L95">        return &quot;Modelo de búsqueda de antecedentes: compara la narrativa de la queja con las &quot;</span>
+                + &quot;quejas del sistema y los casos históricos, y reconoce a las mismas personas.&quot;;
+    }
+
+    /** Las tres listas del modelo V5, ya convertidas. */
+<span class="nc" id="L100">    public record ResultadoV5(</span>
+            List&lt;AntecedenteDTO&gt; porHechos,
+            List&lt;AntecedenteDTO&gt; porInvolucrados,
+            List&lt;AntecedenteDTO&gt; coincidenciasFuertes
+    ) {
+    }
+
+    /**
+     * Consulta el modelo V5. Devuelve null si el modelo desplegado no tiene la ruta V5 (404),
+     * para que el servicio use la ruta anterior; cualquier otro error se propaga.
+     */
+    public ResultadoV5 buscarV5(ExpedientePrimerContacto expediente, QuejaReferencia queja) {
+
+<span class="nc" id="L113">        Map&lt;String, Object&gt; peticion = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L114">        String texto = narrativa(expediente, queja);</span>
+<span class="nc bnc" id="L115" title="All 4 branches missed.">        peticion.put(&quot;descripcion&quot;, texto == null || texto.isBlank() ? &quot;(sin narrativa)&quot; : texto);</span>
+<span class="nc" id="L116">        peticion.put(&quot;folio&quot;, expediente.getFolioOrigen());</span>
+<span class="nc" id="L117">        peticion.put(&quot;origen&quot;, NombresPersona.ORIGEN_SISTEMA);</span>
+<span class="nc" id="L118">        peticion.put(&quot;topK&quot;, maxResultados);</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        if (queja != null) {</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (queja.getFechaHechos() != null) {</span>
+<span class="nc" id="L121">                peticion.put(&quot;fechaHechos&quot;, queja.getFechaHechos().toString());</span>
+            }
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            if (queja.getUnidadAcademicaClave() != null) {</span>
+<span class="nc" id="L124">                peticion.put(&quot;unidadAcademicaClave&quot;, queja.getUnidadAcademicaClave());</span>
+            }
+<span class="nc" id="L126">            peticion.put(&quot;quejoso&quot;, sinVacios(</span>
+<span class="nc" id="L127">                    &quot;nombre&quot;, queja.getNombreQuejoso(),</span>
+<span class="nc" id="L128">                    &quot;apellido1&quot;, queja.getApellido1Quejoso(),</span>
+<span class="nc" id="L129">                    &quot;apellido2&quot;, queja.getApellido2Quejoso(),</span>
+<span class="nc" id="L130">                    &quot;numeroIdentificacion&quot;, queja.getNumeroIdentificacionQuejoso(),</span>
+<span class="nc" id="L131">                    &quot;correo&quot;, queja.getCorreoInstitucional()));</span>
+<span class="nc" id="L132">            peticion.put(&quot;denunciado&quot;, sinVacios(</span>
+<span class="nc" id="L133">                    &quot;nombre&quot;, queja.getNombreDenunciado(),</span>
+<span class="nc" id="L134">                    &quot;apellido1&quot;, queja.getApellido1Denunciado(),</span>
+<span class="nc" id="L135">                    &quot;apellido2&quot;, queja.getApellido2Denunciado()));</span>
+        } else {
+<span class="nc" id="L137">            peticion.put(&quot;quejoso&quot;, sinVacios(</span>
+<span class="nc" id="L138">                    &quot;nombre&quot;, expediente.getQuejosoNombre(),</span>
+<span class="nc" id="L139">                    &quot;correo&quot;, expediente.getQuejosoCorreo()));</span>
+        }
+
+        JsonNode respuesta;
+        try {
+<span class="nc" id="L144">            respuesta = restTemplate.postForObject(url + ENDPOINT_V5, peticion, JsonNode.class);</span>
+<span class="nc" id="L145">        } catch (HttpClientErrorException.NotFound ex) {</span>
+<span class="nc" id="L146">            return null;</span>
+<span class="nc" id="L147">        }</span>
+
+<span class="nc bnc" id="L149" title="All 4 branches missed.">        if (respuesta == null || !respuesta.path(&quot;por_hechos&quot;).isArray()) {</span>
+<span class="nc" id="L150">            throw new IllegalStateException(&quot;El modelo V5 respondió sin la lista por_hechos.&quot;);</span>
+        }
+
+<span class="nc" id="L153">        String folioPropio = expediente.getFolioOrigen();</span>
+
+        // Datos completos de cada candidata (por_hechos las trae todas, ordenadas por hechos).
+<span class="nc" id="L156">        Map&lt;String, AntecedenteDTO&gt; porClave = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L157">        List&lt;AntecedenteDTO&gt; porHechos = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        for (JsonNode item : respuesta.path(&quot;por_hechos&quot;)) {</span>
+<span class="nc" id="L159">            AntecedenteDTO dto = convertirV5(item);</span>
+<span class="nc bnc" id="L160" title="All 4 branches missed.">            if (dto.getFolioQueja() == null || esPropia(dto, folioPropio)) {</span>
+<span class="nc" id="L161">                continue;</span>
+            }
+<span class="nc" id="L163">            porClave.put(clave(dto), dto);</span>
+<span class="nc" id="L164">            porHechos.add(dto);</span>
+<span class="nc" id="L165">        }</span>
+
+<span class="nc" id="L167">        List&lt;AntecedenteDTO&gt; porInvolucrados = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">        for (JsonNode item : respuesta.path(&quot;por_involucrados&quot;)) {</span>
+<span class="nc" id="L169">            AntecedenteDTO base = porClave.get(clave(texto(item, &quot;origen&quot;), texto(item, &quot;folio&quot;)));</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">            AntecedenteDTO dto = base != null</span>
+<span class="nc" id="L171">                    ? base.toBuilder().coincidencias(new ArrayList&lt;&gt;(base.getCoincidencias())).build()</span>
+<span class="nc" id="L172">                    : AntecedenteDTO.builder()</span>
+<span class="nc" id="L173">                            .folioQueja(texto(item, &quot;folio&quot;))</span>
+<span class="nc" id="L174">                            .origen(origen(texto(item, &quot;origen&quot;)))</span>
+<span class="nc" id="L175">                            .fecha(texto(item, &quot;fechaHechos&quot;))</span>
+<span class="nc" id="L176">                            .coincidencias(new ArrayList&lt;&gt;())</span>
+<span class="nc" id="L177">                            .build();</span>
+<span class="nc bnc" id="L178" title="All 4 branches missed.">            if (dto.getFolioQueja() == null || esPropia(dto, folioPropio)) {</span>
+<span class="nc" id="L179">                continue;</span>
+            }
+<span class="nc" id="L181">            marcarPersonas(dto, item);</span>
+<span class="nc" id="L182">            porInvolucrados.add(dto);</span>
+<span class="nc" id="L183">        }</span>
+
+<span class="nc" id="L185">        List&lt;AntecedenteDTO&gt; fuertes = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">        for (JsonNode item : respuesta.path(&quot;coincidencias_fuertes&quot;)) {</span>
+<span class="nc" id="L187">            AntecedenteDTO dto = convertirV5(item);</span>
+<span class="nc bnc" id="L188" title="All 4 branches missed.">            if (dto.getFolioQueja() == null || esPropia(dto, folioPropio)) {</span>
+<span class="nc" id="L189">                continue;</span>
+            }
+<span class="nc" id="L191">            marcarPersonas(dto, item);</span>
+<span class="nc" id="L192">            dto.setRazonCoincidencia(texto(item, &quot;razon_coincidencia_fuerte&quot;));</span>
+<span class="nc" id="L193">            fuertes.add(dto);</span>
+<span class="nc" id="L194">        }</span>
+
+<span class="nc" id="L196">        return new ResultadoV5(porHechos, porInvolucrados, fuertes);</span>
+    }
+
+    private AntecedenteDTO convertirV5(JsonNode item) {
+<span class="nc" id="L200">        String folio = texto(item, &quot;folio&quot;);</span>
+<span class="nc" id="L201">        String narrativa = texto(item, &quot;descripcion&quot;);</span>
+<span class="nc" id="L202">        String origen = origen(texto(item, &quot;origen&quot;));</span>
+<span class="nc" id="L203">        String nivel = texto(item, &quot;nivel_similitud&quot;);</span>
+<span class="nc" id="L204">        List&lt;String&gt; coincidencias = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">        if (nivel != null) {</span>
+<span class="nc" id="L206">            coincidencias.add(&quot;Hechos: similitud &quot; + nivel.toLowerCase());</span>
+        }
+<span class="nc" id="L208">        return AntecedenteDTO.builder()</span>
+<span class="nc" id="L209">                .folioQueja(folio)</span>
+<span class="nc bnc" id="L210" title="All 4 branches missed.">                .folioPrimerContacto(folio == null || NombresPersona.ORIGEN_HISTORICO.equals(origen)</span>
+<span class="nc" id="L211">                        ? null</span>
+<span class="nc" id="L212">                        : quejaRepository.findByNumeroFolio(folio)</span>
+<span class="nc" id="L213">                                .map(QuejaReferencia::getFolioPrimerContacto)</span>
+<span class="nc" id="L214">                                .orElse(null))</span>
+<span class="nc" id="L215">                .fecha(texto(item, &quot;fechaHechos&quot;))</span>
+<span class="nc" id="L216">                .asunto(etiqueta(texto(item, &quot;motivo&quot;)))</span>
+<span class="nc" id="L217">                .extracto(extracto(narrativa))</span>
+<span class="nc" id="L218">                .descripcion(narrativa)</span>
+<span class="nc" id="L219">                .unidadAcademica(texto(item, &quot;unidadAcademicaClave&quot;))</span>
+<span class="nc" id="L220">                .nombreQuejoso(persona(item.path(&quot;quejoso&quot;)))</span>
+<span class="nc" id="L221">                .nombreDenunciado(persona(item.path(&quot;denunciado&quot;)))</span>
+<span class="nc" id="L222">                .correoQuejoso(texto(item.path(&quot;quejoso&quot;), &quot;correo&quot;))</span>
+<span class="nc" id="L223">                .identificacionQuejoso(texto(item.path(&quot;quejoso&quot;), &quot;numeroIdentificacion&quot;))</span>
+<span class="nc" id="L224">                .estatus(texto(item, &quot;estatus&quot;))</span>
+<span class="nc" id="L225">                .resultado(texto(item, &quot;resultado&quot;))</span>
+<span class="nc" id="L226">                .similitud((int) Math.round(</span>
+<span class="nc" id="L227">                        Math.max(0, Math.min(1.0, item.path(&quot;similitud_hechos&quot;).asDouble())) * 100))</span>
+<span class="nc" id="L228">                .nivelSimilitud(nivel)</span>
+<span class="nc" id="L229">                .coincidencias(coincidencias)</span>
+<span class="nc" id="L230">                .origen(origen)</span>
+<span class="nc" id="L231">                .build();</span>
+    }
+
+    /** Banderas de persona que traen por_involucrados y coincidencias_fuertes. */
+    private static void marcarPersonas(AntecedenteDTO dto, JsonNode item) {
+<span class="nc" id="L236">        boolean idQuejoso = item.path(&quot;mismo_quejoso&quot;).asBoolean(false);</span>
+<span class="nc" id="L237">        boolean idDenunciado = item.path(&quot;mismo_denunciado&quot;).asBoolean(false);</span>
+<span class="nc" id="L238">        boolean nombreQuejoso = item.path(&quot;coincide_nombre_quejoso&quot;).asBoolean(false);</span>
+<span class="nc" id="L239">        boolean nombreDenunciado = item.path(&quot;coincide_nombre_denunciado&quot;).asBoolean(false);</span>
+
+<span class="nc bnc" id="L241" title="All 4 branches missed.">        dto.setMismoQuejoso(idQuejoso || nombreQuejoso);</span>
+<span class="nc bnc" id="L242" title="All 4 branches missed.">        dto.setMismoDenunciado(idDenunciado || nombreDenunciado);</span>
+<span class="nc bnc" id="L243" title="All 4 branches missed.">        dto.setIdentidadVerificada(idQuejoso || idDenunciado);</span>
+<span class="nc" id="L244">        dto.setTipoCoincidencia(texto(item, &quot;tipo_coincidencia&quot;));</span>
+<span class="nc" id="L245">        JsonNode dias = item.path(&quot;dias_diferencia&quot;);</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">        dto.setDiasDiferencia(dias.isNumber() ? dias.asInt() : null);</span>
+
+<span class="nc" id="L248">        List&lt;String&gt; coincidencias = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">        if (dto.getTipoCoincidencia() != null) {</span>
+            // &quot;Identificación del quejoso + Nombre del denunciado (por verificar)&quot; → dos etiquetas.
+<span class="nc" id="L251">            coincidencias.addAll(List.of(dto.getTipoCoincidencia().split(&quot; \\+ &quot;)));</span>
+        }
+<span class="nc bnc" id="L253" title="All 2 branches missed.">        if (dto.getCoincidencias() != null) {</span>
+<span class="nc" id="L254">            coincidencias.addAll(dto.getCoincidencias());</span>
+        }
+<span class="nc" id="L256">        dto.setCoincidencias(coincidencias);</span>
+<span class="nc" id="L257">    }</span>
+
+    private static boolean esPropia(AntecedenteDTO dto, String folioPropio) {
+<span class="nc bnc" id="L260" title="All 2 branches missed.">        return NombresPersona.ORIGEN_SISTEMA.equals(dto.getOrigen())</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">                &amp;&amp; dto.getFolioQueja().equals(folioPropio);</span>
+    }
+
+    /** origen:folio, la misma clave con que el front distingue un antecedente. */
+    static String clave(AntecedenteDTO dto) {
+<span class="nc" id="L266">        return clave(dto.getOrigen(), dto.getFolioQueja());</span>
+    }
+
+    private static String clave(String origen, String folio) {
+<span class="nc" id="L270">        return origen(origen) + &quot;:&quot; + folio;</span>
+    }
+
+    private static String origen(String valor) {
+<span class="nc bnc" id="L274" title="All 2 branches missed.">        return NombresPersona.ORIGEN_HISTORICO.equalsIgnoreCase(valor)</span>
+<span class="nc" id="L275">                ? NombresPersona.ORIGEN_HISTORICO</span>
+<span class="nc" id="L276">                : NombresPersona.ORIGEN_SISTEMA;</span>
+    }
+
+    /** Mapa con los pares clave/valor cuyo valor no está vacío. */
+    private static Map&lt;String, Object&gt; sinVacios(String... paresClaveValor) {
+<span class="nc" id="L281">        Map&lt;String, Object&gt; mapa = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">        for (int i = 0; i + 1 &lt; paresClaveValor.length; i += 2) {</span>
+<span class="nc" id="L283">            String valor = paresClaveValor[i + 1];</span>
+<span class="nc bnc" id="L284" title="All 4 branches missed.">            if (valor != null &amp;&amp; !valor.isBlank()) {</span>
+<span class="nc" id="L285">                mapa.put(paresClaveValor[i], valor.strip());</span>
+            }
+        }
+<span class="nc" id="L288">        return mapa;</span>
+    }
+
+    private static String narrativa(ExpedientePrimerContacto expediente, QuejaReferencia queja) {
+<span class="nc" id="L292">        return NombresPersona.unir(</span>
+<span class="nc" id="L293">                expediente.getTema(),</span>
+<span class="nc" id="L294">                expediente.getDescripcionHechos(),</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">                queja != null ? queja.getMotivo() : null,</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">                queja != null ? queja.getDescripcion() : null</span>
+        );
+    }
+
+    @Override
+    public List&lt;AntecedenteDTO&gt; buscar(
+            ExpedientePrimerContacto expediente,
+            QuejaReferencia queja,
+            List&lt;QuejaReferencia&gt; candidatas
+    ) {
+<span class="nc" id="L306">        String texto = narrativa(expediente, queja);</span>
+
+<span class="nc" id="L308">        JsonNode respuesta = restTemplate.postForObject(</span>
+                url + ENDPOINT,
+<span class="nc bnc" id="L310" title="All 2 branches missed.">                Map.of(&quot;texto&quot;, texto == null ? &quot;&quot; : texto, &quot;umbral&quot;, umbral, &quot;topK&quot;, maxResultados),</span>
+                JsonNode.class
+        );
+
+<span class="nc bnc" id="L314" title="All 4 branches missed.">        if (respuesta == null || !respuesta.path(&quot;antecedentes&quot;).isArray()) {</span>
+<span class="nc" id="L315">            throw new IllegalStateException(&quot;El modelo respondió sin lista de antecedentes.&quot;);</span>
+        }
+
+<span class="nc" id="L318">        String folioPropio = expediente.getFolioOrigen();</span>
+
+<span class="nc" id="L320">        List&lt;AntecedenteDTO&gt; resultados = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">        for (JsonNode item : respuesta.path(&quot;antecedentes&quot;)) {</span>
+            // Dos formatos: el del repo trae los datos dentro de &quot;queja&quot;; el desplegado en el
+            // servidor los trae &quot;planos&quot; en el mismo item (y la narrativa en &quot;fragmento&quot;).
+<span class="nc bnc" id="L324" title="All 2 branches missed.">            JsonNode q = item.has(&quot;queja&quot;) ? item.path(&quot;queja&quot;) : item;</span>
+<span class="nc" id="L325">            String folio = texto(q, &quot;folio&quot;);</span>
+<span class="nc bnc" id="L326" title="All 4 branches missed.">            if (folio != null &amp;&amp; folio.equals(folioPropio)) {</span>
+<span class="nc" id="L327">                continue;</span>
+            }
+
+<span class="nc" id="L330">            String nombreQuejoso = persona(q.path(&quot;quejoso&quot;));</span>
+<span class="nc" id="L331">            List&lt;String&gt; coincidencias = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L333" title="All 2 branches missed.">            String narrativa = texto(q, &quot;texto_original&quot;) != null</span>
+<span class="nc" id="L334">                    ? texto(q, &quot;texto_original&quot;)</span>
+<span class="nc" id="L335">                    : texto(q, &quot;fragmento&quot;);</span>
+
+<span class="nc" id="L337">            resultados.add(AntecedenteDTO.builder()</span>
+<span class="nc" id="L338">                    .folioQueja(folio)</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">                    .folioPrimerContacto(folio == null ? null : quejaRepository.findByNumeroFolio(folio)</span>
+<span class="nc" id="L340">                            .map(QuejaReferencia::getFolioPrimerContacto)</span>
+<span class="nc" id="L341">                            .orElse(null))</span>
+<span class="nc" id="L342">                    .fecha(texto(q, &quot;fecha_hechos&quot;))</span>
+<span class="nc" id="L343">                    .asunto(etiqueta(texto(q, &quot;tipo_violencia&quot;)))</span>
+<span class="nc" id="L344">                    .extracto(extracto(narrativa))</span>
+<span class="nc" id="L345">                    .descripcion(narrativa)</span>
+<span class="nc" id="L346">                    .unidadAcademica(texto(q, &quot;unidad_academica&quot;))</span>
+<span class="nc" id="L347">                    .nombreQuejoso(nombreQuejoso)</span>
+<span class="nc" id="L348">                    .nombreDenunciado(persona(q.path(&quot;denunciado&quot;)))</span>
+<span class="nc" id="L349">                    .correoQuejoso(texto(q.path(&quot;quejoso&quot;), &quot;correo&quot;))</span>
+<span class="nc" id="L350">                    .identificacionQuejoso(texto(q.path(&quot;quejoso&quot;), &quot;numero_identificacion&quot;))</span>
+<span class="nc" id="L351">                    .estatus(texto(q, &quot;estatus&quot;))</span>
+<span class="nc" id="L352">                    .similitud((int) Math.round(Math.min(1.0, item.path(&quot;similitud&quot;).asDouble()) * 100))</span>
+<span class="nc" id="L353">                    .coincidencias(coincidencias)</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">                    .origen(item.path(&quot;historico&quot;).asBoolean(false)</span>
+<span class="nc" id="L355">                            ? NombresPersona.ORIGEN_HISTORICO</span>
+<span class="nc" id="L356">                            : NombresPersona.ORIGEN_SISTEMA)</span>
+<span class="nc" id="L357">                    .build());</span>
+<span class="nc" id="L358">        }</span>
+<span class="nc" id="L359">        return resultados;</span>
+    }
+
+    private static String texto(JsonNode nodo, String campo) {
+<span class="nc" id="L363">        JsonNode valor = nodo.path(campo);</span>
+<span class="nc bnc" id="L364" title="All 6 branches missed.">        return valor.isMissingNode() || valor.isNull() || valor.asText().isBlank() ? null : valor.asText();</span>
+    }
+
+    private static String persona(JsonNode p) {
+<span class="nc" id="L368">        return NombresPersona.unir(texto(p, &quot;nombre&quot;), texto(p, &quot;apellido1&quot;), texto(p, &quot;apellido2&quot;));</span>
+    }
+
+    /** ACOSO_ESCOLAR → &quot;Acoso escolar&quot;. */
+    private static String etiqueta(String valor) {
+<span class="nc bnc" id="L373" title="All 2 branches missed.">        if (valor == null) {</span>
+<span class="nc" id="L374">            return null;</span>
+        }
+<span class="nc" id="L376">        String texto = valor.replace('_', ' ').toLowerCase();</span>
+<span class="nc" id="L377">        return Character.toUpperCase(texto.charAt(0)) + texto.substring(1);</span>
+    }
+
+    private static String extracto(String texto) {
+<span class="nc bnc" id="L381" title="All 2 branches missed.">        if (texto == null) {</span>
+<span class="nc" id="L382">            return null;</span>
+        }
+<span class="nc" id="L384">        String limpio = texto.strip();</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">        return limpio.length() &lt;= 220 ? limpio : limpio.substring(0, 217) + &quot;…&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

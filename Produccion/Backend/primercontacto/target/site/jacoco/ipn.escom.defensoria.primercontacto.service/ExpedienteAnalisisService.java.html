@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExpedienteAnalisisService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service</a> &gt; <span class="el_source">ExpedienteAnalisisService.java</span></div><h1>ExpedienteAnalisisService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service;
+
+import ipn.escom.defensoria.primercontacto.dto.DatosQuejaDTO;
+import ipn.escom.defensoria.primercontacto.dto.EvidenciaDTO;
+import ipn.escom.defensoria.primercontacto.dto.ExpedienteAnalisisDTO;
+import ipn.escom.defensoria.primercontacto.dto.NotaAnalisisDTO;
+import ipn.escom.defensoria.primercontacto.dto.QuejosoDTO;
+
+import ipn.escom.defensoria.primercontacto.entity.EstatusExpediente;
+import ipn.escom.defensoria.primercontacto.entity.EvidenciaPrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.NotaAnalisis;
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
+
+import ipn.escom.defensoria.primercontacto.exception.RecursoNoEncontradoException;
+
+import ipn.escom.defensoria.primercontacto.repository.EvidenciaPrimerContactoRepository;
+import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
+import ipn.escom.defensoria.primercontacto.repository.NotaAnalisisRepository;
+import ipn.escom.defensoria.primercontacto.repository.QuejaReferenciaRepository;
+
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+public class ExpedienteAnalisisService {
+
+    private final ExpedientePrimerContactoRepository expedienteRepository;
+    private final NotaAnalisisRepository notaAnalisisRepository;
+    private final EvidenciaPrimerContactoRepository evidenciaRepository;
+    private final TransicionExpedienteService transicionService;
+    private final QuejaReferenciaRepository quejaRepository;
+
+    public ExpedienteAnalisisService(
+            ExpedientePrimerContactoRepository expedienteRepository,
+            NotaAnalisisRepository notaAnalisisRepository,
+            EvidenciaPrimerContactoRepository evidenciaRepository,
+            TransicionExpedienteService transicionService,
+            QuejaReferenciaRepository quejaRepository
+<span class="nc" id="L42">    ) {</span>
+<span class="nc" id="L43">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L44">        this.notaAnalisisRepository = notaAnalisisRepository;</span>
+<span class="nc" id="L45">        this.evidenciaRepository = evidenciaRepository;</span>
+<span class="nc" id="L46">        this.transicionService = transicionService;</span>
+<span class="nc" id="L47">        this.quejaRepository = quejaRepository;</span>
+<span class="nc" id="L48">    }</span>
+
+    /*
+     * Busca utilizando el ID INTERNO
+     * de Primer Contacto.
+     */
+    public ExpedienteAnalisisDTO obtenerExpediente(
+            Long expedienteId
+    ) {
+
+<span class="nc" id="L58">        ExpedientePrimerContacto expediente =</span>
+                expedienteRepository
+<span class="nc" id="L60">                        .findById(expedienteId)</span>
+<span class="nc" id="L61">                        .orElseThrow(() -&gt;</span>
+<span class="nc" id="L62">                                new RecursoNoEncontradoException(</span>
+                                        &quot;No existe el expediente de Primer Contacto con id &quot;
+                                                + expedienteId
+                                )
+                        );
+
+<span class="nc" id="L68">        return construirDTO(expediente);</span>
+    }
+
+    /*
+     * Busca utilizando el folio propio
+     * de Primer Contacto: PC-XXXXXXXX
+     */
+    public ExpedienteAnalisisDTO obtenerPorFolio(
+            String folio
+    ) {
+
+<span class="nc" id="L79">        ExpedientePrimerContacto expediente =</span>
+                expedienteRepository
+<span class="nc" id="L81">                        .findByFolio(folio)</span>
+<span class="nc" id="L82">                        .orElseThrow(() -&gt;</span>
+<span class="nc" id="L83">                                new RecursoNoEncontradoException(</span>
+                                        &quot;No existe el expediente de Primer Contacto con folio &quot;
+                                                + folio
+                                )
+                        );
+
+<span class="nc" id="L89">        return construirDTO(expediente);</span>
+    }
+
+    /**
+     * PC-1: el analista asigna la prioridad (BAJA, MEDIA, ALTA o URGENTE). Se guarda en el
+     * momento; el valor lo valida el controlador. Viaja a Subdefensoría al turnar.
+     */
+    public ExpedienteAnalisisDTO cambiarPrioridad(String folio, String prioridad) {
+<span class="nc" id="L97">        ExpedientePrimerContacto expediente = expedienteRepository.findByFolio(folio)</span>
+<span class="nc" id="L98">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                        &quot;No existe el expediente de Primer Contacto con folio &quot; + folio));
+<span class="nc" id="L100">        expediente.setPrioridad(prioridad);</span>
+<span class="nc" id="L101">        return construirDTO(expedienteRepository.save(expediente));</span>
+    }
+
+    /*
+     * CU-PC-03: al abrir el expediente para trabajarlo, un expediente
+     * TURNADA pasa a EN_ANALISIS y queda registrado quién lo abrió y
+     * cuándo -- mismo patrón que Revisión al abrir una queja.
+     *
+     * Es un endpoint explícito (lo llama la pantalla de detalle) y no
+     * un efecto de GET /folio/{folio}, porque Agenda, Dictamen y
+     * Remisión también consultan el expediente y eso no es &quot;abrirlo&quot;.
+     * En cualquier otro estado no cambia nada.
+     */
+    public ExpedienteAnalisisDTO iniciarAnalisis(
+            String folio,
+            PersonalAdministrativo analista
+    ) {
+
+<span class="nc" id="L119">        ExpedientePrimerContacto expediente =</span>
+<span class="nc" id="L120">                transicionService.obtenerPorFolio(folio);</span>
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        if (EstatusExpediente.TURNADA.equals(expediente.getEstatus())) {</span>
+
+<span class="nc" id="L124">            expediente.setFechaInicioAnalisis(LocalDateTime.now());</span>
+<span class="nc" id="L125">            expediente.setAnalistaAnalisisId(analista.getId());</span>
+<span class="nc" id="L126">            expediente.setAnalistaAnalisisNombre(analista.getNombreCompleto());</span>
+
+<span class="nc" id="L128">            expediente = transicionService.cambiarEstatus(</span>
+                    expediente,
+                    EstatusExpediente.EN_ANALISIS
+            );
+        }
+
+<span class="nc" id="L134">        return construirDTO(expediente);</span>
+    }
+
+    private ExpedienteAnalisisDTO construirDTO(
+            ExpedientePrimerContacto expediente
+    ) {
+
+        /*
+         * Notas internas del expediente de Primer Contacto.
+         */
+<span class="nc" id="L144">        List&lt;NotaAnalisisDTO&gt; notas =</span>
+                notaAnalisisRepository
+<span class="nc" id="L146">                        .findByExpedienteIdOrderByFechaCreacionDesc(</span>
+<span class="nc" id="L147">                                expediente.getId()</span>
+                        )
+<span class="nc" id="L149">                        .stream()</span>
+<span class="nc" id="L150">                        .map(this::convertirNotaDTO)</span>
+<span class="nc" id="L151">                        .toList();</span>
+
+        /*
+         * Evidencias recibidas cuando el expediente
+         * ingresó a Primer Contacto.
+         */
+<span class="nc" id="L157">        List&lt;EvidenciaDTO&gt; evidencias =</span>
+                evidenciaRepository
+<span class="nc" id="L159">                        .findByExpedienteId(</span>
+<span class="nc" id="L160">                                expediente.getId()</span>
+                        )
+<span class="nc" id="L162">                        .stream()</span>
+<span class="nc" id="L163">                        .map(this::convertirEvidenciaDTO)</span>
+<span class="nc" id="L164">                        .toList();</span>
+
+        QuejosoDTO quejoso =
+<span class="nc" id="L167">                QuejosoDTO.builder()</span>
+<span class="nc" id="L168">                        .id(</span>
+<span class="nc" id="L169">                                expediente.getQuejosoId()</span>
+                        )
+<span class="nc" id="L171">                        .nombreCompleto(</span>
+<span class="nc" id="L172">                                expediente.getQuejosoNombre()</span>
+                        )
+<span class="nc" id="L174">                        .correo(</span>
+<span class="nc" id="L175">                                expediente.getQuejosoCorreo()</span>
+                        )
+<span class="nc" id="L177">                        .telefono(</span>
+<span class="nc" id="L178">                                expediente.getQuejosoTelefono()</span>
+                        )
+<span class="nc" id="L180">                        .unidadAcademica(</span>
+<span class="nc" id="L181">                                expediente.getUnidadAcademica()</span>
+                        )
+<span class="nc" id="L183">                        .tipoUsuario(</span>
+<span class="nc" id="L184">                                expediente.getQuejosoTipoUsuario()</span>
+                        )
+<span class="nc" id="L186">                        .build();</span>
+
+<span class="nc" id="L188">        return ExpedienteAnalisisDTO.builder()</span>
+<span class="nc" id="L189">                .expedienteId(</span>
+<span class="nc" id="L190">                        expediente.getId()</span>
+                )
+<span class="nc" id="L192">                .folio(</span>
+<span class="nc" id="L193">                        expediente.getFolio()</span>
+                )
+<span class="nc" id="L195">                .folioOrigen(</span>
+<span class="nc" id="L196">                        expediente.getFolioOrigen()</span>
+                )
+<span class="nc" id="L198">                .folioSubdefensoria(</span>
+<span class="nc" id="L199">                        expediente.getFolioSubdefensoria()</span>
+                )
+<span class="nc" id="L201">                .tema(</span>
+<span class="nc" id="L202">                        expediente.getTema()</span>
+                )
+<span class="nc" id="L204">                .descripcionHechos(</span>
+<span class="nc" id="L205">                        expediente.getDescripcionHechos()</span>
+                )
+<span class="nc" id="L207">                .fechaRecepcion(</span>
+<span class="nc" id="L208">                        expediente.getFechaRecepcionOrigen()</span>
+                )
+<span class="nc" id="L210">                .estatus(</span>
+<span class="nc" id="L211">                        expediente.getEstatus()</span>
+                )
+<span class="nc" id="L213">                .prioridad(</span>
+<span class="nc" id="L214">                        expediente.getPrioridad()</span>
+                )
+<span class="nc" id="L216">                .fechaInicioAnalisis(</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">                        expediente.getFechaInicioAnalisis() != null</span>
+<span class="nc" id="L218">                                ? expediente.getFechaInicioAnalisis().toString()</span>
+<span class="nc" id="L219">                                : null</span>
+                )
+<span class="nc" id="L221">                .analistaAnalisisNombre(</span>
+<span class="nc" id="L222">                        expediente.getAnalistaAnalisisNombre()</span>
+                )
+<span class="nc" id="L224">                .quejoso(quejoso)</span>
+<span class="nc" id="L225">                .datosQueja(datosQueja(expediente))</span>
+<span class="nc" id="L226">                .evidencias(evidencias)</span>
+<span class="nc" id="L227">                .notas(notas)</span>
+<span class="nc" id="L228">                .build();</span>
+    }
+
+    /*
+     * Lo que el quejoso capturó en su queja (denunciado, fecha de los hechos...), leído de la
+     * tabla quejas por el folio de origen. Si falla, el detalle se muestra sin estos datos.
+     */
+    private DatosQuejaDTO datosQueja(ExpedientePrimerContacto expediente) {
+<span class="nc bnc" id="L236" title="All 2 branches missed.">        if (expediente.getFolioOrigen() == null) {</span>
+<span class="nc" id="L237">            return null;</span>
+        }
+        try {
+<span class="nc" id="L240">            return quejaRepository.findByNumeroFolio(expediente.getFolioOrigen())</span>
+<span class="nc" id="L241">                    .map(q -&gt; DatosQuejaDTO.builder()</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">                            .fechaRegistro(q.getFechaCreacion() != null</span>
+<span class="nc" id="L243">                                    ? q.getFechaCreacion().toLocalDate().toString() : null)</span>
+<span class="nc" id="L244">                            .asunto(q.getMotivo())</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">                            .fechaHechos(q.getFechaHechos() != null ? q.getFechaHechos().toString() : null)</span>
+<span class="nc" id="L246">                            .unidadAcademicaClave(q.getUnidadAcademicaClave())</span>
+<span class="nc" id="L247">                            .tipoIdentificacionQuejoso(q.getTipoIdentificacionQuejoso())</span>
+<span class="nc" id="L248">                            .numeroIdentificacionQuejoso(q.getNumeroIdentificacionQuejoso())</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">                            .fechaNacimientoQuejoso(q.getFechaNacimientoQuejoso() != null</span>
+<span class="nc" id="L250">                                    ? q.getFechaNacimientoQuejoso().toString() : null)</span>
+<span class="nc" id="L251">                            .denunciado(unir(q.getNombreDenunciado(), q.getApellido1Denunciado(),</span>
+<span class="nc" id="L252">                                    q.getApellido2Denunciado()))</span>
+<span class="nc" id="L253">                            .build())</span>
+<span class="nc" id="L254">                    .orElse(null);</span>
+<span class="nc" id="L255">        } catch (Exception ex) {</span>
+<span class="nc" id="L256">            return null;</span>
+        }
+    }
+
+    private static String unir(String... partes) {
+<span class="nc" id="L261">        String nombre = java.util.Arrays.stream(partes)</span>
+<span class="nc bnc" id="L262" title="All 4 branches missed.">                .filter(p -&gt; p != null &amp;&amp; !p.isBlank())</span>
+<span class="nc" id="L263">                .map(String::strip)</span>
+<span class="nc" id="L264">                .collect(java.util.stream.Collectors.joining(&quot; &quot;));</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">        return nombre.isEmpty() ? null : nombre;</span>
+    }
+
+    private NotaAnalisisDTO convertirNotaDTO(
+            NotaAnalisis nota
+    ) {
+<span class="nc" id="L271">        return NotaAnalisisService.convertirADTO(nota);</span>
+    }
+
+    private EvidenciaDTO convertirEvidenciaDTO(
+            EvidenciaPrimerContacto evidencia
+    ) {
+
+<span class="nc" id="L278">        return EvidenciaDTO.builder()</span>
+
+                /*
+                 * Conservamos preferentemente el ID que
+                 * tenía la evidencia en el área de origen.
+                 *
+                 * Si no existe, usamos el ID interno
+                 * de Primer Contacto.
+                 */
+<span class="nc" id="L287">                .id(</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">                        evidencia.getEvidenciaOrigenId() != null</span>
+<span class="nc" id="L289">                                ? evidencia.getEvidenciaOrigenId()</span>
+<span class="nc" id="L290">                                : evidencia.getId()</span>
+                )
+
+<span class="nc" id="L293">                .nombreArchivo(</span>
+<span class="nc" id="L294">                        evidencia.getNombreArchivo()</span>
+                )
+<span class="nc" id="L296">                .tipoArchivo(</span>
+<span class="nc" id="L297">                        evidencia.getTipoArchivo()</span>
+                )
+<span class="nc" id="L299">                .urlArchivo(</span>
+<span class="nc" id="L300">                        evidencia.getUrlArchivo()</span>
+                )
+<span class="nc" id="L302">                .fechaCarga(</span>
+<span class="nc" id="L303">                        evidencia.getFechaCarga()</span>
+                )
+<span class="nc" id="L305">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

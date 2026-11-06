@@ -1,5 +1,5 @@
 .page {
-  max-width: 1280px;
+  max-width: none; /* Sin tope: con el menú compacto se aprovecha todo el ancho (como Recepción) */
 }
 
 .page-header {
@@ -38,8 +38,8 @@ button {
 }
 
 .card {
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  box-shadow: var(--sombra-suave);
   padding: var(--space-4);
   background: white;
 }
@@ -539,7 +539,7 @@ button {
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border-radius: 14px;
+  border-radius: 12px;
   background: white;
   box-shadow: 0 6px 24px rgba(15, 23, 42, 0.18);
   border: 1px solid var(--guinda);

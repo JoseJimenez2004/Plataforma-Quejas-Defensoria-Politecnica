@@ -1,0 +1,16 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+,ipn.escom.defensoria.queja_service.controller,ConciliacionController,33,0,0,0,10,0,3,0,3,0
+,ipn.escom.defensoria.queja_service.controller,QuejaController,217,0,6,0,44,0,18,0,15,0
+,ipn.escom.defensoria.queja_service.service,NotificacionClienteService,14,138,4,4,6,31,4,6,0,6
+,ipn.escom.defensoria.queja_service.service,ConciliacionService,5,72,1,7,1,15,2,6,1,3
+,ipn.escom.defensoria.queja_service.service,QuejaService,92,727,21,49,22,172,23,45,4,29
+,ipn.escom.defensoria.queja_service.validacion,ValidadorFechas,0,92,1,17,0,24,1,15,0,7
+,ipn.escom.defensoria.queja_service.validacion,ValidadorArchivos,21,230,9,41,4,53,9,25,0,9
+,ipn.escom.defensoria.queja_service.validacion,ValidadorArchivos.ArchivosClasificados,0,9,0,0,0,1,0,1,0,1
+,ipn.escom.defensoria.queja_service.validacion,ValidadorCorreo,0,101,0,16,0,25,0,12,0,4
+,ipn.escom.defensoria.queja_service.validacion,DetectorTipoArchivo,2,214,3,19,1,30,3,14,0,6
+,ipn.escom.defensoria.queja_service.validacion,ReglasQueja,0,6,0,0,0,1,0,1,0,1
+,ipn.escom.defensoria.queja_service.validacion,Textos,0,26,0,8,0,5,0,6,0,2
+,ipn.escom.defensoria.queja_service.validacion,TipoArchivoDetectado,0,68,0,0,0,13,0,4,0,4
+,ipn.escom.defensoria.queja_service.validacion,ValidadorQuejaPublica,0,272,0,30,0,69,0,27,0,12
+,ipn.escom.defensoria.queja_service.validacion,ValidacionException,0,4,0,0,0,2,0,1,0,1

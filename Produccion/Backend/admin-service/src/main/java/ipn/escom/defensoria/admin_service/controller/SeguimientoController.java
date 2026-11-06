@@ -45,7 +45,7 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 @RestController
 @RequestMapping("/api/admin/seguimiento")
-@PreAuthorize("hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')")
+@PreAuthorize("hasRole('DEFENSOR')")
 @Tag(name = "Seguimiento de quejas", description = "Indicadores y consulta de quejas para la Defensora")
 public class SeguimientoController {
 

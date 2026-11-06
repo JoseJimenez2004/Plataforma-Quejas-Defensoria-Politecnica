@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OficioAnalisisPdfService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service</a> &gt; <span class="el_source">OficioAnalisisPdfService.java</span></div><h1>OficioAnalisisPdfService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service;
+
+import com.lowagie.text.Chunk;
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+import com.lowagie.text.pdf.draw.LineSeparator;
+import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.NotaAnalisis;
+import org.springframework.stereotype.Service;
+
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
+/**
+ * Genera el oficio de Primer Contacto (la nota de análisis del expediente) como PDF.
+ *
+ * Es una constancia interna que queda dentro de la queja: membrete, número de oficio,
+ * lugar, fecha y hora en que se elaboró, datos de la queja, asunto, el texto que escribió el
+ * analista y su firma. Mismo estilo que el oficio de remisión (OficioRemisionPdfService).
+ */
+@Service
+<span class="nc" id="L34">public class OficioAnalisisPdfService {</span>
+
+<span class="nc" id="L36">    private static final Color GUINDA = new Color(0x6C, 0x1D, 0x45);</span>
+<span class="nc" id="L37">    private static final Color GRIS = new Color(0x55, 0x55, 0x55);</span>
+<span class="nc" id="L38">    private static final Color FONDO_DATOS = new Color(0xF7, 0xEE, 0xF1);</span>
+
+<span class="nc" id="L40">    private static final Locale ES_MX = Locale.forLanguageTag(&quot;es-MX&quot;);</span>
+<span class="nc" id="L41">    private static final DateTimeFormatter FECHA_LARGA =</span>
+<span class="nc" id="L42">            DateTimeFormatter.ofPattern(&quot;d 'de' MMMM 'de' yyyy&quot;, ES_MX);</span>
+<span class="nc" id="L43">    private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern(&quot;HH:mm&quot;, ES_MX);</span>
+<span class="nc" id="L44">    private static final DateTimeFormatter FECHA_HORA =</span>
+<span class="nc" id="L45">            DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy 'a las' HH:mm 'h'&quot;, ES_MX);</span>
+
+<span class="nc" id="L47">    private final Font titulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, GUINDA);</span>
+<span class="nc" id="L48">    private final Font subtitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, GUINDA);</span>
+<span class="nc" id="L49">    private final Font normal = FontFactory.getFont(FontFactory.HELVETICA, 10.5f, Color.BLACK);</span>
+<span class="nc" id="L50">    private final Font negrita = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10.5f, Color.BLACK);</span>
+<span class="nc" id="L51">    private final Font datos = FontFactory.getFont(FontFactory.HELVETICA, 9.5f, Color.BLACK);</span>
+<span class="nc" id="L52">    private final Font datosNegrita = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9.5f, Color.BLACK);</span>
+<span class="nc" id="L53">    private final Font pequena = FontFactory.getFont(FontFactory.HELVETICA, 8.5f, GRIS);</span>
+
+    public byte[] generar(
+            NotaAnalisis nota,
+            String numeroOficio,
+            ExpedientePrimerContacto expediente
+    ) {
+
+<span class="nc" id="L61">        ByteArrayOutputStream salida = new ByteArrayOutputStream();</span>
+<span class="nc" id="L62">        Document documento = new Document(PageSize.LETTER, 64, 64, 44, 40);</span>
+
+        try {
+<span class="nc" id="L65">            PdfWriter.getInstance(documento, salida);</span>
+<span class="nc" id="L66">            documento.addTitle(&quot;Oficio &quot; + numeroOficio);</span>
+<span class="nc" id="L67">            documento.addAuthor(valor(nota.getAnalistaNombre(), &quot;Defensoría de los Derechos Politécnicos&quot;));</span>
+<span class="nc" id="L68">            documento.open();</span>
+
+<span class="nc" id="L70">            membrete(documento);</span>
+<span class="nc" id="L71">            encabezadoOficio(documento, nota, numeroOficio, expediente);</span>
+<span class="nc" id="L72">            datosQueja(documento, expediente);</span>
+<span class="nc" id="L73">            cuerpo(documento, nota);</span>
+<span class="nc" id="L74">            firma(documento, nota, expediente);</span>
+
+<span class="nc" id="L76">            documento.close();</span>
+
+<span class="nc" id="L78">        } catch (DocumentException ex) {</span>
+<span class="nc" id="L79">            throw new IllegalStateException(&quot;No se pudo generar el PDF del oficio.&quot;, ex);</span>
+<span class="nc" id="L80">        }</span>
+
+<span class="nc" id="L82">        return salida.toByteArray();</span>
+    }
+
+    private void membrete(Document documento) throws DocumentException {
+
+<span class="nc" id="L87">        Paragraph institucion = new Paragraph(&quot;INSTITUTO POLITÉCNICO NACIONAL&quot;, titulo);</span>
+<span class="nc" id="L88">        institucion.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L89">        documento.add(institucion);</span>
+
+<span class="nc" id="L91">        Paragraph area = new Paragraph(&quot;Defensoría de los Derechos Politécnicos · Área de Primer Contacto&quot;, subtitulo);</span>
+<span class="nc" id="L92">        area.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L93">        documento.add(area);</span>
+
+<span class="nc" id="L95">        LineSeparator linea = new LineSeparator(1.2f, 100, GUINDA, Element.ALIGN_CENTER, -4);</span>
+<span class="nc" id="L96">        documento.add(new Chunk(linea));</span>
+<span class="nc" id="L97">        documento.add(espacio(10));</span>
+<span class="nc" id="L98">    }</span>
+
+    private void encabezadoOficio(
+            Document documento,
+            NotaAnalisis nota,
+            String numeroOficio,
+            ExpedientePrimerContacto expediente
+    ) throws DocumentException {
+
+<span class="nc" id="L107">        PdfPTable tabla = new PdfPTable(2);</span>
+<span class="nc" id="L108">        tabla.setWidthPercentage(62);</span>
+<span class="nc" id="L109">        tabla.setHorizontalAlignment(Element.ALIGN_RIGHT);</span>
+<span class="nc" id="L110">        tabla.setWidths(new float[]{0.9f, 1.6f});</span>
+
+<span class="nc" id="L112">        filaDato(tabla, &quot;Oficio núm.:&quot;, numeroOficio);</span>
+<span class="nc" id="L113">        filaDato(tabla, &quot;Folio de la queja:&quot;, expediente.getFolioOrigen());</span>
+<span class="nc" id="L114">        filaDato(tabla, &quot;Expediente PC:&quot;, expediente.getFolio());</span>
+<span class="nc" id="L115">        filaDato(tabla, &quot;Asunto:&quot;, valor(nota.getAsunto(), &quot;Nota de análisis&quot;));</span>
+
+<span class="nc" id="L117">        documento.add(tabla);</span>
+
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        LocalDateTime fecha = nota.getFechaCreacion() != null</span>
+<span class="nc" id="L120">                ? nota.getFechaCreacion()</span>
+<span class="nc" id="L121">                : LocalDateTime.now();</span>
+
+<span class="nc" id="L123">        Paragraph lugarFecha = new Paragraph(</span>
+<span class="nc" id="L124">                &quot;Ciudad de México, a &quot; + fecha.format(FECHA_LARGA) + &quot;, &quot; + fecha.format(HORA) + &quot; h.&quot;,</span>
+                normal
+        );
+<span class="nc" id="L127">        lugarFecha.setAlignment(Element.ALIGN_RIGHT);</span>
+<span class="nc" id="L128">        lugarFecha.setSpacingBefore(8);</span>
+<span class="nc" id="L129">        documento.add(lugarFecha);</span>
+<span class="nc" id="L130">        documento.add(espacio(10));</span>
+<span class="nc" id="L131">    }</span>
+
+    /* Recuadro con los datos de la queja a la que pertenece el oficio. */
+    private void datosQueja(Document documento, ExpedientePrimerContacto expediente) throws DocumentException {
+
+<span class="nc" id="L136">        PdfPTable tabla = new PdfPTable(4);</span>
+<span class="nc" id="L137">        tabla.setWidthPercentage(100);</span>
+<span class="nc" id="L138">        tabla.setWidths(new float[]{1.1f, 2f, 1f, 1.6f});</span>
+
+<span class="nc" id="L140">        celdaDatos(tabla, &quot;Persona quejosa:&quot;, valor(expediente.getQuejosoNombre(), &quot;—&quot;));</span>
+<span class="nc" id="L141">        celdaDatos(tabla, &quot;Unidad:&quot;, valor(expediente.getUnidadAcademica(), &quot;—&quot;));</span>
+<span class="nc" id="L142">        celdaDatos(tabla, &quot;Asunto de la queja:&quot;, valor(expediente.getTema(), &quot;—&quot;));</span>
+<span class="nc" id="L143">        celdaDatos(tabla, &quot;Prioridad:&quot;, prioridad(expediente.getPrioridad()));</span>
+
+<span class="nc" id="L145">        documento.add(tabla);</span>
+<span class="nc" id="L146">        documento.add(espacio(12));</span>
+<span class="nc" id="L147">    }</span>
+
+    private void cuerpo(Document documento, NotaAnalisis nota) throws DocumentException {
+
+        // Respeta los párrafos que escribió el analista (una línea en blanco o un salto).
+<span class="nc bnc" id="L152" title="All 2 branches missed.">        for (String bloque : valor(nota.getContenido(), &quot;&quot;).strip().split(&quot;\\R+&quot;)) {</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">            if (!bloque.isBlank()) {</span>
+<span class="nc" id="L154">                parrafo(documento, bloque.strip());</span>
+            }
+        }
+<span class="nc" id="L157">    }</span>
+
+    private void firma(
+            Document documento,
+            NotaAnalisis nota,
+            ExpedientePrimerContacto expediente
+    ) throws DocumentException {
+
+<span class="nc" id="L165">        documento.add(espacio(20));</span>
+
+<span class="nc" id="L167">        Paragraph atentamente = new Paragraph(&quot;A T E N T A M E N T E&quot;, negrita);</span>
+<span class="nc" id="L168">        atentamente.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L169">        documento.add(atentamente);</span>
+
+<span class="nc" id="L171">        Paragraph lema = new Paragraph(&quot;\&quot;La Técnica al Servicio de la Patria\&quot;&quot;, normal);</span>
+<span class="nc" id="L172">        lema.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L173">        documento.add(lema);</span>
+
+<span class="nc" id="L175">        documento.add(espacio(26));</span>
+
+<span class="nc" id="L177">        Paragraph linea = new Paragraph(&quot;______________________________________&quot;, normal);</span>
+<span class="nc" id="L178">        linea.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L179">        documento.add(linea);</span>
+
+<span class="nc" id="L181">        Paragraph nombre = new Paragraph(valor(nota.getAnalistaNombre(), &quot;Analista de Primer Contacto&quot;), negrita);</span>
+<span class="nc" id="L182">        nombre.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L183">        documento.add(nombre);</span>
+
+<span class="nc" id="L185">        Paragraph cargo = new Paragraph(&quot;Analista de Primer Contacto\nDefensoría de los Derechos Politécnicos&quot;, normal);</span>
+<span class="nc" id="L186">        cargo.setAlignment(Element.ALIGN_CENTER);</span>
+<span class="nc" id="L187">        documento.add(cargo);</span>
+
+<span class="nc" id="L189">        documento.add(espacio(14));</span>
+
+<span class="nc" id="L191">        StringBuilder constancia = new StringBuilder(&quot;Elaborado por &quot;)</span>
+<span class="nc" id="L192">                .append(valor(nota.getAnalistaNombre(), &quot;el analista&quot;));</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">        if (nota.getFechaCreacion() != null) {</span>
+<span class="nc" id="L194">            constancia.append(&quot; el &quot;).append(nota.getFechaCreacion().format(FECHA_HORA));</span>
+        }
+<span class="nc" id="L196">        constancia.append(&quot;.&quot;);</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        if (nota.getFechaActualizacion() != null) {</span>
+<span class="nc" id="L198">            constancia.append(&quot; Última modificación: &quot;)</span>
+<span class="nc" id="L199">                    .append(nota.getFechaActualizacion().format(FECHA_HORA)).append(&quot;.&quot;);</span>
+        }
+<span class="nc" id="L201">        constancia.append(&quot;\nc.c.p. Expediente &quot;).append(expediente.getFolio()).append(&quot;.&quot;);</span>
+
+<span class="nc" id="L203">        documento.add(new Paragraph(constancia.toString(), pequena));</span>
+<span class="nc" id="L204">    }</span>
+
+    private void filaDato(PdfPTable tabla, String etiqueta, String valor) {
+<span class="nc" id="L207">        tabla.addCell(celda(new Phrase(etiqueta, negrita)));</span>
+<span class="nc" id="L208">        tabla.addCell(celda(new Phrase(valor(valor, &quot;—&quot;), normal)));</span>
+<span class="nc" id="L209">    }</span>
+
+    private void celdaDatos(PdfPTable tabla, String etiqueta, String valor) {
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        for (PdfPCell celda : new PdfPCell[]{</span>
+                new PdfPCell(new Phrase(etiqueta, datosNegrita)),
+                new PdfPCell(new Phrase(valor, datos))
+        }) {
+<span class="nc" id="L216">            celda.setBorder(PdfPCell.NO_BORDER);</span>
+<span class="nc" id="L217">            celda.setBackgroundColor(FONDO_DATOS);</span>
+<span class="nc" id="L218">            celda.setPadding(5);</span>
+<span class="nc" id="L219">            tabla.addCell(celda);</span>
+        }
+<span class="nc" id="L221">    }</span>
+
+    private PdfPCell celda(Phrase contenido) {
+<span class="nc" id="L224">        PdfPCell celda = new PdfPCell(contenido);</span>
+<span class="nc" id="L225">        celda.setBorder(PdfPCell.NO_BORDER);</span>
+<span class="nc" id="L226">        celda.setPaddingBottom(2);</span>
+<span class="nc" id="L227">        return celda;</span>
+    }
+
+    private void parrafo(Document documento, String texto) throws DocumentException {
+<span class="nc" id="L231">        Paragraph p = new Paragraph(texto, normal);</span>
+<span class="nc" id="L232">        p.setAlignment(Element.ALIGN_JUSTIFIED);</span>
+<span class="nc" id="L233">        p.setLeading(15);</span>
+<span class="nc" id="L234">        p.setSpacingAfter(6);</span>
+<span class="nc" id="L235">        documento.add(p);</span>
+<span class="nc" id="L236">    }</span>
+
+    private Paragraph espacio(float alto) {
+<span class="nc" id="L239">        Paragraph p = new Paragraph(&quot; &quot;);</span>
+<span class="nc" id="L240">        p.setLeading(alto);</span>
+<span class="nc" id="L241">        return p;</span>
+    }
+
+    /* ALTA -&gt; Alta */
+    private String prioridad(String codigo) {
+<span class="nc bnc" id="L246" title="All 4 branches missed.">        if (codigo == null || codigo.isBlank()) {</span>
+<span class="nc" id="L247">            return &quot;Sin asignar&quot;;</span>
+        }
+<span class="nc" id="L249">        String texto = codigo.strip().toLowerCase(ES_MX);</span>
+<span class="nc" id="L250">        return Character.toUpperCase(texto.charAt(0)) + texto.substring(1);</span>
+    }
+
+    private String valor(String texto, String porDefecto) {
+<span class="nc bnc" id="L254" title="All 4 branches missed.">        return texto == null || texto.isBlank() ? porDefecto : texto;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

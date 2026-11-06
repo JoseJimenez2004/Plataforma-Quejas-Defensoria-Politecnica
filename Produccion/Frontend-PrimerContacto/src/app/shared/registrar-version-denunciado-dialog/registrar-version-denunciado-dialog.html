@@ -1,0 +1,72 @@
+<h2 mat-dialog-title>Registrar versión del denunciado</h2>
+
+<mat-dialog-content>
+  <p class="intro">Queja <strong>{{ data.folioQueja }}</strong>. Captura lo que declaró la persona denunciada
+    (por ejemplo, en una cita o entrevista). Quedará registrado quién la capturó y cuándo.</p>
+
+  <div class="rejilla">
+    <label>Nombre(s) *<input [(ngModel)]="nombre" maxlength="50" autocomplete="off"></label>
+    <label>Primer apellido *<input [(ngModel)]="apellido1" maxlength="50" autocomplete="off"></label>
+    <label>Segundo apellido<input [(ngModel)]="apellido2" maxlength="50" autocomplete="off"></label>
+
+    <label class="ancho">Unidad de procedencia *
+      <span class="doble">
+        <input type="search" [(ngModel)]="busquedaUnidad" placeholder="Buscar…" aria-label="Buscar unidad">
+        <select [(ngModel)]="unidad" [disabled]="cargandoCatalogo">
+          <option value="" disabled>{{ cargandoCatalogo ? 'Cargando catálogo…' : 'Elige la unidad' }}</option>
+          @for (d of dependenciasFiltradas; track d.clave) { <option [value]="d.clave">{{ etiquetaDependencia(d) }}</option> }
+        </select>
+      </span>
+    </label>
+
+    <label>Tipo de identificación *
+      <select [(ngModel)]="tipoIdentificacion">
+        <option value="EMPLEADO">Número de empleado</option>
+        <option value="ALUMNO">Boleta</option>
+      </select>
+    </label>
+    <label>{{ tipoIdentificacion === 'ALUMNO' ? 'Boleta' : 'Número de empleado' }} *
+      <input [(ngModel)]="numeroIdentificacion" maxlength="10" inputmode="numeric" autocomplete="off"></label>
+    <label>Fecha de la entrevista<input type="date" [(ngModel)]="fechaEntrevista" [max]="hoy"></label>
+
+    <label class="ancho">Versión de los hechos *
+      <textarea rows="7" [(ngModel)]="descripcionHechos" [maxlength]="DESCRIPCION_MAX"
+                placeholder="Lo que declaró el denunciado, con sus palabras en lo posible."></textarea>
+      <small class="contador">{{ descripcionHechos.length }} / {{ DESCRIPCION_MAX }}</small>
+    </label>
+  </div>
+
+  <div class="archivos">
+    <div>
+      <b>Credencial</b> <small>(opcional · JPG o PNG · hasta 2 imágenes de 3 MB)</small>
+      <label class="boton-archivo"><mat-icon>badge</mat-icon> Elegir imagen
+        <input type="file" accept="image/jpeg,image/png" multiple (change)="elegirCredencial($event)" hidden></label>
+      <ul>
+        @for (f of credencial; track f.name + $index; let i = $index) {
+          <li>{{ f.name }} <small>{{ tamanio(f.size) }}</small>
+            <button type="button" class="quitar" (click)="quitar('credencial', i)" aria-label="Quitar">×</button></li>
+        }
+      </ul>
+    </div>
+    <div>
+      <b>Evidencias</b> <small>(opcional · PDF, JPG, PNG, MP4 o MP3 · hasta 10, 30 MB c/u)</small>
+      <label class="boton-archivo"><mat-icon>attach_file</mat-icon> Agregar archivos
+        <input type="file" accept=".pdf,.jpg,.jpeg,.png,.mp4,.mp3" multiple (change)="elegirEvidencias($event)" hidden></label>
+      <ul>
+        @for (f of evidencias; track f.name + $index; let i = $index) {
+          <li>{{ f.name }} <small>{{ tamanio(f.size) }}</small>
+            <button type="button" class="quitar" (click)="quitar('evidencias', i)" aria-label="Quitar">×</button></li>
+        }
+      </ul>
+    </div>
+  </div>
+
+  @if (error) { <p class="error" role="alert">{{ error }}</p> }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button (click)="cancelar()" [disabled]="guardando">Cancelar</button>
+  <button mat-flat-button class="primary-btn" (click)="guardar()" [disabled]="guardando">
+    <mat-icon>save</mat-icon> {{ guardando ? 'Guardando…' : 'Registrar versión' }}
+  </button>
+</mat-dialog-actions>

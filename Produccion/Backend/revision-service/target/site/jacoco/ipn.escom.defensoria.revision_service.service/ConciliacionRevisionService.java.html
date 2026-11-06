@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConciliacionRevisionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.revision_service.service</a> &gt; <span class="el_source">ConciliacionRevisionService.java</span></div><h1>ConciliacionRevisionService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.revision_service.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.revision_service.entity.AcuerdoConciliacion;
+import ipn.escom.defensoria.revision_service.entity.Queja;
+import ipn.escom.defensoria.revision_service.model.CrearConciliacionRequest;
+import ipn.escom.defensoria.revision_service.repository.AcuerdoConciliacionRepository;
+import ipn.escom.defensoria.revision_service.repository.QuejaRepository;
+
+/** Lado del personal (recepcionista/subdefensor/defensor) para emitir acuerdos de
+ * conciliación. El quejoso solo los lee y responde desde queja-service. */
+@Service
+public class ConciliacionRevisionService {
+
+    private final AcuerdoConciliacionRepository acuerdoConciliacionRepository;
+    private final QuejaRepository quejaRepository;
+    private final NotificacionQuejaService notificacionService;
+
+    public ConciliacionRevisionService(
+            AcuerdoConciliacionRepository acuerdoConciliacionRepository,
+            QuejaRepository quejaRepository,
+<span class="fc" id="L25">            NotificacionQuejaService notificacionService) {</span>
+<span class="fc" id="L26">        this.acuerdoConciliacionRepository = acuerdoConciliacionRepository;</span>
+<span class="fc" id="L27">        this.quejaRepository = quejaRepository;</span>
+<span class="fc" id="L28">        this.notificacionService = notificacionService;</span>
+<span class="fc" id="L29">    }</span>
+
+    public AcuerdoConciliacion crear(CrearConciliacionRequest datos, String correoStaff) {
+<span class="fc" id="L32">        Queja queja = quejaRepository.findByNumeroFolio(datos.getNumeroFolio())</span>
+<span class="fc" id="L33">                .orElseThrow(() -&gt; new RuntimeException(&quot;No existe una queja con el folio &quot; + datos.getNumeroFolio()));</span>
+
+<span class="fc" id="L35">        AcuerdoConciliacion acuerdo = new AcuerdoConciliacion();</span>
+<span class="fc" id="L36">        acuerdo.setNumeroFolio(datos.getNumeroFolio());</span>
+<span class="fc" id="L37">        acuerdo.setCorreoInstitucional(queja.getCorreoInstitucional());</span>
+<span class="fc" id="L38">        acuerdo.setAsunto(datos.getAsunto());</span>
+<span class="fc" id="L39">        acuerdo.setTerminos(datos.getTerminos());</span>
+<span class="fc" id="L40">        acuerdo.setCreadoPor(correoStaff);</span>
+
+<span class="fc" id="L42">        AcuerdoConciliacion guardado = acuerdoConciliacionRepository.save(acuerdo);</span>
+
+<span class="fc" id="L44">        notificacionService.registrarConciliacion(queja.getCorreoInstitucional(), datos.getNumeroFolio(), datos.getAsunto());</span>
+
+<span class="fc" id="L46">        return guardado;</span>
+    }
+
+    public List&lt;AcuerdoConciliacion&gt; listar(String folio) {
+<span class="pc bpc" id="L50" title="2 of 4 branches missed.">        if (folio != null &amp;&amp; !folio.isBlank()) {</span>
+<span class="nc" id="L51">            return acuerdoConciliacionRepository.findByNumeroFolioOrderByFechaEmisionDesc(folio);</span>
+        }
+<span class="fc" id="L53">        return acuerdoConciliacionRepository.findAllByOrderByFechaEmisionDesc();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

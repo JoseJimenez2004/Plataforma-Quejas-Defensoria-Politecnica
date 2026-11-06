@@ -32,11 +32,11 @@ interface RespuestaPregunta {
 
 /** Texto del motivo que se le manda al quejoso cuando la respuesta es "No". */
 const MOTIVO_SI_NO: Record<ClavePregunta, string> = {
-  nombreCompleto: 'El nombre asentado en la queja no coincide íntegramente con la identificación oficial adjunta.',
+  nombreCompleto: 'El nombre asentado en la queja no coincide íntegramente con la identificación oficial presentada.',
   identificacionOficial:
-    'No se exhibió una identificación oficial con fotografía válida y vigente (o, en su caso, la constancia idónea de representación legal), en términos del Artículo 13 de la Gaceta Politécnica y del apartado de Control y Gestión Administrativa de Documentos.',
-  numeroIdentificacion: 'El número de boleta registrado no concuerda con la constancia o credencial institucional aportada.',
-  numeroEmpleado: 'El número de empleado registrado no concuerda con la constancia o credencial institucional aportada.',
+    'No se exhibió una identificación oficial con fotografía válida y vigente (o, en su caso, el documento que acredite la representación).',
+  numeroIdentificacion: 'El número de boleta registrado no concuerda con la credencial institucional presentada.',
+  numeroEmpleado: 'El número de empleado registrado no concuerda con la credencial institucional presentada.',
   fechaHechos: `La queja no fue promovida dentro del término de ${PLAZO_DIAS_QUEJA} días naturales posteriores a los hechos.`,
   datosDenunciado: 'La queja no aporta elementos suficientes para la plena identificación de la persona señalada.',
 };
@@ -51,11 +51,12 @@ const TITULO_PREGUNTA: Record<ClavePregunta, string> = {
   datosDenunciado: 'Identificación de la persona señalada',
 };
 
+/** El plazo de 90 días ('fechaHechos') ya no es pregunta: lo impide el formulario (art. 13,
+ * párrafo tercero). Se conserva la clave solo por compatibilidad. */
 const ORDEN_PREGUNTAS: ClavePregunta[] = [
   'nombreCompleto',
   'identificacionOficial',
   'numeroIdentificacion',
-  'fechaHechos',
   'datosDenunciado',
 ];
 

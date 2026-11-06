@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Configuración JWT
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000 # 1 hora
+
+mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USER}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+service:
+    url: ${QUEJAS_SERVICE_URL:http://localhost:8084} # Fallback a localhost si no existe la variable
+
+quejas:
+  service:
+    url: ${QUEJAS_SERVICE_URL:http://localhost:8084}
+
+notificaciones:
+  service:
+    url: ${NOTIFICACIONES_SERVICE_URL:http://localhost:8085}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name}]"

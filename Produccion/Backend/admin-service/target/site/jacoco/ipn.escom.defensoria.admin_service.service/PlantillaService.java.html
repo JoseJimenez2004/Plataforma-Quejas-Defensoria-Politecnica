@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlantillaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.admin_service.service</a> &gt; <span class="el_source">PlantillaService.java</span></div><h1>PlantillaService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.admin_service.service;
+
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.admin_service.entity.PlantillaDocumento;
+import ipn.escom.defensoria.admin_service.repository.PlantillaDocumentoRepository;
+import jakarta.annotation.PostConstruct;
+
+@Service
+public class PlantillaService {
+
+    private final PlantillaDocumentoRepository repository;
+
+<span class="fc" id="L19">    public PlantillaService(PlantillaDocumentoRepository repository) {</span>
+<span class="fc" id="L20">        this.repository = repository;</span>
+<span class="fc" id="L21">    }</span>
+
+    /** Datos de ejemplo usados solo para la previsualización -- nunca se guardan. */
+<span class="fc" id="L24">    private static final Map&lt;String, String&gt; DATOS_EJEMPLO = Map.of(</span>
+            &quot;folio_queja&quot;, &quot;DDP-2026-0421&quot;,
+            &quot;nombre_quejoso&quot;, &quot;Juan Pérez García&quot;,
+            &quot;nombre_subdefensor&quot;, &quot;Mtra. María López&quot;,
+            &quot;nombre_denunciado&quot;, &quot;N/A&quot;,
+            &quot;unidad_academica&quot;, &quot;ESCOM&quot;,
+<span class="fc" id="L30">            &quot;fecha_actual&quot;, java.time.LocalDate.now().toString());</span>
+
+    @PostConstruct
+    public void sembrarPlantillasBase() {
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (repository.count() &gt; 0) {</span>
+<span class="fc" id="L35">            return;</span>
+        }
+<span class="fc" id="L37">        crearSiNoExiste(&quot;OFICIO_SOLICITUD_INFORMACION&quot;, &quot;Oficio de Solicitud de Información&quot;,</span>
+                &quot;Por medio de la presente, se solicita información sobre el expediente &quot;
+                        + &quot;{folio_queja} del quejoso {nombre_quejoso}, relacionado con hechos &quot;
+                        + &quot;ocurridos en {unidad_academica}.\n\n&quot;
+                        + &quot;Se solicita dar respuesta a la brevedad posible.\n\n&quot;
+                        + &quot;Atentamente,\n{nombre_subdefensor}&quot;);
+<span class="fc" id="L43">        crearSiNoExiste(&quot;OFICIO_NOTIFICACION_RESOLUCION&quot;, &quot;Oficio de Notificación de Resolución&quot;,</span>
+                &quot;Por medio del presente oficio se notifica al quejoso {nombre_quejoso} la &quot;
+                        + &quot;resolución correspondiente al expediente {folio_queja}, con fecha &quot;
+                        + &quot;{fecha_actual}.\n\nAtentamente,\n{nombre_subdefensor}&quot;);
+<span class="fc" id="L47">        crearSiNoExiste(&quot;ACUERDO_CONCILIACION&quot;, &quot;Acuerdo de Conciliación&quot;,</span>
+                &quot;En la Ciudad de México, siendo {fecha_actual}, comparecen las partes &quot;
+                        + &quot;involucradas en el expediente {folio_queja} para efectos de &quot;
+                        + &quot;conciliación entre {nombre_quejoso} y {nombre_denunciado}.\n\n&quot;
+                        + &quot;Atentamente,\n{nombre_subdefensor}&quot;);
+<span class="fc" id="L52">    }</span>
+
+    private void crearSiNoExiste(String tipo, String nombre, String contenido) {
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if (repository.findByTipo(tipo).isPresent()) {</span>
+<span class="nc" id="L56">            return;</span>
+        }
+<span class="fc" id="L58">        PlantillaDocumento p = new PlantillaDocumento();</span>
+<span class="fc" id="L59">        p.setTipo(tipo);</span>
+<span class="fc" id="L60">        p.setNombre(nombre);</span>
+<span class="fc" id="L61">        p.setContenido(contenido);</span>
+<span class="fc" id="L62">        p.setActiva(true);</span>
+<span class="fc" id="L63">        repository.save(p);</span>
+<span class="fc" id="L64">    }</span>
+
+    public List&lt;PlantillaDocumento&gt; listar() {
+<span class="nc" id="L67">        return repository.findAllByOrderByNombreAsc();</span>
+    }
+
+    public PlantillaDocumento obtener(String tipo) {
+<span class="fc" id="L71">        return repository.findByTipo(tipo)</span>
+<span class="fc" id="L72">                .orElseThrow(() -&gt; new RuntimeException(&quot;No existe una plantilla de tipo &quot; + tipo));</span>
+    }
+
+    public PlantillaDocumento actualizar(String tipo, String contenido, String actualizadoPor) {
+<span class="fc" id="L76">        PlantillaDocumento plantilla = obtener(tipo);</span>
+<span class="fc" id="L77">        plantilla.setContenido(contenido);</span>
+<span class="fc" id="L78">        plantilla.setActualizadoEn(LocalDateTime.now());</span>
+<span class="fc" id="L79">        plantilla.setActualizadoPor(actualizadoPor);</span>
+<span class="fc" id="L80">        return repository.save(plantilla);</span>
+    }
+
+    /** Rellena los placeholders {clave} con datos de ejemplo para la vista previa -- ver
+     * mockup &quot;Ver Previsualización PDF&quot; (aquí se regresa como texto/HTML, no PDF real). */
+    public String previsualizar(String tipo) {
+<span class="fc" id="L86">        String contenido = obtener(tipo).getContenido();</span>
+<span class="fc" id="L87">        String resultado = contenido;</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; dato : DATOS_EJEMPLO.entrySet()) {</span>
+<span class="fc" id="L89">            resultado = resultado.replace(&quot;{&quot; + dato.getKey() + &quot;}&quot;, dato.getValue());</span>
+<span class="fc" id="L90">        }</span>
+<span class="fc" id="L91">        return resultado;</span>
+    }
+
+    public long contarActivas() {
+<span class="nc" id="L95">        return repository.countByActivaTrue();</span>
+    }
+
+    public Map&lt;String, String&gt; placeholdersDisponibles() {
+<span class="fc" id="L99">        Map&lt;String, String&gt; mapa = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L100">        mapa.put(&quot;folio_queja&quot;, &quot;Folio de la queja&quot;);</span>
+<span class="fc" id="L101">        mapa.put(&quot;nombre_quejoso&quot;, &quot;Nombre completo del quejoso&quot;);</span>
+<span class="fc" id="L102">        mapa.put(&quot;nombre_denunciado&quot;, &quot;Nombre de la persona denunciada&quot;);</span>
+<span class="fc" id="L103">        mapa.put(&quot;nombre_subdefensor&quot;, &quot;Nombre de quien firma el oficio&quot;);</span>
+<span class="fc" id="L104">        mapa.put(&quot;unidad_academica&quot;, &quot;Unidad académica involucrada&quot;);</span>
+<span class="fc" id="L105">        mapa.put(&quot;fecha_actual&quot;, &quot;Fecha en que se genera el documento&quot;);</span>
+<span class="fc" id="L106">        return mapa;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

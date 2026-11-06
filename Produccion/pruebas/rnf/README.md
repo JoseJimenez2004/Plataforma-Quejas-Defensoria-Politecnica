@@ -11,7 +11,7 @@ característica de ISO/IEC 25010. El detalle (casos, criterios, trazabilidad) es
 2. En GitHub → *Settings → Secrets and variables → Actions*:
    - **Variables:** `URL_PRUEBAS` (entorno de pruebas, nunca producción) y `DOMINIO_TLS`.
    - **Secrets:** `CRED_QUEJOSO`, `CRED_RECEPCIONISTA`, `CRED_ANALISTA_PRIMER_CONTACTO`,
-     `CRED_SUBDEFENSOR`, `CRED_DEFENSOR`, `CRED_ADMIN_SISTEMAS` con formato `correo:password`
+     `CRED_SUBDEFENSOR` y `CRED_DEFENSOR` con formato `correo:password`
      de cuentas **de prueba**.
 3. Las etapas 1–3 corren solas en cada push a `Produccion`. Las 4–8 se lanzan con
    *Actions → Pruebas RNF → Run workflow* o cada lunes.
@@ -41,7 +41,7 @@ java -jar checkstyle-10.21.4-all.jar -c estilo/checkstyle-defensoria.xml ../../B
 
 # Dinámicas (contra el entorno de pruebas)
 DOMINIO=defensoria-escom.ddns.net bash confidencialidad/confidencialidad.sh
-BASE_URL=https://pruebas... CRED_ADMIN_SISTEMAS='admin@ipn.mx:****' bash seguridad/matriz-roles.sh
+BASE_URL=https://pruebas... CRED_DEFENSOR='defensora@ipn.mx:****' bash seguridad/matriz-roles.sh
 BASE_URL=https://pruebas... bash capacidad/capacidad.sh
 k6 run -e BASE_URL=https://pruebas... capacidad/carga.k6.js
 ```

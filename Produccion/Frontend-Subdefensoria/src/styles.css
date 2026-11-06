@@ -1,4 +1,17 @@
 :root {
+  /* G-1 (2026-11): mismas sombras y acentos que Recepción (Frontend-Revision/src/styles.scss). */
+  --sombra-suave: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+  --sombra-media: 0 4px 12px rgba(16, 24, 40, 0.1);
+  --sombra-alta: 0 12px 32px rgba(16, 24, 40, 0.18);
+  --acento-azul: #2f6fed;
+  --acento-azul-suave: #eaf1fe;
+  --acento-verde: #1f9d6b;
+  --acento-verde-suave: #e7f7f0;
+  --acento-ambar: #c4841d;
+  --acento-ambar-suave: #fbf1e0;
+  --acento-morado: #7c4dc4;
+  --acento-morado-suave: #f1eafb;
+
   /* ---- Paleta institucional (misma que Frontend/Frontend-Revision/Frontend-Admin/
      Frontend-PrimerContacto, para que los 5 paneles del sistema se vean consistentes) ---- */
   --guinda: #6c1d45;
@@ -36,7 +49,7 @@
   --line-height-body: 1.6;
   --line-height-tight: 1.35;
 
-  --radius-card: 16px;
+  --radius-card: 12px;
   --radius-pill: 999px;
 }
 
@@ -162,3 +175,44 @@ h1, h2, h3, h4 {
 .sd-rejilla { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 .sd-rejilla .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 @media (max-width: 1100px) { .sd-rejilla { grid-template-columns: 1fr; } }
+
+/* SD-6: chips de prioridad (mismos colores que Primer Contacto). */
+.sd-chip.prio-urgente, .prio-urgente { background: #b71c1c; color: #fff; }
+.sd-chip.prio-alta, .prio-alta { background: #ffebee; color: #c62828; }
+.sd-chip.prio-media, .prio-media { background: #fdf6e3; color: #a16207; }
+.sd-chip.prio-baja, .prio-baja { background: #e8f5e9; color: #2e7d32; }
+.sd-chip.prio-sin-asignar, .prio-sin-asignar { background: #f1f2f4; color: #6b7280; }
+
+.selector-prioridad {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.selector-prioridad select {
+  height: 30px;
+  padding: 0 26px 0 10px;
+  border: 1px solid var(--borde, #e5e7eb);
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* =====================================================================================
+ * G-1 (2026-11): homologación con Recepción — tarjetas, tablas y botones. Solo estilos.
+ * ===================================================================================== */
+.sd-card, .sd-kpi { border-color: #eef0f3; border-radius: 12px; box-shadow: var(--sombra-suave); }
+.sd-kpi:hover { box-shadow: var(--sombra-media); }
+.sd-btn, .sd-btn-borde { min-height: 38px; padding: 8px 16px; font-size: 14px; font-weight: 700; }
+.sd-btn.chico, .sd-btn-borde.chico { min-height: 30px; padding: 4px 12px; font-size: 12.5px; }
+.sd-btn-borde { border-color: #e3bccb; color: var(--guinda-vivo); }
+/* Tabla como la cola de Recepción: filas en tarjeta gris claro con esquinas redondeadas. */
+.sd-tabla { border-collapse: separate; border-spacing: 0 6px; font-size: 14px; }
+.sd-tabla th { font-weight: 700; padding: 10px 12px 4px; border-bottom: 0; white-space: nowrap; }
+.sd-tabla td { padding: 9px 12px; background: #f9fafb; border-bottom: 0; }
+.sd-tabla td:first-child { border-radius: 8px 0 0 8px; }
+.sd-tabla td:last-child { border-radius: 0 8px 8px 0; }
+.sd-tabla tbody tr:hover td { background: #f7eef1; }

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ResumenController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.controller</a> &gt; <span class="el_source">ResumenController.java</span></div><h1>ResumenController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.controller;
+
+import ipn.escom.defensoria.primercontacto.service.ResumenModeloService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+/*
+ * Borrador de resumen de una queja con el modelo (resumen-service).
+ *
+ * POST /api/primer-contacto/resumen  { &quot;texto&quot;: &quot;narrativa de la queja&quot; }
+ *   200 -&gt; ResumenQuejaDTO
+ *   503 -&gt; el modelo no está disponible o tardó demasiado (la pantalla usa el simulado)
+ */
+@RestController
+@RequestMapping(&quot;/api/primer-contacto/resumen&quot;)
+public class ResumenController {
+
+    private final ResumenModeloService resumenService;
+
+<span class="nc" id="L23">    public ResumenController(ResumenModeloService resumenService) {</span>
+<span class="nc" id="L24">        this.resumenService = resumenService;</span>
+<span class="nc" id="L25">    }</span>
+
+    @PostMapping
+    public ResponseEntity&lt;?&gt; resumir(@RequestBody Map&lt;String, String&gt; cuerpo) {
+<span class="nc bnc" id="L29" title="All 2 branches missed.">        String texto = cuerpo != null ? cuerpo.get(&quot;texto&quot;) : null;</span>
+<span class="nc bnc" id="L30" title="All 4 branches missed.">        if (texto == null || texto.isBlank()) {</span>
+<span class="nc" id="L31">            return ResponseEntity.badRequest().body(Map.of(&quot;mensaje&quot;, &quot;La queja no tiene narrativa para resumir.&quot;));</span>
+        }
+<span class="nc" id="L33">        return resumenService.resumir(texto)</span>
+<span class="nc" id="L34">                .&lt;ResponseEntity&lt;?&gt;&gt;map(ResponseEntity::ok)</span>
+<span class="nc" id="L35">                .orElseGet(() -&gt; ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)</span>
+<span class="nc" id="L36">                        .body(Map.of(&quot;mensaje&quot;, &quot;El modelo de resumen no está disponible en este momento.&quot;)));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransicionExpedienteService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">TransicionExpedienteService.java</span></div><h1>TransicionExpedienteService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import ipn.escom.defensoria.subdefensoria.entity.EstatusExpediente;
+import ipn.escom.defensoria.subdefensoria.entity.ExpedienteInvestigacion;
+import ipn.escom.defensoria.subdefensoria.entity.QuejaReferencia;
+import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
+import ipn.escom.defensoria.subdefensoria.repository.QuejaReferenciaRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
+/**
+ * Único lugar donde cambia el estatus de un expediente de Subdefensoría (ver
+ * EstatusExpediente para el diagrama).
+ *
+ * Además refleja el cambio en quejas.estatus (lo que ve el quejoso en su panel) cuando
+ * subdefensoria.sincronizar-estatus-queja=true, igual que Primer Contacto. Si la queja no
+ * existe o la tabla falla, el expediente avanza de todos modos y solo queda en el log.
+ */
+@Service
+public class TransicionExpedienteService {
+
+<span class="nc" id="L26">    private static final Logger log = LoggerFactory.getLogger(TransicionExpedienteService.class);</span>
+
+    private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final QuejaReferenciaRepository quejaRepository;
+    private final boolean sincronizarQueja;
+
+    public TransicionExpedienteService(
+            ExpedienteInvestigacionRepository expedienteRepository,
+            QuejaReferenciaRepository quejaRepository,
+            @Value(&quot;${subdefensoria.sincronizar-estatus-queja:true}&quot;) boolean sincronizarQueja
+<span class="nc" id="L36">    ) {</span>
+<span class="nc" id="L37">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L38">        this.quejaRepository = quejaRepository;</span>
+<span class="nc" id="L39">        this.sincronizarQueja = sincronizarQueja;</span>
+<span class="nc" id="L40">    }</span>
+
+    public ExpedienteInvestigacion cambiar(ExpedienteInvestigacion expediente, String nuevoEstatus) {
+<span class="nc" id="L43">        expediente.setEstatus(nuevoEstatus);</span>
+<span class="nc" id="L44">        expediente.setFechaActualizacion(LocalDateTime.now());</span>
+<span class="nc" id="L45">        ExpedienteInvestigacion guardado = expedienteRepository.save(expediente);</span>
+<span class="nc" id="L46">        sincronizarQueja(guardado);</span>
+<span class="nc" id="L47">        return guardado;</span>
+    }
+
+    /** Para el expediente recién creado (ingesta), que ya nace con su estatus. */
+    public void sincronizarQueja(ExpedienteInvestigacion expediente) {
+<span class="nc bnc" id="L52" title="All 4 branches missed.">        if (!sincronizarQueja || expediente.getFolioQueja() == null) {</span>
+<span class="nc" id="L53">            return;</span>
+        }
+        try {
+<span class="nc" id="L56">            QuejaReferencia queja = quejaRepository.findByNumeroFolio(expediente.getFolioQueja()).orElse(null);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">            if (queja == null) {</span>
+<span class="nc" id="L58">                log.warn(&quot;No existe la queja {} para sincronizar el estatus {}&quot;,</span>
+<span class="nc" id="L59">                        expediente.getFolioQueja(), expediente.getEstatus());</span>
+<span class="nc" id="L60">                return;</span>
+            }
+<span class="nc" id="L62">            queja.setEstatus(EstatusExpediente.estatusQueja(expediente.getEstatus()));</span>
+<span class="nc" id="L63">            quejaRepository.save(queja);</span>
+<span class="nc" id="L64">        } catch (Exception ex) {</span>
+<span class="nc" id="L65">            log.error(&quot;No se pudo sincronizar quejas.estatus de {}: {}&quot;,</span>
+<span class="nc" id="L66">                    expediente.getFolioQueja(), ex.getMessage());</span>
+<span class="nc" id="L67">        }</span>
+<span class="nc" id="L68">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

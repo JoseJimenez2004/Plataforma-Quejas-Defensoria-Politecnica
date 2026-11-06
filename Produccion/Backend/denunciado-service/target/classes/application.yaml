@@ -1,0 +1,34 @@
+# Configuración de DESARROLLO local. En producción se usa
+# config-files/denunciado-service/config/denunciado-service.yml (SPRING_CONFIG_NAME).
+server:
+  port: 8094
+
+spring:
+  application:
+    name: denunciado-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/defensoria_db
+    username: postgres
+    password: Temporal2026@
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 100MB
+
+jwt:
+  secret: defensoria-ddp-jwt-secret-produccion-muy-segura-2026
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name}]"

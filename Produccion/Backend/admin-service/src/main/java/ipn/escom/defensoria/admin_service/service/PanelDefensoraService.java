@@ -627,7 +627,7 @@ public class PanelDefensoraService {
     public List<MiembroPersonal> personal() {
         MapSqlParameterSource prm = new MapSqlParameterSource()
                 .addValue("desde", Timestamp.valueOf(INICIO))
-                .addValue("roles", List.of("ADMIN_SISTEMAS", "RECEPCIONISTA", "ANALISTA_PRIMER_CONTACTO", "SUBDEFENSOR", "DEFENSOR"));
+                .addValue("roles", List.of("RECEPCIONISTA", "ANALISTA_PRIMER_CONTACTO", "SUBDEFENSOR", "DEFENSOR"));
         Map<Long, Map<String, Object>> stats = new LinkedHashMap<>();
         named.queryForList(MIEMBROS_SQL, prm).forEach(f -> stats.put(((Number) f.get("id")).longValue(), f));
 

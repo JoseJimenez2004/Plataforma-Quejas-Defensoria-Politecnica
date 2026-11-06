@@ -3,14 +3,36 @@
 <mat-dialog-content>
   <p class="folio-line">Expediente <strong>{{ data.folio }}</strong></p>
 
+  <!-- SD-1: unidad del catálogo de dependencias; llena titular y correo -->
+  <div class="selector-unidad">
+    <mat-form-field appearance="outline">
+      <mat-label>Buscar unidad o dependencia</mat-label>
+      <input matInput [(ngModel)]="busquedaUnidad" placeholder="ESCOM, CECyT 9, Dirección de…">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ cargandoCatalogo ? 'Cargando catálogo…' : 'Unidad / dependencia del catálogo' }}</mat-label>
+      <select matNativeControl [ngModel]="claveDependencia" (ngModelChange)="elegirDependencia($event)" [disabled]="cargandoCatalogo">
+        <option value="" disabled>Elige una unidad</option>
+        @for (d of dependenciasFiltradas; track d.clave) { <option [value]="d.clave">{{ etiquetaDependencia(d) }}</option> }
+      </select>
+    </mat-form-field>
+    @if (!cargandoCatalogo && !dependencias.length) {
+      <p class="aviso">No se pudo cargar el catálogo de dependencias; escribe el destinatario a mano.</p>
+    }
+    @if (claveDependencia && sinCorreo) {
+      <p class="aviso">Esta unidad no tiene correo registrado; escríbelo a mano.</p>
+    }
+  </div>
+
   <mat-form-field appearance="outline">
     <mat-label>Autoridad a la que se dirige</mat-label>
-    <input matInput [(ngModel)]="destinatarioNombre" placeholder="Ej. Director de ESCOM">
+    <input matInput [(ngModel)]="destinatarioNombre" placeholder="Nombre del titular">
   </mat-form-field>
 
   <mat-form-field appearance="outline">
     <mat-label>Correo del destinatario</mat-label>
-    <input matInput type="email" [(ngModel)]="destinatarioCorreo" placeholder="director.escom@ipn.mx">
+    <input matInput type="email" [(ngModel)]="destinatarioCorreo" placeholder="correo@ipn.mx">
   </mat-form-field>
 
   <mat-form-field appearance="outline">

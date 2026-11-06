@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransicionExpedienteService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service</a> &gt; <span class="el_source">TransicionExpedienteService.java</span></div><h1>TransicionExpedienteService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service;
+
+import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.QuejaReferencia;
+import ipn.escom.defensoria.primercontacto.exception.RecursoNoEncontradoException;
+import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
+import ipn.escom.defensoria.primercontacto.repository.QuejaReferenciaRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
+/**
+ * Único lugar donde cambia el estatus de un expediente de Primer Contacto (ver
+ * EstatusExpediente para el diagrama).
+ *
+ * Además refleja el cambio en quejas.estatus, que es lo que ven los demás módulos, cuando
+ * primer-contacto.sincronizar-estatus-queja=true (por defecto desde 2026-10-13, cuando el
+ * panel del quejoso aprendió las etiquetas de todos los estados del diagrama). Además el
+ * quejoso se entera por el centro de notificaciones (NotificacionQuejosoService).
+ */
+@Service
+public class TransicionExpedienteService {
+
+<span class="fc" id="L27">    private static final Logger log = LoggerFactory.getLogger(TransicionExpedienteService.class);</span>
+
+    private final ExpedientePrimerContactoRepository expedienteRepository;
+    private final QuejaReferenciaRepository quejaRepository;
+    private final boolean sincronizarQueja;
+
+    public TransicionExpedienteService(
+            ExpedientePrimerContactoRepository expedienteRepository,
+            QuejaReferenciaRepository quejaRepository,
+            @Value(&quot;${primer-contacto.sincronizar-estatus-queja:true}&quot;)
+            boolean sincronizarQueja
+<span class="fc" id="L38">    ) {</span>
+<span class="fc" id="L39">        this.expedienteRepository = expedienteRepository;</span>
+<span class="fc" id="L40">        this.quejaRepository = quejaRepository;</span>
+<span class="fc" id="L41">        this.sincronizarQueja = sincronizarQueja;</span>
+<span class="fc" id="L42">    }</span>
+
+    public ExpedientePrimerContacto obtenerPorFolio(String folio) {
+<span class="pc" id="L45">        return expedienteRepository.findByFolio(folio)</span>
+<span class="pc" id="L46">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                        &quot;No existe un expediente de Primer Contacto con folio &quot; + folio
+                ));
+    }
+
+    public ExpedientePrimerContacto cambiarEstatus(
+            ExpedientePrimerContacto expediente,
+            String nuevoEstatus
+    ) {
+<span class="fc" id="L55">        expediente.setEstatus(nuevoEstatus);</span>
+<span class="fc" id="L56">        expediente.setFechaActualizacion(LocalDateTime.now());</span>
+
+<span class="fc" id="L58">        ExpedientePrimerContacto guardado = expedienteRepository.save(expediente);</span>
+
+<span class="fc" id="L60">        sincronizarQueja(guardado);</span>
+
+<span class="fc" id="L62">        return guardado;</span>
+    }
+
+    private void sincronizarQueja(ExpedientePrimerContacto expediente) {
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (!sincronizarQueja) {</span>
+<span class="fc" id="L67">            return;</span>
+        }
+
+        try {
+<span class="fc" id="L71">            QuejaReferencia queja = quejaRepository</span>
+<span class="fc" id="L72">                    .findByNumeroFolio(expediente.getFolioOrigen())</span>
+<span class="fc" id="L73">                    .orElse(null);</span>
+
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            if (queja == null) {</span>
+<span class="fc" id="L76">                log.warn(&quot;No existe la queja {} para sincronizar el estatus {}&quot;,</span>
+<span class="fc" id="L77">                        expediente.getFolioOrigen(), expediente.getEstatus());</span>
+<span class="fc" id="L78">                return;</span>
+            }
+
+<span class="fc" id="L81">            queja.setEstatus(expediente.getEstatus());</span>
+<span class="fc" id="L82">            quejaRepository.save(queja);</span>
+
+<span class="fc" id="L84">        } catch (Exception ex) {</span>
+            // El expediente ya avanzó; que la tabla de otro módulo falle no debe revertirlo.
+<span class="fc" id="L86">            log.error(&quot;No se pudo sincronizar quejas.estatus de {}: {}&quot;,</span>
+<span class="fc" id="L87">                    expediente.getFolioOrigen(), ex.getMessage());</span>
+<span class="fc" id="L88">        }</span>
+<span class="fc" id="L89">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

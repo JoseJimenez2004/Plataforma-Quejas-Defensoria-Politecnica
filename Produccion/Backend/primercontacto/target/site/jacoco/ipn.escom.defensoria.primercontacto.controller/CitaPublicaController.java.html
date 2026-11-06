@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CitaPublicaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.controller</a> &gt; <span class="el_source">CitaPublicaController.java</span></div><h1>CitaPublicaController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.controller;
+
+import ipn.escom.defensoria.primercontacto.dto.CancelacionCitaDTO;
+import ipn.escom.defensoria.primercontacto.dto.CitaPublicaDTO;
+import ipn.escom.defensoria.primercontacto.service.CitaPrimerContactoService;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * Respuesta del quejoso a su cita desde el ENLACE que le llega por correo y en su centro de
+ * notificaciones (página /cita/responder?token=... del portal). No pide sesión: el token
+ * aleatorio de la cita es la credencial, igual que un enlace de activación de cuenta.
+ *
+ *   GET /api/primer-contacto/publico/citas/{token}
+ *   PUT /api/primer-contacto/publico/citas/{token}/confirmar
+ *   PUT /api/primer-contacto/publico/citas/{token}/cancelar      { &quot;motivo&quot;: &quot;...&quot; }
+ *
+ * Confirmar y cancelar son PUT (no GET) a propósito: los antivirus de correo abren los
+ * enlaces para revisarlos, y un GET que confirmara lo haría sin que el quejoso decidiera.
+ */
+@RestController
+@RequestMapping(&quot;/api/primer-contacto/publico/citas&quot;)
+public class CitaPublicaController {
+
+    private final CitaPrimerContactoService citaService;
+
+<span class="nc" id="L27">    public CitaPublicaController(CitaPrimerContactoService citaService) {</span>
+<span class="nc" id="L28">        this.citaService = citaService;</span>
+<span class="nc" id="L29">    }</span>
+
+    @GetMapping(&quot;/{token}&quot;)
+    public CitaPublicaDTO consultar(@PathVariable String token) {
+<span class="nc" id="L33">        return citaService.citaPorToken(token);</span>
+    }
+
+    @PutMapping(&quot;/{token}/confirmar&quot;)
+    public CitaPublicaDTO confirmar(@PathVariable String token) {
+<span class="nc" id="L38">        return citaService.confirmarPorToken(token);</span>
+    }
+
+    @PutMapping(&quot;/{token}/cancelar&quot;)
+    public CitaPublicaDTO cancelar(
+            @PathVariable String token,
+            @Valid @RequestBody CancelacionCitaDTO dto
+    ) {
+<span class="nc" id="L46">        return citaService.cancelarPorToken(token, dto.getMotivo());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

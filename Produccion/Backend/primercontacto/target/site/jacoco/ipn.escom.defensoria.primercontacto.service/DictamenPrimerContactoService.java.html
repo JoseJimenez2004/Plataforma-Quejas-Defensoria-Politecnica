@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DictamenPrimerContactoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service</a> &gt; <span class="el_source">DictamenPrimerContactoService.java</span></div><h1>DictamenPrimerContactoService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service;
+
+import ipn.escom.defensoria.primercontacto.dto.CompetenciaDTO;
+import ipn.escom.defensoria.primercontacto.dto.DictamenDTO;
+import ipn.escom.defensoria.primercontacto.dto.ExpedienteEntranteRequest;
+import ipn.escom.defensoria.primercontacto.dto.ImprocedenciaDTO;
+import ipn.escom.defensoria.primercontacto.dto.QuejosoResumenRequest;
+import ipn.escom.defensoria.primercontacto.dto.SubdefensoriaIngresoResponse;
+import ipn.escom.defensoria.primercontacto.entity.AcuerdoConciliacion;
+import ipn.escom.defensoria.primercontacto.entity.DictamenPrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.EstatusExpediente;
+import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.primercontacto.exception.OperacionInvalidaException;
+import ipn.escom.defensoria.primercontacto.exception.RecursoNoEncontradoException;
+import ipn.escom.defensoria.primercontacto.repository.AcuerdoConciliacionRepository;
+import ipn.escom.defensoria.primercontacto.repository.DictamenPrimerContactoRepository;
+import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+/**
+ * Dictámenes de Primer Contacto (CU-PC-06, 07 y 08).
+ *
+ *   Competencia:   EN_ANALISIS -&gt; PROCEDENTE, y luego se envía a Subdefensoría.
+ *   Improcedencia: EN_ANALISIS -&gt; IMPROCEDENTE; el flujo sigue en la remisión externa
+ *                  (IMPROCEDENTE -&gt; REMITIDA), ya no es un cierre por sí sola.
+ *
+ * Quién dictaminó sale siempre del JWT (analistaId/analistaNombre), nunca del payload.
+ */
+@Service
+public class DictamenPrimerContactoService {
+
+<span class="fc" id="L38">    private static final Logger log = LoggerFactory.getLogger(DictamenPrimerContactoService.class);</span>
+
+    public static final String RESULTADO_COMPETENTE = &quot;COMPETENTE&quot;;
+    public static final String RESULTADO_IMPROCEDENTE = &quot;IMPROCEDENTE&quot;;
+
+    private final DictamenPrimerContactoRepository dictamenRepository;
+    private final ExpedientePrimerContactoRepository expedienteRepository;
+    private final AcuerdoConciliacionRepository acuerdoRepository;
+    private final SubdefensoriaClientService subdefensoriaClientService;
+    private final TransicionExpedienteService transicionService;
+    private final NotificacionQuejosoService notificacionService;
+
+    public DictamenPrimerContactoService(
+            DictamenPrimerContactoRepository dictamenRepository,
+            ExpedientePrimerContactoRepository expedienteRepository,
+            AcuerdoConciliacionRepository acuerdoRepository,
+            SubdefensoriaClientService subdefensoriaClientService,
+            TransicionExpedienteService transicionService,
+            NotificacionQuejosoService notificacionService
+<span class="fc" id="L57">    ) {</span>
+<span class="fc" id="L58">        this.dictamenRepository = dictamenRepository;</span>
+<span class="fc" id="L59">        this.expedienteRepository = expedienteRepository;</span>
+<span class="fc" id="L60">        this.acuerdoRepository = acuerdoRepository;</span>
+<span class="fc" id="L61">        this.subdefensoriaClientService = subdefensoriaClientService;</span>
+<span class="fc" id="L62">        this.transicionService = transicionService;</span>
+<span class="fc" id="L63">        this.notificacionService = notificacionService;</span>
+<span class="fc" id="L64">    }</span>
+
+    /*
+     * Sin @Transactional a propósito: el dictamen y el estado PROCEDENTE
+     * deben quedar guardados AUNQUE Subdefensoría no responda. Antes todo
+     * iba en una sola transacción y un fallo de red borraba el dictamen.
+     * Si el envío falla, el expediente queda PROCEDENTE sin
+     * folioSubdefensoria y se reintenta con reenviarASubdefensoria().
+     */
+    public DictamenDTO registrarCompetencia(
+            CompetenciaDTO dto,
+            PersonalAdministrativo analista
+    ) {
+
+<span class="fc" id="L78">        ExpedientePrimerContacto expediente =</span>
+<span class="fc" id="L79">                transicionService.obtenerPorFolio(dto.getFolio());</span>
+
+<span class="fc" id="L81">        validarQueSePuedeDictaminar(expediente);</span>
+
+<span class="fc" id="L83">        DictamenPrimerContacto guardado =</span>
+<span class="fc" id="L84">                guardarDictamen(</span>
+                        expediente,
+<span class="fc" id="L86">                        analista.getId(),</span>
+<span class="fc" id="L87">                        analista.getNombreCompleto(),</span>
+                        RESULTADO_COMPETENTE,
+<span class="fc" id="L89">                        dto.getJustificacion(),</span>
+<span class="fc" id="L90">                        dto.getAreaTurno(),</span>
+<span class="fc" id="L91">                        dto.getResponsableTurno(),</span>
+<span class="fc" id="L92">                        dto.getObservaciones()</span>
+                );
+
+<span class="fc" id="L95">        turnarComoProcedente(expediente, guardado);</span>
+
+<span class="fc" id="L97">        return convertirADTO(guardado);</span>
+    }
+
+    public DictamenDTO registrarImprocedencia(
+            ImprocedenciaDTO dto,
+            PersonalAdministrativo analista
+    ) {
+
+<span class="fc" id="L105">        ExpedientePrimerContacto expediente =</span>
+<span class="fc" id="L106">                transicionService.obtenerPorFolio(dto.getFolio());</span>
+
+<span class="fc" id="L108">        validarQueSePuedeDictaminar(expediente);</span>
+
+<span class="fc" id="L110">        DictamenPrimerContacto guardado =</span>
+<span class="fc" id="L111">                guardarDictamen(</span>
+                        expediente,
+<span class="fc" id="L113">                        analista.getId(),</span>
+<span class="fc" id="L114">                        analista.getNombreCompleto(),</span>
+                        RESULTADO_IMPROCEDENTE,
+<span class="fc" id="L116">                        dto.getJustificacion(),</span>
+                        null,
+                        null,
+                        null
+                );
+
+<span class="fc" id="L122">        transicionService.cambiarEstatus(</span>
+                expediente,
+                EstatusExpediente.IMPROCEDENTE
+        );
+
+<span class="fc" id="L127">        notificacionService.notificar(</span>
+                expediente,
+                NotificacionQuejosoService.TIPO_CAMBIO_ESTATUS,
+                &quot;Tu queja fue dictaminada como improcedente&quot;,
+<span class="fc" id="L131">                &quot;Después de analizar tu queja &quot; + expediente.getFolioOrigen()</span>
+                        + &quot;, Primer Contacto determinó que el asunto no es competencia de la &quot;
+                        + &quot;Defensoría de los Derechos Politécnicos. Tu caso será remitido a la &quot;
+                        + &quot;instancia que puede atenderlo; te avisaremos en cuanto se envíe la remisión.&quot;
+        );
+
+<span class="fc" id="L137">        return convertirADTO(guardado);</span>
+    }
+
+    /**
+     * Dictamen automático cuando el quejoso ACEPTA un acuerdo de conciliación propuesto por
+     * Primer Contacto (CU-PC-10): el asunto es procedente y pasa a Subdefensoría para
+     * elaborar el acuerdo de conclusión. Queda firmado por quien propuso el acuerdo.
+     */
+    public void registrarCompetenciaPorConciliacion(
+            ExpedientePrimerContacto expediente,
+            AcuerdoConciliacion acuerdo,
+            Long analistaId,
+            String analistaNombre
+    ) {
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">        if (dictamenRepository.existsByExpedienteId(expediente.getId())) {</span>
+<span class="nc" id="L153">            return;</span>
+        }
+
+<span class="nc" id="L156">        DictamenPrimerContacto guardado =</span>
+<span class="nc" id="L157">                guardarDictamen(</span>
+                        expediente,
+                        analistaId,
+                        analistaNombre,
+                        RESULTADO_COMPETENTE,
+                        &quot;El quejoso aceptó el acuerdo de conciliación \&quot;&quot;
+<span class="nc" id="L163">                                + acuerdo.getAsunto() + &quot;\&quot; el &quot;</span>
+<span class="nc" id="L164">                                + acuerdo.getFechaRespuesta().toLocalDate()</span>
+                                + &quot;. Procede elaborar el acuerdo de conclusión.&quot;,
+                        &quot;Subdefensoría&quot;,
+                        null,
+<span class="nc" id="L168">                        &quot;Acuerdo de conciliación aceptado. Términos: &quot; + acuerdo.getTerminos()</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                                + (acuerdo.getComentarioQuejoso() != null</span>
+<span class="nc" id="L170">                                ? &quot; | Comentario del quejoso: &quot; + acuerdo.getComentarioQuejoso()</span>
+<span class="nc" id="L171">                                : &quot;&quot;)</span>
+                );
+
+<span class="nc" id="L174">        turnarComoProcedente(expediente, guardado);</span>
+<span class="nc" id="L175">    }</span>
+
+    /**
+     * Reintenta el envío a Subdefensoría de un expediente PROCEDENTE que se quedó sin
+     * folio SD- porque Subdefensoría no respondió en su momento.
+     */
+    public DictamenDTO reenviarASubdefensoria(String folio) {
+
+<span class="fc" id="L183">        ExpedientePrimerContacto expediente =</span>
+<span class="fc" id="L184">                transicionService.obtenerPorFolio(folio);</span>
+
+<span class="fc bfc" id="L186" title="All 2 branches covered.">        if (!EstatusExpediente.PROCEDENTE.equals(expediente.getEstatus())) {</span>
+<span class="fc" id="L187">            throw new OperacionInvalidaException(</span>
+                    &quot;Solo se puede reenviar a Subdefensoría un expediente procedente.&quot;
+            );
+        }
+
+<span class="fc bfc" id="L192" title="All 2 branches covered.">        if (expediente.getFolioSubdefensoria() != null) {</span>
+<span class="fc" id="L193">            throw new OperacionInvalidaException(</span>
+                    &quot;El expediente ya fue recibido por Subdefensoría con folio &quot;
+<span class="fc" id="L195">                            + expediente.getFolioSubdefensoria() + &quot;.&quot;</span>
+            );
+        }
+
+<span class="fc" id="L199">        DictamenPrimerContacto dictamen =</span>
+<span class="fc" id="L200">                dictamenRepository.findByExpedienteId(expediente.getId())</span>
+<span class="pc" id="L201">                        .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                                &quot;El expediente no tiene dictamen registrado.&quot;
+                        ));
+
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">        if (!enviarASubdefensoria(expediente, dictamen)) {</span>
+<span class="fc" id="L206">            throw new OperacionInvalidaException(</span>
+                    &quot;Subdefensoría sigue sin responder. Intenta de nuevo en unos minutos.&quot;
+            );
+        }
+
+<span class="nc" id="L211">        return convertirADTO(dictamen);</span>
+    }
+
+    public DictamenDTO obtenerPorExpediente(
+            Long expedienteId
+    ) {
+
+<span class="nc" id="L218">        return dictamenRepository</span>
+<span class="nc" id="L219">                .findByExpedienteId(expedienteId)</span>
+<span class="nc" id="L220">                .map(this::convertirADTO)</span>
+<span class="nc" id="L221">                .orElseThrow(() -&gt;</span>
+<span class="nc" id="L222">                        new RecursoNoEncontradoException(</span>
+                                &quot;Dictamen no encontrado&quot;
+                        )
+                );
+    }
+
+    public DictamenDTO obtenerPorFolio(
+            String folio
+    ) {
+
+<span class="nc" id="L232">        return dictamenRepository</span>
+<span class="nc" id="L233">                .findByFolio(folio)</span>
+<span class="nc" id="L234">                .map(this::convertirADTO)</span>
+<span class="nc" id="L235">                .orElseThrow(() -&gt;</span>
+<span class="nc" id="L236">                        new RecursoNoEncontradoException(</span>
+                                &quot;El expediente &quot; + folio + &quot; todavía no tiene dictamen registrado.&quot;
+                        )
+                );
+    }
+
+    private void validarQueSePuedeDictaminar(
+            ExpedientePrimerContacto expediente
+    ) {
+
+        /*
+         * Un expediente solamente puede tener
+         * un dictamen de Primer Contacto.
+         */
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        if (dictamenRepository.existsByExpedienteId(expediente.getId())) {</span>
+<span class="fc" id="L251">            throw new OperacionInvalidaException(</span>
+<span class="fc" id="L252">                    &quot;El expediente &quot; + expediente.getFolio()</span>
+                            + &quot; ya cuenta con un dictamen registrado. Consúltalo en lugar de registrar otro.&quot;
+            );
+        }
+
+<span class="fc bfc" id="L257" title="All 2 branches covered.">        if (!EstatusExpediente.estaAbierto(expediente.getEstatus())) {</span>
+<span class="fc" id="L258">            throw new OperacionInvalidaException(</span>
+                    &quot;El expediente ya no está en análisis (estatus &quot;
+<span class="fc" id="L260">                            + expediente.getEstatus() + &quot;).&quot;</span>
+            );
+        }
+
+<span class="fc" id="L264">        boolean conciliacionPendiente =</span>
+                acuerdoRepository
+<span class="fc" id="L266">                        .findByNumeroFolioAndFechaEmisionGreaterThanEqualOrderByFechaEmisionDesc(</span>
+<span class="fc" id="L267">                                expediente.getFolioOrigen(),</span>
+<span class="fc" id="L268">                                expediente.getFechaCreacion()</span>
+                        )
+<span class="fc" id="L270">                        .stream()</span>
+<span class="fc" id="L271">                        .anyMatch(a -&gt; AcuerdoConciliacion.PENDIENTE.equals(a.getEstado()));</span>
+
+<span class="fc bfc" id="L273" title="All 2 branches covered.">        if (conciliacionPendiente) {</span>
+<span class="fc" id="L274">            throw new OperacionInvalidaException(</span>
+                    &quot;Hay un acuerdo de conciliación esperando la respuesta del quejoso. &quot;
+                            + &quot;Espera su respuesta antes de dictaminar.&quot;
+            );
+        }
+<span class="fc" id="L279">    }</span>
+
+    private DictamenPrimerContacto guardarDictamen(
+            ExpedientePrimerContacto expediente,
+            Long analistaId,
+            String analistaNombre,
+            String resultado,
+            String justificacion,
+            String areaTurno,
+            String responsableTurno,
+            String observaciones
+    ) {
+
+        DictamenPrimerContacto dictamen =
+<span class="fc" id="L293">                DictamenPrimerContacto.builder()</span>
+<span class="fc" id="L294">                        .expedienteId(expediente.getId())</span>
+<span class="fc" id="L295">                        .folio(expediente.getFolio())</span>
+<span class="fc" id="L296">                        .analistaId(analistaId)</span>
+<span class="fc" id="L297">                        .analistaNombre(analistaNombre)</span>
+<span class="fc" id="L298">                        .resultado(resultado)</span>
+<span class="fc" id="L299">                        .justificacion(justificacion)</span>
+<span class="fc" id="L300">                        .areaTurno(areaTurno)</span>
+<span class="fc" id="L301">                        .responsableTurno(responsableTurno)</span>
+<span class="fc" id="L302">                        .fechaDictamen(LocalDateTime.now())</span>
+<span class="fc" id="L303">                        .observaciones(observaciones)</span>
+<span class="fc" id="L304">                        .build();</span>
+
+<span class="fc" id="L306">        return dictamenRepository.save(dictamen);</span>
+    }
+
+    /*
+     * Paso 1: queda registrado el dictamen como PROCEDENTE.
+     * Paso 2: Subdefensoría lo recibe (Recibida en Subdefensoría).
+     */
+    private void turnarComoProcedente(
+            ExpedientePrimerContacto expediente,
+            DictamenPrimerContacto dictamen
+    ) {
+
+<span class="fc" id="L318">        transicionService.cambiarEstatus(</span>
+                expediente,
+                EstatusExpediente.PROCEDENTE
+        );
+
+<span class="fc" id="L323">        notificacionService.notificar(</span>
+                expediente,
+                NotificacionQuejosoService.TIPO_CAMBIO_ESTATUS,
+                &quot;Tu queja fue admitida como procedente&quot;,
+<span class="fc" id="L327">                &quot;Tu queja &quot; + expediente.getFolioOrigen()</span>
+                        + &quot; fue analizada por Primer Contacto y se determinó que es competencia &quot;
+                        + &quot;de la Defensoría de los Derechos Politécnicos. Se turnó a Subdefensoría, &quot;
+                        + &quot;que dará seguimiento a tu caso.&quot;
+        );
+
+<span class="fc" id="L333">        enviarASubdefensoria(expediente, dictamen);</span>
+<span class="fc" id="L334">    }</span>
+
+    private boolean enviarASubdefensoria(
+            ExpedientePrimerContacto expediente,
+            DictamenPrimerContacto dictamen
+    ) {
+
+        /*
+         * Construimos únicamente la información que
+         * Subdefensoría necesita.
+         *
+         * La relación entre áreas se realiza mediante
+         * el folio PC-..., nunca mediante IDs.
+         */
+        QuejosoResumenRequest quejoso =
+<span class="fc" id="L349">                QuejosoResumenRequest.builder()</span>
+<span class="fc" id="L350">                        .nombreCompleto(expediente.getQuejosoNombre())</span>
+<span class="fc" id="L351">                        .correo(expediente.getQuejosoCorreo())</span>
+<span class="fc" id="L352">                        .unidadAcademica(expediente.getUnidadAcademica())</span>
+<span class="fc" id="L353">                        .build();</span>
+
+        ExpedienteEntranteRequest solicitud =
+<span class="fc" id="L356">                ExpedienteEntranteRequest.builder()</span>
+<span class="fc" id="L357">                        .folioOrigen(expediente.getFolio())</span>
+<span class="fc" id="L358">                        .folioQueja(expediente.getFolioOrigen())</span>
+<span class="fc" id="L359">                        .asunto(expediente.getTema())</span>
+<span class="fc" id="L360">                        .descripcionHechos(expediente.getDescripcionHechos())</span>
+<span class="fc" id="L361">                        .fechaAdmision(LocalDate.now())</span>
+<span class="fc" id="L362">                        .abogadoAsesorId(null)</span>
+<span class="fc" id="L363">                        .abogadoAsesorNombre(dictamen.getResponsableTurno())</span>
+<span class="fc" id="L364">                        .quejoso(quejoso)</span>
+<span class="fc" id="L365">                        .observacionesAnalista(dictamen.getObservaciones())</span>
+<span class="fc" id="L366">                        .prioridad(expediente.getPrioridad())</span>
+<span class="fc" id="L367">                        .build();</span>
+
+        try {
+<span class="fc" id="L370">            SubdefensoriaIngresoResponse respuesta =</span>
+<span class="fc" id="L371">                    subdefensoriaClientService.enviarExpediente(solicitud);</span>
+
+            /*
+             * Guardamos solamente el folio generado por
+             * Subdefensoría. NO guardamos su id interno.
+             */
+<span class="fc" id="L377">            expediente.setFolioSubdefensoria(respuesta.getFolio());</span>
+<span class="fc" id="L378">            expediente.setFechaActualizacion(LocalDateTime.now());</span>
+<span class="fc" id="L379">            expedienteRepository.save(expediente);</span>
+
+<span class="fc" id="L381">            return true;</span>
+
+<span class="fc" id="L383">        } catch (RuntimeException ex) {</span>
+<span class="fc" id="L384">            log.error(&quot;El expediente {} quedó PROCEDENTE pero no se pudo enviar a Subdefensoría: {}&quot;,</span>
+<span class="fc" id="L385">                    expediente.getFolio(), ex.getMessage());</span>
+<span class="fc" id="L386">            return false;</span>
+        }
+    }
+
+    private DictamenDTO convertirADTO(
+            DictamenPrimerContacto dictamen
+    ) {
+
+<span class="fc" id="L394">        ExpedientePrimerContacto expediente =</span>
+<span class="fc" id="L395">                expedienteRepository.findById(dictamen.getExpedienteId()).orElse(null);</span>
+
+<span class="fc" id="L397">        return DictamenDTO.builder()</span>
+<span class="fc" id="L398">                .id(dictamen.getId())</span>
+<span class="fc" id="L399">                .expedienteId(dictamen.getExpedienteId())</span>
+<span class="fc" id="L400">                .folio(dictamen.getFolio())</span>
+<span class="fc" id="L401">                .analistaId(dictamen.getAnalistaId())</span>
+<span class="fc" id="L402">                .analistaNombre(dictamen.getAnalistaNombre())</span>
+<span class="fc" id="L403">                .resultado(dictamen.getResultado())</span>
+<span class="fc" id="L404">                .justificacion(dictamen.getJustificacion())</span>
+<span class="fc" id="L405">                .areaTurno(dictamen.getAreaTurno())</span>
+<span class="fc" id="L406">                .responsableTurno(dictamen.getResponsableTurno())</span>
+<span class="fc" id="L407">                .fechaDictamen(</span>
+<span class="pc bpc" id="L408" title="1 of 2 branches missed.">                        dictamen.getFechaDictamen() != null</span>
+<span class="fc" id="L409">                                ? dictamen.getFechaDictamen().toString()</span>
+<span class="nc" id="L410">                                : null</span>
+                )
+<span class="fc" id="L412">                .observaciones(dictamen.getObservaciones())</span>
+<span class="pc bpc" id="L413" title="1 of 2 branches missed.">                .estatusExpediente(expediente != null ? expediente.getEstatus() : null)</span>
+<span class="pc bpc" id="L414" title="1 of 2 branches missed.">                .folioSubdefensoria(expediente != null ? expediente.getFolioSubdefensoria() : null)</span>
+<span class="fc" id="L415">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

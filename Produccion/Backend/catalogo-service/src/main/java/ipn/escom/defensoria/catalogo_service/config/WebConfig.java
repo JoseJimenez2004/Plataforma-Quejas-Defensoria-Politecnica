@@ -37,7 +37,7 @@ public class WebConfig {
                 // OJO con el orden: esta regla del panel de administración va ANTES que el
                 // permitAll de abajo, porque "/api/catalogos/dependencias/admin/**" es un
                 // subconjunto de "/api/catalogos/**" y Spring Security usa la PRIMERA regla
-                // que haga match. El rol exacto (ADMIN_SISTEMAS) lo exige @PreAuthorize en
+                // que haga match. El rol exacto (DEFENSOR) lo exige @PreAuthorize en
                 // DependenciaAdminController.
                 .requestMatchers("/api/catalogos/dependencias/admin/**").authenticated()
                 // El resto del catálogo es de solo lectura y público: lo necesita el

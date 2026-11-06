@@ -48,4 +48,7 @@ public class ExpedienteEntranteDTO {
     private QuejosoResumenDTO quejoso;
 
     private String observacionesAnalista;
+
+    /* Prioridad asignada por el analista de Primer Contacto (BAJA|MEDIA|ALTA|URGENTE) o null. */
+    private String prioridad;
 }

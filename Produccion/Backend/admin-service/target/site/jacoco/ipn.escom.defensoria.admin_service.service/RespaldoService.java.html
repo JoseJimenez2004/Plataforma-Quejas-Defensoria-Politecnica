@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RespaldoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.admin_service.service</a> &gt; <span class="el_source">RespaldoService.java</span></div><h1>RespaldoService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.admin_service.service;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.admin_service.model.RespaldoResumenModel;
+
+/**
+ * Respaldos de la base de datos compartida (defensoria_db) vía pg_dump/psql (ProcessBuilder).
+ * Requiere que la imagen del contenedor tenga instalado postgresql-client (ver Dockerfile
+ * propio de admin-service) y que &quot;respaldos.directorio&quot; esté montado como volumen para que
+ * los archivos sobrevivan a que se reconstruya el contenedor.
+ */
+@Service
+<span class="fc" id="L30">public class RespaldoService {</span>
+
+<span class="fc" id="L32">    private static final Logger log = LoggerFactory.getLogger(RespaldoService.class);</span>
+<span class="fc" id="L33">    private static final DateTimeFormatter FORMATO_NOMBRE =</span>
+<span class="fc" id="L34">            DateTimeFormatter.ofPattern(&quot;yyyyMMdd_HHmmss&quot;).withZone(ZoneId.systemDefault());</span>
+
+    @Value(&quot;${respaldos.directorio}&quot;)
+    private String directorio;
+
+    @Value(&quot;${db.host}&quot;)
+    private String dbHost;
+
+    @Value(&quot;${db.puerto}&quot;)
+    private String dbPuerto;
+
+    @Value(&quot;${db.nombre}&quot;)
+    private String dbNombre;
+
+    @Value(&quot;${db.usuario}&quot;)
+    private String dbUsuario;
+
+    @Value(&quot;${db.password}&quot;)
+    private String dbPassword;
+
+    public RespaldoResumenModel ejecutarRespaldoManual() {
+<span class="nc" id="L55">        crearDirectorioSiNoExiste();</span>
+<span class="nc" id="L56">        String nombreArchivo = &quot;defensoria_db_&quot; + FORMATO_NOMBRE.format(Instant.now()) + &quot;.sql&quot;;</span>
+<span class="nc" id="L57">        Path destino = Path.of(directorio, nombreArchivo);</span>
+
+<span class="nc" id="L59">        List&lt;String&gt; comando = List.of(</span>
+                &quot;pg_dump&quot;,
+                &quot;-h&quot;, dbHost,
+                &quot;-p&quot;, dbPuerto,
+                &quot;-U&quot;, dbUsuario,
+                &quot;-F&quot;, &quot;p&quot;,
+<span class="nc" id="L65">                &quot;-f&quot;, destino.toString(),</span>
+                dbNombre);
+
+<span class="nc" id="L68">        ejecutar(comando, &quot;pg_dump&quot;);</span>
+<span class="nc" id="L69">        log.info(&quot;Respaldo manual generado: {}&quot;, destino);</span>
+<span class="nc" id="L70">        return aResumen(destino.toFile());</span>
+    }
+
+    public void restaurar(String nombreArchivo) {
+<span class="fc" id="L74">        Path origen = Path.of(directorio, nombreArchivo);</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (!Files.exists(origen)) {</span>
+<span class="fc" id="L76">            throw new RuntimeException(&quot;No se encontró el archivo de respaldo indicado.&quot;);</span>
+        }
+
+<span class="nc" id="L79">        List&lt;String&gt; comando = List.of(</span>
+                &quot;psql&quot;,
+                &quot;-h&quot;, dbHost,
+                &quot;-p&quot;, dbPuerto,
+                &quot;-U&quot;, dbUsuario,
+                &quot;-d&quot;, dbNombre,
+<span class="nc" id="L85">                &quot;-f&quot;, origen.toString());</span>
+
+<span class="nc" id="L87">        ejecutar(comando, &quot;psql (restauración)&quot;);</span>
+<span class="nc" id="L88">        log.warn(&quot;Base de datos restaurada desde el respaldo: {}&quot;, nombreArchivo);</span>
+<span class="nc" id="L89">    }</span>
+
+    public List&lt;RespaldoResumenModel&gt; listar() {
+<span class="fc" id="L92">        crearDirectorioSiNoExiste();</span>
+<span class="fc" id="L93">        File carpeta = new File(directorio);</span>
+<span class="fc" id="L94">        File[] archivos = carpeta.listFiles((dir, nombre) -&gt; nombre.endsWith(&quot;.sql&quot;));</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        if (archivos == null) {</span>
+<span class="nc" id="L96">            return List.of();</span>
+        }
+<span class="fc" id="L98">        return List.of(archivos).stream()</span>
+<span class="fc" id="L99">                .sorted(Comparator.comparingLong(File::lastModified).reversed())</span>
+<span class="fc" id="L100">                .map(this::aResumen)</span>
+<span class="fc" id="L101">                .toList();</span>
+    }
+
+    public Resource obtenerArchivo(String nombreArchivo) {
+<span class="fc" id="L105">        Path ruta = Path.of(directorio, nombreArchivo);</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if (!Files.exists(ruta)) {</span>
+<span class="nc" id="L107">            throw new RuntimeException(&quot;No se encontró ese archivo de respaldo.&quot;);</span>
+        }
+<span class="fc" id="L109">        return new FileSystemResource(ruta);</span>
+    }
+
+    /** Último respaldo disponible (manual o automático) -- para la tarjeta &quot;Seguridad&quot; del
+     * dashboard y el texto &quot;Último respaldo automático realizado&quot;. */
+    public String ultimoRespaldoTexto() {
+<span class="fc" id="L115">        List&lt;RespaldoResumenModel&gt; respaldos = listar();</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (respaldos.isEmpty()) {</span>
+<span class="fc" id="L117">            return &quot;Sin respaldos todavía&quot;;</span>
+        }
+<span class="nc" id="L119">        return respaldos.get(0).getFecha();</span>
+    }
+
+    /** Respaldo automático diario a las 4:00 AM -- coincide con lo mostrado en el mockup
+     * (&quot;Último respaldo automático realizado: Hoy, 04:00 AM&quot;). */
+    @org.springframework.scheduling.annotation.Scheduled(cron = &quot;0 0 4 * * *&quot;)
+    public void respaldoAutomaticoDiario() {
+        try {
+<span class="nc" id="L127">            ejecutarRespaldoManual();</span>
+<span class="nc" id="L128">        } catch (Exception ex) {</span>
+<span class="nc" id="L129">            log.error(&quot;Falló el respaldo automático programado&quot;, ex);</span>
+<span class="nc" id="L130">        }</span>
+<span class="nc" id="L131">    }</span>
+
+    private void ejecutar(List&lt;String&gt; comando, String nombreProceso) {
+        try {
+<span class="nc" id="L135">            ProcessBuilder pb = new ProcessBuilder(comando);</span>
+<span class="nc" id="L136">            pb.environment().put(&quot;PGPASSWORD&quot;, dbPassword);</span>
+<span class="nc" id="L137">            pb.redirectErrorStream(true);</span>
+<span class="nc" id="L138">            Process proceso = pb.start();</span>
+
+<span class="nc" id="L140">            String salida = new String(proceso.getInputStream().readAllBytes());</span>
+<span class="nc" id="L141">            boolean termino = proceso.waitFor(120, TimeUnit.SECONDS);</span>
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">            if (!termino) {</span>
+<span class="nc" id="L144">                proceso.destroyForcibly();</span>
+<span class="nc" id="L145">                throw new RuntimeException(nombreProceso + &quot; tardó demasiado y fue cancelado.&quot;);</span>
+            }
+<span class="nc bnc" id="L147" title="All 2 branches missed.">            if (proceso.exitValue() != 0) {</span>
+<span class="nc" id="L148">                log.error(&quot;{} terminó con error (código {}): {}&quot;, nombreProceso, proceso.exitValue(), salida);</span>
+<span class="nc" id="L149">                throw new RuntimeException(nombreProceso + &quot; falló. Revisa los logs del servidor.&quot;);</span>
+            }
+<span class="nc" id="L151">        } catch (IOException | InterruptedException ex) {</span>
+<span class="nc" id="L152">            Thread.currentThread().interrupt();</span>
+<span class="nc" id="L153">            throw new RuntimeException(&quot;No se pudo ejecutar &quot; + nombreProceso + &quot;: &quot; + ex.getMessage());</span>
+<span class="nc" id="L154">        }</span>
+<span class="nc" id="L155">    }</span>
+
+    private void crearDirectorioSiNoExiste() {
+<span class="fc" id="L158">        File carpeta = new File(directorio);</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        if (!carpeta.exists()) {</span>
+<span class="fc" id="L160">            carpeta.mkdirs();</span>
+        }
+<span class="fc" id="L162">    }</span>
+
+    private RespaldoResumenModel aResumen(File archivo) {
+<span class="fc" id="L165">        String fecha = Instant.ofEpochMilli(archivo.lastModified())</span>
+<span class="fc" id="L166">                .atZone(ZoneId.systemDefault())</span>
+<span class="fc" id="L167">                .format(DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy HH:mm&quot;));</span>
+<span class="fc" id="L168">        return new RespaldoResumenModel(archivo.getName(), archivo.length(), fecha);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

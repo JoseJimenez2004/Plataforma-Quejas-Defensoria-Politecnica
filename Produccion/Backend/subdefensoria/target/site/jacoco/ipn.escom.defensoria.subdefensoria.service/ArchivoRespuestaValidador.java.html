@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArchivoRespuestaValidador.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">ArchivoRespuestaValidador.java</span></div><h1>ArchivoRespuestaValidador.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import ipn.escom.defensoria.subdefensoria.exception.OperacionInvalidaException;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+/**
+ * Valida el archivo de la respuesta del director: PDF, JPG o PNG según su firma real (no la
+ * extensión ni lo que diga el navegador), y de máximo 10 MB.
+ */
+final class ArchivoRespuestaValidador {
+
+    static final long TAMANO_MAXIMO = 10L * 1024 * 1024;
+
+    private ArchivoRespuestaValidador() {
+    }
+
+    /** Devuelve el contenido y su tipo real; lanza OperacionInvalidaException si no sirve. */
+    static Validado validar(MultipartFile archivo) {
+<span class="pc bpc" id="L21" title="1 of 4 branches missed.">        if (archivo == null || archivo.isEmpty()) {</span>
+<span class="fc" id="L22">            throw new OperacionInvalidaException(&quot;El archivo está vacío.&quot;);</span>
+        }
+<span class="fc bfc" id="L24" title="All 2 branches covered.">        if (archivo.getSize() &gt; TAMANO_MAXIMO) {</span>
+<span class="fc" id="L25">            throw new OperacionInvalidaException(&quot;El archivo excede el tamaño máximo de 10 MB.&quot;);</span>
+        }
+        byte[] contenido;
+        try {
+<span class="fc" id="L29">            contenido = archivo.getBytes();</span>
+<span class="nc" id="L30">        } catch (IOException ex) {</span>
+<span class="nc" id="L31">            throw new OperacionInvalidaException(&quot;No se pudo leer el archivo.&quot;);</span>
+<span class="fc" id="L32">        }</span>
+<span class="fc" id="L33">        String tipo = tipoReal(contenido);</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (tipo == null) {</span>
+<span class="fc" id="L35">            throw new OperacionInvalidaException(&quot;Solo se aceptan archivos PDF, JPG o PNG.&quot;);</span>
+        }
+<span class="pc bpc" id="L37" title="2 of 4 branches missed.">        String nombre = archivo.getOriginalFilename() == null || archivo.getOriginalFilename().isBlank()</span>
+<span class="nc" id="L38">                ? &quot;respuesta&quot;</span>
+<span class="fc" id="L39">                : archivo.getOriginalFilename().replaceAll(&quot;[\\\\/:*?\&quot;&lt;&gt;|]&quot;, &quot;_&quot;);</span>
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">        return new Validado(nombre.length() &gt; 255 ? nombre.substring(0, 255) : nombre, tipo, contenido);</span>
+    }
+
+<span class="fc" id="L43">    record Validado(String nombre, String tipo, byte[] contenido) {</span>
+    }
+
+    private static String tipoReal(byte[] b) {
+<span class="pc bpc" id="L47" title="4 of 10 branches missed.">        if (b.length &gt;= 4 &amp;&amp; b[0] == 0x25 &amp;&amp; b[1] == 0x50 &amp;&amp; b[2] == 0x44 &amp;&amp; b[3] == 0x46) {</span>
+<span class="fc" id="L48">            return &quot;application/pdf&quot;;</span>
+        }
+<span class="pc bpc" id="L50" title="6 of 8 branches missed.">        if (b.length &gt;= 3 &amp;&amp; (b[0] &amp; 0xFF) == 0xFF &amp;&amp; (b[1] &amp; 0xFF) == 0xD8 &amp;&amp; (b[2] &amp; 0xFF) == 0xFF) {</span>
+<span class="nc" id="L51">            return &quot;image/jpeg&quot;;</span>
+        }
+<span class="pc bpc" id="L53" title="8 of 18 branches missed.">        if (b.length &gt;= 8 &amp;&amp; (b[0] &amp; 0xFF) == 0x89 &amp;&amp; b[1] == 0x50 &amp;&amp; b[2] == 0x4E &amp;&amp; b[3] == 0x47</span>
+                &amp;&amp; b[4] == 0x0D &amp;&amp; b[5] == 0x0A &amp;&amp; b[6] == 0x1A &amp;&amp; b[7] == 0x0A) {
+<span class="fc" id="L55">            return &quot;image/png&quot;;</span>
+        }
+<span class="fc" id="L57">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

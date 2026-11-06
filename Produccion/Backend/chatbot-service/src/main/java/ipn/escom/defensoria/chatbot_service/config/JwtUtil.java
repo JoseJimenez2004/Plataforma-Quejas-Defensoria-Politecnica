@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * Igual que en catalogo-service: este servicio nunca emite tokens, solo verifica los que ya
  * emitió admin-service (mismo jwt.secret compartido entre los 7 microservicios). El chatbot es
  * público y de solo lectura para el quejoso; solo el CRUD de contenido bajo /admin exige un
- * token válido con rol ADMIN_SISTEMAS.
+ * token válido con rol DEFENSOR.
  */
 @Component
 public class JwtUtil {

@@ -48,16 +48,44 @@ export function claseEstatus(codigo: string | null | undefined): string {
   return 'estatus-' + (codigoEstatus(codigo) || 'desconocido').toLowerCase().replace('_', '-');
 }
 
-export function formatearPrioridad(prioridad: string | null | undefined): 'Alta' | 'Media' | 'Baja' {
+/**
+ * PC-1 (2026-11): la prioridad la asigna el analista. Mientras no la elija se muestra
+ * "Sin asignar" (antes se inventaba "Media" para todas).
+ */
+export type PrioridadEtiqueta = 'Urgente' | 'Alta' | 'Media' | 'Baja' | 'Sin asignar';
+
+/** Opciones del menú, de mayor a menor. */
+export const PRIORIDADES: { codigo: string; etiqueta: PrioridadEtiqueta }[] = [
+  { codigo: 'URGENTE', etiqueta: 'Urgente' },
+  { codigo: 'ALTA', etiqueta: 'Alta' },
+  { codigo: 'MEDIA', etiqueta: 'Media' },
+  { codigo: 'BAJA', etiqueta: 'Baja' }
+];
+
+export function formatearPrioridad(prioridad: string | null | undefined): PrioridadEtiqueta {
   switch (prioridad?.toUpperCase()) {
+    case 'URGENTE':
+      return 'Urgente';
     case 'ALTA':
       return 'Alta';
+    case 'MEDIA':
+      return 'Media';
     case 'BAJA':
       return 'Baja';
-    case 'MEDIA':
     default:
-      return 'Media';
+      return 'Sin asignar';
   }
+}
+
+/** 'Alta' -> 'ALTA'; 'Sin asignar' -> 'SIN_ASIGNAR' (así lo entiende el filtro del backend). */
+export function codigoPrioridad(etiqueta: string | null | undefined): string {
+  const p = PRIORIDADES.find(x => x.etiqueta === etiqueta);
+  return p ? p.codigo : 'SIN_ASIGNAR';
+}
+
+/** Clase del chip de prioridad (styles.css: .prio-*). */
+export function clasePrioridad(etiqueta: string | null | undefined): string {
+  return 'prio-' + codigoPrioridad(etiqueta).toLowerCase().replace('_', '-');
 }
 
 /** '2026-09-20' o '2026-09-20T10:00:00' -> '20/09/2026'. */

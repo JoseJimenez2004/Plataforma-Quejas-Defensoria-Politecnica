@@ -9,6 +9,7 @@ import { Queja } from '../../../core/models/queja.models';
 import { Dependencia } from '../../../core/models/catalogo.models';
 import { NotaFlotante } from '../../../shared/nota-flotante/nota-flotante';
 import { Datepicker } from '../../../shared/datepicker/datepicker';
+import * as Reglas from '../../../core/validaciones/reglas-queja';
 
 @Component({
   selector: 'app-nueva-queja',
@@ -21,6 +22,8 @@ export class NuevaQueja implements OnInit {
   unidadAcademica = '';
   fechaHechos = '';
   readonly fechaMaxima = new Date().toISOString().split('T')[0];
+  /** Candado de 90 días (art. 13, párrafo tercero). */
+  readonly fechaMinimaHechos = Reglas.fechaMinimaHechos();
   nombreDenunciado = '';
   apellido1Denunciado = '';
   relato = '';
@@ -124,6 +127,15 @@ export class NuevaQueja implements OnInit {
 
     if (!this.identificacionArchivo) {
       this.error = 'Adjunta tu identificación oficial de la comunidad politécnica.';
+      return;
+    }
+
+    if (!this.fechaHechos) {
+      this.error = 'Selecciona la fecha de los hechos.';
+      return;
+    }
+    if (this.fechaHechos < this.fechaMinimaHechos) {
+      this.error = Reglas.mensajeFueraDePlazo();
       return;
     }
 

@@ -42,7 +42,7 @@ class ValidadorQuejaPublicaTest {
         datos.setTipoIdentificacion("alumno");
         datos.setNumeroIdentificacion("2021630001");
         datos.setUnidadAcademicaClave("ESCOM");
-        datos.setFechaHechos(LocalDate.of(2024, 9, 1));
+        datos.setFechaHechos(ValidadorFechas.hoy().minusDays(10));
         datos.setDescripcion("Descripción suficientemente larga de los hechos.");
         datos.setArchivos(List.of(ArchivosPrueba.identificacion("ine.jpg", ArchivosPrueba.JPEG)));
     }

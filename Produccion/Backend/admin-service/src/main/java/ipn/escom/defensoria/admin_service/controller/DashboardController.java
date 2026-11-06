@@ -14,9 +14,8 @@ import ipn.escom.defensoria.admin_service.service.DashboardService;
 /** "Configuración General" del mockup -- el dashboard principal del panel. */
 @RestController
 @RequestMapping("/api/admin/dashboard")
-// La Defensora (DEFENSOR) tiene todas las funciones de administración; ADMIN_SISTEMAS se
-// conserva para la cuenta técnica inicial.
-@PreAuthorize("hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')")
+// Exclusivo de la Defensora (DEFENSOR), que tiene todas las funciones de administración.
+@PreAuthorize("hasRole('DEFENSOR')")
 @Tag(name = "Dashboard", description = "Resumen general del sistema")
 public class DashboardController {
 

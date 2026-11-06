@@ -1,0 +1,33 @@
+spring.application.name=subdefensoria-service
+server.port=8083
+
+# H2 temporal
+spring.datasource.url=jdbc:h2:mem:subdefensoria_db
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+# JPA
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+
+# Consola H2
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+# Origenes (separados por coma) desde los que el navegador puede
+# llamar a esta API: el front de Subdefensoria.
+cors.allowed-origins=http://localhost:4301
+
+# URL base del microservicio de Primer Contacto.
+primer-contacto.base-url=http://localhost:8082
+
+# Plazos
+plazos.primera-solicitud-dias=10
+plazos.recordatorio-dias=5
+
+# JWT compartido con admin-service y los demás servicios protegidos.
+# El valor real se obtiene mediante variable de entorno.
+jwt.secret=${JWT_SECRET}

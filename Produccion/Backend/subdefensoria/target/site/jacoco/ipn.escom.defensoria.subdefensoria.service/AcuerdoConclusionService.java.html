@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AcuerdoConclusionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">AcuerdoConclusionService.java</span></div><h1>AcuerdoConclusionService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import ipn.escom.defensoria.subdefensoria.dto.AcuerdoConclusionDTO;
+import ipn.escom.defensoria.subdefensoria.dto.AcuerdoPublicoDTO;
+import ipn.escom.defensoria.subdefensoria.dto.CrearAcuerdoConclusionDTO;
+import ipn.escom.defensoria.subdefensoria.entity.AcuerdoConclusion;
+import ipn.escom.defensoria.subdefensoria.entity.EstatusExpediente;
+import ipn.escom.defensoria.subdefensoria.entity.ExpedienteInvestigacion;
+import ipn.escom.defensoria.subdefensoria.exception.OperacionInvalidaException;
+import ipn.escom.defensoria.subdefensoria.exception.RecursoNoEncontradoException;
+import ipn.escom.defensoria.subdefensoria.repository.AcuerdoConclusionRepository;
+import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+/**
+ * CU-SD-09: los dos acuerdos con que termina la investigación (filas 17 a 20 del diagrama).
+ *
+ *   1. Acuerdo de CONCILIACIÓN (textoAcuerdo): el subdefensor lo redacta en ELABORO_ACUERDO
+ *      (concluir=false guarda el borrador) y lo envía al quejoso (concluir=true) -&gt;
+ *      PENDIENTE_CONCILIACION. El quejoso lo acepta -&gt; PENDIENTE_CONCLUSION, o lo rechaza -&gt;
+ *      EN_INVESTIGACION, para otro oficio de gestión y un nuevo acuerdo.
+ *   2. Acuerdo de CONCLUSIÓN (textoConclusion): con el de conciliación aceptado, el
+ *      subdefensor lo registra -&gt; CONCLUIDO. Es el único camino a CONCLUIDO.
+ *
+ * Ambos viven en la misma fila de acuerdos_conclusion (una por expediente).
+ *
+ * El quejoso responde el de conciliación desde el ENLACE que le llega por correo y en su
+ * centro de notificaciones (/acuerdo/responder?token=..., sin iniciar sesión, CU-QJ-14).
+ * Cada envío genera un token nuevo: el enlace de un acuerdo anterior deja de servir.
+ */
+@Service
+public class AcuerdoConclusionService {
+
+    private static final String RESPUESTA_ACEPTADO = &quot;ACEPTADO&quot;;
+    private static final String RESPUESTA_RECHAZADO = &quot;RECHAZADO&quot;;
+
+    private final AcuerdoConclusionRepository acuerdoRepository;
+    private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final TransicionExpedienteService transicionService;
+    private final NotificacionQuejosoService notificacionService;
+    private final String portalUrl;
+
+    /* Página pública del portal del quejoso donde acepta o rechaza el acuerdo. */
+    private static final String ENLACE_RESPUESTA = &quot;/acuerdo/responder?token=&quot;;
+
+    public AcuerdoConclusionService(
+            AcuerdoConclusionRepository acuerdoRepository,
+            ExpedienteInvestigacionRepository expedienteRepository,
+            TransicionExpedienteService transicionService,
+            NotificacionQuejosoService notificacionService,
+            @Value(&quot;${subdefensoria.portal.url:https://defensoria-escom.ddns.net}&quot;) String portalUrl
+<span class="nc" id="L56">    ) {</span>
+<span class="nc" id="L57">        this.acuerdoRepository = acuerdoRepository;</span>
+<span class="nc" id="L58">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L59">        this.transicionService = transicionService;</span>
+<span class="nc" id="L60">        this.notificacionService = notificacionService;</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        this.portalUrl = portalUrl == null ? &quot;&quot; : portalUrl.strip().replaceAll(&quot;/+$&quot;, &quot;&quot;);</span>
+<span class="nc" id="L62">    }</span>
+
+    public AcuerdoConclusionDTO guardarOConcluir(CrearAcuerdoConclusionDTO dto) {
+
+<span class="nc" id="L66">        ExpedienteInvestigacion expediente = expedienteRepository.findById(dto.getExpedienteId())</span>
+<span class="nc" id="L67">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="nc" id="L68">                        &quot;No existe el expediente &quot; + dto.getExpedienteId()));</span>
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (!EstatusExpediente.ELABORO_ACUERDO.equals(expediente.getEstatus())) {</span>
+<span class="nc" id="L71">            throw new OperacionInvalidaException(</span>
+<span class="nc" id="L72">                    &quot;El expediente &quot; + expediente.getFolio()</span>
+<span class="nc" id="L73">                            + &quot; no está listo para dictaminar (estatus actual: &quot; + expediente.getEstatus() + &quot;).&quot;);</span>
+        }
+
+<span class="nc" id="L76">        AcuerdoConclusion acuerdo = acuerdoRepository.findByExpedienteId(expediente.getId())</span>
+<span class="nc" id="L77">                .orElseGet(() -&gt; AcuerdoConclusion.builder()</span>
+<span class="nc" id="L78">                        .expedienteId(expediente.getId())</span>
+<span class="nc" id="L79">                        .folio(expediente.getFolio())</span>
+<span class="nc" id="L80">                        .concluido(false)</span>
+<span class="nc" id="L81">                        .fechaCreacion(LocalDateTime.now())</span>
+<span class="nc" id="L82">                        .build());</span>
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (Boolean.TRUE.equals(acuerdo.getConcluido())) {</span>
+<span class="nc" id="L85">            throw new OperacionInvalidaException(</span>
+<span class="nc" id="L86">                    &quot;El expediente &quot; + expediente.getFolio() + &quot; ya fue concluido.&quot;);</span>
+        }
+
+<span class="nc" id="L89">        acuerdo.setTextoAcuerdo(dto.getTextoAcuerdo());</span>
+
+<span class="nc" id="L91">        String estatus = expediente.getEstatus();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (Boolean.TRUE.equals(dto.getConcluir())) {</span>
+            // &quot;concluir&quot; significa ENVIAR el acuerdo de conciliación al quejoso (fila 17).
+            // Si es un acuerdo nuevo tras un rechazo, la respuesta anterior se limpia.
+<span class="nc" id="L95">            acuerdo.setFechaEnvioSecretarial(LocalDateTime.now());</span>
+<span class="nc" id="L96">            acuerdo.setRespuestaQuejoso(null);</span>
+<span class="nc" id="L97">            acuerdo.setComentarioQuejoso(null);</span>
+<span class="nc" id="L98">            acuerdo.setFechaRespuestaQuejoso(null);</span>
+<span class="nc" id="L99">            acuerdo.setTokenRespuesta(nuevoToken());</span>
+<span class="nc" id="L100">            estatus = transicionService.cambiar(expediente, EstatusExpediente.PENDIENTE_CONCILIACION).getEstatus();</span>
+        }
+
+<span class="nc" id="L103">        AcuerdoConclusion guardado = acuerdoRepository.save(acuerdo);</span>
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        if (Boolean.TRUE.equals(dto.getConcluir())) {</span>
+<span class="nc" id="L106">            String enlace = ENLACE_RESPUESTA + guardado.getTokenRespuesta();</span>
+<span class="nc" id="L107">            notificacionService.notificar(expediente, NotificacionQuejosoService.TIPO_CONCILIACION,</span>
+                    &quot;Tienes un acuerdo de conciliación por responder&quot;,
+                    &quot;Subdefensoría te propone el siguiente acuerdo para resolver tu queja:\n\n&quot;
+<span class="nc" id="L110">                            + guardado.getTextoAcuerdo()</span>
+                            + &quot;\n\nPuedes aceptarlo o rechazarlo indicando el motivo en este enlace:\n&quot;
+                            + portalUrl + enlace
+                            + &quot;\n\nSi lo rechazas, la Defensoría continuará la investigación para buscar otro acuerdo.&quot;,
+                    enlace);
+        }
+
+<span class="nc" id="L117">        return convertirADTO(guardado, estatus);</span>
+    }
+
+    public AcuerdoConclusionDTO obtenerPorExpediente(Long expedienteId) {
+<span class="nc" id="L121">        ExpedienteInvestigacion expediente = expedienteRepository.findById(expedienteId)</span>
+<span class="nc" id="L122">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el expediente &quot; + expedienteId));</span>
+
+<span class="nc" id="L124">        return acuerdoRepository.findByExpedienteId(expedienteId)</span>
+<span class="nc" id="L125">                .map(a -&gt; convertirADTO(a, expediente.getEstatus()))</span>
+<span class="nc" id="L126">                .orElse(null);</span>
+    }
+
+    /**
+     * El quejoso ACEPTA el acuerdo de conciliación (fila 19): queda pendiente el acuerdo de
+     * conclusión que redacta el subdefensor.
+     */
+    public AcuerdoConclusionDTO aceptarPorQuejoso(Long expedienteId, String comentario) {
+<span class="nc" id="L134">        ExpedienteInvestigacion expediente = exigirPendienteDeRespuesta(expedienteId);</span>
+<span class="nc" id="L135">        AcuerdoConclusion acuerdo = exigirAcuerdo(expedienteId);</span>
+
+<span class="nc" id="L137">        acuerdo.setRespuestaQuejoso(RESPUESTA_ACEPTADO);</span>
+<span class="nc" id="L138">        acuerdo.setComentarioQuejoso(comentario);</span>
+<span class="nc" id="L139">        acuerdo.setFechaRespuestaQuejoso(LocalDateTime.now());</span>
+<span class="nc" id="L140">        AcuerdoConclusion guardado = acuerdoRepository.save(acuerdo);</span>
+
+<span class="nc" id="L142">        transicionService.cambiar(expediente, EstatusExpediente.PENDIENTE_CONCLUSION);</span>
+<span class="nc" id="L143">        return convertirADTO(guardado, expediente.getEstatus());</span>
+    }
+
+    /**
+     * El subdefensor registra el acuerdo de CONCLUSIÓN (fila 20): el expediente se cierra
+     * definitivamente. Solo con el acuerdo de conciliación aceptado.
+     */
+    public AcuerdoConclusionDTO registrarConclusion(Long expedienteId, String textoConclusion) {
+<span class="nc" id="L151">        ExpedienteInvestigacion expediente = expedienteRepository.findById(expedienteId)</span>
+<span class="nc" id="L152">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe el expediente &quot; + expedienteId));</span>
+
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if (!EstatusExpediente.PENDIENTE_CONCLUSION.equals(expediente.getEstatus())) {</span>
+<span class="nc" id="L155">            throw new OperacionInvalidaException(</span>
+<span class="nc" id="L156">                    &quot;El expediente &quot; + expediente.getFolio()</span>
+                            + &quot; solo se concluye cuando el quejoso aceptó el acuerdo de conciliación (estatus actual: &quot;
+<span class="nc" id="L158">                            + expediente.getEstatus() + &quot;).&quot;);</span>
+        }
+
+<span class="nc" id="L161">        AcuerdoConclusion acuerdo = exigirAcuerdo(expedienteId);</span>
+<span class="nc" id="L162">        acuerdo.setTextoConclusion(textoConclusion.strip());</span>
+<span class="nc" id="L163">        acuerdo.setFechaConclusion(LocalDateTime.now());</span>
+<span class="nc" id="L164">        acuerdo.setConcluido(true);</span>
+<span class="nc" id="L165">        AcuerdoConclusion guardado = acuerdoRepository.save(acuerdo);</span>
+
+<span class="nc" id="L167">        transicionService.cambiar(expediente, EstatusExpediente.CONCLUIDO);</span>
+
+<span class="nc" id="L169">        notificacionService.notificar(expediente, NotificacionQuejosoService.TIPO_CAMBIO_ESTATUS,</span>
+                &quot;Tu caso ha concluido&quot;,
+<span class="nc" id="L171">                &quot;La Defensoría emitió el acuerdo de conclusión de tu queja:\n\n&quot; + guardado.getTextoConclusion()</span>
+                        + &quot;\n\nGracias por confiar en la Defensoría de los Derechos Politécnicos.&quot;,
+                null);
+
+<span class="nc" id="L175">        return convertirADTO(guardado, expediente.getEstatus());</span>
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Respuesta del quejoso desde el enlace del correo / notificación (CU-QJ-14).
+    // ---------------------------------------------------------------------------------
+
+    public AcuerdoPublicoDTO acuerdoPorToken(String token) {
+<span class="nc" id="L183">        return convertirAPublico(obtenerPorToken(token));</span>
+    }
+
+    public AcuerdoPublicoDTO aceptarPorToken(String token, String comentario) {
+<span class="nc" id="L187">        AcuerdoConclusion acuerdo = obtenerPorToken(token);</span>
+<span class="nc" id="L188">        aceptarPorQuejoso(acuerdo.getExpedienteId(), limpiar(comentario));</span>
+<span class="nc" id="L189">        return convertirAPublico(exigirAcuerdo(acuerdo.getExpedienteId()));</span>
+    }
+
+    public AcuerdoPublicoDTO rechazarPorToken(String token, String motivo) {
+<span class="nc" id="L193">        AcuerdoConclusion acuerdo = obtenerPorToken(token);</span>
+<span class="nc bnc" id="L194" title="All 4 branches missed.">        if (motivo == null || motivo.isBlank()) {</span>
+<span class="nc" id="L195">            throw new OperacionInvalidaException(&quot;Indica el motivo por el que rechazas el acuerdo.&quot;);</span>
+        }
+<span class="nc" id="L197">        rechazarPorQuejoso(acuerdo.getExpedienteId(), motivo.strip());</span>
+<span class="nc" id="L198">        return convertirAPublico(exigirAcuerdo(acuerdo.getExpedienteId()));</span>
+    }
+
+    private AcuerdoConclusion obtenerPorToken(String token) {
+<span class="nc bnc" id="L202" title="All 4 branches missed.">        if (token == null || token.isBlank()) {</span>
+<span class="nc" id="L203">            throw new RecursoNoEncontradoException(&quot;El enlace del acuerdo no es válido.&quot;);</span>
+        }
+<span class="nc" id="L205">        return acuerdoRepository.findByTokenRespuesta(token.strip())</span>
+<span class="nc" id="L206">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                        &quot;El enlace del acuerdo no es válido o ya fue sustituido por uno más reciente.&quot;));
+    }
+
+    private AcuerdoPublicoDTO convertirAPublico(AcuerdoConclusion a) {
+<span class="nc" id="L211">        ExpedienteInvestigacion expediente = expedienteRepository.findById(a.getExpedienteId())</span>
+<span class="nc" id="L212">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Acuerdo no encontrado.&quot;));</span>
+<span class="nc" id="L213">        return AcuerdoPublicoDTO.builder()</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">                .folioQueja(expediente.getFolioQueja() != null ? expediente.getFolioQueja() : expediente.getFolio())</span>
+<span class="nc" id="L215">                .quejosoNombre(expediente.getQuejosoNombre())</span>
+<span class="nc" id="L216">                .asunto(expediente.getAsunto())</span>
+<span class="nc" id="L217">                .textoAcuerdo(a.getTextoAcuerdo())</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">                .fechaEnvio(a.getFechaEnvioSecretarial() != null ? a.getFechaEnvioSecretarial().toString() : null)</span>
+<span class="nc" id="L219">                .respuestaQuejoso(a.getRespuestaQuejoso())</span>
+<span class="nc" id="L220">                .comentarioQuejoso(a.getComentarioQuejoso())</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">                .fechaRespuesta(a.getFechaRespuestaQuejoso() != null ? a.getFechaRespuestaQuejoso().toString() : null)</span>
+<span class="nc" id="L222">                .concluido(Boolean.TRUE.equals(a.getConcluido()))</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">                .puedeResponder(EstatusExpediente.PENDIENTE_CONCILIACION.equals(expediente.getEstatus())</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">                        &amp;&amp; a.getRespuestaQuejoso() == null)</span>
+<span class="nc" id="L225">                .build();</span>
+    }
+
+    private static String nuevoToken() {
+<span class="nc" id="L229">        return UUID.randomUUID().toString().replace(&quot;-&quot;, &quot;&quot;) + UUID.randomUUID().toString().replace(&quot;-&quot;, &quot;&quot;);</span>
+    }
+
+    private static String limpiar(String texto) {
+<span class="nc bnc" id="L233" title="All 4 branches missed.">        return texto == null || texto.isBlank() ? null : texto.strip();</span>
+    }
+
+    /**
+     * El quejoso RECHAZA el acuerdo de conciliación (fila 18): el expediente regresa a
+     * EN_INVESTIGACION para otro oficio de gestión y un nuevo acuerdo. El texto se conserva
+     * como antecedente de lo que se le había propuesto.
+     */
+    public AcuerdoConclusionDTO rechazarPorQuejoso(Long expedienteId, String comentario) {
+<span class="nc" id="L242">        ExpedienteInvestigacion expediente = exigirPendienteDeRespuesta(expedienteId);</span>
+<span class="nc" id="L243">        AcuerdoConclusion acuerdo = exigirAcuerdo(expedienteId);</span>
+
+<span class="nc" id="L245">        acuerdo.setRespuestaQuejoso(RESPUESTA_RECHAZADO);</span>
+<span class="nc" id="L246">        acuerdo.setComentarioQuejoso(comentario);</span>
+<span class="nc" id="L247">        acuerdo.setFechaRespuestaQuejoso(LocalDateTime.now());</span>
+<span class="nc" id="L248">        AcuerdoConclusion guardado = acuerdoRepository.save(acuerdo);</span>
+
+<span class="nc" id="L250">        transicionService.cambiar(expediente, EstatusExpediente.EN_INVESTIGACION);</span>
+<span class="nc" id="L251">        return convertirADTO(guardado, expediente.getEstatus());</span>
+    }
+
+    private ExpedienteInvestigacion exigirPendienteDeRespuesta(Long expedienteId) {
+<span class="nc" id="L255">        ExpedienteInvestigacion expediente = expedienteRepository.findById(expedienteId)</span>
+<span class="nc" id="L256">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                        &quot;No existe el expediente &quot; + expedienteId));
+
+<span class="nc bnc" id="L259" title="All 2 branches missed.">        if (!EstatusExpediente.PENDIENTE_CONCILIACION.equals(expediente.getEstatus())) {</span>
+<span class="nc" id="L260">            throw new OperacionInvalidaException(</span>
+<span class="nc" id="L261">                    &quot;El expediente &quot; + expediente.getFolio()</span>
+                            + &quot; no tiene un acuerdo esperando respuesta (estatus actual: &quot;
+<span class="nc" id="L263">                            + expediente.getEstatus() + &quot;).&quot;);</span>
+        }
+<span class="nc" id="L265">        return expediente;</span>
+    }
+
+    private AcuerdoConclusion exigirAcuerdo(Long expedienteId) {
+<span class="nc" id="L269">        return acuerdoRepository.findByExpedienteId(expedienteId)</span>
+<span class="nc" id="L270">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                        &quot;El expediente &quot; + expedienteId + &quot; no tiene acuerdo de conclusion.&quot;));
+    }
+
+    private AcuerdoConclusionDTO convertirADTO(AcuerdoConclusion a, String estatusExpediente) {
+<span class="nc" id="L275">        return AcuerdoConclusionDTO.builder()</span>
+<span class="nc" id="L276">                .id(a.getId())</span>
+<span class="nc" id="L277">                .expedienteId(a.getExpedienteId())</span>
+<span class="nc" id="L278">                .folio(a.getFolio())</span>
+<span class="nc" id="L279">                .textoAcuerdo(a.getTextoAcuerdo())</span>
+<span class="nc" id="L280">                .concluido(a.getConcluido())</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">                .fechaCreacion(a.getFechaCreacion() != null ? a.getFechaCreacion().toString() : null)</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">                .fechaEnvioSecretarial(a.getFechaEnvioSecretarial() != null ? a.getFechaEnvioSecretarial().toString() : null)</span>
+<span class="nc" id="L283">                .estatusExpediente(estatusExpediente)</span>
+<span class="nc" id="L284">                .respuestaQuejoso(a.getRespuestaQuejoso())</span>
+<span class="nc" id="L285">                .comentarioQuejoso(a.getComentarioQuejoso())</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">                .fechaRespuestaQuejoso(a.getFechaRespuestaQuejoso() != null</span>
+<span class="nc" id="L287">                        ? a.getFechaRespuestaQuejoso().toString() : null)</span>
+<span class="nc" id="L288">                .textoConclusion(a.getTextoConclusion())</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">                .fechaConclusion(a.getFechaConclusion() != null ? a.getFechaConclusion().toString() : null)</span>
+<span class="nc" id="L290">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

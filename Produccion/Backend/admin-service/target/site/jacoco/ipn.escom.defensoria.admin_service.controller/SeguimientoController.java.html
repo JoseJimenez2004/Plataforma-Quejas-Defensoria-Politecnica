@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SeguimientoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.admin_service.controller</a> &gt; <span class="el_source">SeguimientoController.java</span></div><h1>SeguimientoController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.admin_service.controller;
+
+import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import ipn.escom.defensoria.admin_service.model.PanelModels.Carga;
+import ipn.escom.defensoria.admin_service.model.PanelModels.ContactoRequest;
+import ipn.escom.defensoria.admin_service.model.PanelModels.DetallePersonal;
+import ipn.escom.defensoria.admin_service.model.PanelModels.MiembroPersonal;
+import ipn.escom.defensoria.admin_service.model.PanelModels.MotivoRechazo;
+import ipn.escom.defensoria.admin_service.model.PanelModels.PaginaCasos;
+import ipn.escom.defensoria.admin_service.model.PanelModels.Panel;
+import ipn.escom.defensoria.admin_service.model.PanelModels.TablaUnidades;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.DetalleQueja;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Filtros;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.PaginaQuejas;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.UnidadConteo;
+import ipn.escom.defensoria.admin_service.service.BitacoraService;
+import ipn.escom.defensoria.admin_service.service.PanelDefensoraService;
+import ipn.escom.defensoria.admin_service.service.SeguimientoQuejasService;
+import jakarta.servlet.http.HttpServletRequest;
+
+/**
+ * Panel de la Defensora: tablero, casos que requieren atención, explorador de quejas, quejas
+ * por unidad, carga de trabajo, motivos de rechazo y personal. Todo de solo lectura salvo el
+ * área y teléfono del personal.
+ */
+@RestController
+@RequestMapping(&quot;/api/admin/seguimiento&quot;)
+@PreAuthorize(&quot;hasRole('DEFENSOR')&quot;)
+@Tag(name = &quot;Seguimiento de quejas&quot;, description = &quot;Indicadores y consulta de quejas para la Defensora&quot;)
+public class SeguimientoController {
+
+    private final SeguimientoQuejasService servicio;
+    private final PanelDefensoraService panel;
+    private final BitacoraService bitacora;
+
+<span class="nc" id="L56">    public SeguimientoController(SeguimientoQuejasService servicio, PanelDefensoraService panel, BitacoraService bitacora) {</span>
+<span class="nc" id="L57">        this.servicio = servicio;</span>
+<span class="nc" id="L58">        this.panel = panel;</span>
+<span class="nc" id="L59">        this.bitacora = bitacora;</span>
+<span class="nc" id="L60">    }</span>
+
+    @GetMapping(&quot;/tablero&quot;)
+    @Operation(summary = &quot;Panel general: indicadores del periodo, etapas, evolución, unidades, casos, carga y motivos&quot;)
+    public ResponseEntity&lt;Panel&gt; tablero(@RequestParam(defaultValue = &quot;30&quot;) int dias,
+                                         @RequestParam(defaultValue = &quot;12&quot;) int meses) {
+<span class="nc" id="L66">        return ResponseEntity.ok(panel.panel(dias, meses));</span>
+    }
+
+    @GetMapping(&quot;/atencion&quot;)
+    @Operation(summary = &quot;Casos que requieren atención (retrasos, sin asignar, observaciones pendientes)&quot;)
+    public ResponseEntity&lt;PaginaCasos&gt; atencion(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String motivo,
+            @RequestParam(required = false) String etapa,
+            @RequestParam(required = false) String unidad,
+            @RequestParam(required = false) String responsable,
+            @RequestParam(required = false) Integer diasMin,
+            @RequestParam(required = false) Integer diasMax,
+            @RequestParam(required = false) String severidad,
+            @RequestParam(defaultValue = &quot;0&quot;) int pagina,
+            @RequestParam(defaultValue = &quot;10&quot;) int tamanio) {
+<span class="nc" id="L82">        return ResponseEntity.ok(panel.casos(q, motivo, etapa, unidad, responsable, diasMin, diasMax, severidad, pagina, tamanio));</span>
+    }
+
+    @GetMapping(&quot;/filtros&quot;)
+    @Operation(summary = &quot;Opciones para los filtros del explorador (recepcionistas, abogados, etapas, estados)&quot;)
+    public ResponseEntity&lt;Filtros&gt; filtros() {
+<span class="nc" id="L88">        return ResponseEntity.ok(servicio.filtros());</span>
+    }
+
+    @GetMapping(&quot;/quejas&quot;)
+    @Operation(summary = &quot;Quejas con filtros por etapa, estado, estatus, unidad, abogado, recepcionista, meses, prioridad, motivo y texto&quot;)
+    public ResponseEntity&lt;PaginaQuejas&gt; quejas(
+            @RequestParam(required = false) String etapa,
+            @RequestParam(required = false) String estatus,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) String unidad,
+            @RequestParam(required = false) String abogado,
+            @RequestParam(required = false) String recepcionista,
+            @RequestParam(required = false) String mes,
+            @RequestParam(required = false) String desde,
+            @RequestParam(required = false) String hasta,
+            @RequestParam(required = false) String prioridad,
+            @RequestParam(required = false) String motivo,
+            @RequestParam(required = false) String orden,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = &quot;0&quot;) int pagina,
+            @RequestParam(defaultValue = &quot;10&quot;) int tamanio) {
+<span class="nc" id="L109">        Map&lt;String, String&gt; f = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L110">        f.put(&quot;etapa&quot;, etapa);</span>
+<span class="nc" id="L111">        f.put(&quot;estatus&quot;, estatus);</span>
+<span class="nc" id="L112">        f.put(&quot;estado&quot;, estado);</span>
+<span class="nc" id="L113">        f.put(&quot;unidad&quot;, unidad);</span>
+<span class="nc" id="L114">        f.put(&quot;abogado&quot;, abogado);</span>
+<span class="nc" id="L115">        f.put(&quot;recepcionista&quot;, recepcionista);</span>
+<span class="nc" id="L116">        f.put(&quot;mes&quot;, mes);</span>
+<span class="nc" id="L117">        f.put(&quot;desde&quot;, desde);</span>
+<span class="nc" id="L118">        f.put(&quot;hasta&quot;, hasta);</span>
+<span class="nc" id="L119">        f.put(&quot;prioridad&quot;, prioridad);</span>
+<span class="nc" id="L120">        f.put(&quot;motivo&quot;, motivo);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        f.put(&quot;orden&quot;, orden == null ? &quot;reciente&quot; : orden);</span>
+<span class="nc" id="L122">        f.put(&quot;q&quot;, q);</span>
+<span class="nc" id="L123">        return ResponseEntity.ok(servicio.quejas(f, pagina, tamanio));</span>
+    }
+
+    @GetMapping(&quot;/quejas/{folio}&quot;)
+    @Operation(summary = &quot;Detalle de solo lectura de una queja&quot;)
+    public ResponseEntity&lt;DetalleQueja&gt; detalle(@PathVariable String folio) {
+<span class="nc" id="L129">        return ResponseEntity.ok(servicio.detalle(folio));</span>
+    }
+
+    @GetMapping(&quot;/quejas/{folio}/evidencias/{id}&quot;)
+    @Operation(summary = &quot;Abre un archivo de la queja (credencial o evidencia)&quot;)
+    public ResponseEntity&lt;byte[]&gt; evidencia(@PathVariable String folio, @PathVariable Long id) {
+<span class="nc" id="L135">        Map&lt;String, Object&gt; archivo = servicio.evidencia(folio, id);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        String tipo = archivo.get(&quot;tipo_mime&quot;) == null ? &quot;application/octet-stream&quot; : archivo.get(&quot;tipo_mime&quot;).toString();</span>
+<span class="nc" id="L137">        String nombre = String.valueOf(archivo.get(&quot;nombre_archivo&quot;)).replace(&quot;\&quot;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L138">        return ResponseEntity.ok()</span>
+<span class="nc" id="L139">                .contentType(MediaType.parseMediaType(tipo))</span>
+<span class="nc" id="L140">                .header(HttpHeaders.CONTENT_DISPOSITION, &quot;inline; filename=\&quot;&quot; + nombre + &quot;\&quot;&quot;)</span>
+<span class="nc" id="L141">                .body((byte[]) archivo.get(&quot;contenido&quot;));</span>
+    }
+
+    @GetMapping(&quot;/unidades&quot;)
+    @Operation(summary = &quot;Dependencias y unidades con quejas (lista simple para los selectores)&quot;)
+    public ResponseEntity&lt;List&lt;UnidadConteo&gt;&gt; unidades(@RequestParam(required = false) String q) {
+<span class="nc" id="L147">        return ResponseEntity.ok(servicio.unidades(q, 0));</span>
+    }
+
+    @GetMapping(&quot;/unidades/tabla&quot;)
+    @Operation(summary = &quot;Quejas por unidad: resumen, top 10, distribución por tipo y tabla paginada con filtros&quot;)
+    public ResponseEntity&lt;TablaUnidades&gt; tablaUnidades(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) String estatus,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(defaultValue = &quot;365&quot;) int dias,
+            @RequestParam(defaultValue = &quot;0&quot;) int pagina,
+            @RequestParam(defaultValue = &quot;10&quot;) int tamanio) {
+<span class="nc" id="L161">        return ResponseEntity.ok(panel.unidades(q, tipo, estatus, desde, hasta, dias, pagina, tamanio));</span>
+    }
+
+    @GetMapping(&quot;/carga&quot;)
+    @Operation(summary = &quot;Carga de trabajo de recepcionistas y abogados en el periodo&quot;)
+    public ResponseEntity&lt;Carga&gt; carga(@RequestParam(defaultValue = &quot;30&quot;) int dias) {
+<span class="nc" id="L167">        return ResponseEntity.ok(panel.carga(dias));</span>
+    }
+
+    @GetMapping(&quot;/motivos-rechazo&quot;)
+    @Operation(summary = &quot;Motivos por los que Recepción regresa las quejas, con su categoría&quot;)
+    public ResponseEntity&lt;List&lt;MotivoRechazo&gt;&gt; motivos(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(defaultValue = &quot;0&quot;) int dias) {
+<span class="nc" id="L178">        return ResponseEntity.ok(panel.motivos(q, categoria, desde, hasta, dias));</span>
+    }
+
+    @GetMapping(&quot;/personal&quot;)
+    @Operation(summary = &quot;Personal de la Defensoría con área, teléfono, último acceso y estadísticas de atención&quot;)
+    public ResponseEntity&lt;List&lt;MiembroPersonal&gt;&gt; personal() {
+<span class="nc" id="L184">        return ResponseEntity.ok(panel.personal());</span>
+    }
+
+    @GetMapping(&quot;/personal/{id}&quot;)
+    @Operation(summary = &quot;Detalle de una persona: actividad reciente y quejas que tiene o tuvo a su cargo&quot;)
+    public ResponseEntity&lt;DetallePersonal&gt; detallePersonal(@PathVariable Long id) {
+<span class="nc" id="L190">        return ResponseEntity.ok(panel.detallePersonal(id));</span>
+    }
+
+    @PutMapping(&quot;/personal/{id}/contacto&quot;)
+    @Operation(summary = &quot;Guarda el área de adscripción (clave del catálogo) y el teléfono de una persona&quot;)
+    public ResponseEntity&lt;MiembroPersonal&gt; guardarContacto(@PathVariable Long id, @RequestBody ContactoRequest datos,
+                                                           HttpServletRequest request) {
+<span class="nc" id="L197">        MiembroPersonal m = panel.guardarContacto(id, datos);</span>
+<span class="nc" id="L198">        bitacora.registrar(SecurityContextHolder.getContext().getAuthentication().getName(),</span>
+<span class="nc" id="L199">                &quot;Actualización de área/teléfono de &quot; + m.correo(), request);</span>
+<span class="nc" id="L200">        return ResponseEntity.ok(m);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

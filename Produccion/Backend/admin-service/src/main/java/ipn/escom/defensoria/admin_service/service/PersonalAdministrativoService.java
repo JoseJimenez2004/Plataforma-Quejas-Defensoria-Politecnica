@@ -89,7 +89,7 @@ public class PersonalAdministrativoService {
     }
 
     /** Roles que pueden administrar el sistema (personal, respaldos, catálogos, plantillas). */
-    private static final Set<RolStaff> ROLES_ADMINISTRACION = Set.of(RolStaff.ADMIN_SISTEMAS, RolStaff.DEFENSOR);
+    private static final Set<RolStaff> ROLES_ADMINISTRACION = Set.of(RolStaff.DEFENSOR);
 
     public PersonalAdministrativo editar(Long id, PersonalRequest datos, String correoActual) {
         PersonalAdministrativo personal = obtener(id);
@@ -144,7 +144,7 @@ public class PersonalAdministrativoService {
     /**
      * Evita quedarse sin nadie que pueda administrar: no se puede desactivar ni quitar el rol
      * a la propia cuenta con la que se está trabajando, ni a la última cuenta activa con rol
-     * de administración (DEFENSOR o ADMIN_SISTEMAS). Si pasara, nadie podría volver a dar de
+     * de administración (DEFENSOR). Si pasara, nadie podría volver a dar de
      * alta personal ni restaurar respaldos sin entrar a la base de datos a mano.
      */
     private void exigirQueNoSeQuedeSinAdministracion(PersonalAdministrativo objetivo, String correoActual) {

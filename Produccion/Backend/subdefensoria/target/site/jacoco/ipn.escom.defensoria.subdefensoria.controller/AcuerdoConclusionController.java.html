@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AcuerdoConclusionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.controller</a> &gt; <span class="el_source">AcuerdoConclusionController.java</span></div><h1>AcuerdoConclusionController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.controller;
+
+import ipn.escom.defensoria.subdefensoria.dto.AcuerdoConclusionDTO;
+import ipn.escom.defensoria.subdefensoria.dto.CrearAcuerdoConclusionDTO;
+import ipn.escom.defensoria.subdefensoria.dto.RegistrarConclusionDTO;
+import ipn.escom.defensoria.subdefensoria.service.AcuerdoConclusionService;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/api/subdefensoria/acuerdos-conclusion&quot;)
+public class AcuerdoConclusionController {
+
+    private final AcuerdoConclusionService acuerdoConclusionService;
+
+<span class="nc" id="L16">    public AcuerdoConclusionController(AcuerdoConclusionService acuerdoConclusionService) {</span>
+<span class="nc" id="L17">        this.acuerdoConclusionService = acuerdoConclusionService;</span>
+<span class="nc" id="L18">    }</span>
+
+    /**
+     * TS-07/08: redactar el acuerdo y, si concluir=true, MANDARSELO AL QUEJOSO.
+     * Ya no cierra el expediente: lo deja en PENDIENTE_CONCLUSION esperando su respuesta.
+     */
+    @PostMapping
+    public AcuerdoConclusionDTO guardarOConcluir(@Valid @RequestBody CrearAcuerdoConclusionDTO dto) {
+<span class="nc" id="L26">        return acuerdoConclusionService.guardarOConcluir(dto);</span>
+    }
+
+    /**
+     * El quejoso acepta el acuerdo de conciliación -&gt; PENDIENTE_CONCLUSION.
+     *
+     * Va bajo /interno porque quien la invoca es queja-service en nombre del quejoso, no
+     * una persona de Subdefensoria: el quejoso tiene un JWT de quejoso, que este servicio
+     * no reconoce. Mismo patron que /api/subdefensoria/ingesta (sin JWT, restringido por
+     * IP de origen en el firewall).
+     */
+    @PostMapping(&quot;/interno/{expedienteId}/aceptar&quot;)
+    public AcuerdoConclusionDTO aceptar(@PathVariable Long expedienteId,
+                                        @RequestParam(required = false) String comentario) {
+<span class="nc" id="L40">        return acuerdoConclusionService.aceptarPorQuejoso(expedienteId, comentario);</span>
+    }
+
+    /** El quejoso rechaza el acuerdo -&gt; el expediente regresa a EN_INVESTIGACION. */
+    @PostMapping(&quot;/interno/{expedienteId}/rechazar&quot;)
+    public AcuerdoConclusionDTO rechazar(@PathVariable Long expedienteId,
+                                         @RequestParam(required = false) String comentario) {
+<span class="nc" id="L47">        return acuerdoConclusionService.rechazarPorQuejoso(expedienteId, comentario);</span>
+    }
+
+    /* Acuerdo de conclusión, con el de conciliación ya aceptado por el quejoso. */
+    @PostMapping(&quot;/{expedienteId}/conclusion&quot;)
+    public AcuerdoConclusionDTO registrarConclusion(@PathVariable Long expedienteId,
+                                                    @Valid @RequestBody RegistrarConclusionDTO dto) {
+<span class="nc" id="L54">        return acuerdoConclusionService.registrarConclusion(expedienteId, dto.getTextoConclusion());</span>
+    }
+
+    @GetMapping(&quot;/expediente/{expedienteId}&quot;)
+    public AcuerdoConclusionDTO obtenerPorExpediente(@PathVariable Long expedienteId) {
+<span class="nc" id="L59">        return acuerdoConclusionService.obtenerPorExpediente(expedienteId);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

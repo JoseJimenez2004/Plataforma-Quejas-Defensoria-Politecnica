@@ -1,3 +1,5 @@
+import { PrioridadEtiqueta } from '../utils/estatus-expediente';
+
 import { NotaAnalisis } from './nota-analisis.model';
 import { DatosQueja } from './expediente-primer-contacto';
 
@@ -21,7 +23,7 @@ export interface ExpedienteDetalle {
   estatus: string;
   estatusCodigo: string;
 
-  prioridad: 'Alta' | 'Media' | 'Baja';
+  prioridad: PrioridadEtiqueta;
   narrativa: string;
 
   /** Quién abrió el expediente y cuándo (TURNADA -> EN_ANALISIS). */

@@ -1,3 +1,5 @@
+import { PrioridadEtiqueta } from '../utils/estatus-expediente';
+
 export interface DashboardResumen {
   titulo: string;
   valor: number;
@@ -10,7 +12,7 @@ export interface DashboardActividad {
   accion: string;
   tiempo: string;
   icono: string;
-  prioridad: 'Alta' | 'Media' | 'Baja';
+  prioridad: PrioridadEtiqueta;
 }
 
 export interface DashboardCitaHoy {

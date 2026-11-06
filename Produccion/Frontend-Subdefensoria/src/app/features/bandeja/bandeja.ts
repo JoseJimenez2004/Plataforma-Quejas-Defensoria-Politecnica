@@ -1,6 +1,7 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
@@ -10,11 +11,13 @@ import { ExpedienteResumenService } from '../../core/services/expediente-resumen
 import { AccionesExpedienteService } from '../../core/services/acciones-expediente.service';
 import {
   GRUPOS, GrupoExpediente, ORDEN_NIVEL, SiguientePaso, claseEtapa, colorPlazo, enGrupo,
-  formatearFecha, oficioVencido, porVencer, porcentajePlazo, siguientePaso
+  formatearFecha, oficioVencido, porVencer, porcentajePlazo, siguientePaso, OPCIONES_ETAPA, etapasDe
 } from '../../core/utils/etapas';
+import { PRIORIDADES, clasePrioridad, codigoPrioridad, etiquetaPrioridad, rangoPrioridad } from '../../core/utils/prioridad';
 
 type FiltroPlazo = '' | 'vencidos' | 'por-vencer' | 'sin-oficio';
-type Orden = 'urgencia' | 'recientes' | 'antiguos';
+type Orden = 'prioridad' | 'urgencia' | 'recientes' | 'antiguos';
+const ORDEN_POR_DEFECTO: Orden = 'prioridad';
 
 const POR_PAGINA = 10;
 
@@ -31,6 +34,11 @@ export class Bandeja implements OnInit {
   readonly colorPlazo = colorPlazo;
   readonly porcentajePlazo = porcentajePlazo;
   readonly formatearFecha = formatearFecha;
+  readonly opcionesEtapa = OPCIONES_ETAPA;
+  readonly prioridades = PRIORIDADES;
+  readonly clasePrioridad = clasePrioridad;
+  readonly etiquetaPrioridad = etiquetaPrioridad;
+  private readonly destroyRef = inject(DestroyRef);
 
   todos: ExpedienteResumen[] = [];
   filtrados: ExpedienteResumen[] = [];
@@ -42,7 +50,11 @@ export class Bandeja implements OnInit {
   busqueda = '';
   unidad = '';
   plazo: FiltroPlazo = '';
-  orden: Orden = 'urgencia';
+  /** SD-2: una o varias etapas separadas por coma (ELABORO_ACUERDO,PENDIENTE_CONCLUSION). */
+  etapa = '';
+  /** SD-6: URGENTE | ALTA | MEDIA | BAJA | SIN_ASIGNAR. */
+  prioridad = '';
+  orden: Orden = ORDEN_POR_DEFECTO;
   pagina = 0;
   cargando = true;
 
@@ -50,16 +62,64 @@ export class Bandeja implements OnInit {
     private expedienteResumenService: ExpedienteResumenService,
     private acciones: AccionesExpedienteService,
     private route: ActivatedRoute,
+    private router: Router,
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    const q = this.route.snapshot.queryParamMap;
-    const grupo = q.get('grupo') as GrupoExpediente | null;
-    if (grupo && GRUPOS.some(g => g.id === grupo)) this.grupo = grupo;
-    this.plazo = (q.get('plazo') as FiltroPlazo) ?? '';
+    // SD-2: se escucha la URL (no solo al entrar), así la flecha atrás y los cuadros de
+    // Inicio siempre dejan la bandeja en el mismo filtro.
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(q => {
+      this.leerUrl(q);
+      if (!this.cargando) {
+        this.aplicarFiltros();
+        this.cdr.detectChanges();
+      }
+    });
     this.cargar();
+  }
+
+  private leerUrl(q: ParamMap): void {
+    const grupo = q.get('grupo') as GrupoExpediente | null;
+    this.grupo = grupo && GRUPOS.some(g => g.id === grupo) ? grupo : 'tramite';
+    this.plazo = (q.get('plazo') as FiltroPlazo) ?? '';
+    this.etapa = q.get('etapa') ?? '';
+    this.unidad = q.get('unidad') ?? '';
+    this.prioridad = q.get('prioridad') ?? '';
+    const orden = q.get('orden') as Orden | null;
+    this.orden = orden && ['prioridad', 'urgencia', 'recientes', 'antiguos'].includes(orden) ? orden : ORDEN_POR_DEFECTO;
+    // Una etapa "Concluido" sola no tiene sentido en "En trámite".
+    if (etapasDe(this.etapa).length === 1 && this.etapa === 'CONCLUIDO' && this.grupo === 'tramite') this.grupo = 'concluidos';
+  }
+
+  /** Guarda pestaña y filtros en la URL sin crear otra entrada en el historial. */
+  private escribirUrl(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      replaceUrl: true,
+      queryParams: {
+        grupo: this.grupo === 'tramite' ? null : this.grupo,
+        etapa: this.etapa || null,
+        plazo: this.plazo || null,
+        unidad: this.unidad || null,
+        prioridad: this.prioridad || null,
+        orden: this.orden === ORDEN_POR_DEFECTO ? null : this.orden
+      }
+    });
+  }
+
+  /** Cambio en un desplegable: aplica y lo deja en la URL. */
+  cambiarFiltro(): void {
+    if (this.etapa === 'CONCLUIDO' && this.grupo === 'tramite') this.grupo = 'concluidos';
+    else if (this.etapa && this.etapa !== 'CONCLUIDO' && this.grupo === 'concluidos') this.grupo = 'tramite';
+    this.aplicarFiltros();
+    this.escribirUrl();
+  }
+
+  /** Etapa elegida que no está en la lista (llegó por URL con otra combinación). */
+  get etapaFueraDeLista(): boolean {
+    return !!this.etapa && !OPCIONES_ETAPA.some(o => o.valor === this.etapa);
   }
 
   cargar(): void {
@@ -83,22 +143,38 @@ export class Bandeja implements OnInit {
 
   elegirGrupo(grupo: GrupoExpediente): void {
     this.grupo = grupo;
+    // Pestaña y etapa se combinan; si la etapa elegida no cabe en la pestaña, se quita.
+    const cabe = (est: string) => grupo === 'tramite' ? est !== 'CONCLUIDO'
+      : grupo === 'concluidos' ? est === 'CONCLUIDO'
+      : grupo === 'ua' ? est === 'EN_ESPERA_OFICIO'
+      : grupo === 'conciliacion' ? est === 'PENDIENTE_CONCILIACION' : true;
+    const etapas = etapasDe(this.etapa);
+    if (etapas.length && !etapas.some(cabe)) this.etapa = '';
     this.aplicarFiltros();
+    this.escribirUrl();
   }
 
   aplicarFiltros(): void {
     const texto = this.busqueda.trim().toLowerCase();
+    const etapas = etapasDe(this.etapa);
 
     this.filtrados = this.todos.filter(e => {
       if (!enGrupo(e, this.grupo)) return false;
+      if (etapas.length && !etapas.includes(e.estatus)) return false;
       if (this.unidad && e.unidadAcademica !== this.unidad) return false;
+      if (this.prioridad && codigoPrioridad(e.prioridad) !== this.prioridad) return false;
       if (this.plazo === 'vencidos' && !oficioVencido(e)) return false;
       if (this.plazo === 'por-vencer' && !porVencer(e)) return false;
       if (this.plazo === 'sin-oficio' && e.numeroOficioVigente) return false;
       return !texto || [e.folio, e.quejosoNombre, e.asunto, e.unidadAcademica, e.numeroOficioVigente]
         .some(v => (v ?? '').toLowerCase().includes(texto));
     }).sort((a, b) => {
-      if (this.orden === 'urgencia') {
+      // SD-6: Urgente -> Alta -> Media -> Baja -> Sin asignar; empate por urgencia y fecha.
+      if (this.orden === 'prioridad') {
+        const p = rangoPrioridad(a.prioridad) - rangoPrioridad(b.prioridad);
+        if (p) return p;
+      }
+      if (this.orden === 'urgencia' || this.orden === 'prioridad') {
         const diferencia = ORDEN_NIVEL[this.paso(a).nivel] - ORDEN_NIVEL[this.paso(b).nivel];
         if (diferencia) return diferencia;
       }
@@ -144,9 +220,9 @@ export class Bandeja implements OnInit {
   }
 
   exportarCsv(): void {
-    const columnas = ['Folio', 'Quejoso', 'Asunto', 'Unidad', 'Admisión', 'Etapa', 'Oficio vigente', 'Días transcurridos', 'Días de plazo', 'Siguiente paso'];
+    const columnas = ['Folio', 'Quejoso', 'Asunto', 'Unidad', 'Admisión', 'Prioridad', 'Etapa', 'Oficio vigente', 'Días transcurridos', 'Días de plazo', 'Siguiente paso'];
     const filas = this.filtrados.map(e => [
-      e.folio, e.quejosoNombre, e.asunto, e.unidadAcademica, e.fechaAdmision, this.etiquetaEtapa(e),
+      e.folio, e.quejosoNombre, e.asunto, e.unidadAcademica, e.fechaAdmision, etiquetaPrioridad(e.prioridad), this.etiquetaEtapa(e),
       e.numeroOficioVigente ?? '', e.diasTranscurridos ?? '', e.diasLimite ?? '', this.paso(e).descripcion
     ]);
     const csv = [columnas, ...filas]

@@ -177,7 +177,7 @@ class PersonalAdministrativoServiceTest {
 
         @Test
         void darDeBaja_administradorConOtroDisponible_seDesactiva() {
-            personal.setRol(RolStaff.ADMIN_SISTEMAS);
+            personal.setRol(RolStaff.DEFENSOR);
             when(repositorio.countByActivoTrueAndRolIn(any())).thenReturn(2L);
             assertDoesNotThrow(() -> servicio.darDeBaja(ID, ADMIN), "Con dos administradores sí se puede");
         }

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuejosoCitaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.controller</a> &gt; <span class="el_source">QuejosoCitaController.java</span></div><h1>QuejosoCitaController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.controller;
+
+import ipn.escom.defensoria.primercontacto.dto.CancelacionCitaDTO;
+import ipn.escom.defensoria.primercontacto.dto.CitaDTO;
+import ipn.escom.defensoria.primercontacto.service.CitaPrimerContactoService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+
+/**
+ * Citas vistas desde el PORTAL DEL QUEJOSO: consulta y respuesta (confirmar o cancelar con
+ * motivo) dentro del plazo. La pantalla del portal la construye el equipo del quejoso; este
+ * es el contrato que consume.
+ *
+ * El token del quejoso no lleva rol (ver auth-service/JwtUtil): solo se exige que esté
+ * autenticado, y el correo del token debe ser el del quejoso del expediente.
+ *
+ *   GET /api/primer-contacto/quejoso/citas/mias
+ *   PUT /api/primer-contacto/quejoso/citas/{id}/confirmar
+ *   PUT /api/primer-contacto/quejoso/citas/{id}/cancelar      { &quot;motivo&quot;: &quot;...&quot; }
+ */
+@RestController
+@RequestMapping(&quot;/api/primer-contacto/quejoso/citas&quot;)
+public class QuejosoCitaController {
+
+    private final CitaPrimerContactoService citaService;
+
+<span class="nc" id="L32">    public QuejosoCitaController(CitaPrimerContactoService citaService) {</span>
+<span class="nc" id="L33">        this.citaService = citaService;</span>
+<span class="nc" id="L34">    }</span>
+
+    @GetMapping(&quot;/mias&quot;)
+    public List&lt;CitaDTO&gt; misCitas(Authentication authentication) {
+<span class="nc" id="L38">        return citaService.citasDelQuejoso(correo(authentication));</span>
+    }
+
+    @PutMapping(&quot;/{id}/confirmar&quot;)
+    public CitaDTO confirmar(@PathVariable Long id, Authentication authentication) {
+<span class="nc" id="L43">        return citaService.confirmarPorQuejoso(id, correo(authentication));</span>
+    }
+
+    @PutMapping(&quot;/{id}/cancelar&quot;)
+    public CitaDTO cancelar(
+            @PathVariable Long id,
+            @Valid @RequestBody CancelacionCitaDTO dto,
+            Authentication authentication
+    ) {
+<span class="nc" id="L52">        return citaService.cancelarPorQuejoso(id, dto.getMotivo(), correo(authentication));</span>
+    }
+
+    private String correo(Authentication authentication) {
+<span class="nc bnc" id="L56" title="All 4 branches missed.">        if (authentication == null || authentication.getName() == null) {</span>
+<span class="nc" id="L57">            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Inicia sesión para continuar.&quot;);</span>
+        }
+<span class="nc" id="L59">        return authentication.getName();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

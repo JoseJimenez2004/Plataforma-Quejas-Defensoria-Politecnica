@@ -1,5 +1,5 @@
 .page {
-  max-width: 1280px;
+  max-width: none; /* Sin tope: con el menú compacto se aprovecha todo el ancho (como Recepción) */
 }
 
 .page-header {
@@ -28,8 +28,8 @@
 
 /* ---- Panel de filtros (facetas) ---- */
 .filters-panel {
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  box-shadow: var(--sombra-suave);
   padding: var(--space-4);
   position: sticky;
   top: calc(72px + var(--space-5)); /* debajo del header fijo */
@@ -105,8 +105,8 @@
 }
 
 .search-card {
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  box-shadow: var(--sombra-suave);
   padding: var(--space-4);
   display: grid;
   grid-template-columns: 1fr 220px;
@@ -139,8 +139,8 @@
      ancho disponible, la columna "Acciones" se recortaba sin forma de
      hacer scroll para verla. */
   overflow-x: auto;
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  box-shadow: var(--sombra-suave);
   padding: 0;
   background: white;
 }
@@ -216,4 +216,14 @@ mat-chip {
   .search-card {
     grid-template-columns: 1fr;
   }
+}
+/* PC-1: Urgente (más fuerte que Alta) y Sin asignar. */
+.chip-urgent {
+  background: #b71c1c !important;
+  color: #fff !important;
+}
+
+.chip-none {
+  background: #f1f2f4 !important;
+  color: #6b7280 !important;
 }

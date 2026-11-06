@@ -10,6 +10,8 @@ import { AccionesExpedienteService } from '../../core/services/acciones-expedien
 import {
   GrupoExpediente, ORDEN_NIVEL, SiguientePaso, diasRestantes, oficioVencido, porVencer, siguientePaso
 } from '../../core/utils/etapas';
+import { ETIQUETAS_ESTATUS } from '../../core/models/estatus-expediente';
+import { clasePrioridad, etiquetaPrioridad, rangoPrioridad } from '../../core/utils/prioridad';
 
 interface Pendiente {
   e: ExpedienteResumen;
@@ -17,6 +19,7 @@ interface Pendiente {
 }
 
 interface Etapa {
+  estatus: string;
   etiqueta: string;
   total: number;
   color: string;
@@ -46,9 +49,12 @@ export class Dashboard implements OnInit {
   esperando = 0;
   esperandoPorVencer = 0;
   porAcuerdo = 0;
+  esperandoQuejoso = 0;
   vencidos = 0;
 
   readonly diasRestantes = diasRestantes;
+  readonly clasePrioridad = clasePrioridad;
+  readonly etiquetaPrioridad = etiquetaPrioridad;
 
   constructor(
     private expedienteResumenService: ExpedienteResumenService,
@@ -86,16 +92,19 @@ export class Dashboard implements OnInit {
 
     this.enTramite = activos.length;
     this.porAbrir = activos.filter(e => e.estatus === 'RECIBIDO').length;
-    this.porOficio = activos.filter(e => !!e.siguienteFase).length;
-    this.esperando = activos.filter(e => e.estatus === 'EN_ESPERA_OFICIO' && !oficioVencido(e)).length;
+    // SD-2: cada cuadro cuenta exactamente lo que muestra al picarlo.
+    this.porOficio = activos.filter(e => e.estatus === 'EN_INVESTIGACION').length;
+    this.esperando = activos.filter(e => e.estatus === 'EN_ESPERA_OFICIO').length;
     this.esperandoPorVencer = activos.filter(porVencer).length;
     this.porAcuerdo = activos.filter(e => e.estatus === 'ELABORO_ACUERDO' || e.estatus === 'PENDIENTE_CONCLUSION').length;
+    this.esperandoQuejoso = activos.filter(e => e.estatus === 'PENDIENTE_CONCILIACION').length;
     this.vencidos = activos.filter(oficioVencido).length;
 
     this.pendientes = activos
       .map(e => ({ e, paso: siguientePaso(e) }))
       .filter(p => p.paso.nivel !== 'espera')
       .sort((a, b) => ORDEN_NIVEL[a.paso.nivel] - ORDEN_NIVEL[b.paso.nivel]
+        || rangoPrioridad(a.e.prioridad) - rangoPrioridad(b.e.prioridad)
         || (a.e.fechaAdmision ?? '').localeCompare(b.e.fechaAdmision ?? ''))
       .slice(0, 8);
 
@@ -105,12 +114,16 @@ export class Dashboard implements OnInit {
       .slice(0, 4);
 
     const cuenta = (estatus: string[]) => activos.filter(e => estatus.includes(e.estatus)).length;
+    // SD-4: mismos nombres que el chip y las pestañas; conciliación y conclusión por separado.
+    const etapa = (estatus: keyof typeof ETIQUETAS_ESTATUS, color: string) =>
+      ({ etiqueta: ETIQUETAS_ESTATUS[estatus], total: cuenta([estatus]), color, estatus });
     this.etapas = [
-      { etiqueta: 'Recibido', total: cuenta(['RECIBIDO']), color: '#6366f1' },
-      { etiqueta: 'Investigación', total: cuenta(['EN_INVESTIGACION']), color: '#0ea5e9' },
-      { etiqueta: 'Espera de oficio', total: cuenta(['EN_ESPERA_OFICIO']), color: '#e0912b' },
-      { etiqueta: 'Acuerdo', total: cuenta(['ELABORO_ACUERDO', 'PENDIENTE_CONCLUSION']), color: '#a855f7' },
-      { etiqueta: 'Pendiente de acuerdo de conciliación', total: cuenta(['PENDIENTE_CONCILIACION']), color: '#2f5ea8' }
+      etapa('RECIBIDO', '#6366f1'),
+      etapa('EN_INVESTIGACION', '#0ea5e9'),
+      etapa('EN_ESPERA_OFICIO', '#e0912b'),
+      etapa('ELABORO_ACUERDO', '#a855f7'),
+      etapa('PENDIENTE_CONCILIACION', '#2f5ea8'),
+      etapa('PENDIENTE_CONCLUSION', '#c026d3')
     ];
   }
 
@@ -119,7 +132,12 @@ export class Dashboard implements OnInit {
   }
 
   irA(grupo: GrupoExpediente, plazo?: string): void {
-    this.router.navigate(['/bandeja'], { queryParams: { grupo, ...(plazo ? { plazo } : {}) } });
+    this.router.navigate(['/bandeja'], { queryParams: { grupo: grupo === 'tramite' ? null : grupo, ...(plazo ? { plazo } : {}) } });
+  }
+
+  /** SD-2: cuadros y barra de etapas llevan a la etapa exacta (?etapa=A,B). */
+  irAEtapa(...estatus: string[]): void {
+    this.router.navigate(['/bandeja'], { queryParams: { etapa: estatus.join(',') } });
   }
 
   hacer(p: Pendiente): void {

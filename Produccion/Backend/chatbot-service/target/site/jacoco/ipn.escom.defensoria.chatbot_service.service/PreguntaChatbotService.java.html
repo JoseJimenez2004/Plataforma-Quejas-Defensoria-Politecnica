@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PreguntaChatbotService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.chatbot_service.service</a> &gt; <span class="el_source">PreguntaChatbotService.java</span></div><h1>PreguntaChatbotService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.chatbot_service.service;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.chatbot_service.dto.PreguntaChatbotRequest;
+import ipn.escom.defensoria.chatbot_service.entity.PreguntaChatbot;
+import ipn.escom.defensoria.chatbot_service.model.CategoriaChatbotModel;
+import ipn.escom.defensoria.chatbot_service.model.PreguntaChatbotModel;
+import ipn.escom.defensoria.chatbot_service.repository.PreguntaChatbotRepository;
+
+@Service
+public class PreguntaChatbotService {
+
+    private final PreguntaChatbotRepository preguntaChatbotRepository;
+
+<span class="fc" id="L22">    public PreguntaChatbotService(PreguntaChatbotRepository preguntaChatbotRepository) {</span>
+<span class="fc" id="L23">        this.preguntaChatbotRepository = preguntaChatbotRepository;</span>
+<span class="fc" id="L24">    }</span>
+
+    /**
+     * Menú completo del mini-chat para el portal del quejoso: categorías en el orden en que
+     * aparece su primera pregunta, y dentro de cada una, las preguntas ordenadas por
+     * &quot;orden&quot;. Se manda todo en una sola llamada (el catálogo es pequeño) para que el
+     * frontend no tenga que pedir cada respuesta por separado al hacer clic.
+     */
+    public List&lt;CategoriaChatbotModel&gt; obtenerMenuPublico() {
+<span class="fc" id="L33">        List&lt;PreguntaChatbot&gt; activas = preguntaChatbotRepository.findByActivoTrueOrderByOrdenAsc();</span>
+
+<span class="fc" id="L35">        Map&lt;String, List&lt;PreguntaChatbotModel&gt;&gt; agrupadas = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        for (PreguntaChatbot pregunta : activas) {</span>
+<span class="fc" id="L37">            agrupadas</span>
+<span class="fc" id="L38">                .computeIfAbsent(pregunta.getCategoria(), k -&gt; new ArrayList&lt;&gt;())</span>
+<span class="fc" id="L39">                .add(new PreguntaChatbotModel(pregunta.getId(), pregunta.getPregunta(), pregunta.getRespuesta()));</span>
+<span class="fc" id="L40">        }</span>
+
+<span class="fc" id="L42">        List&lt;CategoriaChatbotModel&gt; menu = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L43">        agrupadas.forEach((categoria, preguntas) -&gt; menu.add(new CategoriaChatbotModel(categoria, preguntas)));</span>
+<span class="fc" id="L44">        return menu;</span>
+    }
+
+    /** Lista TODAS (activas e inactivas) -- usado por el CRUD de administración. */
+    public List&lt;PreguntaChatbot&gt; listarTodas() {
+<span class="nc" id="L49">        return preguntaChatbotRepository.findAllByOrderByOrdenAsc();</span>
+    }
+
+    public PreguntaChatbot crear(PreguntaChatbotRequest datos) {
+<span class="pc bpc" id="L53" title="2 of 6 branches missed.">        if (esVacio(datos.getCategoria()) || esVacio(datos.getPregunta()) || esVacio(datos.getRespuesta())) {</span>
+<span class="fc" id="L54">            throw new RuntimeException(&quot;Categoría, pregunta y respuesta son obligatorias.&quot;);</span>
+        }
+<span class="fc" id="L56">        PreguntaChatbot pregunta = new PreguntaChatbot();</span>
+<span class="fc" id="L57">        aplicarDatos(pregunta, datos);</span>
+<span class="fc" id="L58">        pregunta.setCreadoEn(LocalDateTime.now());</span>
+<span class="fc" id="L59">        pregunta.setActualizadoEn(LocalDateTime.now());</span>
+<span class="fc" id="L60">        return preguntaChatbotRepository.save(pregunta);</span>
+    }
+
+    public PreguntaChatbot editar(Long id, PreguntaChatbotRequest datos) {
+<span class="fc" id="L64">        PreguntaChatbot pregunta = preguntaChatbotRepository.findById(id)</span>
+<span class="fc" id="L65">                .orElseThrow(() -&gt; new RuntimeException(&quot;No se encontró la pregunta indicada.&quot;));</span>
+<span class="fc" id="L66">        aplicarDatos(pregunta, datos);</span>
+<span class="fc" id="L67">        pregunta.setActualizadoEn(LocalDateTime.now());</span>
+<span class="fc" id="L68">        return preguntaChatbotRepository.save(pregunta);</span>
+    }
+
+    public void eliminar(Long id) {
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (!preguntaChatbotRepository.existsById(id)) {</span>
+<span class="fc" id="L73">            throw new RuntimeException(&quot;No se encontró la pregunta indicada.&quot;);</span>
+        }
+<span class="fc" id="L75">        preguntaChatbotRepository.deleteById(id);</span>
+<span class="fc" id="L76">    }</span>
+
+    private void aplicarDatos(PreguntaChatbot pregunta, PreguntaChatbotRequest datos) {
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (!esVacio(datos.getCategoria())) {</span>
+<span class="fc" id="L80">            pregunta.setCategoria(datos.getCategoria());</span>
+        }
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (!esVacio(datos.getPregunta())) {</span>
+<span class="fc" id="L83">            pregunta.setPregunta(datos.getPregunta());</span>
+        }
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (!esVacio(datos.getRespuesta())) {</span>
+<span class="fc" id="L86">            pregunta.setRespuesta(datos.getRespuesta());</span>
+        }
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if (datos.getOrden() != null) {</span>
+<span class="nc" id="L89">            pregunta.setOrden(datos.getOrden());</span>
+        }
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (datos.getActivo() != null) {</span>
+<span class="fc" id="L92">            pregunta.setActivo(datos.getActivo());</span>
+        }
+<span class="fc" id="L94">    }</span>
+
+    private boolean esVacio(String valor) {
+<span class="fc bfc" id="L97" title="All 4 branches covered.">        return valor == null || valor.isBlank();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

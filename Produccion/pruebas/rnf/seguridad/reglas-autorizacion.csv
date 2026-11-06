@@ -1,7 +1,7 @@
 requisito,servicio,metodo,ruta_regex,roles_esperados,descripcion
-RNF-A06,admin-service,*,^/api/admin/seguridad/(respaldos|restaurar),ADMIN_SISTEMAS|DEFENSOR,Respaldos y restauración solo para los roles de administración
+RNF-A06,admin-service,*,^/api/admin/seguridad/(respaldos|restaurar),DEFENSOR,Respaldos y restauración solo para la Defensora
 RN-R02,revision-service,*,^/api/revision/(?!perfil|catalogos|conciliaciones),RECEPCIONISTA,El servicio de revisión solo lo invoca recepción
-RN-R02,revision-service,*,^/api/revision/conciliaciones,RECEPCIONISTA|SUBDEFENSOR|DEFENSOR|ADMIN_SISTEMAS,Los acuerdos de conciliación los consultan y emiten varias áreas
+RN-R02,revision-service,*,^/api/revision/conciliaciones,RECEPCIONISTA|SUBDEFENSOR|DEFENSOR,Los acuerdos de conciliación los consultan y emiten varias áreas
 RNF-R02,admin-service,POST,^/api/admin/auth/login$,PUBLICO,Punto único de autenticación del personal
 RNF-Q01,queja-service,POST,^/api/quejoso/quejas/registro-publico$,PUBLICO,Queja sin cuenta ni sesión
 RN-Q09,queja-service,PUT,^/api/quejoso/conciliaciones/.*/respuesta$,AUTENTICADO,El acuerdo lo responde el quejoso autenticado

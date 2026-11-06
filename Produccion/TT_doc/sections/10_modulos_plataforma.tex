@@ -142,7 +142,7 @@
 		análisis, oficios, citas y sus respuestas, solicitudes a la persona señalada y conciliaciones.
 		\item \textbf{Gestión.} Oficios de análisis con número, asunto, autor y PDF (CU-PC-05); versión de
 		la persona señalada con sus archivos y la línea de tiempo de la solicitud (enviada, en espera,
-		respuesta); citas con el quejoso; y propuesta de conciliación (CU-PC-10).
+		respuesta); citas con el quejoso y con la persona señalada; y propuesta de conciliación (CU-PC-10).
 		\item \textbf{Resolución.} Tarjetas ``Competente'' e ``Improcedente'' con el formulario en la misma
 		pantalla: justificación, observaciones y, para el dictamen competente, el responsable en
 		Subdefensoría elegido de una lista ordenada por carga (CU-PC-06, CU-PC-07). Una vez dictaminada, la
@@ -154,11 +154,11 @@
 	La agenda muestra los indicadores de citas de hoy, próximas, confirmadas y canceladas, y dos vistas:
 	un calendario mensual que marca los días con cita y lista las del día elegido, y una lista con filtros
 	por estado, tipo, modalidad y fechas, columnas ordenables y exportación. La ventana ``Programar nueva
-	cita'' se usa también desde el expediente: en el primer paso se captura el tipo de cita, la modalidad
-	y el motivo; en el segundo se elige la fecha en un calendario y el horario, que se muestra como
+	cita'' se usa también desde el expediente: en el primer paso se elige a quién se cita ---el quejoso o la
+	persona señalada---, el tipo de cita, la modalidad y el motivo; en el segundo se elige la fecha en un calendario y el horario, que se muestra como
 	disponible, ocupado ---si la persona analista ya tiene una cita a esa hora--- o no disponible ---si ya
 	pasó o cae en fin de semana---. Cada cita puede confirmarse, reagendarse con la misma ventana o
-	cancelarse, y cada cambio se notifica al quejoso (CU-PC-04).
+	cancelarse, y cada cambio se notifica a la persona citada (CU-PC-04).
 
 	\subsection{Panel de Subdefensoría}
 	\label{sec:modulo_subdefensoria}
@@ -184,9 +184,8 @@
 
 	\subsection{Panel de la Defensora}
 	\label{sec:modulo_admin}
-	El panel se publica en \texttt{/admin/}. Su subtítulo dice ``Panel de la Defensora'' para el rol
-	\texttt{DEFENSOR} y ``Panel de Administración'' para la cuenta técnica. El menú se divide en tres
-	secciones.
+	El panel se publica en \texttt{/admin/} y es exclusivo del rol \texttt{DEFENSOR}, que concentra la
+	supervisión y la administración de la plataforma. El menú se divide en tres secciones.
 
 	\subsubsection{Supervisión y seguimiento}
 	\begin{itemize}
@@ -197,8 +196,9 @@
 		de rechazo más frecuentes. Cada número abre la lista filtrada que lo explica (CU-ADM-03).
 		\item \textbf{Quejas.} Explorador con filtros por texto, etapa, unidad, abogado, recepcionista,
 		periodo, estado y prioridad, orden, vista de lista o de tarjetas, selección y exportación a CSV;
-		el detalle de solo lectura muestra la queja, sus archivos, su seguimiento y su línea de tiempo
-		(CU-ADM-03).
+		el detalle de solo lectura muestra la queja, sus archivos, su seguimiento y su línea de tiempo.
+		Desde aquí la Defensora revisa directamente las quejas de mayor prioridad, mediante el filtro de
+		prioridad o desde los casos que requieren atención (CU-ADM-03).
 		\item \textbf{Quejas por unidad.} Indicadores, el top 10 de unidades, la distribución por tipo de
 		unidad y el listado con nombre oficial, siglas, porcentaje y última recepción (CU-ADM-03).
 		\item \textbf{Carga de trabajo.} Indicadores de personal activo, quejas en trámite y tiempo
@@ -255,7 +255,7 @@
 	\subsection{Relación entre módulos y casos de uso}
 	\label{sec:trazabilidad_modulos}
 	La Tabla~\ref{tab:trazabilidad} relaciona cada módulo con los casos de uso que implementa y con los
-	servicios que consume. Junto con la matriz de pruebas del Capítulo~\ref{cap:pruebas}, permite rastrear
+	servicios que consume. Junto con los casos de prueba del Capítulo~\ref{cap:pruebas}, permite rastrear
 	cada requerimiento desde su especificación hasta la pantalla que lo materializa y la prueba que lo
 	verifica.
 

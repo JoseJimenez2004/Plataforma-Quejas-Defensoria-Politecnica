@@ -91,6 +91,13 @@ public class ExpedienteInvestigacion {
     @Column(name = "observaciones_analista", columnDefinition = "TEXT")
     private String observacionesAnalista;
 
+    /**
+     * Prioridad que asignó Primer Contacto (BAJA, MEDIA, ALTA, URGENTE); el subdefensor la
+     * puede cambiar. null = "Sin asignar". Columna nueva: la crea Hibernate (ddl-auto: update).
+     */
+    @Column(name = "prioridad", length = 10)
+    private String prioridad;
+
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 

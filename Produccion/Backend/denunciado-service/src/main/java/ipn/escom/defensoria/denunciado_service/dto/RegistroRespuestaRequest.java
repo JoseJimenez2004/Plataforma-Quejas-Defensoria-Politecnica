@@ -19,6 +19,8 @@ public class RegistroRespuestaRequest {
     private String avisoPrivacidadVersion;
     /** 1 o 2 imágenes JPG/PNG (frente y reverso). */
     private List<MultipartFile> credencial;
+    /** PC-2: fecha de la entrevista (AAAA-MM-DD, opcional; solo cuando captura el personal). */
+    private String fechaEntrevista;
     /** Opcionales, hasta 10. */
     private List<MultipartFile> evidencias;
 
@@ -42,6 +44,8 @@ public class RegistroRespuestaRequest {
     public void setAvisoPrivacidadAceptado(Boolean aceptado) { this.avisoPrivacidadAceptado = aceptado; }
     public String getAvisoPrivacidadVersion() { return avisoPrivacidadVersion; }
     public void setAvisoPrivacidadVersion(String version) { this.avisoPrivacidadVersion = version; }
+    public String getFechaEntrevista() { return fechaEntrevista; }
+    public void setFechaEntrevista(String fechaEntrevista) { this.fechaEntrevista = fechaEntrevista; }
     public List<MultipartFile> getCredencial() { return credencial; }
     public void setCredencial(List<MultipartFile> credencial) { this.credencial = credencial; }
     public List<MultipartFile> getEvidencias() { return evidencias; }

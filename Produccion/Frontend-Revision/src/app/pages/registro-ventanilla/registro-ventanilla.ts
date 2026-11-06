@@ -151,6 +151,8 @@ export class RegistroVentanilla implements OnInit, OnDestroy {
 
   // ---- Límites que también ve la plantilla (espejo del backend, ver reglas-queja.ts) ----
   readonly fechaMaxima = Reglas.hoyIso();
+  /** Candado de 90 días: no se pueden elegir hechos más antiguos (art. 13, párrafo tercero). */
+  readonly fechaMinimaHechos = Reglas.fechaMinimaHechos();
   readonly fechaNacimientoMinima = Reglas.FECHA_NACIMIENTO_MINIMA;
   readonly fechaNacimientoMaxima = Reglas.fechaNacimientoMaxima();
   readonly nombreLongitudMaxima = Reglas.NOMBRE_LONGITUD_MAXIMA;
@@ -289,6 +291,9 @@ export class RegistroVentanilla implements OnInit, OnDestroy {
     }
     if (this.fechaHechos > this.fechaMaxima) {
       return 'La fecha de los hechos no puede ser posterior a hoy.';
+    }
+    if (this.fechaHechos < this.fechaMinimaHechos) {
+      return Reglas.mensajeFueraDePlazo();
     }
     if (this.fechaNacimiento && this.fechaHechos < this.fechaNacimiento) {
       return 'La fecha de los hechos no puede ser anterior a tu fecha de nacimiento.';

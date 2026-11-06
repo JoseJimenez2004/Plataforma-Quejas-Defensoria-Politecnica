@@ -1,0 +1,729 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CitaPrimerContactoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service</a> &gt; <span class="el_source">CitaPrimerContactoService.java</span></div><h1>CitaPrimerContactoService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service;
+
+import ipn.escom.defensoria.primercontacto.dto.CitaDTO;
+import ipn.escom.defensoria.primercontacto.dto.CitaPublicaDTO;
+import ipn.escom.defensoria.primercontacto.dto.CrearCitaDTO;
+import ipn.escom.defensoria.primercontacto.dto.ReagendarCitaDTO;
+import ipn.escom.defensoria.primercontacto.entity.CitaPrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.EstatusExpediente;
+import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.primercontacto.exception.OperacionInvalidaException;
+import ipn.escom.defensoria.primercontacto.exception.RecursoNoEncontradoException;
+import ipn.escom.defensoria.primercontacto.repository.CitaPrimerContactoRepository;
+import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
+
+/**
+ * Citas de Primer Contacto (CU-PC-04).
+ *
+ * Quién agenda, confirma, reagenda o cancela sale siempre del JWT. Cada movimiento se le
+ * avisa al quejoso (centro de notificaciones + correo).
+ *
+ * Respuesta del quejoso: al agendar o reagendar, el quejoso tiene un plazo (48 h por
+ * defecto) para confirmar o cancelar indicando el motivo, desde su panel o avisándole al
+ * analista. Ciclo de la cita:
+ *
+ *   PROGRAMADA ──quejoso confirma──────────▶ CONFIRMADA
+ *              ──quejoso cancela (motivo)──▶ CANCELADA_QUEJOSO ─┐
+ *              ──vence el plazo────────────▶ SIN_RESPUESTA ─────┤ el analista reagenda
+ *                                                               │ (vuelve a PROGRAMADA con
+ *   cualquiera ──el analista cancela───────▶ CANCELADA          │ un plazo nuevo) o cancela
+ *
+ * Reagendar NO modifica la cita: la deja en REAGENDADA (conservando lo que pasó con ella:
+ * respuesta del quejoso, motivo...) y crea una cita NUEVA con su propio plazo, que apunta a
+ * la anterior en citaAnteriorId. Así el expediente guarda el historial completo de citas.
+ *
+ * CANCELADA_QUEJOSO y SIN_RESPUESTA siguen contando como cita activa del expediente: quedan
+ * pendientes de que el analista decida qué hacer.
+ *
+ * El quejoso responde desde el enlace que le llega por correo y en su centro de
+ * notificaciones (/cita/responder?token=..., sin iniciar sesión) o desde su panel.
+ *
+ * Horario: cada cita ocupa duracionMinutos (60 por defecto) y un analista no puede tener dos
+ * citas PROGRAMADAS o CONFIRMADAS encimadas. Dos analistas sí pueden citar a la misma hora.
+ */
+@Service
+public class CitaPrimerContactoService {
+
+<span class="fc" id="L64">    private static final Logger log = LoggerFactory.getLogger(CitaPrimerContactoService.class);</span>
+
+    public static final String PROGRAMADA = &quot;PROGRAMADA&quot;;
+    public static final String CONFIRMADA = &quot;CONFIRMADA&quot;;
+    public static final String CANCELADA = &quot;CANCELADA&quot;;
+    public static final String CANCELADA_QUEJOSO = &quot;CANCELADA_QUEJOSO&quot;;
+    public static final String SIN_RESPUESTA = &quot;SIN_RESPUESTA&quot;;
+    /* La cita se movió a otra fecha: queda en el historial y la sustituye una cita nueva. */
+    public static final String REAGENDADA = &quot;REAGENDADA&quot;;
+
+    /* Citas que ya no cuentan como cita activa del expediente. */
+<span class="fc" id="L75">    public static final List&lt;String&gt; CERRADAS = List.of(CANCELADA, REAGENDADA);</span>
+
+    /* Citas que apartan el horario del analista (las canceladas o sin respuesta lo liberan). */
+<span class="fc" id="L78">    public static final List&lt;String&gt; OCUPAN_HORARIO = List.of(PROGRAMADA, CONFIRMADA);</span>
+
+    /* Página pública del portal del quejoso donde confirma o cancela. */
+    private static final String ENLACE_RESPUESTA = &quot;/cita/responder?token=&quot;;
+
+    public static final String RESPUESTA_QUEJOSO = &quot;QUEJOSO&quot;;
+    public static final String RESPUESTA_ANALISTA = &quot;ANALISTA&quot;;
+
+<span class="fc" id="L86">    private static final DateTimeFormatter FECHA_AVISO =</span>
+<span class="fc" id="L87">            DateTimeFormatter.ofPattern(&quot;EEEE d 'de' MMMM 'de' yyyy&quot;, Locale.forLanguageTag(&quot;es-MX&quot;));</span>
+<span class="fc" id="L88">    private static final DateTimeFormatter FECHA_HORA_LIMITE =</span>
+<span class="fc" id="L89">            DateTimeFormatter.ofPattern(&quot;d 'de' MMMM 'a las' HH:mm 'h'&quot;, Locale.forLanguageTag(&quot;es-MX&quot;));</span>
+
+    private final CitaPrimerContactoRepository citaPrimerContactoRepository;
+    private final ExpedientePrimerContactoRepository expedienteRepository;
+    private final NotificacionQuejosoService notificacionService;
+    private final long horasRespuesta;
+    private final long duracionMinutos;
+    private final String portalUrl;
+
+    public CitaPrimerContactoService(
+            CitaPrimerContactoRepository citaPrimerContactoRepository,
+            ExpedientePrimerContactoRepository expedienteRepository,
+            NotificacionQuejosoService notificacionService,
+            @Value(&quot;${primer-contacto.citas.horas-respuesta:48}&quot;) long horasRespuesta,
+            @Value(&quot;${primer-contacto.citas.duracion-minutos:60}&quot;) long duracionMinutos,
+            @Value(&quot;${primer-contacto.portal.url:https://defensoria-escom.ddns.net}&quot;) String portalUrl
+<span class="fc" id="L105">    ) {</span>
+<span class="fc" id="L106">        this.citaPrimerContactoRepository = citaPrimerContactoRepository;</span>
+<span class="fc" id="L107">        this.expedienteRepository = expedienteRepository;</span>
+<span class="fc" id="L108">        this.notificacionService = notificacionService;</span>
+<span class="fc" id="L109">        this.horasRespuesta = horasRespuesta;</span>
+<span class="fc" id="L110">        this.duracionMinutos = duracionMinutos;</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        this.portalUrl = portalUrl == null ? &quot;&quot; : portalUrl.strip().replaceAll(&quot;/+$&quot;, &quot;&quot;);</span>
+<span class="fc" id="L112">    }</span>
+
+    public CitaDTO crearCita(
+            CrearCitaDTO dto,
+            PersonalAdministrativo analista
+    ) {
+
+        /*
+         * El cliente manda el folio propio de Primer Contacto.
+         * Con ese folio obtenemos el expediente interno.
+         */
+<span class="fc" id="L123">        ExpedientePrimerContacto expediente =</span>
+<span class="fc" id="L124">                expedienteRepository.findByFolio(dto.getFolio())</span>
+<span class="fc" id="L125">                        .orElseThrow(() -&gt;</span>
+<span class="fc" id="L126">                                new RecursoNoEncontradoException(</span>
+                                        &quot;No existe un expediente de Primer Contacto con folio &quot;
+<span class="fc" id="L128">                                                + dto.getFolio()</span>
+                                )
+                        );
+
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        if (!EstatusExpediente.estaAbierto(expediente.getEstatus())) {</span>
+<span class="fc" id="L133">            throw new OperacionInvalidaException(</span>
+                    &quot;Solo se agendan citas para expedientes en análisis.&quot;
+            );
+        }
+
+<span class="fc" id="L138">        boolean yaTieneCita = citaPrimerContactoRepository</span>
+<span class="fc" id="L139">                .existsByExpedienteIdAndEstatusNotIn(</span>
+<span class="fc" id="L140">                        expediente.getId(),</span>
+                        CERRADAS
+                );
+
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (yaTieneCita) {</span>
+<span class="fc" id="L145">            throw new OperacionInvalidaException(</span>
+                    &quot;El expediente ya tiene una cita activa. Reagéndala o cancélala primero.&quot;
+            );
+        }
+
+<span class="fc" id="L150">        LocalDate fechaCita = LocalDate.parse(dto.getFechaCita());</span>
+<span class="fc" id="L151">        LocalTime horaCita = LocalTime.parse(dto.getHoraCita());</span>
+<span class="fc" id="L152">        validarSinTraslape(analista.getId(), fechaCita, horaCita, null);</span>
+
+<span class="fc" id="L154">        LocalDateTime ahora = LocalDateTime.now();</span>
+
+        CitaPrimerContacto cita =
+<span class="fc" id="L157">                CitaPrimerContacto.builder()</span>
+<span class="fc" id="L158">                        .expedienteId(expediente.getId())</span>
+<span class="fc" id="L159">                        .folio(expediente.getFolio())</span>
+                        /*
+                         * El quejoso sale del expediente, no del payload:
+                         * así la cita siempre apunta a la persona real.
+                         */
+<span class="fc" id="L164">                        .quejosoId(expediente.getQuejosoId())</span>
+<span class="fc" id="L165">                        .quejosoNombre(</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">                                expediente.getQuejosoNombre() != null</span>
+<span class="fc" id="L167">                                        ? expediente.getQuejosoNombre()</span>
+<span class="nc" id="L168">                                        : dto.getQuejosoNombre()</span>
+                        )
+<span class="fc" id="L170">                        .analistaId(analista.getId())</span>
+<span class="fc" id="L171">                        .analistaNombre(analista.getNombreCompleto())</span>
+<span class="fc" id="L172">                        .fechaCita(fechaCita)</span>
+<span class="fc" id="L173">                        .horaCita(horaCita)</span>
+<span class="fc" id="L174">                        .tipoCita(dto.getTipoCita())</span>
+<span class="fc" id="L175">                        .categoria(normalizarCategoria(dto.getCategoria()))</span>
+<span class="fc" id="L176">                        .motivo(dto.getMotivo())</span>
+<span class="fc" id="L177">                        .estatus(PROGRAMADA)</span>
+<span class="fc" id="L178">                        .fechaCreacion(ahora)</span>
+<span class="fc" id="L179">                        .fechaActualizacion(ahora)</span>
+<span class="fc" id="L180">                        .actualizadoPorId(analista.getId())</span>
+<span class="fc" id="L181">                        .actualizadoPorNombre(analista.getNombreCompleto())</span>
+<span class="fc" id="L182">                        .fechaLimiteRespuesta(ahora.plusHours(horasRespuesta))</span>
+<span class="fc" id="L183">                        .tokenRespuesta(nuevoToken())</span>
+<span class="fc" id="L184">                        .build();</span>
+
+<span class="fc" id="L186">        CitaPrimerContacto guardada =</span>
+<span class="fc" id="L187">                citaPrimerContactoRepository.save(cita);</span>
+
+<span class="fc" id="L189">        avisar(guardada, expediente,</span>
+                &quot;Se agendó una cita de primer contacto&quot;,
+<span class="fc" id="L191">                &quot;Primer Contacto agendó una cita para atender tu queja &quot; + expediente.getFolioOrigen()</span>
+<span class="fc" id="L192">                        + &quot;: &quot; + describir(guardada) + &quot;.&quot;</span>
+<span class="fc" id="L193">                        + &quot;\nMotivo: &quot; + guardada.getMotivo()</span>
+<span class="fc" id="L194">                        + instruccionesRespuesta(guardada),</span>
+<span class="fc" id="L195">                enlaceRespuesta(guardada));</span>
+
+<span class="fc" id="L197">        return convertirADTO(guardada);</span>
+    }
+
+    public List&lt;CitaDTO&gt; listarPorExpediente(Long expedienteId) {
+<span class="nc" id="L201">        return citaPrimerContactoRepository</span>
+<span class="nc" id="L202">                .findByExpedienteIdOrderByFechaCitaDescHoraCitaDesc(</span>
+                        expedienteId
+                )
+<span class="nc" id="L205">                .stream()</span>
+<span class="nc" id="L206">                .map(this::convertirADTO)</span>
+<span class="nc" id="L207">                .toList();</span>
+    }
+
+    public List&lt;CitaDTO&gt; listarPorFolio(String folio) {
+<span class="nc" id="L211">        return citaPrimerContactoRepository</span>
+<span class="nc" id="L212">                .findByFolioOrderByFechaCitaDescHoraCitaDesc(folio)</span>
+<span class="nc" id="L213">                .stream()</span>
+<span class="nc" id="L214">                .map(this::convertirADTO)</span>
+<span class="nc" id="L215">                .toList();</span>
+    }
+
+    public List&lt;CitaDTO&gt; obtenerAgendaDia(String fecha) {
+<span class="nc" id="L219">        return citaPrimerContactoRepository</span>
+<span class="nc" id="L220">                .findByFechaCitaOrderByHoraCitaAsc(LocalDate.parse(fecha))</span>
+<span class="nc" id="L221">                .stream()</span>
+<span class="nc" id="L222">                .map(this::convertirADTO)</span>
+<span class="nc" id="L223">                .toList();</span>
+    }
+
+    /** Citas vigentes del analista de hoy en adelante, de cualquier día (agenda general). */
+    public List&lt;CitaDTO&gt; proximasDelAnalista(PersonalAdministrativo analista) {
+<span class="nc" id="L228">        return citaPrimerContactoRepository</span>
+<span class="nc" id="L229">                .findByAnalistaIdAndFechaCitaGreaterThanEqualAndEstatusNotInOrderByFechaCitaAscHoraCitaAsc(</span>
+<span class="nc" id="L230">                        analista.getId(), LocalDate.now(), CERRADAS)</span>
+<span class="nc" id="L231">                .stream()</span>
+<span class="nc" id="L232">                .map(this::convertirADTO)</span>
+<span class="nc" id="L233">                .toList();</span>
+    }
+
+    public List&lt;CitaDTO&gt; obtenerAgendaAnalista(Long analistaId) {
+<span class="nc" id="L237">        return citaPrimerContactoRepository</span>
+<span class="nc" id="L238">                .findByAnalistaIdOrderByFechaCitaAscHoraCitaAsc(analistaId)</span>
+<span class="nc" id="L239">                .stream()</span>
+<span class="nc" id="L240">                .map(this::convertirADTO)</span>
+<span class="nc" id="L241">                .toList();</span>
+    }
+
+    /**
+     * El analista registra que el quejoso confirmó (por ejemplo, por teléfono). Se acepta
+     * aunque el plazo ya haya vencido: es el analista quien lo hace constar.
+     */
+    public CitaDTO confirmarCita(Long id, PersonalAdministrativo analista) {
+
+<span class="fc" id="L250">        CitaPrimerContacto cita = obtenerActiva(id);</span>
+
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">        if (CONFIRMADA.equals(cita.getEstatus())) {</span>
+<span class="fc" id="L253">            throw new OperacionInvalidaException(&quot;La cita ya estaba confirmada.&quot;);</span>
+        }
+
+<span class="nc" id="L256">        cita.setEstatus(CONFIRMADA);</span>
+<span class="nc" id="L257">        registrarRespuesta(cita, RESPUESTA_ANALISTA, null);</span>
+<span class="nc" id="L258">        registrarMovimiento(cita, analista);</span>
+
+<span class="nc" id="L260">        CitaPrimerContacto guardada = citaPrimerContactoRepository.save(cita);</span>
+
+<span class="nc" id="L262">        avisar(guardada, null,</span>
+                &quot;Tu cita de primer contacto fue confirmada&quot;,
+<span class="nc" id="L264">                &quot;Tu cita para la queja &quot; + folioQueja(guardada) + &quot; quedó confirmada: &quot;</span>
+<span class="nc" id="L265">                        + describir(guardada) + &quot;.&quot;);</span>
+
+<span class="nc" id="L267">        return convertirADTO(guardada);</span>
+    }
+
+    /**
+     * Reagendar: la cita actual queda en REAGENDADA (con su historia) y se crea una cita
+     * nueva PROGRAMADA con plazo de respuesta nuevo, en una sola transacción lógica: si el
+     * guardado de la nueva fallara, la anterior ya no estaría activa, así que el analista
+     * vería el error y volvería a agendar.
+     */
+    public CitaDTO reagendarCita(
+            Long id,
+            ReagendarCitaDTO dto,
+            PersonalAdministrativo analista
+    ) {
+
+<span class="fc" id="L282">        CitaPrimerContacto anterior = obtenerActiva(id);</span>
+
+<span class="fc" id="L284">        LocalDate fechaCita = LocalDate.parse(dto.getFechaCita());</span>
+<span class="fc" id="L285">        LocalTime horaCita = LocalTime.parse(dto.getHoraCita());</span>
+        // La cita que se mueve no estorba: su horario se libera al reagendar.
+<span class="fc" id="L287">        validarSinTraslape(analista.getId(), fechaCita, horaCita, anterior.getId());</span>
+
+<span class="fc" id="L289">        LocalDateTime ahora = LocalDateTime.now();</span>
+
+        // La cita anterior queda en el historial tal como estaba (respuesta, motivo...).
+<span class="fc" id="L292">        anterior.setEstatus(REAGENDADA);</span>
+<span class="fc" id="L293">        registrarMovimiento(anterior, analista);</span>
+<span class="fc" id="L294">        citaPrimerContactoRepository.save(anterior);</span>
+
+<span class="fc" id="L296">        CitaPrimerContacto nueva = CitaPrimerContacto.builder()</span>
+<span class="fc" id="L297">                .expedienteId(anterior.getExpedienteId())</span>
+<span class="fc" id="L298">                .folio(anterior.getFolio())</span>
+<span class="fc" id="L299">                .quejosoId(anterior.getQuejosoId())</span>
+<span class="fc" id="L300">                .quejosoNombre(anterior.getQuejosoNombre())</span>
+<span class="fc" id="L301">                .analistaId(analista.getId())</span>
+<span class="fc" id="L302">                .analistaNombre(analista.getNombreCompleto())</span>
+<span class="fc" id="L303">                .fechaCita(fechaCita)</span>
+<span class="fc" id="L304">                .horaCita(horaCita)</span>
+<span class="pc bpc" id="L305" title="3 of 4 branches missed.">                .tipoCita(dto.getTipoCita() != null &amp;&amp; !dto.getTipoCita().isBlank()</span>
+<span class="pc" id="L306">                        ? dto.getTipoCita() : anterior.getTipoCita())</span>
+<span class="pc bpc" id="L307" title="3 of 4 branches missed.">                .categoria(dto.getCategoria() != null &amp;&amp; !dto.getCategoria().isBlank()</span>
+<span class="pc" id="L308">                        ? normalizarCategoria(dto.getCategoria()) : anterior.getCategoria())</span>
+<span class="pc bpc" id="L309" title="3 of 4 branches missed.">                .motivo(dto.getMotivo() != null &amp;&amp; !dto.getMotivo().isBlank()</span>
+<span class="pc" id="L310">                        ? dto.getMotivo() : anterior.getMotivo())</span>
+<span class="fc" id="L311">                .estatus(PROGRAMADA)</span>
+<span class="fc" id="L312">                .fechaCreacion(ahora)</span>
+<span class="fc" id="L313">                .fechaActualizacion(ahora)</span>
+<span class="fc" id="L314">                .actualizadoPorId(analista.getId())</span>
+<span class="fc" id="L315">                .actualizadoPorNombre(analista.getNombreCompleto())</span>
+<span class="fc" id="L316">                .fechaLimiteRespuesta(ahora.plusHours(horasRespuesta))</span>
+<span class="fc" id="L317">                .citaAnteriorId(anterior.getId())</span>
+<span class="fc" id="L318">                .tokenRespuesta(nuevoToken())</span>
+<span class="fc" id="L319">                .build();</span>
+
+<span class="fc" id="L321">        CitaPrimerContacto guardada = citaPrimerContactoRepository.save(nueva);</span>
+
+<span class="fc" id="L323">        avisar(guardada, null,</span>
+                &quot;Tu cita de primer contacto cambió de fecha&quot;,
+<span class="fc" id="L325">                &quot;Tu cita para la queja &quot; + folioQueja(guardada) + &quot; se reagendó para el &quot;</span>
+<span class="fc" id="L326">                        + describir(guardada) + &quot;.&quot;</span>
+<span class="fc" id="L327">                        + instruccionesRespuesta(guardada),</span>
+<span class="fc" id="L328">                enlaceRespuesta(guardada));</span>
+
+<span class="fc" id="L330">        return convertirADTO(guardada);</span>
+    }
+
+    /**
+     * El analista registra que el quejoso canceló (por ejemplo, por teléfono), con su motivo.
+     * Queda en CANCELADA_QUEJOSO para que se reagende o se cancele en definitiva.
+     */
+    public CitaDTO registrarCancelacionQuejoso(
+            Long id,
+            String motivo,
+            PersonalAdministrativo analista
+    ) {
+
+<span class="fc" id="L343">        CitaPrimerContacto cita = obtenerActiva(id);</span>
+
+<span class="pc bpc" id="L345" title="3 of 4 branches missed.">        if (!PROGRAMADA.equals(cita.getEstatus()) &amp;&amp; !SIN_RESPUESTA.equals(cita.getEstatus())) {</span>
+<span class="nc" id="L346">            throw new OperacionInvalidaException(</span>
+                    &quot;Solo se registra la cancelación del quejoso en citas pendientes de respuesta.&quot;
+            );
+        }
+
+<span class="fc" id="L351">        cita.setEstatus(CANCELADA_QUEJOSO);</span>
+<span class="nc" id="L352">        registrarRespuesta(cita, RESPUESTA_ANALISTA, motivoObligatorio(motivo));</span>
+<span class="nc" id="L353">        registrarMovimiento(cita, analista);</span>
+
+<span class="nc" id="L355">        return convertirADTO(citaPrimerContactoRepository.save(cita));</span>
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Respuesta del quejoso desde su panel (/api/primer-contacto/quejoso/citas).
+    // El quejoso se identifica por el correo de su JWT, que debe ser el del expediente.
+    // ---------------------------------------------------------------------------------
+
+    public List&lt;CitaDTO&gt; citasDelQuejoso(String correo) {
+
+<span class="nc" id="L365">        List&lt;Long&gt; expedientes = expedienteRepository.findByQuejosoCorreoIgnoreCase(correo)</span>
+<span class="nc" id="L366">                .stream()</span>
+<span class="nc" id="L367">                .map(ExpedientePrimerContacto::getId)</span>
+<span class="nc" id="L368">                .toList();</span>
+
+<span class="nc bnc" id="L370" title="All 2 branches missed.">        if (expedientes.isEmpty()) {</span>
+<span class="nc" id="L371">            return List.of();</span>
+        }
+
+<span class="nc" id="L374">        return citaPrimerContactoRepository</span>
+<span class="nc" id="L375">                .findByExpedienteIdInOrderByFechaCitaDescHoraCitaDesc(expedientes)</span>
+<span class="nc" id="L376">                .stream()</span>
+<span class="nc" id="L377">                .map(this::convertirADTO)</span>
+<span class="nc" id="L378">                .toList();</span>
+    }
+
+    public CitaDTO confirmarPorQuejoso(Long id, String correo) {
+
+<span class="nc" id="L383">        CitaPrimerContacto cita = obtenerParaRespuestaDelQuejoso(id, correo);</span>
+
+<span class="nc" id="L385">        cita.setEstatus(CONFIRMADA);</span>
+<span class="nc" id="L386">        registrarRespuesta(cita, RESPUESTA_QUEJOSO, null);</span>
+<span class="nc" id="L387">        cita.setFechaActualizacion(LocalDateTime.now());</span>
+
+<span class="nc" id="L389">        return convertirADTO(citaPrimerContactoRepository.save(cita));</span>
+    }
+
+    public CitaDTO cancelarPorQuejoso(Long id, String motivo, String correo) {
+
+<span class="nc" id="L394">        CitaPrimerContacto cita = obtenerParaRespuestaDelQuejoso(id, correo);</span>
+
+<span class="nc" id="L396">        cita.setEstatus(CANCELADA_QUEJOSO);</span>
+<span class="nc" id="L397">        registrarRespuesta(cita, RESPUESTA_QUEJOSO, motivoObligatorio(motivo));</span>
+<span class="nc" id="L398">        cita.setFechaActualizacion(LocalDateTime.now());</span>
+
+<span class="nc" id="L400">        return convertirADTO(citaPrimerContactoRepository.save(cita));</span>
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Respuesta del quejoso desde el enlace del correo / notificación (sin sesión).
+    // ---------------------------------------------------------------------------------
+
+    public CitaPublicaDTO citaPorToken(String token) {
+<span class="nc" id="L408">        return convertirAPublica(obtenerPorToken(token));</span>
+    }
+
+    public CitaPublicaDTO confirmarPorToken(String token) {
+
+<span class="fc" id="L413">        CitaPrimerContacto cita = obtenerPorToken(token);</span>
+<span class="fc" id="L414">        validarPendienteDeRespuesta(cita);</span>
+
+<span class="fc" id="L416">        cita.setEstatus(CONFIRMADA);</span>
+<span class="fc" id="L417">        registrarRespuesta(cita, RESPUESTA_QUEJOSO, null);</span>
+<span class="fc" id="L418">        cita.setFechaActualizacion(LocalDateTime.now());</span>
+
+<span class="fc" id="L420">        return convertirAPublica(citaPrimerContactoRepository.save(cita));</span>
+    }
+
+    public CitaPublicaDTO cancelarPorToken(String token, String motivo) {
+
+<span class="fc" id="L425">        CitaPrimerContacto cita = obtenerPorToken(token);</span>
+<span class="nc" id="L426">        validarPendienteDeRespuesta(cita);</span>
+
+<span class="nc" id="L428">        cita.setEstatus(CANCELADA_QUEJOSO);</span>
+<span class="nc" id="L429">        registrarRespuesta(cita, RESPUESTA_QUEJOSO, motivoObligatorio(motivo));</span>
+<span class="nc" id="L430">        cita.setFechaActualizacion(LocalDateTime.now());</span>
+
+<span class="nc" id="L432">        return convertirAPublica(citaPrimerContactoRepository.save(cita));</span>
+    }
+
+    private CitaPrimerContacto obtenerPorToken(String token) {
+<span class="pc bpc" id="L436" title="1 of 4 branches missed.">        if (token == null || token.isBlank()) {</span>
+<span class="fc" id="L437">            throw new RecursoNoEncontradoException(&quot;El enlace de la cita no es válido.&quot;);</span>
+        }
+<span class="fc" id="L439">        return citaPrimerContactoRepository.findByTokenRespuesta(token.strip())</span>
+<span class="pc" id="L440">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                        &quot;El enlace de la cita no es válido o ya no existe.&quot;));
+    }
+
+    /**
+     * Citas PROGRAMADAS cuyo plazo de respuesta ya venció pasan a SIN_RESPUESTA, para que el
+     * analista las vea y decida si reagenda o cancela.
+     */
+    @Scheduled(
+            initialDelayString = &quot;${primer-contacto.citas.revision-ms:300000}&quot;,
+            fixedDelayString = &quot;${primer-contacto.citas.revision-ms:300000}&quot;
+    )
+    public void marcarCitasSinRespuesta() {
+
+<span class="fc" id="L454">        List&lt;CitaPrimerContacto&gt; vencidas = citaPrimerContactoRepository</span>
+<span class="fc" id="L455">                .findByEstatusAndFechaLimiteRespuestaBefore(PROGRAMADA, LocalDateTime.now());</span>
+
+<span class="fc bfc" id="L457" title="All 2 branches covered.">        for (CitaPrimerContacto cita : vencidas) {</span>
+<span class="fc" id="L458">            cita.setEstatus(SIN_RESPUESTA);</span>
+<span class="fc" id="L459">            cita.setFechaActualizacion(LocalDateTime.now());</span>
+<span class="fc" id="L460">            citaPrimerContactoRepository.save(cita);</span>
+<span class="fc" id="L461">            log.info(&quot;Cita {} del expediente {} sin respuesta del quejoso al vencer el plazo.&quot;,</span>
+<span class="fc" id="L462">                    cita.getId(), cita.getFolio());</span>
+<span class="fc" id="L463">        }</span>
+<span class="fc" id="L464">    }</span>
+
+    private CitaPrimerContacto obtenerParaRespuestaDelQuejoso(Long id, String correo) {
+
+<span class="fc" id="L468">        CitaPrimerContacto cita = citaPrimerContactoRepository.findById(id)</span>
+<span class="pc" id="L469">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Cita no encontrada&quot;));</span>
+
+<span class="fc" id="L471">        ExpedientePrimerContacto expediente = expedienteRepository.findById(cita.getExpedienteId())</span>
+<span class="pc" id="L472">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Cita no encontrada&quot;));</span>
+
+        // Una cita ajena se reporta igual que una inexistente: no se revela que existe.
+<span class="pc bpc" id="L475" title="2 of 4 branches missed.">        if (correo == null || !correo.equalsIgnoreCase(expediente.getQuejosoCorreo())) {</span>
+<span class="fc" id="L476">            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Cita no encontrada&quot;);</span>
+        }
+
+<span class="nc" id="L479">        validarPendienteDeRespuesta(cita);</span>
+
+<span class="nc" id="L481">        return cita;</span>
+    }
+
+    private void validarPendienteDeRespuesta(CitaPrimerContacto cita) {
+
+<span class="pc bpc" id="L486" title="1 of 2 branches missed.">        if (!PROGRAMADA.equals(cita.getEstatus())) {</span>
+<span class="nc" id="L487">            throw new OperacionInvalidaException(&quot;Esta cita ya no está esperando tu respuesta.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L490" title="All 2 branches covered.">        if (plazoVencido(cita)) {</span>
+<span class="fc" id="L491">            throw new OperacionInvalidaException(</span>
+                    &quot;El plazo para responder esta cita ya venció. Comunícate con Primer Contacto.&quot;
+            );
+        }
+<span class="fc" id="L495">    }</span>
+
+    private boolean plazoVencido(CitaPrimerContacto cita) {
+<span class="pc bpc" id="L498" title="1 of 2 branches missed.">        return cita.getFechaLimiteRespuesta() != null</span>
+<span class="fc bfc" id="L499" title="All 2 branches covered.">                &amp;&amp; LocalDateTime.now().isAfter(cita.getFechaLimiteRespuesta());</span>
+    }
+
+    /**
+     * Un analista no puede tener dos citas encimadas: cada una ocupa duracionMinutos. Solo
+     * cuentan las PROGRAMADAS y CONFIRMADAS; excluirId es la cita que se está reagendando.
+     */
+    private void validarSinTraslape(Long analistaId, LocalDate fecha, LocalTime hora, Long excluirId) {
+
+<span class="fc bfc" id="L508" title="All 2 branches covered.">        for (CitaPrimerContacto otra : citaPrimerContactoRepository</span>
+<span class="fc" id="L509">                .findByAnalistaIdAndFechaCitaAndEstatusIn(analistaId, fecha, OCUPAN_HORARIO)) {</span>
+
+<span class="fc bfc" id="L511" title="All 2 branches covered.">            if (otra.getId().equals(excluirId)) {</span>
+<span class="fc" id="L512">                continue;</span>
+            }
+
+<span class="fc" id="L515">            long separacion = Math.abs(Duration.between(otra.getHoraCita(), hora).toMinutes());</span>
+<span class="fc bfc" id="L516" title="All 2 branches covered.">            if (separacion &lt; duracionMinutos) {</span>
+<span class="fc" id="L517">                throw new OperacionInvalidaException(</span>
+<span class="fc" id="L518">                        &quot;Ya tienes una cita ese día a las &quot; + otra.getHoraCita().toString().substring(0, 5)</span>
+<span class="fc" id="L519">                                + &quot; h (expediente &quot; + otra.getFolio() + &quot;). Cada cita dura &quot;</span>
+                                + duracionMinutos + &quot; minutos: elige otro horario.&quot;
+                );
+            }
+<span class="fc" id="L523">        }</span>
+<span class="fc" id="L524">    }</span>
+
+    private static String nuevoToken() {
+<span class="fc" id="L527">        return UUID.randomUUID().toString().replace(&quot;-&quot;, &quot;&quot;)</span>
+<span class="fc" id="L528">                + UUID.randomUUID().toString().replace(&quot;-&quot;, &quot;&quot;);</span>
+    }
+
+    /* Ruta dentro del portal; el aviso del panel navega a ella y el correo le antepone portalUrl. */
+    private String enlaceRespuesta(CitaPrimerContacto cita) {
+<span class="pc bpc" id="L533" title="1 of 2 branches missed.">        return cita.getTokenRespuesta() == null ? null : ENLACE_RESPUESTA + cita.getTokenRespuesta();</span>
+    }
+
+    private void registrarRespuesta(CitaPrimerContacto cita, String quien, String motivoCancelacion) {
+<span class="fc" id="L537">        cita.setRespuestaRegistradaPor(quien);</span>
+<span class="fc" id="L538">        cita.setFechaRespuestaQuejoso(LocalDateTime.now());</span>
+<span class="fc" id="L539">        cita.setMotivoCancelacionQuejoso(motivoCancelacion);</span>
+<span class="fc" id="L540">    }</span>
+
+    private String motivoObligatorio(String motivo) {
+<span class="pc bpc" id="L543" title="2 of 4 branches missed.">        if (motivo == null || motivo.isBlank()) {</span>
+<span class="fc" id="L544">            throw new OperacionInvalidaException(&quot;Indica el motivo de la cancelación.&quot;);</span>
+        }
+<span class="nc" id="L546">        return motivo.strip();</span>
+    }
+
+    private String instruccionesRespuesta(CitaPrimerContacto cita) {
+<span class="pc bpc" id="L550" title="1 of 2 branches missed.">        if (cita.getFechaLimiteRespuesta() == null) {</span>
+<span class="nc" id="L551">            return &quot;&quot;;</span>
+        }
+<span class="fc" id="L553">        String plazo = &quot;\n\nTienes &quot; + horasRespuesta + &quot; horas (hasta el &quot;</span>
+<span class="fc" id="L554">                + cita.getFechaLimiteRespuesta().format(FECHA_HORA_LIMITE)</span>
+                + &quot;) para confirmar tu asistencia o cancelarla indicando el motivo&quot;;
+<span class="fc" id="L556">        String enlace = enlaceRespuesta(cita);</span>
+<span class="pc bpc" id="L557" title="1 of 2 branches missed.">        if (enlace != null) {</span>
+<span class="fc" id="L558">            plazo += &quot; en este enlace:\n&quot; + portalUrl + enlace + &quot;\n\nTambién puedes hacerlo&quot;;</span>
+        } else {
+<span class="nc" id="L560">            plazo += &quot;,&quot;;</span>
+        }
+<span class="fc" id="L562">        return plazo + &quot; desde tu panel o comunicándote con Primer Contacto. Si la cancelas, &quot;</span>
+                + &quot;podremos proponerte una nueva fecha.&quot;;
+    }
+
+    public CitaDTO cancelarCita(Long id, PersonalAdministrativo analista) {
+
+<span class="nc" id="L568">        CitaPrimerContacto cita = obtenerActiva(id);</span>
+
+<span class="nc" id="L570">        cita.setEstatus(CANCELADA);</span>
+<span class="nc" id="L571">        registrarMovimiento(cita, analista);</span>
+
+<span class="nc" id="L573">        CitaPrimerContacto guardada = citaPrimerContactoRepository.save(cita);</span>
+
+<span class="nc" id="L575">        avisar(guardada, null,</span>
+                &quot;Tu cita de primer contacto fue cancelada&quot;,
+<span class="nc" id="L577">                &quot;Se canceló tu cita del &quot; + describir(guardada) + &quot; para la queja &quot;</span>
+<span class="nc" id="L578">                        + folioQueja(guardada) + &quot;. Si hace falta, Primer Contacto te &quot;</span>
+                        + &quot;propondrá una nueva fecha.&quot;);
+
+<span class="nc" id="L581">        return convertirADTO(guardada);</span>
+    }
+
+    private CitaPrimerContacto obtenerActiva(Long id) {
+
+<span class="fc" id="L586">        CitaPrimerContacto cita = citaPrimerContactoRepository.findById(id)</span>
+<span class="pc" id="L587">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Cita no encontrada&quot;));</span>
+
+<span class="fc bfc" id="L589" title="All 2 branches covered.">        if (CANCELADA.equals(cita.getEstatus())) {</span>
+<span class="fc" id="L590">            throw new OperacionInvalidaException(&quot;La cita ya está cancelada.&quot;);</span>
+        }
+
+<span class="pc bpc" id="L593" title="1 of 2 branches missed.">        if (REAGENDADA.equals(cita.getEstatus())) {</span>
+<span class="nc" id="L594">            throw new OperacionInvalidaException(&quot;Esta cita ya se reagendó; usa la cita nueva.&quot;);</span>
+        }
+
+<span class="fc" id="L597">        return cita;</span>
+    }
+
+    private void registrarMovimiento(CitaPrimerContacto cita, PersonalAdministrativo analista) {
+<span class="fc" id="L601">        cita.setActualizadoPorId(analista.getId());</span>
+<span class="fc" id="L602">        cita.setActualizadoPorNombre(analista.getNombreCompleto());</span>
+<span class="fc" id="L603">        cita.setFechaActualizacion(LocalDateTime.now());</span>
+<span class="fc" id="L604">    }</span>
+
+    private void avisar(
+            CitaPrimerContacto cita,
+            ExpedientePrimerContacto expediente,
+            String titulo,
+            String mensaje
+    ) {
+<span class="nc" id="L612">        avisar(cita, expediente, titulo, mensaje, null);</span>
+<span class="nc" id="L613">    }</span>
+
+    private void avisar(
+            CitaPrimerContacto cita,
+            ExpedientePrimerContacto expediente,
+            String titulo,
+            String mensaje,
+            String enlace
+    ) {
+<span class="fc bfc" id="L622" title="All 2 branches covered.">        ExpedientePrimerContacto destino = expediente != null</span>
+<span class="fc" id="L623">                ? expediente</span>
+<span class="fc" id="L624">                : expedienteRepository.findById(cita.getExpedienteId()).orElse(null);</span>
+
+<span class="pc bpc" id="L626" title="1 of 2 branches missed.">        if (destino != null) {</span>
+<span class="fc" id="L627">            notificacionService.notificar(</span>
+                    destino,
+                    NotificacionQuejosoService.TIPO_CITA,
+                    titulo,
+                    mensaje,
+                    enlace
+            );
+        }
+<span class="fc" id="L635">    }</span>
+
+    private String folioQueja(CitaPrimerContacto cita) {
+<span class="fc" id="L638">        return expedienteRepository.findById(cita.getExpedienteId())</span>
+<span class="fc" id="L639">                .map(ExpedientePrimerContacto::getFolioOrigen)</span>
+<span class="fc" id="L640">                .orElse(cita.getFolio());</span>
+    }
+
+    private String describir(CitaPrimerContacto cita) {
+<span class="fc bfc" id="L644" title="All 2 branches covered.">        String modalidad = &quot;VIRTUAL&quot;.equalsIgnoreCase(cita.getTipoCita()) ? &quot;virtual&quot; : &quot;presencial&quot;;</span>
+<span class="pc bpc" id="L645" title="1 of 5 branches missed.">        String tipo = switch (cita.getCategoria() == null ? &quot;&quot; : cita.getCategoria()) {</span>
+<span class="fc" id="L646">            case &quot;REVISION&quot; -&gt; &quot;revisión de documentos, &quot;;</span>
+<span class="fc" id="L647">            case &quot;SEGUIMIENTO&quot; -&gt; &quot;seguimiento, &quot;;</span>
+<span class="fc" id="L648">            default -&gt; &quot;&quot;;</span>
+        };
+<span class="fc" id="L650">        return cita.getFechaCita().format(FECHA_AVISO) + &quot; a las &quot;</span>
+<span class="fc" id="L651">                + cita.getHoraCita().toString().substring(0, 5) + &quot; h, &quot; + tipo + &quot;modalidad &quot; + modalidad;</span>
+    }
+
+    /** Solo se aceptan los tres tipos del catálogo; cualquier otro valor se guarda como comparecencia. */
+    private static String normalizarCategoria(String categoria) {
+<span class="fc bfc" id="L656" title="All 4 branches covered.">        if (categoria == null || categoria.isBlank()) {</span>
+<span class="fc" id="L657">            return &quot;COMPARECENCIA&quot;;</span>
+        }
+<span class="fc" id="L659">        String c = categoria.trim().toUpperCase().replace(&quot;Ó&quot;, &quot;O&quot;);</span>
+<span class="fc bfc" id="L660" title="All 2 branches covered.">        return java.util.Set.of(&quot;COMPARECENCIA&quot;, &quot;REVISION&quot;, &quot;SEGUIMIENTO&quot;).contains(c) ? c : &quot;COMPARECENCIA&quot;;</span>
+    }
+
+    /**
+     * Agenda institucional de un periodo (todas las personas analistas), para el calendario
+     * mensual y la &quot;Lista de citas&quot;. Las reagendadas no se muestran: su lugar lo ocupa la nueva.
+     */
+    public List&lt;CitaDTO&gt; citasEnRango(String desde, String hasta) {
+<span class="fc" id="L668">        LocalDate inicio = LocalDate.parse(desde);</span>
+<span class="fc" id="L669">        LocalDate fin = LocalDate.parse(hasta);</span>
+<span class="fc bfc" id="L670" title="All 2 branches covered.">        if (fin.isBefore(inicio)) {</span>
+<span class="fc" id="L671">            throw new OperacionInvalidaException(&quot;La fecha final no puede ser anterior a la inicial.&quot;);</span>
+        }
+<span class="fc bfc" id="L673" title="All 2 branches covered.">        if (inicio.plusDays(400).isBefore(fin)) {</span>
+<span class="fc" id="L674">            throw new OperacionInvalidaException(&quot;Consulta como máximo un año de citas a la vez.&quot;);</span>
+        }
+<span class="fc" id="L676">        return citaPrimerContactoRepository</span>
+<span class="fc" id="L677">                .findByFechaCitaBetweenOrderByFechaCitaAscHoraCitaAsc(inicio, fin)</span>
+<span class="fc" id="L678">                .stream()</span>
+<span class="fc bfc" id="L679" title="All 2 branches covered.">                .filter(c -&gt; !REAGENDADA.equals(c.getEstatus()))</span>
+<span class="fc" id="L680">                .map(this::convertirADTO)</span>
+<span class="fc" id="L681">                .toList();</span>
+    }
+
+    private CitaDTO convertirADTO(CitaPrimerContacto cita) {
+
+<span class="fc" id="L686">        return CitaDTO.builder()</span>
+<span class="fc" id="L687">                .id(cita.getId())</span>
+<span class="fc" id="L688">                .expedienteId(cita.getExpedienteId())</span>
+<span class="fc" id="L689">                .folio(cita.getFolio())</span>
+<span class="fc" id="L690">                .quejosoId(cita.getQuejosoId())</span>
+<span class="fc" id="L691">                .quejosoNombre(cita.getQuejosoNombre())</span>
+<span class="fc" id="L692">                .analistaId(cita.getAnalistaId())</span>
+<span class="fc" id="L693">                .analistaNombre(cita.getAnalistaNombre())</span>
+<span class="pc bpc" id="L694" title="1 of 2 branches missed.">                .fechaCita(cita.getFechaCita() != null ? cita.getFechaCita().toString() : null)</span>
+<span class="pc bpc" id="L695" title="1 of 2 branches missed.">                .horaCita(cita.getHoraCita() != null ? cita.getHoraCita().toString() : null)</span>
+<span class="fc" id="L696">                .tipoCita(cita.getTipoCita())</span>
+<span class="fc bfc" id="L697" title="All 2 branches covered.">                .categoria(cita.getCategoria() != null ? cita.getCategoria() : &quot;COMPARECENCIA&quot;)</span>
+<span class="fc" id="L698">                .motivo(cita.getMotivo())</span>
+<span class="fc" id="L699">                .estatus(cita.getEstatus())</span>
+<span class="fc bfc" id="L700" title="All 2 branches covered.">                .fechaCreacion(cita.getFechaCreacion() != null ? cita.getFechaCreacion().toString() : null)</span>
+<span class="fc" id="L701">                .actualizadoPorNombre(cita.getActualizadoPorNombre())</span>
+<span class="fc bfc" id="L702" title="All 2 branches covered.">                .fechaActualizacion(cita.getFechaActualizacion() != null ? cita.getFechaActualizacion().toString() : null)</span>
+<span class="fc" id="L703">                .folioQueja(folioQueja(cita))</span>
+<span class="fc bfc" id="L704" title="All 2 branches covered.">                .fechaLimiteRespuesta(cita.getFechaLimiteRespuesta() != null ? cita.getFechaLimiteRespuesta().toString() : null)</span>
+<span class="pc bpc" id="L705" title="1 of 2 branches missed.">                .fechaRespuestaQuejoso(cita.getFechaRespuestaQuejoso() != null ? cita.getFechaRespuestaQuejoso().toString() : null)</span>
+<span class="fc" id="L706">                .motivoCancelacionQuejoso(cita.getMotivoCancelacionQuejoso())</span>
+<span class="fc" id="L707">                .respuestaRegistradaPor(cita.getRespuestaRegistradaPor())</span>
+<span class="fc" id="L708">                .citaAnteriorId(cita.getCitaAnteriorId())</span>
+<span class="fc" id="L709">                .build();</span>
+    }
+
+    private CitaPublicaDTO convertirAPublica(CitaPrimerContacto cita) {
+
+<span class="fc" id="L714">        return CitaPublicaDTO.builder()</span>
+<span class="fc" id="L715">                .folioQueja(folioQueja(cita))</span>
+<span class="fc" id="L716">                .quejosoNombre(cita.getQuejosoNombre())</span>
+<span class="pc bpc" id="L717" title="1 of 2 branches missed.">                .fechaCita(cita.getFechaCita() != null ? cita.getFechaCita().toString() : null)</span>
+<span class="pc bpc" id="L718" title="1 of 2 branches missed.">                .horaCita(cita.getHoraCita() != null ? cita.getHoraCita().toString() : null)</span>
+<span class="fc" id="L719">                .tipoCita(cita.getTipoCita())</span>
+<span class="fc" id="L720">                .motivo(cita.getMotivo())</span>
+<span class="fc" id="L721">                .estatus(cita.getEstatus())</span>
+<span class="pc bpc" id="L722" title="1 of 2 branches missed.">                .fechaLimiteRespuesta(cita.getFechaLimiteRespuesta() != null ? cita.getFechaLimiteRespuesta().toString() : null)</span>
+<span class="fc" id="L723">                .motivoCancelacionQuejoso(cita.getMotivoCancelacionQuejoso())</span>
+<span class="fc" id="L724">                .analistaNombre(cita.getAnalistaNombre())</span>
+<span class="pc bpc" id="L725" title="3 of 4 branches missed.">                .puedeResponder(PROGRAMADA.equals(cita.getEstatus()) &amp;&amp; !plazoVencido(cita))</span>
+<span class="fc" id="L726">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TipoArchivoDetectado.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.queja_service.validacion</a> &gt; <span class="el_source">TipoArchivoDetectado.java</span></div><h1>TipoArchivoDetectado.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.queja_service.validacion;
+
+/**
+ * Tipo real de un archivo, deducido de sus primeros bytes (firma o &quot;magic bytes&quot;), no de su
+ * extensión ni del Content-Type que manda el navegador. Ambos los controla el cliente y se
+ * falsifican cambiando el nombre del archivo, así que no sirven como control de seguridad en
+ * un endpoint público sin autenticación.
+ */
+<span class="fc" id="L9">public enum TipoArchivoDetectado {</span>
+
+<span class="fc" id="L11">    JPEG(&quot;image/jpeg&quot;, true),</span>
+<span class="fc" id="L12">    PNG(&quot;image/png&quot;, true),</span>
+<span class="fc" id="L13">    PDF(&quot;application/pdf&quot;, false),</span>
+<span class="fc" id="L14">    MP4(&quot;video/mp4&quot;, false),</span>
+<span class="fc" id="L15">    MP3(&quot;audio/mpeg&quot;, false),</span>
+<span class="fc" id="L16">    DESCONOCIDO(null, false);</span>
+
+    private final String mime;
+    private final boolean imagen;
+
+<span class="fc" id="L21">    TipoArchivoDetectado(String mime, boolean imagen) {</span>
+<span class="fc" id="L22">        this.mime = mime;</span>
+<span class="fc" id="L23">        this.imagen = imagen;</span>
+<span class="fc" id="L24">    }</span>
+
+    public String mime() {
+<span class="fc" id="L27">        return mime;</span>
+    }
+
+    public boolean esImagen() {
+<span class="fc" id="L31">        return imagen;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

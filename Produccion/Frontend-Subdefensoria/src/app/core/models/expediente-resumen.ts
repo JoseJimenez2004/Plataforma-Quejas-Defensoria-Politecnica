@@ -17,4 +17,6 @@ export interface ExpedienteResumen {
   diasLimite: number | null;
   /** Solo si toca emitir oficio. */
   siguienteFase?: 'SOLICITUD_INFORMACION' | 'GESTION_DIRECTOR' | null;
+  /** SD-6: BAJA | MEDIA | ALTA | URGENTE, o null (sin asignar). */
+  prioridad?: string | null;
 }

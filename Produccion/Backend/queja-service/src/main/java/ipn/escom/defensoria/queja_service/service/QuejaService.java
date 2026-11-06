@@ -23,6 +23,7 @@ import ipn.escom.defensoria.queja_service.repository.QuejaRepository;
 import ipn.escom.defensoria.queja_service.validacion.ReglasQueja;
 import ipn.escom.defensoria.queja_service.validacion.ValidacionException;
 import ipn.escom.defensoria.queja_service.validacion.ValidadorArchivos;
+import ipn.escom.defensoria.queja_service.validacion.ValidadorFechas;
 import ipn.escom.defensoria.queja_service.validacion.ValidadorQuejaPublica;
 
 @Service
@@ -316,6 +317,8 @@ public class QuejaService {
         if (esVacio(motivo) || esVacio(descripcion)) {
             throw new RuntimeException("Faltan datos obligatorios de la queja.");
         }
+        // Candado de 90 días también para el panel del quejoso (art. 13, párrafo tercero).
+        ValidadorFechas.validarPlazo(fechaHechos);
 
         Queja queja = new Queja();
         queja.setNumeroFolio(generarFolio());

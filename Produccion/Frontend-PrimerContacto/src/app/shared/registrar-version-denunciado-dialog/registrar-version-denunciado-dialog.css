@@ -1,0 +1,118 @@
+.intro {
+  margin: 0 0 14px;
+  color: var(--negro-inst);
+  line-height: 1.5;
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rejilla label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--negro-inst);
+}
+
+.rejilla .ancho {
+  grid-column: 1 / -1;
+}
+
+.rejilla input,
+.rejilla select,
+.rejilla textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--borde, #d6d9de);
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 400;
+}
+
+.rejilla textarea {
+  resize: vertical;
+}
+
+.doble {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 8px;
+}
+
+.contador {
+  justify-self: end;
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+.archivos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.archivos small {
+  color: var(--texto-suave);
+}
+
+.archivos ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.archivos li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+}
+
+.boton-archivo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--guinda);
+  border-radius: 999px;
+  color: var(--guinda);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.quitar {
+  border: 0;
+  background: none;
+  color: var(--peligro);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.error {
+  margin: 12px 0 0;
+  color: var(--peligro);
+  font-weight: 600;
+}
+
+.primary-btn {
+  background: var(--guinda) !important;
+  color: white !important;
+  border-radius: 999px !important;
+  font-weight: 800;
+}
+
+@media (max-width: 720px) {
+  .rejilla,
+  .archivos {
+    grid-template-columns: 1fr;
+  }
+}

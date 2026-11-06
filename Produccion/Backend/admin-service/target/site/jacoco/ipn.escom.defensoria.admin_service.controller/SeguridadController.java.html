@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SeguridadController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.admin_service.controller</a> &gt; <span class="el_source">SeguridadController.java</span></div><h1>SeguridadController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.admin_service.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import ipn.escom.defensoria.admin_service.entity.BitacoraAccion;
+import ipn.escom.defensoria.admin_service.model.RespaldoResumenModel;
+import ipn.escom.defensoria.admin_service.service.BitacoraService;
+import ipn.escom.defensoria.admin_service.service.RespaldoService;
+import jakarta.servlet.http.HttpServletRequest;
+
+/** &quot;Seguridad y Respaldos&quot; del mockup -- exclusivo de la Defensora (DEFENSOR). La restauración es una
+ * operación destructiva: se exige mandar {&quot;confirmar&quot;: true} en el cuerpo a propósito, para
+ * que no sea un solo clic accidental. */
+@RestController
+@RequestMapping(&quot;/api/admin/seguridad&quot;)
+// Exclusivo de la Defensora (DEFENSOR), que tiene todas las funciones de administración.
+@PreAuthorize(&quot;hasRole('DEFENSOR')&quot;)
+@Tag(name = &quot;Seguridad y Respaldos&quot;, description = &quot;Respaldos manuales/automáticos y bitácora de acciones&quot;)
+public class SeguridadController {
+
+    private final RespaldoService respaldoService;
+    private final BitacoraService bitacoraService;
+
+<span class="nc" id="L38">    public SeguridadController(RespaldoService respaldoService, BitacoraService bitacoraService) {</span>
+<span class="nc" id="L39">        this.respaldoService = respaldoService;</span>
+<span class="nc" id="L40">        this.bitacoraService = bitacoraService;</span>
+<span class="nc" id="L41">    }</span>
+
+    @GetMapping(&quot;/respaldos&quot;)
+    @Operation(summary = &quot;Lista los respaldos disponibles, más reciente primero&quot;)
+    public ResponseEntity&lt;List&lt;RespaldoResumenModel&gt;&gt; listarRespaldos() {
+<span class="nc" id="L46">        return ResponseEntity.ok(respaldoService.listar());</span>
+    }
+
+    @PostMapping(&quot;/respaldos/manual&quot;)
+    @Operation(summary = &quot;Ejecuta un respaldo manual de la base de datos ahora mismo&quot;)
+    public ResponseEntity&lt;RespaldoResumenModel&gt; respaldoManual(HttpServletRequest request) {
+<span class="nc" id="L52">        RespaldoResumenModel resultado = respaldoService.ejecutarRespaldoManual();</span>
+<span class="nc" id="L53">        bitacoraService.registrar(usuarioActual(), &quot;Respaldo manual ejecutado: &quot; + resultado.getNombreArchivo(), request);</span>
+<span class="nc" id="L54">        return ResponseEntity.ok(resultado);</span>
+    }
+
+    @GetMapping(&quot;/respaldos/{nombreArchivo}/descargar&quot;)
+    @Operation(summary = &quot;Descarga un archivo de respaldo específico&quot;)
+    public ResponseEntity&lt;Resource&gt; descargar(@PathVariable String nombreArchivo) {
+<span class="nc" id="L60">        Resource recurso = respaldoService.obtenerArchivo(nombreArchivo);</span>
+<span class="nc" id="L61">        return ResponseEntity.ok()</span>
+<span class="nc" id="L62">                .header(&quot;Content-Disposition&quot;, &quot;attachment; filename=\&quot;&quot; + nombreArchivo + &quot;\&quot;&quot;)</span>
+<span class="nc" id="L63">                .body(recurso);</span>
+    }
+
+    @PostMapping(&quot;/restaurar&quot;)
+    @Operation(summary = &quot;Restaura la base de datos desde un respaldo (requiere confirmar=true, DESTRUCTIVO)&quot;)
+    public ResponseEntity&lt;Void&gt; restaurar(@RequestBody Map&lt;String, Object&gt; body, HttpServletRequest request) {
+<span class="nc" id="L69">        Object confirmar = body.get(&quot;confirmar&quot;);</span>
+<span class="nc" id="L70">        Object archivo = body.get(&quot;nombreArchivo&quot;);</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">        if (!Boolean.TRUE.equals(confirmar) || archivo == null) {</span>
+<span class="nc" id="L72">            throw new RuntimeException(&quot;Debes confirmar explícitamente la restauración e indicar el archivo.&quot;);</span>
+        }
+<span class="nc" id="L74">        respaldoService.restaurar(archivo.toString());</span>
+<span class="nc" id="L75">        bitacoraService.registrar(usuarioActual(), &quot;RESTAURACIÓN de base de datos desde: &quot; + archivo, request);</span>
+<span class="nc" id="L76">        return ResponseEntity.noContent().build();</span>
+    }
+
+    @GetMapping(&quot;/bitacora&quot;)
+    @Operation(summary = &quot;Lista las últimas 50 acciones críticas registradas&quot;)
+    public ResponseEntity&lt;List&lt;BitacoraAccion&gt;&gt; bitacora() {
+<span class="nc" id="L82">        return ResponseEntity.ok(bitacoraService.listarRecientes());</span>
+    }
+
+    private String usuarioActual() {
+<span class="nc" id="L86">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

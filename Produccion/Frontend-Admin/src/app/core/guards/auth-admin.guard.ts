@@ -4,7 +4,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthAdminService } from '../services/auth-admin.service';
 
 /** Login unificado: este panel ya no tiene login propio, todo el personal entra por
- * /revision/login y ahí se le manda aquí si su rol es DEFENSOR o ADMIN_SISTEMAS. */
+ * /revision/login y ahí se le manda aquí si su rol es DEFENSOR. */
 import { esRolDefensora, irALoginPersonal } from '../sesion/sesion-personal';
 
 export const authAdminGuard: CanActivateFn = () => {

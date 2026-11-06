@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IngresoPrimerContactoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service</a> &gt; <span class="el_source">IngresoPrimerContactoService.java</span></div><h1>IngresoPrimerContactoService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service;
+
+import ipn.escom.defensoria.primercontacto.dto.ExpedienteTurnadoRequest;
+import ipn.escom.defensoria.primercontacto.entity.ExpedientePrimerContacto;
+import ipn.escom.defensoria.primercontacto.repository.ExpedientePrimerContactoRepository;
+import org.springframework.stereotype.Service;
+import ipn.escom.defensoria.primercontacto.entity.EstatusExpediente;
+import ipn.escom.defensoria.primercontacto.entity.EvidenciaPrimerContacto;
+import ipn.escom.defensoria.primercontacto.repository.EvidenciaPrimerContactoRepository;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Service
+public class IngresoPrimerContactoService {
+
+    private final ExpedientePrimerContactoRepository expedienteRepository;
+    private final EvidenciaPrimerContactoRepository evidenciaRepository;
+
+    public IngresoPrimerContactoService(
+            ExpedientePrimerContactoRepository expedienteRepository,
+            EvidenciaPrimerContactoRepository evidenciaRepository
+<span class="nc" id="L23">    ) {</span>
+<span class="nc" id="L24">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L25">        this.evidenciaRepository = evidenciaRepository;</span>
+<span class="nc" id="L26">    }</span>
+
+    public ExpedientePrimerContacto recibir(
+            ExpedienteTurnadoRequest request
+    ) {
+
+        /*
+         * Evita que la misma queja sea ingresada dos veces
+         * a Primer Contacto.
+         */
+<span class="nc" id="L36">        return expedienteRepository</span>
+<span class="nc" id="L37">                .findByFolioOrigen(request.getFolioOrigen())</span>
+<span class="nc" id="L38">                .orElseGet(() -&gt; crearNuevoExpediente(request));</span>
+    }
+
+    private ExpedientePrimerContacto crearNuevoExpediente(
+            ExpedienteTurnadoRequest request
+    ) {
+
+<span class="nc" id="L45">        LocalDateTime ahora = LocalDateTime.now();</span>
+
+        ExpedientePrimerContacto.ExpedientePrimerContactoBuilder builder =
+<span class="nc" id="L48">                ExpedientePrimerContacto.builder()</span>
+<span class="nc" id="L49">                        .folio(generarFolio())</span>
+<span class="nc" id="L50">                        .folioOrigen(request.getFolioOrigen())</span>
+<span class="nc" id="L51">                        .tema(request.getTema())</span>
+<span class="nc" id="L52">                        .descripcionHechos(request.getDescripcionHechos())</span>
+<span class="nc" id="L53">                        .fechaRecepcionOrigen(request.getFechaRecepcion())</span>
+<span class="nc" id="L54">                        .prioridad(request.getPrioridad())</span>
+                        /*
+                         * Llega TURNADA (diagrama de estados); pasa a EN_ANALISIS
+                         * cuando un analista abre el expediente (CU-PC-03).
+                         */
+<span class="nc" id="L59">                        .estatus(EstatusExpediente.TURNADA)</span>
+<span class="nc" id="L60">                        .fechaCreacion(ahora)</span>
+<span class="nc" id="L61">                        .fechaActualizacion(ahora);</span>
+
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (request.getQuejoso() != null) {</span>
+
+<span class="nc" id="L65">            builder</span>
+<span class="nc" id="L66">                    .quejosoId(</span>
+<span class="nc" id="L67">                            request.getQuejoso().getId()</span>
+                    )
+<span class="nc" id="L69">                    .quejosoNombre(</span>
+<span class="nc" id="L70">                            request.getQuejoso().getNombreCompleto()</span>
+                    )
+<span class="nc" id="L72">                    .quejosoCorreo(</span>
+<span class="nc" id="L73">                            request.getQuejoso().getCorreo()</span>
+                    )
+<span class="nc" id="L75">                    .quejosoTelefono(</span>
+<span class="nc" id="L76">                            request.getQuejoso().getTelefono()</span>
+                    )
+<span class="nc" id="L78">                    .unidadAcademica(</span>
+<span class="nc" id="L79">                            request.getQuejoso().getUnidadAcademica()</span>
+                    )
+<span class="nc" id="L81">                    .quejosoTipoUsuario(</span>
+<span class="nc" id="L82">                            request.getQuejoso().getTipoUsuario()</span>
+                    );
+        }
+
+<span class="nc" id="L86">        ExpedientePrimerContacto expediente =</span>
+<span class="nc" id="L87">                builder.build();</span>
+
+<span class="nc" id="L89">        ExpedientePrimerContacto guardado =</span>
+<span class="nc" id="L90">                expedienteRepository.save(expediente);</span>
+
+        /*
+         * Guardamos una copia de los metadatos de las evidencias
+         * que llegaron desde Revisión.
+         */
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (request.getEvidencias() != null) {</span>
+
+<span class="nc" id="L98">            request.getEvidencias().forEach(evidencia -&gt; {</span>
+
+                EvidenciaPrimerContacto nueva =
+<span class="nc" id="L101">                        EvidenciaPrimerContacto.builder()</span>
+<span class="nc" id="L102">                                .expedienteId(guardado.getId())</span>
+<span class="nc" id="L103">                                .evidenciaOrigenId(evidencia.getId())</span>
+<span class="nc" id="L104">                                .nombreArchivo(evidencia.getNombreArchivo())</span>
+<span class="nc" id="L105">                                .tipoArchivo(evidencia.getTipoArchivo())</span>
+<span class="nc" id="L106">                                .urlArchivo(evidencia.getUrlArchivo())</span>
+<span class="nc" id="L107">                                .fechaCarga(evidencia.getFechaCarga())</span>
+<span class="nc" id="L108">                                .build();</span>
+
+<span class="nc" id="L110">                evidenciaRepository.save(nueva);</span>
+<span class="nc" id="L111">            });</span>
+        }
+
+<span class="nc" id="L114">        return guardado;    }</span>
+
+    private String generarFolio() {
+
+<span class="nc" id="L118">        return &quot;PC-&quot;</span>
+<span class="nc" id="L119">                + UUID.randomUUID()</span>
+<span class="nc" id="L120">                .toString()</span>
+<span class="nc" id="L121">                .substring(0, 8)</span>
+<span class="nc" id="L122">                .toUpperCase();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

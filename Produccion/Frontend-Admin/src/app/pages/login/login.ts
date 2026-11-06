@@ -34,7 +34,7 @@ export class Login {
     this.authService.login({ correo: this.correo, password: this.password }).subscribe({
       next: (resp) => {
         this.cargando = false;
-        if (resp.rol !== 'ADMIN_SISTEMAS') {
+        if (resp.rol !== 'DEFENSOR') {
           this.toast.advertencia(
             'Tu cuenta no tiene permisos para esta consola. Usa el front de revisión de quejas correspondiente a tu rol.',
           );

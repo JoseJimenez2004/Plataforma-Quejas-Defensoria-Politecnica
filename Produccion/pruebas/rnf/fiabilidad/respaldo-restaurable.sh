@@ -2,23 +2,23 @@
 # ==============================================================================
 # FIA-03 (Fiabilidad / Recuperabilidad) — un respaldo generado por la consola es restaurable.
 #
-#   1. Inicia sesión como ADMIN_SISTEMAS y ejecuta un respaldo manual (RF-A06).
+#   1. Inicia sesión como la Defensora (DEFENSOR) y ejecuta un respaldo manual (RF-A06).
 #   2. Descarga el .sql generado.
 #   3. Lo restaura en una base VACÍA y desechable (nunca en la del sistema).
 #   4. Verifica que existan las tablas núcleo y que tengan filas.
 #
 # SOLO contra el entorno de pruebas. Variables:
-#   BASE_URL, CRED_ADMIN_SISTEMAS="correo:password"
+#   BASE_URL, CRED_DEFENSOR="correo:password"
 #   PGHOST/PGPORT/PGUSER/PGPASSWORD   Postgres desechable (en CI: el contenedor de servicio)
 #   TABLAS_NUCLEO="quejas usuarios personal_administrativo dependencias bitacora_acciones"
 # ==============================================================================
 set -euo pipefail
-: "${BASE_URL:?}" "${CRED_ADMIN_SISTEMAS:?}"
+: "${BASE_URL:?}" "${CRED_DEFENSOR:?}"
 TABLAS_NUCLEO="${TABLAS_NUCLEO:-quejas personal_administrativo dependencias}"
 BD_DESTINO="restauracion_prueba_$(date +%s)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"; dropdb --if-exists "$BD_DESTINO" 2>/dev/null || true' EXIT
 
-correo="${CRED_ADMIN_SISTEMAS%%:*}"; pass="${CRED_ADMIN_SISTEMAS#*:}"
+correo="${CRED_DEFENSOR%%:*}"; pass="${CRED_DEFENSOR#*:}"
 token="$(curl -sf -H 'Content-Type: application/json' \
     -d "$(jq -n --arg c "$correo" --arg p "$pass" '{correo:$c,password:$p}')" \
     "$BASE_URL/api/admin/auth/login" | jq -r '.token')"

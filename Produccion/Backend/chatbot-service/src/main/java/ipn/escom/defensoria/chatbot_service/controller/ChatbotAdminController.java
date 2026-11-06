@@ -21,15 +21,14 @@ import ipn.escom.defensoria.chatbot_service.service.PreguntaChatbotService;
 
 /**
  * CRUD administrativo del contenido del chatbot -- a diferencia de ChatbotController
- * (público, solo lectura), esto exige un JWT con rol ADMIN_SISTEMAS emitido por
+ * (público, solo lectura), esto exige un JWT con rol DEFENSOR emitido por
  * admin-service (mismo jwt.secret compartido entre microservicios). Permite editar/agregar
  * preguntas sin necesidad de redesplegar el servicio.
  */
 @RestController
 @RequestMapping("/api/chatbot/admin")
-// La Defensora (DEFENSOR) tiene todas las funciones de administración; ADMIN_SISTEMAS se
-// conserva para la cuenta técnica inicial.
-@PreAuthorize("hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')")
+// Exclusivo de la Defensora (DEFENSOR), que tiene todas las funciones de administración.
+@PreAuthorize("hasRole('DEFENSOR')")
 @Tag(name = "Chatbot (Admin)", description = "Alta, edición y baja de las preguntas del chatbot")
 public class ChatbotAdminController {
 

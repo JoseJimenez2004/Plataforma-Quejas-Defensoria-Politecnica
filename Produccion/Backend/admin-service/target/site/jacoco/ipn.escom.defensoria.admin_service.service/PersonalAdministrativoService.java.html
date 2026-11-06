@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PersonalAdministrativoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.admin_service.service</a> &gt; <span class="el_source">PersonalAdministrativoService.java</span></div><h1>PersonalAdministrativoService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.admin_service.service;
+
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.admin_service.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.admin_service.entity.RolStaff;
+import ipn.escom.defensoria.admin_service.model.PersonalCreadoResponseModel;
+import ipn.escom.defensoria.admin_service.model.PersonalRequest;
+import ipn.escom.defensoria.admin_service.model.PersonalResumenModel;
+import ipn.escom.defensoria.admin_service.repository.PersonalAdministrativoRepository;
+
+@Service
+public class PersonalAdministrativoService {
+
+    private static final String CARACTERES_PASSWORD =
+            &quot;ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&quot;;
+    /** Mínimo 8 caracteres, al menos una mayúscula y un número (símbolos opcionales). */
+    private static final String PASSWORD_REGEX = &quot;^(?=.*[A-Z])(?=.*\\d).{8,}$&quot;;
+    private static final int LONGITUD_PASSWORD_TEMPORAL = 8;
+    private static final String PREFIJO_PASSWORD_TEMPORAL = &quot;Tmp-&quot;;
+
+<span class="fc" id="L28">    private final SecureRandom random = new SecureRandom();</span>
+
+    private final PersonalAdministrativoRepository repository;
+    private final PasswordEncoder passwordEncoder;
+
+<span class="fc" id="L33">    public PersonalAdministrativoService(PersonalAdministrativoRepository repository, PasswordEncoder passwordEncoder) {</span>
+<span class="fc" id="L34">        this.repository = repository;</span>
+<span class="fc" id="L35">        this.passwordEncoder = passwordEncoder;</span>
+<span class="fc" id="L36">    }</span>
+
+    public PersonalAdministrativo validarLogin(String correo, String password) {
+<span class="fc" id="L39">        PersonalAdministrativo personal = repository.findByCorreoInstitucional(correo)</span>
+<span class="fc" id="L40">                .orElseThrow(() -&gt; new RuntimeException(&quot;Credenciales incorrectas.&quot;));</span>
+
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (!personal.isActivo()) {</span>
+<span class="fc" id="L43">            throw new RuntimeException(&quot;Esta cuenta está desactivada. Contacta a un administrador.&quot;);</span>
+        }
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (!passwordEncoder.matches(password, personal.getPassword())) {</span>
+<span class="fc" id="L46">            throw new RuntimeException(&quot;Credenciales incorrectas.&quot;);</span>
+        }
+
+<span class="fc" id="L49">        personal.setUltimoLogin(LocalDateTime.now());</span>
+<span class="fc" id="L50">        repository.save(personal);</span>
+<span class="fc" id="L51">        return personal;</span>
+    }
+
+    public List&lt;PersonalResumenModel&gt; listar() {
+<span class="nc" id="L55">        return repository.findAllByOrderByFechaCreacionDesc().stream()</span>
+<span class="nc" id="L56">                .map(this::aResumen)</span>
+<span class="nc" id="L57">                .toList();</span>
+    }
+
+    public PersonalCreadoResponseModel crear(PersonalRequest datos) {
+<span class="pc bpc" id="L61" title="2 of 4 branches missed.">        if (esVacio(datos.getNombreCompleto()) || esVacio(datos.getNumeroEmpleado())</span>
+<span class="pc bpc" id="L62" title="1 of 4 branches missed.">                || esVacio(datos.getCorreoInstitucional()) || datos.getRol() == null) {</span>
+<span class="fc" id="L63">            throw new RuntimeException(&quot;Completa nombre, número de empleado, correo y rol.&quot;);</span>
+        }
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (repository.findByCorreoInstitucional(datos.getCorreoInstitucional()).isPresent()) {</span>
+<span class="fc" id="L66">            throw new RuntimeException(&quot;Ya existe una cuenta con ese correo institucional.&quot;);</span>
+        }
+
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        String passwordTemporal = esVacio(datos.getPasswordTemporal())</span>
+<span class="fc" id="L70">                ? generarPasswordTemporal()</span>
+<span class="pc" id="L71">                : datos.getPasswordTemporal();</span>
+
+<span class="fc" id="L73">        PersonalAdministrativo personal = new PersonalAdministrativo();</span>
+<span class="fc" id="L74">        personal.setNombreCompleto(datos.getNombreCompleto());</span>
+<span class="fc" id="L75">        personal.setNumeroEmpleado(datos.getNumeroEmpleado());</span>
+<span class="fc" id="L76">        personal.setCorreoInstitucional(datos.getCorreoInstitucional());</span>
+<span class="fc" id="L77">        personal.setRol(datos.getRol());</span>
+<span class="fc" id="L78">        personal.setPassword(passwordEncoder.encode(passwordTemporal));</span>
+<span class="fc" id="L79">        personal.setCuentaTemporal(true);</span>
+<span class="fc" id="L80">        personal.setForzarCambioPassword(true);</span>
+<span class="fc" id="L81">        personal.setActivo(true);</span>
+
+<span class="fc" id="L83">        PersonalAdministrativo guardado = repository.save(personal);</span>
+        // La contraseña en claro solo viaja en ESTA respuesta -- nunca se vuelve a poder
+        // consultar después (en la BD solo queda el hash).
+<span class="fc" id="L86">        return new PersonalCreadoResponseModel(</span>
+<span class="fc" id="L87">                guardado.getId(), guardado.getNombreCompleto(), guardado.getCorreoInstitucional(),</span>
+                passwordTemporal);
+    }
+
+    /** Roles que pueden administrar el sistema (personal, respaldos, catálogos, plantillas). */
+<span class="fc" id="L92">    private static final Set&lt;RolStaff&gt; ROLES_ADMINISTRACION = Set.of(RolStaff.DEFENSOR);</span>
+
+    public PersonalAdministrativo editar(Long id, PersonalRequest datos, String correoActual) {
+<span class="fc" id="L95">        PersonalAdministrativo personal = obtener(id);</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">        boolean perderiaAdministracion = (datos.isDesactivarTemporalmente()</span>
+<span class="pc bpc" id="L97" title="1 of 4 branches missed.">                || (datos.getRol() != null &amp;&amp; !ROLES_ADMINISTRACION.contains(datos.getRol())));</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (perderiaAdministracion) {</span>
+<span class="nc" id="L99">            exigirQueNoSeQuedeSinAdministracion(personal, correoActual);</span>
+        }
+
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        if (!esVacio(datos.getNombreCompleto())) {</span>
+<span class="fc" id="L103">            personal.setNombreCompleto(datos.getNombreCompleto());</span>
+        }
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        if (!esVacio(datos.getCorreoInstitucional())) {</span>
+<span class="nc" id="L106">            personal.setCorreoInstitucional(datos.getCorreoInstitucional());</span>
+        }
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (datos.getRol() != null) {</span>
+<span class="nc" id="L109">            personal.setRol(datos.getRol());</span>
+        }
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (datos.isRestablecerPassword()) {</span>
+<span class="nc" id="L112">            personal.setForzarCambioPassword(true);</span>
+        }
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if (datos.isDesactivarTemporalmente()) {</span>
+<span class="nc" id="L115">            personal.setActivo(false);</span>
+        }
+
+<span class="fc" id="L118">        return repository.save(personal);</span>
+    }
+
+    public String resetearPassword(Long id) {
+<span class="fc" id="L122">        PersonalAdministrativo personal = obtener(id);</span>
+<span class="fc" id="L123">        String nueva = generarPasswordTemporal();</span>
+<span class="fc" id="L124">        personal.setPassword(passwordEncoder.encode(nueva));</span>
+<span class="fc" id="L125">        personal.setCuentaTemporal(true);</span>
+<span class="fc" id="L126">        personal.setForzarCambioPassword(true);</span>
+<span class="fc" id="L127">        repository.save(personal);</span>
+<span class="fc" id="L128">        return nueva;</span>
+    }
+
+    public void darDeBaja(Long id, String correoActual) {
+<span class="fc" id="L132">        PersonalAdministrativo personal = obtener(id);</span>
+<span class="fc" id="L133">        exigirQueNoSeQuedeSinAdministracion(personal, correoActual);</span>
+<span class="fc" id="L134">        personal.setActivo(false);</span>
+<span class="fc" id="L135">        repository.save(personal);</span>
+<span class="fc" id="L136">    }</span>
+
+    public void reactivar(Long id) {
+<span class="nc" id="L139">        PersonalAdministrativo personal = obtener(id);</span>
+<span class="nc" id="L140">        personal.setActivo(true);</span>
+<span class="nc" id="L141">        repository.save(personal);</span>
+<span class="nc" id="L142">    }</span>
+
+    /**
+     * Evita quedarse sin nadie que pueda administrar: no se puede desactivar ni quitar el rol
+     * a la propia cuenta con la que se está trabajando, ni a la última cuenta activa con rol
+     * de administración (DEFENSOR). Si pasara, nadie podría volver a dar de
+     * alta personal ni restaurar respaldos sin entrar a la base de datos a mano.
+     */
+    private void exigirQueNoSeQuedeSinAdministracion(PersonalAdministrativo objetivo, String correoActual) {
+<span class="pc bpc" id="L151" title="1 of 4 branches missed.">        if (correoActual != null &amp;&amp; correoActual.equalsIgnoreCase(objetivo.getCorreoInstitucional())) {</span>
+<span class="fc" id="L152">            throw new RuntimeException(&quot;No puedes desactivar ni quitarte el rol de administración a ti misma(o). &quot;</span>
+                    + &quot;Pídeselo a otra cuenta con ese rol.&quot;);
+        }
+<span class="pc bpc" id="L155" title="1 of 4 branches missed.">        boolean esAdministracionActiva = objetivo.isActivo() &amp;&amp; ROLES_ADMINISTRACION.contains(objetivo.getRol());</span>
+<span class="fc bfc" id="L156" title="All 4 branches covered.">        if (esAdministracionActiva &amp;&amp; repository.countByActivoTrueAndRolIn(ROLES_ADMINISTRACION) &lt;= 1) {</span>
+<span class="fc" id="L157">            throw new RuntimeException(&quot;Es la última cuenta activa con rol de administración (Defensor/Admin. de &quot;</span>
+                    + &quot;Sistemas). Da de alta otra antes de desactivarla o cambiarle el rol.&quot;);
+        }
+<span class="fc" id="L160">    }</span>
+
+    public long contarActivos() {
+<span class="nc" id="L163">        return repository.countByActivoTrue();</span>
+    }
+
+    /** Autoservicio: cualquier cuenta (sin importar el rol) puede cambiar SU PROPIA
+     * contraseña siempre que confirme la actual. A diferencia de resetearPassword() (que
+     * genera una temporal y exige cambiarla de nuevo), aquí la contraseña queda definitiva. */
+    public void cambiarMiPassword(String correo, String passwordActual, String passwordNueva) {
+<span class="fc" id="L170">        PersonalAdministrativo personal = repository.findByCorreoInstitucional(correo)</span>
+<span class="pc" id="L171">                .orElseThrow(() -&gt; new RuntimeException(&quot;No se encontró la cuenta.&quot;));</span>
+
+<span class="pc bpc" id="L173" title="1 of 4 branches missed.">        if (esVacio(passwordActual) || !passwordEncoder.matches(passwordActual, personal.getPassword())) {</span>
+<span class="fc" id="L174">            throw new RuntimeException(&quot;La contraseña actual no es correcta.&quot;);</span>
+        }
+<span class="fc" id="L176">        validarPassword(passwordNueva);</span>
+
+<span class="fc" id="L178">        personal.setPassword(passwordEncoder.encode(passwordNueva));</span>
+<span class="fc" id="L179">        personal.setCuentaTemporal(false);</span>
+<span class="fc" id="L180">        personal.setForzarCambioPassword(false);</span>
+<span class="fc" id="L181">        repository.save(personal);</span>
+<span class="fc" id="L182">    }</span>
+
+    private void validarPassword(String password) {
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">        if (esVacio(password)) {</span>
+<span class="nc" id="L186">            throw new RuntimeException(&quot;La nueva contraseña no puede estar vacía.&quot;);</span>
+        }
+<span class="fc bfc" id="L188" title="All 2 branches covered.">        if (!password.matches(PASSWORD_REGEX)) {</span>
+<span class="fc" id="L189">            throw new RuntimeException(</span>
+                    &quot;La nueva contraseña debe tener al menos 8 caracteres, una mayúscula y un número. &quot;
+                            + &quot;Puedes usar también símbolos y caracteres especiales.&quot;);
+        }
+<span class="fc" id="L193">    }</span>
+
+    private PersonalAdministrativo obtener(Long id) {
+<span class="fc" id="L196">        return repository.findById(id)</span>
+<span class="fc" id="L197">                .orElseThrow(() -&gt; new RuntimeException(&quot;No se encontró ese personal administrativo.&quot;));</span>
+    }
+
+    private PersonalResumenModel aResumen(PersonalAdministrativo p) {
+<span class="nc" id="L201">        return new PersonalResumenModel(</span>
+<span class="nc" id="L202">                p.getId(), p.getNombreCompleto(), p.getNumeroEmpleado(),</span>
+<span class="nc" id="L203">                p.getCorreoInstitucional(), p.getRol(), p.isActivo(), p.isCuentaTemporal());</span>
+    }
+
+    private String generarPasswordTemporal() {
+<span class="fc" id="L207">        StringBuilder sb = new StringBuilder(PREFIJO_PASSWORD_TEMPORAL);</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">        for (int i = 0; i &lt; LONGITUD_PASSWORD_TEMPORAL; i++) {</span>
+<span class="fc" id="L209">            sb.append(CARACTERES_PASSWORD.charAt(random.nextInt(CARACTERES_PASSWORD.length())));</span>
+        }
+<span class="fc" id="L211">        return sb.toString();</span>
+    }
+
+    private boolean esVacio(String valor) {
+<span class="pc bpc" id="L215" title="1 of 4 branches missed.">        return valor == null || valor.isBlank();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

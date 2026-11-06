@@ -7,5 +7,5 @@ import { Component } from '@angular/core';
   styleUrl: './footer.css',
 })
 export class Footer {
-
+  readonly anio = new Date().getFullYear();
 }

@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 /**
  * A diferencia del filtro equivalente en los otros microservicios, este SÍ agrega una
  * autoridad ROLE_&lt;rol&gt; (si el token trae el claim "rol") para poder usar
- * @PreAuthorize("hasRole('ADMIN_SISTEMAS')") en los controllers de este panel. Un token sin
+ * @PreAuthorize("hasRole('DEFENSOR')") en los controllers de este panel. Un token sin
  * ese claim (ej. de un quejoso) queda autenticado pero sin ningún rol -- no puede pasar los
  * @PreAuthorize de este servicio.
  */

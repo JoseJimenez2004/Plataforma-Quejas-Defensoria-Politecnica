@@ -21,12 +21,11 @@ import ipn.escom.defensoria.admin_service.service.BitacoraService;
 import ipn.escom.defensoria.admin_service.service.PlantillaService;
 import jakarta.servlet.http.HttpServletRequest;
 
-/** "Plantillas Oficiales" del mockup -- exclusivo de ADMIN_SISTEMAS. */
+/** "Plantillas Oficiales" del mockup -- exclusivo de la Defensora (DEFENSOR). */
 @RestController
 @RequestMapping("/api/admin/plantillas")
-// La Defensora (DEFENSOR) tiene todas las funciones de administración; ADMIN_SISTEMAS se
-// conserva para la cuenta técnica inicial.
-@PreAuthorize("hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')")
+// Exclusivo de la Defensora (DEFENSOR), que tiene todas las funciones de administración.
+@PreAuthorize("hasRole('DEFENSOR')")
 @Tag(name = "Plantillas Oficiales", description = "Edición de plantillas de oficios y formatos legales")
 public class PlantillaController {
 

@@ -4,10 +4,21 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  height: 40px;
+  min-height: 48px;
   background: #3b0a22;
   color: #ffffff;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 16px;
+  text-align: center;
   font-size: 12px;
+  line-height: 1.3;
+}
+
+.footer-legal {
+  font-size: 10.5px;
+  opacity: 0.85;
 }

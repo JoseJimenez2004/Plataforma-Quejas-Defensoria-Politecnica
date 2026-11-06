@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BitacoraService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.admin_service.service</a> &gt; <span class="el_source">BitacoraService.java</span></div><h1>BitacoraService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.admin_service.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.admin_service.entity.BitacoraAccion;
+import ipn.escom.defensoria.admin_service.repository.BitacoraAccionRepository;
+import jakarta.servlet.http.HttpServletRequest;
+
+@Service
+public class BitacoraService {
+
+    private static final String IP_DESCONOCIDA = &quot;desconocida&quot;;
+
+    private final BitacoraAccionRepository repository;
+
+<span class="fc" id="L18">    public BitacoraService(BitacoraAccionRepository repository) {</span>
+<span class="fc" id="L19">        this.repository = repository;</span>
+<span class="fc" id="L20">    }</span>
+
+    public void registrar(String usuario, String accion, HttpServletRequest request) {
+<span class="fc bfc" id="L23" title="All 2 branches covered.">        String ip = (request != null) ? ipCliente(request) : IP_DESCONOCIDA;</span>
+<span class="pc bpc" id="L24" title="1 of 4 branches missed.">        String texto = accion != null &amp;&amp; accion.length() &gt; 250 ? accion.substring(0, 250) : accion;</span>
+<span class="fc" id="L25">        repository.save(new BitacoraAccion(usuario, texto, ip));</span>
+<span class="fc" id="L26">    }</span>
+
+    /** Detrás de router-nginx getRemoteAddr() siempre es la IP del servidor frontend; la del
+     * cliente real llega en X-Real-IP / X-Forwarded-For (los pone nginx). */
+    private static String ipCliente(HttpServletRequest request) {
+<span class="fc" id="L31">        String real = request.getHeader(&quot;X-Real-IP&quot;);</span>
+<span class="pc bpc" id="L32" title="1 of 4 branches missed.">        if (real != null &amp;&amp; !real.isBlank()) {</span>
+<span class="fc" id="L33">            return real.trim();</span>
+        }
+<span class="fc" id="L35">        String reenviada = request.getHeader(&quot;X-Forwarded-For&quot;);</span>
+<span class="pc bpc" id="L36" title="1 of 4 branches missed.">        if (reenviada != null &amp;&amp; !reenviada.isBlank()) {</span>
+<span class="fc" id="L37">            return reenviada.split(&quot;,&quot;)[0].trim();</span>
+        }
+<span class="fc" id="L39">        return request.getRemoteAddr();</span>
+    }
+
+    public List&lt;BitacoraAccion&gt; listarRecientes() {
+<span class="nc" id="L43">        return repository.findTop50ByOrderByFechaDesc();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

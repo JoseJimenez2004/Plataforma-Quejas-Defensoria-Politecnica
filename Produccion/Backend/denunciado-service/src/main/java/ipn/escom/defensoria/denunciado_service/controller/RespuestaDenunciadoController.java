@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,7 +31,7 @@ import ipn.escom.defensoria.denunciado_service.service.RespuestaDenunciadoServic
 public class RespuestaDenunciadoController {
 
     private static final String ROLES_PERSONAL =
-            "hasAnyRole('RECEPCIONISTA','ANALISTA_PRIMER_CONTACTO','SUBDEFENSOR','DEFENSOR','ADMIN_SISTEMAS')";
+            "hasAnyRole('RECEPCIONISTA','ANALISTA_PRIMER_CONTACTO','SUBDEFENSOR','DEFENSOR')";
 
     private final RespuestaDenunciadoService service;
 
@@ -38,10 +39,24 @@ public class RespuestaDenunciadoController {
         this.service = service;
     }
 
+    /*
+     * PC-2 (2026-11): ya no hay formulario público; este POST exige sesión (WebConfig ya no lo
+     * deja abierto) y queda solo por compatibilidad. Lo normal es /personal.
+     */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "El denunciado registra sus datos, su versión de los hechos, credencial y evidencias (público)")
+    @PreAuthorize(ROLES_PERSONAL)
+    @Operation(summary = "Registro con los datos del denunciado (requiere sesión; ya no es público)")
     public ResponseEntity<RespuestaRegistradaModel> registrar(@ModelAttribute RegistroRespuestaRequest datos) {
         return ResponseEntity.ok(service.registrar(datos));
+    }
+
+    /** PC-2: el analista de Primer Contacto captura la versión del denunciado. */
+    @PostMapping(value = "/personal", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ANALISTA_PRIMER_CONTACTO')")
+    @Operation(summary = "El analista de Primer Contacto registra la versión del denunciado (entrevista)")
+    public ResponseEntity<RespuestaRegistradaModel> registrarPorPersonal(@ModelAttribute RegistroRespuestaRequest datos,
+                                                                         Authentication autenticacion) {
+        return ResponseEntity.ok(service.registrarPorPersonal(datos, autenticacion.getName()));
     }
 
     @GetMapping

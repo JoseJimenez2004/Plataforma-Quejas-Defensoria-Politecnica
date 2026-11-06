@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExpedienteAnalisisController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.controller</a> &gt; <span class="el_source">ExpedienteAnalisisController.java</span></div><h1>ExpedienteAnalisisController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.controller;
+
+import ipn.escom.defensoria.primercontacto.dto.ExpedienteAnalisisDTO;
+import ipn.escom.defensoria.primercontacto.service.AnalistaAutenticadoService;
+import ipn.escom.defensoria.primercontacto.service.ExpedienteAnalisisService;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/api/primer-contacto/expedientes&quot;)
+public class ExpedienteAnalisisController {
+
+    private final ExpedienteAnalisisService expedienteAnalisisService;
+    private final AnalistaAutenticadoService analistaAutenticadoService;
+
+    public ExpedienteAnalisisController(
+            ExpedienteAnalisisService expedienteAnalisisService,
+            AnalistaAutenticadoService analistaAutenticadoService
+<span class="nc" id="L19">    ) {</span>
+<span class="nc" id="L20">        this.expedienteAnalisisService =</span>
+                expedienteAnalisisService;
+<span class="nc" id="L22">        this.analistaAutenticadoService = analistaAutenticadoService;</span>
+<span class="nc" id="L23">    }</span>
+
+    /*
+     * Consulta por ID interno de Primer Contacto.
+     *
+     * Ejemplo:
+     * GET /api/primer-contacto/expedientes/1
+     */
+    @GetMapping(&quot;/{expedienteId}&quot;)
+    public ExpedienteAnalisisDTO obtenerExpediente(
+            @PathVariable Long expedienteId
+    ) {
+<span class="nc" id="L35">        return expedienteAnalisisService</span>
+<span class="nc" id="L36">                .obtenerExpediente(expedienteId);</span>
+    }
+
+    /*
+     * Consulta por folio propio de Primer Contacto.
+     *
+     * Ejemplo:
+     * GET /api/primer-contacto/expedientes/folio/PC-A1B2C3D4
+     */
+    @GetMapping(&quot;/folio/{folio}&quot;)
+    public ExpedienteAnalisisDTO obtenerPorFolio(
+            @PathVariable String folio
+    ) {
+<span class="nc" id="L49">        return expedienteAnalisisService</span>
+<span class="nc" id="L50">                .obtenerPorFolio(folio);</span>
+    }
+
+<span class="nc" id="L53">    private static final java.util.Set&lt;String&gt; PRIORIDADES = java.util.Set.of(&quot;BAJA&quot;, &quot;MEDIA&quot;, &quot;ALTA&quot;, &quot;URGENTE&quot;);</span>
+
+    /*
+     * PC-1: el analista asigna la prioridad del expediente.
+     *
+     * PATCH /api/primer-contacto/expedientes/folio/PC-A1B2C3D4/prioridad  { &quot;prioridad&quot;: &quot;ALTA&quot; }
+     * Solo BAJA, MEDIA, ALTA o URGENTE; cualquier otro valor responde 400.
+     * Rol ANALISTA_PRIMER_CONTACTO (lo exige SecurityConfig para /api/primer-contacto/**).
+     */
+    @PatchMapping(&quot;/folio/{folio}/prioridad&quot;)
+    public org.springframework.http.ResponseEntity&lt;?&gt; cambiarPrioridad(
+            @PathVariable String folio,
+            @RequestBody java.util.Map&lt;String, String&gt; cuerpo
+    ) {
+<span class="nc bnc" id="L67" title="All 4 branches missed.">        String valor = cuerpo == null || cuerpo.get(&quot;prioridad&quot;) == null</span>
+<span class="nc" id="L68">                ? &quot;&quot; : cuerpo.get(&quot;prioridad&quot;).trim().toUpperCase(java.util.Locale.ROOT);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (!PRIORIDADES.contains(valor)) {</span>
+<span class="nc" id="L70">            return org.springframework.http.ResponseEntity.badRequest()</span>
+<span class="nc" id="L71">                    .body(java.util.Map.of(&quot;error&quot;, &quot;Prioridad inválida. Usa BAJA, MEDIA, ALTA o URGENTE.&quot;));</span>
+        }
+<span class="nc" id="L73">        return org.springframework.http.ResponseEntity.ok(expedienteAnalisisService.cambiarPrioridad(folio, valor));</span>
+    }
+
+    /*
+     * CU-PC-03: el analista abre el expediente para trabajarlo.
+     * TURNADA -&gt; EN_ANALISIS; en otro estado solo devuelve el expediente.
+     *
+     * POST /api/primer-contacto/expedientes/folio/PC-A1B2C3D4/iniciar-analisis
+     */
+    @PostMapping(&quot;/folio/{folio}/iniciar-analisis&quot;)
+    public ExpedienteAnalisisDTO iniciarAnalisis(
+            @PathVariable String folio,
+            Authentication authentication
+    ) {
+<span class="nc" id="L87">        return expedienteAnalisisService.iniciarAnalisis(</span>
+                folio,
+<span class="nc" id="L89">                analistaAutenticadoService.obtenerAnalista(authentication)</span>
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

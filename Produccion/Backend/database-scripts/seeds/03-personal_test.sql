@@ -15,10 +15,10 @@ INSERT INTO personal_administrativo (
     fecha_creacion,
     ultimo_login
 ) VALUES (
-    'Administrador de Prueba',
-    'TEST-ADMIN-001',
-    'admin.test@ipn.mx',
-    'ADMIN_SISTEMAS',
+    'Defensora de Prueba',
+    'TEST-DEF-001',
+    'defensora.test@ipn.mx',
+    'DEFENSOR',
     '$2a$10$rn5aaGoXkHAgCy3W2BStResAsYqZ.PhMW3iT6HVhfaDuSesCt4/4i',
     false,
     false,

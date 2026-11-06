@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SeguimientoQuejasService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.admin_service.service</a> &gt; <span class="el_source">SeguimientoQuejasService.java</span></div><h1>SeguimientoQuejasService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.admin_service.service;
+
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Conteo;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.DetalleQueja;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Etapa;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Evento;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Evidencia;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.FilaQueja;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Filtros;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Mes;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.PaginaQuejas;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.Persona;
+import ipn.escom.defensoria.admin_service.model.SeguimientoModels.UnidadConteo;
+
+/**
+ * Seguimiento de quejas para el Panel de la Defensora (2026-10-16): tablero con cruces de
+ * información (etapas, meses, unidades, Recepción, abogados, motivos de rechazo), explorador
+ * de quejas con filtros y detalle de solo lectura. Todo con SQL de solo lectura: admin-service no
+ * mapea la tabla quejas como entidad (es de queja-service).
+ */
+@Service
+public class SeguimientoQuejasService {
+
+    /** Etapa del proceso según quejas.estatus. */
+    static final String ETAPA_SQL = &quot;&quot;&quot;
+            CASE
+              WHEN q.estatus IS NULL OR q.estatus IN ('RECIBIDA','EN_VALIDACION','CORREGIDA') THEN 'RECEPCION'
+              WHEN q.estatus = 'RECHAZADA' THEN 'CON_QUEJOSO'
+              WHEN q.estatus IN ('TURNADA','EN_ANALISIS','PROCEDENTE') THEN 'PRIMER_CONTACTO'
+              WHEN q.estatus IN ('RECIBIDA_SUBDEFENSORIA','EN_INVESTIGACION','EN_ESPERA_OFICIO','ELABORO_ACUERDO',
+                                 'PENDIENTE_CONCILIACION','PENDIENTE_CONCLUSION') THEN 'SUBDEFENSORIA'
+              WHEN q.estatus IN ('CONCLUIDA','IMPROCEDENTE','REMITIDA','CANCELADA') THEN 'CERRADA'
+              ELSE 'OTRA'
+            END&quot;&quot;&quot;;
+
+<span class="nc" id="L50">    static final Map&lt;String, String&gt; ETAPAS = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L51">    static final Map&lt;String, String&gt; ESTATUS = new LinkedHashMap&lt;&gt;();</span>
+
+    static {
+<span class="nc" id="L54">        ETAPAS.put(&quot;RECEPCION&quot;, &quot;Recepción&quot;);</span>
+<span class="nc" id="L55">        ETAPAS.put(&quot;CON_QUEJOSO&quot;, &quot;Con el quejoso (observaciones)&quot;);</span>
+<span class="nc" id="L56">        ETAPAS.put(&quot;PRIMER_CONTACTO&quot;, &quot;Primer Contacto&quot;);</span>
+<span class="nc" id="L57">        ETAPAS.put(&quot;SUBDEFENSORIA&quot;, &quot;Subdefensoría&quot;);</span>
+<span class="nc" id="L58">        ETAPAS.put(&quot;CERRADA&quot;, &quot;Cerradas&quot;);</span>
+
+<span class="nc" id="L60">        ESTATUS.put(&quot;RECIBIDA&quot;, &quot;Nueva, sin tomar&quot;);</span>
+<span class="nc" id="L61">        ESTATUS.put(&quot;EN_VALIDACION&quot;, &quot;En validación&quot;);</span>
+<span class="nc" id="L62">        ESTATUS.put(&quot;CORREGIDA&quot;, &quot;Corregida por el quejoso&quot;);</span>
+<span class="nc" id="L63">        ESTATUS.put(&quot;RECHAZADA&quot;, &quot;Con observaciones&quot;);</span>
+<span class="nc" id="L64">        ESTATUS.put(&quot;TURNADA&quot;, &quot;Turnada&quot;);</span>
+<span class="nc" id="L65">        ESTATUS.put(&quot;EN_ANALISIS&quot;, &quot;En análisis&quot;);</span>
+<span class="nc" id="L66">        ESTATUS.put(&quot;PROCEDENTE&quot;, &quot;Procedente&quot;);</span>
+<span class="nc" id="L67">        ESTATUS.put(&quot;RECIBIDA_SUBDEFENSORIA&quot;, &quot;Recibida en Subdefensoría&quot;);</span>
+<span class="nc" id="L68">        ESTATUS.put(&quot;EN_INVESTIGACION&quot;, &quot;En investigación&quot;);</span>
+<span class="nc" id="L69">        ESTATUS.put(&quot;EN_ESPERA_OFICIO&quot;, &quot;En espera de oficio&quot;);</span>
+<span class="nc" id="L70">        ESTATUS.put(&quot;ELABORO_ACUERDO&quot;, &quot;Acuerdo elaborado&quot;);</span>
+<span class="nc" id="L71">        ESTATUS.put(&quot;PENDIENTE_CONCILIACION&quot;, &quot;Pendiente de conciliación&quot;);</span>
+<span class="nc" id="L72">        ESTATUS.put(&quot;PENDIENTE_CONCLUSION&quot;, &quot;Pendiente de conclusión&quot;);</span>
+<span class="nc" id="L73">        ESTATUS.put(&quot;CONCLUIDA&quot;, &quot;Concluida&quot;);</span>
+<span class="nc" id="L74">        ESTATUS.put(&quot;IMPROCEDENTE&quot;, &quot;Improcedente&quot;);</span>
+<span class="nc" id="L75">        ESTATUS.put(&quot;REMITIDA&quot;, &quot;Remitida&quot;);</span>
+<span class="nc" id="L76">        ESTATUS.put(&quot;CANCELADA&quot;, &quot;Cancelada por el quejoso&quot;);</span>
+    }
+
+<span class="nc" id="L79">    private static final String[] MESES = {&quot;Ene&quot;, &quot;Feb&quot;, &quot;Mar&quot;, &quot;Abr&quot;, &quot;May&quot;, &quot;Jun&quot;, &quot;Jul&quot;, &quot;Ago&quot;, &quot;Sep&quot;, &quot;Oct&quot;, &quot;Nov&quot;, &quot;Dic&quot;};</span>
+
+    private final JdbcTemplate jdbc;
+    private final NamedParameterJdbcTemplate named;
+
+<span class="nc" id="L84">    public SeguimientoQuejasService(JdbcTemplate jdbc, NamedParameterJdbcTemplate named) {</span>
+<span class="nc" id="L85">        this.jdbc = jdbc;</span>
+<span class="nc" id="L86">        this.named = named;</span>
+<span class="nc" id="L87">    }</span>
+
+    // ======================================================================================
+    // Etapas y meses (los usa el Panel general y la Carga de trabajo)
+    // ======================================================================================
+
+    /** Quejas por etapa con su desglose por estatus (siempre las 5 etapas, aunque estén en 0). */
+    public List&lt;Etapa&gt; etapas() {
+<span class="nc" id="L95">        Map&lt;String, List&lt;Conteo&gt;&gt; desglose = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L96">        ETAPAS.keySet().forEach(e -&gt; desglose.put(e, new ArrayList&lt;&gt;()));</span>
+<span class="nc" id="L97">        jdbc.query(&quot;SELECT %s AS etapa, coalesce(q.estatus,'RECIBIDA') AS estatus, count(*) AS total FROM quejas q GROUP BY 1, 2 ORDER BY 3 DESC&quot;</span>
+<span class="nc" id="L98">                        .formatted(ETAPA_SQL),</span>
+                rs -&gt; {
+<span class="nc" id="L100">                    desglose.computeIfAbsent(rs.getString(&quot;etapa&quot;), x -&gt; new ArrayList&lt;&gt;())</span>
+<span class="nc" id="L101">                            .add(new Conteo(rs.getString(&quot;estatus&quot;), etiquetaEstatus(rs.getString(&quot;estatus&quot;)), rs.getLong(&quot;total&quot;)));</span>
+<span class="nc" id="L102">                });</span>
+<span class="nc" id="L103">        List&lt;Etapa&gt; etapas = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L104">        desglose.forEach((clave, lista) -&gt; {</span>
+<span class="nc" id="L105">            long total = lista.stream().mapToLong(Conteo::total).sum();</span>
+<span class="nc bnc" id="L106" title="All 4 branches missed.">            if (total &gt; 0 || ETAPAS.containsKey(clave)) {</span>
+<span class="nc" id="L107">                etapas.add(new Etapa(clave, ETAPAS.getOrDefault(clave, &quot;Otras&quot;), total, lista));</span>
+            }
+<span class="nc" id="L109">        });</span>
+<span class="nc" id="L110">        return etapas;</span>
+    }
+
+    /** Últimos {@code meses} meses (incluido el actual): recibidas y atendidas por Recepción. */
+    public List&lt;Mes&gt; porMes(int meses) {
+<span class="nc" id="L115">        return jdbc.query(&quot;&quot;&quot;</span>
+                SELECT to_char(m.mes, 'YYYY-MM') AS clave, extract(month FROM m.mes)::int AS mes_num,
+                       extract(year FROM m.mes)::int AS anio,
+                       (SELECT count(*) FROM quejas q WHERE date_trunc('month', q.fecha_creacion) = m.mes) AS recibidas,
+                       (SELECT count(*) FROM quejas q WHERE date_trunc('month', q.fecha_validacion) = m.mes) AS atendidas
+                  FROM generate_series(date_trunc('month', now()) - (? * interval '1 month'), date_trunc('month', now()),
+                                       interval '1 month') AS m(mes)
+                 ORDER BY m.mes
+                &quot;&quot;&quot;,
+<span class="nc" id="L124">                (rs, i) -&gt; new Mes(rs.getString(&quot;clave&quot;),</span>
+<span class="nc" id="L125">                        MESES[rs.getInt(&quot;mes_num&quot;) - 1] + &quot; &quot; + String.valueOf(rs.getInt(&quot;anio&quot;)).substring(2),</span>
+<span class="nc" id="L126">                        rs.getLong(&quot;recibidas&quot;), rs.getLong(&quot;atendidas&quot;)),</span>
+<span class="nc" id="L127">                Math.max(0, meses - 1));</span>
+    }
+
+    // ======================================================================================
+    // Unidades
+    // ======================================================================================
+
+    /** Dependencias y unidades académicas con quejas, de la que más tiene a la que menos. */
+    public List&lt;UnidadConteo&gt; unidades(String texto, int limite) {
+<span class="nc" id="L136">        MapSqlParameterSource p = new MapSqlParameterSource();</span>
+<span class="nc" id="L137">        StringBuilder where = new StringBuilder(&quot; WHERE q.unidad_academica_clave IS NOT NULL &quot;);</span>
+<span class="nc bnc" id="L138" title="All 4 branches missed.">        if (texto != null &amp;&amp; !texto.isBlank()) {</span>
+<span class="nc" id="L139">            where.append(&quot; AND (lower(q.unidad_academica_clave) LIKE :t OR lower(coalesce(d.nombre,'')) LIKE :t&quot;</span>
+                    + &quot; OR lower(coalesce(d.abreviatura,'')) LIKE :t) &quot;);
+<span class="nc" id="L141">            p.addValue(&quot;t&quot;, &quot;%&quot; + texto.trim().toLowerCase() + &quot;%&quot;);</span>
+        }
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        p.addValue(&quot;limite&quot;, limite &lt;= 0 ? 500 : limite);</span>
+<span class="nc" id="L144">        return named.query(&quot;&quot;&quot;</span>
+                SELECT q.unidad_academica_clave AS clave, d.nombre, d.abreviatura, d.tipo,
+                       count(*) AS total,
+                       count(*) FILTER (WHERE %s NOT IN ('CERRADA')) AS en_tramite,
+                       count(*) FILTER (WHERE %s = 'CERRADA') AS cerradas,
+                       max(q.fecha_creacion) AS ultima
+                  FROM quejas q
+                  LEFT JOIN dependencias d ON d.clave = q.unidad_academica_clave
+<span class="nc" id="L152">                &quot;&quot;&quot;.formatted(ETAPA_SQL, ETAPA_SQL) + where + &quot;&quot;&quot;</span>
+                 GROUP BY q.unidad_academica_clave, d.nombre, d.abreviatura, d.tipo
+                 ORDER BY total DESC, clave
+                 LIMIT :limite
+                &quot;&quot;&quot;,
+                p,
+<span class="nc" id="L158">                (rs, i) -&gt; new UnidadConteo(rs.getString(&quot;clave&quot;), rs.getString(&quot;nombre&quot;), rs.getString(&quot;abreviatura&quot;),</span>
+<span class="nc" id="L159">                        rs.getString(&quot;tipo&quot;), rs.getLong(&quot;total&quot;), rs.getLong(&quot;en_tramite&quot;), rs.getLong(&quot;cerradas&quot;),</span>
+<span class="nc" id="L160">                        ts(rs.getTimestamp(&quot;ultima&quot;))));</span>
+    }
+
+    // ======================================================================================
+    // Explorador de quejas
+    // ======================================================================================
+
+    private static final String NOMBRE_QUEJOSO_SQL =
+            &quot;trim(concat_ws(' ', q.nombre_quejoso, q.apellido1_quejoso, q.apellido2_quejoso))&quot;;
+
+    /** Estado resumido de la queja para la Defensora (columna &quot;Estado&quot; del explorador). */
+    static final String ESTADO_SQL = &quot;&quot;&quot;
+            CASE
+              WHEN q.estatus IS NULL OR q.estatus IN ('RECIBIDA','CORREGIDA') THEN 'SIN_ATENCION'
+              WHEN q.estatus = 'RECHAZADA' THEN 'CON_QUEJOSO'
+              WHEN q.estatus IN ('CONCLUIDA','IMPROCEDENTE','REMITIDA','CANCELADA') THEN 'CERRADA'
+              ELSE 'EN_TRAMITE'
+            END&quot;&quot;&quot;;
+
+<span class="nc" id="L179">    static final Map&lt;String, String&gt; ESTADOS = new LinkedHashMap&lt;&gt;();</span>
+
+    static {
+<span class="nc" id="L182">        ESTADOS.put(&quot;SIN_ATENCION&quot;, &quot;Sin atención&quot;);</span>
+<span class="nc" id="L183">        ESTADOS.put(&quot;EN_TRAMITE&quot;, &quot;En trámite&quot;);</span>
+<span class="nc" id="L184">        ESTADOS.put(&quot;CON_QUEJOSO&quot;, &quot;Con el quejoso&quot;);</span>
+<span class="nc" id="L185">        ESTADOS.put(&quot;CERRADA&quot;, &quot;Cerrada&quot;);</span>
+    }
+
+    /** Ordenes permitidos (la clave viene del front; nunca se concatena texto del usuario). */
+<span class="nc" id="L189">    private static final Map&lt;String, String&gt; ORDENES = Map.of(</span>
+            &quot;reciente&quot;, &quot;q.fecha_creacion DESC, q.id DESC&quot;,
+            &quot;antigua&quot;, &quot;q.fecha_creacion ASC, q.id ASC&quot;,
+            &quot;folio&quot;, &quot;q.numero_folio ASC&quot;,
+            &quot;unidad&quot;, &quot;unidad_nombre ASC NULLS LAST, q.fecha_creacion DESC&quot;,
+            &quot;quejoso&quot;, &quot;quejoso ASC, q.fecha_creacion DESC&quot;);
+
+    /**
+     * Explorador de quejas. {@code desde}/{@code hasta} son meses (AAAA-MM, inclusivos);
+     * {@code mes} se conserva para los enlaces de la gráfica mensual. {@code tamanio} llega
+     * hasta 5000 para que &quot;Exportar&quot; pueda bajar todo el resultado de una vez.
+     */
+    public PaginaQuejas quejas(Map&lt;String, String&gt; f, int pagina, int tamanio) {
+<span class="nc" id="L202">        String etapa = f.get(&quot;etapa&quot;);</span>
+<span class="nc" id="L203">        String estatus = f.get(&quot;estatus&quot;);</span>
+<span class="nc" id="L204">        String unidad = f.get(&quot;unidad&quot;);</span>
+<span class="nc" id="L205">        String abogado = f.get(&quot;abogado&quot;);</span>
+<span class="nc" id="L206">        String recepcionista = f.get(&quot;recepcionista&quot;);</span>
+<span class="nc" id="L207">        String mes = f.get(&quot;mes&quot;);</span>
+<span class="nc" id="L208">        String texto = f.get(&quot;q&quot;);</span>
+<span class="nc" id="L209">        MapSqlParameterSource p = new MapSqlParameterSource();</span>
+<span class="nc" id="L210">        StringBuilder where = new StringBuilder(&quot; WHERE 1=1 &quot;);</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">        if (vacio(etapa) != null) {</span>
+<span class="nc" id="L212">            where.append(&quot; AND &quot;).append(ETAPA_SQL).append(&quot; = :etapa &quot;);</span>
+<span class="nc" id="L213">            p.addValue(&quot;etapa&quot;, etapa.trim().toUpperCase());</span>
+        }
+<span class="nc bnc" id="L215" title="All 2 branches missed.">        if (vacio(estatus) != null) {</span>
+<span class="nc" id="L216">            where.append(&quot; AND coalesce(q.estatus,'RECIBIDA') = :estatus &quot;);</span>
+<span class="nc" id="L217">            p.addValue(&quot;estatus&quot;, estatus.trim().toUpperCase());</span>
+        }
+<span class="nc bnc" id="L219" title="All 2 branches missed.">        if (vacio(f.get(&quot;estado&quot;)) != null) {</span>
+<span class="nc" id="L220">            where.append(&quot; AND &quot;).append(ESTADO_SQL).append(&quot; = :estado &quot;);</span>
+<span class="nc" id="L221">            p.addValue(&quot;estado&quot;, f.get(&quot;estado&quot;).trim().toUpperCase());</span>
+        }
+<span class="nc bnc" id="L223" title="All 2 branches missed.">        if (vacio(unidad) != null) {</span>
+<span class="nc" id="L224">            where.append(&quot; AND q.unidad_academica_clave = :unidad &quot;);</span>
+<span class="nc" id="L225">            p.addValue(&quot;unidad&quot;, unidad.trim());</span>
+        }
+<span class="nc bnc" id="L227" title="All 2 branches missed.">        if (vacio(abogado) != null) {</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">            if (&quot;SIN_ASIGNAR&quot;.equalsIgnoreCase(abogado.trim())) {</span>
+<span class="nc" id="L229">                where.append(&quot; AND (q.defensor_asignado IS NULL OR trim(q.defensor_asignado) = '') &quot;);</span>
+            } else {
+<span class="nc" id="L231">                where.append(&quot; AND lower(trim(q.defensor_asignado)) = lower(:abogado) &quot;);</span>
+<span class="nc" id="L232">                p.addValue(&quot;abogado&quot;, abogado.trim());</span>
+            }
+        }
+<span class="nc bnc" id="L235" title="All 2 branches missed.">        if (vacio(recepcionista) != null) {</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">            if (&quot;NADIE&quot;.equalsIgnoreCase(recepcionista.trim())) {</span>
+<span class="nc" id="L237">                where.append(&quot; AND q.revisando_por IS NULL AND q.validado_por IS NULL &quot;);</span>
+            } else {
+<span class="nc" id="L239">                where.append(&quot; AND (lower(q.revisando_por) = lower(:recep) OR lower(q.validado_por) = lower(:recep)) &quot;);</span>
+<span class="nc" id="L240">                p.addValue(&quot;recep&quot;, recepcionista.trim());</span>
+            }
+        }
+<span class="nc bnc" id="L243" title="All 2 branches missed.">        if (vacio(mes) != null) {</span>
+<span class="nc" id="L244">            where.append(&quot; AND to_char(q.fecha_creacion, 'YYYY-MM') = :mes &quot;);</span>
+<span class="nc" id="L245">            p.addValue(&quot;mes&quot;, mes.trim());</span>
+        }
+<span class="nc bnc" id="L247" title="All 2 branches missed.">        if (vacio(f.get(&quot;desde&quot;)) != null) {</span>
+<span class="nc" id="L248">            where.append(&quot; AND to_char(q.fecha_creacion, 'YYYY-MM') &gt;= :desde &quot;);</span>
+<span class="nc" id="L249">            p.addValue(&quot;desde&quot;, f.get(&quot;desde&quot;).trim().substring(0, Math.min(7, f.get(&quot;desde&quot;).trim().length())));</span>
+        }
+<span class="nc bnc" id="L251" title="All 2 branches missed.">        if (vacio(f.get(&quot;hasta&quot;)) != null) {</span>
+<span class="nc" id="L252">            where.append(&quot; AND to_char(q.fecha_creacion, 'YYYY-MM') &lt;= :hasta &quot;);</span>
+<span class="nc" id="L253">            p.addValue(&quot;hasta&quot;, f.get(&quot;hasta&quot;).trim().substring(0, Math.min(7, f.get(&quot;hasta&quot;).trim().length())));</span>
+        }
+<span class="nc bnc" id="L255" title="All 2 branches missed.">        if (vacio(f.get(&quot;motivo&quot;)) != null) {</span>
+<span class="nc" id="L256">            String condicion = PanelDefensoraService.condicionMotivo(f.get(&quot;motivo&quot;).trim().toUpperCase());</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">            if (condicion != null) {</span>
+<span class="nc" id="L258">                where.append(&quot; AND (&quot;).append(condicion).append(&quot;) &quot;);</span>
+            }
+        }
+<span class="nc bnc" id="L261" title="All 2 branches missed.">        if (vacio(texto) != null) {</span>
+<span class="nc" id="L262">            where.append(&quot; AND (lower(q.numero_folio) LIKE :t OR lower(&quot;).append(NOMBRE_QUEJOSO_SQL)</span>
+<span class="nc" id="L263">                    .append(&quot;) LIKE :t OR lower(coalesce(q.defensor_asignado,'')) LIKE :t&quot;</span>
+                            + &quot; OR lower(trim(concat_ws(' ', q.nombre_denunciado, q.apellido1_denunciado))) LIKE :t&quot;
+                            + &quot; OR lower(coalesce(q.descripcion,'')) LIKE :t) &quot;);
+<span class="nc" id="L266">            p.addValue(&quot;t&quot;, &quot;%&quot; + texto.trim().toLowerCase().replace(&quot;%&quot;, &quot;&quot;) + &quot;%&quot;);</span>
+        }
+
+        // Prioridad: la asigna Primer Contacto en su expediente (si esa tabla existe en la base).
+<span class="nc" id="L270">        boolean conPrioridad = existeTabla(&quot;expedientes_primer_contacto&quot;);</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">        String prioridadSql = conPrioridad ? &quot;upper(epc.prioridad)&quot; : &quot;CAST(NULL AS varchar)&quot;;</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">        if (vacio(f.get(&quot;prioridad&quot;)) != null) {</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">            if (conPrioridad) {</span>
+<span class="nc" id="L274">                where.append(&quot; AND upper(coalesce(epc.prioridad,'SIN')) = :prioridad &quot;);</span>
+<span class="nc" id="L275">                p.addValue(&quot;prioridad&quot;, f.get(&quot;prioridad&quot;).trim().toUpperCase());</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">            } else if (!&quot;SIN&quot;.equalsIgnoreCase(f.get(&quot;prioridad&quot;).trim())) {</span>
+<span class="nc" id="L277">                where.append(&quot; AND 1=0 &quot;);</span>
+            }
+        }
+
+<span class="nc bnc" id="L281" title="All 2 branches missed.">        int tam = Math.max(1, Math.min(tamanio &lt;= 0 ? 20 : tamanio, 5000));</span>
+<span class="nc" id="L282">        int pag = Math.max(0, pagina);</span>
+        String from = &quot;&quot;&quot;
+                  FROM quejas q
+                  LEFT JOIN dependencias d ON d.clave = q.unidad_academica_clave
+                  LEFT JOIN personal_administrativo pr ON lower(pr.correo_institucional) = lower(q.revisando_por)
+                  LEFT JOIN personal_administrativo pv ON lower(pv.correo_institucional) = lower(q.validado_por)
+<span class="nc bnc" id="L288" title="All 2 branches missed.">                &quot;&quot;&quot; + (conPrioridad</span>
+<span class="nc" id="L289">                ? &quot; LEFT JOIN expedientes_primer_contacto epc ON epc.folio_origen = q.numero_folio &quot;</span>
+<span class="nc" id="L290">                : &quot;&quot;);</span>
+<span class="nc" id="L291">        Long total = named.queryForObject(&quot;SELECT count(*) &quot; + from + where, p, Long.class);</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        long totalElementos = total == null ? 0 : total;</span>
+
+<span class="nc" id="L294">        String orden = ORDENES.getOrDefault(f.getOrDefault(&quot;orden&quot;, &quot;reciente&quot;), ORDENES.get(&quot;reciente&quot;));</span>
+<span class="nc" id="L295">        p.addValue(&quot;limite&quot;, tam).addValue(&quot;desplazamiento&quot;, (long) pag * tam);</span>
+<span class="nc" id="L296">        List&lt;FilaQueja&gt; filas = named.query(&quot;&quot;&quot;</span>
+                SELECT q.numero_folio, q.fecha_creacion, %s AS quejoso, q.unidad_academica_clave,
+                       coalesce(d.abreviatura, d.nombre, q.unidad_academica_clave) AS unidad_nombre, %s AS etapa,
+                       coalesce(q.estatus,'RECIBIDA') AS estatus,
+                       CASE WHEN q.estatus = 'EN_VALIDACION'
+                            THEN coalesce(pr.nombre_completo, q.revisando_por_nombre, q.revisando_por)
+                            ELSE coalesce(pv.nombre_completo, q.validado_por) END AS recepcionista,
+                       q.defensor_asignado, q.folio_primer_contacto, q.origen_registro,
+                       %s AS estado, %s AS prioridad,
+                       floor(extract(epoch FROM (now() - q.fecha_creacion)) / 86400)::bigint AS dias
+<span class="nc" id="L306">                &quot;&quot;&quot;.formatted(NOMBRE_QUEJOSO_SQL, ETAPA_SQL, ESTADO_SQL, prioridadSql) + from + where</span>
+                        + &quot; ORDER BY &quot; + orden + &quot; LIMIT :limite OFFSET :desplazamiento&quot;,
+                p,
+<span class="nc" id="L309">                (rs, i) -&gt; new FilaQueja(rs.getString(1), ts(rs.getTimestamp(2)), rs.getString(3), rs.getString(4),</span>
+<span class="nc" id="L310">                        rs.getString(5), rs.getString(6), rs.getString(7), etiquetaEstatus(rs.getString(7)),</span>
+<span class="nc" id="L311">                        rs.getString(8), &quot;EN_VALIDACION&quot;.equals(rs.getString(7)), rs.getString(9), rs.getString(10),</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">                        &quot;MANUAL&quot;.equals(rs.getString(11)) ? &quot;Ventanilla&quot; : &quot;Web&quot;,</span>
+<span class="nc" id="L313">                        rs.getString(&quot;estado&quot;), ESTADOS.getOrDefault(rs.getString(&quot;estado&quot;), rs.getString(&quot;estado&quot;)),</span>
+<span class="nc" id="L314">                        rs.getString(&quot;prioridad&quot;), rs.getLong(&quot;dias&quot;)));</span>
+
+<span class="nc" id="L316">        int totalPaginas = (int) Math.ceil(totalElementos / (double) tam);</span>
+<span class="nc" id="L317">        return new PaginaQuejas(filas, pag, tam, totalElementos, totalPaginas);</span>
+    }
+
+    public Filtros filtros() {
+<span class="nc" id="L321">        List&lt;Persona&gt; recep = jdbc.query(&quot;&quot;&quot;</span>
+                SELECT correo_institucional, nombre_completo FROM personal_administrativo
+                 WHERE rol = 'RECEPCIONISTA' ORDER BY nombre_completo
+<span class="nc" id="L324">                &quot;&quot;&quot;, (rs, i) -&gt; new Persona(rs.getString(1), rs.getString(2)));</span>
+<span class="nc" id="L325">        List&lt;String&gt; abogados = jdbc.queryForList(&quot;&quot;&quot;</span>
+                SELECT DISTINCT nombre FROM (
+                  SELECT nombre_completo AS nombre FROM personal_administrativo WHERE rol IN ('SUBDEFENSOR','DEFENSOR')
+                  UNION SELECT defensor_asignado FROM quejas WHERE defensor_asignado IS NOT NULL AND defensor_asignado &lt;&gt; ''
+                ) x ORDER BY nombre
+                &quot;&quot;&quot;, String.class);
+<span class="nc" id="L331">        List&lt;Conteo&gt; etapas = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L332">        ETAPAS.forEach((k, v) -&gt; etapas.add(new Conteo(k, v, 0)));</span>
+<span class="nc" id="L333">        List&lt;Conteo&gt; estados = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L334">        ESTADOS.forEach((k, v) -&gt; estados.add(new Conteo(k, v, 0)));</span>
+<span class="nc" id="L335">        return new Filtros(recep, abogados, etapas, estados);</span>
+    }
+
+    // ======================================================================================
+    // Detalle de solo lectura
+    // ======================================================================================
+
+    public DetalleQueja detalle(String folio) {
+<span class="nc" id="L343">        List&lt;Map&lt;String, Object&gt;&gt; filas = jdbc.queryForList(&quot;&quot;&quot;</span>
+                SELECT q.*, %s AS etapa, coalesce(d.nombre, q.unidad_academica_clave) AS unidad_nombre,
+                       pr.nombre_completo AS nombre_revisando, pv.nombre_completo AS nombre_valido
+                  FROM quejas q
+                  LEFT JOIN dependencias d ON d.clave = q.unidad_academica_clave
+                  LEFT JOIN personal_administrativo pr ON lower(pr.correo_institucional) = lower(q.revisando_por)
+                  LEFT JOIN personal_administrativo pv ON lower(pv.correo_institucional) = lower(q.validado_por)
+                 WHERE q.numero_folio = ?
+<span class="nc" id="L351">                &quot;&quot;&quot;.formatted(ETAPA_SQL), folio);</span>
+<span class="nc bnc" id="L352" title="All 2 branches missed.">        if (filas.isEmpty()) {</span>
+<span class="nc" id="L353">            throw new RuntimeException(&quot;No se encontró la queja &quot; + folio + &quot;.&quot;);</span>
+        }
+<span class="nc" id="L355">        Map&lt;String, Object&gt; q = filas.get(0);</span>
+<span class="nc" id="L356">        Long id = ((Number) q.get(&quot;id&quot;)).longValue();</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">        String estatus = str(q, &quot;estatus&quot;) == null ? &quot;RECIBIDA&quot; : str(q, &quot;estatus&quot;);</span>
+<span class="nc" id="L358">        boolean atendiendo = &quot;EN_VALIDACION&quot;.equals(estatus);</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">        String recepcionista = atendiendo</span>
+<span class="nc" id="L360">                ? primero(str(q, &quot;nombre_revisando&quot;), str(q, &quot;revisando_por_nombre&quot;), str(q, &quot;revisando_por&quot;))</span>
+<span class="nc" id="L361">                : primero(str(q, &quot;nombre_valido&quot;), str(q, &quot;validado_por&quot;));</span>
+
+<span class="nc" id="L363">        List&lt;Evidencia&gt; evidencias = jdbc.query(&quot;&quot;&quot;</span>
+                SELECT id, nombre_archivo, tipo_mime, tipo, tamanio_bytes, fecha_subida
+                  FROM queja_evidencias WHERE queja_id = ? ORDER BY id
+                &quot;&quot;&quot;,
+<span class="nc" id="L367">                (rs, i) -&gt; new Evidencia(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4),</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">                        rs.getObject(5) == null ? null : rs.getLong(5), ts(rs.getTimestamp(6))), id);</span>
+
+<span class="nc bnc" id="L370" title="All 2 branches missed.">        long respuestas = existeTabla(&quot;respuestas_denunciado&quot;)</span>
+<span class="nc" id="L371">                ? contar(&quot;SELECT count(*) FROM respuestas_denunciado WHERE folio_queja = '&quot; + folio.replace(&quot;'&quot;, &quot;''&quot;) + &quot;'&quot;)</span>
+<span class="nc" id="L372">                : 0;</span>
+
+<span class="nc" id="L374">        String nombreValido = primero(str(q, &quot;nombre_valido&quot;), str(q, &quot;validado_por&quot;));</span>
+<span class="nc" id="L375">        List&lt;Evento&gt; linea = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L376">        linea.add(new Evento(fecha(q, &quot;fecha_creacion&quot;), &quot;Queja recibida&quot;,</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">                &quot;MANUAL&quot;.equals(str(q, &quot;origen_registro&quot;)) ? &quot;Capturada en ventanilla&quot; : &quot;Registrada en el portal&quot;));</span>
+<span class="nc bnc" id="L378" title="All 4 branches missed.">        if (atendiendo &amp;&amp; fecha(q, &quot;fecha_inicio_revision&quot;) != null) {</span>
+<span class="nc" id="L379">            linea.add(new Evento(fecha(q, &quot;fecha_inicio_revision&quot;), &quot;En validación&quot;, &quot;La atiende &quot; + recepcionista));</span>
+        }
+<span class="nc bnc" id="L381" title="All 4 branches missed.">        if (str(q, &quot;motivo_rechazo&quot;) != null &amp;&amp; !str(q, &quot;motivo_rechazo&quot;).isBlank()) {</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">            linea.add(new Evento(&quot;RECHAZADA&quot;.equals(estatus) ? fecha(q, &quot;fecha_validacion&quot;) : null,</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">                    &quot;Regresada con observaciones&quot;, &quot;RECHAZADA&quot;.equals(estatus) ? &quot;Por &quot; + nombreValido : &quot;Antes de ser corregida&quot;));</span>
+        }
+<span class="nc bnc" id="L385" title="All 2 branches missed.">        if (fecha(q, &quot;fecha_turnado&quot;) != null) {</span>
+<span class="nc" id="L386">            linea.add(new Evento(fecha(q, &quot;fecha_turnado&quot;), &quot;Turnada a Primer Contacto&quot;,</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">                    &quot;Validó &quot; + nombreValido + (str(q, &quot;defensor_asignado&quot;) != null ? &quot; · Abogado: &quot; + str(q, &quot;defensor_asignado&quot;) : &quot;&quot;)));</span>
+        }
+<span class="nc bnc" id="L389" title="All 4 branches missed.">        if (!&quot;TURNADA&quot;.equals(estatus) &amp;&amp; &quot;PRIMER_CONTACTO,SUBDEFENSORIA,CERRADA&quot;.contains(str(q, &quot;etapa&quot;))) {</span>
+<span class="nc" id="L390">            linea.add(new Evento(null, &quot;Estatus actual: &quot; + etiquetaEstatus(estatus), ETAPAS.get(str(q, &quot;etapa&quot;))));</span>
+        }
+
+<span class="nc" id="L393">        return new DetalleQueja(</span>
+<span class="nc" id="L394">                folio, str(q, &quot;etapa&quot;), ETAPAS.getOrDefault(str(q, &quot;etapa&quot;), &quot;Otra&quot;), estatus, etiquetaEstatus(estatus),</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">                &quot;MANUAL&quot;.equals(str(q, &quot;origen_registro&quot;)) ? &quot;Ventanilla&quot; : &quot;Web&quot;, fecha(q, &quot;fecha_creacion&quot;),</span>
+<span class="nc" id="L396">                primero(String.join(&quot; &quot;, noNulos(str(q, &quot;nombre_quejoso&quot;), str(q, &quot;apellido1_quejoso&quot;), str(q, &quot;apellido2_quejoso&quot;))).trim(),</span>
+<span class="nc" id="L397">                        str(q, &quot;correo_institucional&quot;)),</span>
+<span class="nc" id="L398">                str(q, &quot;correo_institucional&quot;), str(q, &quot;telefono_contacto&quot;), dia(q, &quot;fecha_nacimiento_quejoso&quot;),</span>
+<span class="nc" id="L399">                str(q, &quot;tipo_identificacion_quejoso&quot;), str(q, &quot;numero_identificacion_quejoso&quot;),</span>
+<span class="nc" id="L400">                str(q, &quot;unidad_academica_clave&quot;), str(q, &quot;unidad_nombre&quot;), dia(q, &quot;fecha_hechos&quot;),</span>
+<span class="nc" id="L401">                String.join(&quot; &quot;, noNulos(str(q, &quot;nombre_denunciado&quot;), str(q, &quot;apellido1_denunciado&quot;), str(q, &quot;apellido2_denunciado&quot;))).trim(),</span>
+<span class="nc" id="L402">                str(q, &quot;descripcion&quot;),</span>
+<span class="nc" id="L403">                recepcionista, atendiendo, str(q, &quot;defensor_asignado&quot;), str(q, &quot;folio_primer_contacto&quot;),</span>
+<span class="nc" id="L404">                str(q, &quot;comentarios_recepcion&quot;), str(q, &quot;motivo_rechazo&quot;),</span>
+<span class="nc" id="L405">                str(q, &quot;tipo_documento_fisico&quot;), str(q, &quot;numero_oficio&quot;), dia(q, &quot;fecha_recepcion_fisica&quot;),</span>
+<span class="nc" id="L406">                str(q, &quot;ubicacion_fisica_expediente&quot;), evidencias, respuestas, linea);</span>
+    }
+
+    /** Contenido de una evidencia, solo si pertenece a la queja indicada. */
+    public Map&lt;String, Object&gt; evidencia(String folio, Long id) {
+<span class="nc" id="L411">        List&lt;Map&lt;String, Object&gt;&gt; filas = jdbc.queryForList(&quot;&quot;&quot;</span>
+                SELECT e.nombre_archivo, e.tipo_mime, e.contenido
+                  FROM queja_evidencias e JOIN quejas q ON q.id = e.queja_id
+                 WHERE q.numero_folio = ? AND e.id = ?
+                &quot;&quot;&quot;, folio, id);
+<span class="nc bnc" id="L416" title="All 2 branches missed.">        if (filas.isEmpty()) {</span>
+<span class="nc" id="L417">            throw new RuntimeException(&quot;No se encontró el archivo.&quot;);</span>
+        }
+<span class="nc" id="L419">        return filas.get(0);</span>
+    }
+
+    // ======================================================================================
+    // utilidades
+    // ======================================================================================
+
+    static String etiquetaEstatus(String estatus) {
+<span class="nc bnc" id="L427" title="All 2 branches missed.">        return estatus == null ? &quot;Nueva, sin tomar&quot; : ESTATUS.getOrDefault(estatus, estatus);</span>
+    }
+
+    private long contar(String sql) {
+<span class="nc" id="L431">        Long v = jdbc.queryForObject(sql, Long.class);</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">        return v == null ? 0 : v;</span>
+    }
+
+    private boolean existeTabla(String tabla) {
+<span class="nc" id="L436">        return Boolean.TRUE.equals(jdbc.queryForObject(&quot;SELECT to_regclass(?) IS NOT NULL&quot;, Boolean.class, &quot;public.&quot; + tabla));</span>
+    }
+
+    private static long n(Map&lt;String, Object&gt; fila, String col) {
+<span class="nc" id="L440">        Object v = fila.get(col);</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">        return v == null ? 0 : ((Number) v).longValue();</span>
+    }
+
+    private static String str(Map&lt;String, Object&gt; fila, String col) {
+<span class="nc" id="L445">        Object v = fila.get(col);</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">        return v == null ? null : v.toString();</span>
+    }
+
+    private static LocalDateTime fecha(Map&lt;String, Object&gt; fila, String col) {
+<span class="nc" id="L450">        Object v = fila.get(col);</span>
+<span class="nc bnc" id="L451" title="All 2 branches missed.">        return v instanceof Timestamp t ? t.toLocalDateTime() : null;</span>
+    }
+
+    private static LocalDate dia(Map&lt;String, Object&gt; fila, String col) {
+<span class="nc" id="L455">        Object v = fila.get(col);</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">        if (v instanceof Date d) {</span>
+<span class="nc" id="L457">            return d.toLocalDate();</span>
+        }
+<span class="nc bnc" id="L459" title="All 2 branches missed.">        return v instanceof Timestamp t ? t.toLocalDateTime().toLocalDate() : null;</span>
+    }
+
+    private static LocalDateTime ts(Timestamp t) {
+<span class="nc bnc" id="L463" title="All 2 branches missed.">        return t == null ? null : t.toLocalDateTime();</span>
+    }
+
+    private static String vacio(String s) {
+<span class="nc bnc" id="L467" title="All 4 branches missed.">        return s == null || s.isBlank() ? null : s;</span>
+    }
+
+    private static String primero(String... valores) {
+<span class="nc bnc" id="L471" title="All 2 branches missed.">        for (String v : valores) {</span>
+<span class="nc bnc" id="L472" title="All 4 branches missed.">            if (v != null &amp;&amp; !v.isBlank()) {</span>
+<span class="nc" id="L473">                return v;</span>
+            }
+        }
+<span class="nc" id="L476">        return null;</span>
+    }
+
+    private static String[] noNulos(String... valores) {
+<span class="nc bnc" id="L480" title="All 4 branches missed.">        return java.util.Arrays.stream(valores).filter(v -&gt; v != null &amp;&amp; !v.isBlank()).toArray(String[]::new);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -152,9 +152,11 @@
             <th mat-header-cell *matHeaderCellDef>Prioridad</th>
             <td mat-cell *matCellDef="let expediente">
               <mat-chip
+                [class.chip-urgent]="expediente.prioridad === 'Urgente'"
                 [class.chip-high]="expediente.prioridad === 'Alta'"
                 [class.chip-medium]="expediente.prioridad === 'Media'"
-                [class.chip-low]="expediente.prioridad === 'Baja'">
+                [class.chip-low]="expediente.prioridad === 'Baja'"
+                [class.chip-none]="expediente.prioridad === 'Sin asignar'">
                 {{ expediente.prioridad }}
               </mat-chip>
             </td>

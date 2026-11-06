@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuejaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.queja_service.service</a> &gt; <span class="el_source">QuejaService.java</span></div><h1>QuejaService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.queja_service.service;
+
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import ipn.escom.defensoria.queja_service.dto.EditarQuejaRequest;
+import ipn.escom.defensoria.queja_service.dto.EvidenciaResumen;
+import ipn.escom.defensoria.queja_service.dto.RegistroQuejaPublicaRequest;
+import ipn.escom.defensoria.queja_service.entity.Queja;
+import ipn.escom.defensoria.queja_service.entity.QuejaEvidencia;
+import ipn.escom.defensoria.queja_service.entity.QuejaTutor;
+import ipn.escom.defensoria.queja_service.repository.QuejaEvidenciaRepository;
+import ipn.escom.defensoria.queja_service.repository.CuentaQuejosoRepository;
+import ipn.escom.defensoria.queja_service.repository.QuejaRepository;
+import ipn.escom.defensoria.queja_service.validacion.ReglasQueja;
+import ipn.escom.defensoria.queja_service.validacion.ValidacionException;
+import ipn.escom.defensoria.queja_service.validacion.ValidadorArchivos;
+import ipn.escom.defensoria.queja_service.validacion.ValidadorFechas;
+import ipn.escom.defensoria.queja_service.validacion.ValidadorQuejaPublica;
+
+@Service
+public class QuejaService {
+
+    private static final String ORIGEN_AUTENTICADO = &quot;AUTENTICADO&quot;;
+    private static final String ORIGEN_PUBLICO = &quot;PUBLICO&quot;;
+    private static final String ESTATUS_RECIBIDA = &quot;RECIBIDA&quot;;
+    private static final String PREFIJO_FOLIO = &quot;FOL-&quot;;
+    private static final int LONGITUD_UUID_FOLIO = 8;
+    /** Estatus al que pasa una queja que el propio quejoso retira. NO se borra de la base:
+     * en un sistema de quejas institucional, destruir el registro elimina la constancia de
+     * que la queja existió — y si alguien la presentó y luego la retiró bajo presión, no
+     * quedaría ningún rastro. Ver docs/CAMBIOS.md. */
+    private static final String ESTATUS_CANCELADA = &quot;CANCELADA&quot;;
+    /** Estatus de una queja que Recepción rechazó por faltarle algo del checklist. */
+    private static final String ESTATUS_RECHAZADA = &quot;RECHAZADA&quot;;
+    /**
+     * El quejoso ya atendió las observaciones del rechazo y la queja vuelve a la bandeja.
+     * Antes de esto, una queja rechazada era un callejón sin salida: no se podía editar
+     * (el estatus ya no era RECIBIDA) ni turnar (&quot;Una queja rechazada no puede ser
+     * turnada&quot;), así que quedaba muerta en la base.
+     */
+    private static final String ESTATUS_CORREGIDA = &quot;CORREGIDA&quot;;
+    private static final String TIPO_IDENTIFICACION = &quot;IDENTIFICACION&quot;;
+    private static final String TIPO_EVIDENCIA = &quot;EVIDENCIA&quot;;
+
+    private final QuejaRepository quejaRepository;
+    private final QuejaEvidenciaRepository quejaEvidenciaRepository;
+    private final NotificacionClienteService notificacionClienteService;
+    private final ValidadorQuejaPublica validadorQuejaPublica;
+    private final CuentaQuejosoRepository cuentaQuejosoRepository;
+
+    public QuejaService(QuejaRepository quejaRepository,
+                        QuejaEvidenciaRepository quejaEvidenciaRepository,
+                        NotificacionClienteService notificacionClienteService,
+                        ValidadorQuejaPublica validadorQuejaPublica,
+<span class="fc" id="L64">                        CuentaQuejosoRepository cuentaQuejosoRepository) {</span>
+<span class="fc" id="L65">        this.quejaRepository = quejaRepository;</span>
+<span class="fc" id="L66">        this.quejaEvidenciaRepository = quejaEvidenciaRepository;</span>
+<span class="fc" id="L67">        this.notificacionClienteService = notificacionClienteService;</span>
+<span class="fc" id="L68">        this.validadorQuejaPublica = validadorQuejaPublica;</span>
+<span class="fc" id="L69">        this.cuentaQuejosoRepository = cuentaQuejosoRepository;</span>
+<span class="fc" id="L70">    }</span>
+
+    public boolean validarFolioYCorreo(String folio, String correo) {
+        // Sin normalizar a propósito: auth-service guarda el correo de la cuenta tal cual se
+        // escribió al activar; si aquí se aceptara &quot;Juan@...&quot; la cuenta quedaría con un correo
+        // que no coincide con el de sus quejas y su panel saldría vacío.
+<span class="fc" id="L76">        return quejaRepository.findByNumeroFolioAndCorreoInstitucional(folio, correo).isPresent();</span>
+    }
+
+    /**
+     * Devuelve el detalle de una queja dado folio + correo (misma llave de acceso que
+     * {@link #validarFolioYCorreo}, pero regresando los datos en vez de solo true/false).
+     * La usa el propio frontend (pantalla &quot;Consultar queja&quot; / activación de cuenta) y
+     * auth-service (para poblar nombre/boleta reales al activar una cuenta en vez de dejar
+     * placeholders como &quot;Ciudadano Defensoría&quot;).
+     */
+    public Queja obtenerPorFolioYCorreo(String folio, String correo) {
+<span class="fc" id="L87">        return quejaRepository.findByNumeroFolioAndCorreoInstitucional(</span>
+<span class="fc" id="L88">                        normalizarFolio(folio), normalizarCorreo(correo))</span>
+<span class="fc" id="L89">                .orElseThrow(() -&gt; new RuntimeException(&quot;El folio no existe o el correo no coincide con el registro.&quot;));</span>
+    }
+
+    /** &quot;Mis Quejas&quot; del panel autenticado — todas las quejas del correo que viene en el JWT. */
+    public List&lt;Queja&gt; listarMisQuejas(String correo) {
+<span class="nc" id="L94">        return quejaRepository.findByCorreoInstitucionalOrderByFechaCreacionDesc(correo);</span>
+    }
+
+    /** Detalle de una queja propia (panel autenticado) — a diferencia de
+     * {@link #obtenerPorFolioYCorreo}, aquí el correo viene del JWT verificado, no de un
+     * parámetro que cualquiera podría manipular. */
+    public Queja obtenerMiQueja(String folio, String correo) {
+<span class="fc" id="L101">        Queja queja = quejaRepository.findByNumeroFolioAndCorreoInstitucional(folio, correo)</span>
+<span class="fc" id="L102">                .orElseThrow(() -&gt; new RuntimeException(&quot;No se encontró esa queja asociada a tu cuenta.&quot;));</span>
+<span class="fc" id="L103">        return queja;</span>
+    }
+
+    /** Edita una queja propia MIENTRAS siga en estatus &quot;RECIBIDA&quot; -- una vez que pasa a
+     * revisión (recepcionista la valida/rechaza/turna), la información queda definitiva, tal
+     * como ya se le advertía al quejoso en el formulario (&quot;Nota importante&quot;). Solo se tocan
+     * los campos que vienen no-nulos en la petición. */
+    /**
+     * El quejoso atiende las observaciones de un rechazo y reenvía su queja a Recepción.
+     * Solo aplica sobre una queja RECHAZADA; la deja en CORREGIDA, que es como vuelve a
+     * aparecer en la bandeja del recepcionista para una segunda validación.
+     */
+    public Queja corregirMiQueja(String folio, String correo, EditarQuejaRequest datos) {
+<span class="fc" id="L116">        Queja queja = obtenerMiQueja(folio, correo);</span>
+
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (!ESTATUS_RECHAZADA.equalsIgnoreCase(queja.getEstatus())) {</span>
+<span class="fc" id="L119">            throw new RuntimeException(</span>
+                    &quot;Solo se puede corregir una queja que fue rechazada. Esta queja está en estatus &quot;
+<span class="fc" id="L121">                            + queja.getEstatus() + &quot;.&quot;);</span>
+        }
+
+<span class="fc" id="L124">        aplicarCambios(queja, datos);</span>
+<span class="fc" id="L125">        queja.setEstatus(ESTATUS_CORREGIDA);</span>
+
+<span class="fc" id="L127">        Queja guardada = quejaRepository.save(queja);</span>
+<span class="fc" id="L128">        notificacionClienteService.notificarCambioEstatus(</span>
+<span class="fc" id="L129">                guardada.getCorreoInstitucional(),</span>
+<span class="fc" id="L130">                guardada.getNumeroFolio(),</span>
+                &quot;Queja corregida&quot;,
+<span class="fc" id="L132">                &quot;Reenviaste tu queja con folio &quot; + guardada.getNumeroFolio()</span>
+                        + &quot;. Recepción la revisará de nuevo.&quot;);
+<span class="fc" id="L134">        notificacionClienteService.notificarPersonal(</span>
+<span class="fc" id="L135">                guardada.getValidadoPor(),</span>
+                &quot;Queja corregida por el quejoso&quot;,
+<span class="fc" id="L137">                &quot;El quejoso atendió las observaciones de la queja &quot; + guardada.getNumeroFolio()</span>
+                        + &quot; que rechazaste. Ya está de nuevo en la bandeja como CORREGIDA.&quot;);
+<span class="fc" id="L139">        return guardada;</span>
+    }
+
+    public Queja editarMiQueja(String folio, String correo, EditarQuejaRequest datos) {
+<span class="fc" id="L143">        Queja queja = obtenerMiQueja(folio, correo);</span>
+
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        String estatusActual = queja.getEstatus() == null ? ESTATUS_RECIBIDA : queja.getEstatus();</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        if (!ESTATUS_RECIBIDA.equalsIgnoreCase(estatusActual)) {</span>
+<span class="fc" id="L147">            throw new RuntimeException(</span>
+                    &quot;Esta queja ya está en revisión y no se puede editar. Su información es definitiva.&quot;);
+        }
+
+<span class="fc" id="L151">        aplicarCambios(queja, datos);</span>
+<span class="fc" id="L152">        return quejaRepository.save(queja);</span>
+    }
+
+    /**
+     * Aplica sobre la queja solo los campos que vienen no-nulos. Compartido por
+     * editarMiQueja (queja aún RECIBIDA) y corregirMiQueja (queja RECHAZADA que el quejoso
+     * reenvía): son la misma edición, lo que cambia es desde qué estatus se permite y a
+     * cuál se va.
+     */
+    private void aplicarCambios(Queja queja, EditarQuejaRequest datos) {
+<span class="fc bfc" id="L162" title="All 2 branches covered.">        if (datos.getDescripcion() != null) {</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">            if (esVacio(datos.getDescripcion())) {</span>
+<span class="fc" id="L164">                throw new RuntimeException(&quot;La descripción no puede quedar vacía.&quot;);</span>
+            }
+<span class="fc" id="L166">            queja.setDescripcion(datos.getDescripcion());</span>
+        }
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">        if (datos.getUnidadAcademicaClave() != null) {</span>
+<span class="nc" id="L169">            queja.setUnidadAcademicaClave(datos.getUnidadAcademicaClave());</span>
+        }
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">        if (datos.getFechaHechos() != null) {</span>
+<span class="nc" id="L172">            queja.setFechaHechos(datos.getFechaHechos());</span>
+        }
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (datos.getNombreDenunciado() != null) {</span>
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">            queja.setNombreDenunciado(datos.getNombreDenunciado().isBlank() ? null : datos.getNombreDenunciado());</span>
+        }
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">        if (datos.getApellido1Denunciado() != null) {</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">            queja.setApellido1Denunciado(datos.getApellido1Denunciado().isBlank() ? null : datos.getApellido1Denunciado());</span>
+        }
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">        if (datos.getApellido2Denunciado() != null) {</span>
+<span class="nc" id="L181">            queja.setApellido2Denunciado(</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">                    datos.getApellido2Denunciado().isBlank() ? null : datos.getApellido2Denunciado());</span>
+        }
+<span class="fc" id="L184">    }</span>
+
+    /** Evidencias de una queja propia, SIN el contenido binario (solo para listarlas en el
+     * detalle) — ver {@link EvidenciaResumen}. */
+    public List&lt;EvidenciaResumen&gt; listarEvidencias(String folio, String correo) {
+<span class="nc" id="L189">        Queja queja = obtenerMiQueja(folio, correo);</span>
+<span class="nc" id="L190">        return queja.getEvidencias().stream()</span>
+<span class="nc" id="L191">                .map(this::aResumen)</span>
+<span class="nc" id="L192">                .toList();</span>
+    }
+
+    // =========================================================================================
+    // CU-Q07 — Gestión de la propia queja desde el panel
+    // =========================================================================================
+
+    /**
+     * Retira una queja del historial del quejoso. NO la borra: la marca como CANCELADA.
+     *
+     * Solo se permite mientras siga en &quot;RECIBIDA&quot;, igual que la edición: una vez que el
+     * recepcionista empezó a validarla, ya hay trabajo institucional invertido y el quejoso
+     * no puede hacerla desaparecer por su cuenta.
+     */
+    @Transactional
+    public Queja cancelarMiQueja(String folio, String correo) {
+<span class="fc" id="L208">        Queja queja = obtenerMiQueja(folio, correo);</span>
+<span class="fc" id="L209">        exigirEstatusRecibida(queja,</span>
+                &quot;Esta queja ya está en revisión y no se puede eliminar. &quot;
+                        + &quot;Si necesitas retirarla, comunícate con la Defensoría.&quot;);
+
+<span class="fc" id="L213">        queja.setEstatus(ESTATUS_CANCELADA);</span>
+<span class="fc" id="L214">        return quejaRepository.save(queja);</span>
+    }
+
+    /**
+     * Agrega evidencias a una queja propia que siga en &quot;RECIBIDA&quot;.
+     *
+     * Las reglas de tipo y tamaño son las mismas del registro inicial, verificadas por la
+     * firma binaria del archivo y no por su extensión.
+     */
+    @Transactional
+    public List&lt;EvidenciaResumen&gt; agregarEvidencias(String folio, String correo,
+                                                    List&lt;MultipartFile&gt; archivos) {
+<span class="fc" id="L226">        Queja queja = obtenerMiQueja(folio, correo);</span>
+<span class="fc" id="L227">        exigirEstatusRecibida(queja,</span>
+                &quot;Esta queja ya está en revisión: no se le pueden agregar más evidencias.&quot;);
+
+<span class="fc" id="L230">        ValidadorArchivos.validarEvidenciasAdicionales(archivos);</span>
+<span class="fc" id="L231">        agregarArchivos(queja, archivos, TIPO_EVIDENCIA);</span>
+
+<span class="fc" id="L233">        Queja guardada = quejaRepository.save(queja);</span>
+<span class="fc" id="L234">        return guardada.getEvidencias().stream().map(this::aResumen).toList();</span>
+    }
+
+    /**
+     * Quita una evidencia de una queja propia que siga en &quot;RECIBIDA&quot;.
+     *
+     * La credencial oficial no se puede quitar si es la única que queda: la queja dejaría de
+     * tener con qué acreditar la identidad de quien la presentó, y el recepcionista tendría
+     * que rechazarla.
+     */
+    @Transactional
+    public void eliminarEvidencia(String folio, String correo, Long evidenciaId) {
+<span class="fc" id="L246">        Queja queja = obtenerMiQueja(folio, correo);</span>
+<span class="fc" id="L247">        exigirEstatusRecibida(queja,</span>
+                &quot;Esta queja ya está en revisión: sus evidencias son definitivas.&quot;);
+
+<span class="fc" id="L250">        QuejaEvidencia evidencia = buscarEvidencia(queja, evidenciaId);</span>
+
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        if (esUltimaIdentificacion(queja, evidencia)) {</span>
+<span class="fc" id="L253">            throw new ValidacionException(</span>
+                    &quot;No puedes quitar tu identificación oficial: la queja debe conservar al menos una. &quot;
+                            + &quot;Sube la nueva antes de quitar esta.&quot;);
+        }
+
+<span class="fc" id="L258">        queja.getEvidencias().remove(evidencia);</span>
+<span class="fc" id="L259">        quejaEvidenciaRepository.delete(evidencia);</span>
+<span class="fc" id="L260">    }</span>
+
+    /** Contenido binario de una evidencia propia — lo usa el panel para previsualizarla. */
+    public QuejaEvidencia obtenerEvidencia(String folio, String correo, Long evidenciaId) {
+<span class="nc" id="L264">        Queja queja = obtenerMiQueja(folio, correo);</span>
+<span class="nc" id="L265">        return buscarEvidencia(queja, evidenciaId);</span>
+    }
+
+    // -----------------------------------------------------------------------------------------
+
+    private void exigirEstatusRecibida(Queja queja, String mensajeSiNoAplica) {
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">        String estatusActual = queja.getEstatus() == null ? ESTATUS_RECIBIDA : queja.getEstatus();</span>
+<span class="fc bfc" id="L272" title="All 2 branches covered.">        if (!ESTATUS_RECIBIDA.equalsIgnoreCase(estatusActual)) {</span>
+<span class="fc" id="L273">            throw new ValidacionException(mensajeSiNoAplica);</span>
+        }
+<span class="fc" id="L275">    }</span>
+
+    private QuejaEvidencia buscarEvidencia(Queja queja, Long evidenciaId) {
+<span class="fc" id="L278">        return queja.getEvidencias().stream()</span>
+<span class="fc" id="L279">                .filter(ev -&gt; ev.getId().equals(evidenciaId))</span>
+<span class="fc" id="L280">                .findFirst()</span>
+                // Se busca DENTRO de la queja del usuario, no por id suelto en la tabla: así
+                // nadie puede borrar la evidencia de otra persona mandando un id ajeno.
+<span class="fc" id="L283">                .orElseThrow(() -&gt; new ValidacionException(</span>
+                        &quot;Esa evidencia no existe o no pertenece a esta queja.&quot;));
+    }
+
+    private boolean esUltimaIdentificacion(Queja queja, QuejaEvidencia evidencia) {
+<span class="pc bpc" id="L288" title="1 of 2 branches missed.">        if (!TIPO_IDENTIFICACION.equals(evidencia.getTipo())) {</span>
+<span class="nc" id="L289">            return false;</span>
+        }
+<span class="fc" id="L291">        long identificaciones = queja.getEvidencias().stream()</span>
+<span class="fc" id="L292">                .filter(ev -&gt; TIPO_IDENTIFICACION.equals(ev.getTipo()))</span>
+<span class="fc" id="L293">                .count();</span>
+<span class="fc bfc" id="L294" title="All 2 branches covered.">        return identificaciones &lt;= 1;</span>
+    }
+
+    private EvidenciaResumen aResumen(QuejaEvidencia ev) {
+<span class="fc" id="L298">        return new EvidenciaResumen(ev.getId(), ev.getNombreArchivo(), ev.getTipoMime(),</span>
+<span class="fc" id="L299">                ev.getTamanioBytes(), ev.getFechaSubida(), ev.getTipo());</span>
+    }
+
+    /**
+     * Registra una queja de un usuario ya autenticado (con JWT). Los datos estructurados
+     * (unidad académica, fecha de hechos, denunciado) se guardan como columnas propias en
+     * vez de concatenarse como texto libre dentro de &quot;descripcion&quot;, como se hacía antes.
+     */
+    public Queja registrarQueja(
+            String motivo,
+            String descripcion,
+            String correo,
+            String unidadAcademicaClave,
+            LocalDate fechaHechos,
+            String nombreDenunciado,
+            String apellido1Denunciado,
+            List&lt;MultipartFile&gt; archivos) {
+
+<span class="pc bpc" id="L317" title="1 of 4 branches missed.">        if (esVacio(motivo) || esVacio(descripcion)) {</span>
+<span class="fc" id="L318">            throw new RuntimeException(&quot;Faltan datos obligatorios de la queja.&quot;);</span>
+        }
+        // Candado de 90 días también para el panel del quejoso (art. 13, párrafo tercero).
+<span class="fc" id="L321">        ValidadorFechas.validarPlazo(fechaHechos);</span>
+
+<span class="fc" id="L323">        Queja queja = new Queja();</span>
+<span class="fc" id="L324">        queja.setNumeroFolio(generarFolio());</span>
+<span class="fc" id="L325">        queja.setCorreoInstitucional(correo);</span>
+<span class="fc" id="L326">        queja.setMotivo(motivo);</span>
+<span class="fc" id="L327">        queja.setDescripcion(descripcion);</span>
+<span class="fc" id="L328">        queja.setUnidadAcademicaClave(unidadAcademicaClave);</span>
+<span class="fc" id="L329">        queja.setFechaHechos(fechaHechos);</span>
+<span class="fc" id="L330">        queja.setNombreDenunciado(nombreDenunciado);</span>
+<span class="fc" id="L331">        queja.setApellido1Denunciado(apellido1Denunciado);</span>
+<span class="fc" id="L332">        queja.setOrigenRegistro(ORIGEN_AUTENTICADO);</span>
+<span class="fc" id="L333">        completarDatosQuejoso(queja, correo);</span>
+
+<span class="fc" id="L335">        agregarEvidencias(queja, archivos);</span>
+
+<span class="fc" id="L337">        Queja guardada = quejaRepository.save(queja);</span>
+<span class="fc" id="L338">        notificacionClienteService.notificarQuejaCreada(guardada.getCorreoInstitucional(), guardada.getNumeroFolio());</span>
+<span class="fc" id="L339">        return guardada;</span>
+    }
+
+    /**
+     * Con sesión solo llega el correo del JWT. La cuenta del quejoso nace de su primera queja
+     * (formulario público), que sí pide nombre, apellidos, fecha de nacimiento e
+     * identificación; la tabla usuarios solo guarda nombre y boleta. Por eso se copian de su
+     * queja anterior más reciente y, si no hay, de la cuenta. Sin ninguna, se guarda igual.
+     */
+    private void completarDatosQuejoso(Queja queja, String correo) {
+<span class="fc" id="L349">        Optional&lt;Queja&gt; anterior = quejaRepository</span>
+<span class="fc" id="L350">                .findFirstByCorreoInstitucionalIgnoreCaseAndNombreQuejosoIsNotNullOrderByFechaCreacionDesc(correo);</span>
+<span class="pc bpc" id="L351" title="1 of 2 branches missed.">        if (anterior.isPresent()) {</span>
+<span class="fc" id="L352">            Queja q = anterior.get();</span>
+<span class="fc" id="L353">            queja.setNombreQuejoso(q.getNombreQuejoso());</span>
+<span class="fc" id="L354">            queja.setApellido1Quejoso(q.getApellido1Quejoso());</span>
+<span class="fc" id="L355">            queja.setApellido2Quejoso(q.getApellido2Quejoso());</span>
+<span class="fc" id="L356">            queja.setFechaNacimientoQuejoso(q.getFechaNacimientoQuejoso());</span>
+<span class="fc" id="L357">            queja.setTipoIdentificacionQuejoso(q.getTipoIdentificacionQuejoso());</span>
+<span class="fc" id="L358">            queja.setNumeroIdentificacionQuejoso(q.getNumeroIdentificacionQuejoso());</span>
+<span class="fc" id="L359">            return;</span>
+        }
+<span class="nc" id="L361">        cuentaQuejosoRepository.findFirstByCorreoInstitucionalIgnoreCase(correo).ifPresent(cuenta -&gt; {</span>
+<span class="nc" id="L362">            queja.setNombreQuejoso(cuenta.getNombre());</span>
+<span class="nc" id="L363">            queja.setNumeroIdentificacionQuejoso(cuenta.getBoleta());</span>
+<span class="nc" id="L364">        });</span>
+<span class="nc" id="L365">    }</span>
+
+    /**
+     * Registra una queja del formulario público, sin necesidad de sesión iniciada (decisión
+     * explícita del usuario: &quot;quiero que las quejas estén tanto para nuevos usuarios como
+     * para los que ya están registrados&quot;). Guarda la identidad completa del quejoso (no solo
+     * el correo, como en el flujo autenticado) y, si aplica, los datos del tutor.
+     */
+    public Queja registrarQuejaPublica(RegistroQuejaPublicaRequest datos) {
+        // El validador normaliza los textos del request (trim, espacios colapsados, correo en
+        // minúsculas) y clasifica los archivos en credencial oficial vs. evidencias, cada
+        // grupo con sus propias reglas de tipo y tamaño.
+<span class="fc" id="L377">        ValidadorArchivos.ArchivosClasificados archivos = validadorQuejaPublica.validar(datos);</span>
+
+<span class="fc" id="L379">        Queja queja = new Queja();</span>
+<span class="fc" id="L380">        queja.setNumeroFolio(generarFolio());</span>
+<span class="fc" id="L381">        queja.setCorreoInstitucional(datos.getCorreo());</span>
+<span class="fc" id="L382">        queja.setMotivo(&quot;Queja en &quot; + datos.getUnidadAcademicaClave());</span>
+<span class="fc" id="L383">        queja.setDescripcion(datos.getDescripcion());</span>
+<span class="fc" id="L384">        queja.setNombreQuejoso(datos.getNombre());</span>
+<span class="fc" id="L385">        queja.setApellido1Quejoso(datos.getApellido1());</span>
+<span class="fc" id="L386">        queja.setApellido2Quejoso(datos.getApellido2());</span>
+<span class="fc" id="L387">        queja.setFechaNacimientoQuejoso(datos.getFechaNacimiento());</span>
+<span class="fc" id="L388">        queja.setTipoIdentificacionQuejoso(datos.getTipoIdentificacion());</span>
+<span class="fc" id="L389">        queja.setNumeroIdentificacionQuejoso(datos.getNumeroIdentificacion());</span>
+<span class="fc" id="L390">        queja.setUnidadAcademicaClave(datos.getUnidadAcademicaClave());</span>
+<span class="fc" id="L391">        queja.setFechaHechos(datos.getFechaHechos());</span>
+<span class="fc" id="L392">        queja.setNombreDenunciado(datos.getNombreDenunciado());</span>
+<span class="fc" id="L393">        queja.setApellido1Denunciado(datos.getApellido1Denunciado());</span>
+<span class="fc" id="L394">        queja.setApellido2Denunciado(datos.getApellido2Denunciado());</span>
+<span class="fc" id="L395">        queja.setOrigenRegistro(ORIGEN_PUBLICO);</span>
+
+        // Constancia del consentimiento: la fecha la pone el servidor, no el cliente.
+<span class="fc" id="L398">        queja.setAvisoPrivacidadAceptado(Boolean.TRUE);</span>
+<span class="fc" id="L399">        queja.setAvisoPrivacidadFecha(LocalDateTime.now());</span>
+<span class="fc" id="L400">        queja.setAvisoPrivacidadVersion(</span>
+<span class="pc bpc" id="L401" title="1 of 4 branches missed.">                datos.getAvisoPrivacidadVersion() == null || datos.getAvisoPrivacidadVersion().isBlank()</span>
+<span class="fc" id="L402">                        ? ReglasQueja.AVISO_PRIVACIDAD_VERSION</span>
+<span class="fc" id="L403">                        : datos.getAvisoPrivacidadVersion());</span>
+
+<span class="fc bfc" id="L405" title="All 2 branches covered.">        if (datos.tieneTutor()) {</span>
+<span class="fc" id="L406">            QuejaTutor tutor = new QuejaTutor();</span>
+<span class="fc" id="L407">            tutor.setQueja(queja);</span>
+<span class="fc" id="L408">            tutor.setNombre(datos.getTutorNombre());</span>
+<span class="fc" id="L409">            tutor.setApellido1(datos.getTutorApellido1());</span>
+<span class="fc" id="L410">            tutor.setApellido2(datos.getTutorApellido2());</span>
+<span class="fc" id="L411">            tutor.setParentesco(datos.getTutorParentesco());</span>
+<span class="fc" id="L412">            tutor.setCorreo(datos.getTutorCorreo());</span>
+<span class="fc" id="L413">            tutor.setTelefono(datos.getTutorTelefono());</span>
+<span class="fc" id="L414">            queja.setTutor(tutor);</span>
+        }
+
+<span class="fc" id="L417">        agregarArchivos(queja, archivos.identificaciones(), TIPO_IDENTIFICACION);</span>
+<span class="fc" id="L418">        agregarArchivos(queja, archivos.evidencias(), TIPO_EVIDENCIA);</span>
+
+<span class="fc" id="L420">        Queja guardada = quejaRepository.save(queja);</span>
+<span class="fc" id="L421">        notificacionClienteService.notificarQuejaCreada(guardada.getCorreoInstitucional(), guardada.getNumeroFolio());</span>
+
+<span class="pc bpc" id="L423" title="2 of 6 branches missed.">        if (datos.tieneTutor() &amp;&amp; datos.getTutorCorreo() != null &amp;&amp; !datos.getTutorCorreo().isBlank()) {</span>
+<span class="fc" id="L424">            String nombreMenor = (datos.getNombre() + &quot; &quot; + datos.getApellido1()).trim();</span>
+<span class="fc" id="L425">            notificacionClienteService.notificarTutorQuejaCreada(</span>
+<span class="fc" id="L426">                    datos.getTutorCorreo(), datos.getTutorNombre(), nombreMenor, guardada.getNumeroFolio());</span>
+        }
+
+<span class="fc" id="L429">        return guardada;</span>
+    }
+
+    private boolean esVacio(String valor) {
+<span class="pc bpc" id="L433" title="1 of 4 branches missed.">        return valor == null || valor.isBlank();</span>
+    }
+
+    private String generarFolio() {
+<span class="fc" id="L437">        return PREFIJO_FOLIO + UUID.randomUUID().toString().substring(0, LONGITUD_UUID_FOLIO).toUpperCase();</span>
+    }
+
+    /** Registro autenticado (/registrar): todos los archivos entran como evidencia simple. */
+    private void agregarEvidencias(Queja queja, List&lt;MultipartFile&gt; archivos) {
+<span class="fc" id="L442">        agregarArchivos(queja, archivos, TIPO_EVIDENCIA);</span>
+<span class="fc" id="L443">    }</span>
+
+    private void agregarArchivos(Queja queja, List&lt;MultipartFile&gt; archivos, String tipo) {
+<span class="fc bfc" id="L446" title="All 2 branches covered.">        if (archivos == null) {</span>
+<span class="fc" id="L447">            return;</span>
+        }
+<span class="fc bfc" id="L449" title="All 2 branches covered.">        for (MultipartFile archivo : archivos) {</span>
+<span class="pc bpc" id="L450" title="2 of 4 branches missed.">            if (archivo == null || archivo.isEmpty()) {</span>
+<span class="nc" id="L451">                continue;</span>
+            }
+<span class="fc" id="L453">            queja.getEvidencias().add(convertirAEvidencia(archivo, queja, tipo));</span>
+<span class="fc" id="L454">        }</span>
+<span class="fc" id="L455">    }</span>
+
+    private QuejaEvidencia convertirAEvidencia(MultipartFile archivo, Queja queja, String tipo) {
+        try {
+<span class="fc" id="L459">            QuejaEvidencia evidencia = new QuejaEvidencia();</span>
+<span class="fc" id="L460">            evidencia.setQueja(queja);</span>
+<span class="fc" id="L461">            evidencia.setNombreArchivo(archivo.getOriginalFilename());</span>
+<span class="fc" id="L462">            evidencia.setTipoMime(archivo.getContentType());</span>
+<span class="fc" id="L463">            evidencia.setTamanioBytes(archivo.getSize());</span>
+<span class="fc" id="L464">            evidencia.setContenido(archivo.getBytes());</span>
+<span class="fc" id="L465">            evidencia.setTipo(tipo);</span>
+<span class="fc" id="L466">            return evidencia;</span>
+<span class="nc" id="L467">        } catch (IOException e) {</span>
+<span class="nc" id="L468">            throw new ValidacionException(</span>
+<span class="nc" id="L469">                    &quot;No se pudo leer el archivo \&quot;&quot; + archivo.getOriginalFilename() + &quot;\&quot;.&quot;);</span>
+        }
+    }
+
+    /** El registro guarda el correo en minúsculas (ValidadorCorreo) y el folio en mayúsculas
+     * (FOL-XXXXXXXX); la consulta pública debe comparar igual, si no &quot;Juan@Gmail.com&quot; o
+     * &quot;fol-...&quot; dan &quot;el folio no existe&quot; aunque la queja sí exista. */
+    private static String normalizarCorreo(String correo) {
+<span class="pc bpc" id="L477" title="1 of 2 branches missed.">        return correo == null ? null : correo.trim().toLowerCase(java.util.Locale.ROOT);</span>
+    }
+
+    private static String normalizarFolio(String folio) {
+<span class="pc bpc" id="L481" title="1 of 2 branches missed.">        return folio == null ? null : folio.trim().toUpperCase(java.util.Locale.ROOT);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

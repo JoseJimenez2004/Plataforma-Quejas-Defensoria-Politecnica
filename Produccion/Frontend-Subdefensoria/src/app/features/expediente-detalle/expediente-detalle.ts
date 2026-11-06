@@ -23,6 +23,7 @@ import { RespuestaExternaService } from '../../core/services/respuesta-externa.s
 import { Observable } from 'rxjs';
 import { ConsultaPrimerContacto, PrimerContactoService } from '../../core/services/primer-contacto.service';
 import { formatearFecha } from '../../core/utils/etapas';
+import { PRIORIDADES, clasePrioridad, codigoPrioridad, etiquetaPrioridad } from '../../core/utils/prioridad';
 import { ExpedienteInvestigacion } from '../../core/models/expediente-investigacion';
 import { Oficio } from '../../core/models/oficio';
 import { AcuerdoConclusion } from '../../core/models/acuerdo-conclusion';
@@ -103,6 +104,10 @@ export class ExpedienteDetalle implements OnInit {
   readonly iconos = ICONOS_PASO;
   readonly etiquetaEstatus = etiquetaEstatus;
   readonly formatearFecha = formatearFecha;
+  readonly prioridades = PRIORIDADES;
+  readonly clasePrioridad = clasePrioridad;
+  readonly codigoPrioridad = codigoPrioridad;
+  guardandoPrioridad = false;
 
   pestana: Pestana = 'resumen';
   hechosCompletos = false;
@@ -515,13 +520,38 @@ export class ExpedienteDetalle implements OnInit {
       next: (acuerdo) => {
         this.guardando = false;
         this.acuerdo = acuerdo;
-        this.snackBar.open(concluir ? 'Acuerdo enviado al quejoso. El expediente queda pendiente de su respuesta.' : 'Borrador guardado.', 'Cerrar', { duration: 3000 });
+        if (concluir) {
+          // SD-3: que el subdefensor sepa dónde quedó el expediente.
+          this.snackBar.open('Acuerdo enviado. El expediente quedó en «Esperando al quejoso».', 'Ver', { duration: 6000 })
+            .onAction().subscribe(() => this.router.navigate(['/bandeja'], { queryParams: { grupo: 'conciliacion' } }));
+        } else {
+          this.snackBar.open('Borrador guardado.', 'Cerrar', { duration: 3000 });
+        }
         this.cargarExpediente();
       },
       error: (err) => {
         this.guardando = false;
         const mensaje = err?.error?.error ?? 'No fue posible guardar el acuerdo.';
         this.snackBar.open(mensaje, 'Cerrar', { duration: 4000 });
+      }
+    });
+  }
+
+  /** SD-6: el subdefensor cambia la prioridad; el cambio no regresa a Primer Contacto. */
+  cambiarPrioridad(codigo: string): void {
+    if (!this.expediente || !codigo || codigo === 'SIN_ASIGNAR' || codigo === codigoPrioridad(this.expediente.prioridad)) return;
+    this.guardandoPrioridad = true;
+    this.expedienteService.cambiarPrioridad(this.expediente.id, codigo).subscribe({
+      next: (exp) => {
+        if (this.expediente) this.expediente.prioridad = exp?.prioridad ?? codigo;
+        this.guardandoPrioridad = false;
+        this.snackBar.open(`Prioridad actualizada a ${etiquetaPrioridad(codigo)}.`, 'Cerrar', { duration: 2500 });
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.guardandoPrioridad = false;
+        this.snackBar.open('No se pudo guardar la prioridad.', 'Cerrar', { duration: 3500 });
+        this.cdr.detectChanges();
       }
     });
   }

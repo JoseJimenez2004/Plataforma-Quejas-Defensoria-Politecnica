@@ -1,5 +1,7 @@
 package ipn.escom.defensoria.subdefensoria.service;
 
+import ipn.escom.defensoria.subdefensoria.util.Prioridad;
+
 import ipn.escom.defensoria.subdefensoria.dto.ExpedienteEntranteDTO;
 import ipn.escom.defensoria.subdefensoria.dto.ExpedienteInvestigacionDTO;
 import ipn.escom.defensoria.subdefensoria.entity.EstatusExpediente;
@@ -110,6 +112,10 @@ public class IngestaExpedienteService {
                                 entrante.getObservacionesAnalista()
                         )
 
+                        .prioridad(
+                                Prioridad.normalizar(entrante.getPrioridad())
+                        )
+
                         .estatus(
                                 EstatusExpediente.RECIBIDO
                         )
@@ -166,6 +172,7 @@ public class IngestaExpedienteService {
                 .observacionesAnalista(
                         e.getObservacionesAnalista()
                 )
+                .prioridad(e.getPrioridad())
                 .build();
     }
 }

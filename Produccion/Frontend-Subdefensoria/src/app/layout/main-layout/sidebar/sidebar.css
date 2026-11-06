@@ -1,33 +1,107 @@
+/* Menú compacto (igual que Recepción y el panel de la Defensora, 2026-11): solo iconos; al
+   pasar el cursor o navegar con Tab se despliega ENCIMA del contenido, sin moverlo. */
 .sidebar {
   position: fixed;
   top: 72px;
   left: 0;
-  bottom: 40px;
-  width: 250px;
+  bottom: 48px;
+  width: 68px;
+  overflow-x: hidden;
   overflow-y: auto;
   background: #ffffff;
   border-right: 1px solid var(--borde);
-  padding: 22px 14px;
+  padding: 18px 12px;
   z-index: 900;
+  box-sizing: border-box;
+  transition: width 0.2s ease, box-shadow 0.2s ease;
 }
 
 .sidebar nav {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .sidebar a {
-  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 44px;
+  padding: 0 13px;
   border-radius: 8px;
   color: var(--texto);
   text-decoration: none;
   font-weight: 500;
+  font-size: 14.5px;
+  white-space: nowrap;
   cursor: pointer;
+}
+
+.sidebar a svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 
 .sidebar a:hover,
 .sidebar a.active {
   background: var(--guinda-suave);
   color: var(--guinda);
+}
+
+.sidebar a:hover svg,
+.sidebar a.active svg {
+  opacity: 1;
+}
+
+.sidebar a.active {
+  font-weight: 700;
+}
+
+.sidebar a:focus-visible {
+  outline: 2px solid var(--guinda);
+  outline-offset: -2px;
+}
+
+.sidebar .label {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.sidebar:hover,
+.sidebar:focus-within {
+  width: 250px;
+  box-shadow: 6px 0 24px rgba(15, 23, 42, 0.12);
+}
+
+.sidebar:hover .label,
+.sidebar:focus-within .label {
+  opacity: 1;
+  transition-delay: 0.06s;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    position: static;
+    width: auto;
+    padding: 10px 12px;
+    border-right: none;
+    border-bottom: 1px solid var(--borde);
+  }
+
+  .sidebar nav {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .sidebar .label {
+    opacity: 1;
+  }
+
+  .sidebar:hover,
+  .sidebar:focus-within {
+    width: auto;
+    box-shadow: none;
+  }
 }

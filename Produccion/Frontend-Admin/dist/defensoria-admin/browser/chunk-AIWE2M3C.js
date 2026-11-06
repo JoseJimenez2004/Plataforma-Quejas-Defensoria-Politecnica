@@ -1,0 +1,1 @@
+var E={RECEPCION:"#d8920f",CON_QUEJOSO:"#c62828",PRIMER_CONTACTO:"#2f6fed",SUBDEFENSORIA:"#7c4dc4",CERRADA:"#2e9d4a"},C={RECEPCION:"Recepci\xF3n",CON_QUEJOSO:"Con el quejoso",PRIMER_CONTACTO:"Primer Contacto",SUBDEFENSORIA:"Subdefensor\xEDa",CERRADA:"Cerradas"};export{E as a,C as b};

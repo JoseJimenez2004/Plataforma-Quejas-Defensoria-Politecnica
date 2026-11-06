@@ -30,7 +30,8 @@
         </div>
         <div class="input-group input-fecha">
           <label>Fecha de los hechos</label>
-          <app-datepicker [(ngModel)]="fechaHechos" name="fechaHechos" [max]="fechaMaxima"></app-datepicker>
+          <app-datepicker [(ngModel)]="fechaHechos" name="fechaHechos" [min]="fechaMinimaHechos" [max]="fechaMaxima"></app-datepicker>
+          <small class="ayuda-plazo">Solo hechos de los últimos 90 días naturales (art. 13, párrafo tercero).</small>
         </div>
       </div>
 

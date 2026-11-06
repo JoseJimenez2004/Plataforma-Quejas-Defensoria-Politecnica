@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerfilController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.auth.service.controller</a> &gt; <span class="el_source">PerfilController.java</span></div><h1>PerfilController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.auth.service.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import ipn.escom.defensoria.auth.service.model.PerfilModel;
+import ipn.escom.defensoria.auth.service.model.PerfilUpdateRequest;
+import ipn.escom.defensoria.auth.service.service.UsuarioService;
+
+/**
+ * Perfil del quejoso autenticado -- &quot;Configuración de Perfil&quot; del panel. Requiere JWT (ver
+ * WebConfig); el correo sale del token verificado, no de un parámetro.
+ */
+@RestController
+@RequestMapping(&quot;/api/auth&quot;)
+@Tag(name = &quot;Perfil&quot;, description = &quot;Datos de contacto y generales del quejoso autenticado&quot;)
+public class PerfilController {
+
+    private final UsuarioService usuarioService;
+
+<span class="nc" id="L29">    public PerfilController(UsuarioService usuarioService) {</span>
+<span class="nc" id="L30">        this.usuarioService = usuarioService;</span>
+<span class="nc" id="L31">    }</span>
+
+    @GetMapping(&quot;/me&quot;)
+    @Operation(summary = &quot;Obtiene el perfil completo del usuario autenticado&quot;)
+    public ResponseEntity&lt;PerfilModel&gt; obtenerMiPerfil() {
+<span class="nc" id="L36">        String correo = correoActual();</span>
+<span class="nc" id="L37">        return ResponseEntity.ok(usuarioService.obtenerPerfil(correo));</span>
+    }
+
+    @PutMapping(&quot;/perfil&quot;)
+    @Operation(summary = &quot;Actualiza correo personal, teléfono, unidad académica y/o domicilio&quot;)
+    public ResponseEntity&lt;PerfilModel&gt; actualizarPerfil(@RequestBody PerfilUpdateRequest datos) {
+<span class="nc" id="L43">        String correo = correoActual();</span>
+<span class="nc" id="L44">        return ResponseEntity.ok(usuarioService.actualizarPerfil(correo, datos));</span>
+    }
+
+    private String correoActual() {
+<span class="nc" id="L48">        Authentication autenticacion = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc" id="L49">        return autenticacion.getName();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

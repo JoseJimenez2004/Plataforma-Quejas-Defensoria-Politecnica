@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.auth.service.controller</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.auth.service.controller;
+
+import ipn.escom.defensoria.auth.service.client.NotificacionesClient;
+import ipn.escom.defensoria.auth.service.config.JwtUtil;
+import ipn.escom.defensoria.auth.service.entity.Usuario;
+import ipn.escom.defensoria.auth.service.model.LoginModel;
+import ipn.escom.defensoria.auth.service.model.AuthResponseModel;
+import ipn.escom.defensoria.auth.service.service.UsuarioService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import ipn.escom.defensoria.auth.service.model.ResetPasswordModel;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import ipn.escom.defensoria.auth.service.model.ActivacionCuentaModel;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+
+@RestController
+@RequestMapping(&quot;/api/auth&quot;)
+public class AuthController {
+
+<span class="nc" id="L30">    private static final Logger log = LoggerFactory.getLogger(AuthController.class);</span>
+    private static final String TIPO_NOTIFICACION_LOGIN = &quot;LOGIN&quot;;
+
+    private final UsuarioService usuarioService;
+    private final JwtUtil jwtUtil;
+    private final NotificacionesClient notificacionesClient;
+
+<span class="nc" id="L37">    public AuthController(UsuarioService usuarioService, JwtUtil jwtUtil, NotificacionesClient notificacionesClient) {</span>
+<span class="nc" id="L38">        this.usuarioService = usuarioService;</span>
+<span class="nc" id="L39">        this.jwtUtil = jwtUtil;</span>
+<span class="nc" id="L40">        this.notificacionesClient = notificacionesClient;</span>
+<span class="nc" id="L41">    }</span>
+
+    @PostMapping(&quot;/login&quot;)
+    public ResponseEntity&lt;?&gt; login(@RequestBody LoginModel model) {
+        try {
+            // 1. Validamos credenciales en la base de datos
+<span class="nc" id="L47">            Usuario usuario = usuarioService.validarLogin(model);</span>
+
+            // 2. Generamos el JWT usando el correo institucional
+<span class="nc" id="L50">            String token = jwtUtil.generarToken(usuario.getCorreoInstitucional());</span>
+
+            // 3. Dejamos un aviso persistido en el centro de notificaciones del quejoso
+            // (&quot;inicios de sesión&quot; que pidió el usuario) -- si falla, no debe tumbar el
+            // login, solo queda en el log para diagnosticar (mismo patrón de resiliencia que
+            // ya usa revision-service al mandar el correo de rechazo).
+            try {
+<span class="nc" id="L57">                String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy HH:mm&quot;));</span>
+<span class="nc" id="L58">                notificacionesClient.registrar(Map.of(</span>
+<span class="nc" id="L59">                        &quot;correoDestino&quot;, usuario.getCorreoInstitucional(),</span>
+                        &quot;tipo&quot;, TIPO_NOTIFICACION_LOGIN,
+                        &quot;titulo&quot;, &quot;Inicio de sesión&quot;,
+                        &quot;mensaje&quot;, &quot;Se inició sesión en tu cuenta el &quot; + fecha + &quot;.&quot;));
+<span class="nc" id="L63">            } catch (Exception ex) {</span>
+<span class="nc" id="L64">                log.error(&quot;No se pudo registrar la notificación de inicio de sesión para {}: {}&quot;,</span>
+<span class="nc" id="L65">                        usuario.getCorreoInstitucional(), ex.getMessage());</span>
+<span class="nc" id="L66">            }</span>
+
+            // 4. Entregamos el token al cliente
+<span class="nc" id="L69">            return ResponseEntity.ok(new AuthResponseModel(token, usuario.getNombre()));</span>
+
+<span class="nc" id="L71">        } catch (RuntimeException e) {</span>
+            // Si el servicio lanza la excepción de credenciales incorrectas
+<span class="nc" id="L73">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());</span>
+        }
+    }
+
+    // Estos 3 endpoints regresaban texto plano (ResponseEntity&lt;String&gt;), pero los errores
+    // pasan por GlobalExceptionHandler y responden JSON ({mensaje,...}). El frontend pedía
+    // la respuesta con responseType:'text', así que en caso de error &quot;err.error&quot; llegaba
+    // como string crudo en vez de objeto — el mensaje real del backend (ej. &quot;Correo no
+    // registrado&quot;) nunca se mostraba, solo un texto genérico de respaldo. Unificamos todo a
+    // JSON para que éxito y error se lean igual en el frontend.
+    @PostMapping(&quot;/solicitar-codigo&quot;)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; solicitarCodigo(@RequestParam String correo) {
+<span class="nc" id="L85">        usuarioService.generarCodigoRecuperacion(correo);</span>
+<span class="nc" id="L86">        return ResponseEntity.ok(Map.of(&quot;mensaje&quot;, &quot;Código de verificación enviado a tu correo.&quot;));</span>
+    }
+
+    @PostMapping(&quot;/reset-password&quot;)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; resetPassword(@RequestBody ResetPasswordModel model) {
+<span class="nc" id="L91">        usuarioService.validarCodigoYCambiarPassword(</span>
+<span class="nc" id="L92">                model.getCorreo(),</span>
+<span class="nc" id="L93">                model.getCodigo(),</span>
+<span class="nc" id="L94">                model.getNuevaPassword()</span>
+        );
+<span class="nc" id="L96">        return ResponseEntity.ok(Map.of(&quot;mensaje&quot;, &quot;Contraseña actualizada con éxito. Ya puedes iniciar sesión.&quot;));</span>
+    }
+
+    @PostMapping(&quot;/activar-cuenta&quot;)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; activar(@RequestBody ActivacionCuentaModel model) {
+<span class="nc" id="L101">        usuarioService.activarCuenta(model);</span>
+<span class="nc" id="L102">        return ResponseEntity.ok(Map.of(&quot;mensaje&quot;, &quot;Cuenta activada con éxito. Ya puedes iniciar sesión.&quot;));</span>
+    }
+
+    /**
+     * Valida si el correo ya esta registrado, para que el formulario publico de queja le
+     * sugiera al quejoso iniciar sesion. Publico (cae en el permitAll de /api/auth/**).
+     */
+    @GetMapping(&quot;/existe-cuenta&quot;)
+    public ResponseEntity&lt;Map&lt;String, Boolean&gt;&gt; existeCuenta(@RequestParam String correo) {
+<span class="nc" id="L111">        return ResponseEntity.ok(Map.of(&quot;existe&quot;, usuarioService.existeCuenta(correo)));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

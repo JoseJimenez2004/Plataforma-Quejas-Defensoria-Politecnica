@@ -22,4 +22,5 @@ public class ExpedienteInvestigacionDTO {
     private String abogadoAsesorNombre;
     private String estatus;
     private String observacionesAnalista;
+    private String prioridad;
 }

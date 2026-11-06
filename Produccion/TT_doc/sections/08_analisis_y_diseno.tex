@@ -13,8 +13,7 @@
 	Los artefactos se presentan en el orden en que fueron producidos: primero el levantamiento de
 	requerimientos con el cliente, del que se derivaron los casos de uso; después el modelo de estados
 	de la queja, que ordena el flujo de trabajo entre áreas; sobre esa base la arquitectura de
-	componentes y el modelo de datos; y por último las decisiones de diseño con las alternativas que se
-	descartaron. Cada artefacto es insumo del siguiente, y esa dependencia es la que sostiene la
+	componentes y el modelo de datos. Cada artefacto es insumo del siguiente, y esa dependencia es la que sostiene la
 	coherencia técnica del sistema.
 
 	\subsection{Descripción general de la solución}
@@ -30,15 +29,12 @@
 	Al cierre del proyecto la plataforma está compuesta por:
 
 	\begin{itemize}
-		\item \textbf{Once microservicios} desarrollados con Spring Boot sobre Java~21: autenticación de
+		\item \textbf{Diez microservicios} desarrollados con Spring Boot sobre Java~21: autenticación de
 		quejosos, quejas, notificaciones, catálogo institucional, administración, revisión (Recepción),
-		chatbot de preguntas frecuentes, respuesta de la persona señalada, Primer Contacto, Subdefensoría
-		y el servicio de búsqueda de antecedentes.
-		\item \textbf{Un servicio de resúmenes} en Python que genera borradores narrativos de la queja
-		para apoyo del personal de Primer Contacto.
+		chatbot de preguntas frecuentes, respuesta de la persona señalada, Primer Contacto y Subdefensoría.
 		\item \textbf{Cinco aplicaciones web} independientes desarrolladas con Angular~21, una por tipo de
 		usuario: portal del quejoso, panel de Recepción, panel de Primer Contacto, panel de Subdefensoría y
-		panel de la Defensora y administración.
+		panel de la Defensora.
 		\item \textbf{Una base de datos PostgreSQL~16} compartida por los microservicios, con una tabla
 		dueña identificada para cada servicio.
 		\item \textbf{Un proxy inverso Nginx} que publica las cinco aplicaciones y la API bajo un único
@@ -51,34 +47,33 @@
 
 	\subsection{Actores del sistema}
 	\label{sec:actores}
-	El análisis identificó siete actores humanos con necesidades, permisos e interfaces diferenciadas,
-	además de dos actores no humanos con los que el sistema interactúa. La separación de los actores de
+	El análisis identificó seis actores humanos con necesidades, permisos e interfaces diferenciadas,
+	además de un actor no humano, el servicio de correo electrónico. La separación de los actores de
 	personal en paneles distintos no es solo una cuestión de organización: cada área tiene un nivel de
 	confianza y una superficie de exposición diferente, y mantenerlas en aplicaciones separadas reduce
 	el riesgo de que un defecto en una interfaz exponga funcionalidad de otra.
 
 	\begin{itemize}
-		\item \textbf{Quejoso.} Cualquier integrante de la comunidad politécnica ---estudiante, personal
-		académico o administrativo--- que presenta una queja o le da seguimiento. Puede operar sin cuenta o
+		\item \textbf{Quejoso.} Cualquier integrante de la comunidad politécnica ---estudiante, persona
+		egresada, personal académico o administrativo--- que presenta una queja o le da seguimiento. Las
+		personas egresadas se identifican con su número de boleta, igual que el alumnado. Puede operar sin cuenta o
 		activar una cuenta de seguimiento a partir de su primera queja.
 		\item \textbf{Persona señalada.} Persona a quien se atribuyen los hechos. No tiene cuenta: presenta
 		su versión mediante un formulario público cuando la Defensoría se la solicita.
 		\item \textbf{Personal de recepción.} Recibe las quejas que llegan por el portal o en ventanilla,
 		verifica los requisitos de admisión y las turna a Primer Contacto o las regresa al quejoso con
 		observaciones.
-		\item \textbf{Analista de Primer Contacto.} Analiza la queja, cita al quejoso, elabora oficios y
-		emite el dictamen de competencia o de improcedencia.
+		\item \textbf{Analista de Primer Contacto.} Analiza la queja, cita al quejoso y, cuando es
+		necesario escuchar su versión, a la persona señalada; elabora oficios y emite el dictamen de
+		competencia o de improcedencia.
 		\item \textbf{Subdefensor o abogado asesor.} Investiga los expedientes procedentes: solicita
 		información a las unidades, controla los plazos, propone el acuerdo de conciliación y concluye el
 		expediente.
-		\item \textbf{Defensora.} Titular de la Defensoría. Supervisa el estado de todas las quejas y la
-		carga de trabajo del personal, y administra las cuentas, catálogos y plantillas institucionales.
-		\item \textbf{Administrador de sistemas.} Cuenta técnica con las mismas facultades de administración
-		que la Defensora, destinada a la operación técnica: respaldos, bitácora y alta inicial del personal.
+		\item \textbf{Defensora.} Titular de la Defensoría y administradora de la plataforma. Supervisa el
+		estado de todas las quejas y la carga de trabajo del personal, revisa de forma directa las quejas de
+		mayor prioridad, y administra las cuentas, catálogos, plantillas, respaldos y bitácora.
 		\item \textbf{Servicio de correo electrónico} (actor no humano). Entrega los avisos que el sistema
 		envía: códigos de recuperación, observaciones, citas y acuerdos.
-		\item \textbf{Componentes de inteligencia artificial} (actor no humano). Proveen la búsqueda de
-		antecedentes y el borrador de resumen que consume Primer Contacto.
 	\end{itemize}
 
 	La Tabla~\ref{tab:actores_roles} resume la correspondencia entre actores, roles del sistema e
@@ -114,19 +109,17 @@
 		Análisis, citas, oficios y dictamen & Panel de Primer Contacto (\texttt{/primer-contacto/}) \\ \hline
 		Subdefensor / abogado & \texttt{SUBDEFENSOR} & Investigación, oficios, plazos, conciliación y
 		conclusión & Panel de Subdefensoría (\texttt{/subdefensoria/}) \\ \hline
-		Defensora & \texttt{DEFENSOR} & Supervisión y administración institucional & Panel de la
+		Defensora & \texttt{DEFENSOR} & Supervisión, revisión de quejas prioritarias y administración de la plataforma & Panel de la
 		Defensora (\texttt{/admin/}) \\ \hline
-		Administrador de sistemas & \texttt{ADMIN\_SISTEMAS} & Operación técnica, respaldos y
-		bitácora & Panel de la Defensora (\texttt{/admin/}) \\ \hline
 	\end{longtable}
 	\normalsize
 	\setlength{\tabcolsep}{6pt}
 	\renewcommand{\arraystretch}{1}
 
 	Todo el personal inicia sesión en un único punto (\texttt{/revision/login}) y el sistema lo dirige
-	al panel que corresponde a su rol. El rol \texttt{DEFENSOR} tiene, por decisión de diseño, las mismas
-	facultades de administración que \texttt{ADMIN\_SISTEMAS}; este último se conserva para la cuenta
-	técnica inicial con la que se da de alta al resto del personal.
+	al panel que corresponde a su rol. Por convención con la Defensoría, la administración de la
+	plataforma corresponde a la Defensora: no existe un actor técnico separado, y el rol
+	\texttt{DEFENSOR} concentra las facultades de supervisión y de administración.
 
 	\subsection{Especificación de requerimientos}
 	\label{sec:requerimientos}
@@ -150,11 +143,11 @@
 	la redacción jurídica de los requisitos de admisión, la lista de documentos de identidad aceptados y
 	los umbrales de los indicadores de seguimiento.
 
-	El resultado se organizó en cuatro categorías ---requerimientos funcionales, no funcionales,
-	técnicos y reglas de negocio--- y se estructuró por actor, de modo que cada requerimiento tiene un
+	El resultado se organizó en tres categorías ---requerimientos funcionales, no funcionales y
+	reglas de negocio--- y se estructuró por actor, de modo que cada requerimiento tiene un
 	dueño identificable. La nomenclatura codifica el actor en el identificador: \texttt{Q} para el
 	quejoso, \texttt{D} para la persona señalada, \texttt{R} para Recepción, \texttt{PC} para Primer
-	Contacto, \texttt{SD} para Subdefensoría, \texttt{A} para la Defensora y la administración, y
+	Contacto, \texttt{SD} para Subdefensoría, \texttt{A} para la Defensora, y
 	\texttt{G} para los requerimientos generales de la plataforma. Así, \texttt{RF-R04} es el cuarto
 	requerimiento funcional de Recepción y \texttt{RNF-G02} el segundo requerimiento no funcional
 	general.
@@ -288,9 +281,7 @@
 
 	\subsubsection{Requerimientos funcionales de Primer Contacto}
 	Primer Contacto es la etapa en la que se decide si la Defensoría es competente para conocer la
-	queja. La Tabla~\ref{tab:rf_pc} reúne sus requerimientos; los relacionados con los componentes de
-	inteligencia artificial (RF-PC04) son de apoyo: su resultado es una sugerencia que el analista
-	valora, nunca una decisión automática.
+	queja. La Tabla~\ref{tab:rf_pc} reúne sus requerimientos.
 
 	\rowcolors{2}{rowblue}{white}
 	\small
@@ -316,23 +307,20 @@
 		RF-PC03 & Abrir expediente & Iniciar el análisis al abrir el expediente y presentar la narración,
 		los datos de la queja, del quejoso y de la persona señalada, las evidencias y el historial del
 		expediente. \\ \hline
-		RF-PC04 & Análisis asistido & Mostrar un borrador de resumen de la queja, sus fragmentos clave y los
-		antecedentes más parecidos con su porcentaje de similitud; permitir guardar antecedentes y buscar
-		de forma manual. \\ \hline
-		RF-PC05 & Agenda de citas & Programar citas con el quejoso (comparecencia, revisión de documentos o
-		seguimiento; presencial o virtual) en horarios de 09:00 a 16:00 cada 30 minutos, sin empalmes ni
-		fines de semana; confirmarlas, reagendarlas o cancelarlas, y avisar al quejoso con un enlace para
-		responder. \\ \hline
-		RF-PC06 & Oficios de análisis & Redactar oficios con asunto y contenido, numerados
+		RF-PC04 & Agenda de citas & Programar citas con el quejoso y con la persona señalada
+		(comparecencia, revisión de documentos o seguimiento; presencial o virtual) en horarios de 09:00 a
+		16:00 cada 30 minutos, sin empalmes ni fines de semana; confirmarlas, reagendarlas o cancelarlas, y
+		avisar a la persona citada con un enlace para responder. \\ \hline
+		RF-PC05 & Oficios de análisis & Redactar oficios con asunto y contenido, numerados
 		\texttt{DDP/PC/OF/año/id}, generarlos en PDF, y editarlos o eliminarlos solo por su autor. \\ \hline
-		RF-PC07 & Solicitar versión de la persona señalada & Registrar la solicitud de la versión de la
+		RF-PC06 & Solicitar versión de la persona señalada & Registrar la solicitud de la versión de la
 		persona señalada y consultar su respuesta y archivos. \\ \hline
-		RF-PC08 & Dictamen de competencia & Declarar la queja procedente con justificación y observaciones,
+		RF-PC07 & Dictamen de competencia & Declarar la queja procedente con justificación y observaciones,
 		elegir al responsable en Subdefensoría de una lista ordenada por carga, y turnar el expediente;
 		permitir reenviarlo si Subdefensoría no lo recibió. \\ \hline
-		RF-PC09 & Dictamen de improcedencia y remisión & Declarar la queja improcedente con justificación y
+		RF-PC08 & Dictamen de improcedencia y remisión & Declarar la queja improcedente con justificación y
 		elaborar la remisión a la autoridad competente, con sugerencia al quejoso y oficio en PDF. \\ \hline
-		RF-PC10 & Propuesta de conciliación & Registrar una propuesta de conciliación desde el expediente.
+		RF-PC09 & Propuesta de conciliación & Registrar una propuesta de conciliación desde el expediente.
 		\\ \hline
 	\end{longtable}
 	\normalsize
@@ -384,7 +372,7 @@
 	\end{longtable}
 	\normalsize
 
-	\subsubsection{Requerimientos funcionales de la Defensora y de la administración}
+	\subsubsection{Requerimientos funcionales de la Defensora}
 	El panel de la Defensora combina dos responsabilidades: la supervisión del procedimiento completo
 	---dónde está cada queja, quién la atiende y qué casos se están retrasando--- y la administración de
 	los datos de referencia que usa el resto del sistema. La Tabla~\ref{tab:rf_admin} las reúne.
@@ -394,7 +382,7 @@
 	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
 	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.4cm}|}
-		\caption{Requerimientos funcionales de la Defensora y de la administración}
+		\caption{Requerimientos funcionales de la Defensora}
 		\label{tab:rf_admin} \\
 		\hline
 		\rowcolor{headerblue}
@@ -429,6 +417,9 @@
 		RF-A10 & Bitácora & Consultar las acciones críticas: inicios de sesión exitosos y fallidos, cambios
 		al personal, plantillas, respaldos y restauraciones, con usuario, IP de origen y fecha. \\ \hline
 		RF-A11 & Contraseña propia & Cambiar la contraseña propia; obligatoriamente si es temporal. \\ \hline
+		RF-A12 & Revisión de quejas prioritarias & Identificar las quejas de mayor prioridad y las que
+		requieren atención, para que la Defensora revise directamente su expediente y su seguimiento.
+		\\ \hline
 	\end{longtable}
 	\normalsize
 
@@ -498,10 +489,9 @@
 		RNF-A05 & Usabilidad & El panel de la Defensora debe aprovechar la densidad de información en
 		pantalla y permitir pasar de cada indicador a la lista filtrada que lo explica. \\ \hline
 		RNF-A06 & Seguridad (confidencialidad) & La generación, descarga y restauración de respaldos solo
-		debe estar disponible para los roles de administración (\texttt{ADMIN\_SISTEMAS} y
-		\texttt{DEFENSOR}). \\ \hline
+		debe estar disponible para la Defensora (rol \texttt{DEFENSOR}). \\ \hline
 		RNF-A07 & Fiabilidad & El sistema no debe permitir desactivar ni quitar el rol a la propia cuenta ni
-		a la última cuenta activa de administración. \\ \hline
+		a la última cuenta activa con rol \texttt{DEFENSOR}. \\ \hline
 		RNF-G01 & Mantenibilidad & El código Java debe seguir la guía de estilo del proyecto (Google Java
 		Style con cuatro desviaciones documentadas), sin violaciones de las reglas obligatorias. \\ \hline
 		RNF-G02 & Mantenibilidad (capacidad de ser probado) & Las clases de reglas y servicios deben tener
@@ -523,55 +513,6 @@
 		solo por su extensión. \\ \hline
 		RNF-G09 & Usabilidad & Los portales deben alcanzar una puntuación de accesibilidad de al menos 0.85
 		en Lighthouse y un puntaje SUS de al menos 68 en las pruebas de aceptación. \\ \hline
-	\end{longtable}
-	\normalsize
-
-	\subsubsection{Requerimientos técnicos}
-	Los requerimientos técnicos fijan las tecnologías, versiones y condiciones de infraestructura con
-	las que el sistema debe construirse y operarse. A diferencia de los no funcionales, no describen una
-	cualidad observable por el usuario sino restricciones de construcción, y su cumplimiento se verifica
-	por inspección de la configuración. La Tabla~\ref{tab:rt} los reúne.
-
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{1.5cm}|p{3.4cm}|p{9.6cm}|}
-		\caption{Requerimientos técnicos de la plataforma}
-		\label{tab:rt} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Ámbito} & \headercell{Requerimiento} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Ámbito} & \headercell{Requerimiento} \\
-		\hline
-		\endhead
-		RT-01 & Lenguaje del servidor & Java 21 (LTS) para todos los microservicios. \\ \hline
-		RT-02 & Marco del servidor & Spring Boot 3.5 (3.3 en Primer Contacto y Subdefensoría), con Spring
-		Security, Spring Data JPA, springdoc-openapi y Maven como herramienta de construcción. \\ \hline
-		RT-03 & Interfaz & Angular 21 con componentes independientes y detección de cambios sin zonas;
-		compilación de producción a archivos estáticos. \\ \hline
-		RT-04 & Componentes de IA & Servicio de antecedentes en Java (Spring Boot) y servicio de resúmenes
-		en Python con un marco web ligero, ambos consumidos por HTTP. \\ \hline
-		RT-05 & Base de datos & PostgreSQL 16, codificación UTF-8 y zona horaria
-		\texttt{America/Mexico\_City}. \\ \hline
-		RT-06 & Contenedores & Podman con una imagen por servicio, límites de memoria explícitos y política
-		de reinicio \texttt{always}. \\ \hline
-		RT-07 & Publicación & Nginx como proxy inverso único, con HTTPS, certificado de Let's Encrypt
-		renovado por Certbot y dominio público. \\ \hline
-		RT-08 & Infraestructura & Tres servidores virtuales privados con Linux: publicación, aplicación y
-		datos; el de aplicación con memoria suficiente para los once microservicios (23~GB en el entorno
-		desplegado). \\ \hline
-		RT-09 & Configuración & La configuración de producción de cada servicio debe montarse como volumen
-		externo, de modo que pueda cambiarse sin reconstruir la imagen. \\ \hline
-		RT-10 & Correo & Envío por SMTP autenticado con una cuenta institucional de la Defensoría. \\ \hline
-		RT-11 & Clientes & Navegadores de escritorio y móviles actuales (Chrome, Firefox, Edge, Safari) con
-		JavaScript habilitado; diseño adaptable para el portal del quejoso. \\ \hline
-		RT-12 & Control de versiones & Repositorio Git en GitHub con la rama \texttt{Produccion} como línea
-		de entrega y un flujo de GitHub Actions para las pruebas. \\ \hline
 	\end{longtable}
 	\normalsize
 
@@ -629,8 +570,7 @@
 		RN-R01 & Estados & El estatus de una queja solo puede avanzar por las transiciones del ciclo de vida
 		de la Sección~\ref{sec:maquina_estados}. \\ \hline
 		RN-R02 & Acceso & Los puntos de acceso de Recepción exigen el rol \texttt{RECEPCIONISTA}; la consulta y
-		emisión de acuerdos de conciliación admite además a \texttt{SUBDEFENSOR}, \texttt{DEFENSOR} y
-		\texttt{ADMIN\_SISTEMAS}. \\ \hline
+		emisión de acuerdos de conciliación admite además a \texttt{SUBDEFENSOR} y \texttt{DEFENSOR}. \\ \hline
 		RN-R03 & Recepción & Solo la recepcionista que tomó la queja puede regresarla o turnarla. \\ \hline
 		RN-R04 & Recepción & Una queja solo se turna si los cinco requisitos están satisfechos (o no
 		aplican); con al menos uno no satisfecho solo puede regresarse, con observación por requisito. \\ \hline
@@ -667,11 +607,11 @@
 	Los casos de uso traducen los requerimientos funcionales en interacciones concretas entre un actor y
 	el sistema. Su identificador lleva el prefijo del área a la que pertenecen: \texttt{QJ} para el
 	quejoso, \texttt{REC} para Recepción, \texttt{PC} para Primer Contacto, \texttt{SD} para
-	Subdefensoría, \texttt{ADM} para la administración y \texttt{BOT}, \texttt{CAT} y \texttt{NOT} para
+	Subdefensoría, \texttt{ADM} para la Defensora en su función de administración y \texttt{BOT}, \texttt{CAT} y \texttt{NOT} para
 	los servicios transversales. Se clasifican además en \textbf{específicos}, cuando pertenecen a un
 	solo actor, y \textbf{globales}, cuando los comparte cualquier actor autenticado o cualquier
-	visitante. La misma nomenclatura se usa en el código fuente, en los registros del servidor y en la
-	matriz de trazabilidad de pruebas. Las tablas siguientes describen cada caso de uso conforme a su
+	visitante. La misma nomenclatura se usa en el código fuente, en los registros del servidor y en los
+	casos de prueba. Las tablas siguientes describen cada caso de uso conforme a su
 	comportamiento implementado; al final de la sección se detallan los tres que articulan el paso de la
 	queja entre áreas.
 
@@ -793,8 +733,8 @@
 		CU-PC-03 & Consultar expediente de análisis & Abrir el expediente, que pasa a
 		\texttt{EN\_ANALISIS}, y consultar sus datos, evidencias e historial. \\ \hline
 		CU-PC-04 & Agendar y gestionar citas & Programar, confirmar, reagendar y cancelar citas con el
-		quejoso y consultar la agenda; el quejoso confirma o cancela desde su panel o desde el enlace
-		recibido por correo. \\ \hline
+		quejoso o con la persona señalada y consultar la agenda; la persona citada confirma o cancela desde
+		el enlace recibido por correo, y el quejoso también desde su panel. \\ \hline
 		CU-PC-05 & Registrar notas de análisis & Crear, editar y eliminar las notas del expediente, que se
 		formalizan como oficios numerados con asunto y PDF; solo su autor puede modificarlas. \\ \hline
 		CU-PC-06 & Registrar dictamen de competencia & Declarar la queja competencia de la Defensoría y
@@ -831,7 +771,7 @@
 	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
 	\begin{longtable}{|p{1.7cm}|L{3.8cm}|L{9.0cm}|}
-		\caption{Casos de uso de administración y casos de uso globales}
+		\caption{Casos de uso de la Defensora y casos de uso globales}
 		\label{tab:cu_admin} \\
 		\hline
 		\rowcolor{headerblue}
@@ -849,7 +789,7 @@
 		de otra persona, con cambio obligatorio en su siguiente inicio de sesión. \\ \hline
 		CU-ADM-03 & Ver tablero de indicadores & Consultar los indicadores globales del sistema: estado de
 		las quejas por etapa, casos que requieren atención, quejas por unidad y carga de trabajo del
-		personal. \\ \hline
+		personal, y abrir desde ellos las quejas prioritarias para revisarlas directamente. \\ \hline
 		CU-ADM-04 & Administrar plantillas de documentos & Listar, editar y previsualizar las plantillas
 		de los documentos oficiales. \\ \hline
 		CU-ADM-05 & Gestionar respaldos & Generar, listar, descargar y restaurar respaldos de la base de
@@ -961,7 +901,7 @@
 		\hline
 		\endhead
 		Actor & Analista de Primer Contacto. \\ \hline
-		Requerimientos & RF-PC08, RNF-Q04; reglas RN-PC02 y RN-PC03. \\ \hline
+		Requerimientos & RF-PC07, RNF-Q04; reglas RN-PC02 y RN-PC03. \\ \hline
 		Precondición & El expediente está abierto (\texttt{TURNADA} o \texttt{EN\_ANALISIS}) y no tiene
 		dictamen. \\ \hline
 		Flujo principal & 1. En la pestaña Resolución, el analista elige ``Competente''. 2. Captura la
@@ -1052,8 +992,7 @@
 	La arquitectura se diseñó como un conjunto de microservicios organizados por capacidad del negocio:
 	cada área de la Defensoría y cada función transversal tiene su propio servicio, su propia interfaz
 	de programación y su propio contenedor. Esta sección presenta la vista de componentes, la vista de
-	despliegue, la comunicación entre servicios, el diseño de la seguridad y las decisiones tomadas con
-	sus alternativas.
+	despliegue, la comunicación entre servicios y el diseño de la seguridad.
 
 	\subsubsection{Vista de componentes}
 	La Tabla~\ref{tab:microservicios} lista los servicios del lado del servidor con el puerto en que se
@@ -1099,7 +1038,7 @@
 		\texttt{chatbot-\allowbreak{}service} & 8089 & Preguntas frecuentes del portal y su administración. &
 		\texttt{preguntas\_\allowbreak{}chatbot} \\ \hline
 		\texttt{primer-contacto-\allowbreak{}service} & 8082 & Expedientes de análisis, citas, oficios, solicitudes a la
-		persona señalada, dictámenes, remisiones y antecedentes guardados. & \texttt{expedientes\_\allowbreak{}primer\_\allowbreak{}contacto},
+		persona señalada, dictámenes y remisiones. & \texttt{expedientes\_\allowbreak{}primer\_\allowbreak{}contacto},
 		\texttt{citas\_\allowbreak{}primer\_\allowbreak{}contacto}, \texttt{notas\_\allowbreak{}analisis}, \texttt{dictamenes\_\allowbreak{}primer\_\allowbreak{}contacto},
 		\texttt{remisiones\_\allowbreak{}externas}, \texttt{evidencias\_\allowbreak{}primer\_\allowbreak{}contacto}, \texttt{solicitudes\_\allowbreak{}denunciado} \\ \hline
 		\texttt{subdefensoria-\allowbreak{}service} & 8091 & Expedientes de investigación, oficios, recordatorios,
@@ -1108,9 +1047,6 @@
 		\texttt{respuestas\_\allowbreak{}externas\_\allowbreak{}archivos}, \texttt{acuerdos\_\allowbreak{}conclusion} \\ \hline
 		\texttt{denunciado-\allowbreak{}service} & 8094 & Registro y consulta de la versión de la persona señalada. &
 		\texttt{respuestas\_\allowbreak{}denunciado}, \texttt{respuesta\_\allowbreak{}denunciado\_\allowbreak{}archivos} \\ \hline
-		\texttt{antecedentes-\allowbreak{}service} & 8093 & Búsqueda de quejas similares por contenido y generación de
-		resúmenes extractivos. & Ninguna (solo lectura) \\ \hline
-		\texttt{resumen-\allowbreak{}service} & 8090 & Borrador narrativo de resumen de la queja (Python). & Ninguna \\ \hline
 	\end{longtable}
 	\normalsize
 
@@ -1127,8 +1063,7 @@
 		\item \textbf{Servidor de publicación.} Ejecuta el proxy inverso público (puertos 80 y 443), que
 		termina TLS, y los cinco contenedores Nginx que sirven las aplicaciones compiladas. Es el único
 		servidor con puertos de aplicación abiertos a Internet.
-		\item \textbf{Servidor de aplicación.} Ejecuta los once microservicios Java y el servicio de
-		resúmenes. Sus puertos solo aceptan conexiones que llegan por la interfaz pública desde el servidor
+		\item \textbf{Servidor de aplicación.} Ejecuta los diez microservicios Java. Sus puertos solo aceptan conexiones que llegan por la interfaz pública desde el servidor
 		de publicación; las llamadas entre servicios del mismo servidor no se filtran.
 		\item \textbf{Servidor de datos.} Ejecuta PostgreSQL~16. El puerto de la base solo acepta
 		conexiones del servidor de aplicación y los respaldos diarios se guardan en el propio servidor.
@@ -1210,8 +1145,6 @@
 		investigación al dictaminar competencia & El dictamen se conserva; se ofrece reenviar \\ \hline
 		\texttt{primer-contacto-service} & \texttt{revision-service} & Obtener el contenido de una
 		evidencia sin duplicar archivos & Se informa al usuario \\ \hline
-		\texttt{primer-contacto-service} & \texttt{antecedentes-service}, \texttt{resumen-service} &
-		Antecedentes similares y borrador de resumen & Se muestra un aviso y un resumen de respaldo \\ \hline
 	\end{longtable}
 	\normalsize
 
@@ -1269,56 +1202,19 @@
 		Notificaciones propias & Cualquier token válido \\ \hline
 		\texttt{/api/revision/**} & \texttt{RECEPCIONISTA} \\ \hline
 		Acuerdos de conciliación del personal & \texttt{RECEPCIONISTA}, \texttt{SUBDEFENSOR},
-		\texttt{DEFENSOR}, \texttt{ADMIN\_SISTEMAS} \\ \hline
+		\texttt{DEFENSOR} \\ \hline
 		\texttt{/api/primer-contacto/**} & \texttt{ANALISTA\_PRIMER\_CONTACTO} \\ \hline
 		Consulta de lo actuado en Primer Contacto, PDF de oficios y evidencias de Primer Contacto &
 		\texttt{ANALISTA\_PRIMER\_CONTACTO}, \texttt{SUBDEFENSOR}, \texttt{DEFENSOR} \\ \hline
 		\texttt{/api/subdefensoria/**} & \texttt{SUBDEFENSOR} \\ \hline
 		Consulta de respuestas de la persona señalada & Todos los roles de personal \\ \hline
 		Personal, plantillas, respaldos, bitácora, seguimiento, administración del catálogo y del chatbot &
-		\texttt{ADMIN\_SISTEMAS}, \texttt{DEFENSOR} \\ \hline
+		\texttt{DEFENSOR} \\ \hline
 		Cambio de contraseña propia del personal & Cualquier rol de personal \\ \hline
 		Envío de correo, registro de notificaciones e ingesta de expedientes & Solo entre servicios;
 		bloqueado en el proxy \\ \hline
 	\end{longtable}
 	\normalsize
-
-	\subsubsection{Decisiones de diseño y alternativas descartadas}
-	\label{sec:decisiones_diseno}
-	Cada decisión de arquitectura implicó renunciar a una alternativa. Se documentan aquí las más
-	relevantes, con la razón que las sostuvo.
-
-	\paragraph{Microservicios en lugar de un monolito.} La alternativa más simple era una sola aplicación
-	con módulos por área. Se descartó porque las áreas de la Defensoría evolucionaron a ritmos distintos
-	---Recepción se construyó y validó meses antes que Subdefensoría--- y porque dos equipos trabajaron en
-	paralelo sobre módulos diferentes. Con servicios separados, el despliegue de un área no detiene a las
-	demás, y un fallo de memoria en un servicio no tumba al resto.
-
-	\paragraph{Base de datos compartida en lugar de una base por servicio.} La alternativa canónica era
-	que cada servicio tuviera su base. Se descartó porque la Defensora necesita indicadores que cruzan
-	todas las etapas ---dónde está cada queja, cuánto tarda cada área---, y obtenerlos de once bases
-	habría exigido un servicio de agregación. Se adoptó una base compartida con un dueño declarado por
-	tabla; los servicios que solo consultan datos de otro lo hacen en modo de solo lectura. Primer
-	Contacto y Subdefensoría operaron inicialmente con bases en memoria y se migraron a la base
-	compartida al detectarse que perdían sus datos con cada reinicio.
-
-	\paragraph{Llamadas síncronas en lugar de mensajería.} La alternativa era un intermediario de
-	mensajes para los avisos y el paso de expedientes. Se descartó por el costo operativo de un
-	componente más en una infraestructura administrada por un equipo de dos personas; la tolerancia a
-	fallos se obtuvo con tiempos de espera, operaciones de mejor esfuerzo y reenvío manual.
-
-	\paragraph{Dos emisores de tokens.} Se separó la autenticación de quejosos y la del personal porque
-	sus poblaciones, políticas y tablas son distintas; ambos usan el mismo formato, de modo que los
-	servicios validan los dos con el mismo filtro.
-
-	\paragraph{Evidencias en la base de datos.} Las evidencias se guardan como contenido binario en la
-	base y no en un almacenamiento de archivos. La decisión simplifica los respaldos ---un solo volcado
-	incluye todo el expediente--- a cambio de mayor consumo de memoria al recibir archivos grandes, lo que
-	obligó a dimensionar el contenedor del servicio de quejas (Sección~\ref{sec:impl_despliegue}).
-
-	\paragraph{Cinco aplicaciones web en lugar de una con vistas por rol.} Una sola aplicación habría
-	enviado al navegador del quejoso el código de los paneles del personal. Con aplicaciones separadas,
-	cada navegador recibe solo el código de su actor.
 
 	\subsection{Diseño de la base de datos}
 	\label{sec:diseno_bd}
@@ -1367,72 +1263,3 @@
 		Avisos & \texttt{notificaciones} & Notificación por destinatario, tipo, enlace y lectura \\ \hline
 	\end{longtable}
 	\normalsize
-
-	\subsubsection{Correspondencia entre reglas de negocio y mecanismos de integridad}
-	Las reglas de negocio se hicieron cumplir con el mecanismo más cercano a los datos que fuera
-	viable. Las restricciones de unicidad ---folio de la queja, folio de respuesta, correo y número de
-	empleado del personal, folio de cada expediente--- son restricciones \texttt{UNIQUE} de la base, de
-	modo que ni siquiera un defecto del código podría duplicarlas. Las relaciones de la queja con su
-	tutor y sus evidencias, y de la respuesta de la persona señalada con sus archivos, son claves
-	foráneas reales. La exclusividad de la toma de una queja se garantiza con una sola sentencia de
-	actualización condicionada al estatus, que la base ejecuta de forma atómica.
-
-	Las referencias entre tablas de servicios distintos ---el folio de la queja en un expediente de
-	Primer Contacto, por ejemplo--- se guardan como texto y no como claves foráneas, y los nombres de las
-	personas se copian junto a sus identificadores. Esta desnormalización deliberada rompe la tercera
-	forma normal en esas tablas a cambio de que cada servicio pueda mostrar sus datos sin depender de
-	otro, conforme al compromiso descrito en la Sección~\ref{sec:persistencia_datos}. Las reglas que
-	dependen del momento ---plazos, transiciones de estado, vigencia de códigos--- se validan en la capa
-	de servicios, donde además se prueban de forma unitaria.
-
-	\subsection{Diseño de los componentes de apoyo con inteligencia artificial}
-	\label{sec:diseno_ia}
-	Los componentes de inteligencia artificial se diseñaron como servicios independientes que Primer
-	Contacto consume por HTTP. Sus fundamentos ---representación vectorial del texto, similitud,
-	recuperación de antecedentes y generación de resúmenes--- se desarrollan en las
-	secciones~\ref{sec:busqueda_antecedentes} y~\ref{sec:generacion_resumenes} del marco teórico; aquí se
-	documenta únicamente su relación con el resto del sistema.
-
-	\begin{itemize}
-		\item \textbf{Búsqueda de antecedentes.} Recibe la narración de una queja y devuelve las quejas
-		más parecidas con su porcentaje de similitud y el fragmento relevante. Solo lee la tabla de quejas;
-		la identificación de la misma persona quejosa o señalada se hace después en Primer Contacto.
-		\item \textbf{Borrador de resumen.} Recibe la narración y devuelve un borrador narrativo junto con
-		los fragmentos que lo sustentan, para que el analista pueda contrastarlo con el texto original.
-	\end{itemize}
-
-	El diseño impone dos condiciones. La primera es que la indisponibilidad de estos componentes no debe
-	impedir que una queja se analice o se dictamine: si no responden dentro de su tiempo de espera, la
-	pantalla lo indica y muestra un resumen de respaldo generado en el navegador. La segunda es que su
-	resultado es siempre una sugerencia que el personal valora, nunca una decisión: ningún estado de la
-	queja cambia a partir de una salida del modelo.
-
-	\subsection{Diseño de la interfaz de usuario}
-	\label{sec:diseno_interfaz}
-	El diseño de las interfaces partió de prototipos de alta fidelidad que se usaron como herramienta de
-	validación temprana con el cliente: corregir el orden de los campos de un formulario en un prototipo
-	cuesta minutos, y hacerlo sobre una interfaz desplegada cuesta un ciclo completo de compilación y
-	despliegue. Los paneles de Primer Contacto y de la Defensora se rehicieron sobre un documento de
-	diseño revisado con el personal, pantalla por pantalla. Los criterios que se fijaron para las cinco
-	aplicaciones fueron los siguientes:
-
-	\begin{itemize}
-		\item \textbf{Identidad institucional.} Encabezado blanco con la marca del IPN, menú lateral claro
-		y pie en color guinda, de modo que el usuario reconozca un servicio oficial.
-		\item \textbf{Un mismo armazón para el personal.} Los cuatro paneles del personal comparten
-		estructura, componentes, insignias y patrones de error, para que quien use más de uno no aprenda
-		dos lenguajes visuales.
-		\item \textbf{Formularios por pasos.} Los formularios extensos se dividen en secciones numeradas,
-		con previsualización de archivos y validación por campo.
-		\item \textbf{Ayuda contextual no intrusiva.} Los avisos normativos ---como el plazo para presentar
-		una queja o el fundamento de cada requisito de admisión--- se muestran junto al elemento al que se
-		refieren o en un elemento flotante.
-		\item \textbf{Retroalimentación explícita.} Toda operación produce un mensaje de éxito, error o
-		validación pendiente (RNF-Q07).
-		\item \textbf{Del indicador al detalle.} Cada número de un tablero abre la lista ya filtrada que
-		lo explica, y los filtros quedan en la URL para poder compartirse (RNF-A05).
-		\item \textbf{Siguiente paso visible.} En los expedientes de Primer Contacto y Subdefensoría, el
-		sistema indica cuál es la siguiente acción que corresponde según el estado.
-	\end{itemize}
-
-	El recorrido funcional de cada aplicación se presenta en el Capítulo~\ref{cap:modulos}.

@@ -89,6 +89,18 @@ public class ExpedienteAnalisisService {
         return construirDTO(expediente);
     }
 
+    /**
+     * PC-1: el analista asigna la prioridad (BAJA, MEDIA, ALTA o URGENTE). Se guarda en el
+     * momento; el valor lo valida el controlador. Viaja a Subdefensoría al turnar.
+     */
+    public ExpedienteAnalisisDTO cambiarPrioridad(String folio, String prioridad) {
+        ExpedientePrimerContacto expediente = expedienteRepository.findByFolio(folio)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No existe el expediente de Primer Contacto con folio " + folio));
+        expediente.setPrioridad(prioridad);
+        return construirDTO(expedienteRepository.save(expediente));
+    }
+
     /*
      * CU-PC-03: al abrir el expediente para trabajarlo, un expediente
      * TURNADA pasa a EN_ANALISIS y queda registrado quién lo abrió y

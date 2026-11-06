@@ -18,7 +18,7 @@
 #   BASE_URL=https://pruebas.ejemplo        (obligatoria)
 #   CRED_QUEJOSO="correo:password"          (una por rol; las que falten se omiten)
 #   CRED_RECEPCIONISTA, CRED_ANALISTA_PRIMER_CONTACTO, CRED_SUBDEFENSOR,
-#   CRED_DEFENSOR, CRED_ADMIN_SISTEMAS
+#   CRED_DEFENSOR
 #   MATRIZ=ruta/al/csv (por defecto, la de esta carpeta)
 # Salida: reporte en ${REPORTE:-matriz-roles-resultado.csv}; exit 1 si hay fallas.
 # ==============================================================================
@@ -28,7 +28,7 @@ set -uo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
 MATRIZ="${MATRIZ:-$DIR/matriz-endpoints.csv}"
 REPORTE="${REPORTE:-matriz-roles-resultado.csv}"
-ROLES=(QUEJOSO RECEPCIONISTA ANALISTA_PRIMER_CONTACTO SUBDEFENSOR DEFENSOR ADMIN_SISTEMAS)
+ROLES=(QUEJOSO RECEPCIONISTA ANALISTA_PRIMER_CONTACTO SUBDEFENSOR DEFENSOR)
 
 declare -A TOKEN
 fallas=0
@@ -105,14 +105,14 @@ if [ -n "${TOKEN[QUEJOSO]:-}" ]; then
     c="$(http GET "$BASE_URL/api/quejoso/quejas/mias" "$alterado")"
     [[ "$c" == 401 || "$c" == 403 ]]; registrar "RNF-Q06" GET "/api/quejoso/quejas/mias" "TOKEN_ALTERADO" "401/403" "$c" $(( $? == 0 ))
 fi
-if [ -n "${TOKEN[ADMIN_SISTEMAS]:-}" ]; then
-    t="${TOKEN[ADMIN_SISTEMAS]}"
+if [ -n "${TOKEN[DEFENSOR]:-}" ]; then
+    t="${TOKEN[DEFENSOR]}"
     # RNF-A03: restaurar sin confirmación explícita
     c="$(http POST "$BASE_URL/api/admin/seguridad/restaurar" "$t" '{"nombreArchivo":"no-existe.sql"}')"
-    [[ "$c" == 4* ]]; registrar "RNF-A03" POST "/api/admin/seguridad/restaurar" "ADMIN_SISTEMAS" "4xx" "$c" $(( $? == 0 ))
+    [[ "$c" == 4* ]]; registrar "RNF-A03" POST "/api/admin/seguridad/restaurar" "DEFENSOR" "4xx" "$c" $(( $? == 0 ))
     # Path traversal en la descarga de respaldos
     c="$(http GET "$BASE_URL/api/admin/seguridad/respaldos/..%2F..%2F..%2Fetc%2Fpasswd/descargar" "$t")"
-    [[ "$c" != 200 ]]; registrar "SEG-03" GET "/respaldos/{traversal}/descargar" "ADMIN_SISTEMAS" "!=200" "$c" $(( $? == 0 ))
+    [[ "$c" != 200 ]]; registrar "SEG-03" GET "/respaldos/{traversal}/descargar" "DEFENSOR" "!=200" "$c" $(( $? == 0 ))
 fi
 
 echo ""

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Textos.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.queja_service.validacion</a> &gt; <span class="el_source">Textos.java</span></div><h1>Textos.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.queja_service.validacion;
+
+/** Utilidades de limpieza de texto previas a validar y persistir. */
+public final class Textos {
+
+    private Textos() {
+    }
+
+    public static boolean esVacio(String valor) {
+<span class="fc bfc" id="L10" title="All 4 branches covered.">        return valor == null || valor.isBlank();</span>
+    }
+
+    /**
+     * Quita espacios al inicio/final y colapsa espacios internos repetidos.
+     * &quot;  Juan   Carlos &quot; -&gt; &quot;Juan Carlos&quot;. Devuelve null si no queda nada.
+     *
+     * Se aplica ANTES de validar: si no, &quot;Juan  Carlos&quot; (dos espacios) fallaría el regex de
+     * nombre por un motivo que el usuario no puede ver en pantalla.
+     */
+    public static String normalizar(String valor) {
+<span class="fc bfc" id="L21" title="All 2 branches covered.">        if (valor == null) {</span>
+<span class="fc" id="L22">            return null;</span>
+        }
+<span class="fc" id="L24">        String limpio = valor.trim().replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        return limpio.isEmpty() ? null : limpio;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

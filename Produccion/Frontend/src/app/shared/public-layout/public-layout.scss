@@ -286,3 +286,12 @@
     margin-bottom: 14px;
   }
 }
+
+/* Fundamento legal en el pie (observación de revisión, 2026-11). */
+.footer-legal {
+  max-width: 900px;
+  margin: 0 auto 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+}

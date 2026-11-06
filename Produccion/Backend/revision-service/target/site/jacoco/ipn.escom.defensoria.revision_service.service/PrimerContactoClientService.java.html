@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrimerContactoClientService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.revision_service.service</a> &gt; <span class="el_source">PrimerContactoClientService.java</span></div><h1>PrimerContactoClientService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.revision_service.service;
+
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import ipn.escom.defensoria.revision_service.entity.Queja;
+import ipn.escom.defensoria.revision_service.entity.QuejaEvidencia;
+import ipn.escom.defensoria.revision_service.model.PrimerContactoIngresoRequest;
+import ipn.escom.defensoria.revision_service.model.PrimerContactoIngresoResponse;
+import ipn.escom.defensoria.revision_service.repository.QuejaEvidenciaRepository;
+
+@Service
+public class PrimerContactoClientService {
+
+    private final RestTemplate restTemplate;
+    private final QuejaEvidenciaRepository evidenciaRepository;
+
+    @Value(&quot;${primer-contacto.base-url}&quot;)
+    private String primerContactoBaseUrl;
+
+    public PrimerContactoClientService(
+            RestTemplate restTemplate,
+            QuejaEvidenciaRepository evidenciaRepository
+<span class="fc" id="L28">    ) {</span>
+<span class="fc" id="L29">        this.restTemplate = restTemplate;</span>
+<span class="fc" id="L30">        this.evidenciaRepository = evidenciaRepository;</span>
+<span class="fc" id="L31">    }</span>
+
+    public PrimerContactoIngresoResponse enviarAPrimerContacto(
+            Queja queja
+    ) {
+
+        /*
+         * IMPORTANTE:
+         * No enviamos queja.id a Primer Contacto.
+         *
+         * La relacion entre las etapas se realiza mediante:
+         *
+         * Quejas/Revision: FOL-...
+         *        -&gt;
+         * Primer Contacto: folioOrigen = FOL-...
+         */
+
+<span class="fc" id="L48">        PrimerContactoIngresoRequest.QuejosoRequest quejoso =</span>
+                new PrimerContactoIngresoRequest.QuejosoRequest(
+                        null,
+<span class="fc" id="L51">                        construirNombreCompleto(queja),</span>
+<span class="fc" id="L52">                        queja.getCorreoInstitucional(),</span>
+                        null,
+<span class="fc" id="L54">                        queja.getUnidadAcademicaClave(),</span>
+<span class="fc" id="L55">                        resolverTipoUsuario(queja)</span>
+                );
+
+        List&lt;QuejaEvidencia&gt; evidenciasOrigen =
+<span class="fc bfc" id="L59" title="All 2 branches covered.">                queja.getId() == null</span>
+<span class="fc" id="L60">                        ? Collections.emptyList()</span>
+<span class="fc" id="L61">                        : evidenciaRepository.findByQuejaId(queja.getId());</span>
+
+<span class="fc" id="L63">        List&lt;PrimerContactoIngresoRequest.EvidenciaRequest&gt; evidencias =</span>
+<span class="fc" id="L64">                evidenciasOrigen.stream()</span>
+<span class="fc" id="L65">                        .map(this::convertirEvidencia)</span>
+<span class="fc" id="L66">                        .toList();</span>
+
+<span class="fc" id="L68">        PrimerContactoIngresoRequest request =</span>
+                new PrimerContactoIngresoRequest(
+<span class="fc" id="L70">                        queja.getNumeroFolio(),</span>
+<span class="fc" id="L71">                        queja.getMotivo(),</span>
+<span class="fc" id="L72">                        queja.getDescripcion(),</span>
+<span class="fc" id="L73">                        resolverFechaRecepcion(queja),</span>
+                        null,
+                        quejoso,
+                        evidencias
+                );
+
+<span class="fc" id="L79">        PrimerContactoIngresoResponse response =</span>
+<span class="fc" id="L80">                restTemplate.postForObject(</span>
+                        primerContactoBaseUrl
+                                + &quot;/api/primer-contacto/ingesta/expedientes&quot;,
+                        request,
+                        PrimerContactoIngresoResponse.class
+                );
+
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (response == null) {</span>
+<span class="fc" id="L88">            throw new RuntimeException(</span>
+                    &quot;Primer Contacto no devolvio informacion del expediente.&quot;
+            );
+        }
+
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        if (response.getFolio() == null</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">                || response.getFolio().isBlank()) {</span>
+<span class="fc" id="L95">            throw new RuntimeException(</span>
+                    &quot;Primer Contacto no devolvio un folio valido.&quot;
+            );
+        }
+
+<span class="fc" id="L100">        return response;</span>
+    }
+
+    private PrimerContactoIngresoRequest.EvidenciaRequest convertirEvidencia(
+            QuejaEvidencia evidencia
+    ) {
+
+<span class="nc" id="L107">        return new PrimerContactoIngresoRequest.EvidenciaRequest(</span>
+<span class="nc" id="L108">                evidencia.getId(),</span>
+<span class="nc" id="L109">                evidencia.getNombreArchivo(),</span>
+<span class="nc" id="L110">                evidencia.getTipoMime(),</span>
+                null,
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                evidencia.getFechaSubida() != null</span>
+<span class="nc" id="L113">                        ? evidencia.getFechaSubida().toString()</span>
+<span class="nc" id="L114">                        : null</span>
+        );
+    }
+
+    private String construirNombreCompleto(Queja queja) {
+
+<span class="fc" id="L120">        StringBuilder nombre = new StringBuilder();</span>
+
+<span class="fc" id="L122">        agregarParteNombre(nombre, queja.getNombreQuejoso());</span>
+<span class="fc" id="L123">        agregarParteNombre(nombre, queja.getApellido1Quejoso());</span>
+<span class="fc" id="L124">        agregarParteNombre(nombre, queja.getApellido2Quejoso());</span>
+
+<span class="fc" id="L126">        String resultado = nombre.toString().trim();</span>
+
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        return resultado.isEmpty() ? null : resultado;</span>
+    }
+
+    private void agregarParteNombre(
+            StringBuilder nombre,
+            String parte
+    ) {
+
+<span class="pc bpc" id="L136" title="1 of 4 branches missed.">        if (parte != null &amp;&amp; !parte.isBlank()) {</span>
+
+<span class="fc bfc" id="L138" title="All 2 branches covered.">            if (nombre.length() &gt; 0) {</span>
+<span class="fc" id="L139">                nombre.append(&quot; &quot;);</span>
+            }
+
+<span class="fc" id="L142">            nombre.append(parte.trim());</span>
+        }
+<span class="fc" id="L144">    }</span>
+
+    private String resolverTipoUsuario(Queja queja) {
+
+        /*
+         * Una queja registrada manualmente puede incluir
+         * alumno, empleado o externo.
+         */
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        if (&quot;MANUAL&quot;.equalsIgnoreCase(queja.getOrigenRegistro())</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">                &amp;&amp; queja.getTipoUsuarioManual() != null</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">                &amp;&amp; !queja.getTipoUsuarioManual().isBlank()) {</span>
+
+<span class="fc" id="L156">            return queja.getTipoUsuarioManual();</span>
+        }
+
+<span class="fc" id="L159">        return queja.getTipoIdentificacionQuejoso();</span>
+    }
+
+    private String resolverFechaRecepcion(Queja queja) {
+
+        /*
+         * Para documentos recibidos fisicamente usamos
+         * la fecha real de recepcion.
+         */
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        if (&quot;MANUAL&quot;.equalsIgnoreCase(queja.getOrigenRegistro())</span>
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">                &amp;&amp; queja.getFechaRecepcionFisica() != null) {</span>
+
+<span class="fc" id="L171">            return queja.getFechaRecepcionFisica().toString();</span>
+        }
+
+        /*
+         * Para quejas web/publicas usamos la fecha
+         * en que la queja fue creada.
+         */
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">        if (queja.getFechaCreacion() != null) {</span>
+<span class="fc" id="L179">            return queja.getFechaCreacion().toString();</span>
+        }
+
+<span class="nc" id="L182">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

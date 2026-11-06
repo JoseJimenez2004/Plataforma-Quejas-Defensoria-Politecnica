@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReglasQueja.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.queja_service.validacion</a> &gt; <span class="el_source">ReglasQueja.java</span></div><h1>ReglasQueja.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.queja_service.validacion;
+
+import java.time.LocalDate;
+
+/**
+ * Reglas de negocio de CU-Q01 (registro público de quejas) en un solo lugar.
+ *
+ * Todos estos valores son la FUENTE DE VERDAD: el frontend replica los mismos límites para
+ * dar retroalimentación inmediata, pero el servidor es quien realmente decide. Si un valor
+ * cambia aquí, hay que cambiarlo también en el frontend
+ * (Frontend/src/app/core/validaciones/reglas-queja.ts).
+ */
+public final class ReglasQueja {
+
+    private ReglasQueja() {
+    }
+
+    // ---- Nombres y apellidos -------------------------------------------------------------
+    /**
+     * Letras (incluidos acentos y ñ), permitiendo espacio interno, apóstrofe y guion entre
+     * palabras. Deliberadamente NO es &quot;solo A-Z&quot;: eso rechazaría nombres reales como
+     * &quot;María José&quot;, &quot;D'Angelo&quot; o &quot;Pérez-Gómez&quot;.
+     */
+    public static final String REGEX_NOMBRE =
+            &quot;^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:[ '\\-][A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$&quot;;
+    public static final int NOMBRE_LONGITUD_MINIMA = 2;
+    public static final int NOMBRE_LONGITUD_MAXIMA = 50;
+
+    // ---- Boleta / número de empleado ----------------------------------------------------
+    /** Solo dígitos, máximo 10. Se guarda como texto: los ceros a la izquierda importan. */
+    public static final String REGEX_NUMERO_IDENTIFICACION = &quot;^\\d{1,10}$&quot;;
+    public static final int NUMERO_IDENTIFICACION_LONGITUD_MAXIMA = 10;
+
+    // ---- Fechas --------------------------------------------------------------------------
+<span class="fc" id="L35">    public static final LocalDate FECHA_NACIMIENTO_MINIMA = LocalDate.of(1920, 1, 1);</span>
+    /** Zona con la que se calcula &quot;hoy&quot; y &quot;el año en curso&quot; — no la del servidor por default. */
+    public static final String ZONA_HORARIA = &quot;America/Mexico_City&quot;;
+    /**
+     * Candado de temporalidad: la queja solo procede por hechos ocurridos dentro de los 90 días
+     * naturales anteriores a su presentación (artículo 13, párrafo tercero). Antes lo revisaba
+     * la recepcionista a mano (punto 4 de la lista de verificación); ahora lo impide el sistema.
+     * El frontend replica el valor en reglas-queja.ts (PLAZO_DIAS_QUEJA).
+     */
+    public static final int PLAZO_DIAS_QUEJA = 90;
+
+    // ---- Descripción ---------------------------------------------------------------------
+    public static final int DESCRIPCION_LONGITUD_MINIMA = 20;
+
+    // ---- Archivos ------------------------------------------------------------------------
+    /**
+     * Prefijo con el que el frontend marca la credencial oficial dentro de la lista de
+     * archivos. Es lo que permite aplicarle reglas más estrictas que al resto de evidencias
+     * sin cambiar el contrato multipart del endpoint.
+     */
+    public static final String PREFIJO_IDENTIFICACION = &quot;IDENTIFICACION_&quot;;
+
+    /** Credencial oficial: solo imágenes, 3 MB máximo, hasta 2 archivos. Ya NO se acepta PDF. */
+    public static final long IDENTIFICACION_TAMANIO_MAXIMO = 3L * 1024 * 1024;
+    public static final int IDENTIFICACION_CANTIDAD_MAXIMA = 2;
+    public static final int IDENTIFICACION_CANTIDAD_MINIMA = 1;
+
+    /** Evidencias de la queja: se mantienen los tipos y el tope de 30 MB que ya existían. */
+    public static final long EVIDENCIA_TAMANIO_MAXIMO = 30L * 1024 * 1024;
+
+    // ---- Aviso de privacidad -------------------------------------------------------------
+    /** Versión vigente del aviso. Al cambiar el texto hay que subir este número. */
+    public static final String AVISO_PRIVACIDAD_VERSION = &quot;1.0&quot;;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

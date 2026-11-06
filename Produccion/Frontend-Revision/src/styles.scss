@@ -633,3 +633,11 @@ button {
     }
   }
 }
+
+/* Leyenda del candado de 90 días bajo la fecha de los hechos. */
+.ayuda-plazo {
+  display: block;
+  margin-top: 4px;
+  color: var(--texto-suave, #6b7280);
+  font-size: 12px;
+}

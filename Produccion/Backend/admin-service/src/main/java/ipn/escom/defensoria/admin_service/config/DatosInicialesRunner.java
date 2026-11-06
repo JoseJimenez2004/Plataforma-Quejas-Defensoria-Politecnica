@@ -11,7 +11,7 @@ import ipn.escom.defensoria.admin_service.entity.RolStaff;
 import ipn.escom.defensoria.admin_service.repository.PersonalAdministrativoRepository;
 
 /** Si la tabla de personal administrativo está completamente vacía (primer arranque del
- * servicio), crea una cuenta ADMIN_SISTEMAS inicial para poder entrar por primera vez al
+ * servicio), crea la cuenta inicial de la Defensora (DEFENSOR) para poder entrar por primera vez al
  * panel. La contraseña temporal se imprime UNA sola vez en el log de arranque -- después de
  * activarla, cámbiala desde "Editar Perfil". */
 @Component
@@ -35,10 +35,10 @@ public class DatosInicialesRunner implements CommandLineRunner {
         }
 
         PersonalAdministrativo admin = new PersonalAdministrativo();
-        admin.setNombreCompleto("Administrador del Sistema");
-        admin.setNumeroEmpleado("ADMIN-0001");
-        admin.setCorreoInstitucional("admin.sistemas@ipn.mx");
-        admin.setRol(RolStaff.ADMIN_SISTEMAS);
+        admin.setNombreCompleto("Defensora (cuenta inicial)");
+        admin.setNumeroEmpleado("DEF-0001");
+        admin.setCorreoInstitucional("defensora@ipn.mx");
+        admin.setRol(RolStaff.DEFENSOR);
         admin.setPassword(passwordEncoder.encode(PASSWORD_INICIAL));
         admin.setCuentaTemporal(true);
         admin.setForzarCambioPassword(true);
@@ -46,7 +46,7 @@ public class DatosInicialesRunner implements CommandLineRunner {
         repository.save(admin);
 
         log.warn("========================================================================");
-        log.warn(" Cuenta ADMIN_SISTEMAS inicial creada (correo: admin.sistemas@ipn.mx).");
+        log.warn(" Cuenta inicial de la Defensora creada (correo: defensora@ipn.mx).");
         log.warn(" Contraseña temporal: {}", PASSWORD_INICIAL);
         log.warn(" Cámbiala en cuanto inicies sesión por primera vez.");
         log.warn("========================================================================");

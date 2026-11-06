@@ -68,7 +68,7 @@ Se crean con los scripts semilla (`Backend/database-scripts/seeds/`). La contras
 
 | Correo | Rol | Seed |
 |---|---|---|
-| admin.test@ipn.mx | ADMIN_SISTEMAS | 03-personal_test.sql |
+| defensora.test@ipn.mx | DEFENSOR | 03-personal_test.sql |
 | recepcionista.test@ipn.mx | RECEPCIONISTA | 03-personal_test.sql |
 | primer.contacto.test@ipn.mx | ANALISTA_PRIMER_CONTACTO | 03-personal_test.sql |
 | defensor.test@ipn.mx | DEFENSOR | 03-personal_test.sql |

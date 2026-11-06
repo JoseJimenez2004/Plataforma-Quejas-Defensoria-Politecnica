@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DictamenPrimerContactoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.controller</a> &gt; <span class="el_source">DictamenPrimerContactoController.java</span></div><h1>DictamenPrimerContactoController.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.controller;
+
+import ipn.escom.defensoria.primercontacto.dto.CompetenciaDTO;
+import ipn.escom.defensoria.primercontacto.dto.DictamenDTO;
+import ipn.escom.defensoria.primercontacto.dto.ImprocedenciaDTO;
+import ipn.escom.defensoria.primercontacto.service.DictamenPrimerContactoService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.primercontacto.service.AnalistaAutenticadoService;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/api/primer-contacto/dictamenes&quot;)
+public class DictamenPrimerContactoController {
+
+    private final DictamenPrimerContactoService dictamenPrimerContactoService;
+    private final AnalistaAutenticadoService analistaAutenticadoService;
+
+    public DictamenPrimerContactoController(
+            DictamenPrimerContactoService dictamenPrimerContactoService, AnalistaAutenticadoService analistaAutenticadoService
+<span class="nc" id="L24">    ) {</span>
+<span class="nc" id="L25">        this.dictamenPrimerContactoService =</span>
+                dictamenPrimerContactoService;
+<span class="nc" id="L27">        this.analistaAutenticadoService = analistaAutenticadoService;</span>
+<span class="nc" id="L28">    }</span>
+
+    @PostMapping(&quot;/competente&quot;)
+    public ResponseEntity&lt;DictamenDTO&gt; registrarCompetencia(
+            @Valid @RequestBody CompetenciaDTO dto,
+            Authentication authentication
+    ) {
+
+<span class="nc" id="L36">        PersonalAdministrativo analista =</span>
+<span class="nc" id="L37">                analistaAutenticadoService.obtenerAnalista(authentication);</span>
+
+<span class="nc" id="L39">        return ResponseEntity.ok(</span>
+<span class="nc" id="L40">                dictamenPrimerContactoService.registrarCompetencia(</span>
+                        dto,
+                        analista
+                )
+        );
+    }
+
+    @PostMapping(&quot;/improcedente&quot;)
+    public ResponseEntity&lt;DictamenDTO&gt; registrarImprocedencia(
+            @Valid @RequestBody ImprocedenciaDTO dto,
+            Authentication authentication
+    ) {
+
+<span class="nc" id="L53">        PersonalAdministrativo analista =</span>
+<span class="nc" id="L54">                analistaAutenticadoService.obtenerAnalista(authentication);</span>
+
+<span class="nc" id="L56">        return ResponseEntity.ok(</span>
+<span class="nc" id="L57">                dictamenPrimerContactoService.registrarImprocedencia(</span>
+                        dto,
+                        analista
+                )
+        );
+    }
+
+    @GetMapping(&quot;/expediente/{expedienteId}&quot;)
+    public DictamenDTO obtenerPorExpediente(
+            @PathVariable Long expedienteId
+    ) {
+<span class="nc" id="L68">        return dictamenPrimerContactoService</span>
+<span class="nc" id="L69">                .obtenerPorExpediente(expedienteId);</span>
+    }
+
+    /*
+     * Expediente PROCEDENTE que Subdefensoría no alcanzó a recibir.
+     */
+    @PostMapping(&quot;/folio/{folio}/reenviar-subdefensoria&quot;)
+    public DictamenDTO reenviarASubdefensoria(
+            @PathVariable String folio,
+            Authentication authentication
+    ) {
+<span class="nc" id="L80">        analistaAutenticadoService.obtenerAnalista(authentication);</span>
+
+<span class="nc" id="L82">        return dictamenPrimerContactoService</span>
+<span class="nc" id="L83">                .reenviarASubdefensoria(folio);</span>
+    }
+
+    @GetMapping(&quot;/folio/{folio}&quot;)
+    public DictamenDTO obtenerPorFolio(
+            @PathVariable String folio
+    ) {
+<span class="nc" id="L90">        return dictamenPrimerContactoService</span>
+<span class="nc" id="L91">                .obtenerPorFolio(folio);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

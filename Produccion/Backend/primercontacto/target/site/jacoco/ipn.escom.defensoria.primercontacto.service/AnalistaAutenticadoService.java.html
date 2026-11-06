@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AnalistaAutenticadoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">primercontacto</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.primercontacto.service</a> &gt; <span class="el_source">AnalistaAutenticadoService.java</span></div><h1>AnalistaAutenticadoService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.primercontacto.service;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import ipn.escom.defensoria.primercontacto.entity.PersonalAdministrativo;
+import ipn.escom.defensoria.primercontacto.entity.RolStaff;
+import ipn.escom.defensoria.primercontacto.repository.PersonalAdministrativoRepository;
+
+@Service
+public class AnalistaAutenticadoService {
+
+    private final PersonalAdministrativoRepository personalRepository;
+
+    public AnalistaAutenticadoService(
+            PersonalAdministrativoRepository personalRepository
+<span class="nc" id="L19">    ) {</span>
+<span class="nc" id="L20">        this.personalRepository = personalRepository;</span>
+<span class="nc" id="L21">    }</span>
+
+    public PersonalAdministrativo obtenerAnalista(
+            Authentication authentication
+    ) {
+
+<span class="nc bnc" id="L27" title="All 2 branches missed.">        if (authentication == null</span>
+<span class="nc bnc" id="L28" title="All 2 branches missed.">                || !authentication.isAuthenticated()</span>
+<span class="nc bnc" id="L29" title="All 2 branches missed.">                || authentication.getName() == null) {</span>
+
+<span class="nc" id="L31">            throw new ResponseStatusException(</span>
+                    HttpStatus.UNAUTHORIZED,
+                    &quot;Usuario no autenticado.&quot;
+            );
+        }
+
+<span class="nc" id="L37">        String correo = authentication.getName();</span>
+
+<span class="nc" id="L39">        PersonalAdministrativo personal =</span>
+                personalRepository
+<span class="nc" id="L41">                        .findByCorreoInstitucional(correo)</span>
+<span class="nc" id="L42">                        .orElseThrow(() -&gt;</span>
+<span class="nc" id="L43">                                new ResponseStatusException(</span>
+                                        HttpStatus.UNAUTHORIZED,
+                                        &quot;No se encontró el usuario autenticado.&quot;
+                                )
+                        );
+
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        if (!personal.isActivo()) {</span>
+<span class="nc" id="L50">            throw new ResponseStatusException(</span>
+                    HttpStatus.FORBIDDEN,
+                    &quot;El usuario se encuentra inactivo.&quot;
+            );
+        }
+
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (personal.getRol() != RolStaff.ANALISTA_PRIMER_CONTACTO) {</span>
+<span class="nc" id="L57">            throw new ResponseStatusException(</span>
+                    HttpStatus.FORBIDDEN,
+                    &quot;El usuario no pertenece al área de Primer Contacto.&quot;
+            );
+        }
+
+<span class="nc" id="L63">        return personal;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

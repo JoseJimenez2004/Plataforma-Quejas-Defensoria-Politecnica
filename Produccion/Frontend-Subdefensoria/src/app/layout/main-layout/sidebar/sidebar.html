@@ -1,7 +1,17 @@
+<!-- Menú compacto: solo iconos; se despliega al pasar el cursor (igual que Recepción). -->
 <aside class="sidebar">
   <nav>
-    <a routerLink="/dashboard" routerLinkActive="active">Inicio</a>
-    <a routerLink="/bandeja" routerLinkActive="active">Mis expedientes</a>
-    <a routerLink="/alertas" routerLinkActive="active">Plazos y oficios</a>
+    <a routerLink="/dashboard" routerLinkActive="active" aria-label="Inicio">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+      <span class="label">Inicio</span>
+    </a>
+    <a routerLink="/bandeja" routerLinkActive="active" aria-label="Mis expedientes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+      <span class="label">Mis expedientes</span>
+    </a>
+    <a routerLink="/alertas" routerLinkActive="active" aria-label="Plazos y oficios">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2.5M9 2h6"></path></svg>
+      <span class="label">Plazos y oficios</span>
+    </a>
   </nav>
 </aside>

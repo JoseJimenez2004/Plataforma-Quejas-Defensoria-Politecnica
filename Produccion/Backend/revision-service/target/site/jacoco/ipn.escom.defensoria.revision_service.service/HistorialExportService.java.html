@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HistorialExportService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.revision_service.service</a> &gt; <span class="el_source">HistorialExportService.java</span></div><h1>HistorialExportService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.revision_service.service;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.revision_service.model.HistorialItemModel;
+
+/** Genera el archivo Excel del botón &quot;Exportar Reporte&quot; del Historial de Trámites. */
+@Service
+<span class="nc" id="L20">public class HistorialExportService {</span>
+
+<span class="nc" id="L22">    private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy HH:mm&quot;);</span>
+<span class="nc" id="L23">    private static final String[] ENCABEZADOS = {</span>
+            &quot;Folio&quot;, &quot;Fecha Recibido&quot;, &quot;Quejoso&quot;, &quot;Tipo de Ingreso&quot;, &quot;Estatus Final&quot;, &quot;Motivo&quot;
+    };
+
+    public byte[] exportar(List&lt;HistorialItemModel&gt; items) {
+<span class="nc" id="L28">        try (XSSFWorkbook workbook = new XSSFWorkbook()) {</span>
+<span class="nc" id="L29">            Sheet sheet = workbook.createSheet(&quot;Historial de Trámites&quot;);</span>
+
+<span class="nc" id="L31">            CellStyle estiloEncabezado = workbook.createCellStyle();</span>
+<span class="nc" id="L32">            Font fuenteEncabezado = workbook.createFont();</span>
+<span class="nc" id="L33">            fuenteEncabezado.setBold(true);</span>
+<span class="nc" id="L34">            estiloEncabezado.setFont(fuenteEncabezado);</span>
+
+<span class="nc" id="L36">            Row filaEncabezado = sheet.createRow(0);</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">            for (int i = 0; i &lt; ENCABEZADOS.length; i++) {</span>
+<span class="nc" id="L38">                Cell celda = filaEncabezado.createCell(i);</span>
+<span class="nc" id="L39">                celda.setCellValue(ENCABEZADOS[i]);</span>
+<span class="nc" id="L40">                celda.setCellStyle(estiloEncabezado);</span>
+            }
+
+<span class="nc" id="L43">            int filaIndice = 1;</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">            for (HistorialItemModel item : items) {</span>
+<span class="nc" id="L45">                Row fila = sheet.createRow(filaIndice++);</span>
+<span class="nc" id="L46">                fila.createCell(0).setCellValue(item.getNumeroFolio());</span>
+<span class="nc" id="L47">                fila.createCell(1).setCellValue(</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">                        item.getFechaCreacion() != null ? item.getFechaCreacion().format(FORMATO_FECHA) : &quot;&quot;);</span>
+<span class="nc" id="L49">                fila.createCell(2).setCellValue(item.getNombreQuejoso());</span>
+<span class="nc" id="L50">                fila.createCell(3).setCellValue(item.getTipoIngreso());</span>
+<span class="nc" id="L51">                fila.createCell(4).setCellValue(item.getEstatusFinal());</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">                fila.createCell(5).setCellValue(item.getMotivoRechazo() != null ? item.getMotivoRechazo() : &quot;&quot;);</span>
+<span class="nc" id="L53">            }</span>
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">            for (int i = 0; i &lt; ENCABEZADOS.length; i++) {</span>
+<span class="nc" id="L56">                sheet.autoSizeColumn(i);</span>
+            }
+
+<span class="nc" id="L59">            ByteArrayOutputStream salida = new ByteArrayOutputStream();</span>
+<span class="nc" id="L60">            workbook.write(salida);</span>
+<span class="nc" id="L61">            return salida.toByteArray();</span>
+<span class="nc" id="L62">        } catch (IOException e) {</span>
+<span class="nc" id="L63">            throw new RuntimeException(&quot;No se pudo generar el archivo Excel: &quot; + e.getMessage());</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

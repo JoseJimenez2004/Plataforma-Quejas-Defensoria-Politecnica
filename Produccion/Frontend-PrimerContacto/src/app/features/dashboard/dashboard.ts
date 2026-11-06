@@ -11,6 +11,7 @@ import {
   DashboardItemLista,
   DashboardResumen
 } from '../../core/models/dashboard.model';
+import { clasePrioridad } from '../../core/utils/estatus-expediente';
 
 @Component({
   selector: 'app-dashboard',
@@ -25,6 +26,7 @@ import {
 })
 export class Dashboard implements OnInit {
 fechaActual = this.obtenerFechaActual();
+readonly clasePrioridad = clasePrioridad;
 resumen: DashboardResumen[] = [];
 
 actividad: DashboardActividad[] = [];
@@ -52,33 +54,48 @@ constructor(
   irAgenda(): void {
     this.router.navigate(['/agenda']);
   }
+  /** PC-4: estados de carga de Inicio. */
+  cargando = true;
+  error = false;
+  errorCitas = false;
+
   ngOnInit(): void {
+    this.cargar();
+  }
 
-  this.dashboardService.obtenerResumen()
-    .subscribe(data => {
-      this.resumen = data;
-      this.cdr.detectChanges();
+  /** Una sola petición a la bandeja (indicadores, lista y actividad) y otra a la agenda. */
+  cargar(): void {
+    this.cargando = true;
+    this.error = false;
+    this.errorCitas = false;
+    this.cdr.detectChanges();
+
+    this.dashboardService.obtenerPanel().subscribe({
+      next: (panel) => {
+        this.resumen = panel.resumen;
+        this.lista = panel.lista;
+        this.actividad = panel.actividad;
+        this.cargando = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargando = false;
+        this.error = true;
+        this.cdr.detectChanges();
+      }
     });
 
-  this.dashboardService.obtenerActividad()
-    .subscribe(data => {
-      this.actividad = data;
-      this.cdr.detectChanges();
+    this.dashboardService.obtenerCitasHoy().subscribe({
+      next: (data) => {
+        this.citasHoy = data;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorCitas = true;
+        this.cdr.detectChanges();
+      }
     });
-
-  this.dashboardService.obtenerCitasHoy()
-    .subscribe(data => {
-      this.citasHoy = data;
-      this.cdr.detectChanges();
-    });
-
-  this.dashboardService.obtenerLista()
-    .subscribe(data => {
-      this.lista = data;
-      this.cdr.detectChanges();
-    });
-
-}
+  }
 categoriaSeleccionada: DashboardResumen['tipo'] = 'PENDIENTES';
 
 seleccionarCategoria(tipo: DashboardResumen['tipo']): void {

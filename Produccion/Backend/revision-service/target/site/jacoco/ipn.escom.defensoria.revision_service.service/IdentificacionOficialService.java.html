@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IdentificacionOficialService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.revision_service.service</a> &gt; <span class="el_source">IdentificacionOficialService.java</span></div><h1>IdentificacionOficialService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.revision_service.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import ipn.escom.defensoria.revision_service.model.IdentificacionOficialModel;
+
+@Service
+<span class="nc" id="L10">public class IdentificacionOficialService {</span>
+
+    private static final String OFICIAL = &quot;Identificación oficial&quot;;
+    private static final String INSTITUCIONAL = &quot;Identificación institucional (IPN)&quot;;
+    private static final String REPRESENTACION = &quot;Representación (en su caso)&quot;;
+
+    /**
+     * Documentos con los que el quejoso acredita su identidad y, en su caso, la representación
+     * (apartado de Control y Gestión Administrativa de Documentos del MP-DDP). Se expone como
+     * catálogo para que la recepcionista seleccione cuál exhibió. 2026-11: se quitan la licencia
+     * de conducir y el poder notarial; se agregan la VISA y la constancia de identificación
+     * expedida por el municipio o alcaldía.
+     */
+<span class="nc" id="L23">    private static final List&lt;IdentificacionOficialModel&gt; IDENTIFICACIONES = List.of(</span>
+            new IdentificacionOficialModel(&quot;ine&quot;, &quot;Credencial para votar (INE)&quot;, OFICIAL, &quot;Vigente, con fotografía&quot;),
+            new IdentificacionOficialModel(&quot;pasaporte&quot;, &quot;Pasaporte&quot;, OFICIAL, &quot;Vigente&quot;),
+            new IdentificacionOficialModel(&quot;visa&quot;, &quot;VISA&quot;, OFICIAL, &quot;Vigente, con fotografía&quot;),
+            new IdentificacionOficialModel(&quot;cedula&quot;, &quot;Cédula profesional&quot;, OFICIAL, &quot;Con fotografía&quot;),
+            new IdentificacionOficialModel(&quot;cartilla&quot;, &quot;Cartilla del Servicio Militar Nacional&quot;, OFICIAL, &quot;Liberada&quot;),
+            new IdentificacionOficialModel(&quot;constancia_municipal&quot;,
+                    &quot;Constancia de identificación expedida por el municipio o alcaldía&quot;, OFICIAL, &quot;Con fotografía&quot;),
+            new IdentificacionOficialModel(&quot;credencial_ipn&quot;, &quot;Credencial del IPN&quot;, INSTITUCIONAL,
+                    &quot;Alumno o personal, vigente; coteja la boleta o el número de empleado&quot;),
+            new IdentificacionOficialModel(&quot;acta_tutor&quot;, &quot;Acta de nacimiento o documento de tutela + identificación del padre, madre o tutor&quot;,
+                    REPRESENTACION, &quot;Menores de edad (CECyT)&quot;),
+            new IdentificacionOficialModel(&quot;carta_poder&quot;, &quot;Carta poder simple firmada ante dos testigos + identificaciones&quot;,
+                    REPRESENTACION, &quot;Identificaciones de todas las partes&quot;)
+    );
+
+    public List&lt;IdentificacionOficialModel&gt; listar() {
+<span class="nc" id="L40">        return IDENTIFICACIONES;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

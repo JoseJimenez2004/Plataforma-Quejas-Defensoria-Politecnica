@@ -23,14 +23,13 @@ import ipn.escom.defensoria.catalogo_service.service.DependenciaService;
 
 /**
  * CRUD administrativo del catálogo -- a diferencia de DependenciaController (público,
- * solo lectura), esto exige un JWT con rol ADMIN_SISTEMAS emitido por admin-service (mismo
+ * solo lectura), esto exige un JWT con rol DEFENSOR emitido por admin-service (mismo
  * jwt.secret compartido entre microservicios, ver JwtAuthenticationFilter).
  */
 @RestController
 @RequestMapping("/api/catalogos/dependencias/admin")
-// La Defensora (DEFENSOR) tiene todas las funciones de administración; ADMIN_SISTEMAS se
-// conserva para la cuenta técnica inicial.
-@PreAuthorize("hasAnyRole('ADMIN_SISTEMAS','DEFENSOR')")
+// Exclusivo de la Defensora (DEFENSOR), que tiene todas las funciones de administración.
+@PreAuthorize("hasRole('DEFENSOR')")
 @Tag(name = "Dependencias (Admin)", description = "Alta, edición e importación masiva del catálogo")
 public class DependenciaAdminController {
 

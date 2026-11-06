@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -34,8 +33,8 @@ public class WebConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // El denunciado no tiene cuenta: registrar su respuesta es público.
-                .requestMatchers(HttpMethod.POST, "/api/denunciado/respuestas").permitAll()
+                // PC-2 (2026-11): se cerró el POST público; la versión del denunciado la
+                // captura el analista de Primer Contacto (/api/denunciado/respuestas/personal).
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                 // Consultar respuestas y archivos: solo personal (roles en el controlador).
                 .anyRequest().authenticated()

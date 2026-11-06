@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Respuesta del denunciado</h2>
+<h2 mat-dialog-title>Versión del denunciado</h2>
 
 <mat-dialog-content>
   <p class="encabezado">Queja <strong>{{ data.folioQueja }}</strong></p>
@@ -6,7 +6,7 @@
   @for (r of data.respuestas; track r.id; let primera = $first) {
     <article class="respuesta" [class.anterior]="!primera">
       @if (!primera) {
-        <p class="etiqueta-anterior">Respuesta anterior</p>
+        <p class="etiqueta-anterior">Versión anterior</p>
       }
 
       <div class="detail-grid">
@@ -15,9 +15,20 @@
           <strong>{{ r.folioRespuesta }}</strong>
         </div>
         <div>
-          <span>Fecha</span>
+          <span>{{ r.origen === 'PERSONAL' ? 'Capturada' : 'Fecha' }}</span>
           <strong>{{ r.fechaRegistro | date: 'dd/MM/yyyy HH:mm' }}</strong>
         </div>
+        <!-- PC-2: quién la capturó -->
+        <div>
+          <span>Registrada por</span>
+          <strong>{{ r.origen === 'PERSONAL' ? (r.capturadoPor || 'Personal de Primer Contacto') : 'El propio denunciado (formulario)' }}</strong>
+        </div>
+        @if (r.fechaEntrevista) {
+          <div>
+            <span>Fecha de la entrevista</span>
+            <strong>{{ r.fechaEntrevista + 'T00:00:00' | date: 'dd/MM/yyyy' }}</strong>
+          </div>
+        }
         <div>
           <span>Nombre</span>
           <strong>{{ nombreCompleto(r) }}</strong>
@@ -40,7 +51,7 @@
       <div class="section">
         <span>Archivos ({{ r.archivos.length }})</span>
         @if (r.archivos.length === 0) {
-          <p class="vacio">No adjuntó archivos.</p>
+          <p class="vacio">Sin archivos adjuntos.</p>
         } @else {
           <ul class="archivos">
             @for (a of r.archivos; track a.id) {

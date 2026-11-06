@@ -11,6 +11,8 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 
 @Service
 public class BandejaAnalisisService {
@@ -33,7 +35,7 @@ public class BandejaAnalisisService {
         return expedienteRepository.findAll()
                 .stream()
                 .sorted(masRecientesPrimero())
-                .map(this::convertirADTO)
+                .map(convertidor())
                 .toList();
     }
 
@@ -81,7 +83,7 @@ public class BandejaAnalisisService {
                                 || contiene(e.getQuejosoNombre(), normalizar(filtro.getNombreQuejoso()))
                 )
 
-                .filter(e -> coincide(e.getPrioridad(), filtro.getPrioridad(), filtro.getPrioridades()))
+                .filter(e -> coincidePrioridad(e.getPrioridad(), filtro.getPrioridad(), filtro.getPrioridades()))
                 .filter(e -> coincide(e.getEstatus(), filtro.getEstatus(), filtro.getEstatusLista()))
                 .filter(e -> coincide(e.getUnidadAcademica(), filtro.getUnidadAcademica(), filtro.getUnidadesAcademicas()))
                 .filter(e -> coincide(e.getTema(), null, filtro.getTemas()))
@@ -90,7 +92,7 @@ public class BandejaAnalisisService {
                 .filter(e -> hasta == null || fechaDe(e) == null || !fechaDe(e).isAfter(hasta))
 
                 .sorted(orden)
-                .map(this::convertirADTO)
+                .map(convertidor())
                 .toList();
     }
 
@@ -102,7 +104,7 @@ public class BandejaAnalisisService {
         return expedienteRepository.findAll()
                 .stream()
                 .filter(e -> coincide(e.getPrioridad(), prioridad, null))
-                .map(this::convertirADTO)
+                .map(convertidor())
                 .toList();
     }
 
@@ -114,19 +116,31 @@ public class BandejaAnalisisService {
         return expedienteRepository.findAll()
                 .stream()
                 .filter(e -> coincide(e.getEstatus(), estatus, null))
-                .map(this::convertirADTO)
+                .map(convertidor())
                 .toList();
+    }
+
+    /*
+     * PC-5: antes cada fila hacía su propia consulta de "¿tiene cita activa?" (≈1 200 consultas
+     * por petición con un pool de 3 conexiones). Ahora se traen todos los ids con cita activa en
+     * una sola consulta y cada fila solo revisa el conjunto.
+     */
+    private Function<ExpedientePrimerContacto, BandejaAnalisisDTO> convertidor() {
+        Set<Long> conCita = citaRepository.idsExpedientesConCitaActiva(CitaPrimerContactoService.CERRADAS);
+        return e -> convertirADTO(e, conCita.contains(e.getId()));
     }
 
     private BandejaAnalisisDTO convertirADTO(
             ExpedientePrimerContacto expediente
     ) {
+        return convertirADTO(expediente, citaRepository.existsByExpedienteIdAndEstatusNotIn(
+                expediente.getId(), CitaPrimerContactoService.CERRADAS));
+    }
 
-        boolean tieneCitaActiva =
-                citaRepository.existsByExpedienteIdAndEstatusNotIn(
-                        expediente.getId(),
-                        CitaPrimerContactoService.CERRADAS
-                );
+    private BandejaAnalisisDTO convertirADTO(
+            ExpedientePrimerContacto expediente,
+            boolean tieneCitaActiva
+    ) {
 
         return BandejaAnalisisDTO.builder()
                 .expedienteId(expediente.getId())
@@ -146,6 +160,20 @@ public class BandejaAnalisisService {
      * Un valor simple y/o una lista: el campo coincide si es igual
      * (sin distinguir mayúsculas) a cualquiera de ellos.
      */
+    /**
+     * PC-1: igual que coincide(), pero "SIN_ASIGNAR" encuentra los expedientes sin prioridad.
+     */
+    private boolean coincidePrioridad(String valor, String unico, List<String> varios) {
+        boolean sinValor = valor == null || valor.isBlank();
+        if (sinValor) {
+            boolean pideSinAsignar = "SIN_ASIGNAR".equalsIgnoreCase(unico)
+                    || (varios != null && varios.stream().anyMatch("SIN_ASIGNAR"::equalsIgnoreCase));
+            boolean sinFiltro = (unico == null || unico.isBlank()) && (varios == null || varios.isEmpty());
+            return sinFiltro || pideSinAsignar;
+        }
+        return coincide(valor, unico, varios);
+    }
+
     private boolean coincide(
             String valor,
             String unico,

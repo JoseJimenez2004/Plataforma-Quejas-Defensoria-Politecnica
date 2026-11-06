@@ -24,12 +24,12 @@ Comprobar, con evidencia documentada, que la plataforma cumple los requerimiento
 | 3 | `revision-service` + Frontend‑Revisión | Microservicio + front | RECEPCIONISTA |
 | 4 | `primercontacto` (primer‑contacto‑service) + Frontend‑PrimerContacto | Microservicio + front | ANALISTA_PRIMER_CONTACTO |
 | 5 | `subdefensoria` | Microservicio | SUBDEFENSOR |
-| 6 | `admin-service` + Frontend‑Admin (panel de la Defensora y administración) | Microservicio + front | DEFENSOR, ADMIN_SISTEMAS |
+| 6 | `admin-service` + Frontend‑Admin (panel de la Defensora y administración) | Microservicio + front | DEFENSOR |
 | 7 | `antecedentes_service` / Modelo‑Java (buscador de antecedentes) | Componente de IA | Recepción, Primer Contacto |
 | 8 | `resumen-service-final` (resúmenes) | Componente de IA | Primer Contacto |
 | 9 | `chatbot-service` | Microservicio | Público |
 | 10 | `catalogo-service`, `denunciado-service`, `historico-service`, `notificaciones-service` | Microservicios de apoyo | Varios |
-| 11 | Infraestructura (Podman, nginx, Postgres, 3 VPS) | Despliegue | ADMIN_SISTEMAS |
+| 11 | Infraestructura (Podman, nginx, Postgres, 3 VPS) | Despliegue | DEFENSOR (operación técnica del equipo) |
 
 ### 2.2 Qué NO se prueba (fuera de alcance)
 

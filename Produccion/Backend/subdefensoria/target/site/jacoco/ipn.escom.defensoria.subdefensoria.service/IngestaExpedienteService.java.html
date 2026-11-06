@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IngestaExpedienteService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">subdefensoria</a> &gt; <a href="index.source.html" class="el_package">ipn.escom.defensoria.subdefensoria.service</a> &gt; <span class="el_source">IngestaExpedienteService.java</span></div><h1>IngestaExpedienteService.java</h1><pre class="source lang-java linenums">package ipn.escom.defensoria.subdefensoria.service;
+
+import ipn.escom.defensoria.subdefensoria.util.Prioridad;
+
+import ipn.escom.defensoria.subdefensoria.dto.ExpedienteEntranteDTO;
+import ipn.escom.defensoria.subdefensoria.dto.ExpedienteInvestigacionDTO;
+import ipn.escom.defensoria.subdefensoria.entity.EstatusExpediente;
+import ipn.escom.defensoria.subdefensoria.entity.ExpedienteInvestigacion;
+import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Service
+public class IngestaExpedienteService {
+
+    private final ExpedienteInvestigacionRepository expedienteRepository;
+    private final TransicionExpedienteService transicionService;
+
+    public IngestaExpedienteService(
+            ExpedienteInvestigacionRepository expedienteRepository,
+            TransicionExpedienteService transicionService
+<span class="nc" id="L24">    ) {</span>
+<span class="nc" id="L25">        this.expedienteRepository = expedienteRepository;</span>
+<span class="nc" id="L26">        this.transicionService = transicionService;</span>
+<span class="nc" id="L27">    }</span>
+
+    public ExpedienteInvestigacionDTO recibirExpediente(
+            ExpedienteEntranteDTO entrante
+    ) {
+
+        /*
+         * Si Primer Contacto vuelve a enviar el mismo expediente,
+         * no creamos otro folio de Subdefensoría.
+         */
+<span class="nc" id="L37">        ExpedienteInvestigacion existente =</span>
+                expedienteRepository
+<span class="nc" id="L39">                        .findByFolioOrigen(</span>
+<span class="nc" id="L40">                                entrante.getFolioOrigen()</span>
+                        )
+<span class="nc" id="L42">                        .orElse(null);</span>
+
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (existente != null) {</span>
+<span class="nc" id="L45">            return convertirADTO(existente);</span>
+        }
+
+        ExpedienteInvestigacion expediente =
+<span class="nc" id="L49">                ExpedienteInvestigacion.builder()</span>
+
+                        /*
+                         * Folio NUEVO y propio de Subdefensoría.
+                         */
+<span class="nc" id="L54">                        .folio(generarFolio())</span>
+
+                        /*
+                         * Folio recibido desde Primer Contacto.
+                         */
+<span class="nc" id="L59">                        .folioOrigen(</span>
+<span class="nc" id="L60">                                entrante.getFolioOrigen()</span>
+                        )
+
+<span class="nc" id="L63">                        .folioQueja(</span>
+<span class="nc" id="L64">                                entrante.getFolioQueja()</span>
+                        )
+
+<span class="nc" id="L67">                        .asunto(</span>
+<span class="nc" id="L68">                                entrante.getAsunto()</span>
+                        )
+
+<span class="nc" id="L71">                        .descripcionHechos(</span>
+<span class="nc" id="L72">                                entrante.getDescripcionHechos()</span>
+                        )
+
+<span class="nc" id="L75">                        .fechaAdmision(</span>
+<span class="nc" id="L76">                                entrante.getFechaAdmision()</span>
+                        )
+
+<span class="nc" id="L79">                        .abogadoAsesorId(</span>
+<span class="nc" id="L80">                                entrante.getAbogadoAsesorId()</span>
+                        )
+
+<span class="nc" id="L83">                        .abogadoAsesorNombre(</span>
+<span class="nc" id="L84">                                entrante.getAbogadoAsesorNombre()</span>
+                        )
+
+<span class="nc" id="L87">                        .quejosoNombre(</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">                                entrante.getQuejoso() != null</span>
+                                        ? entrante
+<span class="nc" id="L90">                                        .getQuejoso()</span>
+<span class="nc" id="L91">                                        .getNombreCompleto()</span>
+<span class="nc" id="L92">                                        : null</span>
+                        )
+
+<span class="nc" id="L95">                        .quejosoCorreo(</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                                entrante.getQuejoso() != null</span>
+                                        ? entrante
+<span class="nc" id="L98">                                        .getQuejoso()</span>
+<span class="nc" id="L99">                                        .getCorreo()</span>
+<span class="nc" id="L100">                                        : null</span>
+                        )
+
+<span class="nc" id="L103">                        .unidadAcademica(</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                                entrante.getQuejoso() != null</span>
+                                        ? entrante
+<span class="nc" id="L106">                                        .getQuejoso()</span>
+<span class="nc" id="L107">                                        .getUnidadAcademica()</span>
+<span class="nc" id="L108">                                        : null</span>
+                        )
+
+<span class="nc" id="L111">                        .observacionesAnalista(</span>
+<span class="nc" id="L112">                                entrante.getObservacionesAnalista()</span>
+                        )
+
+<span class="nc" id="L115">                        .prioridad(</span>
+<span class="nc" id="L116">                                Prioridad.normalizar(entrante.getPrioridad())</span>
+                        )
+
+<span class="nc" id="L119">                        .estatus(</span>
+                                EstatusExpediente.RECIBIDO
+                        )
+
+<span class="nc" id="L123">                        .fechaCreacion(</span>
+<span class="nc" id="L124">                                LocalDateTime.now()</span>
+                        )
+
+<span class="nc" id="L127">                        .build();</span>
+
+<span class="nc" id="L129">        ExpedienteInvestigacion guardado =</span>
+<span class="nc" id="L130">                expedienteRepository.save(expediente);</span>
+
+        // La queja pasa a &quot;Recibida (Subdefensoría)&quot; (fila 12 del diagrama).
+<span class="nc" id="L133">        transicionService.sincronizarQueja(guardado);</span>
+
+<span class="nc" id="L135">        return convertirADTO(guardado);</span>
+    }
+
+    private String generarFolio() {
+
+<span class="nc" id="L140">        return &quot;SD-&quot;</span>
+<span class="nc" id="L141">                + UUID.randomUUID()</span>
+<span class="nc" id="L142">                .toString()</span>
+<span class="nc" id="L143">                .substring(0, 8)</span>
+<span class="nc" id="L144">                .toUpperCase();</span>
+    }
+
+    private ExpedienteInvestigacionDTO convertirADTO(
+            ExpedienteInvestigacion e
+    ) {
+
+<span class="nc" id="L151">        return ExpedienteInvestigacionDTO.builder()</span>
+<span class="nc" id="L152">                .id(e.getId())</span>
+<span class="nc" id="L153">                .folio(e.getFolio())</span>
+<span class="nc" id="L154">                .folioOrigen(e.getFolioOrigen())</span>
+<span class="nc" id="L155">                .folioQueja(e.getFolioQueja())</span>
+<span class="nc" id="L156">                .quejosoNombre(e.getQuejosoNombre())</span>
+<span class="nc" id="L157">                .unidadAcademica(e.getUnidadAcademica())</span>
+<span class="nc" id="L158">                .asunto(e.getAsunto())</span>
+<span class="nc" id="L159">                .descripcionHechos(e.getDescripcionHechos())</span>
+<span class="nc" id="L160">                .fechaAdmision(</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">                        e.getFechaAdmision() != null</span>
+<span class="nc" id="L162">                                ? e.getFechaAdmision().toString()</span>
+<span class="nc" id="L163">                                : null</span>
+                )
+<span class="nc" id="L165">                .abogadoAsesorId(</span>
+<span class="nc" id="L166">                        e.getAbogadoAsesorId()</span>
+                )
+<span class="nc" id="L168">                .abogadoAsesorNombre(</span>
+<span class="nc" id="L169">                        e.getAbogadoAsesorNombre()</span>
+                )
+<span class="nc" id="L171">                .estatus(e.getEstatus())</span>
+<span class="nc" id="L172">                .observacionesAnalista(</span>
+<span class="nc" id="L173">                        e.getObservacionesAnalista()</span>
+                )
+<span class="nc" id="L175">                .prioridad(e.getPrioridad())</span>
+<span class="nc" id="L176">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

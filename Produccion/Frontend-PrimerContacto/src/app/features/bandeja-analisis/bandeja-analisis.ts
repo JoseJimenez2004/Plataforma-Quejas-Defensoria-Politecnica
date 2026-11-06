@@ -15,7 +15,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject, Subscription, debounceTime, switchMap } from 'rxjs';
 import { ExpedienteBandeja, FiltroBandeja } from '../../core/models/expediente-bandeja';
 import { BandejaService } from '../../core/services/bandeja.service';
-import { claseEstatus, etiquetaEstatus } from '../../core/utils/estatus-expediente';
+import { claseEstatus, etiquetaEstatus, codigoPrioridad } from '../../core/utils/estatus-expediente';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 type CampoFacetado = 'prioridades' | 'temas' | 'escuelas' | 'estatus';
@@ -81,7 +81,7 @@ export class BandejaAnalisis implements OnInit, OnDestroy {
    */
   private expedientesOriginal: ExpedienteBandeja[] = [];
 
-  prioridades: string[] = ['Alta', 'Media', 'Baja'];
+  prioridades: string[] = ['Urgente', 'Alta', 'Media', 'Baja', 'Sin asignar'];
 
   readonly etiquetaEstatus = etiquetaEstatus;
   readonly claseEstatus = claseEstatus;
@@ -214,7 +214,7 @@ export class BandejaAnalisis implements OnInit, OnDestroy {
   private construirFiltro(): FiltroBandeja {
     return {
       texto: this.filtros.texto.trim() || undefined,
-      prioridades: this.filtros.prioridades.map(p => p.toUpperCase()),
+      prioridades: this.filtros.prioridades.map(p => codigoPrioridad(p)),
       estatusLista: this.filtros.estatus,
       unidadesAcademicas: this.filtros.escuelas,
       temas: this.filtros.temas,
