@@ -43,42 +43,11 @@
 
 	\subsubsection{Prioridad basada en riesgo}
 	No es viable probar todas las combinaciones de entrada, de modo que el esfuerzo se asignó según el
-	riesgo. La Tabla~\ref{tab:riesgos} resume los riesgos identificados y su prioridad.
-
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{1.3cm}|L{6.4cm}|L{6.8cm}|}
-		\caption{Riesgos y prioridad de las pruebas}
-		\label{tab:riesgos} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Prioridad} & \headercell{Riesgo} & \headercell{Impacto si se materializa} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Prioridad} & \headercell{Riesgo} & \headercell{Impacto si se materializa} \\
-		\hline
-		\endhead
-		P1 & Un rol accede a puntos de acceso de otro, o un quejoso consulta la queja de otra persona &
-		Exposición de datos personales y de hechos sensibles \\ \hline
-		P1 & El ciclo de estatus se rompe o admite transiciones inválidas & Quejas perdidas o tramitadas
-		fuera de procedimiento \\ \hline
-		P1 & Dos recepcionistas atienden la misma queja & Decisiones contradictorias \\ \hline
-		P1 & Falla la integración entre Recepción, Primer Contacto y Subdefensoría & Expedientes detenidos
-		entre áreas \\ \hline
-		P1 & El tráfico o los secretos quedan expuestos & Robo de sesiones o de credenciales \\ \hline
-		P2 & Reglas de plazos o de datos obligatorios incorrectas & Quejas admitidas fuera de plazo o
-		rechazadas siendo válidas \\ \hline
-		P2 & Un respaldo no puede restaurarse & Pérdida total de expedientes \\ \hline
-		P2 & Un servicio auxiliar caído detiene una operación principal & Interrupción de la recepción de
-		quejas \\ \hline
-		P3 & Lentitud en bandejas y tableros & Mala experiencia del personal \\ \hline
-		P3 & Pantallas confusas & Errores de captura \\ \hline
-	\end{longtable}
-	\normalsize
+	daño que causaría cada falla. Son de prioridad P1 los riesgos de acceso indebido a datos personales,
+	de ruptura del ciclo de estatus, de atención simultánea de una queja por dos recepcionistas, de falla
+	en el paso de expedientes entre áreas y de exposición del tráfico o de los secretos; de prioridad
+	P2, los errores en plazos y datos obligatorios, la pérdida de respaldos y la caída de servicios
+	auxiliares; y de prioridad P3, la lentitud y las pantallas confusas.
 
 	\subsubsection{Entorno y criterios}
 	Las pruebas dinámicas se ejecutan en un entorno de pruebas y no en producción: una base PostgreSQL~16
@@ -186,22 +155,22 @@
 		RNF-R06, RN-R03 & Dinámica, CN & Aprobada (10 de 10 intentos concurrentes) \\ \hline
 		IT-20 & Activar una cuenta solo con un par folio--correo válido & RN-Q06 & Dinámica, CB &
 		Aprobada en prueba unitaria; dinámica pendiente \\ \hline
-		IT-22 & La queja turnada aparece en la bandeja de Primer Contacto & RF-R08, RF-PC01 & Dinámica,
+		IT-22 & La queja turnada aparece en la bandeja de Primer Contacto & CU-REC-05, CU-PC-01 & Dinámica,
 		CN & Aprobada en el sistema desplegado \\ \hline
-		IT-23 & El dictamen competente crea el expediente en Subdefensoría & RF-PC07, RF-SD01 & Dinámica,
+		IT-23 & El dictamen competente crea el expediente en Subdefensoría & CU-PC-06, CU-SD-01 & Dinámica,
 		CN & Aprobada en entorno local con la base de pruebas \\ \hline
 		IT-24 & El cambio de estatus en Primer Contacto se refleja en la tabla de quejas & RN-R01 &
 		Dinámica, CB & Aprobada en prueba unitaria de sincronización \\ \hline
 		IT-09 & Los indicadores del panel de la Defensora coinciden con datos sembrados en PostgreSQL~16 &
-		RF-A01 & Dinámica, CB & Aprobada \\ \hline
+		CU-ADM-03 & Dinámica, CB & Aprobada \\ \hline
 		IT-11 & Inicio de sesión unificado: siete escenarios (sin sesión, enlace antiguo, Defensora en
-		Recepción, cierre de sesión, recepcionista hacia el panel de la Defensora, entre otros) & RF-R01,
+		Recepción, cierre de sesión, recepcionista hacia el panel de la Defensora, entre otros) & CU-ADM-07,
 		RNF-R02 & Dinámica, CN & Aprobada (7 de 7) \\ \hline
 		IT-12 & Registro de la persona señalada con datos válidos, nombres con dígitos, ejecutable
 		renombrado, credencial PDF o de 4~MB, tres credenciales y sin aviso & RF-D01, RNF-G08 & Dinámica,
 		CB & Aprobada (19 de 19) \\ \hline
 		REN-02 & Carga masiva de quejas sintéticas por el registro público, con credencial y evidencias &
-		RF-Q01 & Dinámica, CN & Aprobada (170 quejas) \\ \hline
+		CU-QJ-07 & Dinámica, CN & Aprobada (170 quejas) \\ \hline
 		ST-01 a ST-14 & Recorridos de extremo a extremo por actor, automatizados con Playwright & Casos de
 		uso & Dinámica, CN & Pendiente: suite por automatizar; recorridos verificados manualmente \\ \hline
 	\end{longtable}
@@ -220,34 +189,12 @@
 	\subsubsection{Guía de estilo}
 	El proyecto adoptó como guía de estilo el Google Java Style Guide \cite{google_java_style}, con cuatro
 	desviaciones que reflejan lo que el código ya seguía de forma consistente, para no reformatear todo
-	el proyecto sin aportar calidad (Tabla~\ref{tab:desviaciones_estilo}). La guía se codificó como
+	el proyecto sin aportar calidad ---sangría de 4 espacios en lugar de 2, líneas de 120 columnas en lugar de 100, guion bajo
+	permitido en los nombres de paquete y el registrador \texttt{log} en minúsculas---. La guía se codificó como
 	configuración de Checkstyle: las reglas \textbf{obligatorias} deben cumplirse sin excepción y las
 	\textbf{recomendadas} se reportan como deuda técnica.
 
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{0.8cm}|L{3.5cm}|L{3.5cm}|L{6.7cm}|}
-		\caption{Desviaciones de la guía de estilo respecto a Google Java Style}
-		\label{tab:desviaciones_estilo} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Google pide} & \headercell{El proyecto usa} & \headercell{Motivo} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Google pide} & \headercell{El proyecto usa} & \headercell{Motivo} \\
-		\hline
-		\endhead
-		D1 & Sangría de 2 espacios & 4 espacios & Convención de Spring; la sigue el 96~\% de los archivos \\ \hline
-		D2 & 100 columnas & 120 columnas & Con 100 quedarían unas 880 líneas fuera; con 120, 90 \\ \hline
-		D3 & Paquetes sin guion bajo & Se permite \texttt{\_} & Lo genera Spring Initializr a partir del
-		nombre del artefacto \\ \hline
-		D4 & Constantes en mayúsculas & Se permite el registrador \texttt{log} & Convención de SLF4J \\ \hline
-	\end{longtable}
-	\normalsize
+
 
 	La Tabla~\ref{tab:pruebas_mantenibilidad} resume los casos y sus resultados.
 
@@ -377,7 +324,7 @@
 		& RNF-A04 & Resumen de creadas, actualizadas y con error & Aprobada \\ \hline
 		FIA-04 & Con Subdefensoría caída al dictaminar, el dictamen se conserva y puede reenviarse &
 		RN-PC03 & El dictamen no se pierde & Aprobada (prueba unitaria) \\ \hline
-		FIA-03 & Respaldo manual, descarga y restauración en una base desechable & RNF-G04, RF-A09 & Sin
+		FIA-03 & Respaldo manual, descarga y restauración en una base desechable & RNF-G04, CU-ADM-05 & Sin
 		errores de \texttt{psql}; tablas principales con filas & Pendiente de ejecución en el entorno de
 		pruebas \\ \hline
 		FIA-01 & Detener un contenedor auxiliar mientras se usa el sistema & RNF-Q04 & El resto opera &
@@ -589,38 +536,10 @@
 
 	\subsection{Resumen de resultados}
 	\label{sec:resumen_pruebas}
-	La Tabla~\ref{tab:resumen_pruebas} resume el estado de las pruebas por característica, y la
-	Tabla~\ref{tab:defectos} los defectos abiertos con la acción que los resuelve.
+	La Tabla~\ref{tab:defectos} reúne los defectos abiertos que dejaron las pruebas, con la acción
+	que resuelve cada uno.
 
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{3.2cm}|L{1.6cm}|L{1.6cm}|L{1.6cm}|L{1.6cm}|L{4.4cm}|}
-		\caption{Resumen de resultados por característica}
-		\label{tab:resumen_pruebas} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Característica} & \headercell{Casos} & \headercell{Aprobados} &
-		\headercell{Fallidos} & \headercell{Pendientes} & \headercell{Observación} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Característica} & \headercell{Casos} & \headercell{Aprobados} &
-		\headercell{Fallidos} & \headercell{Pendientes} & \headercell{Observación} \\
-		\hline
-		\endhead
-		Funcionalidad & 10 grupos + 364 unitarias & 9 + 364 & 0 & 1 & Falta automatizar la suite de
-		sistema \\ \hline
-		Mantenibilidad & 4 & 1 & 1 & 1 & MAN-02 es informativa \\ \hline
-		Usabilidad & 7 & 3 & 0 & 4 & Requiere la sesión alfa \\ \hline
-		Fiabilidad & 7 & 4 & 0 & 3 & FIA-05 y FIA-06 en su primera ejecución \\ \hline
-		Seguridad & 11 & 5 & 3 & 3 & SEG-07 resuelta; SEG-09 como probable falla \\ \hline
-		Capacidad & 6 & 2 & 0 & 4 & CAP-06 observada y resuelta \\ \hline
-		Confidencialidad & 9 & 8 & 1 & 0 & Seis aprobadas por configuración \\ \hline
-	\end{longtable}
-	\normalsize
+
 
 	\rowcolors{2}{rowblue}{white}
 	\small

@@ -144,27 +144,27 @@
 	los umbrales de los indicadores de seguimiento.
 
 	El resultado se organizó en tres categorías ---requerimientos funcionales, no funcionales y
-	reglas de negocio--- y se estructuró por actor, de modo que cada requerimiento tiene un
-	dueño identificable. La nomenclatura codifica el actor en el identificador: \texttt{Q} para el
-	quejoso, \texttt{D} para la persona señalada, \texttt{R} para Recepción, \texttt{PC} para Primer
-	Contacto, \texttt{SD} para Subdefensoría, \texttt{A} para la Defensora, y
-	\texttt{G} para los requerimientos generales de la plataforma. Así, \texttt{RF-R04} es el cuarto
-	requerimiento funcional de Recepción y \texttt{RNF-G02} el segundo requerimiento no funcional
-	general.
+	reglas de negocio--- estructuradas por actor, de modo que cada requerimiento tiene un dueño
+	identificable. La nomenclatura codifica el actor en el identificador: \texttt{Q} para el quejoso,
+	\texttt{D} para la persona señalada, \texttt{R} para Recepción, \texttt{PC} para Primer Contacto,
+	\texttt{SD} para Subdefensoría, \texttt{A} para la Defensora y \texttt{G} para los requerimientos
+	generales de la plataforma. Así, \texttt{RNF-G02} es el segundo requerimiento no funcional general
+	y \texttt{RN-R04}, la cuarta regla de negocio de Recepción.
 
-	\subsubsection{Requerimientos funcionales del quejoso y de la persona señalada}
-	La Tabla~\ref{tab:rf_quejoso} reúne los requerimientos del quejoso, el actor con la mayor superficie
-	funcional porque es el único que interactúa con todas las etapas del procedimiento: presenta la
-	queja, corrige lo que Recepción le observa, acude a las citas de Primer Contacto y responde el
-	acuerdo de conciliación de Subdefensoría.
+	\subsubsection{Requerimientos funcionales}
+	Los requerimientos funcionales se especifican como casos de uso (Sección~\ref{sec:casos_uso}):
+	cada caso de uso describe una función que el sistema debe ofrecer a un actor, con la misma
+	nomenclatura que se usa en el código y en las pruebas. Expresarlos una sola vez evita mantener dos
+	listas paralelas que describen lo mismo. Las únicas funciones que no tienen un caso de uso propio
+	son las de la persona señalada, que se listan en la Tabla~\ref{tab:rf_complementarios}.
 
 	\rowcolors{2}{rowblue}{white}
 	\small
 	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.4cm}|}
-		\caption{Requerimientos funcionales del quejoso y de la persona señalada}
-		\label{tab:rf_quejoso} \\
+	\begin{longtable}{|p{1.5cm}|L{3.6cm}|L{9.4cm}|}
+		\caption{Requerimientos funcionales sin caso de uso propio}
+		\label{tab:rf_complementarios} \\
 		\hline
 		\rowcolor{headerblue}
 		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
@@ -175,251 +175,14 @@
 		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
 		\hline
 		\endhead
-		RF-Q01 & Registrar queja sin cuenta & Capturar la identidad del quejoso (nombre, uno o dos
-		apellidos, correo, teléfono, fecha de nacimiento, tipo y número de identificación), la unidad
-		académica desde el catálogo institucional, la fecha de los hechos, los datos de la persona
-		señalada y la narración libre de los hechos, junto con una o dos imágenes de la identificación y
-		las evidencias; exigir la aceptación del aviso de privacidad y devolver un folio de seguimiento con
-		formato \texttt{FOL-XXXXXXXX}. \\ \hline
-		RF-Q02 & Datos del tutor & Si la fecha de nacimiento corresponde a una persona menor de 18 años,
-		exigir los datos de un tutor o adulto responsable y avisarle por correo del registro. \\ \hline
-		RF-Q03 & Consultar por folio & Consultar el estatus y el detalle de una queja con el folio y el
-		correo con que se registró, sin iniciar sesión. \\ \hline
-		RF-Q04 & Activar cuenta & Crear la cuenta de seguimiento definiendo una contraseña, a partir de un
-		par folio--correo de una queja existente. \\ \hline
-		RF-Q05 & Iniciar sesión & Autenticarse con correo y contraseña y obtener una sesión de una hora.
-		\\ \hline
-		RF-Q06 & Recuperar contraseña & Solicitar un código de seis dígitos por correo y restablecer la
-		contraseña con él. \\ \hline
-		RF-Q07 & Consultar mis quejas & Ver un resumen por estatus, listar las quejas propias con filtros
-		por estatus y texto, y ver el detalle de cada una con su línea de tiempo. \\ \hline
-		RF-Q08 & Registrar queja con sesión & Presentar una nueva queja desde el panel sin volver a capturar
-		los datos de identidad. \\ \hline
-		RF-Q09 & Editar mi queja & Modificar la narración, la unidad, la fecha de los hechos y los datos de
-		la persona señalada, y agregar o quitar evidencias, mientras la queja no haya sido tomada por
-		Recepción. \\ \hline
-		RF-Q10 & Consultar evidencias & Ver y descargar las evidencias adjuntas a una queja propia. \\ \hline
-		RF-Q11 & Corregir y reenviar & Atender las observaciones de Recepción sobre una queja regresada y
-		reenviarla para una nueva revisión. \\ \hline
-		RF-Q12 & Cancelar mi queja & Desistir de una queja propia mientras no haya sido tomada por Recepción;
-		la queja queda registrada como cancelada sin eliminarse. \\ \hline
-		RF-Q13 & Responder conciliación & Consultar los acuerdos de conciliación dirigidos al quejoso y
-		aceptarlos o rechazarlos, desde el panel o desde el enlace recibido por correo. \\ \hline
-		RF-Q14 & Responder citas & Consultar las citas programadas por Primer Contacto y confirmarlas o
-		cancelarlas, desde el panel o desde el enlace recibido por correo. \\ \hline
-		RF-Q15 & Notificaciones & Consultar un centro de notificaciones persistente con contador de no
-		leídas y marcado individual como leída. \\ \hline
-		RF-Q16 & Perfil & Consultar los datos de la cuenta y editar correo personal, teléfono, unidad
-		académica y domicilio. \\ \hline
-		RF-Q17 & Preguntas frecuentes & Consultar, sin sesión, un asistente de preguntas frecuentes sobre la
-		Defensoría y el proceso de queja. \\ \hline
-		RF-Q18 & Avisos por correo & Recibir por correo el código de recuperación, la confirmación de
-		cambio de contraseña, las observaciones de Recepción, las citas y los acuerdos. \\ \hline
 		RF-D01 & Presentar versión de los hechos & Permitir a la persona señalada capturar su identidad, su
 		unidad de procedencia, su número de boleta o de empleado y su versión de los hechos, con una o dos
 		imágenes de su credencial y hasta diez evidencias, asociadas al folio de la queja; devolver un
 		folio de respuesta \texttt{RD-XXXXXXXX}. \\ \hline
 		RF-D02 & Aviso de privacidad propio & Presentar y exigir un aviso de privacidad específico para la
 		persona señalada, distinto del del quejoso. \\ \hline
-	\end{longtable}
-	\normalsize
-
-	\subsubsection{Requerimientos funcionales del personal de recepción}
-	Recepción es la puerta de entrada del procedimiento: su tarea es verificar que la queja reúna los
-	requisitos de admisión antes de que consuma tiempo del área jurídica. Con varias recepcionistas
-	trabajando sobre la misma cola, los requerimientos de la Tabla~\ref{tab:rf_recepcion} incluyen
-	también la coordinación entre ellas.
-
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.4cm}|}
-		\caption{Requerimientos funcionales del personal de recepción}
-		\label{tab:rf_recepcion} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
-		\hline
-		\endhead
-		RF-R01 & Inicio de sesión del personal & Autenticar a todo el personal en un único punto y dirigir
-		a cada persona al panel de su rol. \\ \hline
-		RF-R02 & Bandeja de recepción & Mostrar la cola de quejas paginada (diez por página, la más
-		reciente primero) con filtros (todas, disponibles, mías, corregidas, en atención), búsqueda por
-		folio, nombre o unidad, e indicadores: por atender, en atención, atendidas hoy, espera más larga
-		y tiempo de respuesta promedio. \\ \hline
-		RF-R03 & Equipo de recepción & Mostrar, por recepcionista, las quejas abiertas y atendidas en el
-		día. \\ \hline
-		RF-R04 & Tomar una queja & Asignar la queja a la recepcionista que la abre, de forma exclusiva;
-		permitir soltarla y renovarla mientras se revisa, y liberarla automáticamente tras 20 minutos de
-		inactividad. \\ \hline
-		RF-R05 & Validar requisitos de admisión & Presentar una lista de verificación de cinco requisitos
-		---identidad de la persona quejosa, documentación de identidad, matrícula institucional,
-		oportunidad dentro de 90 días naturales e identificación de la persona señalada--- con su
-		criterio de cotejo, el cómputo automático de los días transcurridos y una observación obligatoria
-		por cada requisito no satisfecho. \\ \hline
-		RF-R06 & Ver evidencias & Abrir en el navegador los documentos e identificaciones adjuntos. \\ \hline
-		RF-R07 & Regresar con observaciones & Regresar la queja al quejoso con los motivos derivados de los
-		requisitos no satisfechos y observaciones generales, y avisarle por correo. \\ \hline
-		RF-R08 & Turnar a Primer Contacto & Turnar la queja admitida, mostrando sus antecedentes y la carga
-		de trabajo de cada abogado, sugiriendo al de menor carga o a quien ya lleva un antecedente de la
-		misma queja. \\ \hline
-		RF-R09 & Registro en ventanilla & Registrar una queja recibida en papel con el mismo formulario del
-		portal, más los datos de la recepción física (documento recibido, fecha, oficio y ubicación del
-		expediente). \\ \hline
-		RF-R10 & Historial y exportación & Consultar las quejas atendidas con totales, filtros y paginación,
-		y exportar el historial filtrado a una hoja de cálculo. \\ \hline
-		RF-R11 & Cuenta y avisos & Cambiar la contraseña propia y consultar las notificaciones del
-		personal. \\ \hline
-	\end{longtable}
-	\normalsize
-
-	\subsubsection{Requerimientos funcionales de Primer Contacto}
-	Primer Contacto es la etapa en la que se decide si la Defensoría es competente para conocer la
-	queja. La Tabla~\ref{tab:rf_pc} reúne sus requerimientos.
-
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.4cm}|}
-		\caption{Requerimientos funcionales de Primer Contacto}
-		\label{tab:rf_pc} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
-		\hline
-		\endhead
-		RF-PC01 & Recibir quejas turnadas & Crear el expediente de análisis cuando Recepción turna una
-		queja, con su prioridad, quejoso, narración y evidencias. \\ \hline
-		RF-PC02 & Bandeja de análisis & Listar los expedientes con filtros por folio, prioridad y estatus,
-		e indicadores en un tablero de inicio. \\ \hline
-		RF-PC03 & Abrir expediente & Iniciar el análisis al abrir el expediente y presentar la narración,
-		los datos de la queja, del quejoso y de la persona señalada, las evidencias y el historial del
-		expediente. \\ \hline
-		RF-PC04 & Agenda de citas & Programar citas con el quejoso y con la persona señalada
-		(comparecencia, revisión de documentos o seguimiento; presencial o virtual) en horarios de 09:00 a
-		16:00 cada 30 minutos, sin empalmes ni fines de semana; confirmarlas, reagendarlas o cancelarlas, y
-		avisar a la persona citada con un enlace para responder. \\ \hline
-		RF-PC05 & Oficios de análisis & Redactar oficios con asunto y contenido, numerados
-		\texttt{DDP/PC/OF/año/id}, generarlos en PDF, y editarlos o eliminarlos solo por su autor. \\ \hline
-		RF-PC06 & Solicitar versión de la persona señalada & Registrar la solicitud de la versión de la
-		persona señalada y consultar su respuesta y archivos. \\ \hline
-		RF-PC07 & Dictamen de competencia & Declarar la queja procedente con justificación y observaciones,
-		elegir al responsable en Subdefensoría de una lista ordenada por carga, y turnar el expediente;
-		permitir reenviarlo si Subdefensoría no lo recibió. \\ \hline
-		RF-PC08 & Dictamen de improcedencia y remisión & Declarar la queja improcedente con justificación y
-		elaborar la remisión a la autoridad competente, con sugerencia al quejoso y oficio en PDF. \\ \hline
-		RF-PC09 & Propuesta de conciliación & Registrar una propuesta de conciliación desde el expediente.
-		\\ \hline
-	\end{longtable}
-	\normalsize
-
-	\subsubsection{Requerimientos funcionales de Subdefensoría}
-	La Subdefensoría investiga los expedientes procedentes. Sus requerimientos
-	(Tabla~\ref{tab:rf_sd}) están dominados por los plazos que fija el Manual de Procedimientos de la
-	DDP: diez días hábiles para que una unidad responda la primera solicitud de información y cinco para
-	cada recordatorio \cite{ipn_manual_procedimientos_ddp}.
-
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.4cm}|}
-		\caption{Requerimientos funcionales de Subdefensoría}
-		\label{tab:rf_sd} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
-		\hline
-		\endhead
-		RF-SD01 & Recibir expediente & Crear el expediente de investigación cuando Primer Contacto dictamina
-		la queja como procedente. \\ \hline
-		RF-SD02 & Inicio y pendientes & Mostrar indicadores, pendientes del día ordenados por urgencia,
-		expedientes que vencen pronto y su distribución por etapa. \\ \hline
-		RF-SD03 & Mis expedientes & Listar los expedientes por etapa (en trámite, por atender, esperando a
-		la unidad, pendiente de acuerdo de conciliación, concluidos) con búsqueda, barra de plazo, siguiente
-		paso sugerido y exportación. \\ \hline
-		RF-SD04 & Abrir expediente & Iniciar la investigación y consultar, en modo de solo lectura, lo
-		actuado en Primer Contacto: oficios, citas y dictamen. \\ \hline
-		RF-SD05 & Solicitud de información & Redactar y enviar a la unidad académica el oficio de solicitud
-		de información, con PDF y plazo de diez días hábiles. \\ \hline
-		RF-SD06 & Recordatorio de urgencia & Enviar un recordatorio a la unidad que no respondió, con plazo
-		de cinco días hábiles. \\ \hline
-		RF-SD07 & Registrar respuesta & Registrar la respuesta de la unidad con su canal de recepción,
-		resumen y archivo. \\ \hline
-		RF-SD08 & Acuerdo de conciliación & Elaborar el acuerdo de conciliación y enviarlo al quejoso, quien
-		lo acepta o rechaza mediante un enlace. \\ \hline
-		RF-SD09 & Acuerdo de conclusión & Elaborar y enviar el acuerdo de conclusión y cerrar el
-		expediente. \\ \hline
-		RF-SD10 & Control de plazos & Mostrar el semáforo de plazos y las alertas de oficios vencidos o por
-		vencer en tres días o menos. \\ \hline
-	\end{longtable}
-	\normalsize
-
-	\subsubsection{Requerimientos funcionales de la Defensora}
-	El panel de la Defensora combina dos responsabilidades: la supervisión del procedimiento completo
-	---dónde está cada queja, quién la atiende y qué casos se están retrasando--- y la administración de
-	los datos de referencia que usa el resto del sistema. La Tabla~\ref{tab:rf_admin} las reúne.
-
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.4cm}|}
-		\caption{Requerimientos funcionales de la Defensora}
-		\label{tab:rf_admin} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Nombre} & \headercell{Descripción} \\
-		\hline
-		\endhead
-		RF-A01 & Panel general & Mostrar, para un periodo elegido, las quejas recibidas contra el periodo
-		anterior, indicadores por etapa, casos que requieren atención, distribución por estatus, evolución
-		mensual, unidades con más quejas, carga del personal y motivos de rechazo más frecuentes. \\ \hline
-		RF-A02 & Explorador de quejas & Consultar todas las quejas con filtros (etapa, estatus, unidad,
-		abogado, recepcionista, periodo, estado, prioridad), ordenarlas, ver su detalle de solo lectura y
-		exportarlas. \\ \hline
-		RF-A03 & Quejas por unidad & Mostrar las unidades con quejas, su tipo, porcentaje y última
-		recepción, con gráficas y variación contra el periodo anterior. \\ \hline
-		RF-A04 & Carga de trabajo & Mostrar la carga de cada recepcionista y abogado, el tiempo promedio de
-		atención y un nivel de carga relativo al equipo. \\ \hline
-		RF-A05 & Gestionar personal & Dar de alta cuentas con contraseña temporal, editarlas, darlas de baja
-		lógica, reactivarlas, restablecer su contraseña y consultar su actividad. \\ \hline
-		RF-A06 & Catálogo de dependencias & Administrar las dependencias y unidades académicas del IPN e
-		importarlas desde un archivo Excel. \\ \hline
-		RF-A07 & Plantillas oficiales & Editar las plantillas de documentos con marcadores de posición y
-		previsualizarlas. \\ \hline
-		RF-A08 & Preguntas frecuentes & Crear, editar, ocultar y eliminar las preguntas del asistente del
-		portal. \\ \hline
-		RF-A09 & Respaldos & Generar respaldos manuales, programar uno diario, listarlos, descargarlos y
-		restaurar la base de datos a partir de uno. \\ \hline
-		RF-A10 & Bitácora & Consultar las acciones críticas: inicios de sesión exitosos y fallidos, cambios
-		al personal, plantillas, respaldos y restauraciones, con usuario, IP de origen y fecha. \\ \hline
-		RF-A11 & Contraseña propia & Cambiar la contraseña propia; obligatoriamente si es temporal. \\ \hline
-		RF-A12 & Revisión de quejas prioritarias & Identificar las quejas de mayor prioridad y las que
-		requieren atención, para que la Defensora revise directamente su expediente y su seguimiento.
-		\\ \hline
+		RF-D03 & Solicitar la versión de la persona señalada & Permitir a Primer Contacto registrar la
+		solicitud de la versión de la persona señalada y consultar su respuesta y sus archivos. \\ \hline
 	\end{longtable}
 	\normalsize
 
@@ -646,7 +409,8 @@
 		Defensoría organizadas por categoría. \\ \hline
 		CU-QJ-07 & Registrar queja (formulario público) & Registrar, sin sesión, una queja con los datos del
 		quejoso, los de la persona señalada, la narración de los hechos, la identificación y las
-		evidencias, previa aceptación del aviso de privacidad. \\ \hline
+		evidencias, previa aceptación del aviso de privacidad; si la persona es menor de edad, exigir los
+		datos de un tutor, a quien se avisa por correo. \\ \hline
 		CU-QJ-08 & Consultar mis quejas y su detalle & Consultar la lista y el detalle de las quejas
 		propias desde la cuenta, verificando que cada queja pertenezca al correo de la sesión. \\ \hline
 		CU-QJ-09 & Editar mi queja & Modificar los datos y las evidencias de una queja propia mientras se
@@ -685,11 +449,13 @@
 		\endhead
 		CU-REC-01 & Consultar bandeja de entrada & Mostrar los indicadores de la recepción ---por atender,
 		en atención, atendidas en el día, espera más larga y tiempo de respuesta--- y la cola paginada de
-		quejas \texttt{RECIBIDA}, \texttt{CORREGIDA} y \texttt{EN\_VALIDACION}, con filtros y búsqueda.
-		\\ \hline
+		quejas \texttt{RECIBIDA}, \texttt{CORREGIDA} y \texttt{EN\_VALIDACION}, con filtros y búsqueda,
+		junto con la actividad del día de cada recepcionista. \\ \hline
 		CU-REC-02 & Consultar detalle de una queja & Abrir una queja, que queda asignada en exclusiva a la
-		recepcionista y pasa a \texttt{EN\_VALIDACION}, y consultar los datos del quejoso, la narración y
-		la documentación para verificar los requisitos de admisión. \\ \hline
+		recepcionista y pasa a \texttt{EN\_VALIDACION}, y verificar los cinco requisitos de admisión
+		---identidad, documentación, matrícula, oportunidad dentro de 90 días naturales y persona
+		señalada--- con una lista de verificación. La queja puede soltarse y se libera sola tras 20
+		minutos de inactividad. \\ \hline
 		CU-REC-03 & Visualizar evidencia adjunta & Abrir en el navegador los documentos e
 		identificaciones adjuntos a la queja, sin necesidad de descargarlos. \\ \hline
 		CU-REC-04 & Rechazar queja & Regresar al quejoso una queja que no satisface algún requisito de
@@ -733,7 +499,8 @@
 		CU-PC-03 & Consultar expediente de análisis & Abrir el expediente, que pasa a
 		\texttt{EN\_ANALISIS}, y consultar sus datos, evidencias e historial. \\ \hline
 		CU-PC-04 & Agendar y gestionar citas & Programar, confirmar, reagendar y cancelar citas con el
-		quejoso o con la persona señalada y consultar la agenda; la persona citada confirma o cancela desde
+		quejoso o con la persona señalada, en horarios de 09:00 a 16:00 cada 30 minutos, y consultar la
+		agenda; la persona citada confirma o cancela desde
 		el enlace recibido por correo, y el quejoso también desde su panel. \\ \hline
 		CU-PC-05 & Registrar notas de análisis & Crear, editar y eliminar las notas del expediente, que se
 		formalizan como oficios numerados con asunto y PDF; solo su autor puede modificarlas. \\ \hline
@@ -805,53 +572,18 @@
 		CU-CAT-01 & Consultar catálogo de dependencias (global) & Consultar las dependencias y unidades
 		académicas activas. \\ \hline
 		CU-NOT-01 & Consultar mis notificaciones (global) & Consultar las notificaciones propias, el
-		número de no leídas y marcarlas como leídas. \\ \hline
+		número de no leídas y marcarlas como leídas; los avisos relevantes se envían además por correo.
+		\\ \hline
 		CU-NOT-02 & Registrar notificación (interno) & Registrar una notificación dirigida a un actor a
 		partir de un evento de negocio; solo la invocan otros servicios. \\ \hline
 	\end{longtable}
 	\normalsize
-	\paragraph{Especificación detallada de los casos de uso que conectan áreas.}
-	Tres casos de uso concentran la mayor parte del riesgo funcional del sistema porque en ellos la
-	queja cambia de área y de responsable. Se especifican a continuación con su flujo principal y sus
-	flujos alternos.
+	\paragraph{Especificación detallada del turnado.}
+	El turnado (CU-REC-05) es el caso de uso con mayor riesgo funcional, porque en él la queja cambia
+	de área y de responsable y deben coordinarse varias recepcionistas. Se especifica a continuación con
+	su flujo principal y sus flujos alternos.
 
 	\rowcolors{0}{white}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\begin{longtable}{|p{3.0cm}|p{11.6cm}|}
-		\caption{Especificación de CU-QJ-07: Registrar queja (formulario público)}
-		\label{tab:cu_qj07} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Elemento} & \headercell{Descripción} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Elemento} & \headercell{Descripción} \\
-		\hline
-		\endhead
-		Actor & Quejoso. \\ \hline
-		Requerimientos & RF-Q01, RF-Q02, RNF-Q01, RNF-Q03, RNF-Q04, RNF-G08; reglas RN-Q01 a RN-Q05 y
-		RN-Q13. \\ \hline
-		Precondición & Ninguna; no se requiere cuenta ni sesión. \\ \hline
-		Flujo principal & 1. El quejoso abre ``Presentar una queja''. 2. Captura sus datos de identidad;
-		si es menor de edad, el sistema solicita los datos del tutor. 3. Elige su unidad académica en el
-		catálogo, captura la fecha de los hechos, los datos de la persona señalada y la narración. 4.
-		Adjunta la identificación y las evidencias, que el sistema previsualiza. 5. Acepta el aviso de
-		privacidad y envía. 6. El servicio de quejas valida cada campo y la firma binaria de cada archivo,
-		genera el folio, guarda la queja con estatus \texttt{RECIBIDA} y origen \texttt{PUBLICO}, y
-		solicita las notificaciones correspondientes. 7. El sistema muestra el folio y ofrece activar una
-		cuenta de seguimiento. \\ \hline
-		Flujos alternos & A1. Un dato no cumple una regla: el servidor responde con el mensaje de la regla
-		incumplida y la interfaz lo señala en el campo; la queja no se guarda. A2. Un archivo excede el
-		tamaño o su contenido no corresponde a un tipo permitido: se rechaza la petición completa. A3. El
-		servicio de notificaciones no responde: la queja se guarda igualmente y el fallo queda en el
-		registro del servidor. \\ \hline
-		Postcondición & Queja persistida con su folio único, evidencias y aviso de privacidad aceptado,
-		visible en la bandeja de Recepción. \\ \hline
-	\end{longtable}
-	\normalsize
 
 	\small
 	\renewcommand{\arraystretch}{1.2}
@@ -869,7 +601,7 @@
 		\hline
 		\endhead
 		Actor & Personal de recepción. \\ \hline
-		Requerimientos & RF-R04, RF-R05, RF-R08, RNF-R01, RNF-R06; reglas RN-R01, RN-R03 a RN-R06. \\ \hline
+		Requerimientos & RNF-R01, RNF-R06; reglas RN-R01, RN-R03 a RN-R06. \\ \hline
 		Precondición & La queja está \texttt{EN\_VALIDACION} a nombre de la recepcionista y los cinco
 		requisitos de admisión están satisfechos o no aplican. \\ \hline
 		Flujo principal & 1. La recepcionista elige ``Turnar''. 2. El sistema muestra los antecedentes de
@@ -885,35 +617,7 @@
 	\end{longtable}
 	\normalsize
 
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\begin{longtable}{|p{3.0cm}|p{11.6cm}|}
-		\caption{Especificación de CU-PC-06: Registrar dictamen de competencia}
-		\label{tab:cu_pc06} \\
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Elemento} & \headercell{Descripción} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{Elemento} & \headercell{Descripción} \\
-		\hline
-		\endhead
-		Actor & Analista de Primer Contacto. \\ \hline
-		Requerimientos & RF-PC07, RNF-Q04; reglas RN-PC02 y RN-PC03. \\ \hline
-		Precondición & El expediente está abierto (\texttt{TURNADA} o \texttt{EN\_ANALISIS}) y no tiene
-		dictamen. \\ \hline
-		Flujo principal & 1. En la pestaña Resolución, el analista elige ``Competente''. 2. Captura la
-		justificación y las observaciones y elige al responsable en Subdefensoría de la lista ordenada por
-		carga. 3. El sistema registra el dictamen, cambia el expediente a \texttt{PROCEDENTE} y refleja el
-		estatus en la queja. 4. Envía el expediente a Subdefensoría, que lo crea como \texttt{RECIBIDO}. \\ \hline
-		Flujos alternos & A1. Falta la justificación: se rechaza el registro. A2. Ya existe un dictamen: el
-		sistema lo informa y lo muestra. A3. Subdefensoría no responde: el dictamen se conserva y se ofrece
-		reenviar el expediente. \\ \hline
-		Postcondición & Dictamen registrado y expediente disponible en la bandeja de Subdefensoría. \\ \hline
-	\end{longtable}
-	\normalsize
+
 
 	\subsection{Ciclo de vida de la queja}
 	\label{sec:maquina_estados}
