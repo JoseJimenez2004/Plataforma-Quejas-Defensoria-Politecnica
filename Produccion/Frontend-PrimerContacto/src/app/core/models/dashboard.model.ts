@@ -20,12 +20,19 @@ export interface DashboardCitaHoy {
   quejoso: string;
   folio: string;
   tipo: 'Presencial' | 'Virtual';
+  /** Estado real de la cita ('Confirmada'...) y su código (CONFIRMADA...) para el color. */
+  estado?: string;
+  estadoCodigo?: string;
 }
 
 export interface DashboardItemLista {
   folio: string;
   nombre: string;
   detalle: string;
-  estado: string;
+  estado?: string;
+  estadoCodigo?: string;
+  unidad?: string;
+  /** dd/mm/aaaa en que llegó a Primer Contacto. */
+  fecha?: string;
   tipo: 'PENDIENTES' | 'CON_CITA' | 'EN_DICTAMEN' | 'REMITIDOS';
 }

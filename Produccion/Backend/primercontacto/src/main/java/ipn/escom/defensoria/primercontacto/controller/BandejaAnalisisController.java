@@ -1,5 +1,8 @@
 package ipn.escom.defensoria.primercontacto.controller;
 
+import ipn.escom.defensoria.primercontacto.service.AnalistaAutenticadoService;
+import org.springframework.security.core.Authentication;
+
 import ipn.escom.defensoria.primercontacto.dto.BandejaAnalisisDTO;
 import ipn.escom.defensoria.primercontacto.dto.FiltroExpedienteDTO;
 import ipn.escom.defensoria.primercontacto.service.BandejaAnalisisService;
@@ -13,47 +16,55 @@ import java.util.List;
 public class BandejaAnalisisController {
 
     private final BandejaAnalisisService bandejaAnalisisService;
+    private final AnalistaAutenticadoService analistaAutenticadoService;
 
-    public BandejaAnalisisController(BandejaAnalisisService bandejaAnalisisService) {
+    public BandejaAnalisisController(BandejaAnalisisService bandejaAnalisisService,
+                                     AnalistaAutenticadoService analistaAutenticadoService) {
         this.bandejaAnalisisService = bandejaAnalisisService;
+        this.analistaAutenticadoService = analistaAutenticadoService;
     }
 
     @GetMapping
     public List<BandejaAnalisisDTO> obtenerBandeja(
-            @RequestHeader(value = "Authorization", required = false) String token
+            Authentication authentication
     ) {
-        return bandejaAnalisisService.obtenerBandeja(token);
+        Long analistaId = analistaAutenticadoService.obtenerAnalista(authentication).getId();
+        return bandejaAnalisisService.obtenerBandeja(analistaId);
     }
 
     @GetMapping("/folio/{folio}")
     public BandejaAnalisisDTO buscarPorFolio(
             @PathVariable String folio,
-            @RequestHeader(value = "Authorization", required = false) String token
+            Authentication authentication
     ) {
-        return bandejaAnalisisService.buscarPorFolio(folio, token);
+        Long analistaId = analistaAutenticadoService.obtenerAnalista(authentication).getId();
+        return bandejaAnalisisService.buscarPorFolio(folio, analistaId);
     }
 
     @PostMapping("/filtrar")
     public List<BandejaAnalisisDTO> filtrar(
             @Valid @RequestBody FiltroExpedienteDTO filtro,
-            @RequestHeader(value = "Authorization", required = false) String token
+            Authentication authentication
     ) {
-        return bandejaAnalisisService.filtrar(filtro, token);
+        Long analistaId = analistaAutenticadoService.obtenerAnalista(authentication).getId();
+        return bandejaAnalisisService.filtrar(filtro, analistaId);
     }
 
     @GetMapping("/prioridad/{prioridad}")
     public List<BandejaAnalisisDTO> obtenerPorPrioridad(
             @PathVariable String prioridad,
-            @RequestHeader(value = "Authorization", required = false) String token
+            Authentication authentication
     ) {
-        return bandejaAnalisisService.obtenerPorPrioridad(prioridad, token);
+        Long analistaId = analistaAutenticadoService.obtenerAnalista(authentication).getId();
+        return bandejaAnalisisService.obtenerPorPrioridad(prioridad, analistaId);
     }
 
     @GetMapping("/estatus/{estatus}")
     public List<BandejaAnalisisDTO> obtenerPorEstatus(
             @PathVariable String estatus,
-            @RequestHeader(value = "Authorization", required = false) String token
+            Authentication authentication
     ) {
-        return bandejaAnalisisService.obtenerPorEstatus(estatus, token);
+        Long analistaId = analistaAutenticadoService.obtenerAnalista(authentication).getId();
+        return bandejaAnalisisService.obtenerPorEstatus(estatus, analistaId);
     }
 }

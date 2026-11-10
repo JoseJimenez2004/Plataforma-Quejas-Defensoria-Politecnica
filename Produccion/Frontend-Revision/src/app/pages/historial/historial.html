@@ -180,7 +180,7 @@
         <p class="aviso-peligro">{{ detalleSeleccionado.motivoRechazo }}</p>
       } @else if (detalleSeleccionado.estatus === 'TURNADA') {
         <p class="detalle-linea"><strong>Área:</strong> {{ detalleSeleccionado.areaTurnada }}</p>
-        <p class="detalle-linea"><strong>Defensor asignado:</strong> {{ detalleSeleccionado.defensorAsignado }}</p>
+        <p class="detalle-linea"><strong>Responsable actual:</strong> {{ detalleSeleccionado.defensorAsignado }}</p>
         @if (detalleSeleccionado.comentariosRecepcion) {
           <p class="detalle-linea"><strong>Comentarios:</strong> {{ detalleSeleccionado.comentariosRecepcion }}</p>
         }

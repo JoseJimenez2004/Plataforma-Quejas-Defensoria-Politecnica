@@ -1,5 +1,10 @@
 package ipn.escom.defensoria.subdefensoria.service;
 
+import ipn.escom.defensoria.subdefensoria.repository.ExpedienteInvestigacionRepository;
+import ipn.escom.defensoria.subdefensoria.entity.ExpedienteInvestigacion;
+import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.function.Predicate;
 import ipn.escom.defensoria.subdefensoria.dto.AlertaVencimientoDTO;
 import ipn.escom.defensoria.subdefensoria.entity.EstatusOficio;
 import ipn.escom.defensoria.subdefensoria.entity.OficioInformacion;
@@ -20,14 +25,23 @@ import java.util.List;
 public class AlertaService {
 
     private final OficioInformacionRepository oficioRepository;
+    private final ExpedienteInvestigacionRepository expedienteRepository;
 
-    public AlertaService(OficioInformacionRepository oficioRepository) {
+    public AlertaService(OficioInformacionRepository oficioRepository,
+                         ExpedienteInvestigacionRepository expedienteRepository) {
+        this.expedienteRepository = expedienteRepository;
         this.oficioRepository = oficioRepository;
     }
 
-    public List<AlertaVencimientoDTO> obtenerVencidos() {
+    /** visibles: expedientes del abogado en sesión (o todos para el titular). */
+    public List<AlertaVencimientoDTO> obtenerVencidos(Predicate<ExpedienteInvestigacion> visibles) {
         madurarPendientes();
+        Set<Long> ids = expedienteRepository.findAll().stream()
+                .filter(visibles)
+                .map(ExpedienteInvestigacion::getId)
+                .collect(Collectors.toSet());
         return oficioRepository.findByEstatusOrderByFechaLimiteAsc(EstatusOficio.VENCIDO).stream()
+                .filter(o -> ids.contains(o.getExpedienteId()))
                 .map(this::convertirADTO)
                 .toList();
     }

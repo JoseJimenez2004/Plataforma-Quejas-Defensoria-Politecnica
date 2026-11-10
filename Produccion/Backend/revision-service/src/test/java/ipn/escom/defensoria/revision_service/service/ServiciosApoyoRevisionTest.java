@@ -130,7 +130,7 @@ class ServiciosApoyoRevisionTest {
             when(restTemplate.postForObject(eq(URL_PC + "/api/primer-contacto/ingesta/expedientes"), any(),
                     eq(PrimerContactoIngresoResponse.class))).thenReturn(respuesta("PC-1"));
 
-            servicio.enviarAPrimerContacto(queja);
+            servicio.enviarAPrimerContacto(queja, 7L, "Analista PC");
 
             ArgumentCaptor<PrimerContactoIngresoRequest> req = ArgumentCaptor.forClass(PrimerContactoIngresoRequest.class);
             verify(restTemplate).postForObject(anyString(), req.capture(), eq(PrimerContactoIngresoResponse.class));
@@ -144,7 +144,7 @@ class ServiciosApoyoRevisionTest {
         @Test
         void enviar_respuestaNula_lanzaExcepcion() {
             when(restTemplate.postForObject(anyString(), any(), eq(PrimerContactoIngresoResponse.class))).thenReturn(null);
-            RuntimeException ex = assertThrows(RuntimeException.class, () -> servicio.enviarAPrimerContacto(queja));
+            RuntimeException ex = assertThrows(RuntimeException.class, () -> servicio.enviarAPrimerContacto(queja, 7L, "Analista PC"));
             assertEquals("Primer Contacto no devolvio informacion del expediente.", ex.getMessage(), "Sin respuesta");
         }
 
@@ -152,7 +152,7 @@ class ServiciosApoyoRevisionTest {
         void enviar_folioEnBlanco_lanzaExcepcion() {
             when(restTemplate.postForObject(anyString(), any(), eq(PrimerContactoIngresoResponse.class)))
                     .thenReturn(respuesta(" "));
-            RuntimeException ex = assertThrows(RuntimeException.class, () -> servicio.enviarAPrimerContacto(queja));
+            RuntimeException ex = assertThrows(RuntimeException.class, () -> servicio.enviarAPrimerContacto(queja, 7L, "Analista PC"));
             assertEquals("Primer Contacto no devolvio un folio valido.", ex.getMessage(), "Folio inválido");
         }
 
@@ -166,7 +166,7 @@ class ServiciosApoyoRevisionTest {
             when(evidencias.findByQuejaId(5L)).thenReturn(List.of());
             when(restTemplate.postForObject(anyString(), any(), eq(PrimerContactoIngresoResponse.class))).thenReturn(respuesta("PC-2"));
 
-            servicio.enviarAPrimerContacto(web);
+            servicio.enviarAPrimerContacto(web, 7L, "Analista PC");
 
             ArgumentCaptor<PrimerContactoIngresoRequest> req = ArgumentCaptor.forClass(PrimerContactoIngresoRequest.class);
             verify(restTemplate).postForObject(anyString(), req.capture(), eq(PrimerContactoIngresoResponse.class));

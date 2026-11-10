@@ -1,5 +1,7 @@
 package ipn.escom.defensoria.subdefensoria.controller;
 
+import org.springframework.security.core.Authentication;
+import ipn.escom.defensoria.subdefensoria.service.AbogadoSesionService;
 import ipn.escom.defensoria.subdefensoria.dto.AcuerdoConclusionDTO;
 import ipn.escom.defensoria.subdefensoria.dto.CrearAcuerdoConclusionDTO;
 import ipn.escom.defensoria.subdefensoria.dto.RegistrarConclusionDTO;
@@ -12,9 +14,11 @@ import org.springframework.web.bind.annotation.*;
 public class AcuerdoConclusionController {
 
     private final AcuerdoConclusionService acuerdoConclusionService;
+    private final AbogadoSesionService abogadoSesion;
 
-    public AcuerdoConclusionController(AcuerdoConclusionService acuerdoConclusionService) {
+    public AcuerdoConclusionController(AcuerdoConclusionService acuerdoConclusionService, AbogadoSesionService abogadoSesion) {
         this.acuerdoConclusionService = acuerdoConclusionService;
+        this.abogadoSesion = abogadoSesion;
     }
 
     /**
@@ -22,7 +26,9 @@ public class AcuerdoConclusionController {
      * Ya no cierra el expediente: lo deja en PENDIENTE_CONCLUSION esperando su respuesta.
      */
     @PostMapping
-    public AcuerdoConclusionDTO guardarOConcluir(@Valid @RequestBody CrearAcuerdoConclusionDTO dto) {
+    public AcuerdoConclusionDTO guardarOConcluir(@Valid @RequestBody CrearAcuerdoConclusionDTO dto,
+                                                 Authentication authentication) {
+        abogadoSesion.exigirExpediente(dto.getExpedienteId(), authentication);
         return acuerdoConclusionService.guardarOConcluir(dto);
     }
 
@@ -50,7 +56,9 @@ public class AcuerdoConclusionController {
     /* Acuerdo de conclusión, con el de conciliación ya aceptado por el quejoso. */
     @PostMapping("/{expedienteId}/conclusion")
     public AcuerdoConclusionDTO registrarConclusion(@PathVariable Long expedienteId,
-                                                    @Valid @RequestBody RegistrarConclusionDTO dto) {
+                                                    @Valid @RequestBody RegistrarConclusionDTO dto,
+                                                    Authentication authentication) {
+        abogadoSesion.exigirExpediente(expedienteId, authentication);
         return acuerdoConclusionService.registrarConclusion(expedienteId, dto.getTextoConclusion());
     }
 

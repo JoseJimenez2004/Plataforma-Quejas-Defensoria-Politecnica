@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { SesionPersonalService } from '../../core/services/sesion-personal.service';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { forkJoin } from 'rxjs';
@@ -20,6 +21,9 @@ type Pestana = 'vencidos' | 'por-vencer' | 'espera';
   styleUrl: './alertas.css'
 })
 export class Alertas implements OnInit {
+  /** 2026-11: el Defensor titular supervisa en solo consulta (sin acciones). */
+  readonly soloConsulta = inject(SesionPersonalService).esDefensorTitular();
+
   readonly formatearFecha = formatearFecha;
   readonly diasRestantes = diasRestantes;
   readonly porcentajePlazo = porcentajePlazo;

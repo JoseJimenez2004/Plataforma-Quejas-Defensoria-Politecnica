@@ -1,5 +1,6 @@
 package ipn.escom.defensoria.subdefensoria.service;
 
+import java.util.function.Predicate;
 import ipn.escom.defensoria.subdefensoria.dto.ExpedienteResumenDTO;
 import ipn.escom.defensoria.subdefensoria.entity.EstatusExpediente;
 import ipn.escom.defensoria.subdefensoria.entity.EstatusOficio;
@@ -47,8 +48,10 @@ public class ExpedienteResumenService {
         this.diasRecordatorio = diasRecordatorio;
     }
 
-    public List<ExpedienteResumenDTO> listarTodos() {
+    /** visibles: expedientes del abogado en sesión (o todos para el titular). */
+    public List<ExpedienteResumenDTO> listarTodos(Predicate<ExpedienteInvestigacion> visibles) {
         return expedienteRepository.findAll(Sort.by(Sort.Direction.DESC, "fechaAdmision")).stream()
+                .filter(visibles)
                 .map(this::convertirADTO)
                 .toList();
     }

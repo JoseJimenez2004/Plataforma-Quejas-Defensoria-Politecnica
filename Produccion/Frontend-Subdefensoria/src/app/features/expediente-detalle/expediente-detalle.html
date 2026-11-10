@@ -9,7 +9,7 @@
       <label class="selector-prioridad" title="Llega de Primer Contacto; aquí puedes cambiarla">
         Prioridad
         <select [class]="clasePrioridad(e.prioridad)" [ngModel]="codigoPrioridad(e.prioridad)"
-                (ngModelChange)="cambiarPrioridad($event)" [disabled]="guardandoPrioridad" aria-label="Prioridad del expediente">
+                (ngModelChange)="cambiarPrioridad($event)" [disabled]="guardandoPrioridad || soloConsulta" aria-label="Prioridad del expediente">
           @if (codigoPrioridad(e.prioridad) === 'SIN_ASIGNAR') { <option value="SIN_ASIGNAR" disabled>Sin asignar</option> }
           @for (p of prioridades; track p.codigo) { <option [value]="p.codigo">{{ p.etiqueta }}</option> }
         </select>
@@ -42,8 +42,9 @@
         <b>{{ sp.hecho ? '' : 'Siguiente paso: ' }}</b>{{ sp.texto }}
         @if (sp.detalle) { <span class="sd-muted"> {{ sp.detalle }}</span> }
       </div>
-      @if (sp.secundario) { <button type="button" class="sd-btn-borde" (click)="sp.accionSecundaria?.()">{{ sp.secundario }}</button> }
-      @if (sp.boton) { <button type="button" class="sd-btn" (click)="sp.accion?.()">{{ sp.boton }}</button> }
+      @if (soloConsulta) { <span class="sd-chip">Solo consulta</span> }
+      @if (sp.secundario && !soloConsulta) { <button type="button" class="sd-btn-borde" (click)="sp.accionSecundaria?.()">{{ sp.secundario }}</button> }
+      @if (sp.boton && !soloConsulta) { <button type="button" class="sd-btn" (click)="sp.accion?.()">{{ sp.boton }}</button> }
     </div>
   }
 
@@ -199,7 +200,7 @@
     <div class="sd-card">
       <div class="sd-card-cabeza">
         <h3><mat-icon>mail</mat-icon> Oficios de Subdefensoría</h3>
-        @if (puedeSolicitarOficio) {
+        @if (puedeSolicitarOficio && !soloConsulta) {
           <button type="button" class="sd-btn" (click)="solicitarOficio()"><mat-icon>send</mat-icon> Solicitar oficio</button>
         }
       </div>
@@ -251,8 +252,8 @@
                 <div class="acciones">
                   @if (resp.tieneArchivo) {
                     <button type="button" class="sd-btn-borde chico" (click)="verArchivoRespuesta(resp)"><mat-icon>attach_file</mat-icon> {{ resp.archivoNombre }}</button>
-                    <button type="button" class="sd-btn-borde chico" (click)="archivoRespuesta.click()">Reemplazar archivo</button>
-                  } @else {
+                    @if (!soloConsulta) { <button type="button" class="sd-btn-borde chico" (click)="archivoRespuesta.click()">Reemplazar archivo</button> }
+                  } @else if (!soloConsulta) {
                     <button type="button" class="sd-btn-borde chico" (click)="archivoRespuesta.click()"><mat-icon>upload_file</mat-icon> Adjuntar archivo de la respuesta</button>
                   }
                 </div>
@@ -261,7 +262,7 @@
 
             <div class="acciones">
               <button type="button" class="sd-btn-borde chico" (click)="verPdfOficio(o)"><mat-icon>picture_as_pdf</mat-icon> Ver oficio (PDF)</button>
-              @if (esOficioActivo(o)) {
+              @if (esOficioActivo(o) && !soloConsulta) {
                 <button type="button" class="sd-btn-borde chico" (click)="abrirRecordatorio(o)"><mat-icon>notifications</mat-icon> Enviar recordatorio</button>
                 <button type="button" class="sd-btn chico" (click)="abrirRespuestaExterna(o)"><mat-icon>upload_file</mat-icon> Registrar respuesta</button>
               }
@@ -284,7 +285,7 @@
         </div>
       }
 
-      @if (e.estatus === 'ELABORO_ACUERDO') {
+      @if (e.estatus === 'ELABORO_ACUERDO' && !soloConsulta) {
         <div class="sd-card">
           <div class="sd-card-cabeza"><h3><mat-icon>edit_document</mat-icon> Acuerdo de conciliación</h3></div>
           <label class="campo" for="textoAcuerdo">Propuesta de acuerdo para el quejoso</label>
@@ -316,6 +317,7 @@
           <p class="sd-texto">{{ acuerdo.textoAcuerdo }}</p>
           <p class="sd-muted">El quejoso lo aceptó el {{ formatearFecha(acuerdo.fechaRespuestaQuejoso, true) }}.</p>
         </div>
+        @if (!soloConsulta) {
         <div class="sd-card">
           <div class="sd-card-cabeza"><h3><mat-icon>gavel</mat-icon> Acuerdo de conclusión</h3></div>
           <label class="campo" for="textoConclusion">Texto del acuerdo de conclusión</label>
@@ -324,6 +326,7 @@
             <button type="button" class="sd-btn" [disabled]="guardando" (click)="registrarConclusion()"><mat-icon>task_alt</mat-icon> Registrar acuerdo de conclusión</button>
           </div>
         </div>
+        }
       }
 
       @if (e.estatus === 'CONCLUIDO' && acuerdo) {

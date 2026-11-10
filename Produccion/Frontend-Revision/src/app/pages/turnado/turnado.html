@@ -41,10 +41,10 @@
               <div><dt>Unidad</dt><dd>{{ a.unidadAcademicaClave || '—' }}</dd></div>
               <div><dt>Estado</dt><dd>{{ a.estadoActual }}</dd></div>
               <div>
-                <dt>Abogado</dt>
+                <dt>Responsable</dt>
                 <dd>
                   @if (a.defensorAsignado) { <strong>{{ a.defensorAsignado }}</strong> }
-                  @else { <span class="sin-dato">Sin abogado asignado</span> }
+                  @else { <span class="sin-dato">Sin responsable asignado</span> }
                 </dd>
               </div>
             </dl>
@@ -65,9 +65,9 @@
       <p class="aviso-inline">Esta queja se canalizará a <strong>Primer Contacto</strong> para su análisis.</p>
 
       <div class="input-group">
-        <label>Defensor / Abogado Responsable:</label>
+        <label>Analista de Primer Contacto:</label>
         <select [(ngModel)]="defensorAsignado" name="defensorAsignado">
-          <option value="" disabled>Seleccione un responsable</option>
+          <option value="" disabled>Seleccione un analista</option>
           @for (ab of abogados; track ab.id) {
             <option [value]="ab.nombre">
               {{ ab.nombre }} — {{ ab.cargaActiva }} en trámite{{ ab.sugerido ? ' · sugerido' : '' }}
@@ -76,7 +76,7 @@
         </select>
         @if (abogados.length === 0) {
           <span class="mensaje-campo aviso-sin-datos">
-            Todavía no hay abogados (rol Subdefensor o Defensor) dados de alta en Usuarios y Roles.
+            Todavía no hay analistas de Primer Contacto activos dados de alta en Usuarios y Roles.
           </span>
         }
         @if (avisoCarga) {
@@ -86,7 +86,7 @@
 
       <div class="input-group">
         <label>Comentarios de Recepción:</label>
-        <textarea rows="4" [(ngModel)]="comentarios" name="comentarios" placeholder="Escriba aquí una nota breve para el abogado…"></textarea>
+        <textarea rows="4" [(ngModel)]="comentarios" name="comentarios" placeholder="Escriba aquí una nota breve para el analista…"></textarea>
       </div>
 
       <div class="modal-acciones acciones-turnado">
@@ -97,12 +97,13 @@
       </div>
     </div>
 
-    <!-- ================= Carga de los abogados ================= -->
+    <!-- ================= Carga de los analistas (2026-11) ================= -->
     <aside class="card carga">
-      <h3>Carga de trabajo de los abogados</h3>
+      <h3>Carga de trabajo de los analistas</h3>
       <p class="explicacion">
-        Quejas en trámite de cada abogado, de menor a mayor. Se sugiere al de menor carga, salvo que alguien ya
-        lleve un antecedente de esta queja: en ese caso se le sugiere a él para dar continuidad.
+        Quejas en trámite de cada analista de Primer Contacto, de menor a mayor. Se sugiere al de menor carga,
+        salvo que alguien ya lleve un antecedente de esta queja: en ese caso se le sugiere a él para dar
+        continuidad. Solo el analista elegido verá la queja; él elegirá al abogado al dictaminar.
       </p>
       <ul class="carga-lista">
         @for (ab of abogados; track ab.id) {
@@ -116,7 +117,6 @@
               <span class="carga-barra"><span [style.width.%]="anchoCarga(ab)"></span></span>
               <span class="carga-pie">
                 {{ ab.cargaActiva }} en trámite · {{ ab.totalAsignadas }} en total
-                @if (ab.rol === 'DEFENSOR') { · Titular }
               </span>
               @if (ab.sugerido || ab.foliosAntecedente.length) {
                 <span class="carga-etiquetas">

@@ -3,5 +3,7 @@ export const environment = {
   apiUrl: '/api/primer-contacto',
   denunciadoApiUrl: '/api/denunciado',
   /** Catálogo público de dependencias (unidad de procedencia del denunciado). */
-  catalogosUrl: '/api/catalogos'
+  catalogosUrl: '/api/catalogos',
+  /** admin-service: cambio de contraseña propia (PUT /perfil/password). */
+  adminApiUrl: '/api/admin'
 };

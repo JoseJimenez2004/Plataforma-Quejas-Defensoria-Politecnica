@@ -68,7 +68,7 @@ class PlazosSubdefensoriaTest {
         @Test
         void obtenerSemaforo_primeraSolicitud_usaDiezDias() {
             unExpedienteConOficio(oficio(EstatusOficio.EN_ESPERA, LocalDate.now().plusDays(5), "PRIMERA"));
-            List<ControlPlazoDTO> r = servicio().obtenerSemaforo();
+            List<ControlPlazoDTO> r = servicio().obtenerSemaforo(e -> true);
             assertEquals(DIAS_PRIMERA, r.get(0).getDiasLimite(), "10 días hábiles en la primera solicitud");
             assertEquals(EstatusOficio.EN_ESPERA, r.get(0).getEstatusOficio(), "Sigue en espera");
         }
@@ -76,7 +76,7 @@ class PlazosSubdefensoriaTest {
         @Test
         void obtenerSemaforo_recordatorio_usaCincoDias() {
             unExpedienteConOficio(oficio(EstatusOficio.EN_ESPERA, LocalDate.now().plusDays(2), "RECORDATORIO"));
-            assertEquals(DIAS_RECORDATORIO, servicio().obtenerSemaforo().get(0).getDiasLimite(), "5 días en recordatorio");
+            assertEquals(DIAS_RECORDATORIO, servicio().obtenerSemaforo(e -> true).get(0).getDiasLimite(), "5 días en recordatorio");
         }
 
         @Test
@@ -84,21 +84,21 @@ class PlazosSubdefensoriaTest {
             OficioInformacion o = oficio(EstatusOficio.EN_ESPERA, LocalDate.now().minusDays(1), "PRIMERA");
             unExpedienteConOficio(o);
             when(oficios.save(o)).thenReturn(o);
-            assertEquals(EstatusOficio.VENCIDO, servicio().obtenerSemaforo().get(0).getEstatusOficio(), "Vencido");
+            assertEquals(EstatusOficio.VENCIDO, servicio().obtenerSemaforo(e -> true).get(0).getEstatusOficio(), "Vencido");
         }
 
         @Test
         void obtenerSemaforo_limiteHoy_aunNoVence() {
             OficioInformacion o = oficio(EstatusOficio.EN_ESPERA, LocalDate.now(), "PRIMERA");
             unExpedienteConOficio(o);
-            servicio().obtenerSemaforo();
+            servicio().obtenerSemaforo(e -> true);
             verify(oficios, never()).save(any());
         }
 
         @Test
         void obtenerSemaforo_expedienteSinOficioVigente_noAparece() {
             unExpedienteConOficio(null);
-            assertTrue(servicio().obtenerSemaforo().isEmpty(), "Sin oficio no hay fila");
+            assertTrue(servicio().obtenerSemaforo(e -> true).isEmpty(), "Sin oficio no hay fila");
         }
     }
 
@@ -109,6 +109,8 @@ class PlazosSubdefensoriaTest {
 
         @Mock
         private OficioInformacionRepository oficios;
+        @Mock
+        private ExpedienteInvestigacionRepository expedientes;
         @InjectMocks
         private AlertaService servicio;
 
@@ -119,12 +121,31 @@ class PlazosSubdefensoriaTest {
             when(oficios.findByEstatusOrderByFechaLimiteAsc(EstatusOficio.EN_ESPERA)).thenReturn(List.of(vencido, vigente));
             when(oficios.findByEstatusOrderByFechaLimiteAsc(EstatusOficio.VENCIDO)).thenReturn(List.of(vencido));
 
-            List<AlertaVencimientoDTO> r = servicio.obtenerVencidos();
+            ExpedienteInvestigacion exp = new ExpedienteInvestigacion();
+            exp.setId(1L);
+            when(expedientes.findAll()).thenReturn(List.of(exp));
+
+            List<AlertaVencimientoDTO> r = servicio.obtenerVencidos(e -> true);
 
             assertEquals(EstatusOficio.VENCIDO, vencido.getEstatus(), "El vencido se marca");
             assertEquals(EstatusOficio.EN_ESPERA, vigente.getEstatus(), "El vigente no cambia");
             verify(oficios, never()).save(vigente);
             assertEquals(1, r.size(), "Solo un vencido");
+        }
+
+        @Test
+        void obtenerVencidos_deOtroAbogado_noSeMuestran() {
+            OficioInformacion vencido = oficio(EstatusOficio.VENCIDO, LocalDate.now().minusDays(3), "PRIMERA");
+            when(oficios.findByEstatusOrderByFechaLimiteAsc(EstatusOficio.EN_ESPERA)).thenReturn(List.of());
+            when(oficios.findByEstatusOrderByFechaLimiteAsc(EstatusOficio.VENCIDO)).thenReturn(List.of(vencido));
+            ExpedienteInvestigacion exp = new ExpedienteInvestigacion();
+            exp.setId(1L);
+            exp.setAbogadoAsesorId(99L);
+            when(expedientes.findAll()).thenReturn(List.of(exp));
+
+            List<AlertaVencimientoDTO> r = servicio.obtenerVencidos(e -> Long.valueOf(5L).equals(e.getAbogadoAsesorId()));
+
+            assertTrue(r.isEmpty(), "2026-11: el abogado 5 no ve el oficio vencido del expediente del abogado 99");
         }
     }
 

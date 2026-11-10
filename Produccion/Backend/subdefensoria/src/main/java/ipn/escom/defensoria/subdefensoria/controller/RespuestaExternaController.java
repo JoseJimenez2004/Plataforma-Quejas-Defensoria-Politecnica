@@ -1,5 +1,7 @@
 package ipn.escom.defensoria.subdefensoria.controller;
 
+import org.springframework.security.core.Authentication;
+import ipn.escom.defensoria.subdefensoria.service.AbogadoSesionService;
 import ipn.escom.defensoria.subdefensoria.entity.RespuestaArchivo;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -19,14 +21,18 @@ import org.springframework.web.bind.annotation.*;
 public class RespuestaExternaController {
 
     private final RespuestaExternaService respuestaExternaService;
+    private final AbogadoSesionService abogadoSesion;
 
-    public RespuestaExternaController(RespuestaExternaService respuestaExternaService) {
+    public RespuestaExternaController(RespuestaExternaService respuestaExternaService, AbogadoSesionService abogadoSesion) {
         this.respuestaExternaService = respuestaExternaService;
+        this.abogadoSesion = abogadoSesion;
     }
 
     /** Boton "Confirmar Registro y Habilitar Dictamen" en P15. */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public RespuestaExternaDTO registrarRespuesta(@Valid @RequestBody RegistrarRespuestaExternaDTO dto) {
+    public RespuestaExternaDTO registrarRespuesta(@Valid @RequestBody RegistrarRespuestaExternaDTO dto,
+                                                  Authentication authentication) {
+        abogadoSesion.exigirOficio(dto.getOficioId(), authentication);
         return respuestaExternaService.registrarRespuesta(dto);
     }
 
@@ -37,15 +43,19 @@ public class RespuestaExternaController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public RespuestaExternaDTO registrarConArchivo(
             @Valid @RequestPart("datos") RegistrarRespuestaExternaDTO dto,
-            @RequestPart(value = "archivo", required = false) MultipartFile archivo
+            @RequestPart(value = "archivo", required = false) MultipartFile archivo,
+            Authentication authentication
     ) {
+        abogadoSesion.exigirOficio(dto.getOficioId(), authentication);
         return respuestaExternaService.registrarRespuesta(dto, archivo);
     }
 
     /* Adjuntar o reemplazar el archivo de una respuesta ya registrada. */
     @PostMapping(value = "/{respuestaId}/archivo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public RespuestaExternaDTO adjuntarArchivo(@PathVariable Long respuestaId,
-                                               @RequestPart("archivo") MultipartFile archivo) {
+                                               @RequestPart("archivo") MultipartFile archivo,
+                                               Authentication authentication) {
+        abogadoSesion.exigirRespuesta(respuestaId, authentication);
         return respuestaExternaService.adjuntarArchivo(respuestaId, archivo);
     }
 

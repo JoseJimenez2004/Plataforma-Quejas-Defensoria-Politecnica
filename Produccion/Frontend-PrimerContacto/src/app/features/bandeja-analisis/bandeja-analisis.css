@@ -1,229 +1,41 @@
-.page {
-  max-width: none; /* Sin tope: con el menú compacto se aprovecha todo el ancho (como Recepción) */
+/* Bandeja de Análisis: la base visual viene de shared/estilos/recepcion.css. */
+
+.barra-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  margin-bottom: 18px;
 }
 
-.page-header {
-  margin-bottom: var(--space-5);
+.barra-pestanas {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
-.page-header h2 {
-  margin: 0;
-  color: var(--guinda);
-  font-size: 28px;
-  font-weight: 800;
-}
-
-.page-header p {
-  margin: var(--space-1) 0 0;
-  color: var(--texto-suave);
-}
-
-/* ---- Layout de dos columnas: panel de filtros + resultados ---- */
-.bandeja-layout {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: var(--space-5);
-  align-items: start;
-}
-
-/* ---- Panel de filtros (facetas) ---- */
-.filters-panel {
-  border-radius: 12px;
-  box-shadow: var(--sombra-suave);
-  padding: var(--space-4);
-  position: sticky;
-  top: calc(72px + var(--space-5)); /* debajo del header fijo */
-  background: white;
-}
-
-.filters-panel-header {
+.barra-derecha {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-2);
+  gap: 16px;
 }
 
-.filters-panel-header h3 {
-  margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: 900;
-  color: var(--negro-inst);
+.quejoso {
+  min-width: 160px;
 }
 
-.clear-link {
-  color: var(--guinda) !important;
-  font-weight: 700;
-  font-size: var(--font-size-sm);
-  min-width: 0;
-  padding: 0 var(--space-2);
+.tema {
+  min-width: 140px;
 }
 
-.filters-accordion .mat-expansion-panel {
-  box-shadow: none !important;
-  border-bottom: 1px solid #f1f1f3;
+.cita-indicador svg {
+  width: 16px;
+  height: 16px;
 }
 
-.filters-accordion .mat-expansion-panel:last-child {
-  border-bottom: none;
-}
-
-.filters-accordion mat-panel-title {
-  font-weight: 800;
-  color: var(--negro-inst);
-  font-size: var(--font-size-base);
-}
-
-.facet-option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  padding: var(--space-1) 0;
-}
-
-.facet-option mat-checkbox {
-  font-size: var(--font-size-sm);
-}
-
-.facet-count {
-  color: #9ca3af;
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-}
-
-.facet-scroll {
-  max-height: 220px;
-  overflow-y: auto;
-  padding-right: var(--space-1);
-}
-
-/* ---- Columna de resultados ---- */
-.results-column {
-  display: grid;
-  gap: var(--space-4);
-  min-width: 0; /* evita que la tabla empuje el grid más allá del ancho disponible */
-}
-
-.search-card {
-  border-radius: 12px;
-  box-shadow: var(--sombra-suave);
-  padding: var(--space-4);
-  display: grid;
-  grid-template-columns: 1fr 220px;
-  align-items: start;
-  gap: var(--space-4);
-  background: white;
-}
-
-.search-field,
-.order-field {
-  width: 100%;
-}
-
-/* Los campos no usan hint/error, así que se quita el espacio reservado
-   para esa línea: era lo que hacía que el select se viera "flotando"
-   muy separado del buscador. */
-.search-card ::ng-deep .mat-mdc-form-field-subscript-wrapper {
-  display: none;
-}
-
-.results-count {
-  margin: 0;
-  color: var(--texto-suave);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-}
-
-.table-card {
-  /* Antes era "overflow: hidden", así que si las columnas no cabían en el
-     ancho disponible, la columna "Acciones" se recortaba sin forma de
-     hacer scroll para verla. */
-  overflow-x: auto;
-  border-radius: 12px;
-  box-shadow: var(--sombra-suave);
-  padding: 0;
-  background: white;
-}
-
-table {
-  width: 100%;
-  min-width: 900px;
-}
-
-th {
-  background: var(--negro-inst) !important;
-  color: white;
-  font-weight: 800;
-}
-
-td,
-th {
-  padding: var(--space-4) !important;
-}
-
-tr:hover td {
-  background: #f9fafb;
-}
-
-mat-chip {
-  font-weight: 700;
-}
-
-.chip-high {
-  background: #ffebee !important;
-  color: var(--peligro) !important;
-}
-
-.chip-medium {
-  background: #fdf6e3 !important;
-  color: var(--advertencia) !important;
-}
-
-.chip-low {
-  background: #e8f5e9 !important;
-  color: var(--exito) !important;
-}
-
-.status {
-  font-weight: 700;
-  color: var(--texto);
-}
-
-.action-btn {
-  background: var(--guinda) !important;
-  color: white !important;
-  font-weight: 700;
-  border-radius: 8px;
-  padding: 0 var(--space-4);
-}
-
-.empty-state {
-  text-align: center;
-  color: var(--texto-suave);
-  padding: var(--space-6);
-  margin: 0;
-}
-
-@media (max-width: 1000px) {
-  .bandeja-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .filters-panel {
-    position: static;
-  }
-
-  .search-card {
-    grid-template-columns: 1fr;
-  }
-}
-/* PC-1: Urgente (más fuerte que Alta) y Sin asignar. */
-.chip-urgent {
-  background: #b71c1c !important;
-  color: #fff !important;
-}
-
-.chip-none {
-  background: #f1f2f4 !important;
-  color: #6b7280 !important;
+.paginado .campo-select select {
+  padding: 5px 8px;
 }

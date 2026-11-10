@@ -8,13 +8,75 @@
   </div>
 
   <div class="user-area">
-    <div class="perfil">
-      <span class="avatar">{{ iniciales }}</span>
-      <span class="perfil-texto">
-        <span class="user-name">{{ nombreUsuario }}</span>
-        <span class="perfil-rol">Analista de Primer Contacto</span>
-      </span>
+    <div class="dropdown">
+      <button type="button" class="perfil-boton" (click)="alternarMenu($event)" [attr.aria-expanded]="menuAbierto">
+        <span class="avatar">{{ iniciales }}</span>
+        <span class="perfil-texto">
+          <span class="user-name">{{ nombreUsuario }}</span>
+          <span class="perfil-rol">Analista de Primer Contacto</span>
+        </span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+
+      @if (menuAbierto) {
+        <div class="dropdown-menu" (click)="$event.stopPropagation()">
+          <button type="button" (click)="abrirModalPassword()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="M21 2l-9.6 9.6"></path><path d="M15.5 7.5L18 5"></path><path d="M17 3l4 4"></path></svg>
+            Cambiar contraseña
+          </button>
+        </div>
+      }
     </div>
-    <button class="logout-btn" (click)="cerrarSesion()">Cerrar sesión</button>
+
+    <button type="button" class="logout-btn" (click)="cerrarSesion()">Cerrar sesión</button>
   </div>
 </header>
+
+@if (mostrarModalPassword) {
+  <div class="modal-overlay">
+    <div class="modal" role="dialog" aria-labelledby="titulo-password" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="titulo-password">Cambiar mi contraseña</h3>
+        <button type="button" class="modal-cerrar" (click)="cerrarModalPassword()" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="input-group">
+        <label for="pw-actual">Contraseña actual</label>
+        <div class="campo-password">
+          <input id="pw-actual" [type]="mostrarActual ? 'text' : 'password'" [(ngModel)]="passwordActual" name="passwordActual" />
+          <button type="button" class="alternar-password" (click)="mostrarActual = !mostrarActual">{{ mostrarActual ? 'Ocultar' : 'Ver' }}</button>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="pw-nueva">Contraseña nueva</label>
+        <div class="campo-password">
+          <input id="pw-nueva" [type]="mostrarNueva ? 'text' : 'password'" [(ngModel)]="passwordNueva" name="passwordNueva" />
+          <button type="button" class="alternar-password" (click)="mostrarNueva = !mostrarNueva">{{ mostrarNueva ? 'Ocultar' : 'Ver' }}</button>
+        </div>
+      </div>
+
+      <ul class="requisitos-password">
+        <li [class.cumplido]="cumpleLongitud"><span class="marca">✓</span> Al menos 8 caracteres</li>
+        <li [class.cumplido]="cumpleMayuscula"><span class="marca">✓</span> Una letra mayúscula</li>
+        <li [class.cumplido]="cumpleNumero"><span class="marca">✓</span> Un número</li>
+      </ul>
+
+      <div class="input-group">
+        <label for="pw-confirmar">Confirmar contraseña nueva</label>
+        <input id="pw-confirmar" type="password" [(ngModel)]="passwordConfirmar" name="passwordConfirmar" />
+      </div>
+
+      @if (errorPassword) {
+        <p class="mensaje-campo">{{ errorPassword }}</p>
+      }
+
+      <div class="modal-acciones">
+        <button type="button" class="btn-secundario" (click)="cerrarModalPassword()">Cancelar</button>
+        <button type="button" class="btn-principal" (click)="guardarPassword()" [disabled]="guardandoPassword">
+          {{ guardandoPassword ? 'Guardando…' : 'Actualizar contraseña' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,17 +1,54 @@
-# Archivos auxiliares de LaTeX
+token.txt
+*.txt
+token.txt
+*.txt
+
+# Archivos de construcción
+target/
+dist/
+node_modules/
+build/
+*.class
+*.jar
+**/.angular/cache/
+
+# Datos persistentes de la base de datos (IMPORTANTE)
+db-data/
+postgres_data/
+
+# IDEs y entorno
+.idea/
+.vscode/
+*.swp
+
+# Archivos de sistema de Docker
+.docker/
+
+# LaTeX temporary files
 *.aux
+*.log
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.out
+*.lot
+*.lof
+
+
+# Excluir respaldos pesados
+Produccion/_backups/
+Produccion/diagnostico/
+*.tar
+*.tar.gz
+*.dump
+*.tgz
+
+# --- Añadido por la rama (LaTeX) ---
+# Archivos auxiliares de LaTeX
 *.bbl
 *.bcf
 *.blg
-*.fdb_latexmk
-*.fls
-*.lof
-*.log
-*.lot
-*.out
 *.run.xml
-*.synctex.gz
-*.toc
-
 # Descomenta si no deseas versionar el documento final compilado:
 # *.pdf

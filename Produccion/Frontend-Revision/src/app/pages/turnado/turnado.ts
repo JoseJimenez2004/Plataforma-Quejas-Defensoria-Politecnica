@@ -50,7 +50,7 @@ export class Turnado implements OnInit {
         this.queja = queja;
         this.antecedentes = antecedentes;
         this.abogados = abogados;
-        // Se preselecciona al abogado sugerido; la recepcionista puede cambiarlo.
+        // Se preselecciona al analista sugerido (2026-11: antes abogado); la recepcionista puede cambiarlo.
         this.defensorAsignado = abogados.find((a) => a.sugerido)?.nombre ?? '';
         this.cargando = false;
         this.cdr.detectChanges();
@@ -91,7 +91,7 @@ export class Turnado implements OnInit {
 
   turnar(): void {
     if (!this.defensorAsignado) {
-      this.toast.advertencia('Selecciona el defensor responsable.');
+      this.toast.advertencia('Selecciona el analista de Primer Contacto.');
       return;
     }
 
