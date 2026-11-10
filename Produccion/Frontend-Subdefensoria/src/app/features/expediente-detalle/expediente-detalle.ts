@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { SesionPersonalService } from '../../core/services/sesion-personal.service';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -87,6 +88,9 @@ const CON_ACUERDO = ['EN_INVESTIGACION', 'ELABORO_ACUERDO', 'PENDIENTE_CONCILIAC
   styleUrl: './expediente-detalle.css'
 })
 export class ExpedienteDetalle implements OnInit {
+  /** 2026-11: el Defensor titular supervisa en solo consulta (sin acciones). */
+  readonly soloConsulta = inject(SesionPersonalService).esDefensorTitular();
+
   folio = '';
   expediente?: ExpedienteInvestigacion;
   oficios: Oficio[] = [];
@@ -284,7 +288,11 @@ export class ExpedienteDetalle implements OnInit {
    * RECIBIDO pasa a EN_INVESTIGACION; en otro estatus solo se devuelve.
    */
   cargarExpediente(): void {
-    this.expedienteService.iniciarInvestigacion(this.folio).subscribe({
+    // El titular solo consulta: abrirlo no lo pasa a "En investigación".
+    const peticion = this.soloConsulta
+      ? this.expedienteService.obtenerPorFolio(this.folio)
+      : this.expedienteService.iniciarInvestigacion(this.folio);
+    peticion.subscribe({
       next: (expediente) => {
         this.expediente = expediente;
         this.cargarHistorial();
@@ -296,9 +304,13 @@ export class ExpedienteDetalle implements OnInit {
           this.cdr.detectChanges();
         }
       },
-      error: () => {
+      error: (err) => {
         this.cdr.detectChanges();
-        this.snackBar.open('No fue posible cargar el expediente.', 'Cerrar', { duration: 3000 });
+        // 2026-11: cada abogado solo abre sus expedientes (403 si es de otro).
+        const mensaje = err?.status === 403
+          ? (err.error?.error ?? 'Este expediente está asignado a otro abogado.')
+          : 'No fue posible cargar el expediente.';
+        this.snackBar.open(mensaje, 'Cerrar', { duration: 5000 });
       }
     });
   }

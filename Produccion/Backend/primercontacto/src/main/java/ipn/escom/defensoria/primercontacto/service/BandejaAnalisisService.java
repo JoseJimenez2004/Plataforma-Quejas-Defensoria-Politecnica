@@ -29,10 +29,10 @@ public class BandejaAnalisisService {
     }
 
     public List<BandejaAnalisisDTO> obtenerBandeja(
-            String token
+            Long analistaId
     ) {
 
-        return expedienteRepository.findAll()
+        return delAnalista(analistaId)
                 .stream()
                 .sorted(masRecientesPrimero())
                 .map(convertidor())
@@ -41,18 +41,19 @@ public class BandejaAnalisisService {
 
     public BandejaAnalisisDTO buscarPorFolio(
             String folio,
-            String token
+            Long analistaId
     ) {
 
         return expedienteRepository
                 .findByFolio(folio)
+                .filter(e -> Objects.equals(e.getAnalistaAsignadoId(), analistaId))
                 .map(this::convertirADTO)
                 .orElse(null);
     }
 
     public List<BandejaAnalisisDTO> filtrar(
             FiltroExpedienteDTO filtro,
-            String token
+            Long analistaId
     ) {
 
         String texto = normalizar(
@@ -67,7 +68,7 @@ public class BandejaAnalisisService {
                         ? masRecientesPrimero().reversed()
                         : masRecientesPrimero();
 
-        return expedienteRepository.findAll()
+        return delAnalista(analistaId)
                 .stream()
 
                 .filter(e ->
@@ -98,10 +99,10 @@ public class BandejaAnalisisService {
 
     public List<BandejaAnalisisDTO> obtenerPorPrioridad(
             String prioridad,
-            String token
+            Long analistaId
     ) {
 
-        return expedienteRepository.findAll()
+        return delAnalista(analistaId)
                 .stream()
                 .filter(e -> coincide(e.getPrioridad(), prioridad, null))
                 .map(convertidor())
@@ -110,14 +111,22 @@ public class BandejaAnalisisService {
 
     public List<BandejaAnalisisDTO> obtenerPorEstatus(
             String estatus,
-            String token
+            Long analistaId
     ) {
 
-        return expedienteRepository.findAll()
+        return delAnalista(analistaId)
                 .stream()
                 .filter(e -> coincide(e.getEstatus(), estatus, null))
                 .map(convertidor())
                 .toList();
+    }
+
+    /**
+     * 2026-11: cada analista solo ve los expedientes que Recepción le turnó
+     * (expedientes_primer_contacto.analista_asignado_id).
+     */
+    private List<ExpedientePrimerContacto> delAnalista(Long analistaId) {
+        return expedienteRepository.findByAnalistaAsignadoId(analistaId);
     }
 
     /*

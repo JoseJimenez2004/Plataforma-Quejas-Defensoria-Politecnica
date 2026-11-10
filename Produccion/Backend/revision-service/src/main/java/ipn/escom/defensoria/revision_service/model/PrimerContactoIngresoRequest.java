@@ -39,6 +39,14 @@ public class PrimerContactoIngresoRequest {
 
     private List<EvidenciaRequest> evidencias;
 
+    /*
+     * Analista de Primer Contacto al que Recepción turnó la queja (2026-11): solo él la ve
+     * en su bandeja. Id de personal_administrativo.
+     */
+    private Long analistaAsignadoId;
+
+    private String analistaAsignadoNombre;
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

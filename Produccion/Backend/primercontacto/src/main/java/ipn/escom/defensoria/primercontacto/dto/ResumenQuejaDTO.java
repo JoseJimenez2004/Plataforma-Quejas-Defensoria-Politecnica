@@ -2,6 +2,7 @@ package ipn.escom.defensoria.primercontacto.dto;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /** Borrador de resumen de una queja que genera resumen-service (D9/MMR + editor Qwen). */
@@ -22,4 +23,9 @@ public class ResumenQuejaDTO {
     private boolean requiereRevision;
 
     private String versionPipeline;
+
+    /* Cuándo y quién lo generó (null si no está guardado por folio). */
+    private LocalDateTime fechaGeneracion;
+
+    private String generadoPor;
 }

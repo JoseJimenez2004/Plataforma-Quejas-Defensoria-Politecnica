@@ -1,0 +1,493 @@
+/* Estilos de Recepción (Frontend-Revision: historial.scss) traídos a Primer Contacto para
+   homologar las pantallas (2026-11): indicadores, tarjeta blanca, buscador, pestañas tipo
+   píldora, tabla con filas grises redondeadas, chips, botón de fila y paginado.
+   Si cambias algo aquí, cámbialo también en Recepción. */
+
+.encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.encabezado h2 {
+  margin: 0;
+  color: var(--guinda);
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.encabezado .fecha {
+  margin: 4px 0 0;
+  color: var(--texto-suave);
+  font-size: 14px;
+}
+
+.btn-guinda {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--guinda);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn-guinda svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-guinda:hover {
+  background: var(--guinda-oscuro);
+}
+
+.btn-borde {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--guinda);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--guinda);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn-borde:hover {
+  background: var(--guinda-suave);
+}
+
+/* ---------------- indicadores ---------------- */
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.indicador {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid transparent;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.indicador.clic {
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.indicador.clic:hover {
+  border-color: #e6c9d6;
+  transform: translateY(-1px);
+}
+
+.indicador.seleccionado {
+  border-color: var(--guinda);
+}
+
+.indicador-icono {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--guinda-suave);
+  color: var(--guinda);
+}
+
+.indicador-icono svg {
+  width: 22px;
+  height: 22px;
+}
+
+.indicador-cuerpo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.indicador-cuerpo strong {
+  color: var(--negro-inst);
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.indicador-titulo {
+  color: var(--texto-suave);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.indicador-detalle {
+  color: var(--texto-suave);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+/* ---------------- tarjeta ---------------- */
+.card-panel {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  padding: 20px;
+  min-width: 0;
+}
+
+.card-panel h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--negro-inst);
+}
+
+.card-cabeza {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 10px;
+}
+
+.card-cabeza p {
+  margin: 4px 0 0;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+/* ---------------- buscador, selects y pestañas ---------------- */
+.buscador {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 300px;
+}
+
+.buscador svg {
+  position: absolute;
+  left: 10px;
+  width: 16px;
+  height: 16px;
+  color: var(--texto-suave);
+}
+
+.buscador input {
+  width: 100%;
+  padding: 9px 12px 9px 34px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.buscador input:focus,
+.campo-select select:focus {
+  outline: 2px solid var(--guinda-suave);
+  border-color: var(--guinda);
+}
+
+.campo-select {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 0 1 190px;
+  min-width: 150px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.campo-select.en-linea {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  font-size: 13px;
+}
+
+.campo-select select {
+  padding: 8px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--texto);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.pestanas {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+}
+
+.pestanas button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: #f4f5f7;
+  color: var(--texto);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pestanas button:hover {
+  background: var(--guinda-suave);
+  color: var(--guinda);
+}
+
+.pestanas button.activa {
+  background: var(--guinda);
+  color: #fff;
+}
+
+.pestana-conteo {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--texto-suave);
+  font-size: 12px;
+  text-align: center;
+}
+
+.pestanas button.activa .pestana-conteo {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.limpiar {
+  border: none;
+  background: none;
+  color: var(--guinda);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.estado {
+  padding: 32px 12px;
+  color: var(--texto-suave);
+  text-align: center;
+}
+
+.estado.error {
+  color: var(--peligro);
+}
+
+/* ---------------- tabla ---------------- */
+.tabla-envoltura {
+  overflow-x: auto;
+}
+
+.tabla-cola {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+  font-size: 14px;
+}
+
+.tabla-cola th {
+  padding: 10px 12px 4px;
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.tabla-cola td {
+  padding: 10px 12px;
+  background: #f9fafb;
+  vertical-align: middle;
+}
+
+.tabla-cola td:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.tabla-cola td:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+.tabla-cola tr.clic {
+  cursor: pointer;
+}
+
+.tabla-cola tr.clic:hover td {
+  background: var(--guinda-suave);
+}
+
+.tabla-cola .derecha {
+  text-align: right;
+}
+
+.folio {
+  display: block;
+  font-weight: 700;
+  color: var(--negro-inst);
+  white-space: nowrap;
+}
+
+.fecha-fila {
+  display: block;
+  white-space: nowrap;
+}
+
+.hace {
+  display: block;
+  color: var(--texto-suave);
+  font-size: 12px;
+}
+
+.hora {
+  color: var(--guinda);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Chips: los colores de estatus (.estatus-*) y prioridad (.prio-*) están en styles.css. */
+.chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.btn-fila {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--guinda);
+  border-radius: 6px;
+  background: var(--guinda);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn-fila svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-fila:hover:not(:disabled) {
+  background: var(--guinda-oscuro);
+}
+
+.btn-fila.secundario {
+  background: #fff;
+  color: var(--guinda);
+}
+
+.btn-fila.secundario:hover:not(:disabled) {
+  background: var(--guinda-suave);
+}
+
+/* ---------------- paginado ---------------- */
+.paginado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.paginado-izq {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.paginado nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.paginado nav button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.paginado nav button:hover:not(:disabled) {
+  border-color: var(--guinda);
+  color: var(--guinda);
+}
+
+.paginado nav button.actual {
+  border-color: var(--guinda);
+  background: var(--guinda);
+  color: #fff;
+}
+
+.paginado nav button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.paginado-rango {
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.paginado-salto {
+  padding: 0 4px;
+  color: var(--texto-suave);
+}
+
+.recargando {
+  opacity: 0.6;
+}

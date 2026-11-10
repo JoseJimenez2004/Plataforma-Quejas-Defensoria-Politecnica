@@ -2,7 +2,7 @@
 
 > Bitácora de decisiones, cambios y despliegues de los módulos Primer Contacto y
 > Subdefensoría. Repo: `Plataforma-Quejas-Defensoria-Politecnica`, rama de trabajo
-> `Pre-Produccion2`. Iniciado el 2026-09-27; lo más reciente está al final (sección 17).
+> `Pre-Produccion2`. Iniciado el 2026-09-27; lo más reciente está al final (sección 19).
 > Los cambios de los demás módulos los documenta el compañero en `VERSION-FINAL-TT.md`.
 
 ## 1. Objetivo original
@@ -1115,6 +1115,22 @@ viejo en back; `pc-dist-antes.tgz` y `sd-dist-antes.tgz` en front). Subido: jar 
 dominio sirve `main-OKSPFXQO.js` (SD) y `main-MTQMI43Z.js` (PC), iguales a los compilados;
 `/consulta` y `/notas/*/pdf` responden 403 sin token.
 
+### 17.4b Datos de demostración en Subdefensoría (2026-10-21 ~16:40)
+Para enseñar el módulo con la cuenta **gerardo@ipn.mx** (SUBDEFENSOR, "Gerardo Ramirez") se
+llevaron 20 quejas de la carga masiva (solo de las de correo `@example.invalid`, para que ningún
+aviso le llegue a nadie) por el flujo REAL con la API: Recepción (`bryanrecep@ipn.mx.com`) las
+turnó a Gerardo → Primer Contacto (`prueba.demo@ipn.mx`) escribió el oficio "Constancia de
+entrevista con la persona quejosa" y dictaminó competente con responsable Gerardo → Subdefensoría.
+- Scripts y resultado (fuera del repo): `C:\Users\leish\despliegue-1021\sembrar-subdefensoria.mjs`,
+  `sembrar-acuerdos.mjs`, `sembrado-resultado.json` (folio FOL → PC → SD, id de expediente y oficio).
+- Quedaron (SD-…, expedientes 4–23 de SD): 3 RECIBIDO, 3 EN_INVESTIGACION, 5 EN_ESPERA_OFICIO,
+  6 ELABORO_ACUERDO, 3 PENDIENTE_CONCILIACION. Plazos movidos por SQL: oficios 4 y 5 vencidos
+  (fecha_limite = hoy − 4), oficio 6 por vencer (hoy + 2).
+- **Recordatorio:** en SD hay **un solo oficio por ciclo** (tabla ECA 15.2): al registrar la
+  respuesta de la unidad el expediente pasa directo a ELABORO_ACUERDO; no existe una segunda
+  ronda "de gestión" aunque el código conserve la fase GESTION_DIRECTOR (409 si se intenta).
+- Los oficios a la UA salieron redirigidos a leishasr2@gmail.com (`[PRUEBA]`).
+
 ### 17.5 Pendiente (siguiente chat)
 1. **Detalles de Subdefensoría** que el usuario vio en la revisión (pidió verlos después).
 2. **Asignación por analista/abogado** (observación 3): esperando al equipo. Hoy Recepción elige
@@ -1129,13 +1145,102 @@ dominio sirve `main-OKSPFXQO.js` (SD) y `main-MTQMI43Z.js` (PC), iguales a los c
 4. Limpieza: `C:\Users\leish\despliegue-1021` y `/tmp/primer-contacto-service.jar`,
    `/tmp/pc-front.tgz`, `/tmp/sd-front.tgz` en los servidores. Siguen los de la sección 15.10.
 
-## 18. 2026-11-02: pendientes de PC y SD (noviembre 2026) — LISTO EN CÓDIGO, falta desplegar
+## 18. 2026-10-28: preparación de la exposición + "Defensoría no deja entrar" (sin cambios de código)
+
+> No se tocó código ni servidor; solo consultas.
+
+### 18.1 Resumen de roles para la exposición
+Se armó en el chat un resumen de qué hace cada rol (Quejoso, Recepcionista, Analista de Primer
+Contacto, Subdefensor, Defensora, Admin de sistemas) a partir de este doc y de `VERSION-FINAL-TT.md`
+(secciones 8, 10.4, 12 y 16). Flujo: Quejoso → Recepción → Primer Contacto → Subdefensoría, con la
+Defensora supervisando.
+
+### 18.2 Plazo de respuesta del director (Subdefensoría)
+- Primer oficio: **10 días hábiles**; cada recordatorio reinicia el plazo a **5 días hábiles**
+  (`plazos.primera-solicitud-dias` / `plazos.recordatorio-dias` en `subdefensoria-service.yml`).
+- Hábiles = lunes a viernes (`util/DiasHabilesCalculator`). **No descuenta días festivos** del
+  IPN (no hay catálogo de días inhábiles). Fuente según el código: política de operación #7 del
+  Manual DDP-PO-02.
+- En "Plazos y oficios": Vencidos / Por vencer (≤ 3 días) / En espera.
+
+### 18.3 "Defensoría no deja entrar": era la contraseña, el sistema está bien
+- Revisado desde fuera: páginas y JS de `/revision/` y `/admin/` cargan (200); APIs sin token dan
+  403 (normal), ninguna 502/504.
+- Con autorización del usuario se entró con **`defensor.test@ipn.mx` / `Prueba2026!`**
+  (seed `Backend/database-scripts/seeds/03-personal_test.sql`; la cuenta existe en producción,
+  rol DEFENSOR): login 200 en ~1 s y las 15 APIs del panel de la Defensora responden 200 en 1–2 s.
+- La **bitácora** mostró 25+ intentos fallidos ("Credenciales incorrectas") de `defensor.test` y
+  3 de `admin.sistemas@ipn.mx` entre 15:41 y 16:03 (hora del servidor), desde la red del IPN
+  (148.204.59.x): los compañeros escribían mal la contraseña (probable confusión con
+  `Temporal2026@`, que es la de las recepcionistas, o Bloq Mayús). En ese mismo rato
+  `prueba.demo@ipn.mx` y `alejandra.vega.abogada@ipn.mx` sí entraron.
+- El inicio de sesión de `defensor.test` de las **16:03:11** en la bitácora fue la prueba del
+  asistente.
+- No se cambió ninguna contraseña. Si hace falta, se restablece desde el panel (Usuarios y Roles,
+  CU-ADM-04). La contraseña de `admin.sistemas@ipn.mx` no está documentada en el repo.
+- Dato visto de paso (tablero del panel, 30 días): 1205 quejas, 1161 en recepción, 145 sin tomar
+  más de 3 días (mayoría de la carga masiva).
+
+### 18.4 Observaciones de la reunión sobre el panel de Subdefensoría (2026-10-30) — POR HACER
+Las vio el usuario en vivo con la cuenta del subdefensor. Solo front (`Frontend-Subdefensoria`),
+lógica en `core/utils/etapas.ts`, `features/dashboard`, `features/bandeja`. Hay que desplegar el
+front de SD al terminar.
+
+1. **Los cuadros de Inicio no filtran lo suyo.** "Por abrir", "Por emitir oficio" y "Por redactar
+   acuerdo" llevan los tres a `/bandeja?grupo=atender` (pestaña "Por atender"), que junta vencidos,
+   por vencer, por abrir, por solicitar oficio y acuerdos. Al picar "Por redactar acuerdo" salen
+   también oficios. El número del cuadro sí está bien (`dashboard.ts:92` cuenta
+   ELABORO_ACUERDO + PENDIENTE_CONCLUSION). Arreglo: un filtro propio por cuadro (p. ej.
+   `grupo=abrir` → RECIBIDO, `grupo=oficio` → con `siguienteFase`/EN_INVESTIGACION,
+   `grupo=acuerdo` → ELABORO_ACUERDO + PENDIENTE_CONCLUSION), o un parámetro `etapa=` aparte de
+   las pestañas.
+2. **"No encuentro la queja después de enviar el acuerdo de conciliación."** El usuario mandó un
+   acuerdo; el expediente pasó a PENDIENTE_CONCILIACION y "desapareció" de donde lo buscaba:
+   - Sale del grupo `atender` porque su nivel es `espera` (esperando al quejoso).
+   - **Ningún cuadro de Inicio lo cuenta** (no hay KPI de "esperando al quejoso").
+   - Sí está en Mis expedientes → pestaña **"Pendiente de acuerdo de conciliación"** y en
+     **"En trámite"**, y en la barra "por etapa" de Inicio.
+   Arreglo propuesto: un cuadro "Esperando al quejoso" (o similar) en Inicio que lleve a
+   `grupo=conciliacion`, y/o un aviso tras enviar el acuerdo ("quedó en la pestaña …").
+3. **Nombres/textos de las etapas confunden.** `core/models/estatus-expediente.ts:33-39`:
+   - "Elaboró acuerdo" (ELABORO_ACUERDO) en realidad significa *falta redactar el acuerdo de
+     conciliación* (la unidad ya respondió). No dice de qué acuerdo es. Propuesta: "Por redactar
+     acuerdo de conciliación" o "Respuesta recibida".
+   - "En investigación" no dice qué falta (enviar el oficio a la UA). Propuesta: "En
+     investigación · por solicitar oficio" o texto descriptivo en la fila.
+   - "Pendiente de acuerdo de conciliación" (PENDIENTE_CONCILIACION) suena a que falta
+     redactarlo, pero ya se envió y se espera al quejoso. Propuesta: "Esperando respuesta del
+     quejoso" / "Acuerdo de conciliación enviado". (Esta etiqueta la pidió el usuario el
+     2026-10-21, 17.3; confirmar con él antes de cambiarla.)
+   - "Pendiente de conclusión" → "Por redactar acuerdo de conclusión".
+   Revisar que la pestaña/KPI/chip/recuadro "Siguiente paso" usen los mismos nombres. Ojo: el
+   portal del quejoso tiene sus propios textos (`queja.models.ts`), no se tocan sin preguntar.
+4. **Texto descriptivo bajo cada queja** en la tabla: hoy muestra "Nombre · Queja en UA". Se
+   pidió que diga qué está pasando (la `descripcion` de `siguientePaso()` ya existe: p. ej.
+   "Acuerdo enviado · esperando que el quejoso lo acepte o rechace").
+5. **Otros detalles** que le comentaron al usuario en la reunión: los pasará en el siguiente chat.
+6. **Demostración de "Pendiente de conclusión":** ninguna queja de prueba ha llegado ahí; para
+   enseñarla hay que aceptar un acuerdo con el enlace del quejoso (correos `@example.invalid`, no
+   les llega). Hacerlo solo con autorización del usuario (escribe en producción).
+
+Cómo se ve hoy una queja en PENDIENTE_CONCLUSION (por si preguntan): chip naranja "Pendiente de
+conclusión", botón "Redactar conclusión", en "Por atender" y en el cuadro "Por redactar acuerdo";
+en el expediente, pestaña Acuerdos con "Acuerdo de conciliación aceptado" + recuadro para el texto
+y "Registrar acuerdo de conclusión" → CONCLUIDO y aviso al quejoso.
+
+### 18.5 Pendiente
+Lo de 18.4 (primero) y todo lo de 17.5.
+**Actualización:** lo de 18.4 se pasó al compañero como lista de tareas
+(`PENDIENTES-PC-SD-2026-11.md`, tareas G-1, PC-1 a PC-5 y SD-1 a SD-7) y él lo hizo: ver
+sección 19.
+
+## 18b. 2026-11-02: pendientes de PC y SD (noviembre 2026) — LISTO EN CÓDIGO, falta desplegar
 
 Se aplicó el documento "Pendientes de Primer Contacto y Subdefensoría (noviembre 2026)". Respaldo
 previo: `_backups/claude/respaldo-antes-pendientes-pc-sd-2026-11-02.tgz`. SD-7 **no** se hizo
 (escribe en producción; requiere autorización del equipo).
 
-### 18.1 Subdefensoría (front)
+### 18b.1 Subdefensoría (front)
 - **SD-4 nombres:** `ETIQUETAS_ESTATUS` → Por abrir · Por solicitar oficio · Esperando respuesta de
   la unidad · Por redactar acuerdo de conciliación · Esperando respuesta del quejoso · Por redactar
   acuerdo de conclusión · Concluido. Pestaña `conciliacion` = "Esperando al quejoso". Barra de
@@ -1164,7 +1269,7 @@ previo: `_backups/claude/respaldo-antes-pendientes-pc-sd-2026-11-02.tgz`. SD-7 *
   no hay correo. El recordatorio no pide destinatario, así que no se tocó. No cambia el backend ni
   la redirección `correo.unidad-academica.redirigir-a`.
 
-### 18.2 Primer Contacto
+### 18b.2 Primer Contacto
 - **PC-1:** `formatearPrioridad` devuelve Urgente/Alta/Media/Baja/**Sin asignar** (ya no inventa
   "Media"). Desplegable en el encabezado del expediente → `PATCH
   /api/primer-contacto/expedientes/folio/{folio}/prioridad` con snackbar "Prioridad actualizada a
@@ -1184,23 +1289,23 @@ previo: `_backups/claude/respaldo-antes-pendientes-pc-sd-2026-11-02.tgz`. SD-7 *
   diálogo de respuesta indica quién la registró. Se quitó la tarjeta y el botón "Solicitud de
   versión del denunciado" (las solicitudes antiguas siguen en el historial; no se borraron datos).
 
-### 18.3 denunciado-service
+### 18b.3 denunciado-service
 - `POST /api/denunciado/respuestas/personal` (multipart, JWT, rol `ANALISTA_PRIMER_CONTACTO`):
   guarda `origen=PERSONAL`, `capturado_por` (usuario del JWT) y `fecha_entrevista`;
   `aviso_privacidad_aceptado=false` sin bloquear. Formularios anteriores quedan `origen` null.
 - Se **cerró** el `POST /api/denunciado/respuestas` público (sin sesión responde 403).
 - `RespuestaDetalleModel` agrega `origen`, `capturadoPor`, `fechaEntrevista`.
 
-### 18.4 Portal del quejoso
+### 18b.4 Portal del quejoso
 - Solo se quitó la ruta `denunciado/respuesta` de `app.routes.ts`. La página, su servicio y su
   modelo se movieron a `_backups/claude/portal-denunciado-2026-11-02/`.
 
-### 18.5 G-1 (solo estilos)
+### 18b.5 G-1 (solo estilos)
 - PC y SD tienen las variables de Recepción (`--sombra-*`, `--acento-*`), `--radius-card: 12px`,
   tarjetas con borde `#eef0f3` y `--sombra-suave`, botones de 38 px con peso 700, y tablas con el
   encabezado en mayúsculas grises y filas en tarjeta gris claro (SD) / hover guinda suave (PC).
 
-### 18.6 Para desplegar
+### 18b.6 Para desplegar
 - Jars (compilar con `mvn -DskipTests package`; correr antes `mvn test` en denunciado-service):
   `primercontacto`, `subdefensoria`, `denunciado-service`.
 - Fronts: `Frontend-PrimerContacto`, `Frontend-Subdefensoria`, `Frontend` (portal).
@@ -1208,3 +1313,121 @@ previo: `_backups/claude/respaldo-antes-pendientes-pc-sd-2026-11-02.tgz`. SD-7 *
   arranque el subdefensoria nuevo).
 - Verificar que `seeds/06-directorio-ipn-2026-10.sql` ya corrió en producción (SD-1 lo necesita).
 - No reemplazar `config-files/` del servidor; respaldar jar/dist en `/apps/utiles/respaldos/<fecha>/`.
+
+## 19. 2026-11-04: revisión de lo que desplegó el compañero (PENDIENTES-PC-SD-2026-11)
+
+> Lo más reciente. No se tocó código ni servidor; solo se revisó desde fuera, sin sesión. Según
+> el usuario se hizo ~95 % de lo pendiente. **Se continúa mañana (2026-11-05).**
+
+### 19.1 Situación del código: desplegado pero NO subido a git
+- `git fetch --all`: las 4 ramas locales (`main`, `Produccion`, `Pre-Produccion`,
+  `Pre-Produccion2`) están igual que en GitHub. El último commit remoto sigue siendo `0d17ce3`
+  (2026-11-01, `main` = `Produccion`); `Pre-Produccion2` = `3253738`. No hay más ramas en remoto.
+- En producción sí hay versiones nuevas, desplegadas el **2026-11-02 ~20:45 hora de México**
+  (Last-Modified 03-nov 02:44–02:47 UTC):
+  - PC: `main-47ILE6VN.js` (antes `main-MTQMI43Z.js` del 21-oct).
+  - SD: `main-Q4SWB6KL.js` (antes `main-OKSPFXQO.js`).
+  - Portal (`Frontend`): también redesplegado.
+- **Riesgo:** desplegar desde el repo ahora borraría sus cambios del servidor. **Primero pedirle
+  al compañero `git push`** (y en qué rama), y luego traerlo a la rama de trabajo. Ojo:
+  `Pre-Produccion2` va atrás de `Produccion` (le falta `1849070`: rediseño de Recepción y
+  directorio IPN), así que habrá que cambiarse a `Produccion` o fusionarla.
+- Cambios locales sin commit en `Pre-Produccion2`: `.gitignore` (`build/`, `*.class`, `*.jar`,
+  `**/.angular/cache/`) y este documento (17.4b, 18, 19).
+
+### 19.2 Qué se encontró en los JS desplegados (revisión sin credenciales)
+Se descargaron los bundles públicos del dominio y se buscaron los textos/llamadas de cada tarea.
+| Tarea | Estado | Evidencia |
+|---|---|---|
+| PC-1 prioridad | ✅ front | "Urgente", "Sin asignar", llamada a `/prioridad`, "Prioridad actualizada" |
+| PC-2 versión del denunciado | ⚠️ parcial | Front: "Registrar versión", "Capturada por", `respuestas/personal`; ya no existen "Solicitar versión" ni la tarjeta de solicitud. Portal: ya no tiene la ruta `denunciado/respuesta`. **Pero `POST /api/denunciado/respuestas` sin sesión da 500, no 401/403**: parece que pasa la seguridad (no se cerró el `permitAll` de `WebConfig.java` o no se redesplegó `denunciado-service`) |
+| PC-3 resumen con botón | ✅ | "Generar resumen con IA", "Volver a generar", "hasta 2 minutos", aviso de queja breve |
+| PC-4 panel vacío | ✅ | `obtenerPanel()` pide la bandeja una vez y arma resumen, lista y actividad; "Cargando", "No se pudo cargar", "Reintentar" |
+| PC-5 lentitud (back) | ❓ | No se puede medir sin sesión |
+| SD-1 correos del catálogo | ✅ | Servicio a `${catalogosUrl}/dependencias` con caché; selector de unidad; avisos "no tiene correo registrado" y "No se pudo cargar el catálogo…". `GET /api/catalogos/dependencias` da 200 con `correoContacto` y `nombreTitular` llenos → el seed `06-directorio-ipn-2026-10.sql` sí está en producción |
+| SD-2 filtros | ✅ | Filtro de etapa (incluye "Por redactar acuerdo (conciliación o conclusión)"), `queryParamMap` + `replaceUrl`; ya no hay `grupo=atender` |
+| SD-3 esperando al quejoso | ✅ | Cuadro "Esperando al quejoso" → `irAEtapa("PENDIENTE_CONCILIACION")`; snackbar "Acuerdo enviado. El expediente quedó en «Esperando al quejoso»." con "Ver" |
+| SD-4 nombres de etapas | ✅ | Los 7 nombres nuevos en `ETIQUETAS_ESTATUS`; ningún nombre viejo. Queda "Expediente en investigación." solo como texto de un caso de `siguientePaso` (revisar si importa) |
+| SD-5 texto en la fila | ✅ | Usa la `descripcion` del siguiente paso |
+| SD-6 prioridad en SD | ✅ front | "Urgente", "Sin asignar", "Mayor prioridad primero", llamada a `/prioridad` |
+| G-1 diseño | ✅ variables | PC y SD ya tienen `--guinda`, `--guinda-oscuro`, `--gris-fondo`, `--texto-suave`, `--sombra-suave`, `--acento-*`. Falta comparar a ojo con Recepción |
+| SD-7 demo conclusión | — | Opcional; requiere autorización (escribe en producción) |
+
+Endpoints nuevos sin sesión: `PATCH /api/primer-contacto/expedientes/folio/X/prioridad`,
+`PATCH /api/subdefensoria/expedientes/0/prioridad` y `POST /api/denunciado/respuestas/personal`
+dan 403 (normal, pero no prueba que existan).
+
+### 19.3 Pendiente para mañana (2026-11-05)
+1. **Pedir al compañero el `git push`** y revisar el código real (diff contra `0d17ce3`) tarea por
+   tarea contra los "Listo cuando" de `PENDIENTES-PC-SD-2026-11.md`.
+2. **PC-2:** confirmar y cerrar el `POST /api/denunciado/respuestas` público (debe dar 401/403).
+3. Con credenciales (el usuario las pasa en el chat; `prueba.demo@ipn.mx` analista PC,
+   `gerardo@ipn.mx` subdefensor), solo lectura:
+   - PC-5: tiempo de `GET /api/primer-contacto/bandeja` (antes vs. después).
+   - PC-1 / SD-6: que los backends regresen `prioridad` y que viaje de PC a SD.
+   - Que los jars desplegados sean los nuevos (fechas/log `Started …`).
+4. Probar en pantalla (lo hace el usuario o con su autorización, porque escribe datos): cambiar
+   prioridad, registrar versión del denunciado con 2 evidencias, emitir oficio con el catálogo,
+   ver G-1 lado a lado con Recepción.
+5. Las modificaciones que el usuario quiere hacer: **después** de tener el código del compañero
+   en la rama.
+6. Sigue sin hacerse lo de 17.5 (asignación por analista/abogado, etc.).
+
+## 20. 2026-11-09: resumen guardado, pantallas homologadas y asignación por analista/abogado (LOCAL, sin commit ni despliegue)
+
+Pull de todas las ramas (Pre-Produccion2 = main = Pre-Produccion = `0400b94d`; Produccion = `6181e659`,
+solo doc del TT). El compañero ya subió el código de 18b. Ojo: también subió `node_modules`
+(instalados en LINUX: en Windows Revision y Admin no compilan con `ng build`; se verificó con `ngc`)
+y `target/` de los backends. Plan: dejar de versionarlos (`git rm -r --cached`) al terminar.
+
+### 20.1 Resumen de la queja: se genera UNA vez
+Tabla nueva `resumenes_queja` (folio único, ddl-auto). `POST /api/primer-contacto/resumen {folio, texto}`
+devuelve el guardado o lo genera y guarda; `GET /resumen?folio=` lo lee. El expediente lo carga al abrir;
+ya no hay "Volver a generar". El SIMULADO no se guarda ("Reintentar con el modelo").
+
+### 20.2 Bandeja e Inicio de PC con el estilo de Recepción
+`shared/estilos/recepcion.css` (copia de historial.scss). Bandeja: filtros en barra (selects de un
+valor), pestañas Todos/Sin asignar/Urgentes/Alta con conteo, paginado 10/20/50. Inicio: aviso "Tu vista
+de trabajo", tabla de pendientes (columna "Llegó" con "hace X días") con paginado, "Mis citas de hoy"
+(`/citas/mias` de hoy, estado REAL), sin "Actividad reciente". Encabezado con menú de perfil →
+"Cambiar contraseña" (`PUT /api/admin/perfil/password`; `environment.adminApiUrl`).
+
+### 20.3 Asignación (decisión del usuario: Recepción → ANALISTA; analista → ABOGADO en el dictamen)
+- Recepción (revision-service): el combo y la carga de trabajo listan ANALISTA_PRIMER_CONTACTO; turnar
+  valida que sea analista activo, manda `analistaAsignadoId/Nombre` a PC y avisa a su campana.
+  `quejas.defensor_asignado` = responsable ACTUAL (analista en PC; abogado tras el dictamen).
+- PC: `expedientes_primer_contacto.analista_asignado_id/_nombre`. Bandeja/Inicio filtran por el JWT;
+  abrir un expediente ajeno → 403 "Este expediente está asignado a X" (sin analista → se lo queda).
+- Dictamen competente: el abogado debe existir (SUBDEFENSOR/DEFENSOR activo) y viaja su **id**;
+  actualiza `quejas.defensor_asignado`.
+- SD: `AbogadoSesionService` (correo del JWT → id). Bandeja, Inicio, Plazos y Alertas solo los del
+  abogado; GET/iniciar de otro → 403. El **Defensor titular (DEFENSOR) entra a SD y ve todo**
+  (decisión "de momento"): SD acepta su sesión `ddp_admin_*` y el panel de la Defensora tiene enlace.
+- Reparto único de lo existente: `docs/reparto-asignaciones-2026-11.sql` (transacción, revisar conteos
+  y COMMIT). Cerrados de PC → quien los analizó; el resto por turnos. NO probado contra una base
+  (Docker apagado). Correrlo DESPUÉS de desplegar.
+- Pruebas: PC 56/56, Recepción 41/41, SD 25/25 (con `-DargLine=-Dnet.bytebuddy.experimental=true`
+  porque la máquina tiene Java 25).
+
+### 20.4 Para desplegar (todo junto)
+revision-service, primer-contacto-service, subdefensoria-service; fronts de Recepción, PC, SD y Admin.
+Luego el script de reparto. Avisar al compañero (toca Admin y Recepción).
+
+### 20.5 DESPLEGADO 2026-11-09 (~21:10–21:30 hora MX) + ajuste del titular
+Respaldos en `/apps/utiles/respaldos/2026-11-09/` de los 3 servidores (jars, `fronts-antes.tgz`,
+`defensoria_db.sql` 350 MB). Reparto aplicado con COMMIT: PC 65/65 (+25 cerrados a "Analista Demo");
+SD guardado TAL CUAL por decisión del usuario (Gerardo 21, otros 0–1). Fronts: revision
+`main-TIZ5HBNF.js`, admin `main-NQMV7LVU.js`, PC `main-7YXBZ3NC.js`, SD `main-GCLQZB52.js`.
+Resumen con el modelo: tardó >2 min pero terminó (no se investigó el tiempo).
+
+Ajuste posterior (decisión del usuario): el **Defensor titular en SD es SOLO CONSULTA** (SecurityConfig:
+GET para SUBDEFENSOR y DEFENSOR, el resto solo SUBDEFENSOR; en el front se ocultan acciones, botón
+"Ver", prioridad bloqueada y abrir usa GET, sin pasar a EN_INVESTIGACION). Además, cada acción de SD
+(oficio, recordatorio, respuesta y su archivo, acuerdos, prioridad) valida que el expediente sea del
+abogado de la sesión (`AbogadoSesionService.exigir*`, 403). SD 31/31 pruebas. Paquete en
+`C:\Users\leish\despliegue-1109b` (SD front `main-FBPR6347.js`).
+
+Cuadros de indicadores en la Bandeja de PC (como el Historial de Recepción; filtran al picarlos):
+Asignados a ti · Por abrir (TURNADA) · En análisis (con cuántos con cita) · Dictaminados (% procedentes)
+· Antigüedad (días promedio de los abiertos y el más viejo; ordena por más antiguos). Filtro de estatus
+acepta grupos ABIERTOS/DICTAMINADOS. Front PC `main-5N4T7H7B.js` en `despliegue-1109b`.

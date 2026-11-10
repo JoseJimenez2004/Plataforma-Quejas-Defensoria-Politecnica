@@ -43,6 +43,14 @@ public class GlobalExceptionHandler {
         return construirRespuesta(HttpStatus.PAYLOAD_TOO_LARGE, "El archivo excede el tamaño máximo de 10 MB.");
     }
 
+    /** 2026-11: respeta el código (p. ej. 403 "Este expediente está asignado a ..."). */
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> manejarResponseStatus(
+            org.springframework.web.server.ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        return construirRespuesta(status != null ? status : HttpStatus.INTERNAL_SERVER_ERROR, ex.getReason());
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> manejarRuntime(RuntimeException ex) {
         return construirRespuesta(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());

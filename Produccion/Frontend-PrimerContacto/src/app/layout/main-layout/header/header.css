@@ -102,6 +102,246 @@
   background: var(--guinda-oscuro);
 }
 
+/* ---- Menú de perfil (igual que Recepción: recepcion-layout.scss + styles.scss) ---- */
+.dropdown {
+  position: relative;
+}
+
+.perfil-boton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.perfil-boton:hover {
+  background: var(--gris-fondo);
+}
+
+.perfil-boton .perfil-texto {
+  align-items: flex-start;
+}
+
+.perfil-boton > svg {
+  width: 16px;
+  height: 16px;
+  color: var(--texto-suave);
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: var(--sombra-alta);
+  z-index: 1100;
+}
+
+.dropdown-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropdown-menu button:hover {
+  background: var(--guinda-suave);
+  color: var(--guinda);
+}
+
+.dropdown-menu svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--texto-suave);
+}
+
+/* ---- Ventana de cambio de contraseña ---- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.modal {
+  width: min(440px, 100%);
+  padding: 22px 24px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--sombra-alta);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--guinda);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.modal-cerrar {
+  border: none;
+  background: none;
+  color: var(--texto-suave);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.input-group label {
+  color: var(--texto);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.input-group input:focus {
+  outline: 2px solid var(--guinda-suave);
+  border-color: var(--guinda);
+}
+
+.campo-password {
+  position: relative;
+}
+
+.campo-password input {
+  padding-right: 70px;
+}
+
+.alternar-password {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: var(--guinda);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.requisitos-password {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.requisitos-password li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 0;
+  color: var(--texto-suave);
+}
+
+.requisitos-password .marca {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--borde);
+  border-radius: 50%;
+  color: transparent;
+  font-size: 10px;
+}
+
+.requisitos-password li.cumplido {
+  color: var(--exito);
+}
+
+.requisitos-password li.cumplido .marca {
+  border-color: var(--exito);
+  background: var(--exito);
+  color: #fff;
+}
+
+.mensaje-campo {
+  margin: 0 0 12px;
+  color: var(--peligro);
+  font-size: 13px;
+}
+
+.modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-principal,
+.btn-secundario {
+  padding: 9px 16px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-principal {
+  border: none;
+  background: var(--guinda);
+  color: #fff;
+}
+
+.btn-principal:hover:not(:disabled) {
+  background: var(--guinda-oscuro);
+}
+
+.btn-principal:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secundario {
+  border: 1px solid var(--borde);
+  background: #fff;
+  color: var(--texto);
+}
+
 @media (max-width: 700px) {
   .perfil-texto,
   .brand p {

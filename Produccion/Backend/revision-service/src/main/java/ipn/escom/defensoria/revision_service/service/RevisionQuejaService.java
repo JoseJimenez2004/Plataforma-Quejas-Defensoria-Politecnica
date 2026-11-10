@@ -338,20 +338,22 @@ public class RevisionQuejaService {
     }
 
     /**
-     * Abogados disponibles para turnar, con su carga (2026-10-16), del que menos quejas en
-     * trámite lleva al que más. Regla de sugerencia:
-     *   1. Si un abogado ya lleva en trámite un antecedente de esta queja (misma persona
+     * Analistas de Primer Contacto a los que se puede turnar, con su carga, del que menos
+     * quejas en trámite lleva al que más (2026-11: antes eran abogados; ahora Recepción turna
+     * a un ANALISTA y el analista elige al abogado en el dictamen). Regla de sugerencia:
+     *   1. Si un analista ya lleva en trámite un antecedente de esta queja (misma persona
      *      quejosa o mismo denunciado), se le sugiere a él para dar continuidad aunque tenga
      *      más carga.
      *   2. Si no, se sugiere al de menor carga activa (empate: menos asignadas en total).
+     * La carga se cuenta por quejas.defensor_asignado, que guarda al responsable ACTUAL
+     * (el analista mientras está en Primer Contacto; el abogado después del dictamen).
      */
     public List<CargaAbogadoModel> abogados(String folio) {
         List<AntecedenteModel> antecedentes = antecedentes(folio);
         Map<String, long[]> cargas = indicadoresService.cargaPorAbogado(ESTATUS_CERRADOS);
 
         List<PersonalAdministrativo> personal = personalRepository.findByRolInAndActivoTrueOrderByNombreCompletoAsc(
-                List.of(ipn.escom.defensoria.revision_service.entity.RolStaff.DEFENSOR,
-                        ipn.escom.defensoria.revision_service.entity.RolStaff.SUBDEFENSOR));
+                List.of(ipn.escom.defensoria.revision_service.entity.RolStaff.ANALISTA_PRIMER_CONTACTO));
 
         record Fila(PersonalAdministrativo p, long activa, long total, List<String> folios) {}
         List<Fila> filas = personal.stream().map(p -> {
@@ -433,9 +435,16 @@ public class RevisionQuejaService {
 
         if (esVacio(defensorAsignado)) {
             throw new RuntimeException(
-                    "Selecciona el defensor responsable antes de turnar."
+                    "Selecciona el analista de Primer Contacto antes de turnar."
             );
         }
+
+        // 2026-11: se turna a un ANALISTA de Primer Contacto (activo); solo él verá la queja.
+        PersonalAdministrativo analista = personalRepository
+                .findFirstByNombreCompletoAndActivoTrue(defensorAsignado.strip())
+                .filter(p -> p.getRol() == ipn.escom.defensoria.revision_service.entity.RolStaff.ANALISTA_PRIMER_CONTACTO)
+                .orElseThrow(() -> new RuntimeException(
+                        "Selecciona un analista de Primer Contacto activo antes de turnar."));
 
         Queja queja = obtenerPorFolio(folio);
 
@@ -468,7 +477,7 @@ public class RevisionQuejaService {
          */
         PrimerContactoIngresoResponse expedientePC =
                 primerContactoClientService
-                        .enviarAPrimerContacto(queja);
+                        .enviarAPrimerContacto(queja, analista.getId(), analista.getNombreCompleto());
 
         /*
          * Primer Contacto devuelve su propio folio.
@@ -482,7 +491,7 @@ public class RevisionQuejaService {
 
         queja.setEstatus(TURNADA);
         queja.setAreaTurnada(AREA_DESTINO);
-        queja.setDefensorAsignado(defensorAsignado);
+        queja.setDefensorAsignado(analista.getNombreCompleto());
         queja.setComentariosRecepcion(comentarios);
         queja.setValidadoPor(correoRecepcionista);
 
@@ -506,15 +515,14 @@ public class RevisionQuejaService {
                         + " para su atención."
         );
 
-        // Aviso en la campana del defensor/subdefensor al que se le asignó la queja.
-        personalRepository.findFirstByNombreCompletoAndActivoTrue(defensorAsignado)
-                .ifPresent(defensor -> notificacionService.notificarPersonal(
-                        defensor.getCorreoInstitucional(),
-                        "Se te turnó una queja",
-                        "La queja " + guardada.getNumeroFolio() + " fue validada por Recepción y turnada a "
-                                + AREA_DESTINO + "; quedaste como responsable."
-                                + (esVacio(comentarios) ? "" : " Comentarios de Recepción: " + comentarios),
-                        ""));
+        // Aviso en la campana del analista de Primer Contacto al que se le asignó la queja.
+        notificacionService.notificarPersonal(
+                analista.getCorreoInstitucional(),
+                "Se te turnó una queja",
+                "La queja " + guardada.getNumeroFolio() + " (expediente " + guardada.getFolioPrimerContacto()
+                        + ") fue validada por Recepción y turnada a " + AREA_DESTINO + "; quedaste como responsable."
+                        + (esVacio(comentarios) ? "" : " Comentarios de Recepción: " + comentarios),
+                "");
 
         return guardada;
     }

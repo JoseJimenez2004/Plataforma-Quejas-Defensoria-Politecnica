@@ -108,6 +108,17 @@ public class ExpedientePrimerContacto {
     @Column(name = "analista_analisis_nombre", length = 150)
     private String analistaAnalisisNombre;
 
+    /*
+     * 2026-11: analista RESPONSABLE (lo elige Recepción al turnar). La bandeja y el inicio
+     * solo le muestran a cada analista sus expedientes. Distinto de analista_analisis_*,
+     * que es quien abrió el expediente por primera vez.
+     */
+    @Column(name = "analista_asignado_id")
+    private Long analistaAsignadoId;
+
+    @Column(name = "analista_asignado_nombre", length = 150)
+    private String analistaAsignadoNombre;
+
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 

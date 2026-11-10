@@ -45,7 +45,11 @@
                   @if (p.e.prioridad) { <span [class]="'sd-chip ' + clasePrioridad(p.e.prioridad)">{{ etiquetaPrioridad(p.e.prioridad) }}</span> }</b>
                 <span class="sd-muted">{{ p.paso.descripcion }}</span>
               </div>
-              <button type="button" [class]="p.paso.nivel === 'info' ? 'sd-btn-borde chico' : 'sd-btn chico'" (click)="hacer(p)">{{ p.paso.boton }}</button>
+              @if (soloConsulta) {
+                <button type="button" class="sd-btn-borde chico" (click)="abrir(p.e)">Ver</button>
+              } @else {
+                <button type="button" [class]="p.paso.nivel === 'info' ? 'sd-btn-borde chico' : 'sd-btn chico'" (click)="hacer(p)">{{ p.paso.boton }}</button>
+              }
             </div>
           } @empty {
             <p class="sd-vacio">No tienes pendientes por ahora. Los expedientes que esperan respuesta de la unidad o del quejoso están en "Mis expedientes".</p>

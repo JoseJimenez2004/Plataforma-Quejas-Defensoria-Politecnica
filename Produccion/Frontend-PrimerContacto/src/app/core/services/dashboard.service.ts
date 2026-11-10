@@ -52,15 +52,21 @@ export class DashboardService {
     );
   }
 
+  /** Citas vigentes del analista en sesión que son HOY, ordenadas por hora. */
   obtenerCitasHoy(): Observable<DashboardCitaHoy[]> {
-    return this.agendaService.obtenerAgendaDia(this.formatearFechaHoy()).pipe(
+    const [y, m, d] = this.formatearFechaHoy().split('-');
+    const hoy = `${d}/${m}/${y}`;
+    return this.agendaService.obtenerMisProximasCitas().pipe(
       map(citas => citas
-        .filter(cita => cita.estatus !== 'Cancelada')
+        .filter(cita => cita.fecha === hoy && !(cita.estatusCodigo ?? '').startsWith('CANCELADA'))
+        .sort((a, b) => (a.hora ?? '').localeCompare(b.hora ?? ''))
         .map(cita => ({
           hora: cita.hora,
           quejoso: cita.quejoso,
           folio: cita.folio,
-          tipo: cita.tipo
+          tipo: cita.tipo,
+          estado: cita.estatus,
+          estadoCodigo: cita.estatusCodigo ?? ''
         })))
     );
   }
@@ -93,6 +99,9 @@ export class DashboardService {
       nombre: exp.nombreQuejoso,
       detalle: exp.tema,
       estado: exp.estatus,
+      estadoCodigo: exp.estatusCodigo,
+      unidad: exp.unidadAcademica,
+      fecha: exp.fechaRecepcion,
       tipo: this.tipoDeExpediente(exp)
     };
   }

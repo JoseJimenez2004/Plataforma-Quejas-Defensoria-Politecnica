@@ -19,4 +19,7 @@ public interface ExpedientePrimerContactoRepository
     List<ExpedientePrimerContacto> findByEstatusIn(Collection<String> estatus);
 
     List<ExpedientePrimerContacto> findByQuejosoCorreoIgnoreCase(String quejosoCorreo);
+
+    /** 2026-11: expedientes que Recepción turnó a este analista. */
+    List<ExpedientePrimerContacto> findByAnalistaAsignadoId(Long analistaAsignadoId);
 }

@@ -1,5 +1,7 @@
 package ipn.escom.defensoria.subdefensoria.controller;
 
+import org.springframework.security.core.Authentication;
+import ipn.escom.defensoria.subdefensoria.service.AbogadoSesionService;
 import ipn.escom.defensoria.subdefensoria.dto.CrearOficioDTO;
 import ipn.escom.defensoria.subdefensoria.dto.OficioDTO;
 import ipn.escom.defensoria.subdefensoria.service.OficioService;
@@ -13,14 +15,17 @@ import java.util.List;
 public class OficioController {
 
     private final OficioService oficioService;
+    private final AbogadoSesionService abogadoSesion;
 
-    public OficioController(OficioService oficioService) {
+    public OficioController(OficioService oficioService, AbogadoSesionService abogadoSesion) {
         this.oficioService = oficioService;
+        this.abogadoSesion = abogadoSesion;
     }
 
     /** Redacta y envia el oficio vigente (TS-01 o TS-04, segun el estatus del expediente). */
     @PostMapping
-    public OficioDTO crearOficio(@Valid @RequestBody CrearOficioDTO dto) {
+    public OficioDTO crearOficio(@Valid @RequestBody CrearOficioDTO dto, Authentication authentication) {
+        abogadoSesion.exigirExpediente(dto.getExpedienteId(), authentication);
         return oficioService.crearOficio(dto);
     }
 

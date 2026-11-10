@@ -54,7 +54,7 @@
             @if (resumen) {
               <span class="exp-etiqueta-ia">
                 <span class="pc-chip" [class.simulado]="resumenSimulado">{{ resumenSimulado ? 'Resumen simulado (sin modelo)' : 'Borrador generado por IA' }}</span>
-                <small>{{ formatearFechaHora(fechaResumen) }}</small>
+                <small>{{ formatearFechaHora(fechaResumen) }}@if (resumen.generadoPor) { · {{ resumen.generadoPor }} }</small>
               </span>
             }
           </div>
@@ -66,7 +66,9 @@
               <p class="exp-aviso">El modelo de resumen no respondió; esto es una aproximación hecha en el navegador. Revísalo antes de usarlo.</p>
             }
             <div class="acciones-der">
-              <button type="button" class="pc-btn-borde" (click)="generarResumen()"><mat-icon>refresh</mat-icon> Volver a generar</button>
+              @if (resumenSimulado) {
+                <button type="button" class="pc-btn-borde" (click)="generarResumen()"><mat-icon>refresh</mat-icon> Reintentar con el modelo</button>
+              }
               <button type="button" class="pc-btn-borde" (click)="verNarrativaCompleta()"><mat-icon>visibility</mat-icon> Ver narrativa completa</button>
               <button type="button" class="pc-btn" (click)="copiarResumen()"><mat-icon>content_copy</mat-icon> Copiar resumen</button>
             </div>

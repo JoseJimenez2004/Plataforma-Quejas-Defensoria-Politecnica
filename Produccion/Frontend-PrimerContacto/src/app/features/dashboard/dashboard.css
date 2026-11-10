@@ -1,266 +1,50 @@
-.page {
-  max-width: none; /* Sin tope: con el menú compacto se aprovecha todo el ancho (como Recepción) */
-}
+/* Panel de inicio: la base visual viene de shared/estilos/recepcion.css. */
 
-/* ---- Encabezado Unificado del Proyecto ---- */
-.page-header {
-  margin-bottom: var(--space-5);
+.aviso-trabajo {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: var(--space-5);
-}
-
-.page-header h2 {
-  margin: 0;
-  color: var(--guinda);
-  font-size: 28px;
-  font-weight: 800;
-}
-
-.page-header p.date-label {
-  margin: var(--space-1) 0 0;
-  color: var(--texto-suave);
-  font-size: var(--font-size-base);
-}
-
-/* ---- Grid de Tarjetas de Estadísticas ---- */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-}
-
-.stat-card {
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
   border-radius: 12px;
-  box-shadow: var(--sombra-suave);
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-3);
-  background: white;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.stat-card mat-icon {
-  color: var(--guinda);
-  font-size: 28px;
-  width: 28px;
-  height: 28px;
-}
-
-.stat-card div {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-card span {
-  color: var(--texto-suave);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-}
-
-.stat-card strong {
-  color: var(--negro-inst);
-  font-size: var(--font-size-2xl);
-  font-weight: 900;
-  line-height: var(--line-height-tight);
-}
-
-/* ---- Diseño de Dos Columnas para Listados ---- */
-.dashboard-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-5);
-  align-items: start;
-}
-
-/* Tarjetas Base Universales */
-.card {
-  border-radius: 12px;
-  box-shadow: var(--sombra-suave);
-  padding: var(--space-4);
-  background: white;
-}
-
-.card-header-custom {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-4);
-}
-
-.card-header-custom h3 {
-  margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: 900;
-  color: var(--negro-inst);
-}
-
-.card-header-custom p {
-  margin: var(--space-1) 0 0;
-  color: var(--texto-suave);
-  font-size: var(--font-size-sm);
-}
-
-/* ---- Listas y Filas Internas ---- */
-.dashboard-list,
-.activity-timeline,
-.appointments {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.dashboard-list-item,
-.activity-item,
-.appointment-item {
-  display: grid;
-  align-items: center;
-  background: #f9fafb;
-  border-radius: 8px;
-  padding: var(--space-3);
-  transition: background 0.2s ease;
-}
-
-.dashboard-list-item {
-  grid-template-columns: 1.2fr 1.4fr auto;
-  gap: var(--space-4);
-}
-
-.activity-item {
-  grid-template-columns: auto 1fr;
-  gap: var(--space-3);
-  align-items: start;
-}
-
-.appointment-item {
-  grid-template-columns: 75px 1fr auto;
-  gap: var(--space-4);
-}
-
-/* ---- Tipografías Internas de Filas ---- */
-.dashboard-list-item div,
-.activity-item div:last-child,
-.appointment-item div {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.dashboard-list-item strong,
-.activity-title strong,
-.appointment-item strong {
-  color: var(--negro-inst);
-  font-weight: 800;
-}
-
-.dashboard-list-item span,
-.activity-item span,
-.appointment-item span {
+  background: var(--guinda-suave);
   color: var(--texto);
-  font-size: var(--font-size-sm);
+  font-size: 14px;
 }
 
-.activity-item small {
-  color: #9ca3af;
-  font-size: var(--font-size-xs);
-}
-
-.appointment-item .hour {
+.aviso-trabajo svg {
+  width: 22px;
+  height: 22px;
   color: var(--guinda);
+  flex-shrink: 0;
+}
+
+.aviso-trabajo strong {
+  padding-right: 14px;
+  border-right: 1px solid #e3c6d3;
+  color: var(--guinda);
+  font-size: 16px;
   font-weight: 800;
-  font-size: var(--font-size-base);
 }
 
-.activity-icon {
-  color: var(--guinda);
-  margin-top: var(--space-1);
+.distribucion {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
 }
 
-.activity-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-/* ---- Botones Homologados (Radio de 8px) ---- */
-.primary-btn {
-  background: var(--guinda) !important;
-  color: white !important;
-  font-weight: 700;
-  border-radius: 8px !important;
-  padding: 0 var(--space-4);
-  height: 40px;
-}
-
-.outline-btn {
-  border-color: var(--texto-suave) !important;
-  color: var(--texto) !important;
-  font-weight: 700;
-  border-radius: 8px !important;
-}
-
-/* ---- Chips de Estado y Prioridad ---- */
-mat-chip {
-  font-weight: 700 !important;
-}
-
-.priority-high {
-  background: #ffebee !important;
-  color: var(--peligro) !important;
-}
-
-.priority-medium {
-  background: #fdf6e3 !important;
-  color: var(--advertencia) !important;
-}
-
-.status-chip-default {
-  background: var(--borde) !important;
-  color: var(--texto) !important;
-}
-
-/* ---- Estados de Interacción (Hover y Clics) ---- */
-.clickable {
-  cursor: pointer;
-}
-
-.stat-card.clickable:hover {
-  background: #fdf2f4; /* Tinte guinda muy sutil */
-  border-color: #ead5df;
-}
-
-.dashboard-list-item.clickable:hover {
-  background: #f3f4f6;
-}
-
-@media (max-width: 900px) {
-  .dashboard-layout {
-    grid-template-columns: 1fr;
-  }
-  .dashboard-list-item {
-    grid-template-columns: 1fr;
-    gap: var(--space-2);
+@media (max-width: 1200px) {
+  .distribucion {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
-/* PC-4: cargando / error con Reintentar. */
-.estado-carga {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fff;
-  color: #4b5563;
-  font-weight: 600;
+
+.card-panel.estado {
+  margin-bottom: 20px;
 }
 
-.estado-carga.error {
-  border-color: #f3c3c3;
-  background: #fff5f5;
-  color: #b42318;
+.paginado .campo-select select {
+  padding: 5px 8px;
 }

@@ -1,5 +1,7 @@
 package ipn.escom.defensoria.primercontacto.service;
 
+import java.util.Optional;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ipn.escom.defensoria.primercontacto.dto.CompetenciaDTO;
 import ipn.escom.defensoria.primercontacto.dto.DictamenDTO;
 import ipn.escom.defensoria.primercontacto.dto.ExpedienteEntranteRequest;
@@ -46,6 +48,11 @@ public class DictamenPrimerContactoService {
     private final SubdefensoriaClientService subdefensoriaClientService;
     private final TransicionExpedienteService transicionService;
     private final NotificacionQuejosoService notificacionService;
+    private final JdbcTemplate jdbc;
+
+    /** Abogado de Subdefensoría (personal_administrativo, rol SUBDEFENSOR o DEFENSOR, activo). */
+    private record Abogado(Long id, String nombre) {
+    }
 
     public DictamenPrimerContactoService(
             DictamenPrimerContactoRepository dictamenRepository,
@@ -53,7 +60,8 @@ public class DictamenPrimerContactoService {
             AcuerdoConciliacionRepository acuerdoRepository,
             SubdefensoriaClientService subdefensoriaClientService,
             TransicionExpedienteService transicionService,
-            NotificacionQuejosoService notificacionService
+            NotificacionQuejosoService notificacionService,
+            JdbcTemplate jdbc
     ) {
         this.dictamenRepository = dictamenRepository;
         this.expedienteRepository = expedienteRepository;
@@ -61,6 +69,7 @@ public class DictamenPrimerContactoService {
         this.subdefensoriaClientService = subdefensoriaClientService;
         this.transicionService = transicionService;
         this.notificacionService = notificacionService;
+        this.jdbc = jdbc;
     }
 
     /*
@@ -79,6 +88,12 @@ public class DictamenPrimerContactoService {
                 transicionService.obtenerPorFolio(dto.getFolio());
 
         validarQueSePuedeDictaminar(expediente);
+
+        // 2026-11: el abogado elegido debe existir (activo) para que le llegue en Subdefensoría.
+        if (buscarAbogado(dto.getResponsableTurno()).isEmpty()) {
+            throw new OperacionInvalidaException(
+                    "Elige al abogado de Subdefensoría (Subdefensor o Defensor activo) que recibirá el expediente.");
+        }
 
         DictamenPrimerContacto guardado =
                 guardarDictamen(
@@ -345,6 +360,12 @@ public class DictamenPrimerContactoService {
          * La relación entre áreas se realiza mediante
          * el folio PC-..., nunca mediante IDs.
          */
+        // 2026-11: se manda el id del abogado (antes solo el nombre) para que Subdefensoría
+        // le muestre a cada abogado solo sus expedientes; y quejas.defensor_asignado pasa a ser
+        // el abogado (responsable actual), para que su carga de trabajo cuadre.
+        Optional<Abogado> abogado = buscarAbogado(dictamen.getResponsableTurno());
+        abogado.ifPresent(a -> actualizarResponsableQueja(expediente.getFolioOrigen(), a.nombre()));
+
         QuejosoResumenRequest quejoso =
                 QuejosoResumenRequest.builder()
                         .nombreCompleto(expediente.getQuejosoNombre())
@@ -359,8 +380,8 @@ public class DictamenPrimerContactoService {
                         .asunto(expediente.getTema())
                         .descripcionHechos(expediente.getDescripcionHechos())
                         .fechaAdmision(LocalDate.now())
-                        .abogadoAsesorId(null)
-                        .abogadoAsesorNombre(dictamen.getResponsableTurno())
+                        .abogadoAsesorId(abogado.map(Abogado::id).orElse(null))
+                        .abogadoAsesorNombre(abogado.map(Abogado::nombre).orElse(dictamen.getResponsableTurno()))
                         .quejoso(quejoso)
                         .observacionesAnalista(dictamen.getObservaciones())
                         .prioridad(expediente.getPrioridad())
@@ -413,5 +434,25 @@ public class DictamenPrimerContactoService {
                 .estatusExpediente(expediente != null ? expediente.getEstatus() : null)
                 .folioSubdefensoria(expediente != null ? expediente.getFolioSubdefensoria() : null)
                 .build();
+    }
+
+    private Optional<Abogado> buscarAbogado(String nombre) {
+        if (nombre == null || nombre.isBlank()) {
+            return Optional.empty();
+        }
+        return jdbc.query("""
+                SELECT id, nombre_completo FROM personal_administrativo
+                 WHERE lower(trim(nombre_completo)) = lower(trim(?))
+                   AND activo = true AND rol IN ('SUBDEFENSOR', 'DEFENSOR')
+                 ORDER BY id LIMIT 1
+                """, (rs, i) -> new Abogado(rs.getLong(1), rs.getString(2)), nombre).stream().findFirst();
+    }
+
+    private void actualizarResponsableQueja(String folioQueja, String nombreAbogado) {
+        try {
+            jdbc.update("UPDATE quejas SET defensor_asignado = ? WHERE numero_folio = ?", nombreAbogado, folioQueja);
+        } catch (Exception ex) {
+            // No detiene el turnado: es un dato de consulta (carga de trabajo, portal).
+        }
     }
 }

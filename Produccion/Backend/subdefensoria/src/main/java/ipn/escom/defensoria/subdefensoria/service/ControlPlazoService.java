@@ -1,5 +1,6 @@
 package ipn.escom.defensoria.subdefensoria.service;
 
+import java.util.function.Predicate;
 import ipn.escom.defensoria.subdefensoria.dto.ControlPlazoDTO;
 import ipn.escom.defensoria.subdefensoria.entity.EstatusExpediente;
 import ipn.escom.defensoria.subdefensoria.entity.EstatusOficio;
@@ -41,11 +42,12 @@ public class ControlPlazoService {
         this.diasRecordatorio = diasRecordatorio;
     }
 
-    public List<ControlPlazoDTO> obtenerSemaforo() {
+    public List<ControlPlazoDTO> obtenerSemaforo(Predicate<ExpedienteInvestigacion> visibles) {
         List<ExpedienteInvestigacion> activos = expedienteRepository.findByEstatusInOrderByFechaAdmisionAsc(
                 List.of(EstatusExpediente.EN_INVESTIGACION, EstatusExpediente.EN_ESPERA_OFICIO));
 
         return activos.stream()
+                .filter(visibles)
                 .map(this::filaDelSemaforo)
                 .filter(java.util.Objects::nonNull)
                 .toList();

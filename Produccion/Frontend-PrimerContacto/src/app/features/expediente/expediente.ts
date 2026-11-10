@@ -269,7 +269,9 @@ export class Expediente implements OnInit, OnDestroy {
         this.cargarCitaActiva();
         this.cargarResumenAntecedentes();
         this.cargarDenunciado();
-        // PC-3: el resumen con IA ya no se pide al abrir; el analista lo genera con el botón.
+        // PC-3: el resumen con IA ya no se genera al abrir; el analista lo genera con el botón
+        // y queda guardado, así que aquí solo se carga el que ya exista.
+        this.cargarResumenGuardado();
       },
       error: (error) => {
         this.cargando = false;
@@ -282,6 +284,18 @@ export class Expediente implements OnInit, OnDestroy {
             'Cerrar',
             { duration: 4000 }
           );
+          return;
+        }
+
+        // 2026-11: solo el analista al que Recepción lo turnó puede abrirlo.
+        if (error.status === 403) {
+          this.cdr.detectChanges();
+          this.snackBar.open(
+            error.error?.error ?? 'Este expediente está asignado a otro analista.',
+            'Cerrar',
+            { duration: 5000 }
+          );
+          this.router.navigate(['/bandeja']);
           return;
         }
 
@@ -535,24 +549,41 @@ export class Expediente implements OnInit, OnDestroy {
 
   // ---------------------------------------------------------------- Análisis IA (resumen)
 
+  /** Resumen que ya se generó antes para esta queja (queda guardado en el servidor). */
+  private cargarResumenGuardado(): void {
+    const folio = this.expediente.folio || this.folio;
+    if (!folio) return;
+    this.resumenService.guardado(folio).subscribe({
+      next: (r) => {
+        if (!r || this.cargandoResumen) return;
+        this.mostrarResumenModelo(r);
+      },
+      error: () => { /* sin guardado: se ofrece el botón */ }
+    });
+  }
+
+  private mostrarResumenModelo(r: ResumenModelo): void {
+    this.resumen = r;
+    this.resumenSimulado = false;
+    this.cargandoResumen = false;
+    this.fechaResumen = (r.fechaGeneracion ?? new Date().toISOString()).slice(0, 16);
+    this.cdr.detectChanges();
+  }
+
   /**
-   * Borrador del resumen con el modelo (resumen-service). Puede tardar hasta ~2 minutos, por
-   * eso se pide al abrir el expediente; si el modelo no responde se usa el resumen simulado
-   * del navegador y la pantalla lo dice.
+   * Borrador del resumen con el modelo (resumen-service). Puede tardar hasta ~2 minutos. Se
+   * genera una sola vez por queja: el servidor lo guarda y las siguientes veces se muestra el
+   * guardado. Si el modelo no responde se usa el resumen simulado del navegador (no se guarda,
+   * y se puede volver a intentar con el modelo).
    */
   generarResumen(): void {
     const texto = this.expediente.narrativa?.trim();
     if (!texto || this.cargandoResumen) return;
+    if (this.resumen && !this.resumenSimulado) return;
     this.peticionResumen?.unsubscribe();
     this.cargandoResumen = true;
-    this.peticionResumen = this.resumenService.resumir(texto).subscribe({
-      next: (r) => {
-        this.resumen = r;
-        this.resumenSimulado = false;
-        this.cargandoResumen = false;
-        this.fechaResumen = new Date().toISOString().slice(0, 16);
-        this.cdr.detectChanges();
-      },
+    this.peticionResumen = this.resumenService.resumir(texto, this.expediente.folio || this.folio).subscribe({
+      next: (r) => this.mostrarResumenModelo(r),
       error: () => {
         const s = generarResumenSimulado(texto);
         const oraciones = texto.split(/(?<=[.!?])\s+/).filter(o => o.trim().length > 25);

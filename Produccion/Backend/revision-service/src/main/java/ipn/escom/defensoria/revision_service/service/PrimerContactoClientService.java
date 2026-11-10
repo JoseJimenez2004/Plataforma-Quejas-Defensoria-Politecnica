@@ -30,8 +30,11 @@ public class PrimerContactoClientService {
         this.evidenciaRepository = evidenciaRepository;
     }
 
+    /** analistaId/analistaNombre: analista de Primer Contacto al que Recepción turnó la queja. */
     public PrimerContactoIngresoResponse enviarAPrimerContacto(
-            Queja queja
+            Queja queja,
+            Long analistaId,
+            String analistaNombre
     ) {
 
         /*
@@ -73,7 +76,9 @@ public class PrimerContactoClientService {
                         resolverFechaRecepcion(queja),
                         null,
                         quejoso,
-                        evidencias
+                        evidencias,
+                        analistaId,
+                        analistaNombre
                 );
 
         PrimerContactoIngresoResponse response =

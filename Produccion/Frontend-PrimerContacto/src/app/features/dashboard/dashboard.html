@@ -1,147 +1,157 @@
-<section class="page">
-  <div class="page-header">
+<section class="pagina">
+  <div class="encabezado">
     <div>
       <h2>Panel de inicio</h2>
-      <p class="date-label">{{ fechaActual }}</p>
+      <p class="fecha">{{ fechaActual }}</p>
     </div>
-
-    <button mat-flat-button class="primary-btn" (click)="irABandeja()">
-      <mat-icon>assignment</mat-icon>
+    <button type="button" class="btn-guinda" (click)="irABandeja()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
       Ir a Bandeja
     </button>
   </div>
 
-  @if (cargando) {
-    <div class="estado-carga" role="status"><mat-icon>hourglass_top</mat-icon> Cargando…</div>
-  } @else if (error) {
-    <div class="estado-carga error" role="alert">
-      <mat-icon>error_outline</mat-icon>
+  <div class="aviso-trabajo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"></path></svg>
+    <strong>Tu vista de trabajo</strong>
+    <span>Hola{{ saludo ? ', ' + saludo : '' }}. Aquí puedes atender tus entradas pendientes, consultar tus citas de hoy y dar seguimiento a tu actividad.</span>
+  </div>
+
+  @if (error) {
+    <div class="card-panel estado error" role="alert">
       No se pudo cargar la información de Inicio.
-      <button mat-stroked-button class="outline-btn" (click)="cargar()"><mat-icon>refresh</mat-icon> Reintentar</button>
+      <button type="button" class="limpiar" (click)="cargar()">Reintentar</button>
     </div>
   }
 
-  <div class="stats-grid">
-    @for (item of resumen; track item.titulo) {
-      <div 
-        class="stat-card clickable" 
-        (click)="seleccionarCategoria(item.tipo)">
-        <mat-icon>{{ item.icono }}</mat-icon>
-        <div>
-          <span>{{ item.titulo }}</span>
+  <div class="indicadores">
+    @for (item of resumen; track item.tipo) {
+      <button type="button" class="indicador clic" [class.seleccionado]="categoriaSeleccionada === item.tipo"
+              (click)="seleccionarCategoria(item.tipo)">
+        <span class="indicador-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="iconos[item.tipo]"></path></svg></span>
+        <span class="indicador-cuerpo">
+          <span class="indicador-titulo">{{ item.titulo }}</span>
           <strong>{{ item.valor }}</strong>
-        </div>
-      </div>
+          <span class="indicador-detalle">{{ detalles[item.tipo] }}</span>
+        </span>
+      </button>
     }
   </div>
 
-  <div class="dashboard-layout">
-    
-    <mat-card class="card">
-      <div class="card-header-custom">
+  <div class="distribucion">
+    <!-- Expedientes de la categoría elegida -->
+    <div class="card-panel">
+      <div class="card-cabeza">
         <div>
           <h3>{{ tituloLista }}</h3>
-          <p>Listado filtrado según el indicador seleccionado arriba.</p>
+          <p>Elige un indicador de arriba para cambiar el listado.</p>
         </div>
       </div>
 
-      <div class="dashboard-list">
-        @if (!cargando && !error && obtenerListaSeleccionada().length === 0) {
-          <p style="color: #6b7280; padding: var(--space-3); text-align: center; font-size: var(--font-size-sm);">
-            No hay expedientes en esta categoría.
-          </p>
-        }
+      @if (cargando) {
+        <p class="estado">Cargando…</p>
+      } @else if (listaSeleccionada.length === 0) {
+        <p class="estado">No hay expedientes en esta categoría.</p>
+      } @else {
+        <div class="tabla-envoltura">
+          <table class="tabla-cola">
+            <thead>
+              <tr>
+                <th>Expediente</th>
+                <th>Quejoso</th>
+                <th>Unidad</th>
+                <th>Llegó</th>
+                <th>Estatus</th>
+                <th class="derecha">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of filasPagina; track item.folio) {
+                <tr>
+                  <td><span class="folio">{{ item.folio }}</span></td>
+                  <td>{{ item.nombre }}</td>
+                  <td>{{ item.unidad }}</td>
+                  <td>
+                    <span class="fecha-fila">{{ item.fecha }}</span>
+                    <span class="hace">{{ haceCuanto(item.fecha) }}</span>
+                  </td>
+                  <td><span [class]="'estatus-chip ' + claseEstatus(item.estadoCodigo)">{{ item.estado }}</span></td>
+                  <td class="derecha">
+                    <button type="button" class="btn-fila" (click)="abrirExpediente(item.folio)">Ver</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
 
-        @for (item of obtenerListaSeleccionada(); track item.folio) {
-          <div class="dashboard-list-item clickable" (click)="abrirExpediente(item.folio)">
-            <div>
-              <strong>{{ item.folio }}</strong>
-              <span>{{ item.nombre }}</span>
-            </div>
-
-            <span>{{ item.detalle }}</span>
-
-            <mat-chip class="status-chip-default">{{ item.estado }}</mat-chip>
+        <div class="paginado">
+          <div class="paginado-izq">
+            <label class="campo-select en-linea">Ver
+              <select [(ngModel)]="paginado.tamanio" (ngModelChange)="paginado.pagina = 0" name="tamanio">
+                @for (t of tamaniosPagina; track t) { <option [ngValue]="t">{{ t }}</option> }
+              </select>
+              por página
+            </label>
+            <span class="paginado-rango">{{ paginado.rango(listaSeleccionada.length) }}</span>
           </div>
-        }
-      </div>
-    </mat-card>
-
-    <div style="display: grid; gap: var(--space-5);">
-      <mat-card class="card">
-        <div class="card-header-custom">
-          <div>
-            <h3>Citas de hoy</h3>
-            <p>Comparecencias programadas para el día actual.</p>
-          </div>
-
-          <button mat-stroked-button class="outline-btn" (click)="irAgenda()">
-            Ver agenda
-          </button>
-        </div>
-
-        <div class="appointments">
-          @if (errorCitas) {
-            <p style="color: #b42318; padding: var(--space-3); text-align: center; font-size: var(--font-size-sm);">
-              No se pudo cargar la agenda de hoy. <button mat-button (click)="cargar()">Reintentar</button>
-            </p>
-          } @else if (citasHoy.length === 0) {
-            <p style="color: #6b7280; padding: var(--space-3); text-align: center; font-size: var(--font-size-sm);">
-              No hay citas programadas para hoy.
-            </p>
-          }
-
-          @for (cita of citasHoy; track cita.folio + cita.hora) {
-            <div class="appointment-item">
-              <div class="hour">{{ cita.hora }} hrs</div>
-
-              <div>
-                <strong>{{ cita.quejoso }}</strong>
-                <span>{{ cita.folio }}</span>
-              </div>
-
-              <mat-chip class="priority-high">Confirmada</mat-chip>
-            </div>
+          @if (paginado.totalPaginas(listaSeleccionada.length) > 1) {
+            <nav aria-label="Páginas del listado">
+              <button type="button" (click)="irAPagina(paginado.pagina - 1)" [disabled]="paginado.pagina === 0" aria-label="Página anterior">‹</button>
+              @for (p of paginado.paginasVisibles(listaSeleccionada.length); track $index) {
+                @if (p === null) {
+                  <span class="paginado-salto">…</span>
+                } @else {
+                  <button type="button" [class.actual]="p === paginado.pagina" (click)="irAPagina(p)">{{ p + 1 }}</button>
+                }
+              }
+              <button type="button" (click)="irAPagina(paginado.pagina + 1)" [disabled]="paginado.pagina >= paginado.totalPaginas(listaSeleccionada.length) - 1" aria-label="Página siguiente">›</button>
+            </nav>
           }
         </div>
-      </mat-card>
-
-      <mat-card class="card">
-        <div class="card-header-custom">
-          <div>
-            <h3>Actividad reciente</h3>
-            <p>Últimas acciones realizadas en el módulo.</p>
-          </div>
-        </div>
-
-        <div class="activity-timeline">
-          @if (!cargando && !error && actividad.length === 0) {
-            <p style="color: #6b7280; padding: var(--space-3); text-align: center; font-size: var(--font-size-sm);">
-              No se registra actividad reciente.
-            </p>
-          }
-
-          @for (item of actividad; track item.folio + item.tiempo) {
-            <div class="activity-item clickable" (click)="abrirExpediente(item.folio)">
-              <mat-icon class="activity-icon">{{ item.icono }}</mat-icon>
-
-              <div>
-                <div class="activity-title">
-                  <strong>{{ item.folio }}</strong>
-
-                  @if (item.prioridad !== 'Sin asignar') {
-                    <span [class]="'pc-chip ' + clasePrioridad(item.prioridad)">{{ item.prioridad }}</span>
-                  }
-                </div>
-
-                <span>{{ item.accion }}</span>
-                <small>Recibido el {{ item.tiempo }}</small>
-              </div>
-            </div>
-          }
-        </div>
-      </mat-card>
+      }
     </div>
 
+    <!-- Mis citas de hoy -->
+    <div class="card-panel">
+      <div class="card-cabeza">
+        <div>
+          <h3>Mis citas de hoy</h3>
+          <p>Citas asignadas a ti para hoy.</p>
+        </div>
+        <button type="button" class="btn-borde" (click)="irAgenda()">Ver agenda</button>
+      </div>
+
+      @if (errorCitas) {
+        <div class="estado error">
+          No se pudo cargar la agenda de hoy.
+          <button type="button" class="limpiar" (click)="cargar()">Reintentar</button>
+        </div>
+      } @else if (citasHoy.length === 0) {
+        <p class="estado">No tienes citas programadas para hoy.</p>
+      } @else {
+        <div class="tabla-envoltura">
+          <table class="tabla-cola">
+            <thead>
+              <tr>
+                <th>Hora</th>
+                <th>Persona</th>
+                <th>Expediente</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cita of citasHoy; track cita.folio + cita.hora) {
+                <tr class="clic" (click)="abrirExpediente(cita.folio)">
+                  <td><span class="hora">{{ cita.hora }} hrs</span></td>
+                  <td>{{ cita.quejoso }}</td>
+                  <td><span class="folio">{{ cita.folio }}</span></td>
+                  <td><span [class]="'pc-chip ' + cita.estadoCodigo">{{ cita.estado }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
   </div>
 </section>

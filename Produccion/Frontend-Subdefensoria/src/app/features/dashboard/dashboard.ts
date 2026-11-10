@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -33,6 +33,9 @@ interface Etapa {
   styleUrl: './dashboard.css'
 })
 export class Dashboard implements OnInit {
+  /** 2026-11: el Defensor titular supervisa en solo consulta (sin acciones). */
+  readonly soloConsulta = inject(SesionPersonalService).esDefensorTitular();
+
   fechaHoy = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   saludo = new Date().getHours() < 12 ? 'Buenos días' : new Date().getHours() < 19 ? 'Buenas tardes' : 'Buenas noches';
   nombre = '';

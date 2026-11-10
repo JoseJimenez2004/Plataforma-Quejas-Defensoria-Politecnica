@@ -75,7 +75,9 @@
                 }
               </td>
               <td>
-                @if (paso(e).nivel !== 'fin') {
+                @if (soloConsulta) {
+                  <button type="button" class="sd-btn-borde chico" (click)="$event.stopPropagation(); abrir(e)">Ver</button>
+                } @else if (paso(e).nivel !== 'fin') {
                   <button type="button" [class]="paso(e).nivel === 'crit' || paso(e).nivel === 'warn' ? 'sd-btn chico' : 'sd-btn-borde chico'"
                           (click)="hacer(e, $event)">{{ paso(e).boton }}</button>
                 } @else {

@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { SesionPersonalService } from '../../core/services/sesion-personal.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
@@ -29,6 +30,9 @@ const POR_PAGINA = 10;
   styleUrl: './bandeja.css'
 })
 export class Bandeja implements OnInit {
+  /** 2026-11: el Defensor titular supervisa en solo consulta (sin acciones). */
+  readonly soloConsulta = inject(SesionPersonalService).esDefensorTitular();
+
   readonly grupos = GRUPOS;
   readonly claseEtapa = claseEtapa;
   readonly colorPlazo = colorPlazo;

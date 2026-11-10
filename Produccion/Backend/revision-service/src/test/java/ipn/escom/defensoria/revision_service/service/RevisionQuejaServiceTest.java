@@ -227,6 +227,20 @@ class RevisionQuejaServiceTest {
     @DisplayName("Turnado (CU-R04)")
     class Turnado {
 
+        private PersonalAdministrativo analista;
+
+        /** 2026-11: se turna a un ANALISTA de Primer Contacto (antes, a un abogado). */
+        @org.junit.jupiter.api.BeforeEach
+        void analistaActivo() {
+            analista = new PersonalAdministrativo();
+            analista.setId(7L);
+            analista.setNombreCompleto(DEFENSOR);
+            analista.setCorreoInstitucional("laura@ipn.mx");
+            analista.setRol(ipn.escom.defensoria.revision_service.entity.RolStaff.ANALISTA_PRIMER_CONTACTO);
+            org.mockito.Mockito.lenient().when(personalRepository.findFirstByNombreCompletoAndActivoTrue(DEFENSOR))
+                    .thenReturn(Optional.of(analista));
+        }
+
         private PrimerContactoIngresoResponse respuestaPc(String folio) {
             PrimerContactoIngresoResponse r = new PrimerContactoIngresoResponse();
             r.setFolio(folio);
@@ -236,25 +250,31 @@ class RevisionQuejaServiceTest {
         @Test
         void turnar_quejaMia_creaExpedienteEnPrimerContacto() {
             tomadaPor(YO);
-            when(primerContacto.enviarAPrimerContacto(queja)).thenReturn(respuestaPc(FOLIO_PC));
-            PersonalAdministrativo defensor = new PersonalAdministrativo();
-            defensor.setCorreoInstitucional("laura@ipn.mx");
-            when(personalRepository.findFirstByNombreCompletoAndActivoTrue(DEFENSOR)).thenReturn(Optional.of(defensor));
+            when(primerContacto.enviarAPrimerContacto(queja, 7L, DEFENSOR)).thenReturn(respuestaPc(FOLIO_PC));
 
             Queja r = servicio.turnar(FOLIO, DEFENSOR, "Urgente", YO);
 
             assertEquals(RevisionQuejaService.TURNADA, r.getEstatus(), "Pasa a TURNADA");
             assertEquals(FOLIO_PC, r.getFolioPrimerContacto(), "Guarda el folio de Primer Contacto");
             assertEquals("Primer Contacto", r.getAreaTurnada(), "Área fija");
-            assertEquals(DEFENSOR, r.getDefensorAsignado(), "Defensor asignado");
+            assertEquals(DEFENSOR, r.getDefensorAsignado(), "Analista asignado (responsable actual)");
             verify(notificaciones).notificarPersonal(eq("laura@ipn.mx"), anyString(), anyString(), eq(""));
         }
 
         @Test
         void turnar_sinDefensor_lanzaExcepcion() {
             RuntimeException ex = assertThrows(RuntimeException.class, () -> servicio.turnar(FOLIO, " ", null, YO));
-            assertEquals("Selecciona el defensor responsable antes de turnar.", ex.getMessage(), "RN-R04");
-            verify(primerContacto, never()).enviarAPrimerContacto(any());
+            assertEquals("Selecciona el analista de Primer Contacto antes de turnar.", ex.getMessage(), "RN-R04");
+            verify(primerContacto, never()).enviarAPrimerContacto(any(), any(), any());
+        }
+
+        @Test
+        void turnar_aUnAbogado_lanzaExcepcion() {
+            analista.setRol(ipn.escom.defensoria.revision_service.entity.RolStaff.SUBDEFENSOR);
+            RuntimeException ex = assertThrows(RuntimeException.class, () -> servicio.turnar(FOLIO, DEFENSOR, null, YO));
+            assertEquals("Selecciona un analista de Primer Contacto activo antes de turnar.", ex.getMessage(),
+                    "Solo analistas de Primer Contacto reciben quejas turnadas");
+            verify(primerContacto, never()).enviarAPrimerContacto(any(), any(), any());
         }
 
         @Test
@@ -265,7 +285,7 @@ class RevisionQuejaServiceTest {
             Queja r = servicio.turnar(FOLIO, DEFENSOR, null, YO);
 
             assertSame(queja, r, "Regresa la misma queja sin cambios");
-            verify(primerContacto, never()).enviarAPrimerContacto(any());
+            verify(primerContacto, never()).enviarAPrimerContacto(any(), any(), any());
             verify(quejaRepository, never()).save(any());
         }
 
@@ -279,7 +299,7 @@ class RevisionQuejaServiceTest {
         @Test
         void turnar_primerContactoFalla_noGuardaLaQueja() {
             tomadaPor(YO);
-            when(primerContacto.enviarAPrimerContacto(queja)).thenThrow(new RuntimeException("Primer Contacto no responde"));
+            when(primerContacto.enviarAPrimerContacto(queja, 7L, DEFENSOR)).thenThrow(new RuntimeException("Primer Contacto no responde"));
             assertThrows(RuntimeException.class, () -> servicio.turnar(FOLIO, DEFENSOR, null, YO), "Propaga el error");
             verify(quejaRepository, never()).save(any());
             assertEquals(RevisionQuejaService.EN_VALIDACION, queja.getEstatus(), "La queja sigue en validación");

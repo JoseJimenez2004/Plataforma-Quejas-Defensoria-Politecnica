@@ -1,5 +1,6 @@
 package ipn.escom.defensoria.subdefensoria.service;
 
+import java.util.function.Predicate;
 import ipn.escom.defensoria.subdefensoria.dto.BandejaNuevaDTO;
 import ipn.escom.defensoria.subdefensoria.entity.EstatusExpediente;
 import ipn.escom.defensoria.subdefensoria.entity.EstatusOficio;
@@ -31,15 +32,17 @@ public class BandejaInvestigacionService {
         this.oficioRepository = oficioRepository;
     }
 
-    public List<BandejaNuevaDTO> obtenerQuejasNuevas() {
+    public List<BandejaNuevaDTO> obtenerQuejasNuevas(Predicate<ExpedienteInvestigacion> visibles) {
         List<BandejaNuevaDTO> resultado = new java.util.ArrayList<>();
 
-        expedienteRepository.findByEstatusOrderByFechaAdmisionAsc(EstatusExpediente.RECIBIDO)
+        expedienteRepository.findByEstatusOrderByFechaAdmisionAsc(EstatusExpediente.RECIBIDO).stream()
+                .filter(visibles)
                 .forEach(e -> resultado.add(convertirADTO(e, FaseOficio.SOLICITUD_INFORMACION)));
 
         // En investigación (abierto o con un acuerdo rechazado) y sin oficio pendiente: toca
         // emitir el oficio.
         expedienteRepository.findByEstatusOrderByFechaAdmisionAsc(EstatusExpediente.EN_INVESTIGACION).stream()
+                .filter(visibles)
                 .filter(e -> !oficioRepository.existsByExpedienteIdAndEstatus(e.getId(), EstatusOficio.EN_ESPERA)
                         && !oficioRepository.existsByExpedienteIdAndEstatus(e.getId(), EstatusOficio.VENCIDO))
                 .forEach(e -> resultado.add(convertirADTO(e, FaseOficio.SOLICITUD_INFORMACION)));

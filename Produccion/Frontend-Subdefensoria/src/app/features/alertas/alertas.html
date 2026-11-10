@@ -26,8 +26,10 @@
                 <td>{{ formatearFecha(a.fechaLimite) }}</td>
                 <td><span class="sd-chip chip-venc">+{{ a.diasRetraso }} días</span></td>
                 <td (click)="$event.stopPropagation()"><div class="acciones">
+                  @if (!soloConsulta) {
                   <button type="button" class="sd-btn chico" (click)="recordatorio(expedienteDe(a))">Enviar recordatorio</button>
                   <button type="button" class="sd-btn-borde chico" (click)="respuesta(expedienteDe(a))">Registrar respuesta</button>
+                  }
                 </div></td>
               </tr>
             }
@@ -53,8 +55,10 @@
                 </td>
                 <td><span class="sd-chip" [class]="(diasRestantes(e) ?? 99) <= 3 ? 'sd-chip chip-en-espera-oficio' : 'sd-chip chip-concluido'">{{ diasRestantes(e) }} días</span></td>
                 <td (click)="$event.stopPropagation()"><div class="acciones">
+                  @if (!soloConsulta) {
                   <button type="button" class="sd-btn-borde chico" (click)="respuesta(e)">Registrar respuesta</button>
                   <button type="button" class="sd-btn-borde chico" (click)="recordatorio(e)">Recordatorio</button>
+                  }
                 </div></td>
               </tr>
             }

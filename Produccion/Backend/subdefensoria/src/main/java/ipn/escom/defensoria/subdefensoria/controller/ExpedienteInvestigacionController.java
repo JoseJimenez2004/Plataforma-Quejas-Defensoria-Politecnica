@@ -1,5 +1,7 @@
 package ipn.escom.defensoria.subdefensoria.controller;
 
+import org.springframework.security.core.Authentication;
+import ipn.escom.defensoria.subdefensoria.service.AbogadoSesionService;
 import ipn.escom.defensoria.subdefensoria.entity.EstatusExpediente;
 import ipn.escom.defensoria.subdefensoria.service.TransicionExpedienteService;
 import ipn.escom.defensoria.subdefensoria.dto.ExpedienteInvestigacionDTO;
@@ -24,12 +26,15 @@ public class ExpedienteInvestigacionController {
     private final ExpedienteInvestigacionRepository expedienteRepository;
     private final ExpedienteResumenService expedienteResumenService;
     private final TransicionExpedienteService transicionService;
+    private final AbogadoSesionService abogadoSesion;
 
     public ExpedienteInvestigacionController(
             ExpedienteInvestigacionRepository expedienteRepository,
             ExpedienteResumenService expedienteResumenService,
-            TransicionExpedienteService transicionService
+            TransicionExpedienteService transicionService,
+            AbogadoSesionService abogadoSesion
     ) {
+        this.abogadoSesion = abogadoSesion;
         this.expedienteRepository = expedienteRepository;
         this.expedienteResumenService = expedienteResumenService;
         this.transicionService = transicionService;
@@ -37,13 +42,16 @@ public class ExpedienteInvestigacionController {
 
     /** Bandeja unificada: todos los expedientes, cualquier estatus, con su progreso. */
     @GetMapping
-    public List<ExpedienteResumenDTO> listarTodos() {
-        return expedienteResumenService.listarTodos();
+    public List<ExpedienteResumenDTO> listarTodos(Authentication authentication) {
+        // 2026-11: el abogado solo ve los suyos; el Defensor titular ve todos.
+        return expedienteResumenService.listarTodos(abogadoSesion.visibles(authentication));
     }
 
     @GetMapping("/folio/{folio}")
-    public ExpedienteInvestigacionDTO obtenerPorFolio(@PathVariable String folio) {
-        return convertir(buscar(folio));
+    public ExpedienteInvestigacionDTO obtenerPorFolio(@PathVariable String folio, Authentication authentication) {
+        ExpedienteInvestigacion e = buscar(folio);
+        abogadoSesion.exigirAcceso(e, authentication);
+        return convertir(e);
     }
 
     /*
@@ -53,8 +61,9 @@ public class ExpedienteInvestigacionController {
      * consultan el expediente y eso no es "abrirlo".
      */
     @PostMapping("/folio/{folio}/iniciar-investigacion")
-    public ExpedienteInvestigacionDTO iniciarInvestigacion(@PathVariable String folio) {
+    public ExpedienteInvestigacionDTO iniciarInvestigacion(@PathVariable String folio, Authentication authentication) {
         ExpedienteInvestigacion e = buscar(folio);
+        abogadoSesion.exigirAcceso(e, authentication);
         if (EstatusExpediente.RECIBIDO.equals(e.getEstatus())) {
             e = transicionService.cambiar(e, EstatusExpediente.EN_INVESTIGACION);
         }
@@ -66,7 +75,9 @@ public class ExpedienteInvestigacionController {
      * a Primer Contacto. Cualquier otro valor responde 400.
      */
     @PatchMapping("/{id}/prioridad")
-    public ResponseEntity<?> cambiarPrioridad(@PathVariable Long id, @RequestBody Map<String, String> cuerpo) {
+    public ResponseEntity<?> cambiarPrioridad(@PathVariable Long id, @RequestBody Map<String, String> cuerpo,
+                                              Authentication authentication) {
+        abogadoSesion.exigirExpediente(id, authentication);
         String valor = cuerpo == null ? null : cuerpo.get("prioridad");
         if (!Prioridad.esValida(valor)) {
             return ResponseEntity.badRequest().body(Map.of("error", "Prioridad inválida. Usa BAJA, MEDIA, ALTA o URGENTE."));

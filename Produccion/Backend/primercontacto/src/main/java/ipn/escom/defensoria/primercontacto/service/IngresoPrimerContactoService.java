@@ -52,6 +52,8 @@ public class IngresoPrimerContactoService {
                         .descripcionHechos(request.getDescripcionHechos())
                         .fechaRecepcionOrigen(request.getFechaRecepcion())
                         .prioridad(request.getPrioridad())
+                        .analistaAsignadoId(request.getAnalistaAsignadoId())
+                        .analistaAsignadoNombre(request.getAnalistaAsignadoNombre())
                         /*
                          * Llega TURNADA (diagrama de estados); pasa a EN_ANALISIS
                          * cuando un analista abre el expediente (CU-PC-03).

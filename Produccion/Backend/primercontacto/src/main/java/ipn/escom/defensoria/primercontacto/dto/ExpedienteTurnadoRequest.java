@@ -37,4 +37,8 @@ public class ExpedienteTurnadoRequest {
     private QuejosoDTO quejoso;
 
     private List<EvidenciaDTO> evidencias;
+
+    /* Analista de Primer Contacto al que Recepción turnó la queja (2026-11). */
+    private Long analistaAsignadoId;
+    private String analistaAsignadoNombre;
 }

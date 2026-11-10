@@ -46,7 +46,7 @@ export class ResumenDialog implements OnInit, OnDestroy {
     if (!this.simulado.resumen || !this.data.texto) return;
 
     this.cargando = true;
-    this.peticion = this.resumenService.resumir(this.data.texto).subscribe({
+    this.peticion = this.resumenService.resumir(this.data.texto, this.data.folio).subscribe({
       next: (resultado) => {
         this.modelo = resultado;
         this.cargando = false;

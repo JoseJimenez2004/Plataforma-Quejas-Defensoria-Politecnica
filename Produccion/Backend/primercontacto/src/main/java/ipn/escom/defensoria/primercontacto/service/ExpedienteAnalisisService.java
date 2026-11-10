@@ -1,5 +1,7 @@
 package ipn.escom.defensoria.primercontacto.service;
 
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 import ipn.escom.defensoria.primercontacto.dto.DatosQuejaDTO;
 import ipn.escom.defensoria.primercontacto.dto.EvidenciaDTO;
 import ipn.escom.defensoria.primercontacto.dto.ExpedienteAnalisisDTO;
@@ -118,6 +120,24 @@ public class ExpedienteAnalisisService {
 
         ExpedientePrimerContacto expediente =
                 transicionService.obtenerPorFolio(folio);
+
+        /*
+         * 2026-11: solo el analista al que Recepción lo turnó puede trabajarlo. Si no tiene
+         * analista (expediente viejo que no entró en el reparto), se queda con quien lo abre.
+         */
+        if (expediente.getAnalistaAsignadoId() == null) {
+            expediente.setAnalistaAsignadoId(analista.getId());
+            expediente.setAnalistaAsignadoNombre(analista.getNombreCompleto());
+            expediente = expedienteRepository.save(expediente);
+        } else if (!expediente.getAnalistaAsignadoId().equals(analista.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Este expediente está asignado a "
+                            + (expediente.getAnalistaAsignadoNombre() != null
+                                    ? expediente.getAnalistaAsignadoNombre() : "otro analista")
+                            + "."
+            );
+        }
 
         if (EstatusExpediente.TURNADA.equals(expediente.getEstatus())) {
 

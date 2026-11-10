@@ -8,10 +8,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +22,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -60,6 +65,8 @@ class DictamenPrimerContactoServiceTest {
     private TransicionExpedienteService transicion;
     @Mock
     private NotificacionQuejosoService notificaciones;
+    @Mock
+    private JdbcTemplate jdbc;
 
     @InjectMocks
     private DictamenPrimerContactoService servicio;
@@ -81,6 +88,15 @@ class DictamenPrimerContactoServiceTest {
         lenient().when(dictamenes.save(any())).thenAnswer(inv -> inv.getArgument(0));
         lenient().when(acuerdos.findByNumeroFolioAndFechaEmisionGreaterThanEqualOrderByFechaEmisionDesc(any(), any()))
                 .thenReturn(List.of());
+        // 2026-11: el abogado elegido existe en personal_administrativo (id 30).
+        lenient().when(jdbc.query(anyString(), any(RowMapper.class), ArgumentMatchers.<Object>any()))
+                .thenAnswer(inv -> {
+                    RowMapper<?> mapper = inv.getArgument(1);
+                    ResultSet rs = mock(ResultSet.class);
+                    when(rs.getLong(1)).thenReturn(30L);
+                    when(rs.getString(2)).thenReturn(ABOGADO);
+                    return List.of(mapper.mapRow(rs, 0));
+                });
     }
 
     private static CompetenciaDTO competencia() {
@@ -100,7 +116,18 @@ class DictamenPrimerContactoServiceTest {
         verify(subdefensoria).enviarExpediente(solicitud.capture());
         assertEquals(FOLIO, solicitud.getValue().getFolioOrigen(), "Se relaciona por folio PC, no por id");
         assertEquals(ABOGADO, solicitud.getValue().getAbogadoAsesorNombre(), "Abogado elegido");
+        assertEquals(30L, solicitud.getValue().getAbogadoAsesorId(), "Viaja el id del abogado (2026-11)");
+        verify(jdbc).update(anyString(), eq(ABOGADO), eq("FOL-ABCD1234"));
         assertEquals(FOLIO_SUB, expediente.getFolioSubdefensoria(), "Guarda el folio de Subdefensoría");
+    }
+
+    @Test
+    void registrarCompetencia_abogadoInexistente_lanzaExcepcion() {
+        when(jdbc.query(anyString(), any(RowMapper.class), ArgumentMatchers.<Object>any())).thenReturn(List.of());
+
+        assertThrows(OperacionInvalidaException.class, () -> servicio.registrarCompetencia(competencia(), analista),
+                "Sin abogado válido no se turna a Subdefensoría");
+        verify(subdefensoria, never()).enviarExpediente(any());
     }
 
     @Test
