@@ -1,207 +1,289 @@
 \section{Marco Teórico}
-
-Este capítulo presenta los fundamentos teóricos que sustentan la solución propuesta y se organiza en dos bloques. El primero aborda los principios de arquitectura de software, las tecnologías empleadas para la construcción de la plataforma y los mecanismos de seguridad que permiten su operación. El segundo contempla los fundamentos relacionados con el Procesamiento de Lenguaje Natural, la representación y comparación de documentos, la recuperación de antecedentes y la generación de resúmenes narrativos. Estos elementos se integran como herramientas de apoyo para la gestión de quejas dentro de la plataforma.
-
-\subsection{Fundamentos de arquitectura de software}
-
-\label{sec:arquitectura_software}
-
-La arquitectura de software comprende las decisiones estructurales que determinan cómo se organiza un sistema, qué componentes lo conforman, cuáles son sus responsabilidades y cómo se relacionan entre sí \cite{bbva_arquitectura_software}. Estas decisiones influyen directamente en características como la capacidad de evolución, el mantenimiento y el desempeño del sistema, por lo que deben establecerse desde las primeras etapas del diseño.
-
-En una plataforma destinada a apoyar un procedimiento institucional de recepción, análisis, investigación y conclusión de quejas, la arquitectura debe permitir separar responsabilidades y establecer mecanismos adecuados para gestionar la información y los permisos de acuerdo con las funciones de cada área.
-
-\subsubsection{Atributos de calidad y el modelo ISO/IEC 25010}
-
-\label{sec:atributos_calidad}
-
-El funcionamiento de un sistema no depende únicamente de las funciones que proporciona, sino también de la calidad con la que las ejecuta. Para establecer criterios que permitan especificar y evaluar estas características, la norma ISO/IEC 25010 define un modelo de calidad del producto de software organizado en características y subcaracterísticas \cite{utel_atributos_calidad, iso25010}.
-
-En este trabajo, dicho modelo sirve como referencia para organizar los requerimientos no funcionales y establecer criterios para su evaluación. Las características consideradas pertinentes para la plataforma se resumen en la Tabla~\ref{tab:iso25010}.
-
-\rowcolors{2}{rowblue}{white}
-\small
-\renewcommand{\arraystretch}{1.25}
-\setlength{\tabcolsep}{5pt}
-
-\begin{longtable}{|p{3.3cm}|L{5.6cm}|L{5.6cm}|}
-    \caption{Características de calidad de ISO/IEC 25010 aplicadas a la plataforma}
-    \label{tab:iso25010} \\
-    \hline
-    \rowcolor{headerblue}
-    \headercell{Característica} & \headercell{Definición} & \headercell{Pertinencia en la plataforma} \\
-    \hline
-    \endfirsthead
-    \hline
-    \rowcolor{headerblue}
-    \headercell{Característica} & \headercell{Definición} & \headercell{Pertinencia en la plataforma} \\
-    \hline
-    \endhead
-    Adecuación funcional &
-    Capacidad de proporcionar las funciones necesarias de forma completa y correcta. &
-    Permite implementar correctamente las reglas y etapas del procedimiento de atención de quejas. \\ \hline
-    Eficiencia de desempeño (capacidad) &
-    Relación entre el comportamiento del sistema, el uso de recursos y los límites que puede soportar. &
-    Resulta relevante para atender peticiones y manejar evidencias sin afectar el funcionamiento del sistema. \\ \hline
-    Usabilidad &
-    Facilidad con la que usuarios específicos pueden alcanzar sus objetivos de manera eficaz y satisfactoria. &
-    Es importante debido a que la plataforma será utilizada tanto por usuarios ocasionales como por personal institucional. \\ \hline
-    Fiabilidad &
-    Capacidad de mantener un funcionamiento adecuado bajo condiciones determinadas y recuperarse ante fallos. &
-    Una falla en un componente no debe impedir el registro o seguimiento de una queja. \\ \hline
-    Seguridad &
-    Capacidad de proteger la información y permitir el acceso únicamente a usuarios autorizados. &
-    Es fundamental debido a la naturaleza de la información contenida en las quejas y a los diferentes roles de usuario. \\ \hline
-    Mantenibilidad &
-    Facilidad con la que el sistema puede analizarse, modificarse, probarse y mantenerse. &
-    Permite adaptar la plataforma ante cambios en las reglas o necesidades institucionales. \\ \hline
-    Compatibilidad y portabilidad &
-    Capacidad de coexistir e intercambiar información con otros componentes y de ejecutarse en diferentes entornos. &
-    Favorece la integración entre servicios y la reproducción del sistema en distintos entornos de ejecución. \\ \hline
-\end{longtable}
-
-\normalsize
-\setlength{\tabcolsep}{6pt}
-\renewcommand{\arraystretch}{1}
-
-Dentro de estos atributos, la seguridad adquiere especial importancia debido a la información que maneja la plataforma. En particular, la \textbf{confidencialidad} busca garantizar que la información únicamente sea accesible para quienes cuentan con autorización. De manera complementaria, la \textbf{capacidad} establece los límites que el sistema debe soportar, como el tamaño de las solicitudes o el número de usuarios concurrentes \cite{iso25010}.
-
-Además de estas características, la operación de una plataforma institucional requiere considerar la \textbf{escalabilidad}, entendida como la capacidad de atender un crecimiento en la demanda mediante la incorporación de recursos sin modificar de manera significativa el sistema \cite{microsoft_escalabilidad}. También es relevante la \textbf{trazabilidad}, que permite reconstruir las acciones realizadas sobre un expediente, identificando qué ocurrió, quién intervino y cuándo.
-
-\subsubsection{Del monolito a los microservicios}
-
-Una arquitectura \textbf{monolítica} concentra las funcionalidades de una aplicación en una única unidad de ejecución \cite{ibm_monolitica}. Este enfoque facilita el desarrollo y despliegue inicial, pero puede presentar dificultades conforme aumenta el tamaño del sistema, ya que los cambios y el escalamiento deben realizarse sobre la aplicación completa.
-
-Por otro lado, una arquitectura de \textbf{microservicios} divide la aplicación en servicios independientes, cada uno con una responsabilidad específica y una interfaz definida para comunicarse con los demás \cite{aws_microservicios}. Esta organización permite desarrollar, desplegar y escalar los componentes de manera independiente, y suele realizarse tomando como referencia las capacidades del dominio del sistema \cite{newman_microservices}.
-
-En comparación con el monolito, los microservicios permiten desplegar, escalar y probar cada componente por separado y acotan el impacto de un fallo al servicio afectado, a cambio de administrar más componentes e infraestructura.
-
-La elección entre ambos enfoques implica ventajas y compromisos. Los microservicios pueden favorecer la escalabilidad y el aprovechamiento de recursos, pero también introducen una mayor complejidad operativa \cite{villamizar_microservices}. Al tratarse de un sistema distribuido, deben considerarse aspectos como la latencia de red, los fallos parciales y la coordinación entre servicios \cite{tanenbaum_distribuidos}. Por ello, su utilización debe responder a las necesidades reales del sistema.
-
-\subsubsection{Arquitectura en capas}
-
-La arquitectura en capas organiza internamente un sistema mediante niveles con responsabilidades diferenciadas. De manera general, la capa de presentación gestiona la interacción con el usuario, la capa de negocio concentra las reglas del dominio y la capa de datos se encarga de la persistencia de la información \cite{ibm_tres_capas}.
-
-En aplicaciones web, esta separación puede reflejarse mediante controladores, servicios y repositorios. Los objetos de transferencia de datos (DTO) permiten establecer contratos entre las diferentes capas sin exponer directamente las estructuras internas. Esta organización facilita el mantenimiento, ya que los cambios pueden concentrarse en una capa determinada siempre que se mantengan los contratos establecidos entre ellas \cite{microsoft_ncapas}.
-
-Para una plataforma institucional, la separación de responsabilidades resulta especialmente útil porque permite mantener las reglas del procedimiento en componentes específicos y facilita su modificación cuando existen cambios en las necesidades o disposiciones que regulan la operación \cite{coticolop_tres_capas}. Asimismo, favorece la realización de pruebas sobre componentes individuales y permite incorporar funciones transversales, como el control de acceso y el manejo de errores \cite{pozalujan_arquitectura}.
-
-\subsubsection{Comunicación entre servicios}
-
-La división del sistema en microservicios requiere mecanismos que permitan la comunicación entre sus componentes. Estos mecanismos pueden ser principalmente síncronos o asíncronos.
-
-La \textbf{comunicación síncrona} sigue un modelo de petición-respuesta: un servicio solicita información o una operación a otro y espera su resultado. REST (\textit{Representational State Transfer}) es uno de los estilos más utilizados para este propósito y emplea recursos identificados mediante URI y los métodos del protocolo HTTP \cite{fielding_rest}. Su principal ventaja es la simplicidad y la interoperabilidad, aunque genera una dependencia temporal entre los servicios involucrados.
-
-El contrato de una API REST puede documentarse mediante la especificación OpenAPI, que permite describir las operaciones disponibles y generar documentación accesible para los desarrolladores \cite{openapi_spec}.
-
-La \textbf{comunicación asíncrona}, en cambio, utiliza mecanismos como colas o eventos para desacoplar al emisor del receptor. El servicio que genera un evento puede continuar con su operación sin esperar una respuesta inmediata \cite{stopford_event_driven}. Este enfoque puede mejorar la tolerancia ante fallos y facilitar la atención de picos de carga, aunque aumenta la complejidad del sistema.
-
-Cuando se emplea comunicación síncrona, es necesario establecer mecanismos que eviten que la falla de un servicio afecte al resto del sistema. Entre ellos destacan los \textbf{tiempos de espera} (\textit{timeouts}), que limitan cuánto tiempo puede permanecer una solicitud esperando una respuesta, y la \textbf{degradación controlada}, mediante la cual una operación secundaria puede fallar sin impedir que se complete la operación principal \cite{nygard_release_it}.
-
-
-\subsubsection{Persistencia de datos}
-
-\label{sec:persistencia_datos}
-
-Las bases de datos relacionales organizan la información en tablas relacionadas mediante claves y proporcionan propiedades ACID: atomicidad, consistencia, aislamiento y durabilidad \cite{ibm_postgresql}. Estas propiedades son relevantes en sistemas institucionales donde la información debe conservarse de manera íntegra y consistente.
-
-PostgreSQL es un sistema gestor de bases de datos relacional de código abierto que proporciona soporte para transacciones, diferentes tipos de datos, índices y mecanismos de respaldo y restauración \cite{schonig_postgresql15}. En aplicaciones desarrolladas con Java, la interacción entre los objetos de la aplicación y las tablas de la base de datos puede realizarse mediante un sistema de mapeo objeto-relacional (ORM). Jakarta Persistence (JPA) proporciona la especificación correspondiente y Hibernate es una de sus implementaciones más utilizadas \cite{hibernate_orm}.
-
-En arquitecturas de microservicios existen diferentes estrategias para organizar la persistencia. El patrón de \textit{base de datos por servicio} establece que cada servicio sea responsable de sus propios datos, reduciendo el acoplamiento entre componentes \cite{richardson_microservices}. Otra posibilidad es utilizar una \textit{base de datos compartida}, en la que varios servicios acceden a las mismas tablas. Esta alternativa simplifica determinadas operaciones, aunque aumenta la dependencia entre los servicios \cite{richardson_microservices, kleppmann_ddia}. La elección entre ambas depende del equilibrio entre autonomía de los servicios, facilidad de operación y consistencia de los datos.
-
-\subsection{Tecnologías de construcción y ejecución}
-
-\label{sec:tecnologias}
-
-Los principios arquitectónicos anteriores se materializan mediante un conjunto de tecnologías utilizadas para construir, ejecutar y publicar la plataforma. Estas tecnologías se agrupan de acuerdo con la función que desempeñan dentro del sistema.
-
-\subsubsection{Plataforma del lado del servidor}
-
-Java es un lenguaje de programación orientado a objetos que se ejecuta sobre la máquina virtual de Java (JVM), lo que favorece su portabilidad entre diferentes sistemas operativos \cite{oracle_java}. Su madurez, tipado estático y amplio ecosistema lo han convertido en una tecnología utilizada en sistemas empresariales de larga duración \cite{ibm_java}.
-
-Sobre Java se utiliza Spring Boot, un marco de trabajo que simplifica la configuración y puesta en funcionamiento de aplicaciones mediante autoconfiguración, servidor embebido y dependencias preconfiguradas \cite{ibm_spring_boot}. Dentro de este ecosistema se emplean diferentes componentes para cubrir necesidades específicas:
-
-\begin{itemize}
-    \item \textbf{Spring Data JPA}, utilizado para facilitar el acceso a los datos mediante repositorios y el mapeo objeto-relacional \cite{hibernate_orm}.
-    
-    \item \textbf{Spring Security}, empleado para implementar mecanismos de autenticación y autorización mediante filtros y reglas de acceso \cite{spring_security_ref}.
-    
-    \item \textbf{OpenFeign} y otros clientes HTTP, utilizados para establecer comunicación entre servicios.
-    
-    \item \textbf{springdoc-openapi}, utilizado para documentar las interfaces REST mediante la especificación OpenAPI \cite{openapi_spec}.
-\end{itemize}
-
-La construcción y administración de dependencias se realiza mediante Apache Maven, que permite compilar el proyecto, ejecutar pruebas y generar los artefactos de cada servicio \cite{maven_ref}.
-
-Para los componentes relacionados con inteligencia artificial se emplea Python, lenguaje que dispone de bibliotecas especializadas en Procesamiento de Lenguaje Natural, recuperación de información y aprendizaje automático \cite{aws_python}. Los fundamentos específicos de estos componentes se desarrollan posteriormente en las secciones correspondientes.
-
-\subsubsection{Interfaz de usuario}
-
-Angular es un marco de trabajo utilizado para desarrollar aplicaciones web de página única (\textit{single-page applications}), en las que la navegación y actualización de la interfaz se realizan principalmente desde el navegador \cite{angular_overview}. Su estructura se basa en componentes reutilizables e incorpora mecanismos para gestionar rutas, formularios, peticiones HTTP e inyección de dependencias \cite{imagina_angular}.
-
-Entre sus características se encuentran los componentes independientes (\textit{standalone}), las señales (\textit{signals}) para la gestión reactiva del estado y la carga diferida de componentes y rutas, que permite descargar determinados recursos únicamente cuando son necesarios \cite{angular_signals}.
-
-Una aplicación Angular se compila en archivos estáticos, principalmente HTML, CSS y JavaScript, que pueden ser entregados por un servidor web. Además, Angular proporciona guardas para controlar la navegación y interceptores HTTP que permiten aplicar acciones comunes a las peticiones, como la incorporación de credenciales de autenticación.
-
-\subsubsection{Contenedores}
-
-Los contenedores permiten empaquetar una aplicación junto con sus dependencias en una unidad aislada que comparte el núcleo del sistema operativo anfitrión \cite{redhat_docker}. A diferencia de las máquinas virtuales, no requieren incluir un sistema operativo completo, por lo que utilizan menos recursos y pueden iniciarse rápidamente.
-
-Una de sus principales ventajas es la reproducibilidad, ya que una misma imagen puede ejecutarse en diferentes entornos manteniendo una configuración consistente. Esto resulta especialmente útil en arquitecturas de microservicios, donde cada servicio puede distribuirse como una imagen independiente.
-
-Podman es un motor de contenedores compatible con el estándar OCI y con las imágenes utilizadas por Docker. Una de sus características es que no requiere un proceso servidor central permanente para administrar los contenedores \cite{podman_docs}. Además, los contenedores admiten límites de recursos y políticas de reinicio; en implementaciones de escala moderada, su administración puede resolverse con guiones de despliegue en lugar de plataformas de orquestación \cite{burns_kubernetes}.
-
-
-\subsubsection{Proxy inverso}
-
-Un proxy inverso es un servidor que recibe las solicitudes provenientes del exterior y las dirige hacia los servicios internos correspondientes \cite{nginx_org}. Además de realizar el enrutamiento, puede centralizar funciones como la terminación de conexiones TLS, la entrega de contenido estático, el balanceo de carga, el control del tráfico y determinadas políticas de seguridad \cite{khanal2023nginx}.
-
-En una aplicación web, el proxy inverso puede servir los archivos que conforman la interfaz y dirigir las solicitudes de la API hacia los microservicios correspondientes. De esta manera, el cliente puede interactuar con un punto de entrada único mientras la separación interna de los servicios se mantiene.
-
-\subsection{Seguridad aplicada al software}
-
-\label{sec:seguridad_software}
-
-La seguridad es un aspecto fundamental en una plataforma para la gestión de quejas, debido a que esta puede contener información personal y datos relacionados con hechos que podrían tener consecuencias administrativas o jurídicas. Por ello, es necesario implementar mecanismos que permitan proteger la información, controlar el acceso y reducir los riesgos asociados con las aplicaciones web.
-
-Como referencia para identificar amenazas comunes se considera la lista OWASP Top 10, que reúne categorías de vulnerabilidades relevantes para aplicaciones web, entre ellas el control de acceso defectuoso, las fallas criptográficas y la inyección \cite{owasp_top10}.
-
-\subsubsection{Autenticación basada en tokens}
-
-En una arquitectura distribuida, la autenticación basada en tokens permite que un usuario sea identificado mediante una credencial que puede ser validada por diferentes servicios sin mantener una sesión compartida en memoria.
-
-JSON Web Token (JWT) es un formato utilizado para transmitir información sobre la identidad y autorización de un usuario \cite{rfc7519}. Un JWT está compuesto por encabezado, carga útil y firma. La carga útil puede contener información como la identidad del usuario, su rol y los tiempos de emisión y expiración. La firma permite verificar que el contenido no haya sido alterado \cite{spring_security_jwt}.
-
-Una ventaja de este mecanismo es que cada servicio puede validar el token de manera local. Sin embargo, la protección de las claves utilizadas para generar y verificar las firmas es fundamental para evitar que terceros puedan generar credenciales válidas.
-
-\subsubsection{Almacenamiento seguro de contraseñas}
-
-Las contraseñas no deben almacenarse directamente en la base de datos. En su lugar, deben procesarse mediante funciones de resumen diseñadas específicamente para contraseñas, utilizando un valor aleatorio denominado \textit{salt} \cite{owasp_password_storage}.
-
-BCrypt es una función utilizada para el almacenamiento seguro de contraseñas que incorpora un \textit{salt} y permite establecer un factor de costo para aumentar el esfuerzo computacional necesario para calcular el resumen \cite{provos_bcrypt}. Durante la autenticación, la contraseña proporcionada por el usuario se procesa nuevamente y el resultado se compara con el valor almacenado.
-
-Este principio también puede aplicarse a secretos temporales, como códigos de recuperación, estableciendo una vigencia limitada y restricciones sobre los intentos de validación \cite{nist_80063b}.
-
-\subsubsection{Control de acceso basado en roles}
-
-La autenticación permite determinar quién es un usuario, mientras que la autorización establece qué acciones puede realizar. El control de acceso basado en roles (RBAC) asigna permisos a roles y posteriormente relaciona a cada usuario con uno o más de ellos \cite{sandhu_rbac}.
-
-Este mecanismo debe aplicar el principio de menor privilegio, de modo que cada usuario tenga únicamente los permisos necesarios para desempeñar sus funciones. En una plataforma institucional, esta separación permite diferenciar las operaciones disponibles para cada tipo de usuario.
-
-El control por roles debe complementarse con la validación de la propiedad de los recursos. Cuando una solicitud se refiere a una queja o expediente específico, el servidor debe comprobar que el usuario tenga autorización para acceder a ese recurso. Esta validación debe realizarse en el servidor y no depender únicamente de restricciones implementadas en la interfaz, ya que un usuario podría intentar invocar directamente un punto de acceso \cite{owasp_top10}.
-
-\subsubsection{Cifrado en tránsito}
-
-La información transmitida entre el navegador y el servidor debe protegerse mediante TLS (\textit{Transport Layer Security}), protocolo que proporciona cifrado y autenticación sobre redes no confiables. TLS 1.3 introdujo mejoras en el establecimiento de las conexiones y eliminó mecanismos criptográficos considerados inseguros en versiones anteriores \cite{rescorla_tls13}.
-
-La autenticidad del servidor se establece mediante certificados digitales emitidos por autoridades de certificación. Let's Encrypt proporciona certificados mediante el protocolo ACME, lo que permite automatizar su emisión y renovación \cite{letsencrypt}.
-
-El uso de TLS puede complementarse con mecanismos como HTTP Strict Transport Security (HSTS), que indica al navegador que el sitio debe utilizar HTTPS \cite{rfc6797}. También deben considerarse configuraciones que eviten la exposición indirecta de información mediante técnicas como BREACH, particularmente cuando se comprimen respuestas que contienen datos sensibles junto con información controlada por el usuario.
-
-En conjunto, estos mecanismos permiten proteger la información durante su transmisión y reducir riesgos asociados con la exposición de credenciales, tokens y contenido de las quejas.
-
-
-
-
+	Este capítulo reúne los fundamentos conceptuales sobre los que se sustenta la solución propuesta y se organiza en dos bloques. El primero desarrolla los principios arquitectónicos, las tecnologías de construcción y los mecanismos de seguridad necesarios para el funcionamiento de la plataforma web. El segundo aborda los fundamentos del Procesamiento de Lenguaje Natural, las técnicas de representación y comparación de documentos, la recuperación de antecedentes y la generación automática de resúmenes narrativos. Estos componentes de inteligencia artificial se consideran herramientas de apoyo para la gestión de quejas y se integran dentro de la arquitectura general de la plataforma.
+	
+	\subsection{Fundamentos de arquitectura de software}
+	\label{sec:arquitectura_software}
+	La arquitectura de software es el conjunto de decisiones estructurales de alto nivel que definen
+	cómo se organiza un sistema: qué componentes lo integran, qué responsabilidad tiene cada uno y cómo
+	se comunican entre sí \cite{bbva_arquitectura_software}. Esas decisiones son costosas de revertir
+	una vez que el sistema está en operación, de modo que conviene tomarlas de forma explícita y
+	justificada desde el diseño, y no dejarlas al azar de la implementación.
+	
+	\subsubsection{Atributos de calidad}
+	Una arquitectura no se evalúa únicamente por las funciones que permite construir, sino por los
+	atributos de calidad que habilita o dificulta \cite{utel_atributos_calidad}. Los relevantes para
+	una plataforma institucional de gestión de quejas son los siguientes:
+	
+	\begin{itemize}
+		\item \textbf{Escalabilidad:} capacidad de atender un volumen creciente de usuarios y
+		peticiones agregando recursos, sin rediseñar el sistema \cite{microsoft_escalabilidad}. Se
+		distingue entre escalamiento vertical ---dar más capacidad a la misma máquina--- y horizontal
+		---agregar más instancias que reparten la carga--- \cite{aws_arquitectura_distribuida}.
+	
+		\item \textbf{Mantenibilidad:} facilidad con que el sistema puede modificarse para corregir
+		defectos o incorporar funciones nuevas. Depende directamente de qué tan acopladas estén sus
+		partes.
+	
+		\item \textbf{Disponibilidad:} proporción del tiempo en que el sistema responde correctamente.
+		En un sistema distribuido, el fallo de un componente no debe propagarse al resto
+		\cite{nygard_release_it}.
+	
+		\item \textbf{Seguridad y confidencialidad:} capacidad de proteger la información frente a
+		accesos no autorizados, atributo crítico cuando los datos administrados son denuncias que
+		identifican a personas.
+	
+		\item \textbf{Trazabilidad:} posibilidad de reconstruir qué ocurrió con cada expediente y
+		cuándo, requisito tanto operativo como jurídico en el contexto de la Defensoría.
+	\end{itemize}
+	
+	\subsubsection{Del monolito a los microservicios}
+	En una arquitectura \textbf{monolítica} toda la funcionalidad se empaqueta y despliega como una
+	única unidad ejecutable \cite{ibm_monolitica}. Este enfoque es simple de desarrollar y desplegar en
+	etapas tempranas, pero conforme el sistema crece presenta problemas conocidos: cualquier cambio
+	obliga a reconstruir y desplegar la aplicación completa, el escalamiento debe hacerse en bloque
+	aunque solo un componente esté saturado, y el acoplamiento interno dificulta que varias personas
+	trabajen en paralelo sin interferir entre sí.
+	
+	Una arquitectura de \textbf{microservicios} descompone la aplicación en un conjunto de servicios
+	pequeños e independientes, cada uno con una responsabilidad acotada, su propio ciclo de despliegue
+	y una interfaz bien definida para comunicarse con los demás \cite{aws_microservicios}. Cada
+	servicio puede desarrollarse, desplegarse y escalarse por separado, lo que reduce el impacto de un
+	cambio y permite dimensionar los recursos según la carga real de cada componente. La
+	Tabla~\ref{tab:monolito_vs_microservicios} contrasta ambos estilos.
+	
+	\rowcolors{2}{rowblue}{white}
+	
+	\small
+	\renewcommand{\arraystretch}{1.25}
+	\setlength{\tabcolsep}{5pt}
+	
+	\begin{longtable}{|p{3.2cm}|p{5.4cm}|p{5.4cm}|}
+		\caption{Comparación entre arquitectura monolítica y de microservicios}
+		\label{tab:monolito_vs_microservicios} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Criterio} & \headercell{Monolito} & \headercell{Microservicios} \\
+		\hline
+		\endfirsthead
+	
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Criterio} & \headercell{Monolito} & \headercell{Microservicios} \\
+		\hline
+		\endhead
+	
+		Unidad de despliegue & La aplicación completa. & Cada servicio por separado. \\ \hline
+		Escalamiento & En bloque, aunque solo un módulo lo requiera. & Selectivo, por servicio. \\ \hline
+		Acoplamiento & Alto: los módulos comparten proceso y memoria. & Bajo: se comunican por
+		interfaces explícitas. \\ \hline
+		Impacto de un fallo & Puede detener toda la aplicación. & Acotado al servicio afectado si el
+		diseño lo aísla. \\ \hline
+		Complejidad operativa & Baja: un solo artefacto que administrar. & Alta: más artefactos, redes
+		y puntos de fallo. \\ \hline
+		Trabajo en equipo & Los cambios compiten sobre el mismo código. & Equipos independientes por
+		servicio. \\ \hline
+	\end{longtable}
+	
+	\normalsize
+	\setlength{\tabcolsep}{6pt}
+	\renewcommand{\arraystretch}{1}
+	
+	La elección entre ambos estilos no es absoluta. Estudios comparativos que despliegan una misma
+	aplicación bajo los dos patrones muestran que los microservicios mejoran el aprovechamiento de
+	recursos y la escalabilidad, pero a costa de una complejidad operativa considerablemente mayor
+	\cite{villamizar_microservices}. Un sistema distribuido introduce problemas que un monolito no
+	tiene ---latencia de red, fallos parciales, consistencia entre nodos--- y que deben resolverse de
+	forma explícita \cite{tanenbaum_distribuidos}. Por esa razón existen posiciones intermedias, como
+	mantener servicios independientes que comparten una única base de datos: una decisión que sacrifica
+	autonomía de datos a cambio de simplicidad operativa, razonable a escala institucional pequeña y
+	que conviene documentar como tal.
+	
+	\subsubsection{Arquitectura en capas}
+	De forma transversal al estilo anterior, la organización interna de cada servicio suele seguir un
+	esquema en capas, en el que la presentación, la lógica de negocio y el acceso a datos se separan en
+	niveles con responsabilidades distintas \cite{ibm_tres_capas}. La capa de presentación expone la
+	interfaz ---en un servicio web, los puntos de acceso HTTP---; la capa de negocio concentra las
+	reglas del dominio; y la capa de datos se ocupa de la persistencia. La ventaja principal es que un
+	cambio en una capa no obliga a modificar las demás mientras se respete el contrato entre ellas
+	\cite{microsoft_ncapas}.
+	
+	Esta separación resulta especialmente valiosa cuando las reglas del dominio son normativas, como en
+	el caso de una defensoría: al concentrarlas en una sola capa, un cambio en el reglamento se traduce
+	en modificaciones localizadas y no dispersas por toda la aplicación \cite{coticolop_tres_capas}.
+	Sobre esa base pueden además incorporarse políticas transversales ---calidad de servicio,
+	monitoreo, control de acceso--- sin reescribir la lógica de negocio \cite{pozalujan_arquitectura}.
+	
+	\subsubsection{Comunicación entre servicios}
+	Una vez dividido el sistema, sus partes deben comunicarse. Existen dos familias de mecanismos.
+	
+	La \textbf{comunicación síncrona} sigue el modelo petición-respuesta: un servicio llama a otro y
+	espera el resultado antes de continuar. El estilo arquitectónico dominante para ello es REST
+	(\textit{Representational State Transfer}), formulado por Fielding, que organiza la interfaz en
+	torno a recursos identificados por URI y manipulados mediante los verbos del protocolo HTTP, con
+	comunicación sin estado entre peticiones \cite{fielding_rest}. Su ventaja es la simplicidad
+	conceptual y la interoperabilidad; su desventaja, que acopla temporalmente a los servicios, pues si
+	el servicio invocado no responde, el invocador queda bloqueado o debe manejar el fallo.
+	
+	La \textbf{comunicación asíncrona} desacopla al emisor del receptor mediante colas o flujos de
+	eventos: el servicio origen publica un evento y continúa, sin esperar a que alguien lo consuma
+	\cite{stopford_event_driven}. Ofrece mayor tolerancia a fallos y mejor absorción de picos de carga,
+	al precio de una complejidad notablemente mayor y de consistencia eventual en los datos.
+	
+	Cuando el número de servicios crece, la comunicación directa entre ellos se vuelve difícil de
+	administrar y aparecen componentes de apoyo ---registro y descubrimiento de servicios,
+	configuración centralizada, balanceo de carga--- que resuelven de forma estándar esa
+	infraestructura transversal \cite{spring_cloud}.
+	
+	\subsubsection{Persistencia de datos}
+	La mayoría de los sistemas de información institucionales descansa sobre bases de datos
+	relacionales, que organizan la información en tablas vinculadas por claves y garantizan las
+	propiedades ACID: atomicidad, consistencia, aislamiento y durabilidad \cite{ibm_postgresql}. Esas
+	garantías son especialmente pertinentes cuando cada registro corresponde a un expediente con
+	efectos jurídicos, donde una escritura parcial o una lectura inconsistente no son aceptables.
+	
+	PostgreSQL es un gestor relacional de código abierto ampliamente utilizado en producción, con
+	soporte para tipos de datos binarios, transacciones concurrentes, índices avanzados y mecanismos de
+	respaldo y restauración \cite{schonig_postgresql15}. El diseño de la capa de datos debe considerar,
+	además, cómo evolucionará el esquema con el tiempo y cómo se mantiene la integridad cuando varios
+	componentes acceden al mismo almacén, problema central en el diseño de sistemas intensivos en datos
+	\cite{kleppmann_ddia}.
+	
+	\subsection{Tecnologías de construcción y ejecución}
+	\label{sec:tecnologias}
+	Definidos los principios arquitectónicos, esta sección describe las tecnologías concretas que los
+	materializan, agrupadas por capa.
+	
+	\subsubsection{Plataforma del lado del servidor}
+	Java es un lenguaje de programación orientado a objetos, compilado a un código intermedio que se
+	ejecuta sobre una máquina virtual (JVM), lo que le da independencia respecto del sistema operativo
+	subyacente \cite{oracle_java}. Su madurez, su tipado estático y su ecosistema de bibliotecas lo han
+	consolidado en el desarrollo de sistemas empresariales de larga vida \cite{ibm_java}.
+	
+	Spring Boot es un marco de trabajo construido sobre el ecosistema Spring que reduce
+	significativamente la configuración necesaria para levantar una aplicación: incorpora
+	autoconfiguración, un servidor de aplicaciones embebido y un modelo de dependencias preempaquetadas
+	que permite pasar de cero a un servicio operativo con poco código de infraestructura
+	\cite{ibm_spring_boot}. Ofrece además componentes para exponer el estado interno de la aplicación
+	---métricas, verificaciones de salud, información de entorno--- indispensables para operar un
+	sistema distribuido sin acceso directo a un depurador \cite{alvarezcaules_actuator}.
+	
+	Para el desarrollo de los componentes de inteligencia
+artificial se emplea Python, un lenguaje de programación
+de propósito general que dispone de bibliotecas
+especializadas en Procesamiento de Lenguaje Natural,
+recuperación de información y aprendizaje automático
+\cite{aws_python}.
+	
+	\subsubsection{Interfaz de usuario}
+	Angular es un marco de trabajo para construir aplicaciones web de página única (\textit{single-page
+	applications}), en las que la navegación ocurre en el navegador sin recargar el documento completo
+	\cite{angular_overview}. Está organizado en componentes reutilizables que encapsulan plantilla,
+	estilos y lógica, e incorpora de forma nativa enrutamiento, gestión de formularios, cliente HTTP e
+	inyección de dependencias, lo que evita ensamblar esas piezas a partir de bibliotecas sueltas
+	\cite{imagina_angular}. El resultado de su compilación es un conjunto de archivos estáticos
+	---HTML, CSS y JavaScript--- que cualquier servidor web puede entregar, sin necesidad de ejecutar
+	código del lado del servidor para la interfaz.
+	
+	\subsubsection{Contenedores}
+	Un contenedor empaqueta una aplicación junto con todas sus dependencias en una unidad aislada que
+	se ejecuta sobre el núcleo del sistema operativo anfitrión \cite{redhat_docker}. A diferencia de
+	una máquina virtual, no incluye un sistema operativo completo, por lo que arranca en segundos y
+	consume una fracción de los recursos. Su aporte principal es la reproducibilidad: la misma imagen
+	se ejecuta de forma idéntica en la máquina de desarrollo y en el servidor de producción, lo que
+	elimina toda una clase de fallos atribuibles a diferencias de entorno.
+	
+	Los contenedores son, además, la unidad natural de despliegue de una arquitectura de
+	microservicios: cada servicio se distribuye como una imagen propia, versionada e inmutable. Cuando
+	el número de contenedores crece hasta volverse inmanejable manualmente, se recurre a plataformas de
+	orquestación que automatizan su ciclo de vida, la recuperación ante fallos y el escalamiento
+	\cite{burns_kubernetes}; a escalas menores, esa administración puede resolverse con guiones de
+	despliegue, opción suficiente cuando el número de servicios es reducido y el equipo pequeño.
+	
+	\subsubsection{Proxy inverso}
+	Un proxy inverso es un servidor que se coloca frente a uno o varios servicios y recibe en su nombre
+	todas las peticiones del exterior, para después reenviarlas al componente que corresponda según la
+	ruta solicitada \cite{nginx_org}. Concentra en un solo punto responsabilidades que de otro modo
+	habría que replicar en cada servicio: terminación de conexiones cifradas, balanceo de carga,
+	entrega de contenido estático y control del tráfico entrante \cite{khanal2023nginx}.
+	
+	Su papel es doble en una aplicación web moderna. Por un lado entrega los archivos estáticos que
+	componen la interfaz; por otro, enruta las peticiones dirigidas a la API hacia el servicio
+	correspondiente. Desde el punto de vista del navegador todo proviene de un mismo origen, lo que
+	simplifica el modelo de seguridad del cliente, mientras que del lado del servidor la separación en
+	servicios permanece intacta.
+	
+	\subsubsection{Control de versiones}
+	Git es un sistema de control de versiones distribuido que registra el historial completo de cambios
+	de un proyecto y permite que varias personas trabajen en paralelo sobre la misma base de código
+	mediante ramas que después se integran \cite{github_about_git}. Su modelo distribuido implica que
+	cada copia del repositorio contiene el historial íntegro, lo que aporta redundancia y permite
+	trabajar sin conexión permanente al servidor central \cite{linis_git_basics}.
+	
+	\subsection{Seguridad aplicada al software}
+	\label{sec:seguridad_software}
+	Una plataforma que administra denuncias maneja, por definición, información sensible: identifica a
+	quien denuncia, a quien es denunciado y describe hechos que pueden tener consecuencias
+	disciplinarias o jurídicas. Los mecanismos de esta sección son, por ello, requisitos del sistema y
+	no características opcionales.
+	
+	\subsubsection{Autenticación basada en tokens}
+	En una arquitectura distribuida, mantener la sesión del usuario en la memoria del servidor obliga a
+	que todas sus peticiones lleguen siempre a la misma instancia, lo que limita el escalamiento
+	horizontal. La alternativa es la autenticación basada en tokens: el servicio de autenticación
+	verifica las credenciales una sola vez y emite un token firmado que el cliente adjunta en cada
+	petición posterior.
+	
+	JSON Web Token (JWT) es el formato más extendido para ello. Se compone de tres partes ---encabezado,
+	carga útil y firma--- codificadas y separadas por puntos. La carga útil contiene afirmaciones sobre
+	el usuario, como su identidad, su rol y la fecha de expiración del token; la firma, calculada con
+	una clave secreta, permite a cualquier servicio que la conozca verificar que el contenido no fue
+	alterado \cite{spring_security_jwt}. Su propiedad más útil en un sistema distribuido es que la
+	validación es local: un servicio puede autorizar una petición sin consultar al servicio emisor ni
+	mantener estado de sesión compartido.
+	
+	Esa misma propiedad tiene un costo: al ser autocontenido, un token válido no puede revocarse antes
+	de su expiración sin introducir un mecanismo adicional de listas de revocación. De ahí que se
+	recomiende emitirlos con tiempos de vida cortos.
+	
+	\subsubsection{Almacenamiento seguro de contraseñas}
+	Las contraseñas nunca deben almacenarse en texto plano ni cifradas de forma reversible, pues quien
+	obtenga acceso a la base de datos obtendría también las credenciales de todos los usuarios. La
+	práctica correcta es guardar el resultado de una función resumen (\textit{hash}) diseñada
+	específicamente para este fin, que sea deliberadamente costosa de calcular y que incorpore un valor
+	aleatorio distinto por usuario (\textit{salt}), de modo que dos usuarios con la misma contraseña
+	produzcan resúmenes diferentes y no puedan emplearse tablas precalculadas para revertirlos. La
+	verificación en el inicio de sesión no consiste entonces en descifrar el valor almacenado, sino en
+	recalcular el resumen de la contraseña recibida y compararlo con el registrado.
+	
+	\subsubsection{Control de acceso basado en roles}
+	La autenticación resuelve quién es el usuario; la autorización, qué le está permitido hacer. El
+	control de acceso basado en roles asigna a cada usuario uno o varios roles y asocia los permisos a
+	esos roles y no a las personas, lo que simplifica la administración y reduce el riesgo de conceder
+	privilegios por olvido. Debe aplicarse siguiendo el principio de menor privilegio: cada rol recibe
+	únicamente los permisos indispensables para su función, y cada punto de acceso declara de forma
+	explícita qué rol puede invocarlo. En una defensoría, esa distinción es también organizativa: quien
+	recibe una queja no debe poder emitir una resolución, ni al contrario.
+	
+	\subsubsection{Intercambio de recursos entre orígenes}
+	Los navegadores aplican la política de mismo origen, que impide a una página consultar recursos
+	alojados en un dominio, protocolo o puerto distinto del suyo. El mecanismo CORS
+	(\textit{Cross-Origin Resource Sharing}) permite relajar esa restricción de forma controlada
+	mediante encabezados HTTP con que el servidor declara qué orígenes acepta. La recomendación es
+	enumerar explícitamente los orígenes permitidos en vez de autorizar cualquiera, y tener presente
+	que el uso de un proxy inverso que sirva la interfaz y la API bajo un mismo dominio hace que el
+	navegador ni siquiera active esta verificación.
+	
+	\subsubsection{Cifrado en tránsito}
+	Toda la información que viaja entre el navegador y el servidor debe protegerse con TLS
+	(\textit{Transport Layer Security}), protocolo que establece un canal cifrado y autenticado sobre
+	una conexión de red no confiable. Su versión 1.3 simplificó el proceso de negociación, redujo la
+	latencia de establecimiento de la conexión y eliminó los algoritmos criptográficos considerados
+	inseguros en versiones previas \cite{rescorla_tls13}. Sin este cifrado, las credenciales, los
+	tokens de sesión y el contenido íntegro de una denuncia viajarían legibles para cualquier
+	intermediario de la red.
+	
+	
+	
 \subsection{Fundamentos de Procesamiento de Lenguaje Natural}
 El Procesamiento de Lenguaje Natural (PLN) es una rama de la inteligencia artificial que estudia los métodos mediante los cuales las computadoras pueden analizar, interpretar y generar información expresada en lenguaje humano \cite{jurafsky2023slp}. Sus aplicaciones incluyen la recuperación de información, el análisis de documentos y la generación automática de resúmenes, tareas que requieren procesar el contenido lingüístico de los textos.
 
@@ -289,6 +371,32 @@ Sentence-BERT (SBERT) es una propuesta basada en la arquitectura Transformer que
 
 En la gestión de quejas, las representaciones semánticas permiten comparar las narrativas de distintos expedientes a partir de su contenido. Sin embargo, una representación cercana no implica necesariamente que los documentos describan el mismo acontecimiento, por lo que sus relaciones deben interpretarse considerando el contexto de cada caso.
 
+\subsubsection{Modelos codificadores: Sentence Transformers y MiniLM}
+
+Los modelos basados en la arquitectura \textit{Transformer} pueden utilizarse como codificadores
+(\textit{encoders}) para transformar secuencias de texto en representaciones numéricas. A diferencia
+de los métodos que representan los documentos únicamente a partir de la frecuencia de sus términos,
+estos modelos incorporan relaciones contextuales aprendidas durante su entrenamiento
+\cite{vaswani2017attention}.
+
+La arquitectura \textit{Sentence-BERT} (SBERT) adapta modelos Transformer para producir
+\textit{embeddings} de oraciones comparables mediante medidas como la similitud coseno. Su empleo
+en recuperación semántica permite obtener representaciones de consultas y documentos para
+identificar cercanía de significado sin comparar cada par de textos con un modelo de clasificación
+\cite{reimers2019sbert}.
+
+MiniLM es una familia de modelos Transformer compactos obtenidos mediante técnicas de
+destilación de conocimiento, orientadas a conservar parte de la capacidad de representación de
+modelos más grandes con menor costo de inferencia \cite{wang2020minilm}. Algunas variantes
+multilingües disponibles mediante \textit{Sentence Transformers} permiten representar textos
+escritos en distintos idiomas. En una tarea de recuperación documental, estos codificadores
+proporcionan señales semánticas complementarias a los métodos léxicos.
+
+Es importante distinguir los codificadores de los modelos generativos: los primeros se utilizan
+aquí para obtener representaciones vectoriales y comparar textos, mientras que los segundos
+producen nuevas secuencias de lenguaje. La cercanía entre \textit{embeddings} no demuestra por
+sí sola que dos expedientes describan idénticos hechos.
+
 \subsubsection{Similitud coseno}
 
 La similitud coseno es una medida matemática utilizada para comparar la orientación de dos vectores en un espacio multidimensional. Se calcula mediante el producto punto de ambos vectores dividido entre el producto de sus normas, lo que permite estimar su proximidad angular independientemente de sus magnitudes \cite{manning2008ir}.
@@ -340,6 +448,72 @@ Por ejemplo, las expresiones ``el profesor me impidió presentar el examen'' y `
 
 La combinación de ambos enfoques puede resultar útil en sistemas de recuperación, debido a que las coincidencias léxicas permiten reconocer términos específicos, mientras que las representaciones semánticas facilitan la identificación de relaciones expresadas mediante vocabulario diferente. Su utilización depende de las características de los documentos y de los criterios establecidos para la recuperación.
 
+\subsubsection{Fragmentación de documentos para recuperación semántica}
+
+Los documentos extensos pueden contener hechos diferentes a lo largo de una misma narración.
+Representarlos mediante un único vector puede dificultar la recuperación de pasajes específicos;
+además, los modelos codificadores suelen tener límites de longitud para sus entradas. La
+\textit{fragmentación} (\textit{chunking}) divide el documento en segmentos más pequeños que
+pueden representarse y compararse de manera individual.
+
+Una estrategia habitual consiste en definir un tamaño máximo de segmento y un solapamiento
+entre segmentos consecutivos. El solapamiento conserva parte del contexto en los límites de
+cada fragmento y reduce la posibilidad de separar expresiones que necesitan interpretarse juntas.
+No obstante, un solapamiento excesivo incrementa el número de representaciones que deben
+almacenarse y procesarse.
+
+En la recuperación documental, las puntuaciones de los fragmentos pueden agregarse o utilizarse
+para determinar la relevancia del documento al que pertenecen. Es necesario conservar la
+asociación entre fragmento y expediente, evitando presentar un mismo documento como varios
+antecedentes independientes. El tamaño y el solapamiento constituyen parámetros de diseño
+que deben justificarse en la implementación y contrastarse durante la evaluación.
+
+\subsubsection{Recuperación híbrida y fusión de rankings}
+
+La \textit{recuperación híbrida} combina mecanismos de búsqueda que utilizan señales distintas,
+por ejemplo coincidencia léxica de términos y similitud semántica entre representaciones
+vectoriales. Cada recuperador puede producir una lista de documentos ordenados por su propio
+criterio de relevancia. Estas puntuaciones no necesariamente comparten escala ni distribución,
+por lo que sumarlas directamente sin calibración puede producir resultados poco interpretables.
+
+\textit{Reciprocal Rank Fusion} (RRF) es un método de fusión que utiliza la posición de cada
+documento dentro de los rankings de entrada en lugar de sumar sus puntuaciones originales
+\cite{cormack2009rrf}. Para dos recuperadores, una extensión ponderada puede expresarse como:
+
+\begin{equation}
+    \operatorname{RRF}(d) =
+    \frac{w_{L}}{k_0 + r_{L}(d)} +
+    \frac{w_{S}}{k_0 + r_{S}(d)},
+    \label{eq:rrf_ponderado}
+\end{equation}
+
+donde $d$ es un documento, $r_{L}(d)$ y $r_{S}(d)$ son sus posiciones en las listas
+léxica y semántica, $w_{L}$ y $w_{S}$ son sus ponderaciones no negativas y $k_0$ es
+una constante de suavizado positiva. Cuando un documento no aparece entre los
+resultados considerados de un recuperador, su contribución correspondiente se toma
+como cero.
+
+La ponderación permite privilegiar una señal sin descartar la otra. Sin embargo, no existe
+una proporción universalmente óptima: los pesos deben seleccionarse con base en consultas
+representativas, juicios de relevancia y métricas de recuperación. La fusión de rankings sirve
+para ordenar antecedentes; su puntuación no debe interpretarse automáticamente como una
+probabilidad de duplicidad ni como un porcentaje calibrado de similitud.
+
+\subsubsection{Indexación y reutilización de representaciones semánticas}
+
+Un índice de recuperación semántica almacena representaciones vectoriales de documentos o
+fragmentos para evitar calcularlas nuevamente durante cada consulta. Cuando la colección se
+actualiza, una reconstrucción completa puede resultar costosa, especialmente si la codificación
+se realiza sobre CPU. La indexación incremental busca reutilizar las representaciones de los
+registros que no cambiaron y procesar únicamente los documentos nuevos o modificados.
+
+Para determinar si un vector es reutilizable, resulta útil asociarlo con una huella del contenido
+y con la identificación de la configuración del modelo que lo produjo. Si el texto, el modelo o
+las reglas de fragmentación cambian, la representación anterior podría dejar de ser válida.
+La persistencia de los vectores permite conservar el trabajo realizado entre reinicios y
+actualizaciones. El mecanismo específico de almacenamiento y sus parámetros corresponden a
+las decisiones de implementación del sistema.
+
 \subsubsection{Identificación de documentos relacionados}
 
 La identificación de documentos relacionados consiste en analizar los resultados de recuperación para reconocer registros que comparten información relevante con una consulta. Esta relación puede establecerse mediante semejanzas en las narrativas, coincidencias de términos específicos o características comunes de los acontecimientos descritos.
@@ -386,6 +560,48 @@ Esta medida permite conocer qué proporción de los documentos relevantes dispon
 Ambas métricas ofrecen perspectivas complementarias sobre el funcionamiento de un sistema de búsqueda. Mientras que precisión ($P_k$) permite valorar la pertinencia de los resultados presentados, recall ($R_k$) permite identificar la capacidad del sistema para recuperar los antecedentes relevantes existentes en la colección.
 
 En la búsqueda de antecedentes de la DDP, estas medidas pueden utilizarse para evaluar la recuperación de expedientes relacionados, siempre que se disponga de referencias previamente verificadas. La selección de las métricas y los valores de $k$ debe corresponder a los objetivos y condiciones de evaluación establecidos para el modelo.
+
+\subsubsection{Métricas de ordenamiento y evaluación experimental}
+
+Además de la precisión y la exhaustividad en las primeras $k$ posiciones, los sistemas de
+recuperación pueden evaluarse con métricas sensibles al orden de aparición de los resultados.
+El \textit{Mean Reciprocal Rank} (MRR) resume la posición del primer documento relevante en
+un conjunto de consultas:
+
+\begin{equation}
+    \operatorname{MRR} = \frac{1}{|Q|}
+    \sum_{q \in Q}\frac{1}{\operatorname{rank}_{q}},
+    \label{eq:mrr}
+\end{equation}
+
+donde $Q$ es el conjunto de consultas y $\operatorname{rank}_{q}$ es la posición del
+primer documento relevante para $q$; las consultas sin documentos relevantes recuperados
+aportan cero. Por su parte, \textit{Normalized Discounted Cumulative Gain} (nDCG) evalúa
+la calidad del ordenamiento al descontar la contribución de los resultados que aparecen
+más abajo en la lista y normalizarla respecto al orden ideal \cite{jarvelin2002cumulated}.
+En su forma habitual:
+
+\begin{equation}
+    \operatorname{nDCG}@k =
+    \frac{\displaystyle\sum_{i=1}^{k}
+    \frac{2^{\operatorname{rel}_{i}}-1}{\log_2(i+1)}}
+    {\operatorname{IDCG}@k},
+    \label{eq:ndcg_k}
+\end{equation}
+
+donde $\operatorname{rel}_{i}$ indica la relevancia asignada al resultado de la posición
+$i$, e $\operatorname{IDCG}@k$ es el valor que se obtendría con el ordenamiento ideal.
+Si el denominador es cero, debe establecerse una convención explícita para esa consulta.
+
+La comparación de configuraciones de un recuperador requiere consultas con etiquetas de
+relevancia, un criterio de evaluación predefinido y una separación entre los datos utilizados
+para seleccionar parámetros y los reservados para la evaluación final. Cuando distintas
+consultas derivan de un mismo expediente o escenario, conviene mantenerlas en un mismo
+grupo para reducir la fuga de información. Los resultados obtenidos con quejas sintéticas
+constituyen evidencia experimental acotada y no sustituyen la validación con casos
+representativos de operación institucional. La selección de parámetros y la evaluación
+final deben distinguirse para evitar que una misma colección se utilice tanto para
+ajustar el recuperador como para estimar su desempeño sin sesgos.
 
 \subsection{Generación automática de resúmenes}
 \label{sec:generacion_resumenes}
@@ -453,6 +669,35 @@ importante debido a que la claridad del resumen debe
 mantenerse subordinada a la conservación de los hechos
 descritos por la persona que presenta la solicitud.
 
+\subsubsection{Selección extractiva mediante Maximum Marginal Relevance}
+
+La selección extractiva de oraciones puede producir resúmenes redundantes cuando varios
+fragmentos expresan información semejante. \textit{Maximum Marginal Relevance} (MMR) es un
+criterio que busca equilibrar la relevancia de una unidad respecto al documento o consulta y su
+novedad frente a las unidades ya seleccionadas \cite{carbonell1998mmr}.
+
+Una formulación habitual escoge iterativamente la unidad $s$ que maximiza:
+
+\begin{equation}
+    \operatorname{MMR}(s) =
+    \lambda\,\operatorname{Sim}(s,q) -
+    (1-\lambda)\max_{s'\in S}
+    \operatorname{Sim}(s,s'),
+    \label{eq:mmr}
+\end{equation}
+
+donde $q$ representa el texto o consulta de referencia, $S$ es el conjunto de unidades
+seleccionadas y $\lambda\in[0,1]$ regula el equilibrio entre relevancia y redundancia.
+Para la primera selección, cuando $S$ está vacío, el término de redundancia se considera
+nulo.
+
+En textos narrativos, MMR proporciona una base para elegir fragmentos informativos sin
+repetir innecesariamente el mismo contenido. Sin embargo, no garantiza por sí solo la
+conservación de fechas, negaciones, actores, consecuencias o relaciones cronológicas.
+Por ese motivo, puede complementarse con reglas de cobertura y coherencia contextual.
+La selección extractiva y la edición lingüística posterior deben tratarse como etapas
+separadas, ya que cada una introduce riesgos y criterios de evaluación diferentes.
+
 \subsubsection{Modelos de lenguaje basados en Transformers}
 
 Los modelos de lenguaje son sistemas computacionales
@@ -501,6 +746,28 @@ correspondan fielmente al documento original.
 Por ello, la utilización de estos modelos requiere
 considerar mecanismos de evaluación y revisión de
 los resultados.
+
+\subsubsection{Generación autoregresiva y cuantización de modelos de lenguaje}
+
+Los modelos de lenguaje generativos de tipo \textit{decoder} producen texto de manera
+autoregresiva: predicen el siguiente token condicionado por los anteriores y repiten el
+procedimiento hasta completar la salida. Aunque el procesamiento de una entrada utiliza
+operaciones paralelizables, los tokens de salida se generan secuencialmente, de modo que la
+longitud de la respuesta influye en el tiempo total de inferencia.
+
+Estos modelos pueden recibir instrucciones que establecen el propósito, el estilo y las
+restricciones del texto generado. En una tarea de redacción institucional, es posible solicitar
+la transformación de fragmentos a tercera persona y pedir que se conserven negaciones,
+actores y datos explícitos. No obstante, las instrucciones no constituyen una garantía formal
+de fidelidad factual, por lo que deben complementarse con evaluación y revisión.
+
+La \textit{cuantización} reduce la precisión numérica utilizada para almacenar parte de los
+parámetros de una red neuronal, con el objetivo de disminuir su consumo de memoria y,
+según el hardware y la implementación, facilitar la ejecución de la inferencia. La reducción
+de precisión también puede modificar la calidad de los resultados, por lo que representa un
+compromiso entre recursos y comportamiento del modelo. En entornos con CPU y memoria
+limitadas, la cuantización, el tamaño de contexto, la concurrencia y el número de tokens
+generados son factores relevantes para el diseño operativo del servicio.
 
 \subsubsection{Fidelidad y consistencia factual}
 
@@ -569,6 +836,12 @@ Dos textos pueden utilizar expresiones diferentes
 y conservar los mismos hechos, mientras que una
 redacción similar puede contener alteraciones
 importantes en su significado.
+
+En un sistema que combina selección extractiva y edición generativa conviene evaluar
+por separado la cobertura de hechos de la captura extractiva y la fidelidad de la
+reescritura respecto a esa captura, además de contrastar el resultado final con la
+queja original. Esta comparación por etapas permite identificar si una omisión
+se originó durante la selección o durante la generación del texto.
 
 La revisión humana permite complementar la evaluación
 automática mediante la identificación de errores
