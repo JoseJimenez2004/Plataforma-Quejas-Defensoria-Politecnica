@@ -23,10 +23,10 @@
       }
     </div>
     <div class="exp-chips">
-      <label class="selector-prioridad" title="La prioridad la asigna Primer Contacto y viaja a Subdefensoría">
-        <mat-icon>flag</mat-icon> Prioridad
+      <label class="selector-prioridad" [title]="tituloPrioridad">
+        <mat-icon>{{ prioridadEditable ? 'flag' : 'lock' }}</mat-icon> Prioridad
         <select [class]="clasePrioridad(expediente.prioridad)" [ngModel]="codigoPrioridadActual"
-                (ngModelChange)="cambiarPrioridad($event)" [disabled]="guardandoPrioridad" aria-label="Prioridad del expediente">
+                (ngModelChange)="cambiarPrioridad($event)" [disabled]="guardandoPrioridad || !prioridadEditable" aria-label="Prioridad del expediente">
           @if (codigoPrioridadActual === 'SIN_ASIGNAR') { <option value="SIN_ASIGNAR" disabled>Sin asignar</option> }
           @for (p of prioridades; track p.codigo) { <option [value]="p.codigo">{{ p.etiqueta }}</option> }
         </select>

@@ -94,13 +94,30 @@ public class ExpedienteAnalisisService {
     /**
      * PC-1: el analista asigna la prioridad (BAJA, MEDIA, ALTA o URGENTE). Se guarda en el
      * momento; el valor lo valida el controlador. Viaja a Subdefensoría al turnar.
+     *
+     * Solo se cambia mientras el expediente está abierto, o si quedó PROCEDENTE pero
+     * Subdefensoría aún no lo recibió (al reintentar viaja la actual). Ya recibido, la
+     * prioridad la maneja Subdefensoría y aquí no se sincronizaría.
      */
     public ExpedienteAnalisisDTO cambiarPrioridad(String folio, String prioridad) {
         ExpedientePrimerContacto expediente = expedienteRepository.findByFolio(folio)
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "No existe el expediente de Primer Contacto con folio " + folio));
+        if (!prioridadEditable(expediente)) {
+            throw new ipn.escom.defensoria.primercontacto.exception.OperacionInvalidaException(
+                    expediente.getFolioSubdefensoria() != null
+                            ? "El expediente ya está en Subdefensoría; la prioridad se cambia allá."
+                            : "El expediente ya fue dictaminado; su prioridad ya no se puede cambiar.");
+        }
         expediente.setPrioridad(prioridad);
         return construirDTO(expedienteRepository.save(expediente));
+    }
+
+    static boolean prioridadEditable(ExpedientePrimerContacto expediente) {
+        String estatus = expediente.getEstatus();
+        return ipn.escom.defensoria.primercontacto.entity.EstatusExpediente.estaAbierto(estatus)
+                || (ipn.escom.defensoria.primercontacto.entity.EstatusExpediente.PROCEDENTE.equals(estatus)
+                    && expediente.getFolioSubdefensoria() == null);
     }
 
     /*
