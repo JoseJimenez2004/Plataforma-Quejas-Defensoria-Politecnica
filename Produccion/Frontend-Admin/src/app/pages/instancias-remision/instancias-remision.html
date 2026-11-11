@@ -1,0 +1,73 @@
+<div class="page-header">
+  <div>
+    <h2>Instancias de remisión</h2>
+    <p class="page-header-subtitulo">
+      Cuando Primer Contacto declara improcedente una queja, el oficio de remisión se envía al
+      correo de la instancia que elija el analista.
+    </p>
+  </div>
+</div>
+
+@if (cargando) {
+  <p class="cargando">Cargando instancias…</p>
+} @else if (error) {
+  <div class="card estado-error">
+    No se pudieron cargar las instancias.
+    <button type="button" class="btn-secondary" (click)="cargar()">Reintentar</button>
+  </div>
+} @else {
+  <div class="card">
+    <div class="tabla-scroll">
+      <table class="tabla-admin">
+        <thead>
+          <tr>
+            <th>Instancia</th>
+            <th>Correo para los oficios</th>
+            <th>Última actualización</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (inst of lista; track inst.clave) {
+            <tr>
+              <td>
+                <span class="sigla">{{ inst.sigla }}</span>
+                <span class="nombre">{{ inst.nombre }}</span>
+              </td>
+              <td class="col-correo">
+                @if (editando === inst.clave) {
+                  <input type="email" class="input-correo" [(ngModel)]="correoEditado" name="correo"
+                         [class.invalido]="correoEditado && !correoValido"
+                         (keydown.enter)="guardar(inst)" (keydown.escape)="cancelar()"
+                         placeholder="correo@ipn.mx" aria-label="Correo de la instancia" />
+                } @else if (inst.correo) {
+                  {{ inst.correo }}
+                } @else {
+                  <span class="sin-correo">Sin correo</span>
+                }
+              </td>
+              <td class="col-fecha">
+                {{ fecha(inst.fechaActualizacion) }}
+                @if (inst.actualizadoPor) { <span class="quien">{{ inst.actualizadoPor }}</span> }
+              </td>
+              <td class="col-accion">
+                @if (editando === inst.clave) {
+                  <button type="button" class="btn-primary" [disabled]="guardando || !correoValido" (click)="guardar(inst)">
+                    {{ guardando ? 'Guardando…' : 'Guardar' }}
+                  </button>
+                  <button type="button" class="btn-secondary" [disabled]="guardando" (click)="cancelar()">Cancelar</button>
+                } @else {
+                  <button type="button" class="btn-secondary" [disabled]="editando !== null" (click)="editar(inst)">Editar correo</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="nota">
+      El cambio aplica desde la siguiente remisión. Las remisiones ya enviadas conservan el correo
+      al que salieron.
+    </p>
+  </div>
+}

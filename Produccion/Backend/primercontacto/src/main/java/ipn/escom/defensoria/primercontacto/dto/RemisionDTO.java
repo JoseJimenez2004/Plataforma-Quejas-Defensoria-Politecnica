@@ -24,4 +24,7 @@ public class RemisionDTO {
     private String estatus;
     private String numeroOficio;
     private String fechaEnvio;
+
+    private String instanciaClave;
+    private String correoDestino;
 }

@@ -32,6 +32,7 @@ import { ETIQUETAS_ESTATUS, PASOS_EXPEDIENTE, etiquetaEstatus } from '../../core
 import { RecordatorioDialog, RecordatorioDialogData } from '../../shared/recordatorio-dialog/recordatorio-dialog';
 import { RedactarOficioDialog, RedactarOficioDialogData } from '../../shared/redactar-oficio-dialog/redactar-oficio-dialog';
 import { RespuestaExternaDialog, RespuestaExternaDialogData } from '../../shared/respuesta-externa-dialog/respuesta-externa-dialog';
+import { ConfirmacionService } from '../../core/services/confirmacion.service';
 
 /** Íconos de la barra de pasos (mismo orden que PASOS_EXPEDIENTE). */
 const ICONOS_PASO: Record<string, string> = {
@@ -119,6 +120,8 @@ export class ExpedienteDetalle implements OnInit {
   /** Lo que trabajó Primer Contacto (solo lectura); null mientras carga o si falló. */
   pc: ConsultaPrimerContacto | null = null;
   pcError = '';
+
+  private readonly confirmacion = inject(ConfirmacionService);
 
   constructor(
     private route: ActivatedRoute,
@@ -365,21 +368,21 @@ export class ExpedienteDetalle implements OnInit {
     this.guardarOConcluir(false);
   }
 
-  enviarAcuerdo(): void {
-    if (!confirm('¿Enviar el acuerdo de conciliación al quejoso? El expediente quedará pendiente de su respuesta: si lo acepta, se elabora el acuerdo de conclusión; si lo rechaza, regresa a investigación.')) {
+  async enviarAcuerdo(): Promise<void> {
+    if (!(await this.confirmacion.confirmar({ titulo: '¿Enviar el acuerdo de conciliación al quejoso?', mensaje: 'El expediente quedará pendiente de su respuesta.', nota: 'Si lo acepta, se elabora el acuerdo de conclusión; si lo rechaza, regresa a investigación.', textoConfirmar: 'Sí, enviar', icono: 'handshake' }))) {
       return;
     }
     this.guardarOConcluir(true);
   }
 
   /** Fila 20: con el acuerdo de conciliación aceptado, el expediente se concluye. */
-  registrarConclusion(): void {
+  async registrarConclusion(): Promise<void> {
     if (!this.expediente) return;
     if (!this.textoConclusion.trim()) {
       this.snackBar.open('Redacta el acuerdo de conclusión antes de continuar.', 'Cerrar', { duration: 3000 });
       return;
     }
-    if (!confirm('¿Registrar el acuerdo de conclusión? El expediente se cerrará definitivamente.')) {
+    if (!(await this.confirmacion.confirmar({ titulo: '¿Registrar el acuerdo de conclusión?', nota: 'El expediente se cerrará definitivamente.', textoConfirmar: 'Sí, concluir', tono: 'peligro', icono: 'task_alt' }))) {
       return;
     }
 

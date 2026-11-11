@@ -11,7 +11,7 @@
     </div>
 
     <mat-chip class="warning-chip">
-      {{ paso === 2 ? 'Remisión enviada' : paso === 1 ? 'Oficio generado' : 'Remisión externa' }}
+      {{ paso === 1 ? 'Remisión enviada' : 'Remisión externa' }}
     </mat-chip>
   </div>
 
@@ -30,15 +30,8 @@
 
     <div class="line"></div>
 
-    <div class="step" [class.active]="paso === 1" [class.done]="paso > 1">
-      <mat-icon>{{ paso > 1 ? 'check_circle' : 'picture_as_pdf' }}</mat-icon>
-      <span>Oficio generado</span>
-    </div>
-
-    <div class="line"></div>
-
-    <div class="step" [class.active]="paso === 2" [class.done]="paso === 2">
-      <mat-icon>{{ paso === 2 ? 'check_circle' : 'mark_email_read' }}</mat-icon>
+    <div class="step" [class.active]="paso === 1" [class.done]="paso === 1">
+      <mat-icon>{{ paso === 1 ? 'check_circle' : 'mark_email_read' }}</mat-icon>
       <span>Enviado</span>
     </div>
   </div>
@@ -90,7 +83,7 @@
     </mat-card>
 
     @if (remision) {
-      <!-- ================= Oficio generado / enviado ================= -->
+      <!-- ================= Oficio enviado (o pendiente del flujo anterior) ================= -->
       <mat-card class="card form-card">
         <h3>Oficio {{ remision.numeroOficio }}</h3>
 
@@ -116,23 +109,55 @@
           <div>
             <span>Envío</span>
             @if (remision.estatus === 'ENVIADA') {
-              <strong class="ok">Enviado {{ formatearFechaHora(remision.fechaEnvio) }}</strong>
+              <strong class="ok">
+                Enviado {{ formatearFechaHora(remision.fechaEnvio) }}
+                @if (remision.correoDestino) { a {{ remision.correoDestino }} }
+              </strong>
             } @else {
-              <strong class="pendiente">Pendiente de registrar</strong>
+              <strong class="pendiente">Pendiente de enviar</strong>
             }
           </div>
         </div>
 
+        @if (remision.estatus !== 'ENVIADA') {
+          <p class="muted aviso-pendiente">
+            El oficio está generado pero todavía no se envía por correo. Revisa la instancia y
+            pulsa «Enviar oficio».
+          </p>
+          <mat-form-field appearance="outline">
+            <mat-label>Enviar a</mat-label>
+            <mat-select [(ngModel)]="institucion">
+              @for (item of instituciones; track item.clave) {
+                <mat-option [value]="item.clave">{{ item.sigla }}: {{ item.nombre }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          @if (instanciaElegida) {
+            <p class="destino">
+              <mat-icon>alternate_email</mat-icon>
+              @if (instanciaElegida.correo) {
+                Se enviará a <strong>{{ instanciaElegida.correo }}</strong>
+              } @else {
+                Esta instancia no tiene correo registrado.
+              }
+            </p>
+          }
+        }
+
         <div class="actions">
+          <button mat-stroked-button (click)="verOficio()">
+            <mat-icon>visibility</mat-icon>
+            Ver oficio
+          </button>
           <button mat-stroked-button (click)="descargarOficio()">
             <mat-icon>picture_as_pdf</mat-icon>
-            Descargar oficio (PDF)
+            Descargar PDF
           </button>
 
           @if (remision.estatus !== 'ENVIADA') {
-            <button mat-flat-button class="danger-btn" [disabled]="procesando" (click)="registrarEnvio()">
-              <mat-icon>mark_email_read</mat-icon>
-              Registrar envío
+            <button mat-flat-button class="danger-btn" [disabled]="procesando || !instanciaElegida?.correo" (click)="enviarPendiente()">
+              <mat-icon>outgoing_mail</mat-icon>
+              {{ procesando ? 'Enviando…' : 'Enviar oficio' }}
             </button>
           }
         </div>
@@ -155,17 +180,22 @@
         <mat-form-field appearance="outline">
           <mat-label>Institución o área destino</mat-label>
           <mat-select [(ngModel)]="institucion">
-            @for (item of instituciones; track item) {
-              <mat-option [value]="item">{{ item }}</mat-option>
+            @for (item of instituciones; track item.clave) {
+              <mat-option [value]="item.clave">{{ item.sigla }}: {{ item.nombre }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
-
-        @if (institucion === 'Otra') {
-          <mat-form-field appearance="outline">
-            <mat-label>Nombre de la institución</mat-label>
-            <input matInput [(ngModel)]="institucionOtra">
-          </mat-form-field>
+        @if (errorInstancias) {
+          <p class="campo-ayuda error">No se pudo cargar la lista de instancias. Recarga la página.</p>
+        } @else if (instanciaElegida) {
+          <p class="destino">
+            <mat-icon>alternate_email</mat-icon>
+            @if (instanciaElegida.correo) {
+              El oficio se enviará a <strong>{{ instanciaElegida.correo }}</strong>
+            } @else {
+              Esta instancia no tiene correo registrado. Pide a la Defensora que lo agregue.
+            }
+          </p>
         }
 
         <mat-form-field appearance="outline">
@@ -192,9 +222,9 @@
         </mat-checkbox>
 
         <div class="actions">
-          <button mat-flat-button class="primary-btn" [disabled]="procesando" (click)="generarRemision()">
-            <mat-icon>picture_as_pdf</mat-icon>
-            Generar oficio
+          <button mat-flat-button class="primary-btn" [disabled]="procesando" (click)="generarYEnviar()">
+            <mat-icon>outgoing_mail</mat-icon>
+            {{ procesando ? 'Generando y enviando…' : 'Generar y enviar oficio' }}
           </button>
         </div>
       </mat-card>

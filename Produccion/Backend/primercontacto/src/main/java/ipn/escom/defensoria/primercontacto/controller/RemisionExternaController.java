@@ -89,18 +89,27 @@ public class RemisionExternaController {
     }
 
     /*
-     * Registra que el oficio ya se envió: remisión ENVIADA y
-     * expediente REMITIDA.
+     * Instancias a las que se puede remitir (OAG, OIC, COSECOVI / Género) con su correo.
+     */
+    @GetMapping("/instancias")
+    public java.util.List<ipn.escom.defensoria.primercontacto.dto.InstanciaRemisionDTO> instancias() {
+        return remisionExternaService.listarInstancias();
+    }
+
+    /*
+     * Envía por correo una remisión que quedó GENERADA con el flujo anterior.
+     * Cuerpo opcional: { "instanciaClave": "OIC" }.
      */
     @PutMapping("/folio/{folio}/enviar")
     public RemisionDTO enviarRemision(
             @PathVariable String folio,
+            @RequestBody(required = false) java.util.Map<String, String> cuerpo,
             Authentication authentication
     ) {
 
         analistaAutenticadoService.obtenerAnalista(authentication);
 
         return remisionExternaService
-                .enviarRemision(folio);
+                .enviarRemision(folio, cuerpo == null ? null : cuerpo.get("instanciaClave"));
     }
 }

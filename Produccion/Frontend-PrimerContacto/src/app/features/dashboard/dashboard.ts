@@ -14,6 +14,7 @@ import { Paginado, haceCuanto } from '../../core/utils/paginado';
 /** Iconos (SVG en línea, mismo trazo que Recepción) de cada indicador. */
 const ICONOS: Record<DashboardResumen['tipo'], string> = {
   PENDIENTES: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 12h6M9 16h4',
+  POR_ABRIR: 'M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z',
   CON_CITA: 'M5 4.5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-12a2 2 0 0 1 2-2zM3 9.5h18M8 2.5v4M16 2.5v4',
   EN_DICTAMEN: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h5',
   REMITIDOS: 'M22 12h-6M19 9l3 3-3 3M20 6V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1M2 5l9 6 4-2.5'
@@ -21,6 +22,7 @@ const ICONOS: Record<DashboardResumen['tipo'], string> = {
 
 const DETALLES: Record<DashboardResumen['tipo'], string> = {
   PENDIENTES: 'por atender',
+  POR_ABRIR: 'turnados sin abrir',
   CON_CITA: 'con cita programada',
   EN_DICTAMEN: 'procedentes e improcedentes',
   REMITIDOS: 'a otra instancia'
@@ -107,8 +109,29 @@ export class Dashboard implements OnInit {
     this.paginado.pagina = 0;
   }
 
+  /**
+   * "Por abrir" son los TURNADA (aún nadie los abre), igual que el cuadro de la Bandeja.
+   * Pendientes: primero los que ya están En análisis, luego los Turnados; dentro de cada
+   * grupo, el más antiguo arriba.
+   */
   get listaSeleccionada(): DashboardItemLista[] {
-    return this.lista.filter(item => item.tipo === this.categoriaSeleccionada);
+    const lista = this.categoriaSeleccionada === 'POR_ABRIR'
+      ? this.lista.filter(item => item.estadoCodigo === 'TURNADA')
+      : this.lista.filter(item => item.tipo === this.categoriaSeleccionada);
+    if (this.categoriaSeleccionada !== 'PENDIENTES' && this.categoriaSeleccionada !== 'POR_ABRIR') {
+      return lista;
+    }
+    return lista.slice().sort((a, b) =>
+      this.rangoEstatus(a.estadoCodigo) - this.rangoEstatus(b.estadoCodigo)
+      || aTimestamp(a.fecha) - aTimestamp(b.fecha));
+  }
+
+  private rangoEstatus(codigo?: string): number {
+    switch (codigo) {
+      case 'EN_ANALISIS': return 0;
+      case 'TURNADA': return 1;
+      default: return 2;
+    }
   }
 
   get filasPagina(): DashboardItemLista[] {
@@ -122,6 +145,7 @@ export class Dashboard implements OnInit {
   get tituloLista(): string {
     switch (this.categoriaSeleccionada) {
       case 'PENDIENTES': return 'Expedientes pendientes';
+      case 'POR_ABRIR': return 'Expedientes por abrir';
       case 'CON_CITA': return 'Expedientes con cita';
       case 'EN_DICTAMEN': return 'Expedientes dictaminados';
       case 'REMITIDOS': return 'Expedientes remitidos';
@@ -147,4 +171,11 @@ export class Dashboard implements OnInit {
     });
     return fecha.charAt(0).toUpperCase() + fecha.slice(1);
   }
+}
+
+/** "dd/mm/aaaa" → milisegundos (0 si no hay fecha). */
+function aTimestamp(fecha?: string): number {
+  if (!fecha) return 0;
+  const [d, m, y] = fecha.split('/');
+  return new Date(+y, +m - 1, +d).getTime();
 }

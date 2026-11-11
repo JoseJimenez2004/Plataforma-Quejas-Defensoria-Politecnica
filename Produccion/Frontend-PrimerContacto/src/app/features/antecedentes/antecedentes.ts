@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -33,6 +33,7 @@ import {
   AntecedenteDetalleData,
   AntecedenteDetalleDialog
 } from '../../shared/antecedente-detalle-dialog/antecedente-detalle-dialog';
+import { ConfirmacionService } from '../../core/services/confirmacion.service';
 
 /** Estatus de quejas de cualquier etapa (recepción, primer contacto e histórico). */
 const ETIQUETAS_QUEJA: Record<string, string> = {
@@ -122,6 +123,8 @@ export class Antecedentes implements OnInit {
   guardando = false;
 
   readonly formatearFecha = formatearFecha;
+
+  private readonly confirmacion = inject(ConfirmacionService);
 
   constructor(
     private route: ActivatedRoute,
@@ -295,9 +298,9 @@ export class Antecedentes implements OnInit {
     });
   }
 
-  quitarGuardado(guardado: AntecedenteGuardado): void {
+  async quitarGuardado(guardado: AntecedenteGuardado): Promise<void> {
     if (!guardado.id) return;
-    if (!confirm(`¿Quitar ${guardado.folioQueja} de los antecedentes del expediente?`)) return;
+    if (!(await this.confirmacion.confirmar({ titulo: '¿Quitar este antecedente?', mensaje: `${guardado.folioQueja} dejará de estar entre los antecedentes del expediente.`, textoConfirmar: 'Sí, quitar', textoCancelar: 'Conservar', tono: 'peligro', icono: 'link_off' }))) return;
 
     this.antecedentesService.quitar(this.folio, guardado.id).subscribe({
       next: () => {

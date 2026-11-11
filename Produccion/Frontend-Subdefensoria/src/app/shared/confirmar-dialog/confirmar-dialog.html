@@ -1,0 +1,22 @@
+<div class="confirmar" role="alertdialog" aria-modal="true" [attr.aria-label]="data.titulo">
+  <div class="confirmar__icono" [class.confirmar__icono--peligro]="peligro">
+    <mat-icon>{{ icono }}</mat-icon>
+  </div>
+  <h3>{{ data.titulo }}</h3>
+  @if (data.mensaje) {
+    <p>{{ data.mensaje }}</p>
+  }
+  @if (data.nota) {
+    <p class="confirmar__nota">{{ data.nota }}</p>
+  }
+  <div class="confirmar__acciones">
+    <button type="button" class="confirmar__btn confirmar__btn--secundario" (click)="responder(false)">
+      {{ data.textoCancelar || 'Cancelar' }}
+    </button>
+    <button type="button" class="confirmar__btn" cdkFocusInitial
+            [class.confirmar__btn--peligro]="peligro" [class.confirmar__btn--primario]="!peligro"
+            (click)="responder(true)">
+      {{ data.textoConfirmar || 'Aceptar' }}
+    </button>
+  </div>
+</div>

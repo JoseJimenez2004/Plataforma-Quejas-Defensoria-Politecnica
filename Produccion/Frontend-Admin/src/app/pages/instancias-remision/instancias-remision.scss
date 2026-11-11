@@ -1,0 +1,92 @@
+.page-header-subtitulo {
+  margin: 4px 0 0;
+  max-width: 720px;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.cargando {
+  color: #6b7280;
+}
+
+.estado-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #b3261e;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+}
+
+.sigla {
+  display: block;
+  font-weight: 700;
+  color: #6c1d45;
+}
+
+.nombre {
+  display: block;
+  max-width: 420px;
+  margin-top: 2px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #6b7280;
+}
+
+.col-correo {
+  min-width: 240px;
+}
+
+.input-correo {
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  border: 1px solid #d9cdd2;
+  border-radius: 8px;
+  outline: none;
+
+  &:focus {
+    border-color: #6c1d45;
+    box-shadow: 0 0 0 3px rgba(108, 29, 69, 0.12);
+  }
+
+  &.invalido {
+    border-color: #b3261e;
+  }
+}
+
+.sin-correo {
+  font-weight: 600;
+  color: #b3261e;
+}
+
+.col-fecha {
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.quien {
+  display: block;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.col-accion {
+  white-space: nowrap;
+
+  button + button {
+    margin-left: 8px;
+  }
+}
+
+.nota {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  color: #555;
+  background: #fafafa;
+  border-left: 3px solid #d9cdd2;
+  border-radius: 4px;
+}

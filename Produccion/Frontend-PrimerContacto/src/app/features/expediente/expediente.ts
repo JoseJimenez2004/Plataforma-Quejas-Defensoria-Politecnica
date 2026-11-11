@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -55,6 +55,7 @@ import { AbogadoSubdefensoria, AbogadosService } from '../../core/services/aboga
 import { generarResumenSimulado } from '../../core/utils/resumen-simulado';
 import { etiquetaCategoria } from '../../core/models/cita-primer-contacto';
 import { descargarBlob } from '../../core/utils/archivos';
+import { ConfirmacionService } from '../../core/services/confirmacion.service';
 
 /** Pestañas del expediente (diseño 2026-10-18). Viven en la URL: ?tab=ia|expediente|gestion|resolucion. */
 export type PestanaExpediente = 'ia' | 'expediente' | 'gestion' | 'resolucion';
@@ -177,6 +178,8 @@ export class Expediente implements OnInit, OnDestroy {
   readonly clasePrioridad = clasePrioridad;
   guardandoPrioridad = false;
   readonly formatearFechaHora = formatearFechaHora;
+
+  private readonly confirmacion = inject(ConfirmacionService);
 
   constructor(
     private route: ActivatedRoute,
@@ -430,8 +433,8 @@ export class Expediente implements OnInit, OnDestroy {
     });
   }
 
-  eliminarNota(nota: NotaAnalisis): void {
-    if (!confirm(`¿Eliminar el oficio ${nota.numeroOficio}? Esta acción no se puede deshacer.`)) return;
+  async eliminarNota(nota: NotaAnalisis): Promise<void> {
+    if (!(await this.confirmacion.confirmar({ titulo: '¿Eliminar este oficio?', mensaje: `${nota.numeroOficio}`, nota: 'Esta acción no se puede deshacer.', textoConfirmar: 'Sí, eliminar', textoCancelar: 'Conservar', tono: 'peligro', icono: 'delete_outline' }))) return;
 
     this.notaAnalisisService.eliminarNota(nota.id).subscribe({
       next: () => {
@@ -464,7 +467,7 @@ export class Expediente implements OnInit, OnDestroy {
     });
   }
 
-  proponerConciliacion(): void {
+  async proponerConciliacion(): Promise<void> {
     const asunto = this.conciliacion.asunto.trim();
     const terminos = this.conciliacion.terminos.trim();
 
@@ -473,7 +476,7 @@ export class Expediente implements OnInit, OnDestroy {
       return;
     }
 
-    if (!confirm('El acuerdo se enviará al quejoso para que lo acepte o rechace desde su panel. ¿Continuar?')) {
+    if (!(await this.confirmacion.confirmar({ titulo: '¿Enviar el acuerdo al quejoso?', mensaje: 'El quejoso podrá aceptarlo o rechazarlo desde su panel.', textoConfirmar: 'Sí, enviar', icono: 'handshake' }))) {
       return;
     }
 
@@ -813,7 +816,7 @@ export class Expediente implements OnInit, OnDestroy {
   }
 
   /** Registra el dictamen desde la pestaña Resolución (antes era una pantalla aparte). */
-  registrarDictamen(): void {
+  async registrarDictamen(): Promise<void> {
     const justificacion = this.justificacion.trim();
     if (!justificacion) {
       this.snackBar.open('Escribe la justificación del dictamen.', 'Cerrar', { duration: 3000 });
@@ -821,7 +824,7 @@ export class Expediente implements OnInit, OnDestroy {
     }
 
     if (this.decision === 'improcedente') {
-      if (!confirm('¿Declarar improcedente este expediente? Después deberás generar la remisión a la instancia competente.')) return;
+      if (!(await this.confirmacion.confirmar({ titulo: '¿Declarar improcedente este expediente?', nota: 'Después deberás generar la remisión a la instancia competente.', textoConfirmar: 'Sí, declarar improcedente', tono: 'peligro', icono: 'gavel' }))) return;
       const obs = this.observacionesDictamen.trim();
       this.procesando = true;
       this.dictamenService.registrarImprocedencia({
@@ -845,7 +848,7 @@ export class Expediente implements OnInit, OnDestroy {
       this.snackBar.open('Selecciona el responsable en Subdefensoría.', 'Cerrar', { duration: 3000 });
       return;
     }
-    if (!confirm('¿Turnar este expediente a Subdefensoría?')) return;
+    if (!(await this.confirmacion.confirmar({ titulo: '¿Turnar este expediente a Subdefensoría?', nota: 'El expediente quedará como procedente y lo recibirá el abogado seleccionado.', textoConfirmar: 'Sí, turnar', icono: 'send' }))) return;
     this.procesando = true;
     this.dictamenService.registrarCompetencia({
       folio: this.folio,

@@ -80,11 +80,13 @@ export class DashboardService {
   private construirResumen(
     expedientes: ExpedienteBandeja[]
   ): DashboardResumen[] {
-    const contar = (tipo: DashboardResumen['tipo']) =>
+    const contar = (tipo: DashboardItemLista['tipo']) =>
       expedientes.filter(e => this.tipoDeExpediente(e) === tipo).length;
+    const porAbrir = expedientes.filter(e => e.estatusCodigo === 'TURNADA').length;
 
     return [
       { titulo: 'Pendientes', valor: contar('PENDIENTES'), icono: 'assignment', tipo: 'PENDIENTES' },
+      { titulo: 'Por abrir', valor: porAbrir, icono: 'inbox', tipo: 'POR_ABRIR' },
       { titulo: 'Con cita', valor: contar('CON_CITA'), icono: 'event', tipo: 'CON_CITA' },
       { titulo: 'Dictaminados', valor: contar('EN_DICTAMEN'), icono: 'description', tipo: 'EN_DICTAMEN' },
       { titulo: 'Remitidos', valor: contar('REMITIDOS'), icono: 'outgoing_mail', tipo: 'REMITIDOS' }
@@ -127,7 +129,7 @@ export class DashboardService {
    */
   private tipoDeExpediente(
     exp: ExpedienteBandeja
-  ): DashboardResumen['tipo'] {
+  ): DashboardItemLista['tipo'] {
     switch (exp.estatusCodigo) {
       case 'PROCEDENTE':
       case 'IMPROCEDENTE':
