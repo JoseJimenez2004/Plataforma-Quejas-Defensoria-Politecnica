@@ -1,7 +1,7 @@
-\section{Marco Teórico}
+\chapter{Marco Teórico}
 	Este capítulo reúne los fundamentos conceptuales sobre los que se sustenta la solución propuesta y se organiza en dos bloques. El primero desarrolla los principios arquitectónicos, las tecnologías de construcción y los mecanismos de seguridad necesarios para el funcionamiento de la plataforma web. El segundo aborda los fundamentos del Procesamiento de Lenguaje Natural, las técnicas de representación y comparación de documentos, la recuperación de antecedentes y la generación automática de resúmenes narrativos. Estos componentes de inteligencia artificial se consideran herramientas de apoyo para la gestión de quejas y se integran dentro de la arquitectura general de la plataforma.
 	
-	\subsection{Fundamentos de arquitectura de software}
+	\section{Fundamentos de arquitectura de software}
 	\label{sec:arquitectura_software}
 	La arquitectura de software es el conjunto de decisiones estructurales de alto nivel que definen
 	cómo se organiza un sistema: qué componentes lo integran, qué responsabilidad tiene cada uno y cómo
@@ -9,7 +9,7 @@
 	una vez que el sistema está en operación, de modo que conviene tomarlas de forma explícita y
 	justificada desde el diseño, y no dejarlas al azar de la implementación.
 	
-	\subsubsection{Atributos de calidad}
+	\subsection{Atributos de calidad}
 	Una arquitectura no se evalúa únicamente por las funciones que permite construir, sino por los
 	atributos de calidad que habilita o dificulta \cite{utel_atributos_calidad}. Los relevantes para
 	una plataforma institucional de gestión de quejas son los siguientes:
@@ -36,7 +36,7 @@
 		cuándo, requisito tanto operativo como jurídico en el contexto de la Defensoría.
 	\end{itemize}
 	
-	\subsubsection{Del monolito a los microservicios}
+	\subsection{Del monolito a los microservicios}
 	En una arquitectura \textbf{monolítica} toda la funcionalidad se empaqueta y despliega como una
 	única unidad ejecutable \cite{ibm_monolitica}. Este enfoque es simple de desarrollar y desplegar en
 	etapas tempranas, pero conforme el sistema crece presenta problemas conocidos: cualquier cambio
@@ -98,7 +98,7 @@
 	autonomía de datos a cambio de simplicidad operativa, razonable a escala institucional pequeña y
 	que conviene documentar como tal.
 	
-	\subsubsection{Arquitectura en capas}
+	\subsection{Arquitectura en capas}
 	De forma transversal al estilo anterior, la organización interna de cada servicio suele seguir un
 	esquema en capas, en el que la presentación, la lógica de negocio y el acceso a datos se separan en
 	niveles con responsabilidades distintas \cite{ibm_tres_capas}. La capa de presentación expone la
@@ -113,7 +113,7 @@
 	Sobre esa base pueden además incorporarse políticas transversales ---calidad de servicio,
 	monitoreo, control de acceso--- sin reescribir la lógica de negocio \cite{pozalujan_arquitectura}.
 	
-	\subsubsection{Comunicación entre servicios}
+	\subsection{Comunicación entre servicios}
 	Una vez dividido el sistema, sus partes deben comunicarse. Existen dos familias de mecanismos.
 	
 	La \textbf{comunicación síncrona} sigue el modelo petición-respuesta: un servicio llama a otro y
@@ -134,7 +134,7 @@
 	configuración centralizada, balanceo de carga--- que resuelven de forma estándar esa
 	infraestructura transversal \cite{spring_cloud}.
 	
-	\subsubsection{Persistencia de datos}
+	\subsection{Persistencia de datos}
 	La mayoría de los sistemas de información institucionales descansa sobre bases de datos
 	relacionales, que organizan la información en tablas vinculadas por claves y garantizan las
 	propiedades ACID: atomicidad, consistencia, aislamiento y durabilidad \cite{ibm_postgresql}. Esas
@@ -148,12 +148,12 @@
 	componentes acceden al mismo almacén, problema central en el diseño de sistemas intensivos en datos
 	\cite{kleppmann_ddia}.
 	
-	\subsection{Tecnologías de construcción y ejecución}
+	\section{Tecnologías de construcción y ejecución}
 	\label{sec:tecnologias}
 	Definidos los principios arquitectónicos, esta sección describe las tecnologías concretas que los
 	materializan, agrupadas por capa.
 	
-	\subsubsection{Plataforma del lado del servidor}
+	\subsection{Plataforma del lado del servidor}
 	Java es un lenguaje de programación orientado a objetos, compilado a un código intermedio que se
 	ejecuta sobre una máquina virtual (JVM), lo que le da independencia respecto del sistema operativo
 	subyacente \cite{oracle_java}. Su madurez, su tipado estático y su ecosistema de bibliotecas lo han
@@ -174,7 +174,7 @@ especializadas en Procesamiento de Lenguaje Natural,
 recuperación de información y aprendizaje automático
 \cite{aws_python}.
 	
-	\subsubsection{Interfaz de usuario}
+	\subsection{Interfaz de usuario}
 	Angular es un marco de trabajo para construir aplicaciones web de página única (\textit{single-page
 	applications}), en las que la navegación ocurre en el navegador sin recargar el documento completo
 	\cite{angular_overview}. Está organizado en componentes reutilizables que encapsulan plantilla,
@@ -184,7 +184,7 @@ recuperación de información y aprendizaje automático
 	---HTML, CSS y JavaScript--- que cualquier servidor web puede entregar, sin necesidad de ejecutar
 	código del lado del servidor para la interfaz.
 	
-	\subsubsection{Contenedores}
+	\subsection{Contenedores}
 	Un contenedor empaqueta una aplicación junto con todas sus dependencias en una unidad aislada que
 	se ejecuta sobre el núcleo del sistema operativo anfitrión \cite{redhat_docker}. A diferencia de
 	una máquina virtual, no incluye un sistema operativo completo, por lo que arranca en segundos y
@@ -199,7 +199,7 @@ recuperación de información y aprendizaje automático
 	\cite{burns_kubernetes}; a escalas menores, esa administración puede resolverse con guiones de
 	despliegue, opción suficiente cuando el número de servicios es reducido y el equipo pequeño.
 	
-	\subsubsection{Proxy inverso}
+	\subsection{Proxy inverso}
 	Un proxy inverso es un servidor que se coloca frente a uno o varios servicios y recibe en su nombre
 	todas las peticiones del exterior, para después reenviarlas al componente que corresponda según la
 	ruta solicitada \cite{nginx_org}. Concentra en un solo punto responsabilidades que de otro modo
@@ -212,21 +212,21 @@ recuperación de información y aprendizaje automático
 	simplifica el modelo de seguridad del cliente, mientras que del lado del servidor la separación en
 	servicios permanece intacta.
 	
-	\subsubsection{Control de versiones}
+	\subsection{Control de versiones}
 	Git es un sistema de control de versiones distribuido que registra el historial completo de cambios
 	de un proyecto y permite que varias personas trabajen en paralelo sobre la misma base de código
 	mediante ramas que después se integran \cite{github_about_git}. Su modelo distribuido implica que
 	cada copia del repositorio contiene el historial íntegro, lo que aporta redundancia y permite
 	trabajar sin conexión permanente al servidor central \cite{linis_git_basics}.
 	
-	\subsection{Seguridad aplicada al software}
+	\section{Seguridad aplicada al software}
 	\label{sec:seguridad_software}
 	Una plataforma que administra denuncias maneja, por definición, información sensible: identifica a
 	quien denuncia, a quien es denunciado y describe hechos que pueden tener consecuencias
 	disciplinarias o jurídicas. Los mecanismos de esta sección son, por ello, requisitos del sistema y
 	no características opcionales.
 	
-	\subsubsection{Autenticación basada en tokens}
+	\subsection{Autenticación basada en tokens}
 	En una arquitectura distribuida, mantener la sesión del usuario en la memoria del servidor obliga a
 	que todas sus peticiones lleguen siempre a la misma instancia, lo que limita el escalamiento
 	horizontal. La alternativa es la autenticación basada en tokens: el servicio de autenticación
@@ -245,7 +245,7 @@ recuperación de información y aprendizaje automático
 	de su expiración sin introducir un mecanismo adicional de listas de revocación. De ahí que se
 	recomiende emitirlos con tiempos de vida cortos.
 	
-	\subsubsection{Almacenamiento seguro de contraseñas}
+	\subsection{Almacenamiento seguro de contraseñas}
 	Las contraseñas nunca deben almacenarse en texto plano ni cifradas de forma reversible, pues quien
 	obtenga acceso a la base de datos obtendría también las credenciales de todos los usuarios. La
 	práctica correcta es guardar el resultado de una función resumen (\textit{hash}) diseñada
@@ -255,7 +255,7 @@ recuperación de información y aprendizaje automático
 	verificación en el inicio de sesión no consiste entonces en descifrar el valor almacenado, sino en
 	recalcular el resumen de la contraseña recibida y compararlo con el registrado.
 	
-	\subsubsection{Control de acceso basado en roles}
+	\subsection{Control de acceso basado en roles}
 	La autenticación resuelve quién es el usuario; la autorización, qué le está permitido hacer. El
 	control de acceso basado en roles asigna a cada usuario uno o varios roles y asocia los permisos a
 	esos roles y no a las personas, lo que simplifica la administración y reduce el riesgo de conceder
@@ -264,7 +264,7 @@ recuperación de información y aprendizaje automático
 	explícita qué rol puede invocarlo. En una defensoría, esa distinción es también organizativa: quien
 	recibe una queja no debe poder emitir una resolución, ni al contrario.
 	
-	\subsubsection{Intercambio de recursos entre orígenes}
+	\subsection{Intercambio de recursos entre orígenes}
 	Los navegadores aplican la política de mismo origen, que impide a una página consultar recursos
 	alojados en un dominio, protocolo o puerto distinto del suyo. El mecanismo CORS
 	(\textit{Cross-Origin Resource Sharing}) permite relajar esa restricción de forma controlada
@@ -273,7 +273,7 @@ recuperación de información y aprendizaje automático
 	que el uso de un proxy inverso que sirva la interfaz y la API bajo un mismo dominio hace que el
 	navegador ni siquiera active esta verificación.
 	
-	\subsubsection{Cifrado en tránsito}
+	\subsection{Cifrado en tránsito}
 	Toda la información que viaja entre el navegador y el servidor debe protegerse con TLS
 	(\textit{Transport Layer Security}), protocolo que establece un canal cifrado y autenticado sobre
 	una conexión de red no confiable. Su versión 1.3 simplificó el proceso de negociación, redujo la
@@ -284,14 +284,14 @@ recuperación de información y aprendizaje automático
 	
 	
 	
-\subsection{Fundamentos de Procesamiento de Lenguaje Natural}
+\section{Fundamentos de Procesamiento de Lenguaje Natural}
 El Procesamiento de Lenguaje Natural (PLN) es una rama de la inteligencia artificial que estudia los métodos mediante los cuales las computadoras pueden analizar, interpretar y generar información expresada en lenguaje humano \cite{jurafsky2023slp}. Sus aplicaciones incluyen la recuperación de información, el análisis de documentos y la generación automática de resúmenes, tareas que requieren procesar el contenido lingüístico de los textos.
 
 Una de las principales dificultades del PLN es la naturaleza ambigua y contextual del lenguaje. Una misma idea puede expresarse mediante palabras diferentes, mientras que expresiones similares pueden adquirir significados distintos según las circunstancias en las que se utilizan. Por ello, el procesamiento computacional debe considerar tanto las características lingüísticas del texto como las relaciones semánticas que permiten interpretar su contenido.
 
 En el contexto de la Defensoría de los Derechos Politécnicos (DDP), las quejas se presentan mediante narrativas que pueden variar en extensión, estructura y vocabulario. Estas características hacen necesario emplear técnicas que permitan representar su contenido, establecer relaciones entre documentos y procesar la información descrita. Los fundamentos de estas técnicas comprenden el preprocesamiento lingüístico y la representación vectorial del texto, que se desarrollan a continuación.
 
-\subsubsection{Preprocesamiento de textos}
+\subsection{Preprocesamiento de textos}
 
 El preprocesamiento consiste en preparar el contenido textual para su análisis mediante técnicas computacionales. Su propósito es identificar las unidades lingüísticas relevantes y, cuando resulta necesario, reducir variaciones que puedan dificultar la comparación entre documentos. Entre las operaciones más utilizadas se encuentran la tokenización, la lematización y el tratamiento de palabras vacías \cite{jurafsky2023slp}.
 
@@ -329,7 +329,7 @@ Sin embargo, su eliminación debe realizarse cuidadosamente, ya que expresiones 
 Estas operaciones constituyen herramientas para preparar los textos, aunque no necesariamente deben aplicarse todas ni en el mismo orden. Su selección depende del método de representación y del tipo de análisis que se pretende realizar.
 
 
-\subsubsection{Representación vectorial del texto}
+\subsection{Representación vectorial del texto}
 
 La representación vectorial permite transformar documentos escritos en estructuras numéricas que pueden procesarse mediante algoritmos computacionales. Cada texto se representa mediante un vector cuyas dimensiones contienen información sobre sus características lingüísticas o semánticas. Esta transformación constituye el fundamento de los métodos que comparan documentos y recuperan información relacionada \cite{manning2008ir}.
 
@@ -371,7 +371,7 @@ Sentence-BERT (SBERT) es una propuesta basada en la arquitectura Transformer que
 
 En la gestión de quejas, las representaciones semánticas permiten comparar las narrativas de distintos expedientes a partir de su contenido. Sin embargo, una representación cercana no implica necesariamente que los documentos describan el mismo acontecimiento, por lo que sus relaciones deben interpretarse considerando el contexto de cada caso.
 
-\subsubsection{Modelos codificadores: Sentence Transformers y MiniLM}
+\subsection{Modelos codificadores: Sentence Transformers y MiniLM}
 
 Los modelos basados en la arquitectura \textit{Transformer} pueden utilizarse como codificadores
 (\textit{encoders}) para transformar secuencias de texto en representaciones numéricas. A diferencia
@@ -397,7 +397,7 @@ aquí para obtener representaciones vectoriales y comparar textos, mientras que 
 producen nuevas secuencias de lenguaje. La cercanía entre \textit{embeddings} no demuestra por
 sí sola que dos expedientes describan idénticos hechos.
 
-\subsubsection{Similitud coseno}
+\subsection{Similitud coseno}
 
 La similitud coseno es una medida matemática utilizada para comparar la orientación de dos vectores en un espacio multidimensional. Se calcula mediante el producto punto de ambos vectores dividido entre el producto de sus normas, lo que permite estimar su proximidad angular independientemente de sus magnitudes \cite{manning2008ir}.
 
@@ -421,14 +421,14 @@ En la comparación de documentos, esta medida permite ordenar los textos de acue
 
 No obstante, la similitud coseno mide proximidad entre representaciones y no verifica por sí misma la identidad de los hechos descritos. Por tanto, su utilización en la búsqueda de antecedentes permite identificar coincidencias relevantes, pero no constituye una confirmación automática de duplicidad.
 
-\subsection{Búsqueda de antecedentes y detección de posibles duplicidades}
+\section{Búsqueda de antecedentes y detección de posibles duplicidades}
 \label{sec:busqueda_antecedentes}
 
 La búsqueda de antecedentes consiste en localizar documentos previamente registrados que mantienen alguna relación con una nueva solicitud. En la gestión de quejas, esta actividad permite consultar expedientes que presentan semejanzas en los hechos descritos, las circunstancias o las personas involucradas. Su propósito es facilitar el acceso a información relevante para la revisión de los casos, sin establecer automáticamente que los documentos recuperados corresponden a una misma situación.
 
 La identificación de posibles duplicidades constituye una tarea relacionada, pero distinta de la recuperación de antecedentes. Mientras que la primera busca reconocer solicitudes que podrían referirse a hechos previamente reportados, la segunda permite localizar documentos relacionados, aunque correspondan a acontecimientos diferentes. Ambas tareas requieren mecanismos de recuperación y comparación de información textual.
 
-\subsubsection{Recuperación de información}
+\subsection{Recuperación de información}
 
 La recuperación de información es el proceso mediante el cual se identifican documentos relevantes dentro de una colección a partir de una consulta. Su funcionamiento comprende la organización de los documentos disponibles, el procesamiento de la consulta y la aplicación de criterios que permitan determinar cuáles registros presentan mayor relación con la información solicitada \cite{manning2008ir}.
 
@@ -436,7 +436,7 @@ En los sistemas de recuperación textual, los documentos pueden representarse me
 
 En el contexto de la DDP, una queja puede utilizarse como consulta para recuperar expedientes previamente registrados. De esta manera, el proceso de recuperación permite identificar antecedentes potencialmente relacionados con los hechos descritos y proporciona referencias documentales para su posterior revisión.
 
-\subsubsection{Similitud léxica y semántica}
+\subsection{Similitud léxica y semántica}
 
 La similitud textual permite establecer el grado de relación entre dos documentos a partir de sus características lingüísticas. Los métodos de comparación pueden distinguirse entre enfoques léxicos, que consideran las coincidencias de términos, y enfoques semánticos, que buscan identificar relaciones de significado entre los textos \cite{manning2008ir}.
 
@@ -448,7 +448,7 @@ Por ejemplo, las expresiones ``el profesor me impidió presentar el examen'' y `
 
 La combinación de ambos enfoques puede resultar útil en sistemas de recuperación, debido a que las coincidencias léxicas permiten reconocer términos específicos, mientras que las representaciones semánticas facilitan la identificación de relaciones expresadas mediante vocabulario diferente. Su utilización depende de las características de los documentos y de los criterios establecidos para la recuperación.
 
-\subsubsection{Fragmentación de documentos para recuperación semántica}
+\subsection{Fragmentación de documentos para recuperación semántica}
 
 Los documentos extensos pueden contener hechos diferentes a lo largo de una misma narración.
 Representarlos mediante un único vector puede dificultar la recuperación de pasajes específicos;
@@ -468,7 +468,7 @@ asociación entre fragmento y expediente, evitando presentar un mismo documento 
 antecedentes independientes. El tamaño y el solapamiento constituyen parámetros de diseño
 que deben justificarse en la implementación y contrastarse durante la evaluación.
 
-\subsubsection{Recuperación híbrida y fusión de rankings}
+\subsection{Recuperación híbrida y fusión de rankings}
 
 La \textit{recuperación híbrida} combina mecanismos de búsqueda que utilizan señales distintas,
 por ejemplo coincidencia léxica de términos y similitud semántica entre representaciones
@@ -499,7 +499,7 @@ representativas, juicios de relevancia y métricas de recuperación. La fusión 
 para ordenar antecedentes; su puntuación no debe interpretarse automáticamente como una
 probabilidad de duplicidad ni como un porcentaje calibrado de similitud.
 
-\subsubsection{Indexación y reutilización de representaciones semánticas}
+\subsection{Indexación y reutilización de representaciones semánticas}
 
 Un índice de recuperación semántica almacena representaciones vectoriales de documentos o
 fragmentos para evitar calcularlas nuevamente durante cada consulta. Cuando la colección se
@@ -514,7 +514,7 @@ La persistencia de los vectores permite conservar el trabajo realizado entre rei
 actualizaciones. El mecanismo específico de almacenamiento y sus parámetros corresponden a
 las decisiones de implementación del sistema.
 
-\subsubsection{Identificación de documentos relacionados}
+\subsection{Identificación de documentos relacionados}
 
 La identificación de documentos relacionados consiste en analizar los resultados de recuperación para reconocer registros que comparten información relevante con una consulta. Esta relación puede establecerse mediante semejanzas en las narrativas, coincidencias de términos específicos o características comunes de los acontecimientos descritos.
 
@@ -524,7 +524,7 @@ La detección de posibles duplicidades requiere una consideración adicional: de
 
 Por tanto, los resultados de recuperación deben interpretarse como coincidencias potencialmente relevantes que requieren revisión. Esta distinción permite utilizar las técnicas de comparación documental sin atribuirles capacidades de verificación que exceden el análisis del contenido textual.
 
-\subsubsection{Evaluación de recuperación de antecedentes}
+\subsection{Evaluación de recuperación de antecedentes}
 
 La evaluación de un sistema de recuperación de información permite determinar qué tan adecuadamente identifica documentos relevantes a partir de una consulta. Para ello, se requiere un conjunto de referencia en el que se conozca qué documentos deben considerarse relevantes, de manera que los resultados obtenidos puedan compararse con las relaciones esperadas \cite{manning2008ir}.
 
@@ -561,7 +561,7 @@ Ambas métricas ofrecen perspectivas complementarias sobre el funcionamiento de 
 
 En la búsqueda de antecedentes de la DDP, estas medidas pueden utilizarse para evaluar la recuperación de expedientes relacionados, siempre que se disponga de referencias previamente verificadas. La selección de las métricas y los valores de $k$ debe corresponder a los objetivos y condiciones de evaluación establecidos para el modelo.
 
-\subsubsection{Métricas de ordenamiento y evaluación experimental}
+\subsection{Métricas de ordenamiento y evaluación experimental}
 
 Además de la precisión y la exhaustividad en las primeras $k$ posiciones, los sistemas de
 recuperación pueden evaluarse con métricas sensibles al orden de aparición de los resultados.
@@ -603,7 +603,7 @@ representativos de operación institucional. La selección de parámetros y la e
 final deben distinguirse para evitar que una misma colección se utilice tanto para
 ajustar el recuperador como para estimar su desempeño sin sesgos.
 
-\subsection{Generación automática de resúmenes}
+\section{Generación automática de resúmenes}
 \label{sec:generacion_resumenes}
 
 La generación automática de resúmenes es una tarea del
@@ -630,7 +630,7 @@ Sin embargo, el resumen generado no sustituye el
 documento original ni la valoración realizada por
 el personal responsable.
 
-\subsubsection{Resumen extractivo y abstractivo}
+\subsection{Resumen extractivo y abstractivo}
 
 Los métodos de generación automática de resúmenes pueden
 clasificarse principalmente en extractivos y abstractivos,
@@ -669,7 +669,7 @@ importante debido a que la claridad del resumen debe
 mantenerse subordinada a la conservación de los hechos
 descritos por la persona que presenta la solicitud.
 
-\subsubsection{Selección extractiva mediante Maximum Marginal Relevance}
+\subsection{Selección extractiva mediante Maximum Marginal Relevance}
 
 La selección extractiva de oraciones puede producir resúmenes redundantes cuando varios
 fragmentos expresan información semejante. \textit{Maximum Marginal Relevance} (MMR) es un
@@ -698,7 +698,7 @@ Por ese motivo, puede complementarse con reglas de cobertura y coherencia contex
 La selección extractiva y la edición lingüística posterior deben tratarse como etapas
 separadas, ya que cada una introduce riesgos y criterios de evaluación diferentes.
 
-\subsubsection{Modelos de lenguaje basados en Transformers}
+\subsection{Modelos de lenguaje basados en Transformers}
 
 Los modelos de lenguaje son sistemas computacionales
 diseñados para procesar y generar secuencias de texto
@@ -747,7 +747,7 @@ Por ello, la utilización de estos modelos requiere
 considerar mecanismos de evaluación y revisión de
 los resultados.
 
-\subsubsection{Generación autoregresiva y cuantización de modelos de lenguaje}
+\subsection{Generación autoregresiva y cuantización de modelos de lenguaje}
 
 Los modelos de lenguaje generativos de tipo \textit{decoder} producen texto de manera
 autoregresiva: predicen el siguiente token condicionado por los anteriores y repiten el
@@ -769,7 +769,7 @@ compromiso entre recursos y comportamiento del modelo. En entornos con CPU y mem
 limitadas, la cuantización, el tamaño de contexto, la concurrencia y el número de tokens
 generados son factores relevantes para el diseño operativo del servicio.
 
-\subsubsection{Fidelidad y consistencia factual}
+\subsection{Fidelidad y consistencia factual}
 
 La fidelidad factual es una propiedad fundamental
 de los resúmenes automáticos y se refiere a la
@@ -809,7 +809,7 @@ considerarse herramientas de apoyo documental,
 sujetas a revisión humana cuando se utilicen
 en procesos institucionales.
 
-\subsubsection{Evaluación de resúmenes generados}
+\subsection{Evaluación de resúmenes generados}
 
 La evaluación de resúmenes automáticos busca determinar
 en qué medida el texto generado conserva la información

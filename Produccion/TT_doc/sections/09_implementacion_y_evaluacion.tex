@@ -1,4 +1,4 @@
-\section{Implementación y evaluación del prototipo}
+\chapter{Implementación y evaluación del prototipo}
 \label{cap:implementacion}
 Este capítulo documenta cómo se construyó, se desplegó y se verificó la plataforma diseñada en
 el Capítulo~\ref{sec:descripcion_solucion}. Se organiza siguiendo las capas del sistema: primero
@@ -8,7 +8,7 @@ finalmente la implementación y evaluación de los componentes de inteligencia a
 explícito de lo que quedó implementado y lo que no, porque un documento técnico que solo enumera
 logros no permite a nadie retomar el trabajo.
 
-\subsection{Entorno de desarrollo y herramientas}
+\section{Entorno de desarrollo y herramientas}
 \label{sec:entorno_herramientas}
 La plataforma se construyó con el conjunto de tecnologías cuyos fundamentos se expusieron en la
 Sección~\ref{sec:tecnologias}. La Tabla~\ref{tab:herramientas} resume la asignación concreta de
@@ -67,7 +67,7 @@ simplifica la evolución de cada servicio por separado, pero tiene una consecuen
 concreta: no existe un comando único que compile todo el sistema, y cada servicio debe compilarse
 desde su propio directorio.
 
-\subsection{Implementación del lado del servidor}
+\section{Implementación del lado del servidor}
 \label{sec:impl_backend}
 Los microservicios Java de gestión institucional siguen una estructura interna común. Esta uniformidad
 fue una decisión de implementación, no una consecuencia: cuando se construyó cada servicio nuevo
@@ -75,7 +75,7 @@ se replicó la organización de carpetas, los filtros y el manejo de errores del
 de introducir un estilo distinto. El beneficio es que quien conoce un servicio reconoce la estructura de los restantes, y
 un defecto corregido en uno se localiza sin dificultad en los demás.
 
-\subsubsection{Estructura común de un microservicio}
+\subsection{Estructura común de un microservicio}
 Cada servicio organiza su código en cinco paquetes que corresponden a las capas descritas en la
 Sección~\ref{sec:arquitectura_software}:
 
@@ -102,7 +102,7 @@ la base de datos: cualquier columna nueva aparece automáticamente en la respues
 que no deberían ser públicas ---la credencial cifrada de un usuario, por ejemplo---. Mantener
 objetos de transferencia separados obliga a decidir de forma consciente qué se expone.
 
-\subsubsection{Verificación de tokens y control de acceso}
+\subsection{Verificación de tokens y control de acceso}
 El mecanismo de autenticación se implementó como un filtro que se ejecuta antes de que la
 petición llegue al controlador. Su lógica es compartida por los servicios Java que requieren autenticación: extrae el token del
 encabezado de autorización, verifica su firma con la clave compartida, extrae de él la identidad
@@ -119,7 +119,7 @@ administrativo efectivamente abierto. Esta situación se atendió declarando sie
 específica primero, y quedó registrada como regla de negocio RN-A05 justamente para que no se
 reintroduzca al agregar servicios nuevos.
 
-\subsubsection{Manejo centralizado de errores}
+\subsection{Manejo centralizado de errores}
 Cada servicio implementa un manejador global de excepciones que traduce cualquier error de la
 capa de negocio a una respuesta con estructura uniforme: mensaje, marca de tiempo y código. La
 alternativa ---capturar excepciones en cada controlador--- se descartó porque produce respuestas
@@ -127,14 +127,14 @@ de error con formatos distintos según el punto de acceso, y obliga al cliente a
 tantas variantes de manejo de error como puntos de acceso consuma. Con el manejador centralizado,
 las aplicaciones web leen el mensaje de error siempre del mismo lugar.
 
-\subsubsection{Documentación de la interfaz de programación}
+\subsection{Documentación de la interfaz de programación}
 Los servicios Java exponen su especificación en formato OpenAPI y una interfaz de exploración
 interactiva. Esta decisión resolvió un problema concreto de coordinación: durante el desarrollo
 del cliente, la única forma de conocer la forma exacta de una petición era leer el código del
 controlador correspondiente. Con la especificación publicada, el contrato de cada servicio es
 consultable sin abrir el código.
 
-\subsubsection{Puntos de acceso implementados}
+\subsection{Puntos de acceso implementados}
 La Tabla~\ref{tab:endpoints} presenta los puntos de acceso principales agrupados por servicio,
 con su condición de acceso. La especificación completa de cada uno, con sus parámetros y
 respuestas, se consulta en la interfaz de exploración de cada servicio y se reproduce en el anexo
@@ -219,21 +219,21 @@ correspondiente.
 \setlength{\tabcolsep}{6pt}
 \renewcommand{\arraystretch}{1}
 
-\subsection{Implementación de las aplicaciones web}
+\section{Implementación de las aplicaciones web}
 \label{sec:impl_frontend}
 Las aplicaciones web se desarrollaron como aplicaciones de página única con componentes
 autónomos, sin el sistema de módulos de versiones anteriores del marco de trabajo. Cada
 aplicación es un proyecto independiente con su propio árbol de rutas, su guarda de
 autenticación y sus interceptores.
 
-\subsubsection{Estructura común}
+\subsection{Estructura común}
 Estas aplicaciones comparten una organización general: una capa \texttt{core} con los servicios de
 comunicación con el servidor, los modelos de datos y la configuración de seguridad del cliente;
 una capa \texttt{shared} con los componentes reutilizables ---encabezado, pie, avisos, ayuda
 flotante---; y una capa \texttt{pages} con un componente por pantalla, cargado de forma diferida
 para que el navegador no descargue el código de pantallas que el usuario no ha visitado.
 
-\subsubsection{Interceptores y guardas}
+\subsection{Interceptores y guardas}
 Dos piezas transversales resuelven problemas que de otro modo habría que repetir en cada
 pantalla.
 
@@ -249,7 +249,7 @@ usabilidad, no de seguridad, porque se ejecuta en el navegador y puede eludirse.
 real la aplica el servidor, que rechaza cualquier petición sin token válido con independencia de
 lo que haga el cliente. Confundir ambas cosas es un error frecuente y por eso se hace explícito.
 
-\subsubsection{Detección de cambios sin zonas}
+\subsection{Detección de cambios sin zonas}
 La versión del marco de trabajo empleada permite ejecutar la aplicación sin la biblioteca que
 tradicionalmente intercepta las operaciones asíncronas para disparar la actualización de la
 vista. Ese modo reduce el trabajo del navegador, pero tiene una consecuencia que apareció durante
@@ -261,7 +261,7 @@ actualización de la vista tras cada respuesta del servidor. Se documenta aquí 
 particularidad no evidente del entorno y porque cualquier pantalla nueva que se agregue al
 proyecto depende de que ese interceptor siga registrado.
 
-\subsection{Empaquetado en contenedores y despliegue}
+\section{Empaquetado en contenedores y despliegue}
 \label{sec:impl_despliegue}
 El sistema se ejecuta mediante contenedores distribuidos según sus responsabilidades, sobre la infraestructura descrita en la
 Sección~\ref{sec:diseno_arquitectura}. La Tabla~\ref{tab:contenedores} presenta los principales componentes de despliegue, sin incluir los contenedores auxiliares de prueba.
@@ -317,7 +317,7 @@ Sección~\ref{sec:diseno_arquitectura}. La Tabla~\ref{tab:contenedores} presenta
 \setlength{\tabcolsep}{6pt}
 \renewcommand{\arraystretch}{1}
 
-\subsubsection{Configuración externalizada}
+\subsection{Configuración externalizada}
 Cada microservicio monta su configuración de producción como un volumen del contenedor, en lugar
 de incluirla en la imagen. La consecuencia práctica es una distinción importante en el
 procedimiento de operación: un cambio de configuración ---una dirección, un tiempo de
@@ -332,7 +332,7 @@ montaje conserva la referencia al archivo original. Es necesario reiniciar el co
 recargar el servicio. Se documenta porque es una fuente de diagnósticos erróneos: el archivo se ve
 correcto en el servidor y el servicio sigue comportándose como antes.
 
-\subsubsection{Publicación segura y cifrado del canal}
+\subsection{Publicación segura y cifrado del canal}
 La publicación al exterior se resolvió en tres pasos. Primero se restringió el cortafuegos del
 servidor de aplicación para que los puertos de los microservicios y de la base de datos aceptaran
 conexiones únicamente desde la dirección del servidor de acceso público, dejando fuera cualquier
@@ -354,7 +354,7 @@ que finalmente no se utilizó; su eliminación resolvió el aviso. Ambos casos i
 de diagnóstico útil: cuando un componente responde de forma local y no desde el exterior, el
 problema no está en el componente sino en el camino.
 
-\subsection{Implementación de la búsqueda de antecedentes}
+\section{Implementación de la búsqueda de antecedentes}
 \label{sec:impl_antecedentes}
 El servicio de búsqueda de antecedentes se implementó en Python y se expone mediante una
 interfaz HTTP. Para cada consulta recibe la descripción de una queja, recupera registros
@@ -371,7 +371,7 @@ a la fusión de rankings, no a una suma directa de las similitudes. Su elección
 representa una decisión de implementación y no demuestra una configuración
 universalmente óptima para cualquier conjunto de quejas.
 
-\subsubsection{Preparación del índice y fragmentación}
+\subsection{Preparación del índice y fragmentación}
 Los documentos se leen desde las tablas de quejas e histórico mediante consultas de
 solo lectura. Para la comparación semántica, el contenido extenso se divide en
 fragmentos de hasta 128 tokens, con un solapamiento de 24 tokens. Esta fragmentación
@@ -385,7 +385,7 @@ el índice, las entradas de documentos sin cambios se reutilizan; las nuevas o
 modificadas se procesan de nuevo. La construcción ocurre sin bloquear el inicio
 de la API y el índice vigente se sustituye cuando la actualización termina.
 
-\subsubsection{Recuperación y ordenamiento}
+\subsection{Recuperación y ordenamiento}
 La consulta se transforma tanto en un vector TF-IDF como en representaciones
 semánticas. Para interpretar y reproducir el resultado de documentos extensos,
 es necesario registrar cómo se agregan las puntuaciones de sus fragmentos y cómo
@@ -404,7 +404,7 @@ o semántica), sin presentarlo como una probabilidad calibrada de duplicidad. Lo
 agruparse por semejanzas narrativas o coincidencias de personas y otros datos,
 pero la confirmación de duplicidad permanece bajo revisión humana.
 
-\subsection{Implementación de la generación de resúmenes}
+\section{Implementación de la generación de resúmenes}
 \label{sec:impl_resumenes}
 El servicio de resúmenes utiliza una secuencia extractiva-generativa. Primero,
 un procedimiento de selección documental basado en relevancia, redundancia y
@@ -418,7 +418,7 @@ fechas, cantidades, evidencias y solicitudes. La denominación de editor
 lingüístico describe su función prevista, pero no garantiza que el modelo
 conserve todos los hechos de la captura.
 
-\subsubsection{Ejecución del editor lingüístico}
+\subsection{Ejecución del editor lingüístico}
 El editor utiliza un modelo Qwen3 de cuatro mil millones de parámetros,
 cuantizado en formato Q4\_K\_M y servido por llama.cpp. La inferencia se ejecuta
 en CPU mediante un proceso independiente del servicio HTTP que expone el
@@ -434,14 +434,14 @@ no puede editarse satisfactoriamente, se conserva su contenido extractivo
 original. Este mecanismo evita perder el bloque por un fallo de generación,
 pero no garantiza la fidelidad completa de un resumen.
 
-\subsubsection{Respuesta y revisión humana}
+\subsection{Respuesta y revisión humana}
 El servicio expone una operación HTTP para generar el borrador y devuelve tanto
 el texto editado como la captura extractiva de la que partió. La respuesta
 indica que requiere revisión humana. El resultado no constituye una resolución
 jurídica ni reemplaza la queja original; su propósito es apoyar la lectura
 inicial del expediente.
 
-\subsection{Evaluación experimental de los componentes de inteligencia artificial}
+\section{Evaluación experimental de los componentes de inteligencia artificial}
 \label{sec:eval_ia}
 La evaluación de antecedentes se organizó en consultas sintéticas con
 referencias de relevancia y casos contrastivos. Se consideraron métricas de
@@ -484,7 +484,7 @@ se completó por las restricciones de tiempo del Trabajo Terminal. Por tanto,
 las pruebas realizadas verifican el funcionamiento del componente e identifican
 limitaciones observadas, pero no acreditan su calidad general en casos reales.
 
-\subsection{Pruebas y verificación}
+\section{Pruebas y verificación}
 \label{sec:pruebas}
 La verificación de la plataforma combinó pruebas automatizadas de lógica de negocio,
 comprobaciones de integración, revisiones de configuración y recorridos funcionales
@@ -519,7 +519,7 @@ pendientes de seguridad, capacidad, aceptación y los flujos completos todavía
 requieren evidencias adicionales. Tampoco se documenta aquí la existencia de una
 integración continua que ejecute automáticamente todas las suites.
 
-\subsection{Estado de avance por componente}
+\section{Estado de avance por componente}
 \label{sec:estado_avance}
 La Tabla~\ref{tab:estado_avance} presenta el balance de lo implementado al cierre de esta etapa.
 Se incluye de forma deliberada la columna de lo no implementado, porque el valor de este balance
