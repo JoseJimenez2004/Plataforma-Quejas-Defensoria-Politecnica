@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -13,17 +13,19 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ExpedienteService } from '../../core/services/expediente.service';
 import { ExpedienteDetalle } from '../../core/models/expediente-detalle';
 import { RemisionService } from '../../core/services/remision.service';
-import { Remision as RemisionModelo } from '../../core/models/remision.model';
+import { InstanciaRemision, Remision as RemisionModelo } from '../../core/models/remision.model';
 import { formatearFechaHora } from '../../core/utils/estatus-expediente';
 import { descargarBlob, mensajeDeError } from '../../core/utils/archivos';
+import { ConfirmacionService } from '../../core/services/confirmacion.service';
 
 /**
  * CU-PC-09: remisión externa de un expediente improcedente.
  *
- *   1. Se capturan los datos -> la remisión queda GENERADA y ya se puede descargar el
- *      oficio en PDF.
- *   2. El analista entrega el oficio por los medios oficiales y registra el envío ->
- *      remisión ENVIADA y expediente REMITIDA. Se avisa al quejoso.
+ * Un solo paso (2026-11-10): se elige la instancia del catálogo (OAG, OIC, COSECOVI /
+ * Género; el correo lo administra la Defensora), se captura el fundamento y "Generar y
+ * enviar oficio" genera el PDF y lo manda por correo. Solo si el correo sale queda ENVIADA,
+ * el expediente REMITIDA y se avisa al quejoso. Después se puede ver o descargar el oficio.
+ * Las remisiones que quedaron GENERADAS con el flujo anterior se envían eligiendo instancia.
  */
 @Component({
   selector: 'app-remision',
@@ -44,8 +46,8 @@ import { descargarBlob, mensajeDeError } from '../../core/utils/archivos';
 })
 export class Remision implements OnInit {
   folio = '';
+  /** Clave de la instancia elegida (OAG, OIC, COSECOVI). */
   institucion = '';
-  institucionOtra = '';
   fundamento = '';
   orientacion = '';
   adjuntarExpediente = true;
@@ -58,13 +60,10 @@ export class Remision implements OnInit {
 
   readonly formatearFechaHora = formatearFechaHora;
 
-  instituciones = [
-    'Órgano Interno de Control IPN',
-    'Abogado General',
-    'Comisión de Derechos Humanos',
-    'Ministerio Público',
-    'Otra'
-  ];
+  instituciones: InstanciaRemision[] = [];
+  errorInstancias = false;
+
+  private readonly confirmacion = inject(ConfirmacionService);
 
   constructor(
     private route: ActivatedRoute,
@@ -79,6 +78,18 @@ export class Remision implements OnInit {
 
   ngOnInit(): void {
     if (!this.folio) return;
+
+    this.remisionService.obtenerInstancias().subscribe({
+      next: (lista) => {
+        this.instituciones = lista;
+        this.errorInstancias = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorInstancias = true;
+        this.cdr.detectChanges();
+      }
+    });
 
     this.expedienteService.obtenerPorFolio(this.folio).subscribe({
       next: (expediente) => {
@@ -99,6 +110,10 @@ export class Remision implements OnInit {
     this.remisionService.obtenerPorFolio(this.folio).subscribe({
       next: (remision) => {
         this.remision = remision;
+        // Para reintentar, se preselecciona la instancia que ya tenía.
+        if (remision.estatus !== 'ENVIADA' && remision.instanciaClave) {
+          this.institucion = remision.instanciaClave;
+        }
         this.cargando = false;
         this.cdr.detectChanges();
       },
@@ -114,57 +129,128 @@ export class Remision implements OnInit {
     return this.expediente?.estatusCodigo === 'IMPROCEDENTE';
   }
 
-  /** Paso activo del flujo: 0 datos, 1 oficio generado, 2 enviado. */
+  /** Paso activo del flujo: 0 datos de la remisión, 1 enviado. */
   get paso(): number {
-    if (!this.remision) return 0;
-    return this.remision.estatus === 'ENVIADA' ? 2 : 1;
+    return this.remision?.estatus === 'ENVIADA' ? 1 : 0;
   }
 
-  generarRemision(): void {
+  /** Instancia elegida en el formulario (para mostrar a qué correo saldrá). */
+  get instanciaElegida(): InstanciaRemision | undefined {
+    return this.instituciones.find(i => i.clave === this.institucion);
+  }
+
+  async generarYEnviar(): Promise<void> {
     if (!this.expediente?.folio) {
       this.snackBar.open('No fue posible identificar el expediente.', 'Cerrar', { duration: 3000 });
       return;
     }
 
-    const institucionDestino =
-      this.institucion === 'Otra'
-        ? this.institucionOtra.trim()
-        : this.institucion;
-
-    if (!institucionDestino || !this.fundamento.trim()) {
+    const instancia = this.instanciaElegida;
+    if (!instancia || !this.fundamento.trim()) {
       this.snackBar.open(
-        'Completa la institución destino y el fundamento de la remisión.',
+        'Elige la instancia destino y escribe el fundamento de la remisión.',
         'Cerrar',
         { duration: 3500 }
       );
       return;
     }
+    if (!instancia.correo) {
+      this.snackBar.open(`${instancia.sigla} no tiene correo registrado. Pide a la Defensora que lo agregue.`, 'Cerrar', { duration: 4500 });
+      return;
+    }
+
+    if (!(await this.confirmarEnvio(instancia))) return;
 
     this.procesando = true;
+    this.cdr.detectChanges();
 
     this.remisionService.crearRemision({
       folio: this.expediente.folio,
-      autoridadRemision: institucionDestino,
+      instanciaClave: instancia.clave,
       justificacionLegal: this.fundamento.trim(),
       sugerenciaQuejoso: this.orientacion.trim() || undefined,
       adjuntarExpediente: this.adjuntarExpediente
     }).subscribe({
-      next: (remision) => {
-        this.remision = remision;
-        this.procesando = false;
-        this.cdr.detectChanges();
-        this.snackBar.open(
-          `Oficio ${remision.numeroOficio} generado. Descárgalo y registra su envío.`,
-          'Cerrar',
-          { duration: 4000 }
-        );
-      },
+      next: (remision) => this.alEnviar(remision),
       error: (error) => {
         this.procesando = false;
         this.cdr.detectChanges();
-        this.snackBar.open(mensajeDeError(error, 'No fue posible generar la remisión.'), 'Cerrar', {
-          duration: 4000
+        this.snackBar.open(mensajeDeError(error, 'No fue posible enviar el oficio.'), 'Cerrar', {
+          duration: 6000
         });
+        // Si el correo falló, la remisión ya quedó guardada como pendiente: se muestra con
+        // el botón «Enviar oficio» para reintentar (404 = no se guardó, sigue el formulario).
+        this.cargarRemision();
+      }
+    });
+  }
+
+  /** Remisiones GENERADAS (flujo anterior o correo que falló) con el flujo anterior: se envían eligiendo instancia. */
+  async enviarPendiente(): Promise<void> {
+    const instancia = this.instanciaElegida;
+    if (!instancia?.correo) {
+      this.snackBar.open('Elige la instancia a la que se enviará el oficio.', 'Cerrar', { duration: 3500 });
+      return;
+    }
+
+    if (!(await this.confirmarEnvio(instancia))) return;
+
+    this.procesando = true;
+    this.cdr.detectChanges();
+
+    this.remisionService.enviarRemision(this.folio, instancia.clave).subscribe({
+      next: (remision) => this.alEnviar(remision),
+      error: (error) => {
+        this.procesando = false;
+        this.cdr.detectChanges();
+        this.snackBar.open(mensajeDeError(error, 'No fue posible enviar el oficio.'), 'Cerrar', {
+          duration: 5000
+        });
+      }
+    });
+  }
+
+  private confirmarEnvio(instancia: InstanciaRemision): Promise<boolean> {
+    return this.confirmacion.confirmar({
+      titulo: '¿Generar y enviar el oficio?',
+      mensaje: `Se enviará a ${instancia.sigla} (${instancia.correo}).`,
+      nota: 'El expediente quedará como Remitido y se avisará al quejoso.',
+      textoConfirmar: 'Sí, enviar oficio',
+      icono: 'outgoing_mail'
+    });
+  }
+
+  private alEnviar(remision: RemisionModelo): void {
+    this.remision = remision;
+    this.procesando = false;
+    if (this.expediente) {
+      this.expediente.estatus = 'Remitida';
+      this.expediente.estatusCodigo = 'REMITIDA';
+    }
+    this.cdr.detectChanges();
+    this.snackBar.open(
+      `Oficio ${remision.numeroOficio} enviado a ${remision.correoDestino}. El expediente quedó remitido.`,
+      'Cerrar',
+      { duration: 5000 }
+    );
+  }
+
+  /** Abre el oficio en una pestaña nueva (el navegador muestra el PDF). */
+  verOficio(): void {
+    const pestana = window.open('', '_blank');
+    this.remisionService.descargarPdf(this.folio).subscribe({
+      next: (pdf) => {
+        const url = URL.createObjectURL(new Blob([pdf], { type: 'application/pdf' }));
+        if (pestana) {
+          pestana.location.href = url;
+        } else {
+          window.open(url, '_blank');
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      },
+      error: () => {
+        pestana?.close();
+        this.snackBar.open('No fue posible abrir el oficio.', 'Cerrar', { duration: 3500 });
       }
     });
   }
@@ -174,37 +260,6 @@ export class Remision implements OnInit {
       next: (pdf) => descargarBlob(pdf, `oficio-remision-${this.expediente?.folioOrigen ?? this.folio}.pdf`),
       error: () => {
         this.snackBar.open('No fue posible descargar el oficio.', 'Cerrar', { duration: 3500 });
-      }
-    });
-  }
-
-  registrarEnvio(): void {
-    const confirmar = confirm(
-      'Registra el envío solo cuando el oficio ya se haya entregado a la instancia. '
-        + 'El expediente quedará como Remitido y se avisará al quejoso. ¿Continuar?'
-    );
-
-    if (!confirmar) return;
-
-    this.procesando = true;
-
-    this.remisionService.enviarRemision(this.folio).subscribe({
-      next: (remision) => {
-        this.remision = remision;
-        this.procesando = false;
-        if (this.expediente) {
-          this.expediente.estatus = 'Remitida';
-          this.expediente.estatusCodigo = 'REMITIDA';
-        }
-        this.cdr.detectChanges();
-        this.snackBar.open('Envío registrado. El expediente quedó remitido.', 'Cerrar', { duration: 3500 });
-      },
-      error: (error) => {
-        this.procesando = false;
-        this.cdr.detectChanges();
-        this.snackBar.open(mensajeDeError(error, 'No fue posible registrar el envío.'), 'Cerrar', {
-          duration: 4000
-        });
       }
     });
   }

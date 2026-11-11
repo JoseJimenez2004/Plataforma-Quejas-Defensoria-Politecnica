@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import {
   Remision,
-  CrearRemisionPayload
+  CrearRemisionPayload,
+  InstanciaRemision
 } from '../models/remision.model';
 
 @Injectable({
@@ -14,7 +15,15 @@ export class RemisionService {
 
   constructor(private api: ApiService) {}
 
-  /** Deja la remisión GENERADA: el oficio ya se puede descargar. */
+  /** OAG, OIC y COSECOVI / Género, con el correo al que saldrá el oficio. */
+  obtenerInstancias(): Observable<InstanciaRemision[]> {
+    return this.api.get<InstanciaRemision[]>('/remisiones/instancias');
+  }
+
+  /**
+   * Genera el oficio y lo envía por correo a la instancia en un solo paso. Si el correo no
+   * sale, el backend responde error y no registra nada.
+   */
   crearRemision(
     dto: CrearRemisionPayload
   ): Observable<Remision> {
@@ -44,14 +53,15 @@ export class RemisionService {
     );
   }
 
-  /** Registra que el oficio se envió: remisión ENVIADA y expediente REMITIDA. */
+  /** Envía por correo una remisión que quedó GENERADA con el flujo anterior. */
   enviarRemision(
-    folio: string
+    folio: string,
+    instanciaClave: string
   ): Observable<Remision> {
 
     return this.api.put<Remision>(
       `/remisiones/folio/${encodeURIComponent(folio)}/enviar`,
-      {}
+      { instanciaClave }
     );
   }
 }

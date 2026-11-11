@@ -216,3 +216,7 @@ h1, h2, h3, h4 {
 .sd-tabla td:first-child { border-radius: 8px 0 0 8px; }
 .sd-tabla td:last-child { border-radius: 0 8px 8px 0; }
 .sd-tabla tbody tr:hover td { background: #f7eef1; }
+
+/* Aviso de confirmación (core/services/confirmacion.service.ts) */
+.confirmar-fondo { background: rgba(20, 8, 14, 0.58); }
+.confirmar-panel .mat-mdc-dialog-surface { border-radius: 14px !important; }

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -13,6 +13,7 @@ import { ExpedienteDetalle, EvidenciaDetalle } from '../../core/models/expedient
 import { DictamenService } from '../../core/services/dictamen.service';
 import { estaAbierto } from '../../core/utils/estatus-expediente';
 import { abrirBlob, mensajeDeError } from '../../core/utils/archivos';
+import { ConfirmacionService } from '../../core/services/confirmacion.service';
 
 @Component({
   selector: 'app-dictamen',
@@ -41,6 +42,8 @@ export class Dictamen implements OnInit {
   /** El expediente ya no admite dictamen (cerrado o ya dictaminado). */
   bloqueado = false;
   enviando = false;
+
+  private readonly confirmacion = inject(ConfirmacionService);
 
   constructor(
     private route: ActivatedRoute,
@@ -106,7 +109,7 @@ export class Dictamen implements OnInit {
     });
   }
 
-  enviarTitular(): void {
+  async enviarTitular(): Promise<void> {
     if (!this.expediente?.folio) {
       this.snackBar.open(
         'No fue posible identificar el expediente.',
@@ -135,9 +138,7 @@ export class Dictamen implements OnInit {
 
     if (this.tipoDictamen === 'improcedente') {
 
-      const confirmar = confirm(
-        '¿Está seguro de declarar improcedente este expediente? Después deberá generar la remisión a la instancia competente.'
-      );
+      const confirmar = await this.confirmacion.confirmar({ titulo: '¿Declarar improcedente este expediente?', nota: 'Después deberás generar la remisión a la instancia competente.', textoConfirmar: 'Sí, declarar improcedente', tono: 'peligro', icono: 'gavel' });
 
       if (!confirmar) return;
 
@@ -190,9 +191,7 @@ export class Dictamen implements OnInit {
       return;
     }
 
-    const confirmar = confirm(
-      '¿Está seguro de turnar este expediente a Subdefensoría?'
-    );
+    const confirmar = await this.confirmacion.confirmar({ titulo: '¿Turnar este expediente a Subdefensoría?', nota: 'El expediente quedará como procedente y lo recibirá el abogado seleccionado.', textoConfirmar: 'Sí, turnar', icono: 'send' });
 
     if (!confirmar) return;
 

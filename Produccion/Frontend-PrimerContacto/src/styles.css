@@ -532,3 +532,7 @@ h1, h2, h3, h4 {
   font-weight: 700;
   letter-spacing: 0;
 }
+
+/* Aviso de confirmación (core/services/confirmacion.service.ts) */
+.confirmar-fondo { background: rgba(20, 8, 14, 0.58); }
+.confirmar-panel .mat-mdc-dialog-surface { border-radius: 14px !important; }

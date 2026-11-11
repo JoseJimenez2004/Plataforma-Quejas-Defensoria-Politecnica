@@ -14,8 +14,9 @@ public class CrearRemisionDTO {
     @NotBlank
     private String folio;
 
+    /* Clave de la instancia (OAG, OIC, COSECOVI); el nombre y el correo salen del catálogo. */
     @NotBlank
-    private String autoridadRemision;
+    private String instanciaClave;
 
     @NotBlank
     private String justificacionLegal;

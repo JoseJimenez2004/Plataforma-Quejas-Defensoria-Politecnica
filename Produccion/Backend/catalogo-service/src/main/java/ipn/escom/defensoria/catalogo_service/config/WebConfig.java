@@ -40,6 +40,8 @@ public class WebConfig {
                 // que haga match. El rol exacto (DEFENSOR) lo exige @PreAuthorize en
                 // DependenciaAdminController.
                 .requestMatchers("/api/catalogos/dependencias/admin/**").authenticated()
+                // Correos de las instancias de remisión: solo la Defensora (no es público).
+                .requestMatchers("/api/catalogos/instancias-remision/**").authenticated()
                 // El resto del catálogo es de solo lectura y público: lo necesita el
                 // formulario de queja incluso antes de que el quejoso tenga cuenta/token.
                 .requestMatchers("/api/catalogos/**").permitAll()

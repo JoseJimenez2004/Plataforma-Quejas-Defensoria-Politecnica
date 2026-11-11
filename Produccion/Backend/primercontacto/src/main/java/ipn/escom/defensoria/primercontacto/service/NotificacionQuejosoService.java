@@ -134,6 +134,33 @@ public class NotificacionQuejosoService {
         }
     }
 
+    /**
+     * Correo con un PDF adjunto (el oficio de remisión). No es best-effort: dice si
+     * notificaciones-service lo aceptó, porque sin correo la remisión no se registra.
+     */
+    public boolean enviarCorreoConPdf(String destinatario, String asunto, String cuerpo,
+                                      String nombreArchivo, byte[] pdf) {
+        try {
+            restTemplate.postForObject(
+                    notificacionesUrl + ENDPOINT_ENVIAR,
+                    Map.of(
+                            "destinatario", destinatario,
+                            "asunto", asunto,
+                            "cuerpo", cuerpo + FIRMA,
+                            "adjuntoNombre", nombreArchivo,
+                            "adjuntoTipo", "application/pdf",
+                            "adjuntoBase64", java.util.Base64.getEncoder().encodeToString(pdf)
+                    ),
+                    String.class
+            );
+            log.info("Correo \"{}\" con {} enviado a {}", asunto, nombreArchivo, destinatario);
+            return true;
+        } catch (Exception ex) {
+            log.error("No se pudo enviar el correo \"{}\" a {}: {}", asunto, destinatario, ex.getMessage());
+            return false;
+        }
+    }
+
     private void enviarCorreo(String destinatario, String asunto, String cuerpo) {
         try {
             restTemplate.postForObject(

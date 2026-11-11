@@ -47,6 +47,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'instancias-remision',
+        loadComponent: () =>
+          import('./pages/instancias-remision/instancias-remision').then(
+            (m) => m.InstanciasRemision,
+          ),
+      },
+      {
         path: 'plantillas',
         loadComponent: () => import('./pages/plantillas/plantillas').then((m) => m.Plantillas),
       },

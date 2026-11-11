@@ -1,0 +1,100 @@
+/* Mismo diseño que el aviso "¿Quitar esta evidencia?" del portal del quejoso. */
+.confirmar {
+  padding: 26px 28px 22px;
+  text-align: center;
+  font-family: inherit;
+}
+
+.confirmar h3 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #6c1d45;
+}
+
+.confirmar p {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #555;
+}
+
+.confirmar__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 14px;
+  color: #6c1d45;
+  background: #f6e9ef;
+  border-radius: 50%;
+}
+
+.confirmar__icono--peligro {
+  color: #b3261e;
+  background: #fdeceb;
+}
+
+.confirmar__icono mat-icon {
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+}
+
+.confirmar__nota {
+  padding: 10px 12px;
+  font-size: 0.8rem !important;
+  text-align: left;
+  background: #fafafa;
+  border-left: 3px solid #d9cdd2;
+  border-radius: 4px;
+}
+
+.confirmar__acciones {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.confirmar__btn {
+  flex: 1;
+  min-height: 38px;
+  padding: 9px 18px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.confirmar__btn--secundario {
+  color: #6c1d45;
+  background: #fff;
+  border: 1px solid #d9cdd2;
+}
+
+.confirmar__btn--secundario:hover { background: #faf5f7; }
+
+.confirmar__btn--primario {
+  color: #fff;
+  background: #6c1d45;
+  border: 0;
+}
+
+.confirmar__btn--primario:hover { background: #561636; }
+
+.confirmar__btn--peligro {
+  color: #fff;
+  background: #b3261e;
+  border: 0;
+}
+
+.confirmar__btn--peligro:hover { background: #97201a; }
+
+@media (max-width: 420px) {
+  .confirmar { padding: 22px 18px 18px; }
+  .confirmar__acciones { flex-direction: column-reverse; }
+}

@@ -66,4 +66,12 @@ public class RemisionExterna {
 
     @Column(name = "fecha_envio")
     private LocalDateTime fechaEnvio;
+
+    /* Instancia del catálogo instancias_remision (OAG, OIC, COSECOVI). Null en las viejas. */
+    @Column(name = "instancia_clave", length = 30)
+    private String instanciaClave;
+
+    /* Correo al que salió el oficio (se guarda el de ese momento, aunque luego cambie). */
+    @Column(name = "correo_destino", length = 150)
+    private String correoDestino;
 }

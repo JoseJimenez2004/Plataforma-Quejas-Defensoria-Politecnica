@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -15,6 +15,7 @@ import {
   citaOcupaHorario,
   etiquetaCategoria
 } from '../../core/models/cita-primer-contacto';
+import { ConfirmacionService } from '../../core/services/confirmacion.service';
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre',
   'octubre', 'noviembre', 'diciembre'];
@@ -70,6 +71,8 @@ export class Agenda implements OnInit {
   mostrarNueva = false;
   folioNueva = '';
   citaReagendar?: CitaPrimerContacto;
+
+  private readonly confirmacion = inject(ConfirmacionService);
 
   constructor(
     private agenda: AgendaService,
@@ -331,7 +334,7 @@ export class Agenda implements OnInit {
   }
 
   /** Mismas acciones que el detalle, también desde el menú ⋮ de la lista. */
-  ejecutar(accion: string, cita: CitaPrimerContacto, motivo?: string): void {
+  async ejecutar(accion: string, cita: CitaPrimerContacto, motivo?: string): Promise<void> {
     this.menuAbierto = null;
     if (!cita.id) return;
     if (accion === 'reagendar') {
@@ -348,7 +351,7 @@ export class Agenda implements OnInit {
       operacion = this.agenda.registrarCancelacionQuejoso(cita.id, motivo);
       mensaje = 'Cancelación del quejoso registrada. Reagenda o cancela la cita.';
     } else if (accion === 'cancelar') {
-      if (!confirm('¿Cancelar la cita? Se le avisará al quejoso.')) return;
+      if (!(await this.confirmacion.confirmar({ titulo: '¿Cancelar la cita?', mensaje: 'Se le avisará al quejoso que la cita fue cancelada.', textoConfirmar: 'Sí, cancelar cita', textoCancelar: 'Conservar', tono: 'peligro', icono: 'event_busy' }))) return;
       operacion = this.agenda.cancelarCita(cita.id);
       mensaje = 'Cita cancelada. Se avisó al quejoso.';
     } else {

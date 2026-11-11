@@ -4,7 +4,7 @@ export interface DashboardResumen {
   titulo: string;
   valor: number;
   icono: string;
-  tipo: 'PENDIENTES' | 'CON_CITA' | 'EN_DICTAMEN' | 'REMITIDOS';
+  tipo: 'PENDIENTES' | 'POR_ABRIR' | 'CON_CITA' | 'EN_DICTAMEN' | 'REMITIDOS';
 }
 
 export interface DashboardActividad {
