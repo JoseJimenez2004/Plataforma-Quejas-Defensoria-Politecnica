@@ -615,6 +615,22 @@ export class Expediente implements OnInit, OnDestroy {
     return codigoPrioridad(this.expediente.prioridad);
   }
 
+  /**
+   * Igual que el backend: se cambia mientras está abierto, o si quedó procedente y
+   * Subdefensoría aún no lo recibe. Ya recibido, la prioridad se cambia en Subdefensoría.
+   */
+  get prioridadEditable(): boolean {
+    return estaAbierto(this.expediente.estatusCodigo)
+      || (this.expediente.estatusCodigo === 'PROCEDENTE' && !this.expediente.folioSubdefensoria);
+  }
+
+  get tituloPrioridad(): string {
+    if (this.prioridadEditable) return 'La prioridad la asigna Primer Contacto y viaja a Subdefensoría al turnar';
+    return this.expediente.folioSubdefensoria
+      ? 'El expediente ya está en Subdefensoría: la prioridad se cambia allá'
+      : 'El expediente ya fue dictaminado: la prioridad ya no se cambia';
+  }
+
   cambiarPrioridad(codigo: string): void {
     if (!codigo || codigo === 'SIN_ASIGNAR' || codigo === this.codigoPrioridadActual) return;
     this.guardandoPrioridad = true;
@@ -625,9 +641,9 @@ export class Expediente implements OnInit, OnDestroy {
         this.snackBar.open(`Prioridad actualizada a ${this.expediente.prioridad}.`, 'Cerrar', { duration: 2500 });
         this.cdr.detectChanges();
       },
-      error: () => {
+      error: (error) => {
         this.guardandoPrioridad = false;
-        this.snackBar.open('No se pudo guardar la prioridad. Intenta de nuevo.', 'Cerrar', { duration: 3500 });
+        this.snackBar.open(mensajeDeError(error, 'No se pudo guardar la prioridad. Intenta de nuevo.'), 'Cerrar', { duration: 3500 });
         this.cdr.detectChanges();
       }
     });
