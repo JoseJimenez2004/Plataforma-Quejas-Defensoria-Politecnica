@@ -1,4 +1,4 @@
-\section{Pruebas}
+\chapter{Pruebas}
 	\label{cap:pruebas}
 	Este capítulo documenta la verificación de la plataforma: la estrategia con que se diseñaron las
 	pruebas y los casos y resultados de cada característica de calidad. Las pruebas se organizan siguiendo el modelo ISO/IEC 25010 \cite{iso25010} con que se
@@ -12,9 +12,9 @@
 	el daño que causaría cada falla, y los resultados se reportan tal como se obtuvieron, incluidas las
 	pruebas que fallaron y las que siguen pendientes de ejecutarse.
 
-	\subsection{Estrategia de pruebas}
+	\section{Estrategia de pruebas}
 	\label{sec:estrategia_pruebas}
-	\subsubsection{Niveles y técnicas}
+	\subsection{Niveles y técnicas}
 	La estrategia sigue el modelo en V, en el que cada nivel de prueba verifica el artefacto del nivel de
 	diseño correspondiente \cite{istqb_foundation}:
 
@@ -41,7 +41,7 @@
 	de estados \cite{myers_testing}; por ejemplo, el plazo de 90 días se prueba con 89, 90 y 91 días, y
 	la máquina de estados de la queja con cada transición permitida y con las prohibidas.
 
-	\subsubsection{Prioridad basada en riesgo}
+	\subsection{Prioridad basada en riesgo}
 	No es viable probar todas las combinaciones de entrada, de modo que el esfuerzo se asignó según el
 	daño que causaría cada falla. Son de prioridad P1 los riesgos de acceso indebido a datos personales,
 	de ruptura del ciclo de estatus, de atención simultánea de una queja por dos recepcionistas, de falla
@@ -49,7 +49,7 @@
 	P2, los errores en plazos y datos obligatorios, la pérdida de respaldos y la caída de servicios
 	auxiliares; y de prioridad P3, la lentitud y las pantallas confusas.
 
-	\subsubsection{Entorno y criterios}
+	\subsection{Entorno y criterios}
 	Las pruebas dinámicas se ejecutan en un entorno de pruebas y no en producción: una base PostgreSQL~16
 	dedicada, sembrada con los datos de referencia y con la carga masiva de quejas sintéticas, los mismos
 	artefactos que se despliegan y una cuenta de prueba por rol. Las pruebas estáticas y unitarias no
@@ -64,12 +64,12 @@
 		ejecución hasta corregirlo.
 	\end{itemize}
 
-	\subsection{Pruebas de funcionalidad}
+	\section{Pruebas de funcionalidad}
 	\label{sec:pruebas_funcionalidad}
 	Las pruebas de funcionalidad verifican la adecuación funcional: que las reglas de negocio y los
 	casos de uso se comporten como se especificaron.
 
-	\subsubsection{Pruebas unitarias}
+	\subsection{Pruebas unitarias}
 	Se escribieron pruebas unitarias con JUnit~5 y Mockito para los diez microservicios Java
 	desarrollados para la plataforma \cite{junit5, mockito}. Las pruebas no levantan el contexto de
 	Spring ni requieren base de datos o red: las dependencias se sustituyen por objetos simulados, lo que
@@ -128,7 +128,7 @@
 	FIA-05 y FIA-06 están implementadas, pero pendientes de su primera ejecución.
 	Por esa razón, esos ocho casos no se suman a las 364 pruebas aprobadas.
 
-	\subsubsection{Pruebas de integración y de sistema}
+	\subsection{Pruebas de integración y de sistema}
 	La Tabla~\ref{tab:pruebas_integracion} lista los casos de integración y de sistema de prioridad P1 y
 	P2 con su resultado. Los que tienen evidencia se ejecutaron durante el desarrollo de cada módulo con
 	guiones y con el navegador; los marcados como pendientes forman parte de la suite de sistema que se
@@ -182,13 +182,13 @@
 	producción, que falla si un componente excede su presupuesto de tamaño o si una plantilla hace
 	referencia a un elemento inexistente. Las cinco compilan sin errores.
 
-	\subsection{Pruebas de mantenibilidad}
+	\section{Pruebas de mantenibilidad}
 	\label{sec:pruebas_mantenibilidad}
 	La mantenibilidad se verificó con pruebas estáticas de caja blanca sobre el código Java de ocho de
 	los diez servicios (225 archivos), y con la cobertura de las pruebas unitarias. Primer Contacto y
 	Subdefensoría se analizaron con las mismas reglas de forma informativa.
 
-	\subsubsection{Guía de estilo}
+	\subsection{Guía de estilo}
 	El proyecto adoptó como guía de estilo el Google Java Style Guide \cite{google_java_style}, con cuatro
 	desviaciones que reflejan lo que el código ya seguía de forma consistente, para no reformatear todo
 	el proyecto sin aportar calidad ---sangría de 4 espacios en lugar de 2, líneas de 120 columnas en lugar de 100, guion bajo
@@ -240,7 +240,7 @@
 	concentrar la refactorización; los métodos más complejos están en los servicios de revisión y de
 	seguimiento, que concentran la lógica de los tableros.
 
-	\subsection{Pruebas de usabilidad}
+	\section{Pruebas de usabilidad}
 	\label{sec:pruebas_usabilidad}
 	La usabilidad no puede verificarse por completo con herramientas automáticas, porque depende de la
 	experiencia de personas concretas. Se combinaron por ello mediciones automáticas de accesibilidad con
@@ -290,7 +290,7 @@
 	usabilidad informal. La medición cuantitativa con SUS queda como criterio de salida de la etapa de
 	aceptación.
 
-	\subsection{Pruebas de fiabilidad}
+	\section{Pruebas de fiabilidad}
 	\label{sec:pruebas_fiabilidad}
 	Las pruebas de fiabilidad verifican la tolerancia a fallos ---que el fallo de un componente no
 	detenga a los demás--- y la recuperabilidad ---que los datos puedan restaurarse---. Las primeras se
@@ -346,14 +346,14 @@
 	lo descarga, lo restaura en una base nueva y verifica que las tablas de quejas, personal y
 	dependencias tengan filas.
 
-	\subsection{Pruebas de seguridad}
+	\section{Pruebas de seguridad}
 	\label{sec:pruebas_seguridad}
 	La seguridad se verificó en dos planos complementarios. En el plano estático, se extrajo del código la
 	matriz completa de roles por punto de acceso y se comparó con las reglas que exigen los
 	requerimientos. En el plano dinámico, la misma matriz se recorre contra el sistema en ejecución con un
 	token por rol.
 
-	\subsubsection{Matriz de permisos extraída del código}
+	\subsection{Matriz de permisos extraída del código}
 	Un guion recorre los controladores de ocho de los diez servicios ---Primer Contacto y Subdefensoría
 	declaran sus permisos solo en la cadena de filtros y se verifican en la prueba dinámica---, lee las rutas, los
 	métodos HTTP, las anotaciones \texttt{@PreAuthorize} y las reglas públicas de la cadena de filtros, y
@@ -375,7 +375,7 @@
 	resultado ilustra un beneficio de esta prueba que va más allá de la seguridad: obliga a que el
 	documento de requerimientos y el código digan lo mismo.
 
-	\subsubsection{Casos de prueba de seguridad}
+	\subsection{Casos de prueba de seguridad}
 	La Tabla~\ref{tab:pruebas_seguridad} reúne los casos de seguridad con su resultado.
 
 	\rowcolors{2}{rowblue}{white}
@@ -435,7 +435,7 @@
 	verificando que la ruta normalizada del archivo permanezca dentro de la carpeta de respaldos, y SEG-09
 	con un manejador que traduzca la falta de confirmación a una respuesta 400.
 
-	\subsection{Pruebas de capacidad}
+	\section{Pruebas de capacidad}
 	\label{sec:pruebas_capacidad}
 	La capacidad se verifica en dos dimensiones: el tamaño máximo de una petición, que determina cuántas
 	evidencias puede adjuntar un quejoso, y el número de usuarios concurrentes. Las pruebas de tamaño
@@ -484,7 +484,7 @@
 	que el contenedor original no la tenía. Por eso RNF-Q03 se verifica con dos tipos de prueba: la de
 	límites, que comprueba el rechazo, y la de archivos reales, que comprueba que lo aceptado se procesa.
 
-	\subsection{Pruebas de confidencialidad}
+	\section{Pruebas de confidencialidad}
 	\label{sec:pruebas_confidencialidad}
 	La confidencialidad se verifica con pruebas de caja negra que observan, desde fuera del servidor, cómo
 	viaja la información. Son pasivas ---no modifican datos--- y por ello pueden ejecutarse también contra
@@ -536,7 +536,7 @@
 	línea por línea; su ejecución dinámica, que confirma que esa configuración es la que realmente está
 	cargada, queda pendiente para el entorno de pruebas.
 	
-	\subsection{Pruebas de los componentes de inteligencia artificial}
+	\section{Pruebas de los componentes de inteligencia artificial}
 \label{sec:pruebas_ia}
 
 La verificación de los componentes de inteligencia artificial comprendió dos tipos de actividades:
@@ -547,7 +547,7 @@ información relevante en una salida generada. Se distinguen expresamente las me
 experimentales de las comprobaciones puntuales de funcionamiento, pues una respuesta HTTP
 correcta no demuestra por sí sola la calidad del contenido producido.
 
-\subsubsection{Evaluación de recuperación de antecedentes}
+\subsection{Evaluación de recuperación de antecedentes}
 \label{sec:pruebas_ia_antecedentes}
 
 Se utilizaron dos conjuntos sintéticos. El primero estuvo compuesto por 200 quejas extensas,
@@ -654,7 +654,7 @@ por lo que aún no puede considerarse reproducible dicho procedimiento. Aun así
 de la Defensoría; por tanto, estas medidas describen el comportamiento experimental del
 recuperador y no su precisión sobre expedientes institucionales reales.
 
-\subsubsection{Funcionamiento del índice y respuesta de antecedentes}
+\subsection{Funcionamiento del índice y respuesta de antecedentes}
 \label{sec:pruebas_ia_indice}
 
 En el servidor se verificó la construcción del índice sobre 1\,210 registros y la
@@ -668,7 +668,7 @@ respondió en aproximadamente 0.135 segundos; en otra consulta realizada mediant
 de integración se registró un tiempo cercano a 0.111 segundos. Estas cifras son observaciones
 puntuales con el índice disponible, no percentiles de latencia ni pruebas de concurrencia.
 
-\subsubsection{Generación de resúmenes e integración con los servicios}
+\subsection{Generación de resúmenes e integración con los servicios}
 \label{sec:pruebas_ia_resumenes}
 
 Se envió una queja sintética al servicio de resúmenes, que realiza una selección extractiva
@@ -710,7 +710,7 @@ este último podía comunicarse con el servidor del modelo generativo (HTTP 200)
 comprobaciones acreditan conectividad entre componentes, pero no constituyen una medición
 de calidad del resumen ni una prueba de carga.
 
-\subsubsection{Alcance de los resultados de inteligencia artificial}
+\subsection{Alcance de los resultados de inteligencia artificial}
 
 Las pruebas ejecutadas permiten documentar el comportamiento de la fusión de rankings sobre
 conjuntos sintéticos, la reutilización del índice y el funcionamiento de las interfaces HTTP.
@@ -726,7 +726,7 @@ definición de criterios con los especialistas y análisis independiente de las
 etapas extractiva y generativa. Tampoco se documentan una prueba de concurrencia
 para la inferencia ni una distribución representativa de los tiempos de respuesta.
 
-	\subsection{Resumen de resultados}
+	\section{Resumen de resultados}
 	\label{sec:resumen_pruebas}
 	La Tabla~\ref{tab:defectos} reúne los defectos abiertos que dejaron las pruebas, con la acción
 	que resuelve cada uno.

@@ -1,11 +1,11 @@
-	\section{Módulos de la Plataforma}
+	\chapter{Módulos de la Plataforma}
 	\label{cap:modulos}
 	Este capítulo presenta, de forma breve, qué encuentra cada actor al entrar a su aplicación y cómo
 	avanza una queja de un módulo al siguiente. Las funciones, reglas y estados que aquí se mencionan
 	están especificados en el Capítulo~\ref{cap:analisis_diseno}; entre paréntesis se indica el caso de
 	uso que implementa cada pantalla.
 
-	\subsection{Portal del quejoso}
+	\section{Portal del quejoso}
 	\label{sec:modulo_quejoso}
 	Es la única aplicación dirigida al público y se publica en la raíz del dominio. Su área pública
 	permite presentar una queja con un formulario en pasos numerados, que previsualiza los archivos y
@@ -18,14 +18,14 @@
 	CU-QJ-12, CU-QJ-15), los acuerdos de conciliación (CU-QJ-13, CU-QJ-14), las notificaciones
 	(CU-NOT-01) y el perfil (CU-QJ-05).
 
-	\subsection{Respuesta de la persona señalada}
+	\section{Respuesta de la persona señalada}
 	\label{sec:modulo_denunciado}
 	La página \texttt{/denunciado/respuesta} forma parte del portal, pero está dirigida a la persona a
 	quien se atribuyen los hechos. Muestra el folio de la queja recibido en el enlace, solicita su
 	identidad, su versión de los hechos, su credencial y sus evidencias, exige su aviso de privacidad y
 	entrega un folio de respuesta (RF-D01, RF-D02).
 
-	\subsection{Panel de Recepción}
+	\section{Panel de Recepción}
 	\label{sec:modulo_revision}
 	Su pantalla de inicio de sesión es la entrada única del personal, que es dirigido al panel de su rol
 	(CU-ADM-07). La bandeja muestra los indicadores del día, la cola paginada y la actividad de cada
@@ -38,7 +38,7 @@
 	(CU-REC-04). El panel incluye además el registro en ventanilla, que reutiliza el formulario del
 	portal (CU-REC-08), y el historial con exportación a Excel (CU-REC-07).
 
-	\subsection{Panel de Primer Contacto}
+	\section{Panel de Primer Contacto}
 	\label{sec:modulo_primer_contacto}
 	La bandeja lista los expedientes turnados con su prioridad y estatus (CU-PC-02). Al abrir un
 	expediente, este pasa a \texttt{EN\_ANALISIS} (CU-PC-03) y se presenta en cuatro pestañas:
@@ -60,7 +60,7 @@
 	La agenda presenta las citas en calendario y en lista, y su ventana de programación muestra cada
 	horario como disponible, ocupado o no disponible (CU-PC-04).
 
-	\subsection{Panel de Subdefensoría}
+	\section{Panel de Subdefensoría}
 	\label{sec:modulo_subdefensoria}
 	El panel se organiza alrededor del siguiente paso de cada expediente. El inicio muestra los
 	pendientes del día ordenados por urgencia y los expedientes que vencen pronto; ``Mis expedientes''
@@ -69,7 +69,7 @@
 	respuesta de la unidad y acuerdos--- (CU-SD-05 a CU-SD-09); y ``Plazos y oficios'' concentra las
 	alertas de vencimiento (CU-SD-04).
 
-	\subsection{Panel de la Defensora}
+	\section{Panel de la Defensora}
 	\label{sec:modulo_admin}
 	Es exclusivo del rol \texttt{DEFENSOR}. En la sección de supervisión, el panel general muestra los
 	indicadores del periodo, la distribución de las quejas por etapa, su evolución mensual, las unidades

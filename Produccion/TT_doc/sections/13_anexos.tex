@@ -1,6 +1,6 @@
-	\section{Anexos}
+	\chapter{Anexos}
 	
-	\subsection{Análisis exploratorio del conjunto de datos}
+	\section{Análisis exploratorio del conjunto de datos}
 	
 	El análisis exploratorio de datos (EDA, por sus siglas en inglés) es una etapa fundamental dentro del desarrollo de sistemas basados en aprendizaje automático y visión por computadora, debido a que permite comprender la estructura, distribución y comportamiento de las muestras antes del entrenamiento de los modelos \cite{tukey1977eda,geron2022hands}. 
 	
@@ -10,7 +10,7 @@
 	
 	A través de los siguientes apartados se evalúa la distribución de las clases, la variabilidad espacial provocada por las condiciones de captura y la separabilidad del espacio de características. Este análisis permitirá justificar los criterios de diseño para el pipeline de preprocesamiento local, la ingeniería de características y la selección de las arquitecturas de clasificación que se desarrollarán en este proyecto.
 	
-	\subsubsection{Descripción general del conjunto de datos}
+	\subsection{Descripción general del conjunto de datos}
 	
 	
 	Debido a la limitada disponibilidad de repositorios públicos orientados a la LSM que sean compatibles con enfoques basados en \textit{landmarks}, se optó por la creación de un conjunto de datos propio.
@@ -74,7 +74,7 @@
 	\end{table}
 	
 	
-	\subsubsection{Análisis de distribución de clases}
+	\subsection{Análisis de distribución de clases}
 	
 	El balance en la cantidad de muestras por cada clase es un factor crítico en el entrenamiento de modelos de clasificación. Un desbalance considerable provocaría que el modelo se incline por las clases mayoritarias, afectando su precisión general \cite{goodfellow2016deep}. Por ello el diagnóstico inicial del conjunto de datos se enfoca en evaluar la simetría en la frecuencia de las señas capturadas.
 	
@@ -91,7 +91,7 @@
 	
 	Desde la perspectiva del diseño del sistema, este balance uniforme permite proyectar el uso de funciones de pérdida estándar para la clasificación multiclase, tales como la entropía cruzada categórica (\textit{Categorical Cross-Entropy}) o su variante dispersa (\textit{Sparse Categorical Cross-Entropy}), las cuales basan su eficacia en la suposición de clases equitativas durante el cálculo del gradiente \cite{goodfellow2016deep}. Por otro lado la paridad en los conteos preliminares sugiere que, en principio, es viable prescindir de técnicas complejas de sobremuestreo artificial o de la implementación de funciones de pérdida modificadas, estrategias comúnmente requeridas para mitigar el sesgo en distribuciones asimétricas dentro de tareas modernas de visión artificial \cite{johnson2021survey, fujiwara2025class}.
 	
-	\subsubsection{Análisis de variabilidad geométrica y espacial}
+	\subsection{Análisis de variabilidad geométrica y espacial}
 	
 	A diferencia de un análisis basado en imágenes completas, revisar la variación de los puntos de la mano requiere entender cómo cambian los números de las coordenadas dentro del lienzo de captura. Al revisar los datos del DataFrame, se observa que las coordenadas entregadas por MediaPipe ya vienen normalizadas en un rango de 0 a 1 respecto al ancho y alto de la pantalla. Sin embargo, este ajuste inicial no funciona para nuestro objetivo, ya que a nosotros no nos interesa saber la distancia ni en qué lugar de la imagen se encuentra la mano, sino conocer su configuración geométrica pura.
 	
@@ -138,14 +138,14 @@
 	Por lo tanto los resultados de este análisis muestran que es necesario probar diferentes métodos de normalización. Esta revisión ayudará a encontrar la estrategia más estable para transformar los datos iniciales. En el desarrollo posterior se deberán hacer pruebas con distintas técnicas de centrado de puntos y cambios de escala, buscando la opción que mantenga la forma real de las señas de la LSM y reduzca el ruido provocado por los dedos ocultos.
 	
 	
-	\subsubsection{Visualización del espacio de características mediante reducción dimensional}
+	\subsection{Visualización del espacio de características mediante reducción dimensional}
 	
 	Cada muestra del conjunto de datos contiene un total de 42 dimensiones, las cuales corresponden a los ejes de las coordenadas de los puntos de la mano. Debido a que la percepción humana no puede interpretar un espacio con tantas dimensiones, resulta imposible evaluar de forma directa cómo se acomodan o se separan las diferentes clases a simple vista \cite{vandermaaten2008visualizing}. Por esta razón, es necesario realizar pruebas basadas en algoritmos de reducción de dimensiones para proyectar estos datos en una gráfica simple de dos dimensiones.
 	
 	En esta etapa del proyecto, esta técnica se utiliza como una herramienta de diagnóstico para revisar qué tan mezcladas o encimadas (\textit{overlapping}) quedan las señas antes de pasar al entrenamiento \cite{scikit-learn}. Ver la distribución visual de las letras permitirá entender la complejidad real del conjunto de datos crudos. Si las clases forman grupos separados y claros, se podría proponer el uso de clasificadores sencillos; por el contrario, si los datos quedan muy entrelazados debido al parecido físico de las señas, esto servirá como argumento sólido para justificar el uso de modelos más avanzados basados en redes neuronales \cite{geron2022hands}.
 	
 	
-	\subsubsection{Visualización del espacio de características mediante reducción dimensional}
+	\subsection{Visualización del espacio de características mediante reducción dimensional}
 	
 	Cada muestra del conjunto de datos contiene un total de 42 dimensiones, las cuales corresponden a los ejes de las coordenadas de los puntos de la mano. Debido a que la percepción humana no puede interpretar un espacio con tantas dimensiones, resulta imposible evaluar de forma directa cómo se acomodan o se separan las diferentes clases a simple vista \cite{vandermaaten2008visualizing}. Por esta razón, se utiliza el algoritmo de reducción de dimensiones t-SNE como una herramienta de diagnóstico visual en dos escenarios: con los datos crudos y con el dataset final preprocesado \cite{scikit-learn}.
 	
@@ -180,13 +180,13 @@
 	
 	La comparación de ambos espacios de características justifica la selección tecnológica de este proyecto: el algoritmo de normalización local propuesto es indispensable para ordenar el espacio numérico, mientras que el uso de una arquitectura basada en redes neuronales artificiales será la mejor opción, ya que es la única herramienta capaz de aprender fronteras no lineales de alta complejidad para asegurar una clasificación robusta y precisa en el dispositivo final \cite{geron2022hands}.
 	
-	\subsection{Conclusiones del análisis exploratorio}
+	\section{Conclusiones del análisis exploratorio}
 	
 	A partir del análisis exploratorio, se determina que el éxito del clasificador embebido en un dispositivo móvil no depende de buscar un modelo de aprendizaje profundo exageradamente grande o complejo. El verdadero rendimiento del sistema radica en encontrar una configuración de normalización adecuada combinada con un ajuste correcto de hiperparámetros para entrenar la red neuronal.
 	
 	Los datos crudos muestran problemas en su estructura que exigen realizar pruebas rigurosas. A continuación, se detallan los retos del entorno real y la ruta de trabajo justificada por las gráficas estadísticas anteriores.
 	
-	\subsubsection{Caminos para la experimentación y normalización de datos}
+	\subsection{Caminos para la experimentación y normalización de datos}
 	
 	Los resultados del histograma de escala y las proyecciones t-SNE demostraron que la normalización general mediante cajas delimitadoras (\textit{bounding boxes}) ayuda a que los datos no se salgan de la pantalla, pero no es suficiente. Este método deforma las proporciones de la mano cuando el usuario abre o cierra el puño. Por lo tanto, las siguientes pruebas deben enfocarse en quitar la dependencia de la pantalla y diseñar un forma de normalizar basado únicamente en la estructura de la mano, evaluando tres estrategias :
 	
@@ -196,7 +196,7 @@
 		\item \textbf{Corrección por inclinación de la mano:} El análisis de los datos crudos asume que la mano siempre está derecha. En el uso real, la gente inclina la muñeca de forma natural. Es necesario experimentar con fórmulas de rotación geométrica basadas en el ángulo de la palma, buscando que los datos finales sean los mismos aunque el usuario gire un poco la mano o el celular.
 	\end{itemize}
 	
-	\subsubsection{Retos del entorno real y problemas físicos}
+	\subsection{Retos del entorno real y problemas físicos}
 	
 	Llevar un traductor de señas a un teléfono móvil introduce variables del mundo físico que pueden alterar los números que recibe el sistema. Las gráficas de boxplot mostraron que MediaPipe mete ruido cuando se presentan ciertas condiciones, las cuales representan los principales retos de ingeniería para el proyecto:
 	
@@ -218,7 +218,7 @@
 	Esta combinación asegura que las pequeñas diferencias entre las señas difíciles puedan separarse con alta precisión, consumiendo muy pocos recursos del teléfono al exportar el modelo final en formato TensorFlow Lite.
 	
 	
-	\subsection{Consideraciones de uso y privacidad}
+	\section{Consideraciones de uso y privacidad}
 	
 	VisionLSM es un prototipo académico y experimental desarrollado como parte de un trabajo terminal del Instituto Politécnico Nacional, cuyo objetivo principal consiste en desarrollar un prototipo para reconocimiento de señas estáticas de la LSM en dispositivos móviles Android mediante visión por computadora.
 	
@@ -234,9 +234,9 @@
 
 	
 
-	\subsection{Términos y condiciones de uso}
+	\section{Términos y condiciones de uso}
 	
-	\subsubsection{Aceptación de los términos}
+	\subsection{Aceptación de los términos}
 	
 	El uso, instalación o acceso a la aplicación VisionLSM implica que el usuario ha leído, comprendido y aceptado los presentes términos y condiciones de uso, así como las disposiciones descritas en el aviso de privacidad incluido en el presente documento.
 	
@@ -244,7 +244,7 @@
 	
 	Asimismo, el usuario reconoce que la aplicación corresponde a un prototipo académico y experimental, por lo que acepta las limitaciones técnicas, operativas y funcionales propias del sistema, así como el uso de la aplicación bajo su propia responsabilidad.
 	
-	\subsubsection{Uso permitido}
+	\subsection{Uso permitido}
 	
 	El usuario se compromete a utilizar la aplicación únicamente con fines lícitos, éticos y compatibles con los objetivos académicos y tecnológicos del proyecto.
 	
@@ -264,7 +264,7 @@
 	
 	El uso de la aplicación deberá realizarse respetando en todo momento la privacidad, integridad y derechos de terceros.
 	
-	\subsubsection{Restricciones de uso}
+	\subsection{Restricciones de uso}
 	
 	Queda prohibido utilizar la aplicación para actividades contrarias a la ley, la ética o los objetivos académicos para los cuales fue desarrollada.
 	
@@ -286,7 +286,7 @@
 	
 	Cualquier uso indebido de la aplicación será responsabilidad exclusiva del usuario.
 	
-	\subsubsection{Limitaciones del sistema}
+	\subsection{Limitaciones del sistema}
 	
 	El usuario reconoce que VisionLSM corresponde a un prototipo experimental basado en modelos de inteligencia artificial y visión por computadora, por lo que el sistema puede presentar errores, variaciones o limitaciones durante el reconocimiento de señas.
 	
@@ -314,7 +314,7 @@
 	
 	El sistema no sustituye intérpretes profesionales de Lengua de Señas Mexicana ni debe utilizarse como herramienta oficial de traducción o asistencia crítica para la comunicación.
 	
-	\subsubsection{Disponibilidad del servicio}
+	\subsection{Disponibilidad del servicio}
 	
 	Dado que VisionLSM corresponde a un prototipo académico y experimental en fase de desarrollo y evaluación tecnológica, no se garantiza la disponibilidad permanente del sistema ni el funcionamiento ininterrumpido de la aplicación en todos los dispositivos móviles Android.
 	
@@ -336,7 +336,7 @@
 	
 	Debido a la naturaleza experimental del proyecto, no se garantiza compatibilidad absoluta, disponibilidad continua ni estabilidad total en todas las condiciones de uso.
 	
-	\subsubsection{Responsabilidad del usuario}
+	\subsection{Responsabilidad del usuario}
 	
 	El usuario es responsable del uso que realice de la aplicación, así como de la instalación del archivo .apk en su dispositivo móvil y de la configuración de los permisos necesarios para el funcionamiento del sistema.
 	
@@ -346,7 +346,7 @@
 	
 	Debido a que la instalación se realiza mediante un archivo .apk externo y no a través de Google Play Store, el usuario reconoce y acepta los riesgos asociados a la instalación manual de aplicaciones provenientes de fuentes externas, así como la responsabilidad derivada de habilitar los permisos correspondientes dentro del sistema operativo Android.
 	
-	\subsubsection{Propiedad intelectual}
+	\subsection{Propiedad intelectual}
 	
 	El código fuente, arquitectura de software, modelos de inteligencia artificial, documentación, diseño de interfaces y demás componentes desarrollados para VisionLSM forman parte del trabajo terminal realizado en el Instituto Politécnico Nacional con fines académicos y de investigación tecnológica.
 	
@@ -356,9 +356,9 @@
 	
 	Las bibliotecas, frameworks y herramientas de terceros utilizadas durante el desarrollo del sistema conservan los derechos y licencias establecidos por sus respectivos propietarios y desarrolladores.
 	
-	\subsection{Aviso de privacidad}
+	\section{Aviso de privacidad}
 
-	\subsubsection{Información recopilada}
+	\subsection{Información recopilada}
 	
 	Para el funcionamiento de VisionLSM, la aplicación puede acceder a determinados recursos y datos básicos del dispositivo móvil, necesarios para ejecutar el sistema de reconocimiento de señas.
 	
@@ -374,7 +374,7 @@
 	
 	Cierta información técnica del dispositivo puede ser utilizada de manera limitada con fines relacionados con compatibilidad, ejecución del sistema y funcionamiento general de la aplicación. En ningún caso esta información es utilizada con fines comerciales, publicitarios o de rastreo del usuario.
 	
-	\subsubsection{Datos procesados}
+	\subsection{Datos procesados}
 	
 	Durante el funcionamiento de VisionLSM, el sistema realiza el procesamiento temporal de información necesaria para ejecutar el reconocimiento y clasificación de señas.
 	
@@ -392,7 +392,7 @@
 	
 	El procesamiento de esta información se realiza de manera temporal y únicamente durante la interacción activa del usuario con la aplicación.
 	
-	\subsubsection{Datos no recopilados}
+	\subsection{Datos no recopilados}
 	
 	VisionLSM no recopila, almacena ni comparte de manera permanente información personal sensible del usuario durante el funcionamiento normal de la aplicación.
 	
@@ -416,7 +416,7 @@
 	
 	Las imágenes capturadas temporalmente durante el reconocimiento de señas no son almacenadas de manera permanente durante el uso normal del sistema.
 	
-	\subsubsection{Procesamiento local}
+	\subsection{Procesamiento local}
 	
 	VisionLSM realiza el procesamiento principal de imágenes y la ejecución del modelo de inteligencia artificial directamente en el dispositivo móvil del usuario, mediante técnicas de inferencia local.
 	
@@ -437,7 +437,7 @@
 	Durante el funcionamiento normal de la aplicación, las inferencias realizadas por el modelo de clasificación no requieren el envío continuo de imágenes, videos o datos personales a plataformas externas para ejecutar el reconocimiento de señas.
 	
 	
-	\subsubsection{Cumplimiento normativo}
+	\subsection{Cumplimiento normativo}
 	
 	El tratamiento y procesamiento de la información dentro de VisionLSM se realiza considerando principios de privacidad, confidencialidad y minimización de datos establecidos en la legislación mexicana aplicable en materia de protección de datos personales, especificamente en la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP).
 	
@@ -446,7 +446,7 @@
 	El diseño de la aplicación considera medidas orientadas a reducir la exposición innecesaria de información del usuario, priorizando el procesamiento local de imágenes, la minimización de datos procesados y la no recopilación permanente de información personal sensible durante el funcionamiento normal del sistema.
 
 		
-	\subsubsection{Aceptación del aviso de privacidad}
+	\subsection{Aceptación del aviso de privacidad}
 	
 	El uso, instalación o acceso a la aplicación VisionLSM implica que el usuario ha leído, comprendido y aceptado las disposiciones establecidas en el presente aviso de privacidad.
 	

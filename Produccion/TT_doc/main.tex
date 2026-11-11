@@ -1,4 +1,7 @@
-\documentclass[12pt]{article}
+% book: documento largo con capitulos. twoside = impresion por ambos lados
+% (margen de encuadernacion alterna izquierda/derecha); openright = cada
+% capitulo empieza en pagina impar (derecha).
+\documentclass[12pt,letterpaper,twoside,openright]{book}
 
 % =========================
 % PREAMBULO (paquetes y configuracion)
@@ -12,9 +15,11 @@
 % =========================
 %% Portadas (institucional y con resumen)
 \input{sections/00_portadas}
+\cleardoublepage
 
 %% Carta responsiva, advertencia y cartas de autorizacion
 \input{sections/01_cartas_y_advertencia}
+\cleardoublepage
 
 %% Indice general, de figuras y de tablas
 \input{sections/02_indices}
@@ -62,7 +67,7 @@
 % =========================
 % BIBLIOGRAFIA
 % =========================
-	\newpage
-	\printbibliography[title={Referencias}]
+	\backmatter
+	\printbibliography[title={Referencias},heading=bibintoc]
 
 \end{document}

@@ -1,4 +1,4 @@
-\section{Análisis y Diseño}
+\chapter{Análisis y Diseño}
 	\label{cap:analisis_diseno}
 	Este capítulo documenta el análisis y el diseño de la plataforma tal como quedó definida al
 	cierre de esta etapa del Trabajo Terminal. Su propósito es dejar constancia de \emph{qué} se
@@ -17,7 +17,7 @@
 	cada artefacto es insumo del siguiente, y esa dependencia es la que sostiene la coherencia
 	técnica del sistema.
 	
-	\subsection{Descripción general de la solución}
+	\section{Descripción general de la solución}
 	\label{sec:descripcion_solucion}
 	La solución es una plataforma web para la gestión digital de quejas y denuncias ante la
 	Defensoría de los Derechos Politécnicos. Permite a cualquier integrante de la comunidad
@@ -34,7 +34,7 @@
 	antecedentes y de resúmenes se mantienen separados para gestionar sus recursos y cambios de
 	forma independiente.
 	
-	\subsection{Actores del sistema}
+	\section{Actores del sistema}
 	\label{sec:actores}
 	El análisis distingue a la persona que presenta la queja y a los perfiles institucionales
 	que participan en su recepción, análisis, gestión y seguimiento. La organización por roles
@@ -50,15 +50,14 @@
 		\item \textbf{Personal de recepción.} Personal de la Defensoría encargado de recibir,
 		validar y canalizar las quejas que llegan por el portal público o en papel.
 	
-		\item \textbf{Administrador de tecnologías de la información.} Responsable de la operación
-		técnica y administrativa de la plataforma: cuentas del personal, catálogos, plantillas,
-		respaldos y bitácora de seguridad.
 		\item \textbf{Analista de primer contacto.} Consulta expedientes, revisa antecedentes
 		relacionados y utiliza borradores de resumen como apoyo al análisis de quejas.
 		\item \textbf{Subdefensoría.} Gestiona las actuaciones y el seguimiento que corresponden
 		a su área conforme a los permisos asignados.
-		\item \textbf{Defensoría.} Participa en las etapas de decisión y resolución del expediente,
-		sin que las herramientas de inteligencia artificial sustituyan sus atribuciones.
+		\item \textbf{Defensora.} Titular de la Defensoría. Participa en las etapas de decisión y
+		resolución del expediente, sin que las herramientas de inteligencia artificial sustituyan sus
+		atribuciones; supervisa la operación desde su panel y administra la plataforma: cuentas del
+		personal, catálogos, plantillas, respaldos y bitácora de seguridad.
 	\end{itemize}
 	
 	La Tabla~\ref{tab:actores_roles} presenta los perfiles, las responsabilidades generales
@@ -94,8 +93,6 @@
 		Personal de recepción & \texttt{RECEPCIONISTA} & Recibir, validar, rechazar y turnar quejas &
 		Panel de revisión \\ \hline
 	
-		Administrador de TI & \texttt{ADMIN\_SISTEMAS} & Operación técnica, cuentas, catálogos,
-		respaldos y auditoría & Consola de administración \\ \hline
 	
 		Analista de primer contacto & \texttt{ANALISTA\_\allowbreak PRIMER\_\allowbreak CONTACTO} &
 		Análisis de expedientes y consulta de herramientas de inteligencia artificial & Módulo de Primer Contacto \\ \hline
@@ -103,8 +100,9 @@
 		Subdefensor & \texttt{SUBDEFENSOR} & Gestión y seguimiento de actuaciones de su área &
 		Módulo de Subdefensoría \\ \hline
 	
-		Defensor & \texttt{DEFENSOR} & Resolución y cierre del expediente &
-		Funciones sujetas a los módulos y permisos disponibles \\ \hline
+		Defensora & \texttt{DEFENSOR} & Supervisión, resolución y cierre del expediente;
+		administración de cuentas, catálogos, plantillas, respaldos y bitácora & Panel de la
+		Defensora \\ \hline
 	\end{longtable}
 	
 	\normalsize
@@ -116,7 +114,7 @@
 	de autorización y los casos de uso. Las actividades de resolución corresponden al personal
 	institucional autorizado y no se automatizan mediante inteligencia artificial.
 	
-	\subsection{Especificación de requerimientos}
+	\section{Especificación de requerimientos}
 	\label{sec:requerimientos}
 	El levantamiento de requerimientos combinó la revisión de documentación institucional
 	de la Defensoría con reuniones de trabajo para precisar actividades, responsabilidades
@@ -138,13 +136,14 @@
 	funcionales y reglas de negocio--- y se estructuró por actor, de modo que cada requerimiento
 	tiene un dueño identificable. La nomenclatura empleada codifica el actor en el identificador:
 	\texttt{RF-Q} para los requerimientos funcionales del quejoso, \texttt{RF-R} para los del
-	personal de recepción y \texttt{RF-A} para los de administración, y de forma análoga
+	personal de recepción, \texttt{RF-PC} para los de Primer Contacto, \texttt{RF-SD} para los de
+	Subdefensoría y \texttt{RF-A} para los de la Defensora, y de forma análoga
 	\texttt{RNF-} y \texttt{RN-} para los no funcionales y las reglas de negocio. Para los
 	servicios de inteligencia artificial se identifican además criterios de diseño transversales
 	que se presentan en la Sección~\ref{sec:diseno_ia}, sin alterar la numeración histórica de los
 	requerimientos ya aprobados. Esta convención permite rastrear cada elemento hasta su origen.
 	
-	\subsubsection{Requerimientos funcionales del quejoso}
+	\subsection{Requerimientos funcionales del quejoso}
 	Los requerimientos del quejoso se agrupan en cinco bloques: operación sin cuenta, gestión de la
 	cuenta, gestión de las quejas propias, seguimiento y servicios de apoyo. El primer bloque es el
 	más determinante para el diseño, porque exige que el sistema acepte quejas de personas que no
@@ -231,7 +230,7 @@
 	
 	\normalsize
 	
-	\subsubsection{Requerimientos funcionales del personal de recepción}
+	\subsection{Requerimientos funcionales del personal de recepción}
 	El diseño de este bloque partió de una restricción que el propio personal planteó en las
 	sesiones de levantamiento: no todas las quejas llegan por el portal. Una parte del volumen
 	ingresa en papel, y el sistema debía poder incorporarlas al mismo flujo digital sin obligar al
@@ -300,7 +299,138 @@
 	
 	\normalsize
 	
-	\subsubsection{Requerimientos funcionales del administrador de TI}
+	\subsection{Requerimientos funcionales de Primer Contacto}
+	Primer Contacto es la etapa en la que se decide si la Defensoría es competente para conocer la
+	queja. Recepción turna cada queja a un analista, y cada analista trabaja únicamente los
+	expedientes que tiene asignados. La Tabla~\ref{tab:rf_pc} reúne sus requerimientos.
+
+	\small
+	\renewcommand{\arraystretch}{1.2}
+
+	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.0cm}|}
+		\caption{Requerimientos funcionales del actor Analista de Primer Contacto}
+		\label{tab:rf_pc} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Requerimiento} & \headercell{Descripción} \\
+		\hline
+		\endfirsthead
+
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Requerimiento} & \headercell{Descripción} \\
+		\hline
+		\endhead
+
+		RF-PC01 & Recibir quejas turnadas & Crear el expediente de análisis cuando Recepción turna una
+		queja, con el analista asignado, su prioridad, quejoso, narración y evidencias. \\ \hline
+
+		RF-PC02 & Consultar la bandeja de análisis & Listar los expedientes asignados al analista con
+		filtros por folio, prioridad y estatus, e indicadores, pendientes y citas del día en un tablero
+		de inicio. \\ \hline
+
+		RF-PC03 & Abrir un expediente & Iniciar el análisis al abrir el expediente y presentar la
+		narración, los datos de la queja, del quejoso y de la persona señalada, las evidencias y el
+		historial; impedir el acceso a expedientes asignados a otro analista. \\ \hline
+
+		RF-PC04 & Gestionar la agenda de citas & Programar citas con el quejoso y con la persona
+		señalada (comparecencia, revisión de documentos o seguimiento; presencial o virtual) en horario
+		hábil, sin empalmes ni fines de semana; confirmarlas, reagendarlas o cancelarlas, y avisar a la
+		persona citada con un enlace para responder. \\ \hline
+
+		RF-PC05 & Elaborar oficios de análisis & Redactar oficios con asunto y contenido, numerados
+		\texttt{DDP/PC/OF/año/id}, generarlos en PDF, y editarlos o eliminarlos solo por su autor.
+		\\ \hline
+
+		RF-PC06 & Registrar la versión de la persona señalada & Capturar la versión que la persona
+		señalada rinde ante el analista, con su identificación, fecha de entrevista y evidencias,
+		dejando constancia de quién la registró. \\ \hline
+
+		RF-PC07 & Dictaminar la competencia & Declarar la queja procedente con justificación y
+		observaciones, elegir al abogado responsable en Subdefensoría de una lista ordenada por carga
+		de trabajo y turnar el expediente; permitir reenviarlo si Subdefensoría no lo recibió.
+		\\ \hline
+
+		RF-PC08 & Dictaminar la improcedencia y remitir & Declarar la queja improcedente con
+		justificación y remitirla a la instancia competente (Abogado General, Órgano Interno de
+		Control o instancias del Protocolo de Género): generar el oficio en PDF, enviarlo por correo
+		a la instancia y avisar al quejoso. \\ \hline
+
+		RF-PC09 & Proponer una conciliación & Registrar una propuesta de conciliación desde el
+		expediente. \\ \hline
+
+		RF-PC10 & Asignar la prioridad & Asignar al expediente una prioridad (baja, media, alta o
+		urgente) mientras esté abierto o, ya dictaminado procedente, antes de que Subdefensoría lo
+		reciba. \\ \hline
+	\end{longtable}
+
+	\normalsize
+
+	\subsection{Requerimientos funcionales de Subdefensoría}
+	La Subdefensoría investiga los expedientes procedentes. Cada abogado trabaja los expedientes que
+	le asignó Primer Contacto, mientras que el titular de la Defensoría puede consultarlos todos.
+	Sus requerimientos (Tabla~\ref{tab:rf_sd}) están dominados por los plazos que fija el Manual de
+	Procedimientos de la DDP: diez días hábiles para que una unidad responda la primera solicitud de
+	información y cinco para cada recordatorio \cite{ipn_manual_procedimientos_ddp}.
+
+	\small
+	\renewcommand{\arraystretch}{1.2}
+
+	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.0cm}|}
+		\caption{Requerimientos funcionales del actor Abogado de Subdefensoría}
+		\label{tab:rf_sd} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Requerimiento} & \headercell{Descripción} \\
+		\hline
+		\endfirsthead
+
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Requerimiento} & \headercell{Descripción} \\
+		\hline
+		\endhead
+
+		RF-SD01 & Recibir el expediente & Crear el expediente de investigación, asignado al abogado
+		elegido, cuando Primer Contacto dictamina la queja como procedente. \\ \hline
+
+		RF-SD02 & Consultar el inicio y los pendientes & Mostrar indicadores, pendientes del día
+		ordenados por urgencia, expedientes que vencen pronto y su distribución por etapa. \\ \hline
+
+		RF-SD03 & Consultar los expedientes propios & Listar los expedientes por etapa (por abrir, por
+		solicitar oficio, esperando respuesta de la unidad, por redactar acuerdo, esperando respuesta
+		del quejoso, concluidos) con búsqueda, filtros por prioridad y plazo, barra de plazo, siguiente
+		paso sugerido y exportación. \\ \hline
+
+		RF-SD04 & Abrir un expediente & Iniciar la investigación y consultar, en modo de solo lectura,
+		lo actuado en Primer Contacto: oficios, citas y dictamen. \\ \hline
+
+		RF-SD05 & Solicitar información a la unidad & Seleccionar la unidad académica del catálogo
+		institucional, redactar el oficio de solicitud de información y enviarlo por correo a su
+		titular, con PDF y plazo de diez días hábiles. \\ \hline
+
+		RF-SD06 & Enviar un recordatorio de urgencia & Enviar un recordatorio a la unidad que no
+		respondió, con plazo de cinco días hábiles. \\ \hline
+
+		RF-SD07 & Registrar la respuesta de la unidad & Registrar la respuesta de la unidad con su canal
+		de recepción, resumen y archivo. \\ \hline
+
+		RF-SD08 & Elaborar el acuerdo de conciliación & Elaborar el acuerdo de conciliación y enviarlo
+		al quejoso, quien lo acepta o rechaza mediante un enlace. \\ \hline
+
+		RF-SD09 & Elaborar el acuerdo de conclusión & Elaborar y enviar el acuerdo de conclusión y
+		cerrar el expediente. \\ \hline
+
+		RF-SD10 & Controlar los plazos & Mostrar el semáforo de plazos y las alertas de oficios
+		vencidos o por vencer en tres días o menos. \\ \hline
+
+		RF-SD11 & Asignar la prioridad & Cambiar la prioridad del expediente (baja, media, alta o
+		urgente) y ordenar la bandeja de mayor a menor prioridad. \\ \hline
+	\end{longtable}
+
+	\normalsize
+
+	\subsection{Requerimientos funcionales de la Defensora}
 	Este bloque concentra las funciones que hacen operable la plataforma a largo plazo sin
 	intervención del equipo de desarrollo. Su requerimiento más sensible es el de respaldo y
 	restauración (RF-A06), porque incluye la única operación destructiva de todo el sistema y por
@@ -310,7 +440,7 @@
 	\renewcommand{\arraystretch}{1.2}
 	
 	\begin{longtable}{|p{1.5cm}|p{3.6cm}|p{9.0cm}|}
-		\caption{Requerimientos funcionales del actor Administrador de TI}
+		\caption{Requerimientos funcionales del actor Defensora}
 		\label{tab:rf_admin} \\
 		\hline
 		\rowcolor{headerblue}
@@ -358,7 +488,7 @@
 	\setlength{\tabcolsep}{6pt}
 	\renewcommand{\arraystretch}{1}
 	
-	\subsubsection{Criterios funcionales de los componentes de inteligencia artificial}
+	\subsection{Criterios funcionales de los componentes de inteligencia artificial}
 	Los componentes de inteligencia artificial se concibieron como servicios auxiliares de la
 	revisión de expedientes, principalmente accesibles desde Primer Contacto. La Tabla~\ref{tab:rf_ia}
 	resume los criterios de interacción derivados de su funcionamiento. Estos criterios se expresan
@@ -392,7 +522,7 @@
 	\normalsize
 	\renewcommand{\arraystretch}{1}
 
-	\subsubsection{Requerimientos no funcionales}
+	\subsection{Requerimientos no funcionales}
 	Los requerimientos no funcionales expresan atributos de calidad y no funciones. Se agruparon
 	por la categoría del atributo que abordan ---disponibilidad, confidencialidad, resiliencia,
 	usabilidad y trazabilidad--- porque esa clasificación es la que permite verificarlos: cada
@@ -478,12 +608,12 @@
 		información disponible en pantalla. \\ \hline
 	
 		RNF-A06 & Seguridad & La generación, descarga y restauración de respaldos debe estar
-		disponible únicamente para el rol de administración de sistemas. \\ \hline
+		disponible únicamente para el rol de la Defensora (\texttt{DEFENSOR}). \\ \hline
 	\end{longtable}
 	
 	\normalsize
 	
-	\subsubsection{Reglas de negocio}
+	\subsection{Reglas de negocio}
 	Las reglas de negocio son las restricciones que el sistema debe hacer cumplir para que el
 	procedimiento sea válido. A diferencia de los requerimientos funcionales, que describen lo que
 	el sistema \emph{permite} hacer, las reglas describen lo que \emph{prohíbe} o \emph{obliga}. Su
@@ -599,7 +729,7 @@
 	\setlength{\tabcolsep}{6pt}
 	\renewcommand{\arraystretch}{1}
 	
-	\subsection{Casos de uso}
+	\section{Casos de uso}
 	\label{sec:casos_uso}
 	Los casos de uso describen las interacciones posibles entre cada actor y el sistema con
 	independencia de la tecnología empleada. Se presentan agrupados por actor y con la estructura
@@ -708,9 +838,119 @@
 		asunto y términos dirigidos al folio y correo del quejoso & Acuerdo creado como pendiente,
 		visible para el quejoso \\ \hline
 	\end{longtable}
+
+	\begin{longtable}{|p{1.5cm}|p{2.8cm}|p{2.6cm}|p{3.4cm}|p{3.4cm}|}
+		\caption{Casos de uso del actor Analista de Primer Contacto}
+		\label{tab:cu_pc} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} &
+		\headercell{Flujo principal} & \headercell{Postcondición} \\
+		\hline
+		\endfirsthead
+
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} &
+		\headercell{Flujo principal} & \headercell{Postcondición} \\
+		\hline
+		\endhead
+
+		CU-PC-01 & Recibir expediente desde Recepción & Recepción turna la queja a un analista & El
+		sistema crea el expediente con los datos de la queja, el analista asignado y la prioridad &
+		Expediente en \texttt{TURNADA} en la bandeja del analista, con aviso en su panel \\ \hline
+
+		CU-PC-02 & Consultar la bandeja de análisis & Sesión iniciada como analista & Consulta sus
+		expedientes y filtra por folio, prioridad o estatus & Se listan los expedientes asignados al
+		analista \\ \hline
+
+		CU-PC-03 & Consultar el expediente de análisis & Expediente asignado al analista & Abre el
+		expediente y consulta sus datos, evidencias e historial & Expediente en
+		\texttt{EN\_ANALISIS}; un analista distinto recibe acceso denegado \\ \hline
+
+		CU-PC-04 & Agendar y gestionar citas & Expediente en análisis & Programa, confirma, reagenda
+		o cancela una cita en un horario libre & Cita registrada; la persona citada la confirma o
+		cancela desde el enlace recibido por correo \\ \hline
+
+		CU-PC-05 & Registrar notas de análisis & Expediente en análisis & Redacta el oficio con asunto
+		y contenido y genera su PDF & Oficio numerado en el expediente; solo su autor puede
+		modificarlo \\ \hline
+
+		CU-PC-06 & Registrar dictamen de competencia & Expediente en análisis & Captura la
+		justificación, elige al abogado de Subdefensoría y confirma & Expediente en
+		\texttt{PROCEDENTE}; se crea el expediente de investigación (CU-SD-01) \\ \hline
+
+		CU-PC-07 & Registrar dictamen de improcedencia & Expediente en análisis & Captura la
+		justificación y confirma & Expediente en \texttt{IMPROCEDENTE}, pendiente de remisión
+		(CU-PC-09) \\ \hline
+
+		CU-PC-08 & Consultar el dictamen & Expediente dictaminado & Abre el dictamen del expediente &
+		Se muestra el dictamen con su sentido, justificación, autor y fecha \\ \hline
+
+		CU-PC-09 & Crear y enviar remisión externa & Expediente en \texttt{IMPROCEDENTE} & Elige la
+		instancia competente, revisa los datos y confirma el envío & Oficio en PDF enviado por correo
+		a la instancia; expediente en \texttt{REMITIDA} y aviso al quejoso \\ \hline
+
+		CU-PC-10 & Proponer y listar acuerdos de conciliación & Expediente en análisis & Captura la
+		propuesta y la envía; consulta las ya propuestas & Acuerdo pendiente, visible para el quejoso
+		\\ \hline
+	\end{longtable}
+
+	\begin{longtable}{|p{1.5cm}|p{2.8cm}|p{2.6cm}|p{3.4cm}|p{3.4cm}|}
+		\caption{Casos de uso del actor Abogado de Subdefensoría}
+		\label{tab:cu_sd} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} &
+		\headercell{Flujo principal} & \headercell{Postcondición} \\
+		\hline
+		\endfirsthead
+
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} &
+		\headercell{Flujo principal} & \headercell{Postcondición} \\
+		\hline
+		\endhead
+
+		CU-SD-01 & Recibir expediente desde Primer Contacto & Dictamen de competencia con abogado
+		elegido & El sistema crea el expediente de investigación & Expediente en
+		\texttt{RECIBIDO}, asignado al abogado \\ \hline
+
+		CU-SD-02 & Consultar la bandeja de expedientes & Sesión iniciada como abogado o como titular
+		& Consulta los expedientes por etapa y filtra por prioridad o plazo & Se listan los
+		expedientes propios; el titular ve todos \\ \hline
+
+		CU-SD-03 & Consultar el semáforo de plazos & Existen expedientes en trámite & Revisa la barra
+		de plazo de cada expediente & Se muestra el avance contra los plazos del Manual de
+		Procedimientos \\ \hline
+
+		CU-SD-04 & Consultar alertas de vencimiento & Existen oficios con plazo en curso & Abre la
+		vista de plazos y oficios & Se listan los oficios vencidos o por vencer en tres días o menos
+		\\ \hline
+
+		CU-SD-05 & Consultar el expediente de investigación & Expediente asignado al abogado & Abre el
+		expediente y consulta lo actuado en Primer Contacto en solo lectura & Expediente en
+		\texttt{EN\_INVESTIGACION} \\ \hline
+
+		CU-SD-06 & Emitir oficio & Expediente en investigación & Elige la unidad académica, revisa
+		titular y correo, redacta y envía el oficio & Oficio en PDF enviado por correo; expediente en
+		\texttt{EN\_ESPERA\_OFICIO} con plazo de diez días hábiles \\ \hline
+
+		CU-SD-07 & Generar recordatorio de urgencia & Oficio sin respuesta & Genera y envía el
+		recordatorio & Recordatorio enviado con plazo de cinco días hábiles \\ \hline
+
+		CU-SD-08 & Registrar respuesta externa & Oficio enviado a la unidad & Captura el canal de
+		recepción, el resumen y el archivo de la respuesta & Respuesta registrada; el expediente pasa
+		a la elaboración del acuerdo \\ \hline
+
+		CU-SD-09 & Registrar acuerdo de conclusión & Respuesta de la unidad registrada & Envía al
+		quejoso el acuerdo de conciliación y, una vez aceptado mediante el enlace, emite el acuerdo
+		de conclusión & Expediente en \texttt{CONCLUIDO} \\ \hline
+	\end{longtable}
 	
 	\begin{longtable}{|p{1.5cm}|p{2.8cm}|p{2.6cm}|p{3.4cm}|p{3.4cm}|}
-		\caption{Casos de uso del actor Administrador de TI}
+		\caption{Casos de uso del actor Defensora}
 		\label{tab:cu_admin} \\
 		\hline
 		\rowcolor{headerblue}
@@ -726,8 +966,8 @@
 		\hline
 		\endhead
 	
-		CU-A01 & Iniciar sesión como administrador & Cuenta activa de administración &
-		Se autentica en la consola & Token emitido; acceso al panel \\ \hline
+		CU-A01 & Iniciar sesión en el panel de la Defensora & Cuenta activa con rol
+		\texttt{DEFENSOR} & Se autentica en el panel & Token emitido; acceso al panel \\ \hline
 	
 		CU-A02 & Dar de alta personal & Sesión iniciada & Captura nombre, número de empleado, correo
 		y rol & Cuenta creada con contraseña temporal; queda en bitácora \\ \hline
@@ -765,7 +1005,7 @@
 	\setlength{\tabcolsep}{6pt}
 	\renewcommand{\arraystretch}{1}
 	
-	\subsubsection{Casos de uso de apoyo al análisis de Primer Contacto}
+	\subsection{Casos de uso de apoyo al análisis de Primer Contacto}
 	El módulo de Primer Contacto dispone de funciones de análisis asistido que no determinan por
 	sí mismas el sentido de una actuación institucional. La Tabla~\ref{tab:cu_ia} representa las
 	interacciones relacionadas con los dos componentes de inteligencia artificial.
@@ -790,7 +1030,7 @@
 	\end{longtable}
 	\normalsize
 
-	\subsection{Ciclo de vida del expediente}
+	\section{Ciclo de vida del expediente}
 	\label{sec:maquina_estados}
 	El elemento que ordena todo el flujo de trabajo es el estatus de la queja. Se modeló como una
 	máquina de estados con cuatro valores y transiciones dirigidas, decisión que se tomó por dos
@@ -820,14 +1060,14 @@
 	Por ello, la máquina aquí presentada debe interpretarse como un subproceso; el ciclo de vida
 	completo se documenta conforme a las reglas de los módulos posteriores.
 	
-	\subsection{Diseño de la arquitectura}
+	\section{Diseño de la arquitectura}
 	\label{sec:diseno_arquitectura}
 	La arquitectura de la plataforma aplica los principios expuestos en la
 	Sección~\ref{sec:arquitectura_software}. Esta sección describe cómo se concretaron: qué
 	componentes existen, cómo se comunican, cómo se despliegan y qué alternativas se descartaron en
 	cada decisión.
 	
-	\subsubsection{Vista de componentes}
+	\subsection{Vista de componentes}
 	El sistema se descompuso en microservicios de dominio y servicios auxiliares de inteligencia
 	artificial. Los servicios de negocio implementan las operaciones institucionales; los de IA
 	atienden recuperación de información y redacción asistida. La
@@ -900,7 +1140,7 @@
 	de red y las reglas de acceso. Esta separación impide confundir un servicio de inferencia
 	con un punto de autenticación o una decisión administrativa.
 	
-	\subsubsection{Vista de despliegue}
+	\subsection{Vista de despliegue}
 	El despliegue diferencia el acceso público, los servicios de negocio y los componentes
 	de procesamiento de inteligencia artificial. El entorno de aplicaciones aloja los
 	microservicios y la persistencia operativa; el entorno de acceso sirve las aplicaciones
@@ -966,7 +1206,7 @@
 	orígenes. Eso simplifica el modelo de seguridad del cliente sin sacrificar la separación en
 	servicios del lado del servidor.
 	
-	\subsubsection{Diseño de la comunicación entre servicios}
+	\subsection{Diseño de la comunicación entre servicios}
 	La comunicación entre servicios es síncrona sobre HTTP siguiendo el estilo REST, conforme a lo
 	expuesto en la Sección~\ref{sec:arquitectura_software}. Se descartó la mensajería asíncrona
 	porque el volumen de operaciones y el número de servicios no justifican la complejidad operativa
@@ -983,7 +1223,7 @@
 	Las dependencias de datos y sus compromisos se analizan en la
 	Sección~\ref{sec:decisiones_diseno}.
 	
-	\subsubsection{Diseño de la seguridad y el control de acceso}
+	\subsection{Diseño de la seguridad y el control de acceso}
 	El esquema de seguridad se construyó sobre cuatro mecanismos, cada uno atendiendo una amenaza
 	distinta.
 	
@@ -1016,7 +1256,7 @@
 	expiración del token limita la ventana de exposición a una hora, pero no equivale a un cierre
 	por inactividad.
 	
-	\subsubsection{Decisiones de diseño y alternativas descartadas}
+	\subsection{Decisiones de diseño y alternativas descartadas}
 	\label{sec:decisiones_diseno}
 	Esta sección documenta las decisiones estructurales del proyecto con el formato
 	contexto-alternativas-decisión-consecuencias. Registrarlas de esta forma cumple un propósito
@@ -1096,7 +1336,7 @@
 	elimina la ambigüedad de no poder saber qué versión de qué servicio está ejecutando un
 	contenedor determinado.
 	
-	\subsection{Diseño de la base de datos}
+	\section{Diseño de la base de datos}
 	\label{sec:diseno_bd}
 	La persistencia principal de expedientes es relacional y se comparte entre varios servicios
 	de negocio. En algunos casos, distintas entidades de persistencia trabajan sobre la misma
@@ -1167,7 +1407,7 @@
 	
 	\normalsize
 	
-	\subsubsection{Correspondencia entre reglas de negocio y mecanismos de integridad}
+	\subsection{Correspondencia entre reglas de negocio y mecanismos de integridad}
 	Un modelo de datos que solo almacena información deja las reglas del dominio a merced de que
 	cada consumidor las respete. El diseño de esta base busca lo contrario: que las reglas se hagan
 	cumplir en el nivel más bajo posible, de modo que ningún camino de acceso pueda violarlas. La
@@ -1236,7 +1476,7 @@
 	El diccionario de datos completo, con el tipo y la longitud de cada columna, las cardinalidades
 	detalladas, los índices y las sentencias de creación, se documenta en el anexo correspondiente.
 	
-	\subsection{Diseño de los componentes de inteligencia artificial}
+	\section{Diseño de los componentes de inteligencia artificial}
 	\label{sec:diseno_ia}
 	Los componentes inteligentes se diseñaron como herramientas auxiliares para la revisión de
 	expedientes. Se separaron en dos procesos con objetivos y salidas diferentes: recuperación
@@ -1245,7 +1485,7 @@
 	a partir de información seleccionada de la queja. Ninguno determina automáticamente la
 	competencia institucional, la existencia de una duplicidad ni el sentido de una resolución.
 
-	\subsubsection{Diseño del componente de búsqueda de antecedentes}
+	\subsection{Diseño del componente de búsqueda de antecedentes}
 	\label{sec:diseno_antecedentes}
 	La entrada principal es la narración de una queja. El diseño parte de una colección de
 	quejas vigentes e históricas que se representa con dos señales complementarias:
@@ -1294,7 +1534,7 @@
 	o involucrados sirve como apoyo visual. Una similitud elevada no confirma que dos
 	quejas sean idénticas: la identificación de duplicidades corresponde a la revisión humana.
 
-	\subsubsection{Diseño del componente de generación de resúmenes}
+	\subsection{Diseño del componente de generación de resúmenes}
 	\label{sec:diseno_resumenes}
 	La generación de resúmenes sigue un esquema de dos etapas para separar la selección de
 	información de la redacción. La entrada es la narrativa original de la queja y la salida
@@ -1340,7 +1580,7 @@
 	La revisión de calidad con datos autorizados y personal responsable queda como
 	actividad futura.
 
-	\subsubsection{Integración de los servicios con Primer Contacto}
+	\subsection{Integración de los servicios con Primer Contacto}
 	\label{sec:integracion_ia}
 	El módulo de Primer Contacto actúa como consumidor de ambos componentes. El servicio
 	de antecedentes atiende peticiones de consulta y devuelve expedientes sugeridos;
@@ -1354,7 +1594,7 @@
 	resultado faltante como una decisión automatizada. La descripción de contratos
 	HTTP, parámetros y despliegue corresponde al capítulo de implementación.
 
-	\subsubsection{Decisiones de diseño y alternativas consideradas}
+	\subsection{Decisiones de diseño y alternativas consideradas}
 	La Tabla~\ref{tab:decisiones_ia} resume los principales compromisos del diseño.
 	\small
 	\renewcommand{\arraystretch}{1.2}
@@ -1387,7 +1627,7 @@
 	\normalsize
 	\renewcommand{\arraystretch}{1}
 
-	\subsection{Diseño de la interfaz de usuario}
+	\section{Diseño de la interfaz de usuario}
 	\label{sec:diseno_interfaz}
 	El diseño de las interfaces partió de prototipos de alta fidelidad que se usaron como
 	herramienta de validación temprana con el cliente. La razón de invertir en ellos antes de
