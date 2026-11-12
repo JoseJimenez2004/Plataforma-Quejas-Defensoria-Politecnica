@@ -1,42 +1,39 @@
 	\chapter{Planteamiento del Problema}
-	Este capítulo presenta el análisis de las principales problemáticas identificadas en los procesos
-	actuales de atención y gestión de quejas dentro de la DDP. Se describen las causas que originan
-	dichas limitaciones operativas y tecnológicas, así como la propuesta de solución planteada para
-	optimizar la administración de expedientes, mejorar la trazabilidad de la información y fortalecer
-	la eficiencia institucional mediante una plataforma digital integral.
-	
+	Este capítulo presenta la problemática que da origen al Trabajo Terminal. En primer lugar, se describe el problema general: la ineficiencia del procedimiento de atención de quejas de la DDP. Posteriormente, se desglosa en los problemas específicos que lo conforman y se analizan las causas que los originan. Finalmente, se presentan los alcances y las limitaciones del proyecto.
+
 	\section{Problema general}
-	El problema central radica en las limitaciones de los mecanismos actuales para gestionar de manera integral, organizada y eficiente los procedimientos relacionados con la atención de quejas. Esta situación representa un desafío para la operación, debido a la necesidad de mantener la continuidad de los expedientes, facilitar el acceso oportuno a la información y asegurar una coordinación adecuada durante las distintas etapas del procedimiento. Por ello, resulta necesario analizar las dificultades particulares que intervienen en la gestión de quejas y que, en conjunto, conforman la problemática identificada en la Defensoría.
-	
+	La DDP es el órgano del Instituto Politécnico Nacional encargado de promover, proteger y defender los derechos de la comunidad politécnica \cite{ipn_acuerdo622, ipn_manual_organizacion_ddp}. Para cumplir esta función, la DDP recibe y atiende quejas: escritos mediante los cuales estudiantes, personal académico, personal de apoyo y demás integrantes de la comunidad politécnica hacen del conocimiento de la Defensoría hechos que consideran una posible vulneración de sus derechos.
+
+	La atención de cada queja sigue un procedimiento institucional en el que intervienen distintas áreas de forma sucesiva. La queja es recibida por Recepción y esta valida que cumpla los requisitos de admisión; posteriormente, el personal de Primer Contacto analiza los hechos, consulta antecedentes y determina si el asunto es competencia de la Defensoría; en caso de serlo, la Subdefensoría realiza la investigación y el seguimiento con las unidades involucradas, y la persona titular de la Defensoría supervisa el conjunto de los casos \cite{ipn_manual_procedimientos_ddp}. Cada etapa depende de la información generada en la anterior.
+
+	El problema central es que este procedimiento resulta ineficiente para el volumen de quejas que recibe la Defensoría. Su ejecución recae principalmente en actividades manuales y secuenciales: el registro y la consulta de los expedientes, la lectura completa de cada narrativa, la búsqueda de antecedentes y la comunicación del avance entre áreas dependen del tiempo y la intervención directa del personal. En consecuencia, el tiempo de atención de cada caso se incrementa, las quejas se acumulan en las distintas etapas y la información necesaria para darles continuidad no siempre está disponible de manera oportuna para quien la requiere. Las dificultades particulares que conforman esta problemática se describen en el siguiente apartado.
+
 	\section{Problemas específicos}
-	La gestión de quejas en la Defensoría de los Derechos Politécnicos presenta diversas dificultades operativas que se manifiestan durante las etapas de recepción, revisión, atención y seguimiento de las solicitudes. A partir del levantamiento de requerimientos y del análisis de los procedimientos institucionales, se identificaron las siguientes problemáticas que afectan la organización de la información, la continuidad de los expedientes y las actividades del personal responsable.
-	
-	\begin{itemize}
-		\item \textbf{Seguimiento de quejas:}
-    El seguimiento de una queja implica conocer su estado, las actuaciones realizadas y las actividades pendientes. Las dificultades para consultar esta información de manera oportuna pueden afectar la continuidad del procedimiento y la coordinación entre las áreas responsables de su atención.
+	A partir del levantamiento de requerimientos realizado con el personal de la Defensoría y del análisis de los procedimientos institucionales, se identificaron los siguientes problemas, que en conjunto explican la ineficiencia del proceso descrito.
 
-    \item \textbf{Carga operativa en las actividades administrativas:}
-    El personal de la Defensoría realiza actividades de registro, revisión, consulta y actualización de información durante la atención de quejas. Estas tareas requieren tiempo y atención constante, especialmente cuando deben gestionarse múltiples solicitudes de manera simultánea.
+	\begin{enumerate}
+		\item \label{pe:volumen}\textbf{Volumen de quejas superior a la capacidad de atención:}
+		De acuerdo con lo señalado por el personal de la Defensoría, el número de quejas que ingresan supera la capacidad del personal para atenderlas y concluirlas en los plazos institucionales. Como cada etapa del procedimiento depende de actividades manuales, el tiempo invertido en tareas de registro, consulta y actualización reduce el tiempo disponible para el análisis de los casos, lo que provoca la acumulación de expedientes pendientes y el retraso en la respuesta a los quejosos.
 
-    \item \textbf{Revisión de narrativas extensas:}
-    Algunas quejas presentadas por los integrantes de la comunidad politécnica contienen descripciones extensas de los acontecimientos. Su revisión requiere identificar los hechos relevantes, comprender la secuencia de los sucesos y reconocer la información necesaria para continuar con el procedimiento, lo que representa una actividad que demanda tiempo al personal responsable.
+		\item \label{pe:narrativas}\textbf{Revisión de narrativas extensas:}
+		Las quejas contienen descripciones redactadas libremente por los quejosos, que con frecuencia son extensas, repetitivas o no siguen un orden cronológico. Para continuar con el procedimiento, el personal debe leer cada narrativa completa e identificar por sí mismo los hechos relevantes, lo que consume una parte importante del tiempo de revisión de cada expediente.
 
-    \item \textbf{Presentación reiterada de quejas:}
-    De acuerdo con lo señalado por el personal de la Defensoría, existen situaciones en las que los quejosos presentan nuevamente una solicitud relacionada con hechos previamente reportados, particularmente cuando consideran que no han recibido una respuesta. Esta situación puede generar registros potencialmente duplicados y requerir revisiones adicionales para determinar si corresponden a un expediente existente o contienen información nueva.
+		\item \label{pe:antecedentes}\textbf{Búsqueda manual de antecedentes:}
+		Durante la revisión de una queja es necesario saber si existen expedientes anteriores relacionados con los mismos hechos, personas o unidades. Esta búsqueda se realiza de forma manual y depende de la memoria del personal o de la revisión de registros previos, lo que resulta lento y poco confiable cuando los casos similares están descritos con palabras distintas.
 
-    \item \textbf{Consulta de antecedentes relacionados:}
-    Durante la revisión de una queja puede ser necesario consultar expedientes anteriores relacionados con los hechos descritos o con las personas involucradas. La localización y comparación de estos registros representa una dificultad operativa, especialmente cuando existen diferencias en la manera de describir acontecimientos similares.
+		\item \label{pe:duplicadas}\textbf{Duplicidad de quejas:}
+		De acuerdo con lo señalado por el personal de la Defensoría, existen quejosos que presentan nuevamente una solicitud sobre hechos ya reportados, particularmente cuando consideran que no han recibido respuesta. Al no contar con un mecanismo para identificarlas, estas quejas pueden registrarse y atenderse como casos nuevos, lo que duplica el trabajo y fragmenta la información de un mismo asunto.
 
-    \item \textbf{Coordinación entre las áreas responsables:}
-    La atención de las quejas involucra la participación de diferentes áreas institucionales, cuyas actividades requieren mantener continuidad en el intercambio de información. Las dificultades para consultar las actuaciones y conocer el avance de los procedimientos pueden complicar la coordinación y el seguimiento de los casos.
+		\item \label{pe:estado}\textbf{Falta de seguimiento de la queja:}
+		No existe un medio único para conocer en qué etapa se encuentra una queja, qué actuaciones se han realizado y qué plazos están por vencer. Esto dificulta priorizar los casos urgentes y obliga a los quejosos a solicitar información sobre el avance de su queja.
 
-    \item \textbf{Administración de información sensible:}
-    Los expedientes pueden contener datos personales, documentos y descripciones de situaciones que requieren un tratamiento confidencial. Su administración representa un desafío debido a la necesidad de mantener la integridad de la información, controlar su consulta y conservar un registro de las actuaciones realizadas por el personal autorizado.
+		\item \label{pe:informacion}\textbf{Falta de coordinación entre áreas:}
+		Cuando un expediente pasa de un área a otra, la información generada en la etapa anterior ---documentos, oficios, citas y determinaciones--- no siempre se encuentra disponible e integrada para quien continúa el procedimiento. Esto provoca consultas adicionales, retrasos y dificultades de coordinación entre el personal.
 
-\end{itemize}
+	\end{enumerate}
 
-Estas problemáticas reflejan las dificultades que intervienen en la administración y atención de quejas dentro de la Defensoría. Aunque se manifiestan en distintas actividades del procedimiento, mantienen una relación directa con la organización de la información, la continuidad de los expedientes y la carga operativa del personal. Su análisis permite identificar los factores que contribuyen a su aparición, los cuales se desarrollan en el siguiente apartado.
-	
+	Estos problemas se manifiestan en distintas etapas del procedimiento, pero mantienen una relación directa con la organización de la información, la continuidad de los expedientes y la carga operativa del personal. Su análisis permite identificar los factores que contribuyen a su aparición, los cuales se desarrollan en el siguiente apartado.
+
 	\section{Causas}
 	Las problemáticas identificadas en la gestión de quejas de la Defensoría de los Derechos Politécnicos se relacionan con diversos factores administrativos, operativos y tecnológicos que intervienen en el desarrollo de sus procedimientos internos. A partir del análisis de los procesos institucionales y de la información obtenida durante el levantamiento de requerimientos, se reconocen condiciones que pueden contribuir a las dificultades de organización, consulta y seguimiento de los expedientes. Estos factores se encuentran relacionados entre sí, por lo que resulta necesario analizarlos desde una perspectiva integral.
 
