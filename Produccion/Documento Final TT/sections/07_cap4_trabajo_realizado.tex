@@ -3,50 +3,608 @@
 \label{cap:analisis_diseno}
 \label{cap:implementacion}
 \label{cap:modulos}
-\pendiente{Introducción del capítulo: qué se construyó y cómo se organiza este capítulo.}
+
+En este capítulo se describe el trabajo realizado para desarrollar e integrar el sistema web de atención y seguimiento de quejas de la Defensoría de los Derechos Politécnicos (DDP). Se presentan los procesos que permite ejecutar la plataforma, la implementación de sus componentes de inteligencia artificial, las principales interfaces de usuario y el despliegue de los servicios necesarios para su funcionamiento.
+
+El desarrollo se organizó en módulos que atienden distintas actividades de la DDP, desde el registro de una queja hasta su seguimiento y conclusión. Esta separación permite asignar funcionalidades de acuerdo con las responsabilidades de cada tipo de usuario y mantener un registro de las acciones realizadas sobre los expedientes. Los módulos se integraron mediante servicios que intercambian información con las aplicaciones web y las bases de datos correspondientes.
+
+En primer lugar, se describe el ciclo de vida del expediente y la participación de las áreas involucradas. Después se expone la implementación de la búsqueda de antecedentes y la generación de resúmenes, funcionalidades incorporadas como apoyo al análisis de las quejas. Posteriormente, se presentan diez pantallas representativas de la plataforma, indicando su propósito, los aspectos relevantes de implementación y su relación con los requerimientos funcionales. Finalmente, se explica la organización del despliegue y los mecanismos de comunicación entre los componentes.
 
 \section{Ciclo de vida del expediente}
 \label{sec:ciclo_vida}
-\pendiente{Diagrama de estados de la queja y descripción del flujo entre áreas.}
+
+El expediente constituye la unidad de información alrededor de la cual se organiza la atención de una queja. A través de él se conserva la información proporcionada por el quejoso y se registran las actuaciones realizadas durante su atención. La plataforma permite consultar dicha información desde los módulos autorizados y dar seguimiento al avance del procedimiento.
+
+El proceso comienza cuando el quejoso captura y envía la información requerida en el portal correspondiente. Una vez registrada, la queja queda disponible para las actividades de recepción y revisión que correspondan. Durante estas etapas se consulta la información capturada y, de ser necesario, se realizan las acciones previstas en el procedimiento de atención. La continuidad del expediente depende de las determinaciones del personal autorizado y de las reglas de negocio establecidas para cada etapa.
+
+Cuando una queja requiere atención posterior, el expediente puede ser consultado desde los módulos de primer contacto y subdefensoría, de acuerdo con las atribuciones de cada área. En estos módulos se concentra la información necesaria para realizar el seguimiento, registrar actuaciones, gestionar citas y documentar los elementos relacionados con la atención. La conclusión del expediente se efectúa conforme a la decisión registrada por el personal responsable y al flujo definido para el caso.
+
+La plataforma no sustituye las decisiones institucionales relacionadas con la procedencia, atención o resolución de una queja. Su función consiste en facilitar el registro, consulta y seguimiento de la información, así como conservar la trazabilidad de las operaciones ejecutadas por los usuarios autorizados.
+
+% PENDIENTE: Sustituir por el diagrama de estados definitivo, obtenido de los estados
+% y transiciones realmente implementados. No usar un diagrama puramente conceptual.
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=0.95\textwidth]{figuras/ciclo_vida_expediente.png}
+%   \caption{Estados y transiciones del expediente en la plataforma.}
+%   \label{fig:ciclo_vida_expediente}
+% \end{figure}
+
+Para representar formalmente el ciclo de vida debe incorporarse un diagrama de estados en el que se indiquen los estados implementados, las transiciones permitidas y el área o usuario responsable de cada cambio. Esta representación debe corresponder con las reglas efectivamente aplicadas por los servicios de la plataforma. Asimismo, se debe distinguir entre el estado general del expediente y las actividades particulares que puedan registrarse durante su atención, ya que una actuación no necesariamente implica un cambio de estado.
+
+La separación de funciones por módulo contribuye a que cada usuario consulte las operaciones relacionadas con sus responsabilidades. De manera complementaria, los mecanismos de autenticación, autorización y registro de acciones permiten asociar las operaciones efectuadas con el usuario que las realiza, siempre dentro de los permisos definidos para su rol.
 
 \section{Componentes de inteligencia artificial}
 \label{sec:diseno_ia}
-\pendiente{Cómo se construyeron la búsqueda de antecedentes y la generación de resúmenes.}
+
+Se integraron dos funcionalidades de inteligencia artificial para apoyar el análisis de la información contenida en las quejas: la búsqueda de antecedentes relacionados y la generación de resúmenes. Ambas se implementaron como componentes de procesamiento independientes, consumidos desde los servicios de la plataforma. Esta organización separa la lógica de los modelos de las funciones de gestión del expediente y permite realizar ajustes sobre los componentes de inteligencia artificial sin trasladar su procesamiento a la interfaz de usuario.
+
+A diferencia de los fundamentos presentados en el marco teórico, esta sección se concentra en la integración de las técnicas seleccionadas y en el recorrido de los datos durante su ejecución.
+
+\subsection{Implementación de la búsqueda de antecedentes}
+\label{subsec:implementacion_antecedentes}
+
+El componente de búsqueda de antecedentes recibe el texto de una queja y lo compara con los documentos disponibles en el conjunto de consulta. Su propósito es recuperar casos con contenido relacionado que puedan servir como referencia durante la revisión. Los resultados representan coincidencias calculadas por el sistema y no una determinación automática de que existan quejas duplicadas o de que los hechos relatados correspondan a un mismo asunto.
+
+Para recuperar antecedentes se construyó un esquema híbrido que combina información léxica y semántica. La representación léxica utiliza TF-IDF con unigramas y bigramas, lo que permite considerar términos individuales y secuencias de dos palabras. A partir de estas representaciones se calcula la cercanía entre los textos consultados. En paralelo, el componente semántico utiliza el modelo \texttt{paraphrase-multilingual-MiniLM-L12-v2} para obtener representaciones vectoriales que permiten comparar el contenido de los documentos más allá de la coincidencia exacta de palabras.
+
+La integración híbrida combina las puntuaciones obtenidas por ambos procedimientos mediante una ponderación configurada para el modelo. En la versión evaluada se trabajó con una distribución de pesos del 75\,\% y 25\,\%; en la versión final del documento debe especificarse explícitamente cuál corresponde al componente léxico y cuál al semántico, de acuerdo con la configuración utilizada en los experimentos. La puntuación combinada se emplea para ordenar los antecedentes y presentar primero aquellos que muestran mayor relación con el texto consultado.
+
+Desde el punto de vista de integración, el módulo de la plataforma envía una solicitud al servicio encargado de la búsqueda con la información necesaria para efectuar la consulta. El servicio procesa el contenido, calcula las puntuaciones y devuelve los resultados en una respuesta estructurada. Posteriormente, la aplicación presenta al personal los antecedentes recuperados para su consulta. De esta manera, el cálculo de similitudes permanece separado de la visualización de los expedientes.
+
+% PENDIENTE: Insertar diagrama del proceso implementado: entrada, TF-IDF,
+% MiniLM, combinación de puntuaciones, ordenamiento y respuesta.
+
+Durante el desarrollo se realizaron evaluaciones con un conjunto de 200 quejas sintéticas de mayor complejidad, con el objetivo de observar el comportamiento del mecanismo de recuperación ante textos extensos y diferentes formas de redacción. Los resultados cuantitativos y el protocolo de evaluación deben presentarse en el capítulo de pruebas, evitando interpretarlos como evidencia directa de desempeño sobre quejas institucionales reales. En particular, la evaluación con datos reales y la validación por parte de la DDP quedaron sujetas a la disponibilidad y autorización de dicha información.
+
+\subsection{Implementación de la generación de resúmenes}
+\label{subsec:implementacion_resumenes}
+
+El segundo componente tiene como finalidad producir una versión condensada del contenido de una queja para facilitar su lectura inicial. La implementación combina una etapa de selección de información mediante Maximal Marginal Relevance (MMR) y una etapa de generación de texto mediante el modelo \texttt{Qwen3-4B-Instruct}.
+
+El procesamiento inicia con la recepción del texto de la queja. A continuación, el contenido se divide en unidades textuales que pueden ser consideradas durante la selección. MMR permite priorizar fragmentos relevantes procurando reducir la redundancia entre los elementos seleccionados. El conjunto resultante se utiliza como contexto de entrada para Qwen3, que genera una síntesis redactada en lenguaje natural.
+
+La elección de esta secuencia responde a la necesidad de acotar la información enviada al modelo generativo cuando se procesan documentos extensos. Sin embargo, la selección previa también introduce una limitación: un dato que no pasa la etapa de MMR no está disponible para la generación posterior. Además, aun cuando un dato haya sido seleccionado, el modelo generativo puede omitirlo o reformularlo. Por ello, el resumen se presenta como apoyo a la lectura y no como reemplazo del texto original del expediente.
+
+Para integrar esta funcionalidad se dispuso de un servicio dedicado al procesamiento de resúmenes y de un servicio de inferencia del modelo generativo. El módulo de la plataforma realiza la solicitud y recibe el texto producido para mostrarlo al usuario autorizado. La ejecución se configuró en un entorno con recursos de CPU, por lo que la capacidad de procesamiento y los tiempos de respuesta formaron parte de las consideraciones de implementación.
+
+% PENDIENTE: Insertar diagrama del flujo: texto, segmentación, MMR,
+% contexto seleccionado, Qwen3 y resumen final.
+
+La evaluación integral de la fidelidad de los resúmenes requiere distinguir entre la información descartada por MMR y aquella que, pese a encontrarse en el contexto seleccionado, no aparece en la respuesta de Qwen3. Esta distinción no pudo validarse exhaustivamente con quejas reales y revisión institucional dentro del tiempo disponible para el proyecto. En consecuencia, los resultados de funcionamiento del componente deben exponerse junto con dicha limitación en el apartado de pruebas.
+
+\subsection{Integración de los componentes con la plataforma}
+\label{subsec:integracion_ia}
+
+Las funcionalidades de inteligencia artificial se incorporaron al proceso de consulta y análisis de expedientes mediante solicitudes a servicios especializados. Esta integración permite que el personal consulte antecedentes y resúmenes desde la interfaz correspondiente sin ejecutar directamente los modelos en el navegador.
+
+La separación entre módulos web, servicios de negocio y servicios de inteligencia artificial permite identificar responsabilidades técnicas diferenciadas: la interfaz gestiona la interacción con el usuario, los servicios de la plataforma coordinan las operaciones autorizadas y los componentes especializados realizan el procesamiento de texto. Los resultados regresan a la aplicación para su presentación y valoración por parte del personal de la Defensoría.
 
 \section{Pantallas principales de la plataforma}
 \label{sec:pantallas}
-\pendiente{Presentar las diez pantallas más importantes: qué hace cada una, cómo se hizo y a qué requerimientos responde.}
 
-\subsection{Pantalla 1}
-\pendiente{Captura, descripción y requerimientos que cubre.}
+La plataforma dispone de interfaces orientadas a las actividades de distintos tipos de usuario. Para presentar el trabajo realizado se seleccionaron diez pantallas representativas del registro, revisión, seguimiento y atención de las quejas. En cada caso se describe su objetivo, el comportamiento general de la interfaz y su vinculación con los requerimientos funcionales definidos en el capítulo correspondiente.
 
-\subsection{Pantalla 2}
-\pendiente{Captura, descripción y requerimientos que cubre.}
+Las capturas de pantalla deben provenir de la versión final implementada. Se recomienda utilizar datos de demostración y ocultar cualquier dato personal o institucional que no deba publicarse. Los identificadores de requerimientos deben incorporarse después de cotejar la tabla definitiva de especificación, para evitar asociaciones incorrectas.
 
-\subsection{Pantalla 3}
-\pendiente{Captura, descripción y requerimientos que cubre.}
+\subsection{Registro de quejas}
+\label{subsec:pantalla_registro}
 
-\subsection{Pantalla 4}
-\pendiente{Captura, descripción y requerimientos que cubre.}
+La pantalla de registro permite al quejoso proporcionar la información necesaria para iniciar una queja. Constituye el punto de entrada del proceso, ya que concentra los datos que posteriormente serán consultados por el personal encargado de su atención. La interfaz organiza la captura en los campos correspondientes y realiza las validaciones implementadas antes de enviar la solicitud.
 
-\subsection{Pantalla 5}
-\pendiente{Captura, descripción y requerimientos que cubre.}
+En su implementación, el formulario se comunica con los servicios de la plataforma encargados del registro de la información. Una vez recibidos los datos, estos servicios realizan las operaciones necesarias para conservar la queja y ponerla a disposición de las etapas posteriores. La interfaz presenta al usuario el resultado de la operación conforme a la respuesta obtenida.
 
-\subsection{Pantalla 6}
-\pendiente{Captura, descripción y requerimientos que cubre.}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=0.95\textwidth,
+        keepaspectratio
+    ]{images/pantalla_analisis_queja.jpg}
+    \caption{Interfaz de análisis de quejas}
+    \label{fig:pantalla_analisis_queja}
+\end{figure}
+\subsection{Detalle y seguimiento de la queja}
+\label{subsec:detalle_seguimiento_queja}
 
-\subsection{Pantalla 7}
-\pendiente{Captura, descripción y requerimientos que cubre.}
+La interfaz de detalle y seguimiento de la queja permite
+al quejoso consultar la información de un expediente
+previamente registrado, así como conocer el avance de
+su atención por parte de la Defensoría de los Derechos
+Politécnicos.
 
-\subsection{Pantalla 8}
-\pendiente{Captura, descripción y requerimientos que cubre.}
+Como se muestra en la Figura~\ref{fig:detalle_seguimiento_queja},
+la pantalla incorpora una representación visual del
+estado del trámite, organizada en siete etapas:
+queja recibida, en validación, turnada a primer contacto,
+en análisis, en investigación, acuerdo de conciliación
+y caso concluido.
 
-\subsection{Pantalla 9}
-\pendiente{Captura, descripción y requerimientos que cubre.}
+Esta representación permite identificar las etapas
+completadas, la etapa actual y aquellas que todavía
+se encuentran pendientes, facilitando al quejoso
+el seguimiento de su solicitud.
 
-\subsection{Pantalla 10}
-\pendiente{Captura, descripción y requerimientos que cubre.}
+Adicionalmente, la interfaz presenta la información
+general del expediente, incluyendo su folio,
+fecha de registro, datos del promovente, asunto,
+lugar de los hechos y descripción de la queja.
+
+También cuenta con un apartado para consultar
+las evidencias documentales asociadas al expediente,
+permitiendo visualizar los archivos proporcionados
+durante su registro.
+
+La información presentada se obtiene de los
+servicios de gestión de quejas y se organiza
+en componentes visuales que permiten consultar
+el estado del procedimiento y sus datos asociados.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=0.95\textwidth,
+        keepaspectratio
+    ]{images/pantalla_seguimiento_queja.png}
+    \caption{Interfaz de seguimiento de quejas}
+    \label{fig:pantalla_analisis_queja}
+\end{figure}
+
+\subsection{Recepción y validación de quejas}
+\label{subsec:recepcion_validacion}
+
+El panel de Recepción constituye la interfaz principal del personal encargado de recibir y gestionar inicialmente las quejas presentadas ante la Defensoría de los Derechos Politécnicos. Su propósito es centralizar las solicitudes recibidas y facilitar su organización, consulta y asignación para su posterior validación.
+
+Como se muestra en la Figura correspondiente, la interfaz presenta una bandeja de entrada que contiene las quejas registradas, organizadas mediante una tabla que incluye el folio, tiempo transcurrido desde su recepción, nombre del quejoso, unidad académica de procedencia, disponibilidad de documentos y estado actual. Además, incorpora indicadores que permiten identificar la cantidad de quejas atendidas durante el día, las que permanecen abiertas y la solicitud con mayor tiempo de espera.
+
+Para facilitar la gestión, se implementaron filtros que permiten distinguir entre todas las quejas, las disponibles, las asignadas al usuario, las corregidas y aquellas que se encuentran en atención. También se incorporó un mecanismo de búsqueda por folio, nombre o unidad académica, así como controles de paginación para consultar los registros.
+
+La interfaz permite seleccionar una queja mediante la opción de atención individual o utilizar la función para atender la siguiente solicitud. Al abrir un expediente, este queda asignado al personal que inicia su atención, evitando que sea atendido simultáneamente por otro usuario. Adicionalmente, se dispone de una opción para realizar el registro manual de quejas.
+
+De esta manera, el panel concentra las actividades iniciales del proceso de recepción y proporciona al personal herramientas para administrar las solicitudes pendientes de manera organizada.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=0.95\textwidth,
+        keepaspectratio
+    ]{images/bandeja_recepcion.png}
+    \caption{Bandeja de entrada del módulo de Recepción}
+    \label{fig:bandeja_recepcion}
+\end{figure}
+
+
+
+% PENDIENTE: Insertar captura real y completar RF de recepción.
+
+\subsection{Revisión de quejas}
+\label{subsec:pantalla_revision}
+
+La interfaz de validación de datos e identificación permite al personal de Recepción verificar la información proporcionada por el quejoso antes de continuar con el procedimiento de atención. Su objetivo es comprobar que los datos registrados sean consistentes con la documentación presentada y determinar si la solicitud cumple con los criterios establecidos para su canalización.
+
+Como se muestra en la Figura correspondiente, la pantalla organiza el proceso de validación mediante un formulario estructurado en cuatro apartados: identidad de la persona quejosa, validez y suficiencia de la documentación de identidad y personalidad jurídica, correspondencia de la matrícula institucional cuando corresponde, e identificación de la persona señalada. Cada apartado incluye criterios de revisión y opciones de respuesta que permiten registrar el cumplimiento de los requisitos.
+
+La interfaz también incorpora un visor de la identificación del quejoso y un apartado para consultar las evidencias documentales adjuntas al expediente. Esto permite contrastar la información capturada con los archivos proporcionados sin abandonar la pantalla de validación.
+
+Adicionalmente, se implementaron campos para registrar observaciones particulares y generales cuando se detectan inconsistencias en la documentación o en los datos proporcionados. El sistema presenta un indicador del número de requisitos satisfechos y pendientes de responder, facilitando el seguimiento del proceso de revisión.
+
+Una vez realizada la validación, el personal puede canalizar la queja cuando se cumplen los criterios establecidos o regresarla al quejoso para que atienda las observaciones correspondientes. Asimismo, la interfaz dispone de opciones para regresar a la bandeja de entrada, conservando o liberando la asignación del expediente.
+
+Esta funcionalidad permite estructurar la revisión inicial de las solicitudes, registrar los resultados de la validación y apoyar la continuidad del procedimiento de atención.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=0.85\textwidth,
+        height=0.85\textheight,
+        keepaspectratio
+    ]{images/validacion_recepcion.png}
+    \caption{Validación de datos e identificación del quejoso}
+    \label{fig:validacion_recepcion}
+\end{figure}
+
+\subsection{Panel de inicio de Primer Contacto}
+\label{subsec:pantalla_primer_contacto}
+
+El panel de inicio de Primer Contacto constituye la interfaz
+principal del personal encargado de realizar el análisis inicial
+de las quejas que han sido canalizadas a esta área. Su propósito
+es proporcionar una visión general de los expedientes pendientes
+de atención, facilitar su consulta y concentrar la información
+relacionada con las actividades asignadas al usuario.
+
+Como se muestra en la Figura~\ref{fig:panel_primer_contacto},
+la interfaz presenta indicadores que clasifican los expedientes
+en cinco categorías: pendientes, por abrir, con cita, dictaminados
+y remitidos. Estos indicadores permiten identificar la cantidad
+de expedientes asociados a cada categoría y seleccionar el listado
+correspondiente para su consulta.
+
+Adicionalmente, el panel incorpora una tabla de expedientes
+pendientes que muestra el identificador del expediente, nombre
+del quejoso, unidad académica, fecha de recepción y estado
+actual. Cada registro dispone de una opción para acceder a su
+información, mientras que los controles de paginación permiten
+organizar la consulta de los expedientes disponibles.
+
+La interfaz también incluye un apartado destinado a las citas
+programadas para el día, con acceso a la agenda del usuario.
+Esta funcionalidad permite consultar los compromisos relacionados
+con la atención de los expedientes sin abandonar el panel
+principal.
+
+En cuanto a su implementación, la pantalla obtiene la información
+de los expedientes y las citas mediante los servicios
+correspondientes, presentando los resultados en componentes
+independientes. Los indicadores permiten actualizar el listado
+de expedientes de acuerdo con la categoría seleccionada,
+mientras que las acciones disponibles facilitan el acceso
+a las funciones del módulo.
+
+De esta manera, el panel proporciona al personal de Primer
+Contacto un punto de acceso centralizado para consultar
+sus actividades pendientes y dar continuidad al proceso de
+atención de las quejas.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=0.95\textwidth,
+        keepaspectratio
+    ]{images/pantalla_primercontacto_entrada.png}
+    \caption{Panel de inicio del módulo de Primer Contacto}
+    \label{fig:panel_primer_contacto}
+\end{figure}
+
+
+% PENDIENTE: Insertar captura real y completar RF de primer contacto.
+
+
+\subsection{Análisis de quejas con inteligencia artificial}
+\label{subsec:pantalla_analisis_ia}
+
+La interfaz de análisis de quejas con inteligencia artificial
+permite al personal de Primer Contacto consultar información
+procesada automáticamente a partir del contenido de un
+expediente. Su propósito es facilitar la revisión inicial
+de los hechos mediante la generación de resúmenes y la
+recuperación de antecedentes relacionados con la queja.
+
+Como se muestra en la Figura~\ref{fig:pantalla_analisis_ia},
+la pantalla se organiza en dos áreas principales. En la
+primera se presenta el resumen generado mediante el modelo
+Qwen3-4B-Instruct a partir de los fragmentos seleccionados
+por MMR. Adicionalmente, se muestran fragmentos relevantes
+del texto original, los cuales permiten al personal
+identificar información utilizada durante el procesamiento
+y consultar la narrativa completa cuando sea necesario.
+
+La segunda área presenta los antecedentes recuperados
+mediante el mecanismo híbrido de búsqueda, que combina
+TF-IDF y representaciones semánticas obtenidas con MiniLM.
+Los resultados se muestran mediante una lista de
+expedientes relacionados, acompañados de sus puntuaciones
+de similitud. También se incorpora una visualización
+gráfica que facilita la comparación de los niveles de
+similitud entre los antecedentes encontrados.
+
+En cuanto a su implementación, la interfaz se comunica
+con los servicios especializados de inteligencia artificial
+a través de los componentes de negocio de la plataforma.
+Estos servicios procesan el contenido de la queja y
+devuelven los resultados para su presentación en la
+interfaz, manteniendo separado el procesamiento de los
+modelos de las funciones de consulta y gestión del
+expediente.
+
+Los resultados obtenidos constituyen elementos de apoyo
+para el análisis del personal de Primer Contacto. Las
+puntuaciones de similitud no representan una determinación
+automática de duplicidad, mientras que el resumen generado
+debe interpretarse como una síntesis del contenido y no
+como sustituto de la narrativa original.
+
+De esta manera, la integración de ambos componentes
+permite reunir información relevante para el análisis
+del expediente dentro de una misma interfaz, facilitando
+la consulta de antecedentes y la lectura inicial de
+quejas extensas.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=0.95\textwidth,
+        height=0.85\textheight,
+        keepaspectratio
+    ]{images/analisis_ia_pantalla_completa.png}
+    \caption{Interfaz de análisis de quejas con inteligencia artificial}
+    \label{fig:pantalla_analisis_ia}
+\end{figure}
+
+
+
+\subsection{Gestión del expediente}
+\label{subsec:pantalla_expediente}
+
+La interfaz de gestión del expediente permite al personal de
+Primer Contacto administrar las actividades relacionadas con
+la atención de una queja. Su propósito es concentrar en un
+mismo espacio las herramientas necesarias para documentar
+actuaciones, organizar citas y gestionar las propuestas de
+conciliación que puedan surgir durante el procedimiento.
+
+Como se muestra en la Figura~\ref{fig:gestion_expediente},
+la pantalla se organiza en cuatro apartados principales:
+oficios, versión del denunciado, citas con el quejoso y
+propuestas de conciliación. Cada apartado presenta la
+información registrada y proporciona las acciones necesarias
+para incorporar nuevos elementos al expediente.
+
+El apartado de oficios permite iniciar el registro de
+documentos relacionados con la atención de la queja.
+Por su parte, la sección de versión del denunciado
+proporciona una opción para registrar la información
+obtenida de la persona señalada, cuando corresponda
+dentro del procedimiento.
+
+Asimismo, la interfaz incorpora una sección para programar
+citas con el quejoso, permitiendo organizar las reuniones
+necesarias para conocer o ampliar la información sobre
+los hechos. En el apartado de conciliación se dispone
+de una opción para formular propuestas de acuerdo,
+como parte de los mecanismos previstos para la atención
+del expediente.
+
+En cuanto a su implementación, las funcionalidades se
+encuentran organizadas mediante componentes independientes
+que presentan el estado de las actividades y habilitan
+las acciones correspondientes. La información se vincula
+con el expediente seleccionado, permitiendo mantener
+organizados los registros generados durante su atención.
+
+De esta manera, la interfaz de gestión facilita la
+administración de las actuaciones realizadas por el
+personal de Primer Contacto, al reunir las principales
+operaciones de seguimiento dentro de un mismo módulo.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=0.95\textwidth,
+        keepaspectratio
+    ]{images/gestion_expediente.png}
+    \caption{Interfaz de gestión del expediente en Primer Contacto}
+    \label{fig:gestion_expediente}
+\end{figure}
+
+
+% PENDIENTE: Insertar captura real y completar RF de gestión de expediente.
+
+\subsection{Programación de citas}
+\label{subsec:pantalla_citas}
+
+La interfaz de programación de citas permite al personal de
+Primer Contacto organizar reuniones de comparecencia o
+seguimiento relacionadas con los expedientes en atención.
+Su propósito es facilitar la coordinación de encuentros
+con los quejosos mediante el registro de información
+sobre el motivo, la modalidad, la fecha y el horario
+de cada cita.
+
+Como se muestra en la Figura~\ref{fig:programacion_citas},
+la pantalla se organiza en dos apartados principales.
+El primero corresponde a los datos de la cita, donde
+se identifica el expediente asociado y se presenta
+el nombre del quejoso. Asimismo, permite seleccionar
+el tipo de cita, establecer su modalidad y registrar
+el motivo por el cual se requiere la reunión.
+
+El segundo apartado corresponde a la selección de fecha
+y hora. Para ello, se incorporó un calendario interactivo
+que permite consultar los días disponibles y seleccionar
+una fecha. Una vez elegida, la interfaz presenta los
+horarios correspondientes, diferenciando visualmente
+aquellos que se encuentran disponibles, ocupados o no
+habilitados.
+
+Adicionalmente, la pantalla informa que el quejoso
+recibirá una notificación con los detalles de la cita
+mediante el correo electrónico registrado en su
+expediente y que contará con un plazo de 48 horas
+para confirmarla.
+
+En cuanto a su implementación, la interfaz integra
+los datos del expediente con los controles de captura
+y selección de horarios. La disponibilidad presentada
+permite al personal identificar las opciones habilitadas
+antes de solicitar el registro de una cita, mientras
+que los campos obligatorios permiten reunir la información
+necesaria para su programación.
+
+De esta manera, la funcionalidad proporciona un mecanismo
+centralizado para organizar las citas vinculadas con
+los expedientes y apoyar la coordinación de las
+actividades de atención del personal de Primer Contacto.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=0.95\textwidth,
+        keepaspectratio
+    ]{images/programacion_cita.png}
+    \caption{Interfaz de programación de citas del módulo de Primer Contacto}
+    \label{fig:programacion_citas}
+\end{figure}
+
+
+% PENDIENTE: Insertar captura real y completar RF de agenda/citas.
+
+\subsection{Registro del acuerdo de conclusión}
+\label{subsec:pantalla_conclusion}
+
+La interfaz de registro del acuerdo de conclusión permite
+al personal de Subdefensoría documentar la determinación
+final correspondiente a un expediente, una vez que se han
+completado las actividades previas del procedimiento.
+Su propósito es facilitar la elaboración y el registro
+del acuerdo mediante el cual se formaliza la conclusión
+de la atención de una queja.
+
+Como se muestra en la Figura~\ref{fig:acuerdo_conclusion},
+la pantalla presenta la información general del expediente,
+incluyendo su identificador, unidad académica de procedencia,
+estado actual y personal responsable. Adicionalmente,
+incorpora una representación gráfica del avance del
+procedimiento, mediante la cual se identifican las etapas
+completadas, la etapa actual y las actividades pendientes.
+
+La interfaz también dispone de un indicador que señala
+la siguiente acción requerida para continuar con la
+atención del expediente. En el caso presentado, se muestra
+que el quejoso aceptó la propuesta de conciliación y
+que corresponde redactar el acuerdo de conclusión.
+
+Dentro del apartado de acuerdos se presenta la información
+del acuerdo de conciliación aceptado, incluyendo la fecha
+de aceptación y una opción para consultar el documento
+correspondiente en formato PDF. Asimismo, se incorpora
+un formulario destinado a la redacción del acuerdo de
+conclusión, acompañado de una acción para registrar
+el documento elaborado.
+
+En cuanto a su implementación, la interfaz organiza
+las actividades del expediente en diferentes apartados
+de consulta y gestión, entre los que se encuentran
+resumen, primer contacto, investigación, acuerdos e
+historial. Esta organización permite acceder a la
+información generada durante las etapas anteriores
+y disponer de los elementos necesarios para documentar
+la conclusión del procedimiento.
+
+De esta manera, la funcionalidad permite al personal
+de Subdefensoría registrar las actuaciones finales
+del expediente y mantener vinculada la información
+correspondiente a los acuerdos alcanzados durante
+su atención.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=0.75\textwidth,
+        keepaspectratio
+    ]{images/acuerdo_conclusion.png}
+    \caption{Interfaz de registro del acuerdo de conclusión
+    en el módulo de Subdefensoría}
+    \label{fig:acuerdo_conclusion}
+\end{figure}
+
+
+\subsection{Panel de la Defensora}
+\label{subsec:pantalla_defensora}
+
+El Panel de la Defensora constituye una interfaz de
+supervisión que permite consultar información general
+sobre las quejas registradas y su distribución entre
+las distintas etapas de atención. Su propósito es
+proporcionar una visión integral de la operación de
+la Defensoría mediante indicadores, representaciones
+gráficas y listados que facilitan la identificación
+de tendencias, cargas de trabajo y expedientes que
+requieren atención.
+
+Como se muestra en la Figura~\ref{fig:panel_defensora},
+la pantalla presenta indicadores generales que
+permiten conocer la cantidad de quejas registradas,
+su distribución entre Recepción, las solicitudes
+devueltas al quejoso, Primer Contacto, Subdefensoría
+y los expedientes cerrados. Estos indicadores se
+complementan con información sobre el porcentaje
+que representa cada etapa respecto del conjunto
+consultado.
+
+La interfaz incorpora una matriz que muestra la
+distribución de quejas por unidad académica y etapa
+del procedimiento, permitiendo identificar aquellas
+unidades con mayor concentración de solicitudes.
+Asimismo, presenta una visualización de la distribución
+general de expedientes y gráficas relacionadas con
+la evolución mensual de las quejas y su antigüedad.
+
+Adicionalmente, el panel incluye información sobre
+el nivel educativo de procedencia, la rama del
+conocimiento, los días y horarios en que se registran
+las solicitudes, así como su origen de registro.
+Estos elementos permiten consultar diferentes
+características de las quejas y reconocer patrones
+dentro de la información disponible.
+
+Para el seguimiento operativo, se incorporaron
+apartados que muestran la distribución de expedientes
+entre el personal de Recepción y los responsables
+de su atención. También se presentan listados de
+las quejas abiertas con mayor antigüedad y de los
+casos que requieren atención, incluyendo información
+sobre su estado, unidad académica y responsable.
+
+En cuanto a su implementación, la interfaz integra
+componentes de visualización que presentan la
+información mediante tarjetas, tablas y gráficas
+interactivas. El panel dispone de controles para
+definir periodos de consulta, realizar búsquedas,
+aplicar filtros y seleccionar elementos de las
+visualizaciones, permitiendo explorar diferentes
+subconjuntos de información.
+
+De esta manera, el Panel de la Defensora centraliza
+información operativa y estadística sobre las quejas,
+facilitando la supervisión general del procedimiento
+de atención y la identificación de situaciones que
+requieren seguimiento por parte del personal
+responsable.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=0.95\textwidth,
+        height=0.85\textheight,
+        keepaspectratio
+    ]{images/panel_defensora_completo.png}
+    \caption{Panel de supervisión y seguimiento de quejas
+    de la Defensora}
+    \label{fig:panel_defensora}
+\end{figure}
+	
 
 \section{Despliegue}
 \label{sec:despliegue}
-\pendiente{Contenedores, servidores y publicación de la plataforma.}
+
+El despliegue de la plataforma requirió configurar los componentes de interfaz, los microservicios de negocio, las bases de datos y los servicios de inteligencia artificial en los entornos de ejecución destinados al proyecto. Para organizar estos componentes se utilizó una arquitectura basada en servicios y contenedores, con configuraciones específicas para su comunicación.
+
+\subsection{Organización de servicios y contenedores}
+\label{subsec:despliegue_contenedores}
+
+La solución contempla aplicaciones web diferenciadas para los módulos de atención, revisión, administración, primer contacto y subdefensoría. Estas aplicaciones consumen los servicios responsables de las operaciones de negocio, entre ellos los relacionados con autenticación, quejas, notificaciones, catálogos, revisión y seguimiento. La comunicación entre componentes se realiza mediante los puntos de acceso definidos para cada servicio.
+
+Para el almacenamiento persistente se utilizaron bases de datos PostgreSQL. Su separación de los componentes de interfaz y procesamiento permite mantener diferenciadas las responsabilidades de presentación, lógica de negocio y persistencia. Asimismo, el procesamiento de inteligencia artificial se alojó en servicios especializados que reciben solicitudes de la plataforma y devuelven los resultados correspondientes.
+
+La contenedorización permitió agrupar los componentes de ejecución y configurar redes para su comunicación. No obstante, el hecho de ejecutar servicios en contenedores no implica por sí mismo tolerancia a fallos, escalabilidad automática o alta disponibilidad; tales características tendrían que acreditarse mediante configuraciones y pruebas específicas.
+
+\subsection{Acceso y comunicación entre componentes}
+\label{subsec:despliegue_comunicacion}
+
+El acceso a las interfaces se organizó mediante NGINX, utilizado para dirigir las solicitudes a las aplicaciones web correspondientes. A partir de estas interfaces, las peticiones se envían a los microservicios que ejecutan las operaciones solicitadas. Los servicios de negocio consultan o actualizan la información persistida y, cuando corresponde, invocan los componentes de inteligencia artificial.
+
+Para restringir el acceso a las funciones de la plataforma se utilizaron mecanismos de autenticación y autorización basados en roles, con intercambio de información de sesión mediante tokens JWT. La definición de permisos corresponde a las operaciones de cada módulo, de manera que las funciones disponibles dependen del usuario autenticado.
+
+% PENDIENTE: Insertar diagrama de despliegue real con servidores/VPS,
+% contenedores, redes, puertos publicados y conexiones principales.
+% No incluir contraseñas, secretos JWT ni direcciones internas sensibles.
+
+\subsection{Publicación y verificación del funcionamiento}
+\label{subsec:despliegue_verificacion}
+
+Para la publicación fue necesario preparar los entornos de ejecución, configurar los servicios y verificar las rutas de comunicación utilizadas por los distintos módulos. Las comprobaciones incluyeron el acceso a las interfaces desplegadas y la comunicación de los componentes necesarios para realizar las operaciones disponibles.
+
+La instalación de la plataforma se realizó en dos entornos VPS diferentes, lo que permitió comprobar su posibilidad de instalación en más de un servidor. Esta observación respalda la reproducibilidad práctica del procedimiento de despliegue seguido, pero no equivale a una evaluación exhaustiva de portabilidad o compatibilidad entre sistemas operativos e infraestructuras diferentes.
+
+La verificación detallada de las funciones y de los resultados obtenidos se desarrolla en el capítulo de pruebas. En este apartado se documenta únicamente la organización técnica del despliegue y las acciones necesarias para poner en ejecución los componentes de la plataforma.
+
+Con la integración de las interfaces, los microservicios, los mecanismos de persistencia y los componentes de inteligencia artificial se obtuvo una plataforma que centraliza operaciones relacionadas con la recepción y seguimiento de quejas. El trabajo realizado proporciona una base para la operación de los procedimientos contemplados en el alcance del proyecto y para su posterior evaluación junto con la Defensoría.
