@@ -96,21 +96,21 @@
 		\endhead
 		\texttt{quejas-service} & 112 & Validadores del registro público: correo en dos niveles, fechas,
 		nombres, boleta, tutor y archivos por firma binaria; edición, corrección y cancelación; conciliación
-		(RN-Q01 a RN-Q12) \\ \hline
+		(RN-Q01 a RN-Q09) \\ \hline
 		\texttt{primer-contacto-service} & 55 & Citas sin empalmes, plazo y rango máximo de consulta,
 		token de respuesta; dictamen con Subdefensoría caída; sincronización de estatus; motor de
-		antecedentes (RN-PC01 a RN-PC04) \\ \hline
+		antecedentes (RN-PC01 y RN-PC02) \\ \hline
 		\texttt{admin-service} & 36 & Cuentas del personal y protección de la última cuenta de
-		administración; bitácora con IP real; plantillas; respaldos en carpeta temporal; tablero (RN-A01 a
+		administración; bitácora con IP real; plantillas; respaldos en carpeta temporal; tablero (RN-A02 a
 		RN-A04, RNF-A07) \\ \hline
 		\texttt{auth-service} & 36 & Inicio de sesión, recuperación con código (cinco intentos, diez
-		minutos), política de contraseñas, activación y emisión del token (RN-Q06 a RN-Q08) \\ \hline
+		minutos), política de contraseñas, activación y emisión del token (RN-Q04, RN-Q06 y RN-Q07) \\ \hline
 		\texttt{revision-service} & 36 & Toma atómica entre recepcionistas, regreso, turnado idempotente,
-		ventanilla e historial (RN-R01 a RN-R07, RNF-R06) \\ \hline
+		ventanilla e historial (RN-R01 a RN-R06, RNF-R06) \\ \hline
 		\texttt{denunciado-service} & 29 & Todas las reglas del registro de la versión de la persona
 		señalada (RF-D01) \\ \hline
 		\texttt{subdefensoria-service} & 24 & Días hábiles (10 y 5), semáforo y alertas de vencimiento,
-		archivo de respuesta (RN-SD01, RN-SD02) \\ \hline
+		archivo de respuesta (RN-SD01) \\ \hline
 		\texttt{notificaciones-service} & 20 & Centro de notificaciones e inyección de encabezados en el
 		correo (CWE-93) \\ \hline
 		\texttt{catalogo-service} & 8 & Alta, edición e importación de Excel tolerante a errores
@@ -325,7 +325,7 @@
 		FIA-07 & La importación del catálogo con filas mal formadas reporta un resumen y no falla en bloque
 		& RNF-A04 & Resumen de creadas, actualizadas y con error & Aprobada \\ \hline
 		FIA-04 & Con Subdefensoría caída al dictaminar, el dictamen se conserva y puede reenviarse &
-		RN-PC03 & El dictamen no se pierde & Aprobada (prueba unitaria) \\ \hline
+		RF-PC07 & El dictamen no se pierde & Aprobada (prueba unitaria) \\ \hline
 		FIA-03 & Respaldo manual, descarga y restauración en una base desechable & RNF-G04, CU-ADM-05 & Sin
 		errores de \texttt{psql}; tablas principales con filas & Pendiente de ejecución en el entorno de
 		pruebas \\ \hline
@@ -367,7 +367,7 @@
 	restauración, que el código abre al rol \texttt{DEFENSOR} mientras que la redacción original del
 	requerimiento RNF-A06 los reservaba a un rol técnico de administración. Las otras dos
 	correspondían a la consulta y emisión de acuerdos de conciliación, que el código abre también a
-	Subdefensoría y a la Defensora, mientras que la redacción original de RN-R02 reservaba todo el
+	Subdefensoría y a la Defensora, mientras que la redacción original de las reglas reservaba todo el
 	servicio de revisión a Recepción. En ambos casos el análisis concluyó que el código reflejaba la
 	decisión de diseño vigente ---por convención con la Defensoría, la administración corresponde a la
 	Defensora, y la conciliación es una actuación de varias áreas---, de modo que se corrigió la redacción de los requerimientos
@@ -398,15 +398,15 @@
 		\hline
 		\endhead
 		SEG-07 & Matriz de permisos extraída del código contra las reglas de los requerimientos (34 puntos
-		de acceso regulados de 92) & RNF-A06, RN-R02, RNF-R02, RNF-Q01, RNF-Q02, RN-Q12 & 0 diferencias &
+		de acceso regulados de 92) & RNF-A06, RNF-G01, RNF-R02, RNF-Q01, RNF-Q02 & 0 diferencias &
 		Fallida en la línea base (6 diferencias); resuelta al alinear los requerimientos \\ \hline
 		SEG-01 & La matriz en vivo: sin token, 401 o 403; con un rol no permitido, 403; con el permitido,
-		la petición pasa el filtro & RN-R02, RNF-A06 & 0 accesos indebidos & Pendiente de ejecución en el
+		la petición pasa el filtro & RNF-G01, RNF-A06 & 0 accesos indebidos & Pendiente de ejecución en el
 		entorno de pruebas \\ \hline
-		SEG-10 & Las rutas de Primer Contacto y Subdefensoría exigen token (antes eran públicas) & RN-R02 &
+		SEG-10 & Las rutas de Primer Contacto y Subdefensoría exigen token (antes eran públicas) & RNF-G01 &
 		403 sin token & Aprobada en el servidor: consulta, PDF de oficios y evidencias responden 403 sin
 		token \\ \hline
-		IT-04 & Un quejoso no puede consultar ni editar la queja de otra persona cambiando el folio & RN-Q11
+		IT-04 & Un quejoso no puede consultar ni editar la queja de otra persona cambiando el folio & RNF-G01
 		& 404 & Aprobada por revisión de código (búsqueda por folio y correo del token) \\ \hline
 		SEG-08 & El token vence a la hora (\texttt{exp} $-$ \texttt{iat} $= 3\,600$) y un token alterado se
 		rechaza & RNF-Q06 & 3\,600~s; 401 o 403 & Aprobada por configuración y prueba unitaria de emisión;
@@ -527,7 +527,7 @@
 		viaja en el encabezado \texttt{Authorization} & RNF-Q02 & Sin \texttt{Set-Cookie} & Aprobada por
 		diseño \\ \hline
 		CON-09 & Las evidencias de una queja solo se entregan al quejoso dueño o al personal autorizado &
-		RN-Q11 & 403 o 404 para terceros & Aprobada (cubierta por IT-04 y SEG-10) \\ \hline
+		RNF-G01 & 403 o 404 para terceros & Aprobada (cubierta por IT-04 y SEG-10) \\ \hline
 	\end{longtable}
 	\normalsize
 

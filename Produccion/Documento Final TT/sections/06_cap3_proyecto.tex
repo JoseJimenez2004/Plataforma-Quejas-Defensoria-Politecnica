@@ -150,10 +150,8 @@ La propuesta se planteó considerando los siguientes supuestos:
 		\item \textbf{Quejoso.} Cualquier integrante de la comunidad politécnica ---estudiante,
 		personal académico o administrativo--- que presenta una queja o le da seguimiento. Es el
 		único actor externo y el único que puede operar sin credenciales previas.
-	
 		\item \textbf{Personal de recepción.} Personal de la Defensoría encargado de recibir,
 		validar y canalizar las quejas que llegan por el portal público o en papel.
-	
 		\item \textbf{Analista de primer contacto.} Consulta expedientes, revisa antecedentes
 		relacionados y utiliza borradores de resumen como apoyo al análisis de quejas.
 		\item \textbf{Subdefensoría.} Gestiona las actuaciones y el seguimiento que corresponden
@@ -708,6 +706,19 @@ La propuesta se planteó considerando los siguientes supuestos:
 	
 		RN-R06 & Turnado & El catálogo de personal disponible para turnar incluye únicamente cuentas
 		activas con rol de defensor o subdefensor. \\ \hline
+
+		RN-PC01 & Citas & Solo se agendan citas para expedientes en análisis y cada expediente
+		tiene como máximo una cita activa; para programar otra, la vigente debe reagendarse o
+		cancelarse. Las citas de un mismo analista en un día no pueden empalmarse de acuerdo con la
+		duración establecida para cada cita. \\ \hline
+
+		RN-PC02 & Respuesta a citas & El quejoso solo puede confirmar o cancelar una cita que esté
+		programada y dentro de su plazo de respuesta, mediante el enlace que recibe por correo. Una
+		cita que no le pertenece se reporta como inexistente. \\ \hline
+
+		RN-SD01 & Plazos & Los plazos de las solicitudes de información se cuentan en días hábiles:
+		diez para la primera solicitud a una unidad y cinco a partir de cada recordatorio. Un oficio
+		que no recibe respuesta antes de su fecha límite cambia a estatus \texttt{VENCIDO}. \\ \hline
 	
 	
 	
@@ -1300,11 +1311,17 @@ La plataforma sigue una arquitectura de microservicios distribuida en tres servi
 \setlength{\tabcolsep}{6pt}
 \renewcommand{\arraystretch}{1}
 
-\textbf{Seguridad.} La autenticación se basa en tokens JWT firmados. El servicio de autenticación emite los tokens de los quejosos y el de administración los del personal; el resto de los microservicios únicamente los verifican y aplican la autorización según el rol del usuario en cada operación. Las contraseñas se almacenan cifradas mediante una función de resumen. En la red, cada servidor solo acepta conexiones del servidor que le antecede: el de aplicaciones, del de acceso público, y el de base de datos, del de aplicaciones.
+\subsection{Justificación de la arquitectura de microservicios}
+\label{subsec:justificacion_microservicios}
+La elección de una arquitectura de microservicios, en lugar de una aplicación monolítica, responde a las características del procedimiento de la Defensoría y a los requerimientos de la plataforma. Un sistema monolítico concentraría todas las áreas en una sola aplicación, de modo que cualquier falla, cambio o actualización afectaría al conjunto. A continuación se presentan las tres razones principales que motivaron esta decisión.
 
-\textbf{Comunicación entre servicios.} La comunicación es síncrona sobre HTTP. Además de las peticiones que llegan a través del proxy, existen llamadas internas entre servicios: Primer Contacto envía a Subdefensoría los expedientes dictaminados como procedentes y varios servicios solicitan al servicio de notificaciones el envío de correos. Una falla en un servicio auxiliar, como el de notificaciones o los de inteligencia artificial, no impide que la operación principal se complete (requerimientos RNF-Q04 y RNF-G02).
+\begin{enumerate}
+	\item \textbf{Separación por área y control de acceso.} Cada microservicio corresponde a un área del procedimiento ---Recepción, Primer Contacto, Subdefensoría y la Defensora---, por lo que la información y las operaciones de cada área quedan separadas y protegidas según el rol de quien las solicita. La autenticación se basa en tokens JWT firmados: el servicio de autenticación emite los tokens de los quejosos y el de administración los del personal, mientras que el resto de los microservicios únicamente los verifican y aplican la autorización según el rol del usuario en cada operación. Las contraseñas se almacenan cifradas mediante una función de resumen y, en la red, cada servidor solo acepta conexiones del servidor que le antecede: el de aplicaciones, del de acceso público, y el de base de datos, del de aplicaciones.
 
-\textbf{Despliegue.} Todos los componentes se ejecutan en contenedores administrados con Podman, lo que permite actualizar cada servicio de manera independiente.
+	\item \textbf{Aislamiento de fallas.} Los servicios se comunican de forma síncrona sobre HTTP. Además de las peticiones que llegan a través del proxy, existen llamadas internas entre servicios: Primer Contacto envía a Subdefensoría los expedientes dictaminados como procedentes y varios servicios solicitan al servicio de notificaciones el envío de correos. Al ejecutarse por separado, una falla en un servicio auxiliar, como el de notificaciones o los de inteligencia artificial, no impide que la operación principal se complete (requerimientos RNF-Q04 y RNF-G02), algo que en una aplicación monolítica podría detener la plataforma completa.
+
+	\item \textbf{Despliegue independiente y uso de distintas tecnologías.} Todos los componentes se ejecutan en contenedores administrados con Podman, lo que permite actualizar o reiniciar cada servicio sin detener a los demás. Esta independencia también permite que los servicios de negocio se desarrollen con Spring Boot y los de inteligencia artificial con Python, cada uno con las herramientas más adecuadas para su función, e incorporar nuevos servicios sin modificar los existentes.
+\end{enumerate}
 
 \section{Diseño de la base de datos}
 \label{sec:bd}
