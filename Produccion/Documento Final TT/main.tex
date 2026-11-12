@@ -1,0 +1,68 @@
+% book: documento largo con capitulos. twoside = impresion por ambos lados
+% (margen de encuadernacion alterna izquierda/derecha); openright = cada
+% capitulo empieza en pagina impar (derecha).
+\documentclass[12pt,letterpaper,twoside,openright]{book}
+
+% =========================
+% PREAMBULO (paquetes y configuracion)
+% =========================
+\input{preambulo}
+
+\begin{document}
+
+% =========================
+% PRELIMINARES
+% =========================
+%% Portadas (institucional y con resumen)
+\input{sections/00_portadas}
+\cleardoublepage
+
+%% Carta responsiva, advertencia y cartas de autorizacion
+\input{sections/01_cartas_y_advertencia}
+\cleardoublepage
+
+%% Indice general, de figuras y de tablas
+\input{sections/02_indices}
+
+
+% =========================
+% CONTENIDO
+% =========================
+%% Introduccion (sin numero de capitulo)
+\input{sections/03_introduccion}
+
+%% Capitulo 1. Analisis del problema
+\input{sections/04_cap1_analisis_del_problema}
+
+%% Capitulo 2. Marco teorico (estado del arte y fundamentos)
+\input{sections/05_cap2_marco_teorico}
+
+%% Capitulo 3. Proyecto (objetivos, metodologia, alcances, requerimientos)
+\input{sections/06_cap3_proyecto}
+
+%% Capitulo 4. Trabajo realizado (solo estructura; el material previo
+%% esta en sections/material_cap4/ para usarlo al construirlo)
+\input{sections/07_cap4_trabajo_realizado}
+
+%% Capitulo 5. Pruebas
+\input{sections/08_cap5_pruebas}
+
+%% Capitulo 6. Resultados obtenidos
+\input{sections/09_cap6_resultados}
+
+%% Capitulo 7. Trabajo a futuro y conclusiones
+\input{sections/10_cap7_trabajo_futuro_y_conclusiones}
+
+%% Anexos
+\appendix
+\renewcommand{\chaptermark}[1]{\markboth{\appendixname~\thechapter.~#1}{}}
+\input{anexos/anexo_a_base_de_datos}
+\input{anexos/anexo_b_casos_de_uso}
+
+% =========================
+% BIBLIOGRAFIA
+% =========================
+	\backmatter
+	\printbibliography[title={Referencias},heading=bibintoc]
+
+\end{document}

@@ -1,0 +1,166 @@
+\chapter{Resultados obtenidos}
+\label{cap:resultados}
+
+	\section{Resumen de resultados}
+	\label{sec:resumen_pruebas}
+	La Tabla~\ref{tab:defectos} reúne los defectos abiertos que dejaron las pruebas, con la acción
+	que resuelve cada uno.
+
+
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{1.4cm}|L{5.6cm}|L{1.8cm}|L{5.7cm}|}
+		\hiderowcolors\caption{Defectos abiertos y acción correctiva}
+		\label{tab:defectos} \\ \showrowcolors
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Prueba} & \headercell{Defecto} & \headercell{Severidad} & \headercell{Acción} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Prueba} & \headercell{Defecto} & \headercell{Severidad} & \headercell{Acción} \\
+		\hline
+		\endhead
+		SEG-05 & Secretos en texto plano en el repositorio & Alta & Rotarlos, pasarlos a variables de
+		entorno y depurar el historial \\ \hline
+		CON-05 & Falta el encabezado HSTS & Media & Agregar \texttt{Strict-Transport-Security} en el
+		servidor seguro del proxy \\ \hline
+		SEG-03 & La descarga y restauración de respaldos no valida la ruta & Baja & Normalizar la ruta y
+		exigir que quede dentro de la carpeta de respaldos \\ \hline
+		SEG-09 & Restaurar sin confirmación responde 500 & Baja & Responder 400 desde el manejador global \\ \hline
+		MAN-01 & Cuatro violaciones obligatorias de estilo & Baja & Corregir las cuatro líneas \\ \hline
+	\end{longtable}
+	\normalsize
+
+\noindent Los resultados registrados respaldan el correcto funcionamiento de las
+reglas cubiertas por la ejecución inicial de 364 pruebas unitarias y determinadas
+integraciones verificadas en el entorno descrito. Sin embargo, las pruebas
+unitarias no equivalen a una validación completa de los flujos de extremo a
+extremo. La automatización con Playwright, la medición de cobertura, varias
+verificaciones dinámicas de seguridad y confidencialidad, las pruebas de carga
+y la aceptación formal permanecen pendientes o solo parcialmente verificadas.
+Los ocho casos adicionales de resiliencia mencionados en la sección de pruebas
+unitarias tampoco deben sumarse a las 364 pruebas iniciales sin incorporar su
+resultado de ejecución correspondiente.
+
+La protección de la información requiere atención prioritaria. El hallazgo
+SEG-05 identifica secretos expuestos en archivos versionados; mientras no se
+roten y retiren, no debe declararse completamente satisfecho el criterio de
+seguridad. Asimismo, los resultados de inteligencia artificial documentan el
+funcionamiento de los servicios y el comportamiento de los experimentos
+sintéticos, pero no acreditan todavía calidad generalizada sobre expedientes
+institucionales. La validación con expedientes reales y personal de la
+Defensoría no se completó debido a las restricciones de tiempo del proyecto;
+queda registrada como trabajo futuro, no como una prueba aprobada ni como una
+condición que invalide las verificaciones técnicas ya realizadas. El estado
+final de las pruebas debe describirse, por tanto, como una validación parcial
+con resultados aprobados, hallazgos abiertos y actividades pendientes, sin
+extrapolar esos resultados a condiciones que no fueron ensayadas.
+
+
+\section{Evaluación experimental de los componentes de inteligencia artificial}
+\label{sec:eval_ia}
+La evaluación de antecedentes se organizó en consultas sintéticas con
+referencias de relevancia y casos contrastivos. Se consideraron métricas de
+recuperación y ordenamiento, entre ellas Precision@k, Recall@k, MRR y nDCG@k.
+Se preparó una exploración de ponderaciones de RRF del 0 al 100 por ciento
+para cada recuperador, manteniendo la suma de pesos constante. La configuración
+final elegida para la plataforma fue 75\,\% TF-IDF y 25\,\% MiniLM.
+Esta elección debe interpretarse como una decisión de compromiso: en las 200
+quejas extensas alcanzó un P@5 de 52.0\,\%, próximo al 52.3\,\% de 90/10;
+en las 15 consultas contrastivas alcanzó un R@10 de 13.3\,\%, por lo que
+no puede afirmarse que funcione igual de bien ante paráfrasis complejas.
+La selección se realizó a partir de las pruebas sintéticas disponibles y de las
+necesidades de integración del prototipo, sin considerar estos resultados una
+validación definitiva de su desempeño institucional. No fue posible completar
+una validación con expedientes reales ni una revisión formal de los resultados
+por personal de la Defensoría dentro del tiempo disponible para el Trabajo
+Terminal. Asimismo, el protocolo de separación entre datos de ajuste y de
+evaluación final requiere documentarse con mayor detalle para establecer
+la reproducibilidad de las comparaciones. Los resultados experimentales se
+presentan en el capítulo de pruebas y sus anexos.
+
+En la verificación de infraestructura se observó un índice de 1\,210 registros.
+En una actualización sin modificaciones de documentos se reutilizaron 1\,210
+representaciones almacenadas y no fue necesario recalcularlas. Para el servicio
+de resúmenes se ejecutó una solicitud sintética que obtuvo respuesta HTTP 200
+en 26.3 segundos. Esta medición es un caso de prueba y no constituye una
+garantía de latencia para cualquier entrada.
+
+La revisión de dicha salida identificó omisiones de hechos presentes en el
+texto de entrada, incluidas fechas y un cambio de calificación. Con la evidencia
+recopilada no fue posible establecer si esas omisiones se produjeron durante la
+selección extractiva basada en MMR, durante la reformulación con Qwen3 o por la
+interacción entre ambas etapas. Una evaluación técnica por etapas puede realizarse
+con narrativas sintéticas controladas comparando la entrada original, la captura
+extractiva y el borrador generado. Sin embargo, la evaluación sistemática de
+fidelidad y utilidad de los resúmenes para el procedimiento institucional
+requeriría incorporar expedientes reales debidamente autorizados y criterios de
+revisión acordados con personal de la Defensoría. Esta validación institucional no
+se completó por las restricciones de tiempo del Trabajo Terminal. Por tanto,
+las pruebas realizadas verifican el funcionamiento del componente e identifican
+limitaciones observadas, pero no acreditan su calidad general en casos reales.
+
+
+\section{Estado de avance por componente}
+\label{sec:estado_avance}
+La Tabla~\ref{tab:estado_avance} presenta el balance de lo implementado al cierre de esta etapa.
+Se incluye de forma deliberada la columna de lo no implementado, porque el valor de este balance
+para quien retome el proyecto está en lo que falta, no en lo que ya está.
+
+\rowcolors{2}{rowblue}{white}
+
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+
+\begin{longtable}{|p{3.7cm}|p{2.1cm}|p{8.2cm}|}
+	\hiderowcolors\caption{Estado de avance por componente al cierre de la etapa}
+	\label{tab:estado_avance} \\ \showrowcolors
+	\hline
+	\rowcolor{headerblue}
+	\headercell{Componente} & \headercell{Estado} & \headercell{Observaciones} \\
+	\hline
+	\endfirsthead
+
+	\hline
+	\rowcolor{headerblue}
+	\headercell{Componente} & \headercell{Estado} & \headercell{Observaciones} \\
+	\hline
+	\endhead
+
+	Portal del quejoso & Operativo & Los diecisiete requerimientos funcionales del actor están
+	implementados y desplegados \\ \hline
+
+	Panel de revisión & Operativo & Los trece requerimientos del actor de recepción están
+	implementados \\ \hline
+
+	Consola de administración & Operativo & Los nueve requerimientos de administración están
+	implementados \\ \hline
+
+	Paneles de Primer Contacto y Subdefensoría & Operativos & Disponen de interfaces institucionales; su cobertura debe contrastarse con los casos de uso definitivos \\ \hline
+
+	Búsqueda de antecedentes & Integrada & Recuperación híbrida disponible para Primer Contacto, con revisión humana de los resultados \\ \hline
+
+	Generación de resúmenes & Integrada, sin validación institucional & Captura extractiva y edición con Qwen3; probado con narrativas sintéticas. No se completó su evaluación con expedientes reales y personal de la Defensoría por limitaciones de tiempo; los borradores requieren revisión humana \\ \hline
+
+	Cierre de sesión por inactividad & Pendiente & La expiración del token limita la ventana de
+	exposición, pero no equivale a un cierre por inactividad \\ \hline
+
+	Automatización integral de pruebas & Parcial & Se reportaron 364 pruebas unitarias aprobadas y se prepararon ocho casos adicionales de resiliencia; continúan pendientes la automatización integral de recorridos y verificaciones de sistema \\ \hline
+
+	Corrección de hallazgos de análisis estático & Pendiente & Las vulnerabilidades de
+	neutralización de entradas y de generación pseudoaleatoria identificadas requieren remediación
+	prioritaria \\ \hline
+
+	Separación de los cortafuegos por servidor & Pendiente & Ambos servidores comparten el mismo
+	grupo de reglas; no hay exposición real hoy, pero conviene separarlos \\ \hline
+\end{longtable}
+
+\normalsize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1}

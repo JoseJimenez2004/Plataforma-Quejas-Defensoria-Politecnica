@@ -1,0 +1,330 @@
+\chapter{Marco teórico}
+
+El presente capítulo reúne los antecedentes comparativos y los fundamentos conceptuales que sustentan el Trabajo Terminal. En primer lugar, se recupera el estado del arte desarrollado en Trabajo Terminal I (TT-I), con el propósito de contextualizar la propuesta de la Defensoría de los Derechos Politécnicos (DDP) frente a otras plataformas de recepción y seguimiento de denuncias y quejas. Posteriormente, se presentan los conceptos de Procesamiento de Lenguaje Natural (PLN) necesarios para comprender dos componentes del sistema: la búsqueda de antecedentes y la generación automática de resúmenes.
+
+En los apartados teóricos se explica cada técnica y se precisa su relación con el sistema desarrollado, sin sustituir la descripción de su implementación ni la presentación de resultados experimentales, que corresponden a capítulos posteriores.
+
+\section{Estado del arte de plataformas de denuncia digital}
+\label{sec:estado_arte_plataformas}
+
+Durante TT-I se realizó un estudio comparativo de plataformas nacionales e internacionales relacionadas con la recepción, registro y seguimiento de denuncias, quejas y reportes institucionales. La revisión abarcó soluciones gubernamentales, ciudadanas, corporativas y académicas, con el fin de reconocer capacidades de gestión de casos y aspectos relevantes para el contexto de la DDP.
+
+El estudio consideró criterios como seguridad, anonimato, seguimiento, soporte multimedia, automatización, escalabilidad y adaptación al entorno universitario. Estas valoraciones corresponden al análisis documental realizado en TT-I: no son resultados de pruebas técnicas ejecutadas sobre todas las plataformas ni constituyen mediciones comparables de desempeño. Por esa razón, las categorías cualitativas de la tabla deben leerse como apreciaciones del estudio original y no como certificaciones de cada atributo.
+
+\subsection{Comparativa de plataformas}
+
+Se consideraron, entre otras, el Sistema Integral de Denuncias Ciudadanas (SIDEC) \cite{sfp_sidec}, Denuncia Digital de la Ciudad de México \cite{cdmx_denuncia_digital}, MP Virtual \cite{fgjcdmx_mp_virtual}, el Sistema de Atención Mexiquense (SAM) \cite{secogem_sam}, Whistlelink \cite{whistlelink}, EQS Integrity Line \cite{eqs_integrity_line}, NAVEX/WhistleB \cite{navex_whistleb}, Whistleblower Software \cite{whistleblower_software}, BullyButton \cite{bully_button}, Ventanilla Escolar \cite{sep_ventanilla_escolar}, Alerta IPN \cite{ipn_alerta} y Denuncia en Línea de la UNAM \cite{unam_ddu_denuncia}. El análisis de TT-I también incluyó Incorruptible, cuya valoración se conserva para respetar la comparativa original; esta entrada requiere recuperar su fuente documental específica si se pretende utilizar como evidencia independiente.
+
+La Tabla~\ref{tab:comparativa_plataformas} sintetiza las valoraciones registradas en TT-I. Se mantienen las categorías del análisis original para conservar la trazabilidad del estudio; su significado y criterios de asignación deben consultarse junto con la metodología utilizada en esa etapa.
+
+\rowcolors{2}{rowblue}{white}
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{|L{2.9cm}|L{1.6cm}|L{1.7cm}|L{1.75cm}|L{1.6cm}|L{1.9cm}|L{1.75cm}|L{1.75cm}|}
+\hiderowcolors\caption{Comparativa general de plataformas de denuncia digital}\label{tab:comparativa_plataformas} \\ \showrowcolors
+\hline
+\rowcolor{headerblue}
+\headercell{Plataforma} & \headercell{Seguridad} & \headercell{Anonimato} & \headercell{Seguimiento} & \headercell{Multimedia} & \headercell{Automatización} & \headercell{Escalabilidad} & \headercell{Adaptación universitaria} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{headerblue}
+\headercell{Plataforma} & \headercell{Seguridad} & \headercell{Anonimato} & \headercell{Seguimiento} & \headercell{Multimedia} & \headercell{Automatización} & \headercell{Escalabilidad} & \headercell{Adaptación universitaria} \\
+\hline
+\endhead
+SIDEC & Media & Baja & Media & Sí & Baja & Media & No \\ \hline
+Denuncia Digital CDMX & Media & Baja & Media & Sí & Baja & Media & No \\ \hline
+MP Virtual & Media & Media & Media & Sí & Baja & Media & No \\ \hline
+Incorruptible & Baja & Media & Baja & Sí & Baja & Alta & No \\ \hline
+SAM & Media & Baja & Media & Sí & Baja & Media & No \\ \hline
+Whistlelink & Alta & Alta & Alta & Sí & Media & Alta & Parcial \\ \hline
+EQS Integrity Line & Alta & Alta & Alta & Sí & Alta & Alta & Parcial \\ \hline
+NAVEX / WhistleB & Alta & Alta & Alta & Sí & Alta & Alta & Parcial \\ \hline
+Whistleblower Software & Muy alta & Muy alta & Alta & Sí & Alta & Alta & Parcial \\ \hline
+BullyButton & Media & Media & Baja & Limitado & Baja & Media & Sí \\ \hline
+Ventanilla Escolar & Media & Baja & Baja & No & Baja & Media & Sí \\ \hline
+Alerta IPN & Media & Baja & Media & Sí & Baja & Media & Sí \\ \hline
+UNAM Denuncia en Línea & Media & Media & Alta & Sí & Media & Media & Sí \\ \hline
+\end{longtable}
+\normalsize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1}
+
+\subsection{Brechas identificadas y relación con la propuesta}
+
+El análisis de TT-I permitió observar diferencias entre las soluciones consideradas. Algunas se orientan a canales generales de denuncia, otras a la protección de informantes y otras a servicios institucionales o educativos. En consecuencia, sus mecanismos de seguimiento, manejo de archivos y adecuación a procedimientos universitarios no responden necesariamente a las mismas necesidades.
+
+Para la DDP, la revisión sirvió como referencia al delimitar funciones como la organización de expedientes, el seguimiento de quejas, el acceso según las responsabilidades del personal y el apoyo a la consulta documental. Asimismo, el estudio motivó la exploración de componentes de PLN para recuperar antecedentes potencialmente relacionados y elaborar resúmenes de apoyo a la revisión de casos. Estas decisiones se fundamentan teóricamente en las siguientes secciones.
+
+Las diferencias señaladas no permiten concluir, por sí solas, que una plataforma específica carezca de una capacidad que no fue documentada en las fuentes consultadas. Del mismo modo, los atributos identificados en TT-I no deben confundirse con los atributos implementados o medidos en el sistema desarrollado; estos últimos se describen y evalúan en los capítulos correspondientes.
+
+\section{Procesamiento de Lenguaje Natural}
+\label{sec:fundamentos_pln}
+
+El Procesamiento de Lenguaje Natural (PLN) es una rama de la inteligencia artificial que estudia métodos para analizar, interpretar y generar información expresada en lenguaje humano \cite{jurafsky2023slp}. Entre sus aplicaciones se encuentran la recuperación de información, la comparación documental y la elaboración automática de resúmenes.
+
+El lenguaje presenta variaciones de vocabulario, redacción, extensión y contexto. Dos personas pueden describir acontecimientos semejantes con términos diferentes, mientras que narraciones con palabras coincidentes pueden referirse a hechos distintos. Esta dificultad resulta relevante en las quejas dirigidas a la DDP, pues la información se presenta principalmente como relatos escritos. Para procesarlos, es necesario convertir el texto en unidades y representaciones que puedan analizarse computacionalmente.
+
+\subsection{Preprocesamiento de textos}
+
+El preprocesamiento consiste en preparar el contenido textual para su análisis mediante técnicas computacionales. Su propósito es identificar las unidades lingüísticas relevantes y, cuando resulta necesario, reducir variaciones que puedan dificultar la comparación entre documentos. En la representación léxica son especialmente relevantes la tokenización, la identificación de secuencias de términos y el tratamiento de palabras frecuentes \cite{jurafsky2023slp}. No todas las transformaciones lingüísticas son apropiadas para todas las representaciones: el procesamiento de TF-IDF debe distinguirse de la tokenización interna del modelo semántico.
+
+\paragraph{Tokenización.}
+
+La tokenización divide un texto en unidades denominadas \textit{tokens}, que pueden corresponder a palabras, signos de puntuación u otros elementos lingüísticos. Esta operación permite identificar los componentes de una oración para su posterior análisis. En la búsqueda de antecedentes, la identificación de unidades textuales es relevante para construir las características léxicas utilizadas por TF-IDF; debe distinguirse de la tokenización propia del modelo MiniLM, que utiliza su vocabulario y reglas de codificación.
+
+Por ejemplo, la expresión ``El profesor negó el acceso'' puede dividirse en los siguientes tokens:
+
+\begin{center}
+    [\texttt{El}, \texttt{profesor}, \texttt{negó},
+    \texttt{el}, \texttt{acceso}]
+\end{center}
+
+\paragraph{Unigramas y bigramas.}
+
+Un unigrama representa un término individual, mientras que un bigrama conserva una secuencia de dos términos consecutivos. Considerar ambas unidades permite recoger coincidencias de vocabulario y expresiones cortas cuyo significado depende de la combinación de palabras. En el componente de antecedentes se utiliza TF-IDF con unigramas y bigramas. Esta decisión es relevante para expresiones como ``no autorizó'', en las que considerar únicamente términos aislados puede perder información sobre la relación entre palabras.
+
+\paragraph{Tratamiento de palabras vacías.}
+
+Las palabras vacías, conocidas como \textit{stop words}, son términos frecuentes que, dependiendo de la tarea, pueden aportar poca información para distinguir documentos. Entre ellas se encuentran determinados artículos, preposiciones y conjunciones.
+
+Sin embargo, su eliminación debe realizarse cuidadosamente, ya que expresiones como ``no'', ``sin'' y ``nunca'' pueden modificar el significado de los acontecimientos descritos en una queja. Por esta razón, el preprocesamiento debe considerar las características del contenido y los requisitos del modelo utilizado.
+
+En las narrativas de las quejas, conservar las negaciones es importante para no alterar los hechos descritos. Por ello, al construir representaciones léxicas deben valorarse las consecuencias de eliminar términos frecuentes. Este tratamiento no debe confundirse con la tokenización interna de MiniLM, que sigue las reglas del codificador empleado.
+
+\subsection{Representación vectorial del texto}
+
+La representación vectorial transforma textos en estructuras numéricas que permiten realizar operaciones de comparación y recuperación de información \cite{manning2008ir}. Cada vector describe ciertas propiedades del documento: en una representación léxica, sus dimensiones pueden corresponder a términos o secuencias de términos; en una representación semántica, recogen características aprendidas por un modelo a partir del contexto lingüístico.
+
+Estas dos clases de representación no son equivalentes. La primera facilita la identificación de coincidencias explícitas de vocabulario, mientras que la segunda ayuda a comparar expresiones diferentes que pueden tener significados relacionados. En la búsqueda de antecedentes del sistema se emplean ambas: TF-IDF proporciona la representación léxica y MiniLM genera la representación semántica. Los fundamentos particulares de cada método se explican en la sección dedicada a la recuperación de información.
+
+\section{Recuperación de información y búsqueda de antecedentes}
+\label{sec:busqueda_antecedentes}
+
+La búsqueda de antecedentes consiste en localizar documentos previamente registrados que mantienen alguna relación con una nueva solicitud. En la gestión de quejas, esta actividad permite consultar expedientes que presentan semejanzas en los hechos descritos, las circunstancias o las personas involucradas. Su propósito es facilitar el acceso a información relevante para la revisión de los casos, sin establecer automáticamente que los documentos recuperados corresponden a una misma situación.
+
+La identificación de posibles duplicidades constituye una tarea relacionada, pero distinta de la recuperación de antecedentes. Mientras que la primera busca reconocer solicitudes que podrían referirse a hechos previamente reportados, la segunda permite localizar documentos relacionados, aunque correspondan a acontecimientos diferentes. Ambas tareas requieren mecanismos de recuperación y comparación de información textual.
+
+\subsection{Recuperación de información textual}
+
+La recuperación de información es el proceso mediante el cual se identifican documentos relevantes dentro de una colección a partir de una consulta. Su funcionamiento comprende la organización de los documentos disponibles, el procesamiento de la consulta y la aplicación de criterios que permitan determinar cuáles registros presentan mayor relación con la información solicitada \cite{manning2008ir}.
+
+En los sistemas de recuperación textual, los documentos pueden representarse mediante estructuras que facilitan su búsqueda. A partir de sus representaciones se calculan medidas de relevancia para ordenar los resultados y presentar primero aquellos que mantienen una mayor relación con la consulta. En el componente desarrollado, esta comparación se apoya en señales léxicas y semánticas que se explican en los apartados siguientes.
+
+En el contexto de la DDP, una queja puede utilizarse como consulta para recuperar expedientes previamente registrados. De esta manera, el proceso de recuperación permite identificar antecedentes potencialmente relacionados con los hechos descritos y proporciona referencias documentales para su posterior revisión.
+
+\subsection{Representación léxica mediante TF-IDF}
+
+Como antecedente de los métodos de ponderación léxica, el modelo de bolsa de palabras, conocido como \textit{Bag of Words} (BoW), representa un documento mediante la frecuencia de aparición de sus términos, sin considerar el orden en el que se presentan. Aunque permite comparar documentos a partir de su vocabulario, no representa directamente las relaciones de significado entre las palabras \cite{manning2008ir}.
+
+TF-IDF (\textit{Term Frequency--Inverse Document Frequency}) es un método de ponderación que, a partir de los términos presentes en los documentos, asigna un peso según su frecuencia en cada texto y su distribución en la colección.
+
+Su expresión general es:
+
+\begin{equation}
+    \operatorname{tf-idf}(t,d,D)
+    =
+    \operatorname{tf}(t,d)
+    \times
+    \operatorname{idf}(t,D)
+    \label{eq:tfidf}
+\end{equation}
+
+donde $t$ representa un término, $d$ un documento y $D$ el conjunto de documentos. El componente TF mide la frecuencia del término dentro del documento, mientras que IDF reduce la importancia de los términos que aparecen en numerosos documentos \cite{manning2008ir}.
+
+En el componente de búsqueda de antecedentes, TF-IDF se aplica sobre unigramas y bigramas de las narrativas para representar las quejas y obtener una señal de coincidencia léxica. Esta señal ayuda a recuperar expedientes que comparten vocabulario y expresiones relevantes. No obstante, dos relatos sobre situaciones semejantes pueden emplear palabras distintas; por ello, el sistema complementa este enfoque con representaciones semánticas generadas mediante MiniLM.
+
+\subsection{Representación semántica mediante Transformers y MiniLM}
+
+Los \textit{embeddings} contextuales generan representaciones que consideran las relaciones entre las palabras de una secuencia. Estos enfoques permiten incorporar información del contexto y representar oraciones o documentos mediante vectores que reflejan características de su contenido semántico.
+
+En los sistemas de recuperación semántica, estos vectores permiten comparar consultas y documentos con una medida de proximidad, incluso cuando no comparten exactamente las mismas palabras. Los modelos utilizados para obtener estas representaciones se describen a continuación.
+
+En la búsqueda de antecedentes, estas representaciones permiten comparar narrativas que expresan hechos relacionados mediante vocabulario distinto. Por ejemplo, dos relatos pueden referirse a una restricción para presentar un examen sin utilizar exactamente los mismos términos. Esta capacidad complementa la coincidencia léxica, aunque la proximidad de los vectores no demuestra por sí sola que los expedientes describan un mismo acontecimiento.
+
+La arquitectura \textit{Transformer} utiliza mecanismos de atención para modelar relaciones entre elementos de una secuencia \cite{vaswani2017attention}. Algunas de sus variantes se emplean como codificadores
+(\textit{encoders}) para transformar secuencias de texto en representaciones numéricas. A diferencia
+de los métodos que representan los documentos únicamente a partir de la frecuencia de sus términos, estos modelos incorporan relaciones contextuales aprendidas durante su entrenamiento.
+
+El enfoque \textit{Sentence-BERT} (SBERT) adapta modelos Transformer para producir
+\textit{embeddings} de oraciones comparables mediante medidas como la similitud coseno. Su empleo
+en recuperación semántica permite obtener representaciones de consultas y documentos para identificar cercanía de significado sin comparar cada par de textos con un modelo de clasificación
+\cite{reimers2019sbert}.
+
+MiniLM es una familia de modelos Transformer compactos obtenidos mediante técnicas de destilación de conocimiento, orientadas a conservar parte de la capacidad de representación de modelos más grandes con menor costo de inferencia \cite{wang2020minilm}. En el sistema se utiliza la variante multilingüe \texttt{paraphrase-multilingual-MiniLM-L12-v2}, distribuida mediante Sentence Transformers \cite{hf_minilm_multilingual}, para generar las representaciones semánticas de las quejas. Esta variante permite obtener vectores comparables de textos en español y aporta una señal semántica complementaria a las coincidencias de términos identificadas mediante TF-IDF.
+
+Es importante distinguir los codificadores de los modelos generativos: los primeros se utilizan aquí para obtener representaciones vectoriales y comparar textos, mientras que los segundos producen nuevas secuencias de lenguaje. La cercanía entre \textit{embeddings} no demuestra por sí sola que dos expedientes describan los mismos hechos.
+
+\subsection{Similitud coseno}
+
+La similitud coseno es una medida matemática utilizada para comparar la orientación de dos vectores en un espacio multidimensional. Se calcula mediante el producto punto de ambos vectores dividido entre el producto de sus normas, lo que permite estimar su proximidad angular independientemente de sus magnitudes \cite{manning2008ir}.
+
+Para dos vectores no nulos $\mathbf{u}$ y $\mathbf{v}$, la similitud coseno se define como:
+
+\begin{equation}
+    \operatorname{sim}(\mathbf{u},\mathbf{v})
+    =
+    \frac{\mathbf{u}\cdot\mathbf{v}}
+    {\lVert\mathbf{u}\rVert\lVert\mathbf{v}\rVert}
+    =
+    \frac{\displaystyle\sum_{i=1}^{d}u_i v_i}
+    {\sqrt{\displaystyle\sum_{i=1}^{d}u_i^2}
+     \sqrt{\displaystyle\sum_{i=1}^{d}v_i^2}}
+    \label{eq:similitud_coseno}
+\end{equation}
+
+donde $d$ representa el número de dimensiones de los vectores. Su resultado se encuentra en el intervalo $[-1,1]$, y los valores cercanos a $1$ indican una mayor proximidad en la dirección de las representaciones.
+
+En la comparación de documentos, esta medida permite ordenar los textos de acuerdo con su similitud vectorial. En el componente de antecedentes se emplea para comparar las representaciones de las quejas y contribuir al ordenamiento de los documentos recuperados. Su interpretación depende del tipo de vector comparado: una coincidencia léxica ponderada por TF-IDF no equivale a una relación semántica obtenida a partir de MiniLM.
+
+No obstante, la similitud coseno mide proximidad entre representaciones y no verifica por sí misma la identidad de los hechos descritos. Por tanto, su utilización en la búsqueda de antecedentes permite identificar coincidencias relevantes, pero no constituye una confirmación automática de duplicidad.
+
+\subsection{Recuperación híbrida de antecedentes}
+
+La recuperación híbrida combina señales provenientes de métodos distintos con la finalidad de aprovechar sus capacidades complementarias. En el sistema propuesto se integran una señal léxica, obtenida mediante TF-IDF, y una señal semántica, calculada a partir de las representaciones generadas con MiniLM. La primera permite recuperar coincidencias de términos y expresiones específicas; la segunda facilita la identificación de textos relacionados incluso cuando están redactados con un vocabulario diferente.
+
+La integración de ambas señales requiere una regla de combinación que establezca la contribución relativa de cada enfoque. Combinar directamente las puntuaciones presenta una dificultad: la similitud obtenida con TF-IDF y la obtenida con MiniLM se expresan en escalas distintas, por lo que sus valores no son comparables. Una alternativa es la fusión por rango recíproco, conocida como \textit{Reciprocal Rank Fusion} (RRF), que combina las posiciones que cada recuperador asigna a un documento en lugar de sus puntuaciones \cite{cormack2009rrf}. En su variante ponderada, la puntuación de un documento $d$ se calcula como:
+
+\begin{equation}
+    \operatorname{RRF}(d) = \sum_{r \in \mathcal{R}} \frac{w_r}{c + \operatorname{rango}_r(d)},
+    \label{eq:rrf}
+\end{equation}
+
+donde $\mathcal{R}$ es el conjunto de recuperadores, $w_r$ el peso asignado al recuperador $r$, $\operatorname{rango}_r(d)$ la posición del documento en la lista de ese recuperador y $c$ una constante de suavizado que reduce la diferencia entre las primeras posiciones. Los documentos que aparecen en posiciones altas en ambas listas obtienen las puntuaciones más elevadas. En el recuperador desarrollado se emplea esta fusión ponderada para combinar las listas de TF-IDF y MiniLM; los valores concretos de las ponderaciones y sus resultados se presentan en los capítulos de pruebas y resultados.
+
+El valor de relevancia producido por la recuperación híbrida permite ordenar antecedentes potenciales, pero no representa por sí mismo una probabilidad de que dos quejas describan los mismos hechos ni determina automáticamente que exista duplicidad. La decisión final corresponde a la revisión de los expedientes.
+
+\subsection{Identificación de posibles duplicidades}
+
+La identificación de documentos relacionados consiste en analizar los resultados de recuperación para reconocer registros que comparten información relevante con una consulta. Esta relación puede establecerse mediante semejanzas en las narrativas, coincidencias de términos específicos o características comunes de los acontecimientos descritos.
+
+En la gestión de quejas, los documentos relacionados pueden corresponder a antecedentes de una situación, solicitudes que involucran a una misma persona o registros que describen acontecimientos semejantes. Sin embargo, estas relaciones no son equivalentes entre sí, ya que dos expedientes pueden compartir elementos sin referirse necesariamente a los mismos hechos.
+
+La detección de posibles duplicidades requiere una consideración adicional: determinar si diferentes solicitudes podrían corresponder a un acontecimiento previamente registrado. Para ello, la similitud textual constituye un criterio de apoyo, pero no una prueba suficiente, debido a que una misma situación puede describirse de distintas maneras y diferentes acontecimientos pueden presentar narrativas similares.
+
+Por tanto, los resultados de recuperación deben interpretarse como coincidencias potencialmente relevantes que requieren revisión. Esta distinción permite utilizar las técnicas de comparación documental sin atribuirles capacidades de verificación que exceden el análisis del contenido textual.
+
+\subsection{Evaluación de la recuperación de antecedentes}
+
+La evaluación de un sistema de recuperación de información permite determinar qué tan adecuadamente identifica documentos relevantes a partir de una consulta. Para ello, se requiere un conjunto de referencia en el que se conozca qué documentos deben considerarse relevantes, de manera que los resultados obtenidos puedan compararse con las relaciones esperadas \cite{manning2008ir}.
+
+Entre las métricas utilizadas para evaluar sistemas de recuperación se encuentran la precisión y la exhaustividad en los primeros $k$ resultados, representadas mediante
+$P_k$ y $R_k$, respectivamente, y denotadas también como P@$k$ y R@$k$.
+
+La precisión en los primeros $k$ resultados se define como:
+
+\begin{equation}
+    P_k =
+    \frac{\text{Documentos relevantes recuperados en los primeros } k}
+    {k}
+    \label{eq:precision_k}
+\end{equation}
+
+Esta métrica indica qué proporción de los documentos presentados en las primeras posiciones resulta relevante para la consulta.
+
+Por su parte, la exhaustividad en los primeros $k$ resultados se expresa como:
+
+\begin{equation}
+    R_k =
+    \frac{\text{Documentos relevantes recuperados en los primeros } k}
+    {\text{Total de documentos relevantes}}
+    \label{eq:recall_k}
+\end{equation}
+
+Esta medida permite conocer qué proporción de los documentos relevantes disponibles se encuentra entre los primeros resultados recuperados.
+
+Ambas métricas ofrecen perspectivas complementarias sobre el funcionamiento de un sistema de búsqueda. Mientras que la precisión ($P_k$) permite valorar la pertinencia de los resultados presentados, la exhaustividad o \textit{recall} ($R_k$) permite identificar la capacidad del sistema para recuperar los antecedentes relevantes existentes en la colección.
+
+En las pruebas del componente de antecedentes, estas medidas permiten valorar si las quejas relacionadas aparecen entre los primeros resultados de búsqueda, a partir de relaciones de relevancia definidas para el conjunto de evaluación. La selección de las métricas y los valores de $k$ debe corresponder a los objetivos y condiciones de evaluación establecidos para el modelo.
+
+La comparación de configuraciones del recuperador requiere consultas con relaciones de relevancia previamente establecidas y criterios definidos antes de examinar los resultados. Debe distinguirse entre los datos empleados para ajustar parámetros y aquellos destinados a evaluar el comportamiento final, pues utilizar los mismos casos para ambas actividades puede producir estimaciones optimistas. Cuando varias consultas se derivan de un mismo expediente o escenario, es conveniente mantenerlas en un mismo grupo para reducir la fuga de información.
+
+Las pruebas con quejas sintéticas permiten estudiar el comportamiento del sistema en condiciones controladas, pero sus resultados no equivalen a una validación institucional con expedientes reales. Por ello, las métricas obtenidas deben interpretarse junto con el tamaño y las características del conjunto de prueba, los criterios de relevancia y la configuración evaluada.
+
+\section{Generación automática de resúmenes}
+\label{sec:generacion_resumenes}
+
+A diferencia de la recuperación de antecedentes, cuyo propósito es comparar y ordenar documentos, la generación de resúmenes busca producir una versión condensada de su contenido. La generación automática de resúmenes es una tarea del Procesamiento de Lenguaje Natural que consiste en producir una versión más breve de un documento, conservando la información necesaria para comprender su contenido. Su propósito es reducir la extensión del texto sin perder los elementos esenciales que permiten interpretar el mensaje original \cite{jurafsky2023slp}.
+
+Esta tarea resulta especialmente relevante cuando se trabaja con documentos extensos que contienen información narrativa. En estos casos, un resumen permite identificar los acontecimientos principales, las circunstancias descritas y las relaciones entre los hechos, sin necesidad de revisar inicialmente la totalidad del documento.
+
+En el contexto de la DDP, las quejas pueden contener descripciones extensas de acontecimientos, antecedentes y circunstancias particulares. La generación automática de resúmenes puede facilitar una primera revisión del contenido y apoyar la consulta de los expedientes. Sin embargo, el resumen generado no sustituye el documento original ni la valoración realizada por el personal responsable.
+
+\subsection{Resumen extractivo y abstractivo}
+
+Los métodos de generación automática de resúmenes pueden clasificarse principalmente en extractivos y abstractivos, de acuerdo con la manera en que construyen el texto resultante \cite{jurafsky2023slp}.
+
+El resumen extractivo consiste en seleccionar fragmentos del documento original que contienen información considerada relevante. Estos fragmentos, generalmente oraciones completas, se organizan para construir una versión reducida del texto. Su principal característica es que conserva las expresiones utilizadas en el documento de origen.
+
+Por ejemplo, si una queja contiene varias oraciones que describen un acontecimiento, un método extractivo puede seleccionar aquellas que proporcionan mayor información sobre los hechos, omitiendo detalles repetitivos o secundarios.
+
+Por su parte, el resumen abstractivo genera una nueva redacción a partir de la información identificada en el documento. A diferencia del enfoque extractivo, no se limita a copiar fragmentos, sino que puede reformular oraciones, integrar información relacionada y producir expresiones que no aparecen literalmente en el texto original.
+
+Esta capacidad permite construir resúmenes narrativos más cohesionados. No obstante, también introduce el riesgo de generar afirmaciones que no se encuentran respaldadas por el documento de origen.
+
+Para la gestión de quejas, esta distinción resulta importante debido a que la claridad del resumen debe mantenerse subordinada a la conservación de los hechos descritos por la persona que presenta la solicitud.
+
+\subsection{Selección de fragmentos mediante Maximum Marginal Relevance}
+
+La selección extractiva de oraciones puede producir resúmenes redundantes cuando varios fragmentos expresan información semejante. \textit{Maximum Marginal Relevance} (MMR) es un criterio que busca equilibrar la relevancia de una unidad respecto al documento o consulta y su novedad frente a las unidades ya seleccionadas \cite{carbonell1998mmr}.
+
+Una formulación habitual escoge iterativamente la unidad $s$ que maximiza:
+
+\begin{equation}
+    \operatorname{MMR}(s) =
+    \lambda\,\operatorname{sim}(s,q) -
+    (1-\lambda)\max_{s'\in S}
+    \operatorname{sim}(s,s'),
+    \label{eq:mmr}
+\end{equation}
+
+donde $q$ representa el texto o consulta de referencia, $S$ es el conjunto de unidades seleccionadas y $\lambda\in[0,1]$ regula el equilibrio entre relevancia y redundancia. Para la primera selección, cuando $S$ está vacío, el término de redundancia se considera nulo.
+
+En textos narrativos, MMR proporciona una base para elegir fragmentos informativos sin repetir innecesariamente el mismo contenido. Sin embargo, no garantiza por sí solo la conservación de fechas, negaciones, actores, consecuencias o relaciones cronológicas. Por ese motivo, puede complementarse con reglas de cobertura y coherencia contextual. En el componente de resúmenes de la DDP, MMR se utiliza para seleccionar fragmentos de la queja antes de enviarlos al modelo Qwen3. De esta forma se busca concentrar la entrada en contenido informativo y reducir repeticiones innecesarias. La selección y la redacción posterior son etapas diferentes: MMR decide qué contenido se proporciona al generador, mientras que Qwen3 determina cómo se expresa ese contenido en el resumen.
+
+\subsection{Modelos de lenguaje generativos y Qwen3}
+
+Los modelos de lenguaje son sistemas computacionales diseñados para procesar y generar secuencias de texto mediante el aprendizaje de patrones lingüísticos. Sus aplicaciones incluyen la comprensión de documentos, la generación de respuestas y la elaboración automática de resúmenes \cite{jurafsky2023slp}.
+
+Como se explicó en la recuperación semántica, los Transformers emplean mecanismos de atención para representar las relaciones entre los elementos del texto \cite{vaswani2017attention}. No obstante, los modelos basados en esta arquitectura pueden tener funciones diferentes: MiniLM se utiliza como codificador para producir representaciones comparables, mientras que Qwen3 se emplea como modelo generativo para redactar resúmenes. Esta diferencia permite distinguir la recuperación de información de la producción de nuevas secuencias lingüísticas.
+
+Los modelos de lenguaje basados en Transformers pueden utilizarse para desarrollar sistemas de resumen abstractivo. A partir de un documento de entrada, estos modelos generan una secuencia de texto que busca representar su contenido principal mediante una redacción más breve y organizada.
+
+Sin embargo, la capacidad de generar lenguaje coherente no garantiza que todas las afirmaciones producidas correspondan fielmente al documento original. Por ello, la utilización de estos modelos requiere considerar mecanismos de evaluación y revisión de los resultados.
+
+\paragraph{Generación autorregresiva con Qwen3.}
+
+Para la etapa de redacción del resumen se utiliza el modelo \texttt{Qwen3-4B-Instruct-2507}, perteneciente a la familia Qwen3 \cite{hf_qwen3_4b_instruct_2507}, que trabaja a partir de los fragmentos seleccionados mediante MMR. Los modelos de lenguaje generativos de tipo \textit{decoder} producen texto de manera autorregresiva: predicen el siguiente token condicionado por los anteriores y repiten el procedimiento hasta completar la salida. Aunque el procesamiento de una entrada utiliza operaciones paralelizables, los tokens de salida se generan secuencialmente, de modo que la longitud de la respuesta influye en el tiempo total de inferencia.
+
+En el componente de resúmenes, Qwen3 recibe como material de entrada los fragmentos previamente seleccionados con MMR y produce una redacción condensada. Los modelos generativos pueden recibir instrucciones que establecen el propósito, el estilo y las restricciones del texto generado. En una tarea de redacción institucional, es posible solicitar la transformación de fragmentos a tercera persona y pedir que se conserven negaciones, actores y datos explícitos. No obstante, las instrucciones no constituyen una garantía formal de fidelidad factual, por lo que deben complementarse con evaluación y revisión.
+
+\subsection{Fidelidad y consistencia factual}
+
+La fidelidad factual es una propiedad fundamental de los resúmenes automáticos y se refiere a la correspondencia entre las afirmaciones del resumen y la información contenida en el documento original.
+
+Un resumen puede presentar una redacción clara y gramaticalmente correcta sin representar adecuadamente los acontecimientos descritos. Esto ocurre cuando se incorporan datos inexistentes, se modifican relaciones entre los hechos o se omiten elementos necesarios para comprender una situación.
+
+En los modelos generativos, la producción de información que no está respaldada por el documento de entrada se conoce comúnmente como alucinación. Este fenómeno representa una limitación importante en aplicaciones donde la exactitud del contenido resulta esencial.
+
+En el contexto de las quejas, las alteraciones pueden afectar aspectos como las personas involucradas, las fechas, las acciones atribuidas a cada participante o la secuencia de los acontecimientos. Por ejemplo, modificar quién realizó una acción puede cambiar sustancialmente el significado de la narrativa.
+
+La fidelidad de un resumen requiere, por tanto, preservar las afirmaciones relevantes y evitar incorporar interpretaciones que excedan la información proporcionada. Asimismo, es necesario distinguir entre reducir la extensión del documento y eliminar información que resulta indispensable para comprender los hechos.
+
+Por estas razones, el resumen generado con Qwen3 se presenta en el sistema como un apoyo para la lectura inicial de la queja, no como una sustitución del expediente ni como una interpretación definitiva de los hechos. La revisión por parte del personal responsable sigue siendo necesaria cuando la síntesis se utilice en un proceso institucional.
+
+\subsection{Evaluación de resúmenes automáticos}
+
+La evaluación de resúmenes automáticos busca determinar en qué medida el texto generado conserva la información relevante del documento original y presenta una redacción comprensible.
+
+Entre los aspectos que pueden considerarse se encuentran la cobertura de los hechos principales, la fidelidad factual, la ausencia de información inventada, la coherencia narrativa y la claridad del texto.
+
+Una estrategia de evaluación consiste en comparar el resumen generado con un resumen de referencia elaborado o validado previamente. Esta comparación permite analizar si el sistema recupera los elementos informativos esperados, aunque la existencia de diferentes formas válidas de resumir un documento puede dificultar la evaluación automática.
+
+Por esta razón, las medidas basadas únicamente en coincidencias textuales no son suficientes para determinar la calidad integral de un resumen. Dos textos pueden utilizar expresiones diferentes y conservar los mismos hechos, mientras que una redacción similar puede contener alteraciones importantes en su significado.
+
+En un procedimiento que combina MMR con generación mediante Qwen3, resulta pertinente distinguir dos fuentes de error: la omisión de información durante la selección de fragmentos y la modificación u omisión de hechos durante la generación. Para diferenciarlas se puede examinar, primero, la cobertura factual de los fragmentos seleccionados frente a la queja original y, después, la fidelidad del resumen frente a esos fragmentos y frente al documento completo. Esta evaluación por etapas constituye un criterio metodológico y no debe presentarse como una validación exhaustiva ya realizada. Su aplicación con quejas reales y revisión del personal de la DDP quedó fuera del alcance temporal del proyecto.
+
+La revisión humana complementa la evaluación automática mediante la identificación de errores factuales, omisiones relevantes y problemas de interpretación. En documentos que describen posibles vulneraciones de derechos, esta revisión adquiere especial importancia debido a las consecuencias que puede tener una representación incorrecta de los acontecimientos.
+
+Para la DDP, una evaluación posterior con expedientes reales y criterios acordados con el personal responsable deberá considerar tanto su utilidad para facilitar la lectura de las quejas como su capacidad para conservar la información necesaria para comprender cada caso. El resultado debe interpretarse como una síntesis de apoyo y no como una sustitución del expediente original.

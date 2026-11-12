@@ -1,0 +1,641 @@
+	\section{Ciclo de vida del expediente}
+	\label{sec:maquina_estados}
+	El elemento que ordena todo el flujo de trabajo es el estatus de la queja. Se modeló como una
+	máquina de estados con cuatro valores y transiciones dirigidas, decisión que se tomó por dos
+	razones: permite validar en el servidor qué operaciones son admisibles en cada momento ---la
+	regla RN-Q08 depende por completo de esto--- y da al quejoso una línea de tiempo comprensible
+	del avance de su expediente.
+	
+	\begin{itemize}
+		\item \texttt{RECIBIDA}. Estado inicial de toda queja, sin importar su origen. Es el único
+		estado en el que el quejoso puede editar su propia queja, porque es el único en el que la
+		Defensoría no ha empezado a trabajar sobre ella.
+	
+		\item \texttt{EN\_VALIDACION}. El personal de recepción tomó la queja y está verificando su
+		documentación y sus antecedentes. La edición por parte del quejoso queda cerrada a partir de
+		aquí, para evitar que el expediente cambie mientras se lo evalúa.
+	
+		\item \texttt{RECHAZADA}. Estado terminal. La queja no reunió los requisitos de
+		documentación; el rechazo exige motivos registrados y notificación al quejoso.
+	
+		\item \texttt{TURNADA}. Estado terminal desde la perspectiva de recepción. La queja fue
+		canalizada a un área y a un defensor, y recibió un folio oficial de turnado.
+	\end{itemize}
+	
+	Los estados anteriores describen principalmente la fase de recepción y turnado, no el ciclo
+	completo del expediente. Tras el turnado pueden intervenir los módulos de Primer Contacto,
+	Subdefensoría y las instancias responsables de resolución, con estados y actuaciones propios.
+	Por ello, la máquina aquí presentada debe interpretarse como un subproceso; el ciclo de vida
+	completo se documenta conforme a las reglas de los módulos posteriores.
+	
+	\section{Diseño de la arquitectura}
+	\label{sec:diseno_arquitectura}
+	La arquitectura de la plataforma aplica los principios expuestos en la
+	Sección~\ref{sec:arquitectura_software}. Esta sección describe cómo se concretaron: qué
+	componentes existen, cómo se comunican, cómo se despliegan y qué alternativas se descartaron en
+	cada decisión.
+	
+	\subsection{Vista de componentes}
+	El sistema se descompuso en microservicios de dominio y servicios auxiliares de inteligencia
+	artificial. Los servicios de negocio implementan las operaciones institucionales; los de IA
+	atienden recuperación de información y redacción asistida. La
+	Tabla~\ref{tab:microservicios} presenta los componentes principales. Los puertos de los
+	servicios internos corresponden a la publicación en el servidor cuando aplica; el
+	procesamiento inteligente se comunica por la red de contenedores y no requiere exposición pública.
+	
+	\rowcolors{2}{rowblue}{white}
+	
+	\small
+	\renewcommand{\arraystretch}{1.25}
+	\setlength{\tabcolsep}{4pt}
+	
+	\begin{longtable}{|p{3.4cm}|p{1.2cm}|p{6.6cm}|p{2.4cm}|}
+		\caption{Microservicios de la plataforma y su responsabilidad}
+		\label{tab:microservicios} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Servicio} & \headercell{Puerto} & \headercell{Responsabilidad} &
+		\headercell{Emite tokens} \\
+		\hline
+		\endfirsthead
+	
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Servicio} & \headercell{Puerto} & \headercell{Responsabilidad} &
+		\headercell{Emite tokens} \\
+		\hline
+		\endhead
+	
+		\texttt{auth-service} & 8083 & Sesión del quejoso, activación de cuenta, recuperación de
+		contraseña y perfil & Sí, para quejosos \\ \hline
+	
+		\texttt{queja-service} & 8084 & Registro de quejas público y autenticado, consulta y edición
+		de quejas propias, evidencias y respuesta a acuerdos de conciliación & No, solo verifica
+		\\ \hline
+	
+		\texttt{notificaciones-\allowbreak service} & 8085 & Envío de correo electrónico y centro de
+		notificaciones persistido por usuario & No, solo verifica \\ \hline
+	
+		\texttt{catalogo-\allowbreak service} & 8086 & Catálogo de dependencias y unidades académicas del
+		Instituto & No, solo verifica \\ \hline
+	
+		\texttt{admin-service} & 8087 & Sesión del personal, cuentas y roles, plantillas de oficios,
+		respaldos y bitácora de seguridad & Sí, para personal \\ \hline
+	
+		\texttt{revision-\allowbreak service} & 8088 & Bandeja de recepción, validación, rechazo, turnado,
+		registro manual, historial exportable y emisión de acuerdos & No, solo verifica \\ \hline
+	
+		\texttt{chatbot-\allowbreak service} & 8089 & Menú de preguntas frecuentes del portal público y su
+		administración & No, solo verifica \\ \hline
+		\texttt{primer-contacto-service} & 8082 & Gestión de expedientes de Primer Contacto e integración
+		de las herramientas de antecedentes y resúmenes & No, verifica \\ \hline
+		\texttt{subdefensoria-service} & Interno & Operaciones del módulo de Subdefensoría & No, verifica \\ \hline
+		\texttt{historico-service} & Interno & Consulta y tratamiento de información histórica
+		de quejas & No, verifica \\ \hline
+		\texttt{antecedentes-service} & Interno & Recuperación híbrida de expedientes con TF-IDF,
+		MiniLM y fusión de rankings & No emite \\ \hline
+		\texttt{resumen-service} & Interno & Selección extractiva y edición institucional de resúmenes &
+		No emite \\ \hline
+		\texttt{qwen-server} & Interno & Motor de inferencia del modelo generativo para el editor &
+		No emite \\ \hline
+	\end{longtable}
+	
+	\normalsize
+	
+	Los tokens de sesión se emiten desde los servicios de autenticación de quejosos y de
+	personal. Los servicios de negocio que necesitan autorización los verifican; los componentes
+	de IA permanecen accesibles únicamente a los servicios internos autorizados por la topología
+	de red y las reglas de acceso. Esta separación impide confundir un servicio de inferencia
+	con un punto de autenticación o una decisión administrativa.
+	
+	\subsection{Vista de despliegue}
+	El despliegue diferencia el acceso público, los servicios de negocio y los componentes
+	de procesamiento de inteligencia artificial. El entorno de aplicaciones aloja los
+	microservicios y la persistencia operativa; el entorno de acceso sirve las aplicaciones
+	web y el proxy inverso; el procesamiento de modelos dispone de servicios de inferencia
+	separados y redes internas de contenedores. La Figura de despliegue y los detalles de
+	infraestructura del capítulo de implementación especifican la distribución física y la
+	configuración finalmente utilizada.
+	
+	Esta separación cumple tres propósitos. El primero es de seguridad: el servidor que contiene la
+	base de datos y la lógica de negocio no está expuesto directamente a Internet, y su cortafuegos
+	acepta conexiones a los puertos de los microservicios únicamente desde la dirección del servidor
+	de acceso público. El segundo es de aislamiento de fallos: una saturación en la entrega de
+	archivos estáticos no compite por recursos con el procesamiento de las peticiones de negocio.
+	El tercero es operativo: el certificado de transporte y la configuración del dominio residen en
+	un solo lugar, de modo que renovarlos no implica reiniciar ningún servicio de negocio.
+	
+	El único puerto realmente público es el de HTTPS; el puerto de HTTP se conserva abierto
+	exclusivamente para redirigir el tráfico a su equivalente cifrado y para atender el reto de
+	validación del certificado. La Tabla~\ref{tab:enrutamiento} presenta las reglas de enrutamiento
+	del proxy inverso, que son el contrato entre el exterior y la arquitectura interna.
+	
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	
+	\begin{longtable}{|p{4.0cm}|p{5.4cm}|p{4.4cm}|}
+		\caption{Reglas de enrutamiento del proxy inverso público}
+		\label{tab:enrutamiento} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Ruta pública} & \headercell{Destino} & \headercell{Servidor} \\
+		\hline
+		\endfirsthead
+	
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Ruta pública} & \headercell{Destino} & \headercell{Servidor} \\
+		\hline
+		\endhead
+	
+		\texttt{/} & Portal del quejoso & Acceso público \\ \hline
+		\texttt{/admin/} & Consola de administración & Acceso público \\ \hline
+		\texttt{/revision/} & Panel de revisión & Acceso público \\ \hline
+		\texttt{/primer-contacto/} & Panel de Primer Contacto & Acceso público \\ \hline
+		\texttt{/subdefensoria/} & Panel de Subdefensoría & Acceso público \\ \hline
+		\texttt{/api/auth/} & \texttt{auth-service} & Aplicación \\ \hline
+		\texttt{/api/quejoso/} & \texttt{queja-service} & Aplicación \\ \hline
+		\texttt{/api/notificaciones/} & \texttt{notificaciones-\allowbreak service} & Aplicación \\ \hline
+		\texttt{/api/catalogos/} & \texttt{catalogo-\allowbreak service} & Aplicación \\ \hline
+		\texttt{/api/admin/} & \texttt{admin-service} & Aplicación \\ \hline
+		\texttt{/api/revision/} & \texttt{revision-\allowbreak service} & Aplicación \\ \hline
+		\texttt{/api/chatbot/} & \texttt{chatbot-\allowbreak service} & Aplicación \\ \hline
+		\texttt{/api/primer-contacto/} & \texttt{primer-contacto-service} & Aplicación \\ \hline
+		\texttt{/api/subdefensoria/} & \texttt{subdefensoria-service} & Aplicación \\ \hline
+	\end{longtable}
+	
+	\normalsize
+	\setlength{\tabcolsep}{6pt}
+	\renewcommand{\arraystretch}{1}
+	
+	Una consecuencia de diseño de este esquema merece destacarse: como el proxy entrega tanto las
+	aplicaciones web como la interfaz de programación bajo un mismo dominio, el navegador considera
+	que todo proviene del mismo origen y no activa la verificación de intercambio de recursos entre
+	orígenes. Eso simplifica el modelo de seguridad del cliente sin sacrificar la separación en
+	servicios del lado del servidor.
+	
+	\subsection{Diseño de la comunicación entre servicios}
+	La comunicación entre servicios es síncrona sobre HTTP siguiendo el estilo REST, conforme a lo
+	expuesto en la Sección~\ref{sec:arquitectura_software}. Se descartó la mensajería asíncrona
+	porque el volumen de operaciones y el número de servicios no justifican la complejidad operativa
+	de un intermediario de mensajes, y porque ninguno de los flujos identificados tolera bien la
+	consistencia eventual: un quejoso que envía una queja espera su folio en la misma respuesta, no
+	después.
+	
+	El diseño utiliza llamadas internas para validación de identidad y envío de notificaciones,
+	además de consultas a los servicios especializados. En Primer Contacto, la recuperación de
+	antecedentes se obtiene mediante una petición HTTP al servicio de búsqueda; la elaboración de
+	resúmenes invoca otro servicio, que a su vez consulta un motor de inferencia generativa.
+	Cada interacción tiene su propio tiempo de espera y una estrategia de manejo de fallos: la
+	indisponibilidad del componente de IA no debe sustituir ni bloquear el criterio institucional.
+	Las dependencias de datos y sus compromisos se analizan en la
+	Sección~\ref{sec:decisiones_diseno}.
+	
+	\subsection{Diseño de la seguridad y el control de acceso}
+	El esquema de seguridad se construyó sobre cuatro mecanismos, cada uno atendiendo una amenaza
+	distinta.
+	
+	La \textbf{autenticación} emplea tokens firmados con algoritmo simétrico. Un token emitido por
+	el servicio de autenticación es válido en los servicios que atienden al quejoso, y uno emitido
+	por el servicio de administración es válido en los que atienden al personal, porque todos
+	comparten la misma clave de firma. Cada servicio verifica el token de forma local, sin consultar
+	al emisor, lo que evita un punto único de falla en cada petición. La vigencia del token es de
+	una hora, y el cliente cierra la sesión de forma automática cuando el servidor la rechaza.
+	
+	El \textbf{almacenamiento de contraseñas} usa una función de resumen con costo configurable en
+	los dos servicios que emiten sesión. La política de complejidad exige un mínimo de ocho
+	caracteres, al menos una mayúscula y al menos un dígito, y está implementada como una expresión
+	compartida para que no divergja entre servicios. Las cuentas de personal se crean con contraseña
+	temporal y obligación de cambiarla en el primer acceso.
+	
+	La \textbf{autorización} se declara por rol en cada controlador, no solo por ruta. Esta
+	distinción no es cosmética: una restricción declarada únicamente en la configuración de rutas
+	puede eludirse si una ruta nueva se agrega sin actualizar esa configuración, mientras que la
+	declaración en el controlador viaja con el código que protege.
+	
+	El \textbf{cifrado en tránsito} se termina en el proxy inverso con un certificado de una
+	autoridad reconocida y renovación automática. Del proxy hacia los microservicios el tráfico
+	viaja sin cifrar, decisión aceptable porque ese tramo no atraviesa Internet y está restringido
+	por dirección de origen en el cortafuegos, pero que conviene revisar si en el futuro los
+	servidores dejan de estar bajo control directo del proyecto.
+	
+	Un punto pendiente que debe declararse: el cierre automático de sesión por inactividad
+	solicitado para las cuentas de personal no está implementado al cierre de esta etapa. La
+	expiración del token limita la ventana de exposición a una hora, pero no equivale a un cierre
+	por inactividad.
+	
+	\subsection{Decisiones de diseño y alternativas descartadas}
+	\label{sec:decisiones_diseno}
+	Esta sección documenta las decisiones estructurales del proyecto con el formato
+	contexto-alternativas-decisión-consecuencias. Registrarlas de esta forma cumple un propósito
+	concreto: una decisión de arquitectura cuyo razonamiento no se documenta se vuelve
+	indistinguible de un accidente, y quien mantenga el sistema en el futuro no sabrá si puede
+	revertirla.
+	
+	\paragraph{Decisión 1: base de datos única compartida.}
+	\emph{Contexto:} varios servicios de negocio necesitan datos que se relacionan entre sí ---una
+	queja, su tutor, sus evidencias, el usuario que la presentó, la notificación que se le envió---.
+	\emph{Alternativas:} una base de datos por servicio, con sincronización explícita entre ellas;
+	o una base única compartida. \emph{Decisión:} base única. \emph{Consecuencias aceptadas:} se
+	sacrifica la autonomía de datos que caracteriza a los microservicios puros, y dos servicios
+	escriben la misma tabla sin coordinación transaccional entre ellos. A cambio se evita la
+	complejidad de mantener consistencia entre bases separadas, que a la escala de este sistema
+	habría requerido un esfuerzo mayor que el beneficio obtenido. Es un híbrido consciente, no una
+	implementación incompleta del patrón.
+	
+	\paragraph{Decisión 2: entidades independientes sobre una tabla compartida.}
+	\emph{Contexto:} el servicio de quejas y el de revisión necesitan la misma tabla de quejas, pero
+	con vistas distintas: el primero requiere los campos del quejoso, el segundo los del flujo de
+	validación. \emph{Alternativas:} un servicio dueño de la tabla que exponga los datos al otro por
+	interfaz de programación; o dos clases de persistencia independientes sobre la misma tabla
+	física. \emph{Decisión:} entidades independientes. \emph{Consecuencias aceptadas:} un cambio de
+	estatus hecho por recepción es visible de inmediato para el quejoso sin llamada entre servicios,
+	lo que simplifica el flujo; pero ambos servicios pueden agregar columnas sin que el otro lo
+	sepa, y una modificación descoordinada del esquema puede romper al servicio vecino. La mitigación
+	adoptada es que cada servicio declare únicamente las columnas que usa.
+	
+	\paragraph{Decisión 3: catálogo institucional como servicio propio.}
+	\emph{Contexto:} el catálogo de dependencias del Instituto es requerido por el formulario público
+	de quejas, por el turnado en el panel de revisión y por la consola de administración.
+	\emph{Alternativas:} alojarlo dentro del servicio de quejas, que fue quien primero lo necesitó;
+	o extraerlo a un servicio propio. \emph{Decisión:} servicio propio.
+	\emph{Consecuencias aceptadas:} se añadió un servicio más que operar y desplegar, con el
+	sobrecosto correspondiente, en un momento en que un solo consumidor lo necesitaba. La razón para
+	asumirlo fue anticipada: al convertirse en dato de referencia de tres consumidores distintos,
+	alojarlo dentro de un servicio de negocio habría obligado a que los otros dos dependieran de él
+	por razones ajenas a su dominio.
+	
+	\paragraph{Decisión 4: evidencias almacenadas en la base de datos.}
+	\emph{Contexto:} cada queja puede llevar varios archivos de evidencia que constituyen material
+	probatorio. \emph{Alternativas:} guardar los archivos en el sistema de archivos del servidor y
+	almacenar la ruta en la base; o almacenar el contenido binario completo dentro de la base.
+	\emph{Decisión:} contenido binario en la base. \emph{Consecuencias aceptadas:} la base crece más
+	rápido y los respaldos son más grandes. A cambio se obtiene lo que en este dominio pesa más: el
+	archivo y su expediente se respaldan y se restauran como una unidad atómica, de modo que no puede
+	existir un expediente cuya evidencia se haya perdido porque el respaldo del sistema de archivos y
+	el de la base se tomaron en momentos distintos. Para material con posible valor probatorio, esa
+	garantía justifica el costo de almacenamiento.
+	
+	\paragraph{Decisión 5: aplicaciones web separadas por perfil funcional.}
+	\emph{Contexto:} los módulos de quejosos, recepción, administración, Primer Contacto y
+	Subdefensoría tienen responsabilidades y necesidades de interfaz distintas.
+	\emph{Alternativas:} una sola aplicación con rutas condicionadas por rol o aplicaciones
+	separadas. \emph{Decisión:} separar los módulos web por ámbito de uso.
+	\emph{Consecuencias aceptadas:} se deben mantener coherentes componentes, interceptores
+	y estilos entre proyectos; a cambio se delimitan interfaces y despliegues de cada área.
+	La autorización efectiva sigue dependiendo de la validación del servidor.
+	
+	\paragraph{Decisión 6: datos del quejoso en columnas propias.}
+	\emph{Contexto:} el registro público debe capturar la identidad completa del quejoso, que en una
+	versión inicial se concatenaba como texto libre dentro de la descripción de la queja.
+	\emph{Alternativas:} conservar la concatenación, más simple de implementar; o estructurar cada
+	dato en su propia columna. \emph{Decisión:} columnas propias. \emph{Consecuencias aceptadas:} el
+	esquema creció y el formulario requiere más validación. A cambio, los datos se volvieron
+	consultables y verificables ---la búsqueda de antecedentes del requerimiento RF-R04 sería
+	impracticable sobre texto concatenado--- y la unidad académica pudo pasar de texto libre a una
+	referencia al catálogo institucional.
+	
+	\paragraph{Decisión 7: una imagen de contenedor por servicio.}
+	\emph{Contexto:} los microservicios comparten la misma imagen base y el mismo procedimiento de
+	construcción. \emph{Alternativas:} una imagen común reutilizada por todos, parametrizada al
+	ejecutarse; o una imagen dedicada por servicio. \emph{Decisión:} una por servicio.
+	\emph{Consecuencias aceptadas:} se consume más espacio de almacenamiento en el registro de
+	imágenes. A cambio, cada contenedor es identificable y versionable de forma independiente, y se
+	elimina la ambigüedad de no poder saber qué versión de qué servicio está ejecutando un
+	contenedor determinado.
+	
+	\section{Diseño de la base de datos}
+	\label{sec:diseno_bd}
+	La persistencia principal de expedientes es relacional y se comparte entre varios servicios
+	de negocio. En algunos casos, distintas entidades de persistencia trabajan sobre la misma
+	tabla física, bajo el patrón descrito en la Decisión~2. La
+	Tabla~\ref{tab:esquema_bd} presenta las tablas de los módulos de registro, revisión y
+	administración. Las estructuras adicionales de Primer Contacto, Subdefensoría e histórico
+	deben documentarse en el diccionario de datos correspondiente. Los embeddings del recuperador
+	se conservan en una caché técnica independiente, que no reemplaza el expediente original.
+	
+	\rowcolors{2}{rowblue}{white}
+	
+	\small
+	\renewcommand{\arraystretch}{1.25}
+	\setlength{\tabcolsep}{4pt}
+	
+	\begin{longtable}{|p{3.5cm}|p{3.1cm}|p{7.5cm}|}
+		\caption{Esquema de la base de datos por tabla y servicio propietario}
+		\label{tab:esquema_bd} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Tabla} & \headercell{Propietario} & \headercell{Contenido} \\
+		\hline
+		\endfirsthead
+	
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Tabla} & \headercell{Propietario} & \headercell{Contenido} \\
+		\hline
+		\endhead
+	
+		\texttt{usuarios} & \texttt{auth-service} & Cuentas de quejoso: identidad institucional,
+		credencial cifrada, datos de contacto, datos de tutor y código de recuperación con su
+		vigencia \\ \hline
+	
+		\texttt{quejas} & \texttt{queja-service} y \texttt{revision-\allowbreak service} & Cuerpo del expediente:
+		folio, identidad del quejoso, narrativa de los hechos, unidad académica, denunciado, origen,
+		estatus, y los campos del flujo de validación ---motivo de rechazo, área, defensor asignado,
+		quién validó y cuándo--- \\ \hline
+	
+		\texttt{queja\_tutores} & \texttt{queja-service} & Datos del tutor o adulto responsable,
+		en relación uno a uno con la queja \\ \hline
+	
+		\texttt{queja\_evidencias} & \texttt{queja-service} & Archivos de evidencia: nombre, tipo,
+		tamaño y contenido binario completo \\ \hline
+	
+		\texttt{acuerdos\_} \texttt{conciliacion} & \texttt{revision-\allowbreak service} y
+		\texttt{queja-service} & Acuerdos emitidos por la Defensoría: asunto, términos, estado y
+		respuesta del quejoso \\ \hline
+	
+		\texttt{notificaciones} & \texttt{notificaciones-} \texttt{service} & Avisos persistidos por
+		destinatario, con tipo, estado de lectura y enlace \\ \hline
+	
+		\texttt{dependencias} & \texttt{catalogo-\allowbreak service} & Catálogo institucional jerárquico con
+		clave propia, clave del padre, tipo, categoría y nivel \\ \hline
+	
+		\texttt{personal\_} \texttt{administrativo} & \texttt{admin-service} & Cuentas de personal:
+		identidad, rol, credencial cifrada, condición de cuenta temporal y último acceso \\ \hline
+	
+		\texttt{plantillas\_} \texttt{documentos} & \texttt{admin-service} & Plantillas de oficios
+		con clave estable de negocio, contenido y datos de última actualización \\ \hline
+	
+		\texttt{bitacora\_acciones} & \texttt{admin-service} & Registro de auditoría: usuario, acción,
+		dirección de origen y fecha \\ \hline
+	
+		\texttt{preguntas\_chatbot} & \texttt{chatbot-\allowbreak service} & Contenido del menú de preguntas
+		frecuentes del portal público \\ \hline
+	\end{longtable}
+	
+	\normalsize
+	
+	\subsection{Correspondencia entre reglas de negocio y mecanismos de integridad}
+	Un modelo de datos que solo almacena información deja las reglas del dominio a merced de que
+	cada consumidor las respete. El diseño de esta base busca lo contrario: que las reglas se hagan
+	cumplir en el nivel más bajo posible, de modo que ningún camino de acceso pueda violarlas. La
+	Tabla~\ref{tab:reglas_mecanismos} muestra esa correspondencia para las reglas que admiten
+	verificación estructural.
+	
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	
+	\begin{longtable}{|p{1.9cm}|p{5.6cm}|p{6.6cm}|}
+		\caption{Reglas de negocio y mecanismo que las hace cumplir}
+		\label{tab:reglas_mecanismos} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Regla} & \headercell{Enunciado} & \headercell{Mecanismo} \\
+		\hline
+		\endfirsthead
+	
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Regla} & \headercell{Enunciado} & \headercell{Mecanismo} \\
+		\hline
+		\endhead
+	
+		RN-Q04 & El par folio-correo es la llave de activación & Consulta entre servicios que exige
+		coincidencia de ambos campos antes de crear la cuenta \\ \hline
+	
+		RN-Q05 & Una cuenta activa no se reactiva & Verificación del indicador de actividad antes de
+		procesar la activación \\ \hline
+	
+		RN-Q07 & El código de recuperación expira en diez minutos & Columna de fecha de expiración
+		evaluada en el servidor al validar el código \\ \hline
+	
+		RN-Q08 & Una queja solo es editable en estatus recibida & Validación del estatus en la capa
+		de negocio antes de aplicar la modificación \\ \hline
+	
+		RN-Q09 & Solo el destinatario responde un acuerdo & Comparación del correo del acuerdo contra
+		el del token de sesión \\ \hline
+	
+		RN-Q10 & El origen de la queja se infiere & Asignación en el servidor según el punto de acceso
+		invocado, sin exponerlo como campo de entrada \\ \hline
+	
+		RN-R01 & Transiciones válidas del expediente & Columna de estatus con conjunto acotado de
+		valores y validación de la transición en la capa de negocio \\ \hline
+	
+		RN-R02 & Solo recepción usa el servicio de revisión & Declaración de rol requerido en cada
+		controlador \\ \hline
+	
+		RN-R06 & Solo defensores activos reciben turnado & Consulta filtrada por rol y por indicador
+		de actividad \\ \hline
+	
+		RN-A03 & La baja desactiva, no elimina & Indicador de actividad en lugar de borrado físico,
+		preservando la integridad referencial con la bitácora \\ \hline
+	
+		RN-A04 & Correo y número de empleado únicos & Restricción de unicidad en la definición de la
+		tabla \\ \hline
+	
+		RN-A06 & La plantilla se identifica por clave de negocio & Restricción de unicidad sobre la
+		columna de tipo, independiente del identificador autogenerado \\ \hline
+	\end{longtable}
+	
+	\normalsize
+	\setlength{\tabcolsep}{6pt}
+	\renewcommand{\arraystretch}{1}
+	
+	El diccionario de datos completo, con el tipo y la longitud de cada columna, las cardinalidades
+	detalladas, los índices y las sentencias de creación, se documenta en el anexo correspondiente.
+	
+	\section{Diseño de los componentes de inteligencia artificial}
+	\label{sec:diseno_ia}
+	Los componentes inteligentes se diseñaron como herramientas auxiliares para la revisión de
+	expedientes. Se separaron en dos procesos con objetivos y salidas diferentes: recuperación
+	de antecedentes relacionados y elaboración de borradores narrativos. El primero devuelve
+	referencias documentales ordenadas por relevancia; el segundo devuelve un texto redactado
+	a partir de información seleccionada de la queja. Ninguno determina automáticamente la
+	competencia institucional, la existencia de una duplicidad ni el sentido de una resolución.
+
+	\subsection{Diseño del componente de búsqueda de antecedentes}
+	\label{sec:diseno_antecedentes}
+	La entrada principal es la narración de una queja. El diseño parte de una colección de
+	quejas vigentes e históricas que se representa con dos señales complementarias:
+	coincidencias de términos y similitud semántica. La primera emplea TF-IDF con unigramas y
+	bigramas; la segunda emplea un codificador multilingüe MiniLM para construir embeddings
+	de fragmentos del contenido.
+
+	\paragraph{Fragmentación de narrativas.}
+	Las narrativas extensas se dividen en segmentos de longitud acotada, con solapamiento entre
+	segmentos consecutivos. El objetivo es preservar contexto local y evitar que un solo vector
+	de documento oculte acontecimientos relevantes mencionados en una parte de la queja.
+	Las decisiones de tamaño, solapamiento y procesamiento por lotes pertenecen a la
+	configuración de implementación y se evalúan según costo y calidad de recuperación.
+
+	\paragraph{Recuperación paralela y fusión de rankings.}
+	Cada recuperador produce su propia lista ordenada de antecedentes: TF-IDF privilegia
+	coincidencias léxicas específicas, mientras que MiniLM facilita localizar textos de
+	significado relacionado aunque utilicen otras expresiones. Se emplea Reciprocal Rank
+	Fusion (RRF) ponderado, que integra las posiciones en ambos rankings en lugar de sumar
+	directamente sus puntuaciones, porque las escalas de similitud de los recuperadores no
+	son necesariamente equivalentes. El mecanismo se fundamenta en la
+	Sección~\ref{sec:busqueda_antecedentes}.
+
+	La configuración seleccionada para la integración del sistema asigna un peso
+	del 75\,\% al ranking TF-IDF y del 25\,\% al ranking semántico MiniLM.
+	Estas ponderaciones se aplican a las contribuciones de los rankings mediante RRF;
+	no representan porcentajes de similitud ni probabilidades de duplicidad.
+	Su selección corresponde a los experimentos con datos sintéticos documentados en
+	el capítulo de pruebas, y no implica que constituyan una combinación óptima para
+	todos los escenarios institucionales. Para compararlos es necesario utilizar un mismo
+	conjunto de consultas y juicios de relevancia, probar distintas ponderaciones y medir
+	la pertinencia y posición de los antecedentes mediante métricas como precisión,
+	exhaustividad y ganancia acumulada descontada normalizada.
+
+	\paragraph{Indexación y actualización.}
+	El diseño evita recalcular los embeddings de toda la colección en cada actualización:
+	mantiene una caché persistente de representaciones, identificadas mediante una huella
+	del contenido y la configuración del codificador. Si un documento no cambió,
+	se puede reutilizar su representación; si cambió o se incorporó, se calcula la nueva.
+	El índice disponible para consulta se sustituye cuando la reconstrucción termina,
+	para no exponer un estado parcialmente construido.
+
+	\paragraph{Presentación e interpretación.}
+	Los antecedentes se exponen con su identificación y datos contextuales disponibles,
+	para que el personal contraste los hechos. La clasificación de coincidencias por hechos
+	o involucrados sirve como apoyo visual. Una similitud elevada no confirma que dos
+	quejas sean idénticas: la identificación de duplicidades corresponde a la revisión humana.
+
+	\subsection{Diseño del componente de generación de resúmenes}
+	\label{sec:diseno_resumenes}
+	La generación de resúmenes sigue un esquema de dos etapas para separar la selección de
+	información de la redacción. La entrada es la narrativa original de la queja y la salida
+	es un borrador institucional, nunca una sustitución del documento fuente.
+
+	\paragraph{Selección extractiva.}
+	En la primera etapa, el procedimiento de selección extractiva utiliza criterios de relevancia,
+	redundancia, importancia y conservación del contexto. Incorpora un criterio de selección
+	basado en Maximum Marginal Relevance (MMR), de modo que el resultado no concentre
+	exclusivamente oraciones muy similares. Su salida es una captura extractiva, que
+	conserva fragmentos del relato en su formulación original y sirve de entrada al editor.
+
+	\paragraph{Edición mediante un modelo de lenguaje.}
+	La segunda etapa utiliza Qwen3, un modelo generativo, para convertir la captura
+	extractiva en narración institucional en tercera persona. La instrucción de edición
+	busca conservar actores, negaciones, fechas, cantidades, evidencias, consecuencias y
+	secuencia de acontecimientos, así como presentar las afirmaciones como declaraciones
+	del quejoso y no como hechos jurídicamente comprobados. Su función prevista es
+	reformular los fragmentos recibidos, no realizar una nueva selección deliberada
+	de hechos. Sin embargo, debido al carácter generativo del modelo, pueden ocurrir
+	omisiones o alteraciones de información incluso bajo estas instrucciones.
+
+	\paragraph{Procesamiento por bloques y límites operativos.}
+	La captura puede dividirse en bloques de oraciones con una extensión máxima, para
+	acotar el trabajo por solicitud al motor generativo y adecuar el procesamiento a la
+	infraestructura de CPU disponible. Se establece un presupuesto de tiempo para la
+	edición y se prevé conservar el fragmento extractivo si una llamada falla o queda
+	incompleta. Esa contingencia evita descartar contenido por errores de generación,
+	pero puede producir un borrador parcialmente editado, por lo que debe informarse
+	en las pruebas y en la interpretación de resultados.
+
+	\paragraph{Fidelidad y validación humana.}
+	El diseño distingue dos fuentes posibles de omisión: la selección extractiva y la
+	edición generativa. Es necesario evaluar ambas por separado, comparando la narrativa
+	original con la captura seleccionada y esta con el resumen final. Se consideran
+	críticos los cambios de actores, negaciones, fechas y cantidades. Aunque las
+	instrucciones de generación buscan evitar alteraciones, no ofrecen una garantía
+	de conservación factual; toda síntesis debe quedar sujeta a revisión humana.
+	Por restricciones de tiempo, la evaluación realizada con narrativas sintéticas
+	no se complementó con una validación de calidad y utilidad mediante expedientes
+	reales y la participación del personal de la Defensoría. Por tanto, las pruebas
+	técnicas no deben interpretarse como validación institucional del componente.
+	La revisión de calidad con datos autorizados y personal responsable queda como
+	actividad futura.
+
+	\subsection{Integración de los servicios con Primer Contacto}
+	\label{sec:integracion_ia}
+	El módulo de Primer Contacto actúa como consumidor de ambos componentes. El servicio
+	de antecedentes atiende peticiones de consulta y devuelve expedientes sugeridos;
+	el servicio de resúmenes ejecuta la selección extractiva y solicita la redacción
+	al motor generativo. La separación de los servicios permite actualizar los
+	algoritmos de recuperación y generación sin acoplarlos entre sí.
+
+	Por tratarse de llamadas síncronas, el diseño contempla tiempos máximos de espera,
+	observabilidad del estado de los servicios y manejo de fallos. Si un componente no
+	responde, la actividad administrativa debe poder continuar sin interpretar el
+	resultado faltante como una decisión automatizada. La descripción de contratos
+	HTTP, parámetros y despliegue corresponde al capítulo de implementación.
+
+	\subsection{Decisiones de diseño y alternativas consideradas}
+	La Tabla~\ref{tab:decisiones_ia} resume los principales compromisos del diseño.
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\begin{longtable}{|p{3.1cm}|p{4.5cm}|p{6.1cm}|}
+		\caption{Decisiones técnicas de los componentes de inteligencia artificial}
+		\label{tab:decisiones_ia} \\
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Decisión} & \headercell{Alternativas} & \headercell{Justificación y compromiso} \\ \hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{Decisión} & \headercell{Alternativas} & \headercell{Justificación y compromiso} \\ \hline
+		\endhead
+		Recuperación híbrida & TF-IDF aislado, MiniLM aislado o combinación &
+		Combina coincidencias específicas y relaciones semánticas; exige evaluar sus pesos. \\ \hline
+		Fragmentación & Vector único por documento o vectores por fragmento &
+		Conserva señales locales de textos extensos; aumenta almacenamiento y cómputo. \\ \hline
+		Fusión por rankings & Suma directa de puntuaciones o RRF ponderado &
+		Evita comparar directamente escalas de similitud no equivalentes; se seleccionó
+		la ponderación 75\,\% TF-IDF y 25\,\% MiniLM con evidencia sintética,
+		sin asumir generalización a expedientes reales. \\ \hline
+		Caché de embeddings & Reconstrucción total o reutilización por contenido &
+		Reduce trabajo repetido; obliga a invalidar representaciones al cambiar contenido o modelo. \\ \hline
+		Resumen en dos etapas & Generación directa o selección más edición &
+		Separa relevancia y redacción; conserva riesgos de omisión en ambas etapas. \\ \hline
+		Inferencia en CPU & Modelo de mayor tamaño o modelo compacto cuantizado &
+		Permite operación en los recursos disponibles; limita concurrencia y velocidad. \\ \hline
+	\end{longtable}
+	\normalsize
+	\renewcommand{\arraystretch}{1}
+
+	\section{Diseño de la interfaz de usuario}
+	\label{sec:diseno_interfaz}
+	El diseño de las interfaces partió de prototipos de alta fidelidad que se usaron como
+	herramienta de validación temprana con el cliente. La razón de invertir en ellos antes de
+	escribir código fue económica: corregir el orden de los campos de un formulario en un prototipo
+	cuesta minutos, y hacerlo sobre una interfaz ya implementada y desplegada cuesta un ciclo
+	completo de compilación y despliegue.
+	
+	Esa inversión se justificó en la práctica. La retroalimentación de las sesiones de revisión
+	derivó en dos tipos de cambio que se incorporaron antes de implementar: ajustes en el orden y
+	agrupación de los campos del formulario de queja, y la incorporación de mensajes de validación
+	explícitos donde el prototipo original solo mostraba el campo en rojo.
+	
+	Los criterios de diseño aplicados a las aplicaciones web fueron los siguientes:
+	
+	\begin{itemize}
+		\item \textbf{Identidad institucional.} La paleta y la estructura del encabezado y del pie
+		siguen la identidad visual del Instituto, de modo que el usuario reconozca que se encuentra en
+		un servicio oficial y no en un sitio de terceros.
+	
+		\item \textbf{Formularios por pasos.} Los formularios extensos se dividen en secciones
+		numeradas en lugar de presentarse como una lista continua de campos, para reducir la carga
+		cognitiva y hacer visible el progreso.
+	
+		\item \textbf{Ayuda contextual no intrusiva.} Los avisos normativos que el usuario debe
+		conocer ---como el plazo para presentar una queja--- se presentan en un elemento flotante
+		consultable en cualquier momento, en lugar de un bloque fijo que reduce el espacio útil del
+		formulario.
+	
+		\item \textbf{Retroalimentación explícita.} Toda operación produce un mensaje visible de
+		éxito, error o validación pendiente. Este criterio se elevó a requerimiento no funcional
+		(RNF-Q07) porque su ausencia fue la causa de que, en una versión temprana, los mensajes de
+		error existieran en el código pero no fueran visibles para el usuario.
+	
+		\item \textbf{Consistencia entre paneles de personal.} Las interfaces de administración,
+		revisión, Primer Contacto y Subdefensoría comparten criterios visuales, patrones de
+		error y estilos institucionales, para reducir diferencias innecesarias entre áreas.
+		\item \textbf{Resultados de inteligencia artificial revisables.} La interfaz separa los
+		antecedentes relacionados del borrador de resumen, identifica sus resultados como apoyos
+		para el análisis y permite consultar la narrativa original al revisar el contenido.
+	\end{itemize}
+	
+	Los prototipos completos y las capturas de las interfaces implementadas se presentan en el
+	Capítulo~\ref{cap:modulos} y en el anexo correspondiente.

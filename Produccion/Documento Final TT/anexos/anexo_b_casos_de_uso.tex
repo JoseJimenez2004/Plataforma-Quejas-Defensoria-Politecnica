@@ -1,0 +1,876 @@
+\chapter{Casos de uso}
+\label{anx:casos_uso}
+
+Este anexo presenta la lista completa de los casos de uso de la plataforma y la especificación de aquellos que no se detallan en la Sección~\ref{sec:casos_uso}, así como los casos de uso de apoyo mediante inteligencia artificial. Los casos de uso principales de cada actor se especifican en el capítulo correspondiente; aquí aparecen en las tablas de resumen para conservar la lista completa.
+
+\section{Casos de uso del quejoso}
+
+\rowcolors{2}{rowblue}{white}
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{1.6cm}|L{3.0cm}|L{2.9cm}|L{4.2cm}|L{3.5cm}|}
+	\hiderowcolors\caption{Lista completa de casos de uso: Quejoso}
+	\label{tab:anx_cu_quejoso} \\ \showrowcolors
+	\hline
+	\rowcolor{headerblue}
+	\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} & \headercell{Flujo principal} & \headercell{Postcondición} \\
+	\hline
+	\endfirsthead
+	\hline
+	\rowcolor{headerblue}
+	\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} & \headercell{Flujo principal} & \headercell{Postcondición} \\
+	\hline
+	\endhead
+	CU-Q01 & Presentar una queja sin cuenta & Ninguna & Completa el formulario público con identidad, motivo, evidencias y tutor si aplica, y lo envía & Queja creada con estatus \texttt{RECIBIDA} y origen \texttt{PUBLICO}; se muestra el folio \\ \hline
+	CU-Q02 & Consultar una queja por folio & Conoce folio y correo & Captura ambos datos en la pantalla de consulta & Se muestra el detalle y el estatus de la queja \\ \hline
+	CU-Q03 & Activar cuenta de seguimiento & Existe una queja con ese folio y correo & Define una contraseña; el sistema valida el par folio-correo contra el servicio de quejas & Cuenta activa; puede iniciar sesión \\ \hline
+	CU-Q04 & Iniciar sesión & Cuenta activa & Captura correo y contraseña & Token de sesión emitido; se registra la notificación de acceso \\ \hline
+	CU-Q05 & Recuperar contraseña & Cuenta activa existente & Solicita el código, lo recibe por correo y lo captura con la nueva contraseña & Contraseña actualizada; se envía correo de confirmación \\ \hline
+	CU-Q06 & Presentar una queja autenticado & Sesión iniciada & Desde el panel captura motivo, descripción y evidencias & Queja creada con estatus \texttt{RECIBIDA} y origen \texttt{AUTENTICADO} \\ \hline
+	CU-Q07 & Editar una queja propia & Sesión iniciada y queja en \texttt{RECIBIDA} & Modifica los campos habilitados desde el detalle y guarda & Queja actualizada; en otro estatus el servidor rechaza la edición \\ \hline
+	CU-Q08 & Responder un acuerdo de conciliación & Existe un acuerdo pendiente dirigido a su correo & Revisa el acuerdo y lo acepta o rechaza con comentario opcional & Acuerdo pasa a aceptado o rechazado, con fecha de respuesta \\ \hline
+	CU-Q09 & Revisar notificaciones & Sesión iniciada & Abre el centro de notificaciones y marca como leídas & El contador de no leídas se actualiza \\ \hline
+	CU-Q10 & Actualizar el perfil & Sesión iniciada & Edita los campos habilitados y guarda & Perfil actualizado \\ \hline
+\end{longtable}
+\normalsize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1}
+
+Los casos de uso CU-Q01, CU-Q02, CU-Q08 se especifican en la Sección~\ref{sec:casos_uso}. A continuación se describen los demás.
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q03\quad Activar cuenta de seguimiento}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q03\quad Activar cuenta de seguimiento (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Quejoso \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Existe una queja con ese folio y correo \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Define una contraseña; el sistema valida el par folio-correo contra el servicio de quejas \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Cuenta activa; puede iniciar sesión \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q04\quad Iniciar sesión}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q04\quad Iniciar sesión (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Quejoso \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Cuenta activa \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Captura correo y contraseña \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Token de sesión emitido; se registra la notificación de acceso \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q05\quad Recuperar contraseña}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q05\quad Recuperar contraseña (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Quejoso \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Cuenta activa existente \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Solicita el código, lo recibe por correo y lo captura con la nueva contraseña \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Contraseña actualizada; se envía correo de confirmación \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q06\quad Presentar una queja autenticado}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q06\quad Presentar una queja autenticado (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Quejoso \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Sesión iniciada \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Desde el panel captura motivo, descripción y evidencias \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Queja creada con estatus \texttt{RECIBIDA} y origen \texttt{AUTENTICADO} \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q07\quad Editar una queja propia}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q07\quad Editar una queja propia (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Quejoso \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Sesión iniciada y queja en \texttt{RECIBIDA} \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Modifica los campos habilitados desde el detalle y guarda \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Queja actualizada; en otro estatus el servidor rechaza la edición \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q09\quad Revisar notificaciones}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q09\quad Revisar notificaciones (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Quejoso \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Sesión iniciada \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Abre el centro de notificaciones y marca como leídas \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & El contador de no leídas se actualiza \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q10\quad Actualizar el perfil}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-Q10\quad Actualizar el perfil (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Quejoso \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Sesión iniciada \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Edita los campos habilitados y guarda \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Perfil actualizado \\ \hline
+\end{longtable}
+\endgroup
+
+\section{Casos de uso del personal de recepción}
+
+\rowcolors{2}{rowblue}{white}
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{1.6cm}|L{3.0cm}|L{2.9cm}|L{4.2cm}|L{3.5cm}|}
+	\hiderowcolors\caption{Lista completa de casos de uso: Personal de recepción}
+	\label{tab:anx_cu_recepcion} \\ \showrowcolors
+	\hline
+	\rowcolor{headerblue}
+	\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} & \headercell{Flujo principal} & \headercell{Postcondición} \\
+	\hline
+	\endfirsthead
+	\hline
+	\rowcolor{headerblue}
+	\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} & \headercell{Flujo principal} & \headercell{Postcondición} \\
+	\hline
+	\endhead
+	CU-R01 & Iniciar sesión en el panel de revisión & Cuenta activa con rol de recepción & Se autentica contra el servicio de administración & Token emitido; acceso al panel \\ \hline
+	CU-R02 & Revisar la bandeja de entrada & Sesión iniciada & Consulta contadores y lista de pendientes & --- \\ \hline
+	CU-R03 & Validar y rechazar una queja & Queja en \texttt{RECIBIDA} o \texttt{EN\_VALIDACION} & Revisa documentos y antecedentes, marca motivos y observaciones, confirma & Queja pasa a \texttt{RECHAZADA}; se envía correo al quejoso \\ \hline
+	CU-R04 & Validar y turnar una queja & Queja en \texttt{RECIBIDA} o \texttt{EN\_VALIDACION} & Revisa antecedentes, elige área y defensor, agrega comentarios, confirma & Queja pasa a \texttt{TURNADA} con folio oficial, área y defensor \\ \hline
+	CU-R05 & Registrar una queja en papel & Documento físico recibido & Captura los datos del documento y adjunta el escaneo si lo hay & Queja creada con origen \texttt{MANUAL} y folio propio \\ \hline
+	CU-R06 & Consultar y exportar el historial & Existen trámites procesados & Filtra por texto, estatus o fecha y exporta si lo requiere & Archivo de hoja de cálculo descargado con el filtro aplicado \\ \hline
+	CU-R07 & Emitir un acuerdo de conciliación & Existe una queja con folio conocido & Captura asunto y términos dirigidos al folio y correo del quejoso & Acuerdo creado como pendiente, visible para el quejoso \\ \hline
+\end{longtable}
+\normalsize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1}
+
+Los casos de uso CU-R03, CU-R04, CU-R05 se especifican en la Sección~\ref{sec:casos_uso}. A continuación se describen los demás.
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-R01\quad Iniciar sesión en el panel de revisión}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-R01\quad Iniciar sesión en el panel de revisión (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Personal de recepción \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Cuenta activa con rol de recepción \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Se autentica contra el servicio de administración \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Token emitido; acceso al panel \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-R02\quad Revisar la bandeja de entrada}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-R02\quad Revisar la bandeja de entrada (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Personal de recepción \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Sesión iniciada \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Consulta contadores y lista de pendientes \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & --- \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-R06\quad Consultar y exportar el historial}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-R06\quad Consultar y exportar el historial (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Personal de recepción \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Existen trámites procesados \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Filtra por texto, estatus o fecha y exporta si lo requiere \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Archivo de hoja de cálculo descargado con el filtro aplicado \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-R07\quad Emitir un acuerdo de conciliación}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-R07\quad Emitir un acuerdo de conciliación (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Personal de recepción \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Existe una queja con folio conocido \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Captura asunto y términos dirigidos al folio y correo del quejoso \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Acuerdo creado como pendiente, visible para el quejoso \\ \hline
+\end{longtable}
+\endgroup
+
+\section{Casos de uso de Primer Contacto}
+
+\rowcolors{2}{rowblue}{white}
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{1.6cm}|L{3.0cm}|L{2.9cm}|L{4.2cm}|L{3.5cm}|}
+	\hiderowcolors\caption{Lista completa de casos de uso: Analista de primer contacto}
+	\label{tab:anx_cu_pc} \\ \showrowcolors
+	\hline
+	\rowcolor{headerblue}
+	\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} & \headercell{Flujo principal} & \headercell{Postcondición} \\
+	\hline
+	\endfirsthead
+	\hline
+	\rowcolor{headerblue}
+	\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} & \headercell{Flujo principal} & \headercell{Postcondición} \\
+	\hline
+	\endhead
+	CU-PC-01 & Recibir expediente desde Recepción & Recepción turna la queja a un analista & El sistema crea el expediente con los datos de la queja, el analista asignado y la prioridad & Expediente en \texttt{TURNADA} en la bandeja del analista, con aviso en su panel \\ \hline
+	CU-PC-02 & Consultar la bandeja de análisis & Sesión iniciada como analista & Consulta sus expedientes y filtra por folio, prioridad o estatus & Se listan los expedientes asignados al analista \\ \hline
+	CU-PC-03 & Consultar el expediente de análisis & Expediente asignado al analista & Abre el expediente y consulta sus datos, evidencias e historial & Expediente en \texttt{EN\_ANALISIS}; un analista distinto recibe acceso denegado \\ \hline
+	CU-PC-04 & Agendar y gestionar citas & Expediente en análisis & Programa, confirma, reagenda o cancela una cita en un horario libre & Cita registrada; la persona citada la confirma o cancela desde el enlace recibido por correo \\ \hline
+	CU-PC-05 & Registrar notas de análisis & Expediente en análisis & Redacta el oficio con asunto y contenido y genera su PDF & Oficio numerado en el expediente; solo su autor puede modificarlo \\ \hline
+	CU-PC-06 & Registrar dictamen de competencia & Expediente en análisis & Captura la justificación, elige al abogado de Subdefensoría y confirma & Expediente en \texttt{PROCEDENTE}; se crea el expediente de investigación (CU-SD-01) \\ \hline
+	CU-PC-07 & Registrar dictamen de improcedencia & Expediente en análisis & Captura la justificación y confirma & Expediente en \texttt{IMPROCEDENTE}, pendiente de remisión (CU-PC-09) \\ \hline
+	CU-PC-08 & Consultar el dictamen & Expediente dictaminado & Abre el dictamen del expediente & Se muestra el dictamen con su sentido, justificación, autor y fecha \\ \hline
+	CU-PC-09 & Crear y enviar remisión externa & Expediente en \texttt{IMPROCEDENTE} & Elige la instancia competente, revisa los datos y confirma el envío & Oficio en PDF enviado por correo a la instancia; expediente en \texttt{REMITIDA} y aviso al quejoso \\ \hline
+	CU-PC-10 & Proponer y listar acuerdos de conciliación & Expediente en análisis & Captura la propuesta y la envía; consulta las ya propuestas & Acuerdo pendiente, visible para el quejoso \\ \hline
+\end{longtable}
+\normalsize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1}
+
+Los casos de uso CU-PC-03, CU-PC-06, CU-PC-09 se especifican en la Sección~\ref{sec:casos_uso}. A continuación se describen los demás.
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-01\quad Recibir expediente desde Recepción}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-01\quad Recibir expediente desde Recepción (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Analista de primer contacto \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Recepción turna la queja a un analista \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & El sistema crea el expediente con los datos de la queja, el analista asignado y la prioridad \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Expediente en \texttt{TURNADA} en la bandeja del analista, con aviso en su panel \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-02\quad Consultar la bandeja de análisis}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-02\quad Consultar la bandeja de análisis (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Analista de primer contacto \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Sesión iniciada como analista \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Consulta sus expedientes y filtra por folio, prioridad o estatus \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Se listan los expedientes asignados al analista \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-04\quad Agendar y gestionar citas}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-04\quad Agendar y gestionar citas (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Analista de primer contacto \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Expediente en análisis \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Programa, confirma, reagenda o cancela una cita en un horario libre \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Cita registrada; la persona citada la confirma o cancela desde el enlace recibido por correo \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-05\quad Registrar notas de análisis}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-05\quad Registrar notas de análisis (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Analista de primer contacto \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Expediente en análisis \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Redacta el oficio con asunto y contenido y genera su PDF \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Oficio numerado en el expediente; solo su autor puede modificarlo \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-07\quad Registrar dictamen de improcedencia}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-07\quad Registrar dictamen de improcedencia (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Analista de primer contacto \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Expediente en análisis \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Captura la justificación y confirma \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Expediente en \texttt{IMPROCEDENTE}, pendiente de remisión (CU-PC-09) \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-08\quad Consultar el dictamen}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-08\quad Consultar el dictamen (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Analista de primer contacto \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Expediente dictaminado \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Abre el dictamen del expediente \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Se muestra el dictamen con su sentido, justificación, autor y fecha \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-10\quad Proponer y listar acuerdos de conciliación}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-PC-10\quad Proponer y listar acuerdos de conciliación (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Analista de primer contacto \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Expediente en análisis \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Captura la propuesta y la envía; consulta las ya propuestas \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Acuerdo pendiente, visible para el quejoso \\ \hline
+\end{longtable}
+\endgroup
+
+\section{Casos de uso de Subdefensoría}
+
+\rowcolors{2}{rowblue}{white}
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{1.6cm}|L{3.0cm}|L{2.9cm}|L{4.2cm}|L{3.5cm}|}
+	\hiderowcolors\caption{Lista completa de casos de uso: Abogado de Subdefensoría}
+	\label{tab:anx_cu_sd} \\ \showrowcolors
+	\hline
+	\rowcolor{headerblue}
+	\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} & \headercell{Flujo principal} & \headercell{Postcondición} \\
+	\hline
+	\endfirsthead
+	\hline
+	\rowcolor{headerblue}
+	\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} & \headercell{Flujo principal} & \headercell{Postcondición} \\
+	\hline
+	\endhead
+	CU-SD-01 & Recibir expediente desde Primer Contacto & Dictamen de competencia con abogado elegido & El sistema crea el expediente de investigación & Expediente en \texttt{RECIBIDO}, asignado al abogado \\ \hline
+	CU-SD-02 & Consultar la bandeja de expedientes & Sesión iniciada como abogado o como titular & Consulta los expedientes por etapa y filtra por prioridad o plazo & Se listan los expedientes propios; el titular ve todos \\ \hline
+	CU-SD-03 & Consultar el semáforo de plazos & Existen expedientes en trámite & Revisa la barra de plazo de cada expediente & Se muestra el avance contra los plazos del Manual de Procedimientos \\ \hline
+	CU-SD-04 & Consultar alertas de vencimiento & Existen oficios con plazo en curso & Abre la vista de plazos y oficios & Se listan los oficios vencidos o por vencer en tres días o menos \\ \hline
+	CU-SD-05 & Consultar el expediente de investigación & Expediente asignado al abogado & Abre el expediente y consulta lo actuado en Primer Contacto en solo lectura & Expediente en \texttt{EN\_INVESTIGACION} \\ \hline
+	CU-SD-06 & Emitir oficio & Expediente en investigación & Elige la unidad académica, revisa titular y correo, redacta y envía el oficio & Oficio en PDF enviado por correo; expediente en \texttt{EN\_ESPERA\_OFICIO} con plazo de diez días hábiles \\ \hline
+	CU-SD-07 & Generar recordatorio de urgencia & Oficio sin respuesta & Genera y envía el recordatorio & Recordatorio enviado con plazo de cinco días hábiles \\ \hline
+	CU-SD-08 & Registrar respuesta externa & Oficio enviado a la unidad & Captura el canal de recepción, el resumen y el archivo de la respuesta & Respuesta registrada; el expediente pasa a la elaboración del acuerdo \\ \hline
+	CU-SD-09 & Registrar acuerdo de conclusión & Respuesta de la unidad registrada & Envía al quejoso el acuerdo de conciliación y, una vez aceptado mediante el enlace, emite el acuerdo de conclusión & Expediente en \texttt{CONCLUIDO} \\ \hline
+\end{longtable}
+\normalsize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1}
+
+Los casos de uso CU-SD-06, CU-SD-07, CU-SD-09 se especifican en la Sección~\ref{sec:casos_uso}. A continuación se describen los demás.
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-SD-01\quad Recibir expediente desde Primer Contacto}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-SD-01\quad Recibir expediente desde Primer Contacto (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Abogado de Subdefensoría \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Dictamen de competencia con abogado elegido \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & El sistema crea el expediente de investigación \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Expediente en \texttt{RECIBIDO}, asignado al abogado \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-SD-02\quad Consultar la bandeja de expedientes}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-SD-02\quad Consultar la bandeja de expedientes (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Abogado de Subdefensoría \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Sesión iniciada como abogado o como titular \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Consulta los expedientes por etapa y filtra por prioridad o plazo \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Se listan los expedientes propios; el titular ve todos \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-SD-03\quad Consultar el semáforo de plazos}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-SD-03\quad Consultar el semáforo de plazos (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Abogado de Subdefensoría \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Existen expedientes en trámite \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Revisa la barra de plazo de cada expediente \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Se muestra el avance contra los plazos del Manual de Procedimientos \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-SD-04\quad Consultar alertas de vencimiento}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-SD-04\quad Consultar alertas de vencimiento (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Abogado de Subdefensoría \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Existen oficios con plazo en curso \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Abre la vista de plazos y oficios \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Se listan los oficios vencidos o por vencer en tres días o menos \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-SD-05\quad Consultar el expediente de investigación}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-SD-05\quad Consultar el expediente de investigación (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Abogado de Subdefensoría \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Expediente asignado al abogado \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Abre el expediente y consulta lo actuado en Primer Contacto en solo lectura \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Expediente en \texttt{EN\_INVESTIGACION} \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-SD-08\quad Registrar respuesta externa}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-SD-08\quad Registrar respuesta externa (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Abogado de Subdefensoría \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Oficio enviado a la unidad \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Captura el canal de recepción, el resumen y el archivo de la respuesta \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Respuesta registrada; el expediente pasa a la elaboración del acuerdo \\ \hline
+\end{longtable}
+\endgroup
+
+\section{Casos de uso de la Defensora}
+
+\rowcolors{2}{rowblue}{white}
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{1.6cm}|L{3.0cm}|L{2.9cm}|L{4.2cm}|L{3.5cm}|}
+	\hiderowcolors\caption{Lista completa de casos de uso: Defensora}
+	\label{tab:anx_cu_admin} \\ \showrowcolors
+	\hline
+	\rowcolor{headerblue}
+	\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} & \headercell{Flujo principal} & \headercell{Postcondición} \\
+	\hline
+	\endfirsthead
+	\hline
+	\rowcolor{headerblue}
+	\headercell{ID} & \headercell{Nombre} & \headercell{Precondición} & \headercell{Flujo principal} & \headercell{Postcondición} \\
+	\hline
+	\endhead
+	CU-A01 & Iniciar sesión en el panel de la Defensora & Cuenta activa con rol \texttt{DEFENSOR} & Se autentica en el panel & Token emitido; acceso al panel \\ \hline
+	CU-A02 & Dar de alta personal & Sesión iniciada & Captura nombre, número de empleado, correo y rol & Cuenta creada con contraseña temporal; queda en bitácora \\ \hline
+	CU-A03 & Restablecer la contraseña de otra cuenta & La cuenta destino existe & Selecciona la cuenta y solicita el restablecimiento & Nueva contraseña temporal generada; queda en bitácora \\ \hline
+	CU-A04 & Dar de baja o reactivar una cuenta & Sesión iniciada & Selecciona la cuenta y confirma la operación & La cuenta cambia su estado de actividad; queda en bitácora \\ \hline
+	CU-A05 & Importar el catálogo institucional & Archivo de hoja de cálculo con el formato esperado & Carga el archivo en el módulo de catálogo & Dependencias creadas o actualizadas de forma masiva; se muestra el resumen \\ \hline
+	CU-A06 & Editar una plantilla de oficio & Sesión iniciada & Edita el contenido con los marcadores disponibles, previsualiza y publica & Plantilla actualizada; queda en bitácora \\ \hline
+	CU-A07 & Ejecutar un respaldo & Sesión iniciada & Solicita un respaldo bajo demanda & Archivo de respaldo generado y listado; queda en bitácora \\ \hline
+	CU-A08 & Restaurar desde un respaldo & Existe al menos un respaldo & Selecciona el archivo y confirma de forma explícita la operación destructiva & Base de datos restaurada; queda en bitácora \\ \hline
+	CU-A09 & Revisar la bitácora de seguridad & Sesión iniciada & Abre el historial de acciones críticas & Se listan las acciones con usuario, dirección de origen y fecha \\ \hline
+	CU-A10 & Administrar las preguntas frecuentes & Sesión iniciada & Crea, edita o elimina preguntas & Los cambios se reflejan de inmediato en el portal público \\ \hline
+\end{longtable}
+\normalsize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1}
+
+Los casos de uso CU-A02, CU-A08, CU-A09 se especifican en la Sección~\ref{sec:casos_uso}. A continuación se describen los demás.
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A01\quad Iniciar sesión en el panel de la Defensora}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A01\quad Iniciar sesión en el panel de la Defensora (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Defensora \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Cuenta activa con rol \texttt{DEFENSOR} \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Se autentica en el panel \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Token emitido; acceso al panel \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A03\quad Restablecer la contraseña de otra cuenta}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A03\quad Restablecer la contraseña de otra cuenta (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Defensora \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & La cuenta destino existe \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Selecciona la cuenta y solicita el restablecimiento \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Nueva contraseña temporal generada; queda en bitácora \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A04\quad Dar de baja o reactivar una cuenta}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A04\quad Dar de baja o reactivar una cuenta (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Defensora \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Sesión iniciada \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Selecciona la cuenta y confirma la operación \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & La cuenta cambia su estado de actividad; queda en bitácora \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A05\quad Importar el catálogo institucional}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A05\quad Importar el catálogo institucional (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Defensora \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Archivo de hoja de cálculo con el formato esperado \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Carga el archivo en el módulo de catálogo \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Dependencias creadas o actualizadas de forma masiva; se muestra el resumen \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A06\quad Editar una plantilla de oficio}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A06\quad Editar una plantilla de oficio (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Defensora \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Sesión iniciada \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Edita el contenido con los marcadores disponibles, previsualiza y publica \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Plantilla actualizada; queda en bitácora \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A07\quad Ejecutar un respaldo}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A07\quad Ejecutar un respaldo (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Defensora \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Sesión iniciada \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Solicita un respaldo bajo demanda \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Archivo de respaldo generado y listado; queda en bitácora \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A10\quad Administrar las preguntas frecuentes}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-A10\quad Administrar las preguntas frecuentes (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Defensora \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Sesión iniciada \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo principal} & Crea, edita o elimina preguntas \\ \hline
+	\cellcolor{rowblue}\textbf{Postcondición} & Los cambios se reflejan de inmediato en el portal público \\ \hline
+\end{longtable}
+\endgroup
+
+\section{Casos de uso de apoyo mediante inteligencia artificial}
+El módulo de Primer Contacto dispone de funciones de análisis asistido que no determinan por sí mismas el sentido de una actuación institucional. Los dos casos de uso siguientes representan las interacciones con los componentes de inteligencia artificial; ambos se invocan desde la consulta del expediente (CU-PC-03) y sus resultados siempre requieren la revisión del analista.
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-IA01\quad Consultar antecedentes relacionados}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-IA01\quad Consultar antecedentes relacionados (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Analista de primer contacto \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Expediente accesible al analista \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo y resultado} & El servicio consulta el recuperador híbrido y presenta los expedientes sugeridos para revisión. \\ \hline
+	\cellcolor{rowblue}\textbf{Consideraciones} & Los expedientes sugeridos se ordenan por su relación textual con la queja; la similitud no confirma por sí sola una duplicidad. Si el servicio no está disponible, el expediente se sigue consultando normalmente (RNF-G02). \\ \hline
+\end{longtable}
+\endgroup
+
+\begingroup
+\rowcolors{1}{white}{white}
+\small
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{3.2cm}|L{12.4cm}|}
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-IA02\quad Generar borrador de resumen}} \\
+	\hline
+	\endfirsthead
+	\hline
+	\multicolumn{2}{|l|}{\cellcolor{headerblue}\headercell{CU-IA02\quad Generar borrador de resumen (continuación)}} \\
+	\hline
+	\endhead
+	\cellcolor{rowblue}\textbf{Actor} & Analista de primer contacto \\ \hline
+	\cellcolor{rowblue}\textbf{Precondición} & Narrativa disponible \\ \hline
+	\cellcolor{rowblue}\textbf{Flujo y resultado} & El servicio obtiene una captura extractiva y solicita su edición institucional; el resultado se muestra con advertencia de revisión humana. \\ \hline
+	\cellcolor{rowblue}\textbf{Consideraciones} & El borrador no sustituye la lectura de la queja original. Si el servicio no responde, se informa al analista y el análisis continúa sin el resumen (RNF-G02). \\ \hline
+\end{longtable}
+\endgroup
