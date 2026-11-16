@@ -1,21 +1,21 @@
 \chapter{Marco teórico}
 
-El presente capítulo reúne los antecedentes comparativos y los fundamentos conceptuales que sustentan el Trabajo Terminal. En primer lugar, se recupera el estado del arte desarrollado en Trabajo Terminal I (TT-I), con el propósito de contextualizar la propuesta de la Defensoría de los Derechos Politécnicos (DDP) frente a otras plataformas de recepción y seguimiento de denuncias y quejas. Posteriormente, se presentan los conceptos de Procesamiento de Lenguaje Natural (PLN) necesarios para comprender dos componentes del sistema: la búsqueda de antecedentes y la generación automática de resúmenes.
+El presente capítulo reúne los antecedentes comparativos y los fundamentos conceptuales que sustentan el Trabajo Terminal. En primer lugar, se presenta el estado del arte de las plataformas de recepción y seguimiento de denuncias, con el propósito de contextualizar la propuesta de la Defensoría de los Derechos Politécnicos (DDP) frente a otras plataformas de recepción y seguimiento de denuncias y quejas. Posteriormente, se presentan los conceptos de Procesamiento de Lenguaje Natural (PLN) necesarios para comprender dos componentes del sistema: la búsqueda de antecedentes y la generación automática de resúmenes.
 
 En los apartados teóricos se explica cada técnica y se precisa su relación con el sistema desarrollado, sin sustituir la descripción de su implementación ni la presentación de resultados experimentales, que corresponden a capítulos posteriores.
 
 \section{Estado del arte de plataformas de denuncia digital}
 \label{sec:estado_arte_plataformas}
 
-Durante TT-I se realizó un estudio comparativo de plataformas nacionales e internacionales relacionadas con la recepción, registro y seguimiento de denuncias, quejas y reportes institucionales. La revisión abarcó soluciones gubernamentales, ciudadanas, corporativas y académicas, con el fin de reconocer capacidades de gestión de casos y aspectos relevantes para el contexto de la DDP.
+Se realizó un estudio comparativo de plataformas nacionales e internacionales relacionadas con la recepción, registro y seguimiento de denuncias, quejas y reportes institucionales. La revisión abarcó soluciones gubernamentales, ciudadanas, corporativas y académicas, con el fin de reconocer capacidades de gestión de casos y aspectos relevantes para el contexto de la DDP.
 
-El estudio consideró criterios como seguridad, anonimato, seguimiento, soporte multimedia, automatización, escalabilidad y adaptación al entorno universitario. Estas valoraciones corresponden al análisis documental realizado en TT-I: no son resultados de pruebas técnicas ejecutadas sobre todas las plataformas ni constituyen mediciones comparables de desempeño. Por esa razón, las categorías cualitativas de la tabla deben leerse como apreciaciones del estudio original y no como certificaciones de cada atributo.
+El estudio consideró criterios como seguridad, anonimato, seguimiento, soporte multimedia, automatización, escalabilidad y adaptación al entorno universitario. Estas valoraciones corresponden a un análisis documental de la información publicada por cada plataforma: no son resultados de pruebas técnicas ejecutadas sobre todas las plataformas ni constituyen mediciones comparables de desempeño. Por esa razón, las categorías cualitativas de la tabla deben leerse como apreciaciones del estudio y no como certificaciones de cada atributo.
 
 \subsection{Comparativa de plataformas}
 
-Se consideraron, entre otras, el Sistema Integral de Denuncias Ciudadanas (SIDEC) \cite{sfp_sidec}, Denuncia Digital de la Ciudad de México \cite{cdmx_denuncia_digital}, MP Virtual \cite{fgjcdmx_mp_virtual}, el Sistema de Atención Mexiquense (SAM) \cite{secogem_sam}, Whistlelink \cite{whistlelink}, EQS Integrity Line \cite{eqs_integrity_line}, NAVEX/WhistleB \cite{navex_whistleb}, Whistleblower Software \cite{whistleblower_software}, BullyButton \cite{bully_button}, Ventanilla Escolar \cite{sep_ventanilla_escolar}, Alerta IPN \cite{ipn_alerta} y Denuncia en Línea de la UNAM \cite{unam_ddu_denuncia}. El análisis de TT-I también incluyó Incorruptible, cuya valoración se conserva para respetar la comparativa original; esta entrada requiere recuperar su fuente documental específica si se pretende utilizar como evidencia independiente.
+Se consideraron, entre otras, el Sistema Integral de Denuncias Ciudadanas (SIDEC) \cite{sfp_sidec}, Denuncia Digital de la Ciudad de México \cite{cdmx_denuncia_digital}, MP Virtual \cite{fgjcdmx_mp_virtual}, el Sistema de Atención Mexiquense (SAM) \cite{secogem_sam}, Whistlelink \cite{whistlelink}, EQS Integrity Line \cite{eqs_integrity_line}, NAVEX/WhistleB \cite{navex_whistleb}, Whistleblower Software \cite{whistleblower_software}, BullyButton \cite{bully_button}, Ventanilla Escolar \cite{sep_ventanilla_escolar}, Alerta IPN \cite{ipn_alerta}, Denuncia en Línea de la UNAM \cite{unam_ddu_denuncia} e Incorruptible.
 
-La Tabla~\ref{tab:comparativa_plataformas} sintetiza las valoraciones registradas en TT-I. Se mantienen las categorías del análisis original para conservar la trazabilidad del estudio; su significado y criterios de asignación deben consultarse junto con la metodología utilizada en esa etapa.
+La Tabla~\ref{tab:comparativa_plataformas} sintetiza las valoraciones obtenidas para cada plataforma en los criterios considerados.
 
 \rowcolors{2}{rowblue}{white}
 \footnotesize
@@ -53,11 +53,11 @@ UNAM Denuncia en Línea & Media & Media & Alta & Sí & Media & Media & Sí \\ \h
 
 \subsection{Brechas identificadas y relación con la propuesta}
 
-El análisis de TT-I permitió observar diferencias entre las soluciones consideradas. Algunas se orientan a canales generales de denuncia, otras a la protección de informantes y otras a servicios institucionales o educativos. En consecuencia, sus mecanismos de seguimiento, manejo de archivos y adecuación a procedimientos universitarios no responden necesariamente a las mismas necesidades.
+El análisis permitió observar diferencias entre las soluciones consideradas. Algunas se orientan a canales generales de denuncia, otras a la protección de informantes y otras a servicios institucionales o educativos. En consecuencia, sus mecanismos de seguimiento, manejo de archivos y adecuación a procedimientos universitarios no responden necesariamente a las mismas necesidades.
 
 Para la DDP, la revisión sirvió como referencia al delimitar funciones como la organización de expedientes, el seguimiento de quejas, el acceso según las responsabilidades del personal y el apoyo a la consulta documental. Asimismo, el estudio motivó la exploración de componentes de PLN para recuperar antecedentes potencialmente relacionados y elaborar resúmenes de apoyo a la revisión de casos. Estas decisiones se fundamentan teóricamente en las siguientes secciones.
 
-Las diferencias señaladas no permiten concluir, por sí solas, que una plataforma específica carezca de una capacidad que no fue documentada en las fuentes consultadas. Del mismo modo, los atributos identificados en TT-I no deben confundirse con los atributos implementados o medidos en el sistema desarrollado; estos últimos se describen y evalúan en los capítulos correspondientes.
+Las diferencias señaladas no permiten concluir, por sí solas, que una plataforma específica carezca de una capacidad que no fue documentada en las fuentes consultadas. Del mismo modo, los atributos identificados en este análisis no deben confundirse con los atributos implementados o medidos en el sistema desarrollado; estos últimos se describen y evalúan en los capítulos correspondientes.
 
 \section{Procesamiento de Lenguaje Natural}
 \label{sec:fundamentos_pln}

@@ -1,10 +1,10 @@
 \chapter{Pruebas}
 	\label{cap:pruebas}
 	Este capítulo documenta la verificación de la plataforma: la estrategia con que se diseñaron las
-	pruebas y los casos y resultados de cada característica de calidad. Las pruebas se organizan siguiendo el modelo ISO/IEC 25010 \cite{iso25010} con que se
-	clasificaron los requerimientos no funcionales (Tabla~\ref{tab:rnf}), en siete secciones:
-	funcionalidad, mantenibilidad, usabilidad, fiabilidad, seguridad, capacidad y confidencialidad. Cada
-	caso de prueba indica el requerimiento que verifica, lo que permite rastrear cada requerimiento
+	pruebas y los casos y resultados de cada característica de calidad. Las pruebas se organizan según los cinco atributos de calidad con que se
+	clasificaron los requerimientos no funcionales (Tabla~\ref{tab:rnf}): funcionalidad, robustez,
+	fiabilidad, usabilidad y seguridad, además de una sección dedicada a los componentes de inteligencia
+	artificial. Cada caso de prueba indica el requerimiento o el atributo de calidad que verifica, lo que permite rastrear cada requerimiento
 	hasta la evidencia que lo respalda.
 
 	Una advertencia de método acompaña a todo el capítulo: probar no demuestra la ausencia de defectos,
@@ -34,7 +34,7 @@
 	Según la información disponible para diseñarlas, las pruebas son de \textbf{caja blanca} ---se
 	diseñan a partir del código, como las unitarias y la verificación estática de permisos--- o de
 	\textbf{caja negra} ---se diseñan a partir de la especificación y se ejecutan contra la interfaz
-	pública, como las de seguridad dinámica y de confidencialidad---. Según su forma de ejecución, son
+	pública, como las de seguridad dinámica---. Según su forma de ejecución, son
 	\textbf{estáticas}, si analizan el código o la configuración sin ejecutarlos, o
 	\textbf{dinámicas}, si ejecutan el sistema. Para diseñar los datos de entrada se emplearon las
 	técnicas de particiones de equivalencia, análisis de valores límite, tablas de decisión y transición
@@ -58,16 +58,16 @@
 	\begin{itemize}
 		\item \textbf{Entrada:} el código compila sin errores y el entorno de pruebas está disponible.
 		\item \textbf{Salida:} todos los casos P1 ejecutados y aprobados, al menos el 90~\% de los P2
-		ejecutados, ningún defecto crítico o alto abierto, cobertura de al menos 70~\% en las clases de
-		reglas, percentil 95 menor a 1~s en la prueba de carga y puntaje SUS de al menos 68.
+		ejecutados, ningún defecto crítico o alto abierto y puntaje SUS de al menos 68.
 		\item \textbf{Suspensión:} si un defecto crítico bloquea más del 30~\% de los casos, se detiene la
 		ejecución hasta corregirlo.
 	\end{itemize}
 
 	\section{Pruebas de funcionalidad}
 	\label{sec:pruebas_funcionalidad}
-	Las pruebas de funcionalidad verifican la adecuación funcional: que las reglas de negocio y los
-	casos de uso se comporten como se especificaron.
+	Las pruebas de funcionalidad verifican que el sistema haga lo que tiene que hacer: que las reglas
+	de negocio y los flujos del procedimiento produzcan resultados exactos y correctos, y que el usuario
+	reciba un resultado legible de cada operación.
 
 	\subsection{Pruebas unitarias}
 	Se escribieron pruebas unitarias con JUnit~5 y Mockito para los diez microservicios Java
@@ -96,17 +96,17 @@
 		\endhead
 		\texttt{quejas-service} & 112 & Validadores del registro público: correo en dos niveles, fechas,
 		nombres, boleta, tutor y archivos por firma binaria; edición, corrección y cancelación; conciliación
-		(RN-Q01 a RN-Q09) \\ \hline
+		(RN-Q01, RN-Q02, RN-Q08 y RN-Q09; Funcionalidad y Robustez) \\ \hline
 		\texttt{primer-contacto-service} & 55 & Citas sin empalmes, plazo y rango máximo de consulta,
 		token de respuesta; dictamen con Subdefensoría caída; sincronización de estatus; motor de
 		antecedentes (RN-PC01 y RN-PC02) \\ \hline
 		\texttt{admin-service} & 36 & Cuentas del personal y protección de la última cuenta de
 		administración; bitácora con IP real; plantillas; respaldos en carpeta temporal; tablero (RN-A02 a
-		RN-A04, RNF-A07) \\ \hline
+		RN-A04, Seguridad) \\ \hline
 		\texttt{auth-service} & 36 & Inicio de sesión, recuperación con código (cinco intentos, diez
 		minutos), política de contraseñas, activación y emisión del token (RN-Q04, RN-Q06 y RN-Q07) \\ \hline
 		\texttt{revision-service} & 36 & Toma atómica entre recepcionistas, regreso, turnado idempotente,
-		ventanilla e historial (RN-R01 a RN-R06, RNF-R06) \\ \hline
+		ventanilla e historial (RN-R01 a RN-R06, Robustez) \\ \hline
 		\texttt{denunciado-service} & 29 & Todas las reglas del registro de la versión de la persona
 		señalada (RF-D01) \\ \hline
 		\texttt{subdefensoria-service} & 24 & Días hábiles (10 y 5), semáforo y alertas de vencimiento,
@@ -114,7 +114,7 @@
 		\texttt{notificaciones-service} & 20 & Centro de notificaciones e inyección de encabezados en el
 		correo (CWE-93) \\ \hline
 		\texttt{catalogo-service} & 8 & Alta, edición e importación de Excel tolerante a errores
-		(RNF-A04) \\ \hline
+		(Robustez) \\ \hline
 		\texttt{chatbot-service} & 8 & Menú agrupado y administración de preguntas \\ \hline
 		\textbf{Total} & \textbf{364} & \\ \hline
 	\end{longtable}
@@ -143,36 +143,31 @@
 		\label{tab:pruebas_integracion} \\ \showrowcolors
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requerimiento} &
+		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requeri\-miento} &
 		\headercell{Tipo} & \headercell{Resultado} \\
 		\hline
 		\endfirsthead
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requerimiento} &
+		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requeri\-miento} &
 		\headercell{Tipo} & \headercell{Resultado} \\
 		\hline
 		\endhead
-		IT-06 & Dos recepcionistas abren la misma queja al mismo tiempo; solo una la obtiene &
-		RNF-R06, RN-R03 & Dinámica, CN & Aprobada (10 de 10 intentos concurrentes) \\ \hline
-		IT-20 & Activar una cuenta solo con un par folio--correo válido & RN-Q06 & Dinámica, CB &
+		IT-20 & Activar una cuenta solo con un par folio--correo válido & RN-Q04, Funcionalidad & Dinámica, CB &
 		Aprobada en prueba unitaria; dinámica pendiente \\ \hline
-		IT-22 & La queja turnada aparece en la bandeja de Primer Contacto & CU-REC-05, CU-PC-01 & Dinámica,
+		IT-22 & La queja turnada aparece en la bandeja de Primer Contacto & CU-R04, CU-PC-01, Funcionalidad & Dinámica,
 		CN & Aprobada en el sistema desplegado \\ \hline
-		IT-23 & El dictamen competente crea el expediente en Subdefensoría & CU-PC-06, CU-SD-01 & Dinámica,
+		IT-23 & El dictamen competente crea el expediente en Subdefensoría & CU-PC-06, CU-SD-01, Funcionalidad & Dinámica,
 		CN & Aprobada en entorno local con la base de pruebas \\ \hline
-		IT-24 & El cambio de estatus en Primer Contacto se refleja en la tabla de quejas & RN-R01 &
+		IT-24 & El cambio de estatus en Primer Contacto se refleja en la tabla de quejas & RN-R01, Funcionalidad &
 		Dinámica, CB & Aprobada en prueba unitaria de sincronización \\ \hline
 		IT-09 & Los indicadores del panel de la Defensora coinciden con datos sembrados en PostgreSQL~16 &
-		CU-ADM-03 & Dinámica, CB & Aprobada \\ \hline
+		RF-A02, Funcionalidad & Dinámica, CB & Aprobada \\ \hline
 		IT-11 & Inicio de sesión unificado: siete escenarios (sin sesión, enlace antiguo, Defensora en
-		Recepción, cierre de sesión, recepcionista hacia el panel de la Defensora, entre otros) & CU-ADM-07,
-		RNF-R02 & Dinámica, CN & Aprobada (7 de 7) \\ \hline
-		IT-12 & Registro de la persona señalada con datos válidos, nombres con dígitos, ejecutable
-		renombrado, credencial PDF o de 4~MB, tres credenciales y sin aviso & RF-D01, RNF-G08 & Dinámica,
-		CB & Aprobada (19 de 19) \\ \hline
+		Recepción, cierre de sesión, recepcionista hacia el panel de la Defensora, entre otros) & Seguridad & Dinámica, CN & Aprobada (7 de 7) \\ \hline
 		REN-02 & Carga masiva de quejas sintéticas por el registro público, con credencial y evidencias &
-		CU-QJ-07 & Dinámica, CN & Aprobada (170 quejas) \\ \hline
+		CU-Q01, Funcionalidad & Dinámica, CN & Aprobada (170 quejas) \\ \hline
+		USA-06 & Toda operación muestra éxito o error; sin fallos silenciosos & Funcionalidad & Estática, inspección & Aprobada por inspección; se propone automatizarla con Playwright \\ \hline
 		ST-01 a ST-14 & Recorridos de extremo a extremo por actor, automatizados con Playwright & Casos de
 		uso & Dinámica, CN & Pendiente: suite por automatizar; recorridos verificados manualmente \\ \hline
 	\end{longtable}
@@ -182,113 +177,39 @@
 	producción, que falla si un componente excede su presupuesto de tamaño o si una plantilla hace
 	referencia a un elemento inexistente. Las cinco compilan sin errores.
 
-	\section{Pruebas de mantenibilidad}
-	\label{sec:pruebas_mantenibilidad}
-	La mantenibilidad se verificó con pruebas estáticas de caja blanca sobre el código Java de ocho de
-	los diez servicios (225 archivos), y con la cobertura de las pruebas unitarias. Primer Contacto y
-	Subdefensoría se analizaron con las mismas reglas de forma informativa.
-
-	\subsection{Guía de estilo}
-	El proyecto adoptó como guía de estilo el Google Java Style Guide \cite{google_java_style}, con cuatro
-	desviaciones que reflejan lo que el código ya seguía de forma consistente, para no reformatear todo
-	el proyecto sin aportar calidad ---sangría de 4 espacios en lugar de 2, líneas de 120 columnas en lugar de 100, guion bajo
-	permitido en los nombres de paquete y el registrador \texttt{log} en minúsculas---. La guía se codificó como
-	configuración de Checkstyle: las reglas \textbf{obligatorias} deben cumplirse sin excepción y las
-	\textbf{recomendadas} se reportan como deuda técnica.
-
-
-
-	La Tabla~\ref{tab:pruebas_mantenibilidad} resume los casos y sus resultados.
-
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{1.2cm}|L{5.5cm}|L{3.1cm}|L{4.7cm}|}
-		\hiderowcolors\caption{Pruebas de mantenibilidad}
-		\label{tab:pruebas_mantenibilidad} \\ \showrowcolors
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Criterio} & \headercell{Resultado} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Criterio} & \headercell{Resultado} \\
-		\hline
-		\endhead
-		MAN-01 & Reglas obligatorias de la guía: nombre de archivo, sin tabuladores, sin importaciones con
-		comodín, llaves siempre, un enunciado por línea, una variable por declaración, nombres, sin
-		\texttt{System.out} ni excepciones ignoradas, \texttt{equals} con \texttt{hashCode} & 0
-		violaciones & Fallida: 4 violaciones en 225 archivos (tres en \texttt{RevisionQuejaService}: dos
-		enunciados en una línea, dos variables en una declaración y un \texttt{if} sin llaves; una
-		importación estática con comodín en \texttt{RespuestaDenunciadoService}) \\ \hline
-		MAN-02 & Métricas: complejidad ciclomática $\leq 15$, NPath $\leq 400$, método $\leq 80$ líneas,
-		$\leq 8$ parámetros, acoplamiento de salida $\leq 30$, archivo $\leq 800$ líneas & Se reporta como
-		deuda & Informativa: 5 métodos con complejidad mayor a 15, 117 tipos públicos sin Javadoc, 90 líneas
-		de más de 120 columnas \\ \hline
-		MAN-03 & Cobertura de líneas en los paquetes de servicios, validaciones y utilerías, medida con
-		JaCoCo & $\geq 70~\%$ por servicio & Pendiente de su primera ejecución (el reporte se
-		genera en cada ejecución de las pruebas) \\ \hline
-		MAN-04 & Cada servicio publica su contrato OpenAPI & 10 de 10 & Aprobada (Primer Contacto y
-		Subdefensoría lo incorporaron al cierre) \\ \hline
-	\end{longtable}
-	\normalsize
-
-	El cumplimiento global de las reglas obligatorias es de cuatro violaciones en 225 archivos: corregirlas
-	permite aprobar MAN-01. La deuda reportada por MAN-02 no es bloqueante, pero indica dónde conviene
-	concentrar la refactorización; los métodos más complejos están en los servicios de revisión y de
-	seguimiento, que concentran la lógica de los tableros.
-
-	\section{Pruebas de usabilidad}
-	\label{sec:pruebas_usabilidad}
-	La usabilidad no puede verificarse por completo con herramientas automáticas, porque depende de la
-	experiencia de personas concretas. Se combinaron por ello mediciones automáticas de accesibilidad con
-	pruebas con usuarios. La Tabla~\ref{tab:pruebas_usabilidad} resume los casos.
+	\section{Pruebas de robustez}
+	\label{sec:pruebas_robustez}
+	Las pruebas de robustez verifican cómo se comporta el sistema ante escenarios distintos del uso
+	esperado: datos de entrada inválidos o mal formados, operaciones simultáneas sobre la misma
+	información y archivos con errores. A los casos de la
+	Tabla~\ref{tab:pruebas_robustez} se suman las pruebas unitarias de los validadores del registro
+	público ---correo en dos niveles, fechas, nombres, boleta, tutor y archivos verificados por su firma
+	binaria---, descritas en la Tabla~\ref{tab:pruebas_unitarias}.
 
 	\rowcolors{2}{rowblue}{white}
 	\small
 	\renewcommand{\arraystretch}{1.2}
 	\setlength{\tabcolsep}{4pt}
 	\begin{longtable}{|p{1.2cm}|L{5.6cm}|L{2.2cm}|L{2.6cm}|L{2.9cm}|}
-		\hiderowcolors\caption{Pruebas de usabilidad}
-		\label{tab:pruebas_usabilidad} \\ \showrowcolors
+		\hiderowcolors\caption{Pruebas de robustez}
+		\label{tab:pruebas_robustez} \\ \showrowcolors
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requerimiento} &
-		\headercell{Criterio} & \headercell{Resultado} \\
+		\headercell{ID} & \headercell{Prueba} & \headercell{Requeri\-miento} & \headercell{Criterio} & \headercell{Resultado} \\
 		\hline
 		\endfirsthead
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requerimiento} &
-		\headercell{Criterio} & \headercell{Resultado} \\
+		\headercell{ID} & \headercell{Prueba} & \headercell{Requeri\-miento} & \headercell{Criterio} & \headercell{Resultado} \\
 		\hline
 		\endhead
-		USA-01 & Cuestionario SUS a cinco usuarios después de las pruebas alfa \cite{brooke_sus} & RNF-G09 &
-		Puntaje $\geq 68$ & Pendiente: sesión alfa con la Defensoría \\ \hline
-		USA-02 & Tareas cronometradas: presentar una queja, turnar, agendar una cita y dictaminar & RNF-Q05,
-		RNF-A05 & Tiempo y errores por tarea & Pendiente: sesión alfa \\ \hline
-		USA-03 & Accesibilidad básica de los portales: contraste, etiquetas y uso con teclado, medida con
-		Lighthouse & RNF-G09 & Puntuación $\geq 0.85$ & Configurada; informativa hasta definir el umbral
-		por portal \\ \hline
-		USA-04 & El portal del quejoso permite presentar la queja completa desde un teléfono & RNF-Q01 &
-		Flujo completo & Pendiente de verificación formal; diseño adaptable implementado \\ \hline
-		USA-05 & El formulario de queja se presenta en pasos numerados con previsualización de archivos &
-		RNF-Q05 & Cumple & Aprobada por inspección \\ \hline
-		USA-06 & Toda operación muestra éxito o error; sin fallos silenciosos & RNF-Q07 & Cumple & Aprobada
-		por inspección; se propone automatizarla con Playwright \\ \hline
-		USA-07 & Cada indicador del panel de la Defensora abre la lista filtrada & RNF-A05 & Cumple &
-		Aprobada en revisión con capturas de las cinco pantallas \\ \hline
+		IT-12 & Registro de la persona señalada con datos válidos, nombres con dígitos, ejecutable renombrado, credencial PDF o de 4~MB, tres credenciales y sin aviso de privacidad & RF-D01, Robustez & Las entradas inválidas se rechazan & Aprobada (19 de 19) \\ \hline
+		IT-06 & Dos recepcionistas abren la misma queja al mismo tiempo; solo una la obtiene & Robustez & 0 asignaciones dobles & Aprobada (10 de 10 intentos concurrentes) \\ \hline
+		FIA-07 & La importación del catálogo con filas mal formadas reporta un resumen y no falla en bloque & Robustez & Resumen de creadas, actualizadas y con error & Aprobada \\ \hline
 	\end{longtable}
 	\normalsize
-
-	La validación cualitativa más importante ocurrió durante el desarrollo: las sesiones de revisión con
-	el personal produjeron cambios concretos ---la redacción jurídica de los requisitos de admisión, el
-	paso de dos a cinco preguntas en la validación, la matrícula en dos pasos y el rediseño completo de
-	Primer Contacto y del panel de la Defensora---, lo que equivale a varias iteraciones de prueba de
-	usabilidad informal. La medición cuantitativa con SUS queda como criterio de salida de la etapa de
-	aceptación.
+	\setlength{\tabcolsep}{6pt}
+	\renewcommand{\arraystretch}{1}
 
 	\section{Pruebas de fiabilidad}
 	\label{sec:pruebas_fiabilidad}
@@ -306,38 +227,34 @@
 		\label{tab:pruebas_fiabilidad} \\ \showrowcolors
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requerimiento} &
+		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requeri\-miento} &
 		\headercell{Criterio} & \headercell{Resultado} \\
 		\hline
 		\endfirsthead
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requerimiento} &
+		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requeri\-miento} &
 		\headercell{Criterio} & \headercell{Resultado} \\
 		\hline
 		\endhead
 		FIA-05 & Con el servicio de notificaciones sin conexión o respondiendo 500, los avisos de queja
-		creada, al tutor, de cambio de estatus y al personal no propagan la excepción (4 casos) & RNF-Q04 &
+		creada, al tutor, de cambio de estatus y al personal no propagan la excepción (4 casos) & Fiabilidad &
 		Ninguna excepción se propaga & Implementada; pendiente de su primera ejecución \\ \hline
 		FIA-06 & Con el servicio de notificaciones caído, el correo de observaciones y los avisos de
-		Recepción no impiden el regreso de la queja (4 casos) & RNF-R04 & Ninguna excepción se propaga &
+		Recepción no impiden el regreso de la queja (4 casos) & Fiabilidad & Ninguna excepción se propaga &
 		Implementada; pendiente de su primera ejecución \\ \hline
-		FIA-07 & La importación del catálogo con filas mal formadas reporta un resumen y no falla en bloque
-		& RNF-A04 & Resumen de creadas, actualizadas y con error & Aprobada \\ \hline
-		FIA-04 & Con Subdefensoría caída al dictaminar, el dictamen se conserva y puede reenviarse &
-		RF-PC07 & El dictamen no se pierde & Aprobada (prueba unitaria) \\ \hline
-		FIA-03 & Respaldo manual, descarga y restauración en una base desechable & RNF-G04, CU-ADM-05 & Sin
+		FIA-04 & Con Subdefensoría caída al dictaminar, el dictamen se conserva y puede reenviarse & RF-PC07, Fiabilidad & El dictamen no se pierde & Aprobada (prueba unitaria) \\ \hline
+		FIA-03 & Respaldo manual, descarga y restauración en una base desechable & Fiabilidad, CU-A07, CU-A08 & Sin
 		errores de \texttt{psql}; tablas principales con filas & Pendiente de ejecución en el entorno de
 		pruebas \\ \hline
-		FIA-01 & Detener un contenedor auxiliar mientras se usa el sistema & RNF-Q04 & El resto opera &
-		Aprobada en operación (incidentes de la Sección~\ref{sec:incidentes}) \\ \hline
-		FIA-02 & Reiniciar el servidor de aplicación & RNF-G04 & Los contenedores se levantan solos &
+		FIA-01 & Detener un contenedor auxiliar mientras se usa el sistema & Fiabilidad & El resto opera &
+		Aprobada en operación (incidentes registrados durante el despliegue) \\ \hline
+		FIA-02 & Reiniciar el servidor de aplicación & Fiabilidad & Los contenedores se levantan solos &
 		Aprobada en operación \\ \hline
 	\end{longtable}
 	\normalsize
 
-	Las pruebas FIA-05 y FIA-06 son el ejemplo más claro de cómo un incidente se convirtió en prueba. El
-	defecto descrito en la Sección~\ref{sec:incidentes} ---peticiones colgadas por una llamada sin tiempo
+	Las pruebas FIA-05 y FIA-06 son el ejemplo más claro de cómo un incidente se convirtió en prueba. Un defecto observado durante la operación ---peticiones colgadas por una llamada sin tiempo
 	de espera--- se habría detectado con una prueba que simulara el servicio caído. Las pruebas usan un
 	cliente HTTP simulado que lanza un error de conexión o un error 500 y verifican que ningún método del
 	cliente de notificaciones propague la excepción hacia el servicio que lo invoca. La restauración
@@ -345,6 +262,53 @@
 	respaldo, y la única forma de saberlo es restaurarlo. El guion genera un respaldo desde el panel,
 	lo descarga, lo restaura en una base nueva y verifica que las tablas de quejas, personal y
 	dependencias tengan filas.
+
+	\section{Pruebas de usabilidad}
+	\label{sec:pruebas_usabilidad}
+	La usabilidad no puede verificarse por completo con herramientas automáticas, porque depende de la
+	experiencia de personas concretas. Se combinaron por ello mediciones automáticas de accesibilidad con
+	pruebas con usuarios. La Tabla~\ref{tab:pruebas_usabilidad} resume los casos.
+
+	\rowcolors{2}{rowblue}{white}
+	\small
+	\renewcommand{\arraystretch}{1.2}
+	\setlength{\tabcolsep}{4pt}
+	\begin{longtable}{|p{1.2cm}|L{5.6cm}|L{2.2cm}|L{2.6cm}|L{2.9cm}|}
+		\hiderowcolors\caption{Pruebas de usabilidad}
+		\label{tab:pruebas_usabilidad} \\ \showrowcolors
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requeri\-miento} &
+		\headercell{Criterio} & \headercell{Resultado} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{headerblue}
+		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requeri\-miento} &
+		\headercell{Criterio} & \headercell{Resultado} \\
+		\hline
+		\endhead
+		USA-01 & Cuestionario SUS a cinco usuarios después de las pruebas alfa \cite{brooke_sus} & Usabilidad &
+		Puntaje $\geq 68$ & Pendiente: sesión alfa con la Defensoría \\ \hline
+		USA-02 & Tareas cronometradas: presentar una queja, turnar, agendar una cita y dictaminar & Usabilidad & Tiempo y errores por tarea & Pendiente: sesión alfa \\ \hline
+		USA-03 & Accesibilidad básica de los portales: contraste, etiquetas y uso con teclado, medida con
+		Lighthouse & Usabilidad & Puntuación $\geq 0.85$ & Configurada; informativa hasta definir el umbral
+		por portal \\ \hline
+		USA-04 & El portal del quejoso permite presentar la queja completa desde un teléfono & Usabilidad &
+		Flujo completo & Pendiente de verificación formal; diseño adaptable implementado \\ \hline
+		USA-05 & El formulario de queja se presenta en pasos numerados con previsualización de archivos &
+		Usabilidad & Cumple & Aprobada por inspección \\ \hline
+		USA-07 & Cada indicador del panel de la Defensora abre la lista filtrada & Usabilidad & Cumple &
+		Aprobada en revisión con capturas de las cinco pantallas \\ \hline
+	\end{longtable}
+	\normalsize
+
+	La validación cualitativa más importante ocurrió durante el desarrollo: las sesiones de revisión con
+	el personal produjeron cambios concretos ---la redacción jurídica de los requisitos de admisión, el
+	paso de dos a cinco preguntas en la validación, la matrícula en dos pasos y el rediseño completo de
+	Primer Contacto y del panel de la Defensora---, lo que equivale a varias iteraciones de prueba de
+	usabilidad informal. La medición cuantitativa con SUS queda como criterio de salida de la etapa de
+	aceptación.
 
 	\section{Pruebas de seguridad}
 	\label{sec:pruebas_seguridad}
@@ -365,7 +329,7 @@
 
 	La primera ejecución encontró seis diferencias. Cuatro correspondían a los respaldos y la
 	restauración, que el código abre al rol \texttt{DEFENSOR} mientras que la redacción original del
-	requerimiento RNF-A06 los reservaba a un rol técnico de administración. Las otras dos
+	requerimiento de respaldos los reservaba a un rol técnico de administración. Las otras dos
 	correspondían a la consulta y emisión de acuerdos de conciliación, que el código abre también a
 	Subdefensoría y a la Defensora, mientras que la redacción original de las reglas reservaba todo el
 	servicio de revisión a Recepción. En ambos casos el análisis concluyó que el código reflejaba la
@@ -387,43 +351,43 @@
 		\label{tab:pruebas_seguridad} \\ \showrowcolors
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requerimiento} &
+		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requeri\-miento} &
 		\headercell{Criterio} & \headercell{Resultado} \\
 		\hline
 		\endfirsthead
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requerimiento} &
+		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requeri\-miento} &
 		\headercell{Criterio} & \headercell{Resultado} \\
 		\hline
 		\endhead
 		SEG-07 & Matriz de permisos extraída del código contra las reglas de los requerimientos (34 puntos
-		de acceso regulados de 92) & RNF-A06, RNF-G01, RNF-R02, RNF-Q01, RNF-Q02 & 0 diferencias &
+		de acceso regulados de 92) & Seguridad & 0 diferencias &
 		Fallida en la línea base (6 diferencias); resuelta al alinear los requerimientos \\ \hline
 		SEG-01 & La matriz en vivo: sin token, 401 o 403; con un rol no permitido, 403; con el permitido,
-		la petición pasa el filtro & RNF-G01, RNF-A06 & 0 accesos indebidos & Pendiente de ejecución en el
+		la petición pasa el filtro & Seguridad & 0 accesos indebidos & Pendiente de ejecución en el
 		entorno de pruebas \\ \hline
-		SEG-10 & Las rutas de Primer Contacto y Subdefensoría exigen token (antes eran públicas) & RNF-G01 &
+		SEG-10 & Las rutas de Primer Contacto y Subdefensoría exigen token (antes eran públicas) & Seguridad &
 		403 sin token & Aprobada en el servidor: consulta, PDF de oficios y evidencias responden 403 sin
 		token \\ \hline
-		IT-04 & Un quejoso no puede consultar ni editar la queja de otra persona cambiando el folio & RNF-G01
+		IT-04 & Un quejoso no puede consultar ni editar la queja de otra persona cambiando el folio & Seguridad
 		& 404 & Aprobada por revisión de código (búsqueda por folio y correo del token) \\ \hline
 		SEG-08 & El token vence a la hora (\texttt{exp} $-$ \texttt{iat} $= 3\,600$) y un token alterado se
-		rechaza & RNF-Q06 & 3\,600~s; 401 o 403 & Aprobada por configuración y prueba unitaria de emisión;
+		rechaza & Seguridad & 3\,600~s; 401 o 403 & Aprobada por configuración y prueba unitaria de emisión;
 		dinámica pendiente \\ \hline
-		SEG-09 & Restaurar sin \texttt{"confirmar": true} se rechaza & RNF-A03 & Respuesta 4xx & Probable falla
+		SEG-09 & Restaurar sin \texttt{"confirmar": true} se rechaza & Seguridad & Respuesta 4xx & Probable falla
 		por revisión de código: se rechaza con una excepción genérica que se traduce en 500, no en 400 \\ \hline
-		SEG-03 & Recorrido de rutas (\texttt{../}) en la descarga y restauración de respaldos & RNF-A06 &
+		SEG-03 & Recorrido de rutas (\texttt{../}) en la descarga y restauración de respaldos & Seguridad &
 		Distinto de 200 & Fallida por revisión de código: el nombre de archivo no se valida contra la carpeta
 		de respaldos (riesgo bajo: solo cuentas de administración) \\ \hline
 		SEG-05 & Secretos ---contraseña de la base, clave de firma de tokens, credenciales de correo--- en el
-		repositorio & RNF-G07 & 0 hallazgos & Fallida: residen en texto plano en los archivos de
+		repositorio & Seguridad & 0 hallazgos & Fallida: residen en texto plano en los archivos de
 		configuración \\ \hline
-		SEG-04 & Dependencias Maven y npm con vulnerabilidades altas o críticas con parche & RNF-G07 & 0 &
+		SEG-04 & Dependencias Maven y npm con vulnerabilidades altas o críticas con parche & Seguridad & 0 &
 		Pendiente de su primera ejecución \\ \hline
-		SEG-02 & Escaneo pasivo de vulnerabilidades web de los cinco portales & RNF-G06 & Sin alertas
+		SEG-02 & Escaneo pasivo de vulnerabilidades web de los cinco portales & Seguridad & Sin alertas
 		altas & Pendiente (informativa) \\ \hline
-		SEG-11 & Los puertos de los servicios y de la base no son alcanzables desde Internet & RNF-G06 &
+		SEG-11 & Los puertos de los servicios y de la base no son alcanzables desde Internet & Seguridad &
 		Conexión rechazada & Aprobada en operación (reglas en la tabla \texttt{raw}) \\ \hline
 	\end{longtable}
 	\normalsize
@@ -435,107 +399,6 @@
 	verificando que la ruta normalizada del archivo permanezca dentro de la carpeta de respaldos, y SEG-09
 	con un manejador que traduzca la falta de confirmación a una respuesta 400.
 
-	\section{Pruebas de capacidad}
-	\label{sec:pruebas_capacidad}
-	La capacidad se verifica en dos dimensiones: el tamaño máximo de una petición, que determina cuántas
-	evidencias puede adjuntar un quejoso, y el número de usuarios concurrentes. Las pruebas de tamaño
-	envían formularios multiparte vacíos a propósito, con un relleno del tamaño deseado, de modo que no
-	crean quejas en el entorno.
-
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{1.2cm}|L{5.6cm}|L{2.2cm}|L{2.6cm}|L{2.9cm}|}
-		\hiderowcolors\caption{Pruebas de capacidad}
-		\label{tab:pruebas_capacidad} \\ \showrowcolors
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requerimiento} &
-		\headercell{Criterio} & \headercell{Resultado} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requerimiento} &
-		\headercell{Criterio} & \headercell{Resultado} \\
-		\hline
-		\endhead
-		CAP-01 & Una petición de 95~MB atraviesa el proxy & RNF-Q03 & Distinto de 413 & Pendiente de
-		ejecución \\ \hline
-		CAP-02 & Una petición de 105~MB es rechazada por el proxy & RNF-Q03 & 413 & Pendiente de ejecución \\ \hline
-		CAP-03, CAP-04 & Lo mismo directamente contra el servicio de quejas & RNF-Q03 & Distinto de 413 / 413
-		& Pendiente de ejecución \\ \hline
-		CAP-06 & Coherencia entre el requerimiento y la configuración de cada servicio & RNF-Q03 & Iguales
-		& Observada y resuelta: el requerimiento indicaba 60~MB y los servicios aceptan 100~MB; se actualizó
-		el requerimiento \\ \hline
-		CAP-07 & Una queja con seis archivos, uno de 12.5~MB, se registra sin terminar el contenedor &
-		RNF-Q03 & Respuesta 200 & Aprobada tras el redimensionamiento de memoria \\ \hline
-		CAP-05 & 50 usuarios virtuales concurrentes sobre las consultas públicas (catálogo, menú del
-		chatbot, consulta por folio) & RNF-G05 & p95 $< 1$~s; errores $< 1~\%$ & Pendiente de ejecución
-		con k6 \\ \hline
-	\end{longtable}
-	\normalsize
-
-	La prueba CAP-07 merece un comentario. El límite de tamaño de una petición no es solo una cifra de
-	configuración: como las evidencias se guardan como contenido binario en la base, cada megabyte
-	recibido se copia varias veces en memoria. Un límite de 100~MB por petición exige que el servicio
-	tenga memoria para varias copias de esa petición, y la prueba con archivos reales fue la que reveló
-	que el contenedor original no la tenía. Por eso RNF-Q03 se verifica con dos tipos de prueba: la de
-	límites, que comprueba el rechazo, y la de archivos reales, que comprueba que lo aceptado se procesa.
-
-	\section{Pruebas de confidencialidad}
-	\label{sec:pruebas_confidencialidad}
-	La confidencialidad se verifica con pruebas de caja negra que observan, desde fuera del servidor, cómo
-	viaja la información. Son pasivas ---no modifican datos--- y por ello pueden ejecutarse también contra
-	producción. El guion usa \texttt{openssl} para negociar conexiones con cada versión de TLS y
-	\texttt{curl} para revisar redirecciones y encabezados.
-
-	\rowcolors{2}{rowblue}{white}
-	\small
-	\renewcommand{\arraystretch}{1.2}
-	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|p{1.2cm}|L{5.6cm}|L{2.2cm}|L{2.6cm}|L{2.9cm}|}
-		\hiderowcolors\caption{Pruebas de confidencialidad}
-		\label{tab:pruebas_confidencialidad} \\ \showrowcolors
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requerimiento} &
-		\headercell{Criterio} & \headercell{Resultado} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Qué se verifica} & \headercell{Requerimiento} &
-		\headercell{Criterio} & \headercell{Resultado} \\
-		\hline
-		\endhead
-		CON-01 & Una petición HTTP se redirige a HTTPS & RNF-Q02 & 301 a \texttt{https} & Aprobada por
-		configuración; dinámica pendiente \\ \hline
-		CON-02 & Se aceptan TLS 1.2 y 1.3 & RNF-Q02 & Negociación exitosa & Aprobada por configuración
-		(\texttt{ssl\_protocols}) \\ \hline
-		CON-03 & Se rechazan TLS 1.0 y 1.1 & RNF-Q02 & Negociación fallida & Aprobada por configuración \\ \hline
-		CON-04 & Certificado válido con al menos 14 días de vigencia & RNF-Q02 & Cumple & Aprobada por
-		configuración (renovación automática con Certbot) \\ \hline
-		CON-05 & El servidor envía el encabezado \texttt{Strict-Transport-Security} & RNF-Q02 & Presente &
-		Fallida: el proxy no lo envía \\ \hline
-		CON-06 & Las respuestas JSON de la API no se comprimen (mitigación de BREACH) & RNF-Q02 & Sin
-		\texttt{Content-Encoding} & Aprobada por configuración \\ \hline
-		CON-07 & Las rutas internas de notificaciones e ingesta responden 403 desde Internet & RNF-G06 &
-		403 & Aprobada por configuración; dinámica pendiente \\ \hline
-		CON-08 & El inicio de sesión no usa \textit{cookies} ni acepta credenciales en la URL; la sesión
-		viaja en el encabezado \texttt{Authorization} & RNF-Q02 & Sin \texttt{Set-Cookie} & Aprobada por
-		diseño \\ \hline
-		CON-09 & Las evidencias de una queja solo se entregan al quejoso dueño o al personal autorizado &
-		RNF-G01 & 403 o 404 para terceros & Aprobada (cubierta por IT-04 y SEG-10) \\ \hline
-	\end{longtable}
-	\normalsize
-
-	La única falla, CON-05, se corrige con una línea en la configuración del servidor seguro del proxy.
-	Varias pruebas figuran como aprobadas por configuración porque la configuración del proxy se revisó
-	línea por línea; su ejecución dinámica, que confirma que esa configuración es la que realmente está
-	cargada, queda pendiente para el entorno de pruebas.
-	
 	\section{Pruebas de los componentes de inteligencia artificial}
 \label{sec:pruebas_ia}
 

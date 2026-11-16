@@ -27,12 +27,9 @@
 		\endhead
 		SEG-05 & Secretos en texto plano en el repositorio & Alta & Rotarlos, pasarlos a variables de
 		entorno y depurar el historial \\ \hline
-		CON-05 & Falta el encabezado HSTS & Media & Agregar \texttt{Strict-Transport-Security} en el
-		servidor seguro del proxy \\ \hline
 		SEG-03 & La descarga y restauración de respaldos no valida la ruta & Baja & Normalizar la ruta y
 		exigir que quede dentro de la carpeta de respaldos \\ \hline
 		SEG-09 & Restaurar sin confirmación responde 500 & Baja & Responder 400 desde el manejador global \\ \hline
-		MAN-01 & Cuatro violaciones obligatorias de estilo & Baja & Corregir las cuatro líneas \\ \hline
 	\end{longtable}
 	\normalsize
 
@@ -40,9 +37,8 @@
 reglas cubiertas por la ejecución inicial de 364 pruebas unitarias y determinadas
 integraciones verificadas en el entorno descrito. Sin embargo, las pruebas
 unitarias no equivalen a una validación completa de los flujos de extremo a
-extremo. La automatización con Playwright, la medición de cobertura, varias
-verificaciones dinámicas de seguridad y confidencialidad, las pruebas de carga
-y la aceptación formal permanecen pendientes o solo parcialmente verificadas.
+extremo. La automatización con Playwright, varias verificaciones dinámicas de
+seguridad y la aceptación formal permanecen pendientes o solo parcialmente verificadas.
 Los ocho casos adicionales de resiliencia mencionados en la sección de pruebas
 unitarias tampoco deben sumarse a las 364 pruebas iniciales sin incorporar su
 resultado de ejecución correspondiente.

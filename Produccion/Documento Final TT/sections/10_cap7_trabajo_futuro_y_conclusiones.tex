@@ -3,8 +3,80 @@
 
 \section{Trabajo a futuro}
 \label{sec:trabajo_futuro}
-\pendiente{Líneas de trabajo a futuro de la plataforma.}
+La plataforma desarrollada cubre el procedimiento de atención de quejas de la Defensoría, desde la recepción hasta la conclusión del expediente; sin embargo, las pruebas y la evaluación reportadas en los Capítulos~\ref{cap:pruebas} y~\ref{cap:resultados} dejaron identificadas actividades que no pudieron completarse en el tiempo del Trabajo Terminal, así como mejoras que permitirían llevar la plataforma a una operación institucional. Se agrupan en las siguientes líneas de trabajo:
+
+\begin{itemize}
+	\item \textbf{Validación de los componentes de inteligencia artificial con expedientes reales.} Los modelos de búsqueda de antecedentes y de generación de resúmenes se evaluaron con quejas sintéticas. El siguiente paso es evaluarlos con expedientes reales, con el acceso autorizado por la Defensoría y con criterios de revisión acordados con su personal. Esta evaluación permitiría confirmar o ajustar la ponderación de 75~\% para TF-IDF y 25~\% para MiniLM, que se eligió con datos sintéticos, y mejorar la recuperación de quejas redactadas con palabras distintas, en la que el recuperador obtuvo sus resultados más bajos. En el caso de los resúmenes, se propone evaluar por separado la etapa de selección de fragmentos y la de redacción, para identificar en cuál se originan las omisiones de hechos observadas en las pruebas.
+
+	\item \textbf{Rendimiento del servicio de resúmenes.} El modelo generativo se ejecuta en procesador central, y la solicitud de prueba tardó 26.3 segundos en responder. Queda pendiente medir la distribución de los tiempos de respuesta y el comportamiento con varias solicitudes simultáneas, así como evaluar alternativas para reducir la espera del analista, como la ejecución con aceleración gráfica o la generación del resumen en segundo plano al momento en que la queja se turna a Primer Contacto.
+
+	\item \textbf{Pruebas de aceptación con la Defensoría.} Está pendiente la sesión de pruebas con el personal de la Defensoría, en la que se aplicarían el cuestionario SUS y las tareas cronometradas que verifican la usabilidad. También quedan por completar la automatización de los recorridos de extremo a extremo de cada actor, la primera ejecución de las pruebas de resiliencia ya implementadas, la restauración de un respaldo en una base desechable y la verificación de la matriz de permisos contra el sistema en ejecución.
+
+	\item \textbf{Corrección de los hallazgos de seguridad.} Antes de una operación con información real deben atenderse los defectos abiertos: retirar del repositorio las contraseñas y la clave de firma de los tokens y pasarlas a variables de entorno del servidor, validar la ruta de los archivos de respaldo, responder con un error de cliente cuando falta la confirmación de una restauración y corregir las vulnerabilidades señaladas por el análisis estático. Se propone además implementar el cierre de sesión por inactividad, agregar el encabezado HSTS en el proxy y separar las reglas de cortafuegos de cada servidor.
+
+	\item \textbf{Evolución de la base de datos.} Actualmente, las tablas se crean y actualizan automáticamente a partir de las entidades de cada microservicio. Para una operación prolongada conviene sustituir este mecanismo por migraciones versionadas, que permitan conocer y revertir cada cambio del esquema, y reforzar la verificación de las referencias lógicas entre módulos que hoy no están respaldadas por llaves foráneas.
+
+	\item \textbf{Integración con los sistemas del Instituto.} El alcance del Trabajo Terminal excluyó la integración con sistemas externos. Una línea natural de continuación es que la comunidad politécnica inicie sesión con su cuenta institucional y que los datos de identificación ---boleta, número de empleado y unidad académica--- se obtengan de los registros del Instituto en lugar de capturarse manualmente, lo que reduciría errores en el registro de las quejas.
+
+	\item \textbf{Transferencia a la Defensoría.} Para que la plataforma pase de prototipo a herramienta de trabajo se requiere desplegarla en la infraestructura que el Instituto determine, capacitar al personal de cada área y acordar con la Defensoría los responsables de su operación, de los respaldos y de las cuentas de usuario.
+\end{itemize}
 
 \section{Conclusiones}
 \label{sec:conclusiones}
-\pendiente{Conclusiones del Trabajo Terminal.}
+El Trabajo Terminal partió de un problema concreto: el procedimiento de atención de quejas de la Defensoría de los Derechos Politécnicos resultaba ineficiente para el volumen de quejas que recibe, porque dependía de actividades manuales y secuenciales ---el registro y la consulta de expedientes, la lectura completa de cada narrativa, la búsqueda de antecedentes y la comunicación del avance entre áreas---. Para atenderlo se desarrolló una plataforma web basada en microservicios que digitaliza el procedimiento completo, desde la presentación de la queja hasta la conclusión del expediente, e incorpora dos componentes de inteligencia artificial como apoyo al análisis. A continuación se valora el cumplimiento de cada objetivo y, al final, si se llegó a la solución del problema planteado.
+
+\subsection*{Cumplimiento de los objetivos específicos}
+
+\textbf{Análisis del marco normativo.} El objetivo se cumplió. A partir de los manuales de organización y de procedimientos de la Defensoría y de las reuniones con su personal, se modeló el procedimiento de atención de quejas en notación BPMN, que fue validado por la propia Defensoría, y se tradujo en los requerimientos funcionales de cinco actores, en reglas de negocio y en un ciclo de vida del expediente con estados definidos. Las reglas que el manual establece ---como los plazos de diez y cinco días hábiles para las solicitudes de información de Subdefensoría--- quedaron implementadas y verificadas en el sistema, lo que hizo posible pasar de una gestión en papel a un flujo de trabajo digital.
+
+\textbf{Diseño de la arquitectura, la base de datos y la interfaz.} El objetivo se cumplió en el diseño y en la implementación, aunque algunos de sus atributos no pudieron medirse por completo:
+
+\begin{itemize}
+	\item \textit{Arquitectura.} Se construyó una arquitectura de once microservicios y tres servicios de inteligencia artificial, distribuida en tres servidores y con autenticación mediante tokens y control de acceso por rol. El diseño modular permite escalar y actualizar cada servicio de forma independiente; sin embargo, no se ejecutó una prueba de carga, por lo que su capacidad para soportar una alta demanda no está medida. En cuanto a la seguridad, la matriz de permisos se verificó contra los requerimientos, pero quedan defectos abiertos ---principalmente los secretos de configuración en el repositorio--- que deben corregirse antes de operar con información real.
+	\item \textit{Base de datos.} Se estructuró un esquema centralizado de 29 tablas en el que cada expediente puede rastrearse desde la queja original, a través de Primer Contacto, hasta Subdefensoría, mediante la cadena de folios. Respecto a la duplicidad, el esquema evita registros repetidos dentro de cada módulo mediante restricciones de unicidad, y la búsqueda de antecedentes señala las quejas que podrían ser duplicadas; no obstante, la plataforma no elimina por sí sola la duplicidad de quejas presentadas de nuevo por un quejoso, sino que la hace visible para que el personal decida.
+	\item \textit{Interfaz.} Se desarrollaron cinco aplicaciones web, una para el quejoso y una para cada área de la Defensoría, cuyo diseño se ajustó en varias iteraciones con las observaciones del personal. La medición formal de la usabilidad mediante el cuestionario SUS queda pendiente de la sesión de aceptación.
+\end{itemize}
+
+\textbf{Módulo de procesamiento de lenguaje natural.} Este objetivo se cumplió parcialmente y su alcance se redefinió durante el desarrollo. El objetivo planteaba apoyar la clasificación preliminar de las quejas y la determinación de su competencia. Al analizar el dominio se concluyó que la determinación de la competencia es una decisión jurídica que corresponde al personal de la Defensoría y no debe automatizarse. Por ello, se implementaron dos componentes que apoyan el análisis previo a esa decisión: un buscador de antecedentes que identifica quejas relacionadas y posibles duplicidades combinando TF-IDF y MiniLM, y un generador de resúmenes que condensa las narrativas extensas mediante la selección de fragmentos con MMR y su redacción con Qwen3. Ambos están integrados en el módulo de Primer Contacto. Con quejas sintéticas, el buscador alcanzó una precisión de 52~\% en los primeros cinco resultados sobre quejas extensas, pero un desempeño bajo ante paráfrasis complejas; y en los resúmenes se observaron omisiones de hechos. Su validación con expedientes reales no pudo completarse, por lo que estos componentes deben considerarse herramientas de apoyo cuyo desempeño institucional aún debe confirmarse.
+
+\textbf{Desarrollo de los componentes centrales.} El objetivo se cumplió. La gestión de expedientes cubre el ciclo de vida completo de la queja: Recepción la valida y la turna, Primer Contacto la analiza y dictamina su competencia, y Subdefensoría la investiga con control de plazos hasta su conclusión, con el paso automático del expediente de un área a otra. El quejoso puede consultar el estado de su queja con su folio y su correo, o con una cuenta de seguimiento, y recibe avisos de los cambios. Los controles de acceso se basan en el rol de cada actor y fueron verificados con la matriz de permisos y con 364 pruebas unitarias aprobadas. La reducción del tiempo efectivo del personal es el propósito de estas funciones; sin embargo, no se realizó una medición que compare los tiempos de atención antes y después de la plataforma.
+
+La Tabla~\ref{tab:cumplimiento} resume el grado de cumplimiento de cada objetivo.
+
+\rowcolors{2}{rowblue}{white}
+\small
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{|L{4.2cm}|L{2.6cm}|L{8.8cm}|}
+	\hiderowcolors\caption{Grado de cumplimiento de los objetivos}
+	\label{tab:cumplimiento} \\ \showrowcolors
+	\hline
+	\rowcolor{headerblue}
+	\headercell{Objetivo} & \headercell{Cumplimiento} & \headercell{Evidencia y pendientes} \\
+	\hline
+	\endfirsthead
+	\hline
+	\rowcolor{headerblue}
+	\headercell{Objetivo} & \headercell{Cumplimiento} & \headercell{Evidencia y pendientes} \\
+	\hline
+	\endhead
+	Analizar el marco normativo & Cumplido & Procedimiento en BPMN validado con la Defensoría; requerimientos, reglas de negocio y plazos implementados. \\ \hline
+	Diseñar la arquitectura, la base de datos y la interfaz & Cumplido, con atributos por medir & Arquitectura, esquema de 29 tablas y cinco aplicaciones implementados; pendientes la prueba de carga, la medición SUS y la corrección de los hallazgos de seguridad. \\ \hline
+	Implementar el módulo de PLN & Cumplido parcialmente & Buscador de antecedentes y generador de resúmenes integrados; la competencia se dejó como decisión del personal; falta la validación con expedientes reales. \\ \hline
+	Desarrollar los componentes centrales & Cumplido & Ciclo de vida completo del expediente, consulta del quejoso y control de acceso por rol, verificados con pruebas. \\ \hline
+\end{longtable}
+\normalsize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1}
+
+\subsection*{Cumplimiento del objetivo general}
+
+El objetivo general se cumplió en lo técnico: se desarrolló una plataforma web basada en microservicios que integra la gestión documental de los expedientes con un motor de procesamiento de lenguaje natural, y que sistematiza el flujo de recepción y seguimiento de quejas de la Defensoría. La clasificación de las quejas se apoya en el turnado por área que realiza Recepción y en las herramientas de antecedentes y resúmenes que consulta Primer Contacto, sin sustituir el criterio del personal.
+
+\subsection*{¿Se llegó a la solución del problema?}
+
+Se llegó a una solución técnica para cada uno de los problemas específicos identificados en el Capítulo~\ref{cap:analisis_problema}: las actividades manuales de registro y consulta se realizan ahora en la plataforma; la revisión de narrativas extensas cuenta con resúmenes de apoyo; la búsqueda de antecedentes y de posibles duplicidades dejó de depender de la memoria del personal; el estado de cada queja y sus plazos pueden consultarse en un solo lugar, tanto por el personal como por el quejoso; y la información de cada expediente pasa completa de un área a otra. En ese sentido, la plataforma resuelve las causas del problema que se plantearon.
+
+Sin embargo, no puede afirmarse todavía que el problema general ---la ineficiencia del procedimiento ante el volumen de quejas--- esté resuelto en la práctica. Para demostrarlo hace falta que la Defensoría opere la plataforma con quejas reales, que se complete la validación de los componentes de inteligencia artificial con sus expedientes y que se mida la reducción en los tiempos de atención. Por ello, el resultado de este Trabajo Terminal debe entenderse como una solución funcional, desplegada y verificada en sus aspectos técnicos, cuya eficacia institucional queda por confirmar con las actividades descritas en la Sección~\ref{sec:trabajo_futuro}.
+
+Por último, el desarrollo del proyecto dejó una enseñanza sobre la forma de trabajar con una institución: la disponibilidad limitada de retroalimentación obligó a cambiar de metodología y a adoptar un desarrollo incremental con prototipos que se ajustaban conforme llegaban las observaciones. Este enfoque permitió que cada sesión con la Defensoría se tradujera en cambios concretos en la plataforma y que el sistema final respondiera al procedimiento real y no solo al descrito en los documentos.

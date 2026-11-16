@@ -230,7 +230,7 @@ La propuesta se planteó considerando los siguientes supuestos:
 	\texttt{RF-Q} para los requerimientos funcionales del quejoso, \texttt{RF-R} para los del
 	personal de recepción, \texttt{RF-PC} para los de Primer Contacto, \texttt{RF-SD} para los de
 	Subdefensoría y \texttt{RF-A} para los de la Defensora, y de forma análoga
-	\texttt{RNF-} y \texttt{RN-} para los no funcionales y las reglas de negocio. Esta convención permite rastrear cada elemento hasta su origen.
+	\texttt{RN-} para las reglas de negocio. Los requerimientos no funcionales se organizan por atributo de calidad. Esta convención permite rastrear cada elemento hasta su origen.
 	
 	\subsection{Requerimientos funcionales del quejoso}
 	Los requerimientos del quejoso se agrupan en cinco bloques: operación sin cuenta, gestión de la
@@ -578,58 +578,33 @@ La propuesta se planteó considerando los siguientes supuestos:
 	\renewcommand{\arraystretch}{1}
 	
 	\subsection{Requerimientos no funcionales}
-	Los requerimientos no funcionales expresan atributos de calidad y no funciones. Se agruparon en
-	tres características: \textbf{funcionalidad}, que verifica que el sistema haga cumplir
-	correctamente sus reglas e informe el resultado de cada operación; \textbf{robustez}, que
-	verifica que el sistema mantenga su operación ante fallos de servicios auxiliares o entradas
-	incorrectas; y \textbf{seguridad}, que verifica la protección de la información y el control de
-	acceso. La Tabla~\ref{tab:rnf} los concentra.
+	Los requerimientos no funcionales expresan atributos de calidad y no funciones: no describen qué hace
+	el sistema, sino qué tan bien debe hacerlo. Se agruparon en cinco atributos de calidad. La
+	Tabla~\ref{tab:rnf} describe cada uno y la métrica con la que se verifica mediante las pruebas del
+	Capítulo~\ref{cap:pruebas}.
 
 	\rowcolors{2}{rowblue}{white}
 	\small
-	\renewcommand{\arraystretch}{1.2}
+	\renewcommand{\arraystretch}{1.25}
 	\setlength{\tabcolsep}{4pt}
-	\begin{longtable}{|L{1.8cm}|L{2.7cm}|L{11.1cm}|}
+	\begin{longtable}{|L{2.6cm}|L{13.0cm}|}
 		\hiderowcolors\caption{Requerimientos no funcionales de la plataforma}
 		\label{tab:rnf} \\ \showrowcolors
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Característica} & \headercell{Atributo requerido} \\
+		\headercell{Atributo} & \headercell{Descripción de la métrica} \\
 		\hline
 		\endfirsthead
 		\hline
 		\rowcolor{headerblue}
-		\headercell{ID} & \headercell{Característica} & \headercell{Atributo requerido} \\
+		\headercell{Atributo} & \headercell{Descripción de la métrica} \\
 		\hline
 		\endhead
-		RNF-G01 & Funcionalidad & Las reglas de negocio deben validarse en el servidor y no solo en
-		la interfaz; una operación no permitida se rechaza aunque se invoque directamente la interfaz
-		de programación. \\ \hline
-		RNF-Q07 & Funcionalidad & Toda operación debe producir retroalimentación visual inmediata de
-		éxito, error o validación; no se admiten fallos silenciosos. \\ \hline
-		RNF-Q04 & Robustez & Un fallo en el envío de un correo ---incluido el de rechazo de una
-		queja--- o en el registro de una notificación nunca debe impedir que la operación principal se
-		complete; el fallo se degrada a un registro en la bitácora del servidor. \\ \hline
-		RNF-A04 & Robustez & La importación masiva del catálogo debe reportar un resumen de filas
-		procesadas, creadas, actualizadas y con error, en lugar de fallar en bloque ante una fila mal
-		formada. \\ \hline
-		RNF-G02 & Robustez & Una falla o indisponibilidad de los servicios de inteligencia artificial
-		no debe bloquear la recepción, el seguimiento ni las decisiones administrativas del
-		expediente. \\ \hline
-		RNF-Q02 & Seguridad & Todo el tráfico público debe viajar cifrado con TLS; tras el inicio de
-		sesión, la autenticación se transmite como token en el encabezado de autorización y nunca como
-		credenciales en claro. \\ \hline
-		RNF-Q06 & Seguridad & La sesión del quejoso debe expirar en una hora; al expirar o ser
-		rechazada, el cliente debe cerrar sesión de forma automática. \\ \hline
-		RNF-R02 & Seguridad & El personal debe autenticarse en un único punto; ningún panel de
-		personal implementa lógica de contraseñas propia. \\ \hline
-		RNF-A01 & Seguridad & El primer acceso administrativo debe autoprovisionarse en el arranque
-		inicial con una contraseña temporal registrada una sola vez en la bitácora del servidor; nunca
-		incrustada en el cliente ni expuesta por la interfaz de programación. \\ \hline
-		RNF-A03 & Seguridad & La restauración de la base de datos debe exigir una confirmación
-		explícita en el cuerpo de la petición; no puede dispararse con una sola acción accidental. \\ \hline
-		RNF-A06 & Seguridad & La generación, descarga y restauración de respaldos debe estar
-		disponible únicamente para el rol de la Defensora (\texttt{DEFENSOR}). \\ \hline
+		\textbf{Funcionalidad} & Que el sistema haga lo que tiene que hacer. Se mide con la exactitud de sus resultados, con respuestas correctas a cada operación y con datos legibles para el usuario: las reglas de negocio se validan en el servidor, cada flujo del procedimiento produce el resultado esperado ---por ejemplo, el turnado crea el expediente en Primer Contacto--- y toda operación muestra un mensaje comprensible de su resultado. \textbf{Métrica:} 100~\% de los casos de prueba de reglas de negocio y de los flujos de prioridad P1 con el resultado esperado. \\ \hline
+		\textbf{Robustez} & Cómo se comporta el sistema ante diferentes escenarios, incluidos los que no corresponden al uso esperado: datos de entrada inválidos o mal formados, archivos con errores, valores límite y operaciones simultáneas sobre la misma información, como dos recepcionistas que abren la misma queja. El sistema debe rechazar o manejar cada escenario con un mensaje, sin fallar ni registrar información inconsistente. \textbf{Métrica:} 100~\% de las entradas inválidas probadas rechazadas y 0 asignaciones dobles en los intentos concurrentes. \\ \hline
+		\textbf{Fiabilidad} & La capacidad del sistema de mantener su operación cuando falla alguno de sus componentes y de recuperar la información después de una falla: la caída del servicio de notificaciones, de los servicios de inteligencia artificial o de Subdefensoría no impide completar la operación principal ni provoca pérdida de información, y los datos pueden restaurarse desde un respaldo. \textbf{Métrica:} 0 excepciones propagadas ante la caída de un servicio auxiliar, ningún dictamen perdido y restauración de respaldos sin errores. \\ \hline
+		\textbf{Usabilidad} & La facilidad con la que los usuarios aprenden a usar el sistema y completan sus tareas, y su satisfacción al hacerlo: formularios en pasos numerados con ayuda contextual, uso del portal desde un teléfono y acceso directo desde cada indicador del panel de la Defensora a las quejas que lo componen. \textbf{Métrica:} puntaje SUS de al menos 68, 100~\% de las tareas principales completadas sin ayuda y puntuación de accesibilidad de al menos 0.85 en Lighthouse. \\ \hline
+		\textbf{Seguridad} & La protección de la información frente a accesos no autorizados y la confidencialidad de los datos en tránsito: cada operación solo admite a los roles autorizados, el tráfico viaja cifrado con TLS, la sesión expira a la hora, las operaciones críticas como la restauración de respaldos exigen confirmación y los secretos de configuración no residen en el repositorio. \textbf{Métrica:} 0 accesos indebidos, 0 diferencias entre los permisos implementados y los requeridos, y 0 vulnerabilidades altas o críticas abiertas. \\ \hline
 	\end{longtable}
 	\normalsize
 	\setlength{\tabcolsep}{6pt}
@@ -806,7 +781,7 @@ Los casos de uso del quejoso cubren el ingreso de la queja y su seguimiento. El 
 	\cellcolor{rowblue}\textbf{Flujo principal} & 1.~El quejoso abre la opción para presentar una queja.\newline 2.~Captura su identidad (nombre, apellidos, tipo y número de identificación, correo institucional y fecha de nacimiento) y acepta el aviso de privacidad.\newline 3.~El sistema calcula la edad del quejoso a partir de su fecha de nacimiento.\newline 4.~El quejoso selecciona la unidad académica involucrada desde el catálogo institucional, captura la fecha de los hechos, los datos de la persona señalada y la narrativa de los hechos.\newline 5.~Adjunta los archivos de evidencia.\newline 6.~Revisa la información y envía la queja.\newline 7.~El sistema registra la queja con estatus \texttt{RECIBIDA} y origen \texttt{PUBLICO}, genera el folio de seguimiento y lo muestra en pantalla. \\ \hline
 	\cellcolor{rowblue}\textbf{Flujos alternos} & \textbf{Quejoso menor de 18 años:} en el paso 3 el sistema solicita los datos del tutor o adulto responsable y no permite el envío hasta que se capturen.\newline \textbf{Quejoso menor de 14 años:} el sistema indica que debe ser el tutor quien complete el formulario a su nombre.\newline \textbf{Datos obligatorios incompletos:} el sistema señala los campos faltantes y no envía la queja.\newline \textbf{Falla en el envío de un correo:} la queja se registra de todos modos y el fallo queda en la bitácora del servidor. \\ \hline
 	\cellcolor{rowblue}\textbf{Postcondición} & La queja queda registrada con estatus \texttt{RECIBIDA}, el quejoso conoce su folio y la queja aparece en la bandeja de Recepción. \\ \hline
-	\cellcolor{rowblue}\textbf{Requerimientos y reglas} & RF-Q02, RF-Q03, RN-Q01, RN-Q02, RNF-Q04 \\ \hline
+	\cellcolor{rowblue}\textbf{Requerimientos y reglas} & RF-Q02, RF-Q03, RN-Q01, RN-Q02, RNF de fiabilidad \\ \hline
 \end{longtable}
 \endgroup
 
@@ -906,7 +881,7 @@ Recepción decide si una queja continúa en el procedimiento. Sus casos de uso p
 	\cellcolor{rowblue}\textbf{Flujo principal} & 1.~La recepcionista abre la queja desde su bandeja; la queja pasa a \texttt{EN\_VALIDACION} y queda asignada a ella.\newline 2.~Revisa los datos, los documentos adjuntos y los antecedentes relacionados.\newline 3.~Elige rechazar la queja, marca al menos un motivo y agrega observaciones.\newline 4.~Confirma la operación.\newline 5.~El sistema cambia la queja a \texttt{RECHAZADA}, registra quién la procesó y cuándo, y envía el correo de rechazo al quejoso. \\ \hline
 	\cellcolor{rowblue}\textbf{Flujos alternos} & \textbf{Sin motivo de rechazo:} el sistema no permite confirmar la operación.\newline \textbf{Queja tomada por otra recepcionista:} el sistema impide procesarla.\newline \textbf{Falla el envío del correo:} el rechazo se completa de todos modos y el fallo queda registrado. \\ \hline
 	\cellcolor{rowblue}\textbf{Postcondición} & La queja queda \texttt{RECHAZADA} y sale de la bandeja de pendientes; desde el panel de revisión no puede regresar a un estado anterior. \\ \hline
-	\cellcolor{rowblue}\textbf{Requerimientos y reglas} & RF-R06, RN-R01, RN-R03, RNF-Q04 \\ \hline
+	\cellcolor{rowblue}\textbf{Requerimientos y reglas} & RF-R06, RN-R01, RN-R03, RNF de fiabilidad \\ \hline
 \end{longtable}
 \endgroup
 
@@ -1006,7 +981,7 @@ En Primer Contacto se determina si la Defensoría es competente. Los casos de us
 	\cellcolor{rowblue}\textbf{Flujo principal} & 1.~El analista abre el expediente desde su bandeja.\newline 2.~El sistema verifica que el expediente esté asignado a ese analista.\newline 3.~Si es la primera vez que se abre, el sistema cambia el expediente a \texttt{EN\_ANALISIS} y registra al analista y la fecha de inicio.\newline 4.~El sistema muestra la narración, los datos de la queja, del quejoso y de la persona señalada, las evidencias y el historial.\newline 5.~El analista puede consultar los antecedentes sugeridos y generar un borrador de resumen (casos de uso de apoyo del Anexo~\ref{anx:casos_uso}). \\ \hline
 	\cellcolor{rowblue}\textbf{Flujos alternos} & \textbf{Expediente asignado a otro analista:} el sistema niega el acceso.\newline \textbf{Servicios de inteligencia artificial no disponibles:} el expediente se consulta normalmente; solo se informa que las herramientas de apoyo no están disponibles. \\ \hline
 	\cellcolor{rowblue}\textbf{Postcondición} & El expediente queda \texttt{EN\_ANALISIS} bajo la responsabilidad del analista. \\ \hline
-	\cellcolor{rowblue}\textbf{Requerimientos y reglas} & RF-PC03, RNF-G02 \\ \hline
+	\cellcolor{rowblue}\textbf{Requerimientos y reglas} & RF-PC03, RNF de fiabilidad \\ \hline
 \end{longtable}
 \endgroup
 
@@ -1230,7 +1205,7 @@ La Defensora, además de supervisar la operación, administra la plataforma. Sus
 	\cellcolor{rowblue}\textbf{Flujo principal} & 1.~La Defensora abre la sección de respaldos.\newline 2.~Selecciona el respaldo que desea restaurar.\newline 3.~El sistema advierte que la operación sustituye la información actual.\newline 4.~La Defensora confirma de forma explícita.\newline 5.~El sistema verifica la confirmación, restaura la base de datos y registra la acción en la bitácora. \\ \hline
 	\cellcolor{rowblue}\textbf{Flujos alternos} & \textbf{La petición no incluye la confirmación:} el sistema rechaza la operación sin modificar la base de datos.\newline \textbf{Usuario sin rol de Defensora:} el sistema niega el acceso a la operación. \\ \hline
 	\cellcolor{rowblue}\textbf{Postcondición} & La base de datos queda restaurada al estado del respaldo y la acción queda registrada. \\ \hline
-	\cellcolor{rowblue}\textbf{Requerimientos y reglas} & RF-A06, RNF-A03, RNF-A06 \\ \hline
+	\cellcolor{rowblue}\textbf{Requerimientos y reglas} & RF-A06, RNF de seguridad \\ \hline
 \end{longtable}
 \endgroup
 
@@ -1318,7 +1293,7 @@ La elección de una arquitectura de microservicios, en lugar de una aplicación 
 \begin{enumerate}
 	\item \textbf{Separación por área y control de acceso.} Cada microservicio corresponde a un área del procedimiento ---Recepción, Primer Contacto, Subdefensoría y la Defensora---, por lo que la información y las operaciones de cada área quedan separadas y protegidas según el rol de quien las solicita. La autenticación se basa en tokens JWT firmados: el servicio de autenticación emite los tokens de los quejosos y el de administración los del personal, mientras que el resto de los microservicios únicamente los verifican y aplican la autorización según el rol del usuario en cada operación. Las contraseñas se almacenan cifradas mediante una función de resumen y, en la red, cada servidor solo acepta conexiones del servidor que le antecede: el de aplicaciones, del de acceso público, y el de base de datos, del de aplicaciones.
 
-	\item \textbf{Aislamiento de fallas.} Los servicios se comunican de forma síncrona sobre HTTP. Además de las peticiones que llegan a través del proxy, existen llamadas internas entre servicios: Primer Contacto envía a Subdefensoría los expedientes dictaminados como procedentes y varios servicios solicitan al servicio de notificaciones el envío de correos. Al ejecutarse por separado, una falla en un servicio auxiliar, como el de notificaciones o los de inteligencia artificial, no impide que la operación principal se complete (requerimientos RNF-Q04 y RNF-G02), algo que en una aplicación monolítica podría detener la plataforma completa.
+	\item \textbf{Aislamiento de fallas.} Los servicios se comunican de forma síncrona sobre HTTP. Además de las peticiones que llegan a través del proxy, existen llamadas internas entre servicios: Primer Contacto envía a Subdefensoría los expedientes dictaminados como procedentes y varios servicios solicitan al servicio de notificaciones el envío de correos. Al ejecutarse por separado, una falla en un servicio auxiliar, como el de notificaciones o los de inteligencia artificial, no impide que la operación principal se complete, algo que en una aplicación monolítica podría detener la plataforma completa.
 
 	\item \textbf{Despliegue independiente y uso de distintas tecnologías.} Todos los componentes se ejecutan en contenedores administrados con Podman, lo que permite actualizar o reiniciar cada servicio sin detener a los demás. Esta independencia también permite que los servicios de negocio se desarrollen con Spring Boot y los de inteligencia artificial con Python, cada uno con las herramientas más adecuadas para su función, e incorporar nuevos servicios sin modificar los existentes.
 \end{enumerate}
@@ -1329,14 +1304,50 @@ La información operativa de la plataforma se almacena en la base de datos \text
 
 Las tablas se crean a partir de las entidades que declara cada microservicio, de modo que el esquema corresponde directamente al código de la plataforma. Cada tabla tiene un microservicio responsable de su escritura. Dentro de un mismo servicio, las relaciones se declaran como llaves foráneas; entre servicios distintos, en cambio, se emplean \emph{referencias lógicas}: el registro hijo guarda el folio o el identificador del registro padre y la integridad se verifica en la lógica del servicio. Esta decisión mantiene independientes a los microservicios, a cambio de que la base de datos no impida por sí sola una referencia inválida entre módulos.
 
-La Figura~\ref{fig:er_general} presenta el diagrama entidad-relación de la base de datos. Para que el esquema completo pueda leerse en una sola página, presentada en orientación horizontal, de cada tabla se muestran sus atributos clave: la llave primaria, las llaves foráneas, las referencias lógicas y los atributos referenciados por otras tablas, con su tipo de dato. Las tablas se distinguen por color según su módulo. Los atributos restantes de cada tabla y las relaciones de menor nivel ---como la referencia de cada cita, nota o dictamen al analista que la registró, o la cita reprogramada a partir de otra--- se presentan en los diagramas por módulo del Anexo~\ref{anx:base_datos}.
+Las Figuras~\ref{fig:rel_1} a~\ref{fig:rel_6} presentan el modelo relacional completo de la base de datos: cada tabla con todas sus columnas, el tipo de dato de cada una y sus llaves. Debido a su extensión, el modelo se divide en 6 páginas horizontales, una por módulo o grupo de tablas relacionadas. Cuando una tabla se relaciona con otra que se presenta en una página distinta, esta última aparece en gris y solo con su nombre, para indicar la relación sin repetir sus columnas. En los diagramas se emplea la siguiente notación: \textbf{PK}, llave primaria; \textbf{FK}, llave foránea declarada en la base de datos (línea continua); \textbf{RL}, referencia lógica sin llave foránea declarada (línea discontinua); y \textbf{U}, restricción de unicidad. Los extremos de cada línea indican la cardinalidad: el extremo con tres ramas corresponde al lado \emph{muchos} y el extremo con una barra, al lado \emph{uno}.
 
 \begin{sidewaysfigure}
 	\centering
-	\includegraphics[width=23cm,height=14.6cm,keepaspectratio]{images/er_general.pdf}
-	\caption{Diagrama entidad-relación de la base de datos (atributos clave)}
-	\label{fig:er_general}
+	\includegraphics[width=23cm,height=15.2cm,keepaspectratio]{images/rel_1.pdf}
+	\caption{Modelo relacional de la base de datos (1 de 6): Núcleo de quejas}
+	\label{fig:rel_1}
 \end{sidewaysfigure}
+
+\begin{sidewaysfigure}
+	\centering
+	\includegraphics[width=23cm,height=15.2cm,keepaspectratio]{images/rel_2.pdf}
+	\caption{Modelo relacional de la base de datos (2 de 6): Primer Contacto: expediente, citas, dictámenes y notas}
+	\label{fig:rel_2}
+\end{sidewaysfigure}
+
+\begin{sidewaysfigure}
+	\centering
+	\includegraphics[width=23cm,height=15.2cm,keepaspectratio]{images/rel_3.pdf}
+	\caption{Modelo relacional de la base de datos (3 de 6): Primer Contacto: evidencias, antecedentes y remisiones}
+	\label{fig:rel_3}
+\end{sidewaysfigure}
+
+\begin{sidewaysfigure}
+	\centering
+	\includegraphics[width=23cm,height=15.2cm,keepaspectratio]{images/rel_4.pdf}
+	\caption{Modelo relacional de la base de datos (4 de 6): Primer Contacto: solicitudes y resúmenes; respuesta de la persona señalada}
+	\label{fig:rel_4}
+\end{sidewaysfigure}
+
+\begin{sidewaysfigure}
+	\centering
+	\includegraphics[width=23cm,height=15.2cm,keepaspectratio]{images/rel_5.pdf}
+	\caption{Modelo relacional de la base de datos (5 de 6): Subdefensoría}
+	\label{fig:rel_5}
+\end{sidewaysfigure}
+
+\begin{sidewaysfigure}
+	\centering
+	\includegraphics[width=23cm,height=15.2cm,keepaspectratio]{images/rel_6.pdf}
+	\caption{Modelo relacional de la base de datos (6 de 6): Administración y catálogos}
+	\label{fig:rel_6}
+\end{sidewaysfigure}
+
 
 Algunas tablas se relacionan con el resto del esquema mediante el correo electrónico y no mediante un identificador: \texttt{notificaciones} guarda el correo del destinatario, y \texttt{bitacora\_acciones} y \texttt{plantillas\_documentos} guardan el correo institucional de la persona del personal que realizó la acción o la actualización. La tabla \texttt{dependencias} se relaciona consigo misma para representar la jerarquía de dependencias del Instituto. Por último, \texttt{preguntas\_chatbot} es independiente: almacena el contenido del menú de ayuda del portal público y no depende de ningún otro registro.
 
