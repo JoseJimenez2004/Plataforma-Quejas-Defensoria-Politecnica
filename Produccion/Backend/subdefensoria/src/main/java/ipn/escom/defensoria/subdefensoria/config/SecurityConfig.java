@@ -88,14 +88,9 @@ public class SecurityConfig {
                         /*
                          * Operaciones normales de Subdefensoría.
                          */
-                        // 2026-11: el Defensor titular supervisa en SOLO CONSULTA (GET) y ve
-                        // todos los expedientes; las acciones del trámite son de los
-                        // abogados, cada uno sobre los suyos (AbogadoSesionService).
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/subdefensoria/**"
-                        ).hasAnyRole("SUBDEFENSOR", "DEFENSOR")
-
+                        // 2026-11-17: solo los abogados (SUBDEFENSOR), cada uno sobre los
+                        // suyos (AbogadoSesionService). La Defensora ya no entra a
+                        // Subdefensoría: consulta el detalle desde "Quejas" en su panel.
                         .requestMatchers(
                                 "/api/subdefensoria/**"
                         ).hasRole("SUBDEFENSOR")
